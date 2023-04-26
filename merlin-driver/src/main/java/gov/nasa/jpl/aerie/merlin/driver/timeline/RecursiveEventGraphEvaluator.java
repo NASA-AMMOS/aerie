@@ -22,13 +22,13 @@ public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
   @Override
   public <Effect> Optional<Effect>
   evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, final EventGraph<Event> graph,
-           final Optional<Event> lastEvent, final boolean includeLast) {
+           final Event lastEvent, final boolean includeLast) {
     // Make sure we don't bother evaluating after finding the last event -- this shouldn't happen; maybe remove
     if (evaluating == EvalState.AFTER) return Optional.empty();
 
     // case graph is Atom
     if (graph instanceof EventGraph.Atom<Event> g) {
-      if (lastEvent.isPresent() && lastEvent.get().equals(g.atom())) {
+      if (lastEvent != null && lastEvent.equals(g.atom())) {
         evaluating = EvalState.AFTER;
         if (!includeLast) {
           return Optional.empty();

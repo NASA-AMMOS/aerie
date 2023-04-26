@@ -108,7 +108,7 @@ public class ResumableSimulationDriver<Model> {
   }
 
   private void startDaemons(Duration time) {
-    engine.scheduleTask(time, missionModel.getDaemon(), Optional.empty());
+    engine.scheduleTask(time, missionModel.getDaemon(), null);
 
     final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
     final var commit = engine.performJobs(batch.jobs(), time, Duration.MAX_VALUE, queryTopic);
@@ -362,7 +362,7 @@ public class ResumableSimulationDriver<Model> {
           resolved,
           missionModel,
           activityTopic
-      ), Optional.empty());
+      ), null);
       plannedDirectiveToTask.put(directiveId,taskId);
     }
   }

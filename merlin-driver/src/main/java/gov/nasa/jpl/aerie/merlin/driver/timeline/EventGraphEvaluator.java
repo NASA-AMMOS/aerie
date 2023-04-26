@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface EventGraphEvaluator {
   <Effect> Optional<Effect> evaluate(EffectTrait<Effect> trait, Selector<Effect> selector, EventGraph<Event> graph,
-                                     final Optional<Event> lastEvent, boolean includeLast);
+                                     final Event lastEvent, boolean includeLast);
 }

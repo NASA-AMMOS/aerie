@@ -161,9 +161,7 @@ public final class SimulationEngine implements AutoCloseable {
           } else if (d.longerThan(earliest)) {
             continue;
           }
-          taskIds.entrySet().forEach(e -> {
-            tasks.computeIfAbsent(e.getKey(), $ -> new HashSet<>()).add(Pair.of(topic, e.getValue()));
-          });
+          taskIds.forEach((id, event) -> tasks.computeIfAbsent(id, $ -> new HashSet<>()).add(Pair.of(topic, event)));
         }
       }
     }
@@ -218,11 +216,10 @@ public final class SimulationEngine implements AutoCloseable {
   /**
    * For the next time t that a set of tasks could potentially have a stale read, check if any read is stale for
    * each of those tasks, and, if so, mark them stale at t and schedule them to re-run.
-   *
+   * <p>
    * This method assumes that these are reads that occurred in the previous simulation and thus have an EventGraph
    * in the old SimulationEngine's timeline with the read noop.  If the current timeline has an EventGraph at this
    * same time, it is assumed to also have the noop events.
-   *
    *
    * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
    */
@@ -242,15 +239,15 @@ public final class SimulationEngine implements AutoCloseable {
         final Cell<?> tempCell = steppedCell.duplicate();
         EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
         if (events == null) throw new RuntimeException("No EventGraph for potentially stale read.");
-        this.timeline.stepUp(tempCell, events, Optional.of(noop), false);
+        this.timeline.stepUp(tempCell, events, noop, false);
         // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
         var oldEvents = this.timeline.oldTemporalEventSource.eventsByTime.get(timeOfStaleReads);
         if (oldEvents == null) throw new RuntimeException("No old EventGraph for potentially stale read.");
         if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
           // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
-          var tempOldCell = timeline.getOldCell(steppedCell).duplicate();
-          this.timeline.oldTemporalEventSource.stepUp(tempOldCell, oldEvents, Optional.of(noop), false);
-          if (!tempCell.getState().equals(tempOldCell.getState())) {
+          var tempOldCell = timeline.getOldCell(steppedCell).map(Cell::duplicate);
+          this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(), oldEvents, noop, false);
+          if (!tempCell.getState().equals(tempOldCell.get().getState())) {
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads);
             break;  // rescheduled task, so can move on to the next task
@@ -299,10 +296,10 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Schedule a new task to be performed at the given time. */
-  public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state, Optional<TaskId> taskIdToUse) {
+  public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state, TaskId taskIdToUse) {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
-    final var task = taskIdToUse.orElse(TaskId.generate());
+    final var task = taskIdToUse == null ? TaskId.generate() : taskIdToUse;
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
@@ -685,9 +682,6 @@ public final class SimulationEngine implements AutoCloseable {
     graphs.forEach(events -> events.evaluate(trait, trait::atom).accept(this.taskInfo));
 
     // Extract profiles for every resource.
-    //final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    //final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
-
     for (final var entry : this.resources.entrySet()) {
       final var id = entry.getKey();
       final var state = entry.getValue();
@@ -847,14 +841,6 @@ public final class SimulationEngine implements AutoCloseable {
       return Optional.of(e.joinOffset().minus(e.startOffset()));
     }
     return Optional.empty();
-  }
-
-  public Map<Topic<?>, TreeMap<Duration, Boolean>> getStaleTopics() {
-    return timeline.staleTopics;
-  }
-
-  public Map<TaskId, Duration> getStaleTasks() {
-    return staleTasks;
   }
 
   private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
@@ -1045,7 +1031,7 @@ public final class SimulationEngine implements AutoCloseable {
     TaskId lastId = taskId;
     boolean isAct = false;
     boolean isDaemon = true;
-    while (!isAct) {
+    while (true) {
       if (oldEngine.taskInfo.isActivity(lastId)) {
         isAct = true;
         activityId = lastId;
@@ -1064,7 +1050,7 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (isAct) {
       // Get the SerializedActivity for the taskId.
       // If an activity is found, see if it is associated with a directive and, if so, use the directive instead.
-      SerializedActivity serializedActivity = this.taskInfo.input.get(activityId);
+      SerializedActivity serializedActivity = this.taskInfo.input.get(activityId.id());
       var activityDirectiveId = taskInfo.taskToPlannedDirective.get(activityId.id());
       SimulatedActivity simulatedActivity = simulatedActivities.get(activityDirectiveId);
       if (startOffset == null || startOffset == Duration.MAX_VALUE) {
@@ -1072,7 +1058,7 @@ public final class SimulationEngine implements AutoCloseable {
           Instant actStart = simulatedActivity.start();
           startOffset = Duration.minus(actStart, this.startTime);
         } else {
-          // TODO: throw error of some kind
+          throw new RuntimeException("No SimulatedActivity for ActivityDirectiveId, " + activityDirectiveId);
         }
       }
       TaskFactory<?> task;
@@ -1084,7 +1070,7 @@ public final class SimulationEngine implements AutoCloseable {
                             .formatted(serializedActivity.getTypeName(), ex.toString()));
       }
       // TODO: What if there is no activityDirectiveId?
-      scheduleTask(startOffset, emitAndThen(activityDirectiveId, defaultActivityTopic, task), Optional.of(activityId));
+      scheduleTask(startOffset, emitAndThen(activityDirectiveId, defaultActivityTopic, task), activityId);
     }
   }
 

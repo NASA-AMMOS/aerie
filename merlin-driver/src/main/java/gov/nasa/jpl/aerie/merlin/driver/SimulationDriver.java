@@ -43,7 +43,7 @@ public final class SimulationDriver {
       final var queryTopic = new Topic<Topic<?>>();
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Optional.empty());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
@@ -127,7 +127,7 @@ public final class SimulationDriver {
       final var queryTopic = new Topic<Topic<?>>();
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Optional.empty());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
@@ -135,7 +135,7 @@ public final class SimulationDriver {
       }
 
       // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task, Optional.empty());
+      final var taskId = engine.scheduleTask(elapsedTime, task, null);
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
@@ -188,7 +188,7 @@ public final class SimulationDriver {
                                           resolved,
                                           missionModel,
                                           activityTopic),
-                          Optional.empty());
+                          null);
     }
   }
 
