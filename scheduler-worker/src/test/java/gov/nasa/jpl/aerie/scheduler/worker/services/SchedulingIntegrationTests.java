@@ -19,7 +19,6 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static org.junit.jupiter.api.Assertions.*;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
@@ -71,6 +70,12 @@ public class SchedulingIntegrationTests {
       Map.of("initialDataPath", SerializedValue.of("/etc/hosts")),
       Path.of(System.getenv("AERIE_ROOT"), "examples", "banananation", "build", "libs")
   );
+  private static final MissionModelDescription MINIMAL_MISSION_MODEL = new MissionModelDescription(
+      "minimal-mission-model",
+      Map.of(),
+      Path.of(System.getenv("AERIE_ROOT"), "examples", "minimal-mission-model", "build", "libs")
+  );
+
   private SchedulingDSLCompilationService schedulingDSLCompiler;
 
   @BeforeAll
@@ -2166,5 +2171,20 @@ public class SchedulingIntegrationTests {
 
     assertEquals(Duration.of(5, MINUTES), zeroDuration.startOffset());
     assertEquals(Duration.of(10, MINUTES).plus(Duration.of(1, SECOND)), daemonChecker.startOffset());
+  }
+
+  /**
+   * This regression test makes sure that even models that declare no numeric resources generate valid typescript
+   */
+  @Test
+  void testEmptyPlanMinimalMissionModelSimpleRecurrenceGoal() {
+    runScheduler(MINIMAL_MISSION_MODEL, List.of(), List.of(new SchedulingGoal(new GoalId(0L), """
+        export default () => Goal.ActivityRecurrenceGoal({
+          activityTemplate: ActivityTemplates.SingleActivity(),
+          interval: Temporal.Duration.from({ milliseconds: 24 * 60 * 60 * 1000 })
+        })
+        """, true)), PLANNING_HORIZON);
+
+    // If invalid typescript is generated, an exception will be thrown.
   }
 }
