@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Aerie UI
+    url: https://github.com/NASA-AMMOS/aerie-ui/issues/new/choose
+    about: Issues and feature requests for the main Aerie UI repo (not backend related).
+  - name: Aerie Docs
+    url: https://github.com/NASA-AMMOS/aerie-docs/issues/new/choose
+    about: Issues and feature requests for the Aerie Documentation
+  - name: Slack Chat
+    url: https://jpl.slack.com/archives/C0163E42UBF
+    about: Ask questions and discuss with other Aerie users in real time.
