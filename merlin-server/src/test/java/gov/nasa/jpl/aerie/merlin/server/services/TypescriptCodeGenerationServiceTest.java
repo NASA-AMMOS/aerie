@@ -31,8 +31,8 @@ class TypescriptCodeGenerationServiceTest {
               "an integer": number,
               "external resource": boolean,
             };
-            export type ResourceName = "mode" | "state of charge" | "an integer" | "external resource";
-            export type RealResourceName = "state of charge" | "an integer";
+            export type ResourceName = "mode" | "state of charge" | "an integer" | "external resource" | never;
+            export type RealResourceName = "state of charge" | "an integer" | never;
             export const ActivityTypeParameterInstantiationMap = {
               [ActivityType.activity2]: (alias: string) => ({
                 "Param": new Discrete<( | "hello" | "there")>({

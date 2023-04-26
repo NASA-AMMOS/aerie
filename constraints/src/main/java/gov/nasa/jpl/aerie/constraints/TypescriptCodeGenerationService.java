@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public final class TypescriptCodeGenerationService {
 
@@ -39,12 +40,15 @@ public final class TypescriptCodeGenerationService {
 
     result.add("export type ResourceName = " + String.join(
         " | ",
-        resources.keySet().stream().map(key -> ("\"" + key + "\"")).toList()
+        Stream.concat(resources.keySet().stream().map(key -> ("\"" + key + "\"")), Stream.of("never")).toList()
     ) + ";");
 
     result.add("export type RealResourceName = " + String.join(
         " | ",
-        resources.entrySet().stream().filter($ -> valueSchemaIsNumeric($.getValue())).map($ -> ("\"" + $.getKey() + "\"")).toList()
+        Stream.concat(
+            resources.entrySet().stream().filter($ -> valueSchemaIsNumeric($.getValue())).map($ -> ("\"" + $.getKey() + "\"")),
+            Stream.of("never"))
+              .toList()
     ) + ";");
 
     // ActivityParameters
