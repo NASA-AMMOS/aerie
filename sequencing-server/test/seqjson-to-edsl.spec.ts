@@ -46,12 +46,12 @@ describe('getEdslForSeqJson', () => {
   Sequence.new({
     seqId: 'test_00001',
     metadata: {},
-    steps: [
+    steps: ({ locals, parameters }) => ([
       C.BAKE_BREAD,
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
         temperature: 100,
       }),
-    ],
+    ]),
   });`);
   });
 
@@ -135,6 +135,7 @@ describe('getEdslForSeqJson', () => {
                   min: 1,
                 },
               ],
+              sc_name : 'BAN-NATION',
               name: 'duration',
               type: 'UINT',
             },
@@ -226,28 +227,25 @@ describe('getEdslForSeqJson', () => {
       author: 'rrgoetz',
     },
     locals: [
-      {
+      UINT('duration', {
         allowable_ranges: [
           {
             max: 3600,
             min: 1,
           },
         ],
-        name: 'duration',
-        type: 'UINT',
-      }
+        sc_name: 'BAN-NATION',
+      })
     ],
     parameters: [
-      {
+      UINT('duration', {
         allowable_ranges: [
           {
             max: 3600,
             min: 1,
           },
         ],
-        name: 'duration',
-        type: 'UINT',
-      }
+      })
     ],
     hardware_commands: [
       HDW_PYRO_ENGINE
@@ -261,7 +259,7 @@ describe('getEdslForSeqJson', () => {
         direction: 'FromStem',
       }),
     ],
-    requests: [
+    requests: ({ locals, parameters }) => ([
       {
         name: 'power',
         steps: [
@@ -295,7 +293,93 @@ describe('getEdslForSeqJson', () => {
           author: 'rrgoetz',
         },
       }
+    ]),
+  });`);
+  });
+
+  it('should return errors in edsl', async () => {
+    const res = await graphqlClient.request<{
+      getEdslForSeqJson: string;
+    }>(
+      gql`
+        query GetEdslForSeqJson($seqJson: SequenceSeqJson!) {
+          getEdslForSeqJson(seqJson: $seqJson)
+        }
+      `,
+      {
+        seqJson: {
+          id: '',
+          locals: [
+            {
+              name: 'temp',
+              type: 'FLOAT',
+            },
+          ],
+          metadata: {},
+          parameters: [
+            {
+              name: 'sugar',
+              type: 'INT',
+            },
+          ],
+          steps: [
+            {
+              args: [
+                {
+                  name: 'temperature',
+                  type: 'symbol',
+                  value: 'temp',
+                },
+              ],
+              stem: 'PREHEAT_OVEN',
+              time: {
+                type: 'COMMAND_COMPLETE',
+              },
+              type: 'command',
+            },
+            {
+              args: [
+                {
+                  name: 'tb_sugar',
+                  type: 'symbol',
+                  value: 'sugarrrrr',
+                },
+                {
+                  name: 'gluten_free',
+                  type: 'string',
+                  value: 'FALSE',
+                },
+              ],
+              stem: 'PREPARE_LOAF',
+              time: {
+                type: 'COMMAND_COMPLETE',
+              },
+              type: 'command',
+            },
+          ],
+        },
+      },
+    );
+
+    expect(res.getEdslForSeqJson).toEqual(`export default () =>
+  Sequence.new({
+    seqId: '',
+    metadata: {},
+    locals: [
+      FLOAT('temp')
     ],
+    parameters: [
+      INT('sugar')
+    ],
+    steps: ({ locals, parameters }) => ([
+      C.PREHEAT_OVEN({
+        temperature: locals.temp,
+      }),
+      C.PREPARE_LOAF({
+        tb_sugar: unknown.sugarrrrr //ERROR: Variable 'sugarrrrr' is not defined as a local or parameter,
+        gluten_free: 'FALSE',
+      }),
+    ]),
   });`);
   });
 });
@@ -359,8 +443,8 @@ describe('getEdslForSeqJsonBulk', () => {
     );
 
     expect(res.getEdslForSeqJsonBulk).toEqual([
-      "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: [\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ],\n  });",
-      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: [\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ],\n  });",
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });",
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });"
     ]);
   });
 });
