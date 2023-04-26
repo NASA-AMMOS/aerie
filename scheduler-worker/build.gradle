@@ -90,6 +90,7 @@ test {
   environment "SCHEDULING_DSL_COMPILER_COMMAND", './build/main.js'
 
   dependsOn ":examples:banananation:assemble"
+  dependsOn ":examples:minimal-mission-model:assemble"
   environment 'AERIE_ROOT', rootDir.toString()
 }
 
