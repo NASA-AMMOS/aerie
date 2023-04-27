@@ -404,7 +404,10 @@ public record SynchronousSchedulerAgent(
                     .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
                 Duration.MICROSECONDS);
           }
-        } else if (schedulerActType.getDurationType() instanceof DurationType.Uncontrollable s) {
+        } else if (
+            schedulerActType.getDurationType() instanceof DurationType.Uncontrollable
+            || schedulerActType.getDurationType() instanceof DurationType.Fixed
+        ) {
           // Do nothing
         } else {
           throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
