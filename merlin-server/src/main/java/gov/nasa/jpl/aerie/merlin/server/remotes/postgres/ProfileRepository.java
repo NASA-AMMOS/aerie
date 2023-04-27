@@ -101,8 +101,14 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
   }
 
   static List<PlanDatasetRecord> getAllPlanDatasetsForPlan(final Connection connection, final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws SQLException {
-    try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
-      return getPlanDatasetsAction.get(planId.id(), simulationDatasetId.map(SimulationDatasetId::id));
+    if (simulationDatasetId.isPresent()) {
+      try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
+        return getPlanDatasetsAction.get(planId.id(), simulationDatasetId.map(SimulationDatasetId::id).get());
+      }
+    } else {
+      try (final var getPlanDatasetsAction = new GetAllPlanDatasetsAction(connection)) {
+        return getPlanDatasetsAction.get(planId.id());
+      }
     }
   }
 

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parseOffset;
 
-/*package-local*/ final class GetPlanDatasetsAction implements AutoCloseable {
+/*package-local*/ final class GetAllPlanDatasetsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       select
         pdsd.simulation_dataset_id,
@@ -23,19 +23,18 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       on p.plan_id = pdsd.plan_id
       and p.dataset_id = pdsd.dataset_id
       where
-        p.plan_id = ? and (pdsd.simulation_dataset_id is null or pdsd.simulation_dataset_id = ?)
+        p.plan_id = ?
     """;
 
   private final PreparedStatement statement;
 
-  public GetPlanDatasetsAction(final Connection connection) throws SQLException {
+  public GetAllPlanDatasetsAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<PlanDatasetRecord> get(final long planId, final long simulationDatasetId) throws SQLException {
+  public List<PlanDatasetRecord> get(final long planId) throws SQLException {
     final var records = new ArrayList<PlanDatasetRecord>();
     this.statement.setLong(1, planId);
-    this.statement.setLong(2, simulationDatasetId);
     final var resultSet = statement.executeQuery();
     while (resultSet.next()) {
       final var associatedSimulationDatasetId = Optional.ofNullable(resultSet.getString(1)).map(Long::valueOf);

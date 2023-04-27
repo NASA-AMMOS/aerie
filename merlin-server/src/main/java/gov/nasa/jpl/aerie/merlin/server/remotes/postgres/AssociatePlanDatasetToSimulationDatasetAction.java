@@ -31,8 +31,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
     this.statement.setLong(2, datasetId);
     this.statement.setLong(3, simulationDatasetId);
 
-    final var results = this.statement.executeQuery();
-    if (!results.next()) throw new FailedInsertException("plan_dataset_to_simulation_dataset");
+    final var affectedRows = this.statement.executeUpdate();
+    if (affectedRows != 1) throw new FailedInsertException("plan_dataset_to_simulation_dataset");
   }
 
   @Override
