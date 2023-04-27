@@ -19,6 +19,7 @@ begin;
   -- Planning intents.
   \ir tables/mission_model.sql
   \ir tables/activity_type.sql
+  \ir tables/resource_type.sql
   \ir tables/plan.sql
   \ir tables/plan_collaborators.sql
   \ir tables/activity_directive.sql
