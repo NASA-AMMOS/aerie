@@ -14,9 +14,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -25,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.sql.DataSource;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class PostgresPlanRepository implements PlanRepository {
   private final DataSource dataSource;
@@ -47,17 +46,20 @@ public final class PostgresPlanRepository implements PlanRepository {
             final var planId = new PlanId(record.id());
             final var activities = getPlanActivities(connection, planId);
 
-            plans.put(planId, new Plan(
-                record.name(),
-                Long.toString(record.missionModelId()),
-                record.startTime(),
-                record.endTime(),
-                activities
-            ));
+            plans.put(
+                planId,
+                new Plan(
+                    record.name(),
+                    Long.toString(record.missionModelId()),
+                    record.startTime(),
+                    record.endTime(),
+                    activities));
           } catch (final NoSuchPlanException ex) {
-            // If a plan was removed between getting its record and getting its activities, then the plan
+            // If a plan was removed between getting its record and getting its activities, then the
+            // plan
             // no longer exists, so it's okay to swallow the exception and continue
-            System.err.println("Plan was removed while retrieving all plans. Continuing without removed plan.");
+            System.err.println(
+                "Plan was removed while retrieving all plans. Continuing without removed plan.");
           }
         }
 
@@ -93,8 +95,7 @@ public final class PostgresPlanRepository implements PlanRepository {
           activities,
           arguments,
           simStartTime,
-          simEndTime
-      );
+          simEndTime);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);
     }
@@ -111,15 +112,14 @@ public final class PostgresPlanRepository implements PlanRepository {
           Long.toString(planRecord.missionModelId()),
           planRecord.startTime(),
           planRecord.endTime(),
-          activities
-      );
+          activities);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);
     }
   }
 
-
-  private SimulationRecord getSimRecord(final Connection connection, final long planId) throws SQLException {
+  private SimulationRecord getSimRecord(final Connection connection, final long planId)
+      throws SQLException {
     try (final var getSimulationAction = new GetSimulationAction(connection)) {
       return getSimulationAction.get(planId);
     } catch (SQLException ex) {
@@ -127,7 +127,8 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  private Optional<SimulationTemplateRecord> getTemplate(final Connection connection, final long templateID) {
+  private Optional<SimulationTemplateRecord> getTemplate(
+      final Connection connection, final long templateID) {
     try (final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)) {
       return getSimulationTemplateAction.get(templateID);
     } catch (SQLException ex) {
@@ -135,8 +136,9 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  private Map<String, SerializedValue> getSimulationArguments(final SimulationRecord simulationRecord, final Optional<SimulationTemplateRecord> templateRecord)
-  {
+  private Map<String, SerializedValue> getSimulationArguments(
+      final SimulationRecord simulationRecord,
+      final Optional<SimulationTemplateRecord> templateRecord) {
     final var arguments = new HashMap<String, SerializedValue>();
     final var templateId$ = simulationRecord.simulationTemplateId();
 
@@ -165,7 +167,8 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public PostgresPlanRevisionData getPlanRevisionData(final PlanId planId) throws NoSuchPlanException {
+  public PostgresPlanRevisionData getPlanRevisionData(final PlanId planId)
+      throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanRevisionDataAction = new GetPlanRevisionDataAction(connection)) {
         return getPlanRevisionDataAction
@@ -178,20 +181,18 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId)
+      throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {
         return getPlanConstraintsAction
             .get(planId.id())
             .orElseThrow(() -> new NoSuchPlanException(planId))
             .stream()
-            .collect(Collectors.toMap(
-                ConstraintRecord::name,
-                r -> new Constraint(
-                    r.name(),
-                    r.summary(),
-                    r.description(),
-                    r.definition())));
+            .collect(
+                Collectors.toMap(
+                    ConstraintRecord::name,
+                    r -> new Constraint(r.name(), r.summary(), r.description(), r.definition())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
@@ -201,18 +202,12 @@ public final class PostgresPlanRepository implements PlanRepository {
 
   @Override
   public long addExternalDataset(
-      final PlanId planId,
-      final Timestamp datasetStart,
-      final ProfileSet profileSet
-  ) throws NoSuchPlanException {
+      final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
+      throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
       final var planDataset = createPlanDataset(connection, planId, plan.startTime(), datasetStart);
-      ProfileRepository.postResourceProfiles(
-          connection,
-          planDataset.datasetId(),
-          profileSet
-      );
+      ProfileRepository.postResourceProfiles(connection, planDataset.datasetId(), profileSet);
 
       return planDataset.datasetId();
     } catch (final SQLException ex) {
@@ -222,42 +217,39 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public void extendExternalDataset(
-      final DatasetId datasetId,
-      final ProfileSet profileSet
-  ) throws NoSuchPlanDatasetException {
+  public void extendExternalDataset(final DatasetId datasetId, final ProfileSet profileSet)
+      throws NoSuchPlanDatasetException {
     try (final var connection = this.dataSource.getConnection()) {
       if (!planDatasetExists(connection, datasetId)) {
         throw new NoSuchPlanDatasetException(datasetId);
       }
-      ProfileRepository.appendResourceProfiles(
-          connection,
-          datasetId.id(),
-          profileSet
-      );
+      ProfileRepository.appendResourceProfiles(connection, datasetId.id(), profileSet);
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to extend external dataset with id `%s`".formatted(datasetId), ex);
     }
   }
 
-  private static boolean planDatasetExists(final Connection connection, final DatasetId datasetId) throws SQLException {
+  private static boolean planDatasetExists(final Connection connection, final DatasetId datasetId)
+      throws SQLException {
     try (final var getPlanDatasetAction = new CheckPlanDatasetExistsAction(connection)) {
       return getPlanDatasetAction.get(datasetId);
     }
   }
 
   @Override
-  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId)
+      throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
-      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
+      final var planDatasets =
+          ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
       final var result = new ArrayList<Pair<Duration, ProfileSet>>();
-      for (final var planDataset: planDatasets) {
-        result.add(Pair.of(
-            planDataset.offsetFromPlanStart(),
-            ProfileRepository.getProfiles(connection, planDataset.datasetId())
-        ));
+      for (final var planDataset : planDatasets) {
+        result.add(
+            Pair.of(
+                planDataset.offsetFromPlanStart(),
+                ProfileRepository.getProfiles(connection, planDataset.datasetId())));
       }
       return result;
     } catch (final SQLException ex) {
@@ -267,52 +259,46 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId)
+      throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
-      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
+      final var planDatasets =
+          ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
       final var result = new HashMap<String, ValueSchema>();
-      for (final var planDataset: planDatasets) {
-        final var schemas = ProfileRepository.getProfileSchemas(connection, planDataset.datasetId());
+      for (final var planDataset : planDatasets) {
+        final var schemas =
+            ProfileRepository.getProfileSchemas(connection, planDataset.datasetId());
         result.putAll(schemas);
       }
       return result;
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to get external resource schemas for plan with id `%s`".formatted(planId), ex
-      );
+          "Failed to get external resource schemas for plan with id `%s`".formatted(planId), ex);
     }
   }
 
-  private PlanRecord getPlanRecord(
-      final Connection connection,
-      final PlanId planId
-  ) throws SQLException, NoSuchPlanException {
+  private PlanRecord getPlanRecord(final Connection connection, final PlanId planId)
+      throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction
-          .get(planId.id())
-          .orElseThrow(() -> new NoSuchPlanException(planId));
+      return getPlanAction.get(planId.id()).orElseThrow(() -> new NoSuchPlanException(planId));
     }
   }
 
   private Map<ActivityDirectiveId, ActivityDirective> getPlanActivities(
-      final Connection connection,
-      final PlanId planId
-  ) throws SQLException, NoSuchPlanException {
-    try (
-        final var getActivitiesAction = new GetActivityDirectivesAction(connection)
-    ) {
-      return getActivitiesAction
-          .get(planId.id())
-          .stream()
-          .collect(Collectors.toMap(
-              a -> new ActivityDirectiveId(a.id()),
-              a -> new ActivityDirective(
-                  Duration.of(a.startOffsetInMicros(), Duration.MICROSECONDS),
-                  a.type(),
-                  a.arguments(),
-                  a.anchorId()!=null? new ActivityDirectiveId(a.anchorId()): null,
-                  a.anchoredToStart())));
+      final Connection connection, final PlanId planId) throws SQLException, NoSuchPlanException {
+    try (final var getActivitiesAction = new GetActivityDirectivesAction(connection)) {
+      return getActivitiesAction.get(planId.id()).stream()
+          .collect(
+              Collectors.toMap(
+                  a -> new ActivityDirectiveId(a.id()),
+                  a ->
+                      new ActivityDirective(
+                          Duration.of(a.startOffsetInMicros(), Duration.MICROSECONDS),
+                          a.type(),
+                          a.arguments(),
+                          a.anchorId() != null ? new ActivityDirectiveId(a.anchorId()) : null,
+                          a.anchoredToStart())));
     }
   }
 
@@ -320,8 +306,8 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Connection connection,
       final PlanId planId,
       final Timestamp planStart,
-      final Timestamp datasetStart
-  ) throws SQLException {
+      final Timestamp datasetStart)
+      throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
       return createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
     }

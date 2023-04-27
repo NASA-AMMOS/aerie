@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-
 import java.util.Objects;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -15,14 +14,14 @@ public final class CounterCell<T> {
   private final BinaryOperator<T> adder;
   private T value;
 
-  public CounterCell(final T initialValue, final BinaryOperator<T> adder, final UnaryOperator<T> duplicator) {
+  public CounterCell(
+      final T initialValue, final BinaryOperator<T> adder, final UnaryOperator<T> duplicator) {
     this.duplicator = Objects.requireNonNull(duplicator);
     this.adder = Objects.requireNonNull(adder);
     this.value = Objects.requireNonNull(initialValue);
   }
 
-  public static <Event, T> CellRef<Event, CounterCell<T>>
-  allocate(
+  public static <Event, T> CellRef<Event, CounterCell<T>> allocate(
       final T initialValue,
       final T zero,
       final BinaryOperator<T> adder,

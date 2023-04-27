@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -56,7 +55,8 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   }
 
   /** Use {@link EventGraph#sequentially(EventGraph[])}} instead of instantiating this class directly. */
-  record Sequentially<Event>(EventGraph<Event> prefix, EventGraph<Event> suffix) implements EventGraph<Event> {
+  record Sequentially<Event>(EventGraph<Event> prefix, EventGraph<Event> suffix)
+      implements EventGraph<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
@@ -64,26 +64,26 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   }
 
   /** Use {@link EventGraph#concurrently(EventGraph[])}} instead of instantiating this class directly. */
-  record Concurrently<Event>(EventGraph<Event> left, EventGraph<Event> right) implements EventGraph<Event> {
+  record Concurrently<Event>(EventGraph<Event> left, EventGraph<Event> right)
+      implements EventGraph<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
     }
   }
 
-  default <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
+  default <Effect> Effect evaluate(
+      final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
     if (this instanceof EventGraph.Empty) {
       return trait.empty();
     } else if (this instanceof EventGraph.Atom<Event> g) {
       return substitution.apply(g.atom());
     } else if (this instanceof EventGraph.Sequentially<Event> g) {
       return trait.sequentially(
-          g.prefix().evaluate(trait, substitution),
-          g.suffix().evaluate(trait, substitution));
+          g.prefix().evaluate(trait, substitution), g.suffix().evaluate(trait, substitution));
     } else if (this instanceof EventGraph.Concurrently<Event> g) {
       return trait.concurrently(
-          g.left().evaluate(trait, substitution),
-          g.right().evaluate(trait, substitution));
+          g.left().evaluate(trait, substitution), g.right().evaluate(trait, substitution));
     } else {
       throw new IllegalArgumentException();
     }
@@ -119,7 +119,8 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a sequence of subgraphs.
    */
-  static <Event> EventGraph<Event> sequentially(final EventGraph<Event> prefix, final EventGraph<Event> suffix) {
+  static <Event> EventGraph<Event> sequentially(
+      final EventGraph<Event> prefix, final EventGraph<Event> suffix) {
     if (prefix instanceof Empty) return suffix;
     if (suffix instanceof Empty) return prefix;
 
@@ -134,7 +135,8 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a set of concurrent subgraphs.
    */
-  static <Event> EventGraph<Event> concurrently(final EventGraph<Event> left, final EventGraph<Event> right) {
+  static <Event> EventGraph<Event> concurrently(
+      final EventGraph<Event> left, final EventGraph<Event> right) {
     if (left instanceof Empty) return right;
     if (right instanceof Empty) return left;
 

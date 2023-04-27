@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 
 public class UnsatisfiableGoalConflict extends Conflict {
 
-  final private String reason;
+  private final String reason;
 
   /**
    * ctor creates a new conflict

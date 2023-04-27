@@ -25,8 +25,7 @@ public @interface Export {
   // A parameter to export through the mission-agnostic interface
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.FIELD)
-  @interface Parameter {
-  }
+  @interface Parameter {}
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)

@@ -21,28 +21,20 @@ public final class MissionModelJar {
 
   @Override
   public boolean equals(final Object object) {
-      if (object.getClass() != MissionModelJar.class) {
-          return false;
-      }
+    if (object.getClass() != MissionModelJar.class) {
+      return false;
+    }
 
-      final MissionModelJar other = (MissionModelJar)object;
-      return
-              (  Objects.equals(this.name, other.name)
-              && Objects.equals(this.version, other.version)
-              && Objects.equals(this.mission, other.mission)
-              && Objects.equals(this.owner, other.owner)
-              && Objects.equals(this.path, other.path)
-              );
+    final MissionModelJar other = (MissionModelJar) object;
+    return (Objects.equals(this.name, other.name)
+        && Objects.equals(this.version, other.version)
+        && Objects.equals(this.mission, other.mission)
+        && Objects.equals(this.owner, other.owner)
+        && Objects.equals(this.path, other.path));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        name,
-        version,
-        mission,
-        owner,
-        path
-    );
+    return Objects.hash(name, version, mission, owner, path);
   }
 }

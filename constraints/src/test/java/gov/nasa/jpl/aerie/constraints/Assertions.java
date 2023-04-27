@@ -1,18 +1,15 @@
 package gov.nasa.jpl.aerie.constraints;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class Assertions {
   private Assertions() {}
@@ -27,7 +24,8 @@ public final class Assertions {
     assertTrue(areEquivalent(expected.profilePieces, actual.profilePieces));
   }
 
-  public static void assertEquivalent(final DiscreteProfile expected, final DiscreteProfile actual) {
+  public static void assertEquivalent(
+      final DiscreteProfile expected, final DiscreteProfile actual) {
     assertEquals(expected, actual);
 
     assertTrue(areEquivalent(expected.profilePieces, actual.profilePieces));

@@ -10,10 +10,8 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
  */
 public interface GlobalConstraint {
 
-  //todo: probably needs a domain
+  // todo: probably needs a domain
 
-  //is the constraint enforced on its domain
+  // is the constraint enforced on its domain
   ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults);
-
-
 }

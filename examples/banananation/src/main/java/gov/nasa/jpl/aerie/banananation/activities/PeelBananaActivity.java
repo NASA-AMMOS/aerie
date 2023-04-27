@@ -24,8 +24,7 @@ public final class PeelBananaActivity {
     fromTip,
   }
 
-  @Parameter
-  public PeelDirectionEnum peelDirection = PeelDirectionEnum.fromStem;
+  @Parameter public PeelDirectionEnum peelDirection = PeelDirectionEnum.fromStem;
 
   @EffectModel
   public void run(final Mission mission) {

@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
-
 import java.util.Objects;
 
 public interface RealResource extends Resource<RealDynamics> {
@@ -27,7 +26,6 @@ public interface RealResource extends Resource<RealDynamics> {
     return () -> left.getDynamics().minus(right.getDynamics());
   }
 
-
   default RealResource plus(final RealResource other) {
     return RealResource.add(this, other);
   }
@@ -39,7 +37,6 @@ public interface RealResource extends Resource<RealDynamics> {
   default RealResource scaledBy(final double scalar) {
     return RealResource.scaleBy(scalar, this);
   }
-
 
   default double get() {
     return this.getDynamics().initial;

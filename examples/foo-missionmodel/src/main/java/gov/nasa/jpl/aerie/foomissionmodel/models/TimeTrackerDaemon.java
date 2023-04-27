@@ -13,16 +13,15 @@ public class TimeTrackerDaemon {
     return minutesElapsed;
   }
 
-  public TimeTrackerDaemon(){
+  public TimeTrackerDaemon() {
     minutesElapsed = 0;
   }
 
-  public void run(){
+  public void run() {
     minutesElapsed = 0;
-    while(true) {
+    while (true) {
       ModelActions.delay(Duration.MINUTE);
       minutesElapsed++;
     }
   }
-
 }

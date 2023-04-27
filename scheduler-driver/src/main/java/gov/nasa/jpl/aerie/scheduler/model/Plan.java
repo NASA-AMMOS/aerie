@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +87,9 @@ public interface Plan {
    * @return collection of instances that match the given template
    */
   Collection<SchedulingActivityDirective> find(
-      ActivityExpression template, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
+      ActivityExpression template,
+      SimulationResults simulationResults,
+      EvaluationEnvironment evaluationEnvironment);
   /**
    * adds a new evaluation to the plan
    *
@@ -105,5 +106,4 @@ public interface Plan {
    * @return evaluation posted to the plan
    */
   Evaluation getEvaluation();
-
 }

@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 
 /**
  * Model for a three-dimensional vector.
@@ -45,13 +45,14 @@ public final class Pointing {
     addRate(previousRate.negate()); // Negate the previous rate to bring rate to <0, 0, 0>
 
     // rate = (v2 - v1) / duration
-    final var desiredRate = target.subtract(getVector()).scalarMultiply(1/duration.ratioOver(Duration.SECOND));
+    final var desiredRate =
+        target.subtract(getVector()).scalarMultiply(1 / duration.ratioOver(Duration.SECOND));
     addRate(desiredRate);
     delay(duration);
 
     // Reset the rate post-slew
     addRate(desiredRate.negate()); // Negate the slew rate to bring rate back to <0, 0, 0>
-    addRate(previousRate);         // Reset rate to previous rate
+    addRate(previousRate); // Reset rate to previous rate
   }
 
   public static final class Component implements RealResource {

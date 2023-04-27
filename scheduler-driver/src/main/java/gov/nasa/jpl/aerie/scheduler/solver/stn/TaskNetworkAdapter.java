@@ -11,14 +11,14 @@ public class TaskNetworkAdapter {
 
   private final TaskNetwork tw;
 
-  public TaskNetworkAdapter(TaskNetwork tw){
+  public TaskNetworkAdapter(TaskNetwork tw) {
     this.tw = tw;
   }
 
   public record TNActData(Interval start, Interval end, Interval duration) {}
 
-  public void addDurationInterval(String nameAct, Duration lb, Duration ub){
-    tw.addDurationInterval(nameAct,toDouble(lb), toDouble(ub));
+  public void addDurationInterval(String nameAct, Duration lb, Duration ub) {
+    tw.addDurationInterval(nameAct, toDouble(lb), toDouble(ub));
   }
 
   public Interval getStartInterval(String actName) {
@@ -26,90 +26,89 @@ public class TaskNetworkAdapter {
     return toWin(st.getLeft(), st.getRight());
   }
 
-  public TNActData getAllData(String nameAct){
+  public TNActData getAllData(String nameAct) {
     var data = tw.getAllData(nameAct);
     return new TNActData(toWin(data.start()), toWin(data.end()), toWin(data.duration()));
   }
 
-  public Interval getEndInterval(String actName){
+  public Interval getEndInterval(String actName) {
     return toWin(tw.getEndInterval(actName));
   }
 
-  public Interval getDurationInterval(String actName){
+  public Interval getDurationInterval(String actName) {
     return toWin(tw.getDurationInterval(actName));
   }
 
   /**
    * Adds an enveloppe at absolute times t1, t2 for activity nameAct
    */
-  public void addEnveloppe(String nameAct, String envName, Duration t1, Duration t2){
-    tw.addEnveloppe(nameAct,envName,toDouble(t1),toDouble(t2));
+  public void addEnveloppe(String nameAct, String envName, Duration t1, Duration t2) {
+    tw.addEnveloppe(nameAct, envName, toDouble(t1), toDouble(t2));
   }
 
-  public void addStartInterval(String actName, Duration t1, Duration t2){
-    tw.addStartInterval(actName,toDouble(t1),toDouble(t2));
+  public void addStartInterval(String actName, Duration t1, Duration t2) {
+    tw.addStartInterval(actName, toDouble(t1), toDouble(t2));
   }
 
   /**
    * Adds an absolute time interval for activity
    */
-  public void addEndInterval(String actName, Duration lb, Duration ub){
-   tw.addEndInterval(actName,toDouble(lb),toDouble(ub));
+  public void addEndInterval(String actName, Duration lb, Duration ub) {
+    tw.addEndInterval(actName, toDouble(lb), toDouble(ub));
   }
 
-  public void startsAfterEnd(String actBefore, String actAfter){
-    tw.startsAfterEnd(actBefore,actAfter);
+  public void startsAfterEnd(String actBefore, String actAfter) {
+    tw.startsAfterEnd(actBefore, actAfter);
   }
 
-  public void addAct(String name){
+  public void addAct(String name) {
     tw.addAct(name);
   }
 
-  public void print(){
+  public void print() {
     tw.print();
   }
 
-  public boolean solveConstraints(){
+  public boolean solveConstraints() {
     return tw.propagate();
   }
 
-  private Duration toDur(double d){
+  private Duration toDur(double d) {
     return Duration.of(Math.round(d), Duration.MICROSECOND);
   }
 
-  private double toDouble(Duration dur){
+  private double toDouble(Duration dur) {
     return (double) dur.in(Duration.MICROSECOND);
   }
 
-  private Interval toWin(double d1, double d2){
+  private Interval toWin(double d1, double d2) {
     return Interval.between(toDur(d1), toDur(d2));
   }
 
-  private Interval toWin(Pair<Double, Double> pair){
+  private Interval toWin(Pair<Double, Double> pair) {
     return toWin(pair.getLeft(), pair.getRight());
   }
 
-  public static TNActData solve(Interval start, Interval end, Interval dur, Interval enveloppe){
+  public static TNActData solve(Interval start, Interval end, Interval dur, Interval enveloppe) {
     TaskNetwork tw = new TaskNetwork();
     String actName = "ACT";
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
-    if(start!=null){
+    if (start != null) {
       tnw.addStartInterval(actName, start.start, start.end);
     }
-    if(end!=null){
+    if (end != null) {
       tnw.addStartInterval(actName, end.start, end.end);
     }
-    if(dur!=null){
+    if (dur != null) {
       tnw.addDurationInterval(actName, dur.start, dur.end);
     }
-    if(enveloppe!=null){
+    if (enveloppe != null) {
       tnw.addEnveloppe(actName, "ENV", enveloppe.start, enveloppe.end);
     }
-    if(tnw.solveConstraints()){
+    if (tnw.solveConstraints()) {
       return tnw.getAllData(actName);
-    } else{
+    } else {
       return null;
     }
   }
-
 }

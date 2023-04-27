@@ -2,11 +2,10 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class EventGraphFlattener {
   private EventGraphFlattener() {}
@@ -14,8 +13,9 @@ public final class EventGraphFlattener {
   public static <T> List<Pair<String, T>> flatten(final EventGraph<T> graph) {
     final var accumulator = new ArrayList<Pair<String, T>>();
 
-    graph.evaluate(new TagLogger.Trait<>(), TagLogger.Atom::new)
-         .accept(Tag.origin(), (tag, event) -> accumulator.add(Pair.of(tag.serialize(), event)));
+    graph
+        .evaluate(new TagLogger.Trait<>(), TagLogger.Atom::new)
+        .accept(Tag.origin(), (tag, event) -> accumulator.add(Pair.of(tag.serialize(), event)));
 
     return accumulator;
   }

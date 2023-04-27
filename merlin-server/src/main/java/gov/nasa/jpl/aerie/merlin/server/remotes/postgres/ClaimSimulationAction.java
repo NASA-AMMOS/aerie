@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.intellij.lang.annotations.Language;
 
 /*package local*/ public class ClaimSimulationAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     update simulation_dataset
       set
         status = 'incomplete'
@@ -28,7 +28,9 @@ import java.sql.SQLException;
       throw new UnclaimableSimulationException(datasetId);
     } else if (count > 1) {
       throw new SQLException(
-          String.format("Claiming a simulation for dataset id %s returned more than one result row.", datasetId));
+          String.format(
+              "Claiming a simulation for dataset id %s returned more than one result row.",
+              datasetId));
     }
   }
 

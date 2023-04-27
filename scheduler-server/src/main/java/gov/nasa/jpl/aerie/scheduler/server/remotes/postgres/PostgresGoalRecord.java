@@ -6,5 +6,4 @@ public record PostgresGoalRecord(
     String name,
     String definition,
     boolean enabled,
-    boolean simulateAfter
-) {}
+    boolean simulateAfter) {}

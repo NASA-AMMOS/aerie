@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-
 import java.util.Objects;
 
 public final class RegisterEffect<T> {
@@ -35,7 +34,6 @@ public final class RegisterEffect<T> {
     return (this.newValue != null) ? "set(%s)".formatted(this.newValue) : "noop()";
   }
 
-
   public static final class Trait<T> implements EffectTrait<RegisterEffect<T>> {
     @Override
     public RegisterEffect<T> empty() {
@@ -43,9 +41,11 @@ public final class RegisterEffect<T> {
     }
 
     @Override
-    public RegisterEffect<T> sequentially(final RegisterEffect<T> prefix, final RegisterEffect<T> suffix) {
+    public RegisterEffect<T> sequentially(
+        final RegisterEffect<T> prefix, final RegisterEffect<T> suffix) {
       if (suffix.newValue != null) {
-        // The suffix is a set (with or without a subsequent conflict); it strictly dominates the prefix.
+        // The suffix is a set (with or without a subsequent conflict); it strictly dominates the
+        // prefix.
         return suffix;
       } else if (!suffix.conflicted) {
         // The suffix is a no-op; take the prefix.
@@ -54,13 +54,15 @@ public final class RegisterEffect<T> {
         // The suffix is a pure conflict, and the prefix performed a valid write.
         return new RegisterEffect<>(prefix.newValue, suffix.conflicted);
       } else {
-        // The suffix is a pure conflict, and the prefix performs no write, so the suffix dominates the prefix.
+        // The suffix is a pure conflict, and the prefix performs no write, so the suffix dominates
+        // the prefix.
         return suffix;
       }
     }
 
     @Override
-    public RegisterEffect<T> concurrently(final RegisterEffect<T> left, final RegisterEffect<T> right) {
+    public RegisterEffect<T> concurrently(
+        final RegisterEffect<T> left, final RegisterEffect<T> right) {
       /*
        left.hasValue | left.isConflicted | right.hasValue | right.isConflicted || ( left | right )
       ---------------+-------------------+----------------+--------------------++--------------------

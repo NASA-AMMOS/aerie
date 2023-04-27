@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.json;
 
+import java.util.Objects;
+import java.util.function.Function;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * An interface for two-way conversion between JSON documents and domain objects.
@@ -94,8 +94,7 @@ public interface JsonParser<T> {
    *   a JSON Schema document describing the format of JSON documents supported by this parser.
    */
   default JsonObject getSchema() {
-    return Json
-        .createObjectBuilder()
+    return Json.createObjectBuilder()
         .add("$schema", Json.createValue("https://json-schema.org/draft/2020-12/schema"))
         .addAll(Json.createObjectBuilder(this.getSchema(new SchemaCache())))
         .build();

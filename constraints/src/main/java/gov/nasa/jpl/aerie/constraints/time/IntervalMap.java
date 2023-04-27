@@ -1,8 +1,9 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.function.TriFunction;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,9 +14,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+import org.apache.commons.lang3.function.TriFunction;
 
 /**
  * A generic container that maps non-overlapping intervals on the timeline to values.
@@ -33,7 +32,8 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive
  */
 public final class IntervalMap<V> implements Iterable<Segment<V>> {
   // INVARIANT: `segments` is list of non-empty, non-overlapping segments in ascending order.
-  // INVARIANT: If two adjacent segments abut exactly (e.g. [0, 3), [3, 5]), their values are non-equal.
+  // INVARIANT: If two adjacent segments abut exactly (e.g. [0, 3), [3, 5]), their values are
+  // non-equal.
   private final List<Segment<V>> segments;
 
   // PRECONDITION: The list of `segments` meets the invariants of the class.
@@ -87,9 +87,8 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
   /** Creates an IntervalMap that is equal to a single value for all representable time */
   public static <V> IntervalMap<V> of(final V value) {
-   return IntervalMap.of(List.of(Segment.of(Interval.FOREVER, value)));
+    return IntervalMap.of(List.of(Segment.of(Interval.FOREVER, value)));
   }
-
 
   /**
    * Sets an interval to a value
@@ -115,10 +114,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
    * @return a new IntervalMap
    */
   public IntervalMap<V> set(final IntervalMap<V> other) {
-    return IntervalMap.map2(
-        this, other,
-        (a, b) -> (b.isPresent()) ? b : a
-    );
+    return IntervalMap.map2(this, other, (a, b) -> (b.isPresent()) ? b : a);
   }
 
   /**
@@ -140,7 +136,10 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
    * @return a new IntervalMap
    */
   public IntervalMap<V> unset(final List<Interval> intervals) {
-    return map2(this, IntervalMap.of(intervals, new Object()), (l, r) -> r.isEmpty() ? l : Optional.empty());
+    return map2(
+        this,
+        IntervalMap.of(intervals, new Object()),
+        (l, r) -> r.isEmpty() ? l : Optional.empty());
   }
 
   /**
@@ -158,9 +157,9 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
    */
   public IntervalMap<V> select(final List<Interval> intervals) {
     return IntervalMap.map2(
-        this, IntervalMap.of(intervals, new Object()),
-        (l, r) -> r.isPresent() ? l : Optional.empty()
-    );
+        this,
+        IntervalMap.of(intervals, new Object()),
+        (l, r) -> r.isPresent() ? l : Optional.empty());
   }
 
   /**
@@ -218,7 +217,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   public <R> IntervalMap<R> flatMap(final BiFunction<V, Interval, Stream<Segment<R>>> transform) {
     final var unflattened = this.map(transform);
     final var result = IntervalMap.<R>builder();
-    for (final var segment: unflattened) {
+    for (final var segment : unflattened) {
       segment.value().forEach(result::set);
     }
     return result.build();
@@ -236,12 +235,10 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
    * @param <R> value type of the result
    * @return a new IntervalMap, the result of applying the transform
    */
-  public static <V1, V2, R>
-  IntervalMap<R> map2(
+  public static <V1, V2, R> IntervalMap<R> map2(
       final IntervalMap<V1> left,
       final IntervalMap<V2> right,
-      final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
-  ) {
+      final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform) {
     return map2(left, right, (interval, l, r) -> transform.apply(l, r));
   }
 
@@ -257,12 +254,10 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
    * @param <R> value type of the result
    * @return a new IntervalMap, the result of applying the transform
    */
-  public static <V1, V2, R>
-  IntervalMap<R> map2(
+  public static <V1, V2, R> IntervalMap<R> map2(
       final IntervalMap<V1> left,
       final IntervalMap<V2> right,
-      final TriFunction<Interval, Optional<V1>, Optional<V2>, Optional<R>> transform
-  ) {
+      final TriFunction<Interval, Optional<V1>, Optional<V2>, Optional<R>> transform) {
     final var result = new ArrayList<Segment<R>>();
 
     var startTime = Duration.MIN_VALUE;
@@ -285,16 +280,22 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     while (startTime.shorterThan(Duration.MAX_VALUE) || startInclusivity == Inclusive) {
       if (leftIndex < left.size()) {
         var leftNextDefinedSegment = left.get(leftIndex);
-        if (leftNextDefinedSegment.interval().start.shorterThan(startTime) || (leftNextDefinedSegment.interval().start.isEqualTo(startTime) && !leftNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
+        if (leftNextDefinedSegment.interval().start.shorterThan(startTime)
+            || (leftNextDefinedSegment.interval().start.isEqualTo(startTime)
+                && !leftNextDefinedSegment
+                    .interval()
+                    .startInclusivity
+                    .moreRestrictiveThan(startInclusivity))) {
           leftInterval = leftNextDefinedSegment.interval();
           leftValue = Optional.of(leftNextDefinedSegment.value());
           nextLeftIndex = leftIndex + 1;
         } else {
-          leftInterval = Interval.between(
-              Duration.MIN_VALUE,
-              Inclusive,
-              leftNextDefinedSegment.interval().start,
-              leftNextDefinedSegment.interval().startInclusivity.opposite());
+          leftInterval =
+              Interval.between(
+                  Duration.MIN_VALUE,
+                  Inclusive,
+                  leftNextDefinedSegment.interval().start,
+                  leftNextDefinedSegment.interval().startInclusivity.opposite());
           leftValue = Optional.empty();
         }
       } else {
@@ -304,16 +305,22 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
       if (rightIndex < right.size()) {
         var rightNextDefinedSegment = right.get(rightIndex);
-        if (rightNextDefinedSegment.interval().start.shorterThan(startTime) || (rightNextDefinedSegment.interval().start.isEqualTo(startTime) && !rightNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
+        if (rightNextDefinedSegment.interval().start.shorterThan(startTime)
+            || (rightNextDefinedSegment.interval().start.isEqualTo(startTime)
+                && !rightNextDefinedSegment
+                    .interval()
+                    .startInclusivity
+                    .moreRestrictiveThan(startInclusivity))) {
           rightInterval = rightNextDefinedSegment.interval();
           rightValue = Optional.of(rightNextDefinedSegment.value());
           nextRightIndex = rightIndex + 1;
         } else {
-          rightInterval = Interval.between(
-              Duration.MIN_VALUE,
-              Inclusive,
-              rightNextDefinedSegment.interval().start,
-              rightNextDefinedSegment.interval().startInclusivity.opposite());
+          rightInterval =
+              Interval.between(
+                  Duration.MIN_VALUE,
+                  Inclusive,
+                  rightNextDefinedSegment.interval().start,
+                  rightNextDefinedSegment.interval().startInclusivity.opposite());
           rightValue = Optional.empty();
         }
       } else {
@@ -355,12 +362,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
           result.add(Segment.of(finalInterval, newValue.get()));
         } else {
           var previousInterval = result.remove(result.size() - 1).interval();
-          result.add(
-              Segment.of(
-                  Interval.unify(previousInterval, finalInterval),
-                  newValue.get()
-              )
-          );
+          result.add(Segment.of(Interval.unify(previousInterval, finalInterval), newValue.get()));
         }
       }
       previousValue = newValue;
@@ -376,15 +378,13 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
    * A similar operation to {@link IntervalMap#map2}, except it allows producing any number of segments
    * per overlapping interval. Each segment is then flattened into a new IntervalMap.
    */
-  public static <V1, V2, R>
-  IntervalMap<R> flatMap2(
+  public static <V1, V2, R> IntervalMap<R> flatMap2(
       final IntervalMap<V1> left,
       final IntervalMap<V2> right,
-      final BiFunction<Optional<V1>, Optional<V2>, Stream<Segment<R>>> transform
-  ) {
-    final var unflattened = map2(left, right, (l, r) -> Optional.of(transform.apply(l,r)));
+      final BiFunction<Optional<V1>, Optional<V2>, Stream<Segment<R>>> transform) {
+    final var unflattened = map2(left, right, (l, r) -> Optional.of(transform.apply(l, r)));
     final var result = IntervalMap.<R>builder();
-    for (final var segment: unflattened) {
+    for (final var segment : unflattened) {
       segment.value().forEach(result::set);
     }
     return result.build();
@@ -413,11 +413,11 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
   /** Creates an iterable over the Intervals where this map is equal to a value */
   public Iterable<Interval> iterateEqualTo(final V value) {
-    return () -> this.segments
-        .stream()
-        .filter($ -> $.value().equals(value))
-        .map(Segment::interval)
-        .iterator();
+    return () ->
+        this.segments.stream()
+            .filter($ -> $.value().equals(value))
+            .map(Segment::interval)
+            .iterator();
   }
 
   public Stream<Segment<V>> stream() {
@@ -435,11 +435,11 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return this.segments.toString();
   }
 
-
   /** A builder for IntervalMap */
   public static final class Builder<V> {
     // INVARIANT: `segments` is list of non-empty, non-overlapping segments in ascending order.
-    // INVARIANT: If two adjacent segments abut exactly (e.g. [0, 3), [3, 5]), their values are non-equal.
+    // INVARIANT: If two adjacent segments abut exactly (e.g. [0, 3), [3, 5]), their values are
+    // non-equal.
     private List<Segment<V>> segments;
     private boolean built = false;
 
@@ -452,7 +452,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     }
 
     public Builder<V> set(final IntervalMap<V> map) {
-      for (final var segment: map) {
+      for (final var segment : map) {
         set(segment);
       }
       return this;
@@ -470,40 +470,51 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       // <> is `interval`, the interval to apply; [] is the currently-indexed interval in the map.
       // Cases: --[---]---<--->--
       int index = 0;
-      while (index < this.segments.size() && IntervalAlgebra.endsStrictlyBefore(this.getInterval(index), interval)) {
+      while (index < this.segments.size()
+          && IntervalAlgebra.endsStrictlyBefore(this.getInterval(index), interval)) {
         index += 1;
       }
 
       // Cases: --[---<---]--->-- and --[---<--->---]--
-      if (index < this.segments.size() && IntervalAlgebra.startsBefore(this.getInterval(index), interval)) {
+      if (index < this.segments.size()
+          && IntervalAlgebra.startsBefore(this.getInterval(index), interval)) {
         // If the intervals agree on their value, we can unify the old interval with the new one.
         // Otherwise, we'll snip the old one.
         if (Objects.equals(this.getValue(index), value)) {
           interval = IntervalAlgebra.unify(this.segments.remove(index).interval(), interval);
         } else {
-          final var prefix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.strictLowerBoundsOf(interval));
-          final var suffix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.strictUpperBoundsOf(interval));
+          final var prefix =
+              IntervalAlgebra.intersect(
+                  this.getInterval(index), IntervalAlgebra.strictLowerBoundsOf(interval));
+          final var suffix =
+              IntervalAlgebra.intersect(
+                  this.getInterval(index), IntervalAlgebra.strictUpperBoundsOf(interval));
 
           this.segments.set(index, Segment.of(prefix, this.getValue(index)));
-          if (!IntervalAlgebra.isEmpty(suffix)) this.segments.add(index + 1, Segment.of(suffix, this.getValue(index)));
+          if (!IntervalAlgebra.isEmpty(suffix))
+            this.segments.add(index + 1, Segment.of(suffix, this.getValue(index)));
 
           index += 1;
         }
       }
 
       // Cases: --<---[---]--->--
-      while (index < this.segments.size() && !IntervalAlgebra.endsAfter(this.getInterval(index), interval)) {
+      while (index < this.segments.size()
+          && !IntervalAlgebra.endsAfter(this.getInterval(index), interval)) {
         this.segments.remove(index);
       }
 
       // Cases: --<---[--->---]--
-      if (index < this.segments.size() && !IntervalAlgebra.startsStrictlyAfter(this.getInterval(index), interval)) {
+      if (index < this.segments.size()
+          && !IntervalAlgebra.startsStrictlyAfter(this.getInterval(index), interval)) {
         // If the intervals agree on their value, we can unify the old interval with the new one.
         // Otherwise, we'll snip the old one.
         if (Objects.equals(this.getValue(index), value)) {
           interval = IntervalAlgebra.unify(this.segments.remove(index).interval(), interval);
         } else {
-          final var suffix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.strictUpperBoundsOf(interval));
+          final var suffix =
+              IntervalAlgebra.intersect(
+                  this.getInterval(index), IntervalAlgebra.strictUpperBoundsOf(interval));
 
           this.segments.set(index, Segment.of(suffix, this.getValue(index)));
         }
@@ -533,7 +544,12 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
           if (IntervalAlgebra.contains(interval, existingInterval)) {
             i--;
           } else {
-            final var newInterval = Interval.between(interval.end, interval.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity);
+            final var newInterval =
+                Interval.between(
+                    interval.end,
+                    interval.endInclusivity.opposite(),
+                    existingInterval.end,
+                    existingInterval.endInclusivity);
             if (!newInterval.isEmpty()) {
               this.segments.add(i, Segment.of(newInterval, segment.value()));
             } else {
@@ -542,16 +558,26 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
           }
         } else {
           final var segment = this.segments.remove(i);
-          final var leftInterval = Interval.between(existingInterval.start, existingInterval.startInclusivity, interval.start, interval.startInclusivity.opposite());
+          final var leftInterval =
+              Interval.between(
+                  existingInterval.start,
+                  existingInterval.startInclusivity,
+                  interval.start,
+                  interval.startInclusivity.opposite());
           if (!leftInterval.isEmpty()) {
             this.segments.add(i, Segment.of(leftInterval, segment.value()));
           } else {
             i--;
           }
           if (IntervalAlgebra.endsAfter(existingInterval, interval)) {
-            final var rightInterval = Interval.between(interval.end, interval.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity);
+            final var rightInterval =
+                Interval.between(
+                    interval.end,
+                    interval.endInclusivity.opposite(),
+                    existingInterval.end,
+                    existingInterval.endInclusivity);
             if (!rightInterval.isEmpty()) {
-              this.segments.add(i+1, Segment.of(rightInterval, segment.value()));
+              this.segments.add(i + 1, Segment.of(rightInterval, segment.value()));
             } else {
               i--;
             }

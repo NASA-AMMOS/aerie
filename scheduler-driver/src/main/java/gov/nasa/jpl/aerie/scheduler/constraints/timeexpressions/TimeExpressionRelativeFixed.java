@@ -17,7 +17,8 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
   }
 
   @Override
-  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+  public Interval computeTime(
+      final SimulationResults simulationResults, final Plan plan, final Interval interval) {
     Duration from = null;
     if (anchor == TimeAnchor.START) {
       from = interval.start;
@@ -32,7 +33,7 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
 
     Interval retRange;
 
-    //if we want an range of possibles
+    // if we want an range of possibles
     if (!fixed) {
       if (res.compareTo(from) > 0) {
         retRange = Interval.between(from, res);

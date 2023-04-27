@@ -2,9 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.function.Consumer;
 
 public final class ResultsProtocol {

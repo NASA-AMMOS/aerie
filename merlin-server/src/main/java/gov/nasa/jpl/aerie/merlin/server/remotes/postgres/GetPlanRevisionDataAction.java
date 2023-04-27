@@ -1,14 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetPlanRevisionDataAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       select
           m.revision as model_revision,
           p.revision as plan_revision,
@@ -40,15 +40,11 @@ import java.util.Optional;
     final var planRevision = results.getLong(2);
     final var simulationRevision = results.getLong(3);
     final var templateRevision$ =
-        results.getObject(4) == null ?
-            Optional.<Long>empty() :
-            Optional.of(results.getLong(4));
+        results.getObject(4) == null ? Optional.<Long>empty() : Optional.of(results.getLong(4));
 
-    return Optional.of(new PostgresPlanRevisionData(
-        modelRevision,
-        planRevision,
-        simulationRevision,
-        templateRevision$));
+    return Optional.of(
+        new PostgresPlanRevisionData(
+            modelRevision, planRevision, simulationRevision, templateRevision$));
   }
 
   @Override

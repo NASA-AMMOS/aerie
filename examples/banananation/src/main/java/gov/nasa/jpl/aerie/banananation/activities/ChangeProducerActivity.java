@@ -10,8 +10,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
  */
 @ActivityType("ChangeProducer")
 public final class ChangeProducerActivity {
-  @Parameter
-  public String producer = "Dole";
+  @Parameter public String producer = "Dole";
 
   @EffectModel
   public void run(final Mission mission) {

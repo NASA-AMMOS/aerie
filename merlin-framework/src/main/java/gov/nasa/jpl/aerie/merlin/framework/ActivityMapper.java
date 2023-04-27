@@ -5,13 +5,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-
 import java.util.stream.Collectors;
 
 public interface ActivityMapper<Model, Specification, Return>
-    extends DirectiveType<Model, Specification, Return>
-{
+    extends DirectiveType<Model, Specification, Return> {
   Topic<Specification> getInputTopic();
+
   Topic<Return> getOutputTopic();
 
   default OutputType<Specification> getInputAsOutput() {
@@ -20,10 +19,9 @@ public interface ActivityMapper<Model, Specification, Return>
     return new OutputType<>() {
       @Override
       public ValueSchema getSchema() {
-        return ValueSchema.ofStruct(inputType
-            .getParameters()
-            .stream()
-            .collect(Collectors.toMap($ -> $.name(), $ -> $.schema())));
+        return ValueSchema.ofStruct(
+            inputType.getParameters().stream()
+                .collect(Collectors.toMap($ -> $.name(), $ -> $.schema())));
       }
 
       @Override

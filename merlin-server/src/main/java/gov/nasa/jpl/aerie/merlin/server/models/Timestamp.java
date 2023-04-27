@@ -12,7 +12,8 @@ import java.time.temporal.ChronoUnit;
 
 public record Timestamp(ZonedDateTime time) {
   // This builder must be used to get optional subsecond values
-  // See: https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+  // See:
+  // https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
   public static final DateTimeFormatter format =
       new DateTimeFormatterBuilder()
           .appendPattern("uuuu-DDD'T'HH:mm:ss")

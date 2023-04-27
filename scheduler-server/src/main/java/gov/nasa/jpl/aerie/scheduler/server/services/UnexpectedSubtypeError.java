@@ -12,8 +12,8 @@ public class UnexpectedSubtypeError extends Error {
    * @param <E> the interface type that the errant object adhered to
    */
   public <E> UnexpectedSubtypeError(final Class<E> supertype, final E instance) {
-    super("Unexpected subtype %s of type %s".formatted(
-        instance.getClass().getCanonicalName(),
-        supertype.getCanonicalName()));
+    super(
+        "Unexpected subtype %s of type %s"
+            .formatted(instance.getClass().getCanonicalName(), supertype.getCanonicalName()));
   }
 }

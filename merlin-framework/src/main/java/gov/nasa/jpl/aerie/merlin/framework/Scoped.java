@@ -13,11 +13,11 @@ import java.util.function.Supplier;
  * in Project Loom</a>.
  */
 public final class Scoped<T> implements Supplier<T> {
-    private final ThreadLocal<T> dynamicSlot;
+  private final ThreadLocal<T> dynamicSlot;
 
-    private Scoped(final ThreadLocal<T> dynamicSlot) {
-        this.dynamicSlot = dynamicSlot;
-    }
+  private Scoped(final ThreadLocal<T> dynamicSlot) {
+    this.dynamicSlot = dynamicSlot;
+  }
 
   /**
    * Create a dynamically-scoped cell containing values of type {@link T}.
@@ -25,47 +25,47 @@ public final class Scoped<T> implements Supplier<T> {
    * @param <T> The type of value this cell will contain.
    * @return A new cell that can contain values of type {@link T}.
    */
-    public static <T> Scoped<T> create() {
-        return new Scoped<>(ThreadLocal.withInitial(() -> null));
-    }
+  public static <T> Scoped<T> create() {
+    return new Scoped<>(ThreadLocal.withInitial(() -> null));
+  }
 
-    /**
-     * Gets the current value of the dynamic cell.
-     *
-     * Throws an exception if nobody up-stack is currently serving this cell.
-     */
+  /**
+   * Gets the current value of the dynamic cell.
+   *
+   * Throws an exception if nobody up-stack is currently serving this cell.
+   */
+  @Override
+  public T get() throws EmptyDynamicCellException {
+    final var value = dynamicSlot.get();
+    if (value == null) throw new EmptyDynamicCellException();
+    return value;
+  }
+
+  /**
+   * Set a value in this cell, returning an {@link AutoCloseable} resource restoring the previous value on close.
+   *
+   * <p>
+   *   This method should always be used in a try-with-resources statement:
+   * </p>
+   *
+   * <pre>
+   * try (final var scope = cell.set(value)) {
+   *   // ...
+   * }
+   * </pre>
+   */
+  public UndoToken<T> set(final T newValue) {
+    final var oldValue = this.dynamicSlot.get();
+    this.dynamicSlot.set(newValue);
+    return new UndoToken<>(this, oldValue);
+  }
+
+  public record UndoToken<T>(Scoped<T> cell, T oldValue) implements AutoCloseable {
     @Override
-    public T get() throws EmptyDynamicCellException {
-        final var value = dynamicSlot.get();
-        if (value == null) throw new EmptyDynamicCellException();
-        return value;
+    public void close() {
+      this.cell.dynamicSlot.set(this.oldValue);
     }
+  }
 
-    /**
-     * Set a value in this cell, returning an {@link AutoCloseable} resource restoring the previous value on close.
-     *
-     * <p>
-     *   This method should always be used in a try-with-resources statement:
-     * </p>
-     *
-     * <pre>
-     * try (final var scope = cell.set(value)) {
-     *   // ...
-     * }
-     * </pre>
-     */
-    public UndoToken<T> set(final T newValue) {
-        final var oldValue = this.dynamicSlot.get();
-        this.dynamicSlot.set(newValue);
-        return new UndoToken<>(this, oldValue);
-    }
-
-    public record UndoToken<T>(Scoped<T> cell, T oldValue) implements AutoCloseable {
-        @Override
-        public void close() {
-            this.cell.dynamicSlot.set(this.oldValue);
-        }
-    }
-
-    public static class EmptyDynamicCellException extends RuntimeException {}
+  public static class EmptyDynamicCellException extends RuntimeException {}
 }

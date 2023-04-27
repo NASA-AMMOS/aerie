@@ -6,7 +6,8 @@ import java.sql.SQLException;
 import org.intellij.lang.annotations.Language;
 
 /*package local*/ public class ClaimRequestAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     update scheduling_request
       set
         status = 'incomplete'
@@ -27,7 +28,10 @@ import org.intellij.lang.annotations.Language;
       throw new UnclaimableRequestException(specificationId);
     } else if (count > 1) {
       throw new SQLException(
-          String.format("Claiming a scheduling request for specification id %s returned more than one result row.", specificationId));
+          String.format(
+              "Claiming a scheduling request for specification id %s returned more than one result"
+                  + " row.",
+              specificationId));
     }
   }
 

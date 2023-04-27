@@ -1,18 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
+import org.intellij.lang.annotations.Language;
 
 /*package local*/ final class GetSimulationTemplateAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     select
           t.model_id,
           t.revision,
@@ -29,21 +29,25 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   public Optional<SimulationTemplateRecord> get(final long simulationTemplateId)
-  throws SQLException {
-      this.statement.setLong(1, simulationTemplateId);
-      final ResultSet results = this.statement.executeQuery();
+      throws SQLException {
+    this.statement.setLong(1, simulationTemplateId);
+    final ResultSet results = this.statement.executeQuery();
 
-      if (!results.next()) return Optional.empty();
+    if (!results.next()) return Optional.empty();
 
-      final var modelId = results.getLong("model_id");
-      final var revision = results.getLong("revision");
-      final var description = results.getString("description");
-      final var arguments = getJsonColumn(results, "arguments", simulationArgumentsP)
-          .getSuccessOrThrow(
-              failureReason -> new Error("Corrupt simulation template arguments cannot be parsed: "
-                                         + failureReason.reason())
-          );
-      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments));
+    final var modelId = results.getLong("model_id");
+    final var revision = results.getLong("revision");
+    final var description = results.getString("description");
+    final var arguments =
+        getJsonColumn(results, "arguments", simulationArgumentsP)
+            .getSuccessOrThrow(
+                failureReason ->
+                    new Error(
+                        "Corrupt simulation template arguments cannot be parsed: "
+                            + failureReason.reason()));
+    return Optional.of(
+        new SimulationTemplateRecord(
+            simulationTemplateId, revision, modelId, description, arguments));
   }
 
   @Override

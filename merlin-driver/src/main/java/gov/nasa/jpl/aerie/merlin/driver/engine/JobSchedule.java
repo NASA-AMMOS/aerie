@@ -1,8 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -10,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   /** The scheduled time for each upcoming job. */
@@ -17,7 +16,8 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
 
   /** A time-ordered queue of all tasks whose resumption time is concretely known. */
   @DerivedFrom("scheduledJobs")
-  private final PriorityQueue<Pair<TimeRef, JobRef>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
+  private final PriorityQueue<Pair<TimeRef, JobRef>> queue =
+      new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
   public void schedule(final JobRef job, final TimeRef time) {
     final var oldTime = this.scheduledJobs.put(job, time);

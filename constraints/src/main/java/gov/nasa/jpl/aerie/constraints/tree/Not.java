@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,7 +15,10 @@ public final class Not implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment) {
     return this.expression.evaluate(results, bounds, environment).not();
   }
 
@@ -27,17 +29,13 @@ public final class Not implements Expression<Windows> {
 
   @Override
   public String prettyPrint(final String prefix) {
-    return String.format(
-        "\n%s(not %s)",
-        prefix,
-        this.expression.prettyPrint(prefix + "  ")
-    );
+    return String.format("\n%s(not %s)", prefix, this.expression.prettyPrint(prefix + "  "));
   }
 
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof Not)) return false;
-    final var o = (Not)obj;
+    final var o = (Not) obj;
 
     return Objects.equals(this.expression, o.expression);
   }

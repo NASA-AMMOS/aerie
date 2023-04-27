@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.solver.stn;
 
-import org.slf4j.Logger;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import org.slf4j.Logger;
 
 /**
  * Small helper class for logging an exception's stack trace.

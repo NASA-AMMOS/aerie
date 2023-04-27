@@ -1,20 +1,18 @@
 package gov.nasa.jpl.aerie.json;
 
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.util.Map;
 
 public final class PathJsonParser implements JsonParser<Path> {
   public static final PathJsonParser pathP = new PathJsonParser();
 
   @Override
   public JsonObject getSchema(final SchemaCache anchors) {
-    return Json
-        .createObjectBuilder()
+    return Json.createObjectBuilder()
         .add("type", "string")
         .add("pattern", "(?:/?[^/]+)(?:/[^/]+)*/?")
         .build();

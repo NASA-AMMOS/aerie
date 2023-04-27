@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import java.util.Objects;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
+import java.util.Objects;
 
 /**
  * details of a scheduling request, including the target schedule specification version and goals to operate on

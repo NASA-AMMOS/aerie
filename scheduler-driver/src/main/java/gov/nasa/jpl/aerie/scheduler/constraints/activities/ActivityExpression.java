@@ -14,11 +14,10 @@ import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
-
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +48,8 @@ public class ActivityExpression implements Expression<Spans> {
   private Windows startOrEndRangeW;
 
   @SuppressWarnings("unchecked")
-  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
+  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression>
+      AbstractBuilder<B, AT> getNewBuilder() {
     return (AbstractBuilder<B, AT>) new Builder();
   }
 
@@ -60,7 +60,7 @@ public class ActivityExpression implements Expression<Spans> {
    *
    * leaves all criteria elements unspecified
    */
-  protected ActivityExpression() { }
+  protected ActivityExpression() {}
 
   /**
    * a fluent builder class for constructing consistent template queries
@@ -82,12 +82,12 @@ public class ActivityExpression implements Expression<Spans> {
    *     pattern)
    * @param <AT> concrete activity template type constructed by the builder
    */
-  public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
+  public abstract static class AbstractBuilder<
+      B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
 
     protected Duration acceptableAbsoluteTimingError = Duration.of(0, Duration.MILLISECOND);
 
     Map<String, ProfileExpression<?>> arguments = new HashMap<>();
-
 
     public B withArgument(String argument, SerializedValue val) {
       arguments.put(argument, new ProfileExpression<>(new DiscreteValue(val)));
@@ -99,7 +99,7 @@ public class ActivityExpression implements Expression<Spans> {
       return getThis();
     }
 
-    public B withTimingPrecision(Duration acceptableAbsoluteTimingError){
+    public B withTimingPrecision(Duration acceptableAbsoluteTimingError) {
       this.acceptableAbsoluteTimingError = acceptableAbsoluteTimingError;
       return getThis();
     }
@@ -115,14 +115,12 @@ public class ActivityExpression implements Expression<Spans> {
      *     if no specific type is required
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B ofType(@Nullable ActivityType type) {
+    public @NotNull B ofType(@Nullable ActivityType type) {
       this.type = type;
       return getThis();
     }
 
-    protected @Nullable
-    ActivityType type;
+    protected @Nullable ActivityType type;
 
     /**
      * requires activities have a scheduled start time in a specified range
@@ -135,8 +133,7 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B startsIn(@Nullable Interval range) {
+    public @NotNull B startsIn(@Nullable Interval range) {
       this.startsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
@@ -154,8 +151,7 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B startsOrEndsIn(@Nullable Interval range) {
+    public @NotNull B startsOrEndsIn(@Nullable Interval range) {
       this.startsOrEndsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
@@ -173,18 +169,16 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B startsOrEndsIn(@Nullable Windows windows) {
+    public @NotNull B startsOrEndsIn(@Nullable Windows windows) {
       Windows wins = new Windows(false);
-      for(final var win : windows.iterateEqualTo(true)){
+      for (final var win : windows.iterateEqualTo(true)) {
         wins = wins.set(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError), true);
       }
       this.startsOrEndsInW = wins;
       return getThis();
     }
 
-    protected @Nullable
-    Windows startsOrEndsInW;
+    protected @Nullable Windows startsOrEndsInW;
 
     /**
      * requires activities have a scheduled end time in a specified range
@@ -197,18 +191,16 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B endsIn(@Nullable Interval range) {
+    public @NotNull B endsIn(@Nullable Interval range) {
       this.endsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
     protected @Nullable Interval endsIn;
 
-    public @NotNull
-    B startsIn(Windows ranges) {
+    public @NotNull B startsIn(Windows ranges) {
       Windows wins = new Windows(false);
-      for(final var win : ranges.iterateEqualTo(true)) {
+      for (final var win : ranges.iterateEqualTo(true)) {
         wins = wins.set(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError), true);
       }
       this.startsInR = wins;
@@ -228,8 +220,7 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B durationIn(@Nullable Duration duration) {
+    public @NotNull B durationIn(@Nullable Duration duration) {
       if (duration == null) {
         this.durationIn = Expression.of(() -> new DiscreteProfile());
       }
@@ -250,8 +241,7 @@ public class ActivityExpression implements Expression<Spans> {
      *     into this builder. must not be null.
      * @return the same builder object updated with new criteria
      */
-    public abstract @NotNull
-    B basedOn(@NotNull AT template);
+    public abstract @NotNull B basedOn(@NotNull AT template);
 
     /**
      * bootstraps a new query builder based on an existing activity instance
@@ -264,8 +254,7 @@ public class ActivityExpression implements Expression<Spans> {
      *     prototype for the new search criteria. must not be null.
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B basedOn(@NotNull SchedulingActivityDirective existingAct) {
+    public @NotNull B basedOn(@NotNull SchedulingActivityDirective existingAct) {
       type = existingAct.getType();
 
       if (existingAct.startOffset() != null) {
@@ -276,7 +265,7 @@ public class ActivityExpression implements Expression<Spans> {
 
       return getThis();
 
-      //FINISH: extract all param values as == criteria
+      // FINISH: extract all param values as == criteria
     }
 
     /**
@@ -284,8 +273,7 @@ public class ActivityExpression implements Expression<Spans> {
      *
      * @return the concrete builder type object for further method chaining
      */
-    public abstract @NotNull
-    B getThis();
+    public abstract @NotNull B getThis();
 
     /**
      * collect and cross-check all specified terms and construct the template
@@ -302,19 +290,22 @@ public class ActivityExpression implements Expression<Spans> {
      * @return a newly constructed template that matches activities meeting
      *     the conjunction of all criteria specified to the builder
      */
-    public abstract @NotNull
-    AT build();
+    public abstract @NotNull AT build();
 
-    private Interval extendUpToAbsoluteError(final Interval interval, final Duration absoluteError){
+    private Interval extendUpToAbsoluteError(
+        final Interval interval, final Duration absoluteError) {
       final var diff = absoluteError.times(2).minus(interval.duration());
-      if(diff.isPositive()){
+      if (diff.isPositive()) {
         final var toApply = diff.dividedBy(2);
-        return Interval.between(interval.start.minus(toApply), interval.startInclusivity, interval.end.plus(toApply), interval.endInclusivity);
+        return Interval.between(
+            interval.start.minus(toApply),
+            interval.startInclusivity,
+            interval.end.plus(toApply),
+            interval.endInclusivity);
       } else {
         return interval;
       }
     }
-
   }
 
   /**
@@ -328,14 +319,12 @@ public class ActivityExpression implements Expression<Spans> {
     /**
      * {@inheritDoc}
      */
-    public @NotNull
-    Builder getThis() {
+    public @NotNull Builder getThis() {
       return this;
     }
 
     @Override
-    public @NotNull
-    Builder basedOn(@NotNull ActivityExpression template) {
+    public @NotNull Builder basedOn(@NotNull ActivityExpression template) {
       type = template.type;
       startsIn = template.startRange;
       endsIn = template.endRange;
@@ -345,7 +334,6 @@ public class ActivityExpression implements Expression<Spans> {
       arguments = template.arguments;
       return getThis();
     }
-
 
     protected ActivityExpression fill(ActivityExpression template) {
       template.type = type;
@@ -361,14 +349,12 @@ public class ActivityExpression implements Expression<Spans> {
     /**
      * {@inheritDoc}
      */
-    public @NotNull
-    ActivityExpression build() {
+    public @NotNull ActivityExpression build() {
       final var template = new ActivityExpression();
       fill(template);
       return template;
     }
   }
-
 
   /**
    * range of allowed values for matching activity scheduled start times
@@ -402,7 +388,6 @@ public class ActivityExpression implements Expression<Spans> {
    */
   protected @Nullable Interval startOrEndRange;
 
-
   /**
    * range of allowed values for matching activity simulated durations
    *
@@ -421,8 +406,7 @@ public class ActivityExpression implements Expression<Spans> {
    *
    * null if no limit on activity type
    */
-  protected @Nullable
-  ActivityType type;
+  protected @Nullable ActivityType type;
 
   /**
    * regular expression of matching activity instance names
@@ -439,8 +423,9 @@ public class ActivityExpression implements Expression<Spans> {
    * @return the allowed range of start times for matching activities, or null
    *     if no limit on start time
    */
-  public @Nullable
-  Interval getStartRange() { return startRange; }
+  public @Nullable Interval getStartRange() {
+    return startRange;
+  }
 
   /**
    * fetch the bounding super type of activities matched by this template
@@ -448,8 +433,9 @@ public class ActivityExpression implements Expression<Spans> {
    * @return the super type for matching activities, or null if no limit on
    *     activity type
    */
-  public @Nullable
-  ActivityType getType() { return type; }
+  public @Nullable ActivityType getType() {
+    return type;
+  }
 
   /**
    * creates a template matching a given activity type (or its subtypes)
@@ -463,14 +449,11 @@ public class ActivityExpression implements Expression<Spans> {
    * @return an activity template that matches only activities with the
    *     specified super type
    */
-  public static @NotNull
-  ActivityExpression ofType(@NotNull ActivityType type) {
+  public static @NotNull ActivityExpression ofType(@NotNull ActivityType type) {
     return new Builder().ofType(type).build();
   }
 
-
   Map<String, ProfileExpression<?>> arguments = new HashMap<>();
-
 
   /**
    * determines if the given activity matches all criteria of this template
@@ -483,10 +466,13 @@ public class ActivityExpression implements Expression<Spans> {
    *     by this template, or false if it does not meet one or more of
    *     the template criteria
    */
-  public boolean matches(@NotNull SchedulingActivityDirective act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  public boolean matches(
+      @NotNull SchedulingActivityDirective act,
+      SimulationResults simulationResults,
+      EvaluationEnvironment evaluationEnvironment) {
     boolean match = true;
 
-    //REVIEW: literal object equality is probably correct for type
+    // REVIEW: literal object equality is probably correct for type
     match = match && (type == null || type == act.getType());
 
     if (match && startRange != null) {
@@ -498,13 +484,15 @@ public class ActivityExpression implements Expression<Spans> {
       final var startT = act.startOffset();
       final var endT = act.getEndTime();
       match =
-          ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
+          ((startT != null) && startOrEndRange.contains(startT))
+              || (endT != null) && startOrEndRange.contains(endT);
     }
 
     if (match && startOrEndRangeW != null) {
       final var startT = act.startOffset();
       final var endT = act.getEndTime();
-      match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
+      match =
+          ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
               || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
     }
 
@@ -515,17 +503,20 @@ public class ActivityExpression implements Expression<Spans> {
 
     if (match && duration != null) {
       final var dur = act.duration();
-      final Optional<Duration> durRequirement = this.duration
-          .evaluate(simulationResults, evaluationEnvironment)
-          .valueAt(Duration.ZERO)
-          .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      final Optional<Duration> durRequirement =
+          this.duration
+              .evaluate(simulationResults, evaluationEnvironment)
+              .valueAt(Duration.ZERO)
+              .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
       match = durRequirement.isEmpty() || (dur != null && durRequirement.get().isEqualTo(dur));
     }
 
-    //activity must have all instantiated arguments of template to be compatible
+    // activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.arguments();
-      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
+      final var instantiatedArguments =
+          SchedulingActivityDirective.instantiateArguments(
+              arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
       for (var param : instantiatedArguments.entrySet()) {
         if (actInstanceArguments.containsKey(param.getKey())) {
           match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
@@ -538,10 +529,13 @@ public class ActivityExpression implements Expression<Spans> {
     return match;
   }
 
-  public boolean matches(@NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  public boolean matches(
+      @NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act,
+      SimulationResults simulationResults,
+      EvaluationEnvironment evaluationEnvironment) {
     boolean match = true;
 
-    //REVIEW: literal object equality is probably correct for type
+    // REVIEW: literal object equality is probably correct for type
     match = match && (type == null || Objects.equals(type.getName(), act.type));
 
     if (match && startRange != null) {
@@ -553,36 +547,43 @@ public class ActivityExpression implements Expression<Spans> {
       final var startT = act.interval.start;
       final var endT = act.interval.end;
       match =
-          ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
+          ((startT != null) && startOrEndRange.contains(startT))
+              || (endT != null) && startOrEndRange.contains(endT);
     }
 
     if (match && startOrEndRangeW != null) {
       final var startT = act.interval.start;
       final var endT = act.interval.end;
-      match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
-               || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
+      match =
+          ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
+              || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
     }
 
     if (match && endRange != null) {
-      final var endT = act.interval.end;;
+      final var endT = act.interval.end;
+      ;
       match = (endT != null) && endRange.contains(endT);
     }
 
     if (match && duration != null) {
       final var dur = act.interval.duration();
-      final Optional<Duration> durRequirement = this.duration
-          .evaluate(simulationResults, evaluationEnvironment)
-          .valueAt(Duration.ZERO)
-          .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      final Optional<Duration> durRequirement =
+          this.duration
+              .evaluate(simulationResults, evaluationEnvironment)
+              .valueAt(Duration.ZERO)
+              .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
       match = durRequirement.isEmpty() || (dur != null && durRequirement.get() == dur);
     }
 
-    //activity must have all instantiated arguments of template to be compatible
+    // activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
-      final var instantiatedArguments = SchedulingActivityDirective
-                .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
-      match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
+      final var instantiatedArguments =
+          SchedulingActivityDirective.instantiateArguments(
+              arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
+      match =
+          subsetOrEqual(
+              SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
     }
     return match;
   }
@@ -591,104 +592,101 @@ public class ActivityExpression implements Expression<Spans> {
   public Spans evaluate(
       final SimulationResults results,
       final Interval bounds,
-      final EvaluationEnvironment environment)
-  {
+      final EvaluationEnvironment environment) {
     final var spans = new Spans();
-    results.activities.stream().filter(x -> matches(x, results, environment)).forEach(x -> spans.add(x.interval));
+    results.activities.stream()
+        .filter(x -> matches(x, results, environment))
+        .forEach(x -> spans.add(x.interval));
     return spans;
   }
 
   @Override
   public String prettyPrint(final String prefix) {
-    return String.format(
-        "\n%s(look-for-activity %s)",
-        prefix,
-        this.type
-    );  }
+    return String.format("\n%s(look-for-activity %s)", prefix, this.type);
+  }
 
   @Override
-  public void extractResources(final Set<String> names) { }
-
+  public void extractResources(final Set<String> names) {}
 
   /**
    * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not
-    * @param superset the proposed superset
+   * @param superset the proposed superset
    * @param subset the proposed subset
    * @return true if subset is a subset of superset
    */
-  public static boolean subsetOrEqual(SerializedValue superset, SerializedValue subset){
+  public static boolean subsetOrEqual(SerializedValue superset, SerializedValue subset) {
     Objects.requireNonNull(superset);
     Objects.requireNonNull(subset);
-    final var visitor = new SerializedValue.Visitor<Boolean>(){
-      @Override
-      public Boolean onNull() {
-        return true;
-      }
+    final var visitor =
+        new SerializedValue.Visitor<Boolean>() {
+          @Override
+          public Boolean onNull() {
+            return true;
+          }
 
-      @Override
-      public Boolean onNumeric(final BigDecimal value) {
-        final var argumentsAsNumeric = superset.asNumeric();
-        if(argumentsAsNumeric.isEmpty()){
-          return false;
-        }
-        return argumentsAsNumeric.get().equals(value);
-      }
-
-      @Override
-      public Boolean onBoolean(final boolean value) {
-        final var argumentsAsBoolean = superset.asBoolean();
-        if(argumentsAsBoolean.isEmpty()){
-          return false;
-        }
-        return argumentsAsBoolean.get().equals(value);
-      }
-
-      @Override
-      public Boolean onString(final String value) {
-        final var argumentsAsString = superset.asString();
-        if(argumentsAsString.isEmpty()){
-          return false;
-        }
-        return argumentsAsString.get().equals(value);
-      }
-
-      @Override
-      public Boolean onMap(final Map<String, SerializedValue> value) {
-        final var argumentsAsMap = superset.asMap();
-        if(argumentsAsMap.isEmpty()){
-          return false;
-        }
-        for(final var elementInPattern: value.entrySet()){
-          final var elementInArguments = argumentsAsMap.get().get(elementInPattern.getKey());
-          if(elementInArguments != null){
-            if(!subsetOrEqual(elementInArguments, elementInPattern.getValue())){
+          @Override
+          public Boolean onNumeric(final BigDecimal value) {
+            final var argumentsAsNumeric = superset.asNumeric();
+            if (argumentsAsNumeric.isEmpty()) {
               return false;
             }
-          } else {
-            return false;
+            return argumentsAsNumeric.get().equals(value);
           }
-        }
-        return true;
-      }
 
-      @Override
-      public Boolean onList(final List<SerializedValue> value) {
-        final var argumentsAsListOptional = superset.asList();
-        if(argumentsAsListOptional.isEmpty()){
-          return false;
-        }
-        if(argumentsAsListOptional.get().size() < value.size()){
-          return false;
-        }
-        for(int i = 0; i < value.size(); i++){
-          if(!subsetOrEqual(argumentsAsListOptional.get().get(i), value.get(i))){
-            return false;
+          @Override
+          public Boolean onBoolean(final boolean value) {
+            final var argumentsAsBoolean = superset.asBoolean();
+            if (argumentsAsBoolean.isEmpty()) {
+              return false;
+            }
+            return argumentsAsBoolean.get().equals(value);
           }
-        }
-        return true;
-      }
-    };
+
+          @Override
+          public Boolean onString(final String value) {
+            final var argumentsAsString = superset.asString();
+            if (argumentsAsString.isEmpty()) {
+              return false;
+            }
+            return argumentsAsString.get().equals(value);
+          }
+
+          @Override
+          public Boolean onMap(final Map<String, SerializedValue> value) {
+            final var argumentsAsMap = superset.asMap();
+            if (argumentsAsMap.isEmpty()) {
+              return false;
+            }
+            for (final var elementInPattern : value.entrySet()) {
+              final var elementInArguments = argumentsAsMap.get().get(elementInPattern.getKey());
+              if (elementInArguments != null) {
+                if (!subsetOrEqual(elementInArguments, elementInPattern.getValue())) {
+                  return false;
+                }
+              } else {
+                return false;
+              }
+            }
+            return true;
+          }
+
+          @Override
+          public Boolean onList(final List<SerializedValue> value) {
+            final var argumentsAsListOptional = superset.asList();
+            if (argumentsAsListOptional.isEmpty()) {
+              return false;
+            }
+            if (argumentsAsListOptional.get().size() < value.size()) {
+              return false;
+            }
+            for (int i = 0; i < value.size(); i++) {
+              if (!subsetOrEqual(argumentsAsListOptional.get().get(i), value.get(i))) {
+                return false;
+              }
+            }
+            return true;
+          }
+        };
     return subset.match(visitor);
   }
-
 }

@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
+import java.io.IOException;
+import java.util.Optional;
 
 /**
  * represents the query for the results of a scheduling run
@@ -16,14 +15,18 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
  * @param specificationService interface to specification service for any necessary specification details
  * @param schedulerService scheduling service that handles activity scheduling requests
  */
-//TODO: how to handle successive scheduling requests (probably synchronous per-plan, but not service-wide)
-//TODO: how to fetch in-progress status without risking mutating the plan again (since scheduling is NOT idempotent)
-public record ScheduleAction(SpecificationService specificationService, SchedulerService schedulerService) {
+// TODO: how to handle successive scheduling requests (probably synchronous per-plan, but not
+// service-wide)
+// TODO: how to fetch in-progress status without risking mutating the plan again (since scheduling
+// is NOT idempotent)
+public record ScheduleAction(
+    SpecificationService specificationService, SchedulerService schedulerService) {
 
   /**
    * common interface for different possible results of the query
    */
-  //tempting to unify with the overlapping ResultProtocol.State, but kept to parallel merlin...GetSimulationResultsAction
+  // tempting to unify with the overlapping ResultProtocol.State, but kept to parallel
+  // merlin...GetSimulationResultsAction
   public sealed interface Response {
     /** Scheduler has enqueued this request. */
     record Pending(long analysisId) implements Response {}
@@ -41,7 +44,8 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
     /**
      * scheduler completed successfully; contains the requested results
      */
-    record Complete(ScheduleResults results, long analysisId, Optional<Long> datasetId) implements Response {}
+    record Complete(ScheduleResults results, long analysisId, Optional<Long> datasetId)
+        implements Response {}
   }
 
   /**
@@ -52,14 +56,18 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
    * @throws NoSuchSpecificationException if the target specification could not be found
    */
   public Response run(final SpecificationId specificationId)
-  throws NoSuchSpecificationException, IOException
-  {
-    //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
-    //TODO may also need to verify the model revision / other volatile metadata matches one from request
-    final var specificationRev = this.specificationService.getSpecificationRevisionData(specificationId);
+      throws NoSuchSpecificationException, IOException {
+    // record the plan revision as of the scheduling request time (in case work commences much later
+    // eg in worker thread)
+    // TODO may also need to verify the model revision / other volatile metadata matches one from
+    // request
+    final var specificationRev =
+        this.specificationService.getSpecificationRevisionData(specificationId);
 
-    //submit request to run scheduler (possibly asynchronously or even cached depending on service)
-    final var response = this.schedulerService.getScheduleResults(new ScheduleRequest(specificationId, specificationRev));
+    // submit request to run scheduler (possibly asynchronously or even cached depending on service)
+    final var response =
+        this.schedulerService.getScheduleResults(
+            new ScheduleRequest(specificationId, specificationRev));
 
     return repackResponse(response);
   }
@@ -71,7 +79,8 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
    * @return scheduling results augmented with any extra post-analysis
    */
   private Response repackResponse(final ResultsProtocol.State response) {
-    //the two responses are identical for now, but kept in order to remain parallel to merlin...GetSimulationResultsAction
+    // the two responses are identical for now, but kept in order to remain parallel to
+    // merlin...GetSimulationResultsAction
     if (response instanceof ResultsProtocol.State.Pending r) {
       return new Response.Pending(r.analysisId());
     } else if (response instanceof ResultsProtocol.State.Incomplete r) {
@@ -80,11 +89,11 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
       return new Response.Failed(r.reason(), r.analysisId());
     } else if (response instanceof ResultsProtocol.State.Success r) {
       final var results = r.results();
-      //NB: could elaborate with more response content here, like merlin...SimResults adds in violation analytics
+      // NB: could elaborate with more response content here, like merlin...SimResults adds in
+      // violation analytics
       return new Response.Complete(results, r.analysisId(), r.datasetId());
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }
   }
-
 }

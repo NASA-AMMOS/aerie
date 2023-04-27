@@ -1,18 +1,16 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.Objects;
-
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import java.util.Objects;
 
 /**
  * An Interval on the timeline, represented by start and end points
  * and start and end inclusivity.
  */
-public final class Interval implements Comparable<Interval>{
+public final class Interval implements Comparable<Interval> {
   // If end.shorterThan(start), this is the empty interval.
   // If end.equals(start), this is a single point.
   // If end.longerThan(start), this is a closed interval.
@@ -70,8 +68,7 @@ public final class Interval implements Comparable<Interval>{
       final Duration start,
       final Inclusivity startInclusivity,
       final Duration end,
-      final Inclusivity endInclusivity
-  ) {
+      final Inclusivity endInclusivity) {
     return (end.shorterThan(start))
         ? Interval.EMPTY
         : new Interval(start, startInclusivity, end, endInclusivity);
@@ -86,9 +83,9 @@ public final class Interval implements Comparable<Interval>{
       final Inclusivity startInclusivity,
       final long end,
       final Inclusivity endInclusivity,
-      final Duration unit
-  ) {
-    return between(Duration.of(start, unit), startInclusivity, Duration.of(end, unit), endInclusivity);
+      final Duration unit) {
+    return between(
+        Duration.of(start, unit), startInclusivity, Duration.of(end, unit), endInclusivity);
   }
 
   public static Interval between(final long start, final long end, final Duration unit) {
@@ -99,8 +96,7 @@ public final class Interval implements Comparable<Interval>{
       final Duration start,
       final Inclusivity startInclusivity,
       final Duration end,
-      final Inclusivity endInclusivity
-  ) {
+      final Inclusivity endInclusivity) {
     return between(start, startInclusivity, end, endInclusivity);
   }
 
@@ -113,8 +109,7 @@ public final class Interval implements Comparable<Interval>{
       final Inclusivity startInclusivity,
       final long end,
       final Inclusivity endInclusivity,
-      final Duration unit
-  ) {
+      final Duration unit) {
     return between(start, startInclusivity, end, endInclusivity, unit);
   }
 
@@ -130,7 +125,8 @@ public final class Interval implements Comparable<Interval>{
     return at(Duration.of(quantity, unit));
   }
 
-  public static final Interval EMPTY = new Interval(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
+  public static final Interval EMPTY =
+      new Interval(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
   public static final Interval FOREVER = new Interval(Duration.MIN_VALUE, Duration.MAX_VALUE);
 
   public boolean isEmpty() {
@@ -142,10 +138,7 @@ public final class Interval implements Comparable<Interval>{
 
   // Use this instead of `.duration().isZero()` to avoid overflow on long intervals.
   public boolean isPoint() {
-    return
-        this.includesStart() &&
-        this.includesEnd() &&
-        this.start == this.end;
+    return this.includesStart() && this.includesEnd() && this.start == this.end;
   }
 
   public Duration duration() {
@@ -218,23 +211,23 @@ public final class Interval implements Comparable<Interval>{
     return Interval.between(start, startInclusivity, end, endInclusivity);
   }
 
-  public boolean isStrictlyAfter(Interval x){
+  public boolean isStrictlyAfter(Interval x) {
     return compareStartToEnd(this, x) > 0;
   }
 
-  public boolean isStrictlyBefore(Interval x){
-    return compareEndToStart(this,x) < 0;
+  public boolean isStrictlyBefore(Interval x) {
+    return compareEndToStart(this, x) < 0;
   }
 
-  public boolean contains(Duration d){
+  public boolean contains(Duration d) {
     return !intersect(this, at(d)).isEmpty();
   }
 
-  public boolean contains(Interval x){
-    return intersect(this,x).equals(x);
+  public boolean contains(Interval x) {
+    return intersect(this, x).equals(x);
   }
 
-  public boolean isSingleton(){
+  public boolean isSingleton() {
     return this.start.isEqualTo(this.end);
   }
 
@@ -242,8 +235,8 @@ public final class Interval implements Comparable<Interval>{
     return between(start, Inclusive, end, Exclusive);
   }
 
-  public boolean adjacent(Interval x){
-    return meets(x,this) || meets(this,x);
+  public boolean adjacent(Interval x) {
+    return meets(x, this) || meets(this, x);
   }
 
   @Override
@@ -308,16 +301,18 @@ public final class Interval implements Comparable<Interval>{
   public boolean equals(final Object o) {
     if (!(o instanceof final Interval other)) return false;
 
-    return ( (this.isEmpty() && other.isEmpty())
-             || ( Objects.equals(this.start, other.start)
-                  && Objects.equals(this.startInclusivity, other.startInclusivity)
-                  && Objects.equals(this.end, other.end)
-                  && Objects.equals(this.endInclusivity, other.endInclusivity) ) );
+    return ((this.isEmpty() && other.isEmpty())
+        || (Objects.equals(this.start, other.start)
+            && Objects.equals(this.startInclusivity, other.startInclusivity)
+            && Objects.equals(this.end, other.end)
+            && Objects.equals(this.endInclusivity, other.endInclusivity)));
   }
 
   @Override
   public int hashCode() {
-    return (this.isEmpty()) ? Objects.hash(0L, -1L) : Objects.hash(this.start, this.startInclusivity, this.end, this.endInclusivity);
+    return (this.isEmpty())
+        ? Objects.hash(0L, -1L)
+        : Objects.hash(this.start, this.startInclusivity, this.end, this.endInclusivity);
   }
 
   @Override
@@ -327,11 +322,7 @@ public final class Interval implements Comparable<Interval>{
     } else {
       return String.format(
           "Interval%s%s, %s%s",
-          this.includesStart() ? "[" : "(",
-          this.start,
-          this.end,
-          this.includesEnd() ? "]" : ")"
-      );
+          this.includesStart() ? "[" : "(", this.start, this.end, this.includesEnd() ? "]" : ")");
     }
   }
 }

@@ -2,15 +2,15 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+import org.intellij.lang.annotations.Language;
 
 public final class GetSimulationDatasetAction implements AutoCloseable {
-  private static final @Language("Sql") String sql = """
+  private static final @Language("Sql") String sql =
+      """
     select
           d.simulation_id as simulation_id,
           d.status as status,
@@ -30,9 +30,7 @@ public final class GetSimulationDatasetAction implements AutoCloseable {
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<SimulationDatasetRecord> get(
-      final long datasetId
-  ) throws SQLException {
+  public Optional<SimulationDatasetRecord> get(final long datasetId) throws SQLException {
     this.statement.setLong(1, datasetId);
 
     try (final var results = this.statement.executeQuery()) {

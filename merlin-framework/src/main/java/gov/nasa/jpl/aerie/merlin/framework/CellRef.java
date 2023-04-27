@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
-
 import java.util.function.Function;
 
 public final class CellRef<Event, State> {
@@ -15,29 +14,26 @@ public final class CellRef<Event, State> {
     this.cellId = cellId;
   }
 
-  public static <Event, Effect, State>
-  CellRef<Event, State> allocate(
+  public static <Event, Effect, State> CellRef<Event, State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> eventToEffect,
-      final Topic<Event> topic
-  ) {
-    final var cellId = ModelActions.context.get().allocate(initialState, cellType, eventToEffect, topic);
+      final Topic<Event> topic) {
+    final var cellId =
+        ModelActions.context.get().allocate(initialState, cellType, eventToEffect, topic);
 
     return new CellRef<>(topic, cellId);
   }
 
-  public static <Event, Effect, State>
-  CellRef<Event, State> allocate(
+  public static <Event, Effect, State> CellRef<Event, State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
-      final Function<Event, Effect> eventToEffect
-  ) {
+      final Function<Event, Effect> eventToEffect) {
     return CellRef.allocate(initialState, cellType, eventToEffect, new Topic<>());
   }
 
-  public static <Effect, State>
-  CellRef<Effect, State> allocate(final State initialState, final CellType<Effect, State> applicator) {
+  public static <Effect, State> CellRef<Effect, State> allocate(
+      final State initialState, final CellType<Effect, State> applicator) {
     return allocate(initialState, applicator, $ -> $);
   }
 

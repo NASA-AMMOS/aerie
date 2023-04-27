@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
-import org.junit.jupiter.api.Test;
-
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import org.junit.jupiter.api.Test;
 
 public class ActivityTypeTest {
 
@@ -25,5 +25,4 @@ public class ActivityTypeTest {
     final var actual = obj.getName();
     assertThat(actual).isEqualTo(expected);
   }
-
 }

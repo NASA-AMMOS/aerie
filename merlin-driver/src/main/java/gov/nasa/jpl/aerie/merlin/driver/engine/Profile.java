@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Iterator;
 
 /*package-local*/ record Profile<Dynamics>(SlabList<Segment<Dynamics>> segments)
-implements Iterable<Profile.Segment<Dynamics>> {
+    implements Iterable<Profile.Segment<Dynamics>> {
   public record Segment<Dynamics>(Duration startOffset, Dynamics dynamics) {}
 
   public Profile() {

@@ -1,21 +1,21 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
+
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetProfileSegmentsAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       select
         seg.start_offset,
         seg.dynamics,
@@ -36,10 +36,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final long datasetId,
       final long profileId,
       final Duration profileDuration,
-      final JsonParser<Dynamics> dynamicsP
-  ) throws SQLException {
+      final JsonParser<Dynamics> dynamicsP)
+      throws SQLException {
     final var segments = new ArrayList<ProfileSegment<Optional<Dynamics>>>();
-    PreparedStatements.setIntervalStyle(statement.getConnection(), PreparedStatements.PGIntervalStyle.ISO8601);
+    PreparedStatements.setIntervalStyle(
+        statement.getConnection(), PreparedStatements.PGIntervalStyle.ISO8601);
     this.statement.setLong(1, datasetId);
     this.statement.setLong(2, profileId);
     final var resultSet = statement.executeQuery();
@@ -51,8 +52,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       Optional<Dynamics> dynamics;
       var isGap = resultSet.getBoolean("is_gap");
       if (!isGap) {
-        dynamics = Optional.of(getJsonColumn(resultSet, "dynamics", dynamicsP)
-            .getSuccessOrThrow(failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason())));
+        dynamics =
+            Optional.of(
+                getJsonColumn(resultSet, "dynamics", dynamicsP)
+                    .getSuccessOrThrow(
+                        failureReason ->
+                            new Error("Corrupt profile dynamics: " + failureReason.reason())));
       } else {
         dynamics = Optional.empty();
       }
@@ -65,9 +70,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
         isGap = resultSet.getBoolean("is_gap");
         if (!isGap) {
-          dynamics = Optional.of(getJsonColumn(resultSet, "dynamics", dynamicsP)
-              .getSuccessOrThrow(
-                  failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason())));
+          dynamics =
+              Optional.of(
+                  getJsonColumn(resultSet, "dynamics", dynamicsP)
+                      .getSuccessOrThrow(
+                          failureReason ->
+                              new Error("Corrupt profile dynamics: " + failureReason.reason())));
         } else {
           dynamics = Optional.empty();
         }
@@ -76,7 +84,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var duration = profileDuration.minus(offset);
       segments.add(new ProfileSegment<>(duration, dynamics));
     } else {
-      throw new Error("No profile segments found for `dataset_id` (%d) and `profile_id` (%d)".formatted(datasetId, profileId));
+      throw new Error(
+          "No profile segments found for `dataset_id` (%d) and `profile_id` (%d)"
+              .formatted(datasetId, profileId));
     }
 
     return segments;

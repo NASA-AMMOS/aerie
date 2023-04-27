@@ -2,11 +2,9 @@ package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.StreamSupport;
 
 public final class Violation {
   public final List<Long> activityInstanceIds;
@@ -14,19 +12,23 @@ public final class Violation {
   public final List<Interval> violationWindows;
   public final List<Interval> gaps;
 
-  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
+  public Violation(
+      final List<Long> activityInstanceIds,
+      final List<String> resourceNames,
+      final Windows violationWindows) {
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = new ArrayList<>(resourceNames);
     this.violationWindows = new ArrayList<>(violationWindows.size());
     this.gaps = new ArrayList<>();
-    for (final var interval: violationWindows.iterateEqualTo(true)) {
+    for (final var interval : violationWindows.iterateEqualTo(true)) {
       this.violationWindows.add(interval);
     }
 
     // Set all known segments to false and assign true to the gaps
-    final var gapsWindows = violationWindows.notEqualTo(violationWindows).assignGaps(new Windows(true));
+    final var gapsWindows =
+        violationWindows.notEqualTo(violationWindows).assignGaps(new Windows(true));
 
-    for (final var interval: gapsWindows.iterateEqualTo(true)) {
+    for (final var interval : gapsWindows.iterateEqualTo(true)) {
       this.gaps.add(interval);
     }
   }
@@ -35,7 +37,11 @@ public final class Violation {
     this(new ArrayList<>(), new ArrayList<>(), violationWindows);
   }
 
-  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final List<Interval> intervals, final List<Interval> gaps) {
+  public Violation(
+      final List<Long> activityInstanceIds,
+      final List<String> resourceNames,
+      final List<Interval> intervals,
+      final List<Interval> gaps) {
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = List.copyOf(resourceNames);
     this.violationWindows = List.copyOf(intervals);
@@ -79,14 +85,15 @@ public final class Violation {
   @Override
   public boolean equals(final Object obj) {
     if (!(obj instanceof final Violation other)) return false;
-    return Objects.equals(this.activityInstanceIds, other.activityInstanceIds) &&
-           Objects.equals(this.resourceNames, other.resourceNames) &&
-           Objects.equals(this.violationWindows, other.violationWindows) &&
-           Objects.equals(this.gaps, other.gaps);
+    return Objects.equals(this.activityInstanceIds, other.activityInstanceIds)
+        && Objects.equals(this.resourceNames, other.resourceNames)
+        && Objects.equals(this.violationWindows, other.violationWindows)
+        && Objects.equals(this.gaps, other.gaps);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.activityInstanceIds, this.resourceNames, this.violationWindows, this.gaps);
+    return Objects.hash(
+        this.activityInstanceIds, this.resourceNames, this.violationWindows, this.gaps);
   }
 }

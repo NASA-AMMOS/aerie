@@ -10,9 +10,7 @@ public final class AdditiveRegister implements DiscreteResource<Double> {
     this.value = Counter.ofDouble(initialValue);
   }
 
-  public static
-  AdditiveRegister
-  create(final double initialValue) {
+  public static AdditiveRegister create(final double initialValue) {
     return new AdditiveRegister(initialValue);
   }
 

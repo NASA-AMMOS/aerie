@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class DeleteRequestAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
     delete from scheduling_request
     where
       spec_id = ? and

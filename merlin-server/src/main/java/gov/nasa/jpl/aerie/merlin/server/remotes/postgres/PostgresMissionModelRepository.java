@@ -9,13 +9,12 @@ import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
-
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.sql.DataSource;
 
 public final class PostgresMissionModelRepository implements MissionModelRepository {
   private final DataSource dataSource;
@@ -28,13 +27,11 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   public Map<String, MissionModelJar> getAllMissionModels() {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getAllMissionModelsAction = new GetAllModelsAction(connection)) {
-        return getAllMissionModelsAction
-            .get()
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(
-                e -> Long.toString(e.getKey()),
-                e -> missionModelRecordToMissionModelJar(e.getValue())));
+        return getAllMissionModelsAction.get().entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    e -> Long.toString(e.getKey()),
+                    e -> missionModelRecordToMissionModelJar(e.getValue())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to retrieve all mission models", ex);
@@ -42,7 +39,8 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public MissionModelJar getMissionModel(final String missionModelId) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModel(final String missionModelId)
+      throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getMissionModelAction = new GetModelAction(connection)) {
         return getMissionModelAction
@@ -51,52 +49,56 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
             .orElseThrow(NoSuchMissionModelException::new);
       }
     } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to retrieve mission model with id `%s`".formatted(missionModelId), ex);
+      throw new DatabaseException(
+          "Failed to retrieve mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<String, Constraint> getConstraints(final String missionModelId)
+      throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getModelConstraintsAction = new GetModelConstraintsAction(connection)) {
         return getModelConstraintsAction
             .get(toMissionModelId(missionModelId))
             .orElseThrow(NoSuchMissionModelException::new)
             .stream()
-            .collect(Collectors.toMap(
-                ConstraintRecord::name,
-                r -> new Constraint(
-                    r.name(),
-                    r.summary(),
-                    r.description(),
-                    r.definition())));
+            .collect(
+                Collectors.toMap(
+                    ConstraintRecord::name,
+                    r -> new Constraint(r.name(), r.summary(), r.description(), r.definition())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to retrieve constraints for mission model with id `%s`".formatted(missionModelId), ex);
+          "Failed to retrieve constraints for mission model with id `%s`".formatted(missionModelId),
+          ex);
     }
   }
 
   @Override
-  public Map<String, ActivityType> getActivityTypes(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<String, ActivityType> getActivityTypes(final String missionModelId)
+      throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getActivityTypesAction = new GetActivityTypesAction(connection)) {
         final var id = toMissionModelId(missionModelId);
         final var result = new HashMap<String, ActivityType>();
-        for (final var activityType: getActivityTypesAction.get(id)) {
+        for (final var activityType : getActivityTypesAction.get(id)) {
           result.put(activityType.name(), activityType);
         }
         return result;
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to retrieve activity types for mission model with id `%s`".formatted(missionModelId), ex);
+          "Failed to retrieve activity types for mission model with id `%s`"
+              .formatted(missionModelId),
+          ex);
     }
   }
 
   @Override
-  public void updateModelParameters(final String missionModelId, final List<Parameter> modelParameters)
-  throws NoSuchMissionModelException {
+  public void updateModelParameters(
+      final String missionModelId, final List<Parameter> modelParameters)
+      throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createModelParametersAction = new CreateModelParametersAction(connection)) {
         final var id = toMissionModelId(missionModelId);
@@ -104,13 +106,15 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
+          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId),
+          ex);
     }
   }
 
   @Override
-  public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
-  throws NoSuchMissionModelException {
+  public void updateActivityTypes(
+      final String missionModelId, final Map<String, ActivityType> activityTypes)
+      throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
         final var id = toMissionModelId(missionModelId);
@@ -125,7 +129,8 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
+          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId),
+          ex);
     }
   }
 
@@ -134,22 +139,22 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       final ActivityDirectiveId directiveId,
       final PlanId planId,
       final Timestamp argumentsModifiedTime,
-      final List<ValidationNotice> notices
-  )
-  {
+      final List<ValidationNotice> notices) {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var updateActivityDirectiveValidationsAction = new UpdateActivityDirectiveValidationsAction(connection)) {
-        updateActivityDirectiveValidationsAction.apply(directiveId.id(), planId.id(), argumentsModifiedTime, notices);
+      try (final var updateActivityDirectiveValidationsAction =
+          new UpdateActivityDirectiveValidationsAction(connection)) {
+        updateActivityDirectiveValidationsAction.apply(
+            directiveId.id(), planId.id(), argumentsModifiedTime, notices);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for activity directive with id `%d` and plan id '%d'".formatted(directiveId.id(), planId.id()), ex);
+          "Failed to update derived data for activity directive with id `%d` and plan id '%d'"
+              .formatted(directiveId.id(), planId.id()),
+          ex);
     }
   }
 
-  private static long toMissionModelId(final String modelId)
-  throws NoSuchMissionModelException
-  {
+  private static long toMissionModelId(final String modelId) throws NoSuchMissionModelException {
     try {
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
@@ -157,7 +162,8 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     }
   }
 
-  private static MissionModelJar missionModelRecordToMissionModelJar(final MissionModelRecord record) {
+  private static MissionModelJar missionModelRecordToMissionModelJar(
+      final MissionModelRecord record) {
     final var model = new MissionModelJar();
     model.mission = record.mission();
     model.name = record.name();

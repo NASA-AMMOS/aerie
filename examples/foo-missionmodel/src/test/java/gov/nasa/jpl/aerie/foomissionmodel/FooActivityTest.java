@@ -1,5 +1,12 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.within;
+
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.activities.FooActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
@@ -7,20 +14,12 @@ import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import java.time.Instant;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.time.Instant;
-import java.util.Map;
-
-import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.assertj.core.api.Assertions.within;
 
 // The `@ExtendWith` annotation injects the given extension into JUnit's testing apparatus.
 // Our `MerlinExtension` hooks test class construction and test method execution,
@@ -53,18 +52,26 @@ public final class FooActivityTest {
   public void testActivityInstantiate() {
 
     // Assert missing required argument throws exception
-    assertThatExceptionOfType(InstantiationException.class).isThrownBy(() ->
-    new FooActivityMapper().getInputType().instantiate(Map.of(
-        "x", SerializedValue.of(42),
-        "y", SerializedValue.of("test")
-    )));
+    assertThatExceptionOfType(InstantiationException.class)
+        .isThrownBy(
+            () ->
+                new FooActivityMapper()
+                    .getInputType()
+                    .instantiate(
+                        Map.of(
+                            "x", SerializedValue.of(42),
+                            "y", SerializedValue.of("test"))));
 
     // Assert provided required argument throws no exception
-    assertThatNoException().isThrownBy(() ->
-        new FooActivityMapper().getInputType().instantiate(Map.of(
-           "x", SerializedValue.of(42),
-           "y", SerializedValue.of("test"),
-           "z", SerializedValue.of(43)
-    )));
+    assertThatNoException()
+        .isThrownBy(
+            () ->
+                new FooActivityMapper()
+                    .getInputType()
+                    .instantiate(
+                        Map.of(
+                            "x", SerializedValue.of(42),
+                            "y", SerializedValue.of("test"),
+                            "z", SerializedValue.of(43))));
   }
 }

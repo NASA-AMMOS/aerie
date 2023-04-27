@@ -18,6 +18,6 @@ public interface SchedulerAgent {
    * @param request details of scheduling request, including target plan version
    * @param writer object representing the request for scheduling results, including space to store results
    */
-  void schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer) throws InterruptedException;
-
+  void schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer)
+      throws InterruptedException;
 }

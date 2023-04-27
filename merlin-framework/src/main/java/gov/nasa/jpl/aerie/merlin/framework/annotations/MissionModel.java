@@ -29,7 +29,6 @@ public @interface MissionModel {
     WithMappers[] value();
   }
 
-
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
   @Repeatable(AllActivityTypes.class)

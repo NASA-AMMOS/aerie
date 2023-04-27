@@ -1,11 +1,7 @@
 @MissionModel(model = Mission.class)
-
 @WithConfiguration(Configuration.class)
-
 @WithMappers(BasicValueMappers.class)
-
 @WithActivityType(SingleActivity.class)
-
 package gov.nasa.jpl.aerie.minimalmissionmodel;
 
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;

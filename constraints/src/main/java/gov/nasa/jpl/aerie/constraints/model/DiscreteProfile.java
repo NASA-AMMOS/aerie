@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -7,17 +10,14 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
-
-public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable<Segment<SerializedValue>> {
+public final class DiscreteProfile
+    implements Profile<DiscreteProfile>, Iterable<Segment<SerializedValue>> {
   public final IntervalMap<SerializedValue> profilePieces;
 
   public DiscreteProfile(final IntervalMap<SerializedValue> profilePieces) {
@@ -33,7 +33,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     this.profilePieces = IntervalMap.of(profilePieces);
   }
 
-  private static boolean profileOutsideBounds(final Segment<SerializedValue> piece, final Interval bounds){
+  private static boolean profileOutsideBounds(
+      final Segment<SerializedValue> piece, final Interval bounds) {
     return piece.interval().isStrictlyBefore(bounds) || piece.interval().isStrictlyAfter(bounds);
   }
 
@@ -41,20 +42,18 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
   public Windows equalTo(final DiscreteProfile other) {
     return new Windows(
         IntervalMap.map2(
-            this.profilePieces, other.profilePieces,
-            (left, right) -> left.flatMap($l -> right.map($l::equals))
-        )
-    );
+            this.profilePieces,
+            other.profilePieces,
+            (left, right) -> left.flatMap($l -> right.map($l::equals))));
   }
 
   @Override
   public Windows notEqualTo(final DiscreteProfile other) {
     return new Windows(
         IntervalMap.map2(
-            this.profilePieces, other.profilePieces,
-            (left, right) -> left.flatMap($l -> right.map($r -> !$l.equals($r)))
-        )
-    );
+            this.profilePieces,
+            other.profilePieces,
+            (left, right) -> left.flatMap($l -> right.map($r -> !$l.equals($r)))));
   }
 
   @Override
@@ -67,7 +66,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
           result.unset(Interval.at(segment.interval().start));
         }
       } else {
-        final var previousSegment = this.profilePieces.get(i-1);
+        final var previousSegment = this.profilePieces.get(i - 1);
         if (Interval.meets(previousSegment.interval(), segment.interval())) {
           if (!previousSegment.value().equals(segment.value())) {
             result.set(Interval.at(segment.interval().start), true);
@@ -90,7 +89,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
           result.unset(Interval.at(segment.interval().start));
         }
       } else {
-        final var previousSegment = this.profilePieces.get(i-1);
+        final var previousSegment = this.profilePieces.get(i - 1);
         if (Interval.meets(previousSegment.interval(), segment.interval())) {
           if (previousSegment.value().equals(oldState) && segment.value().equals(newState)) {
             result.set(Interval.at(segment.interval().start), true);
@@ -114,48 +113,42 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
   public DiscreteProfile assignGaps(final DiscreteProfile def) {
     return new DiscreteProfile(
         IntervalMap.map2(
-            this.profilePieces, def.profilePieces,
-            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
-        )
-    );
+            this.profilePieces,
+            def.profilePieces,
+            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment));
   }
 
   @Override
   public Optional<SerializedValue> valueAt(final Duration timepoint) {
-    final var matchPiece = profilePieces
-        .stream()
-        .filter($ -> $.interval().contains(timepoint))
-        .findFirst();
-    return matchPiece
-        .map(Segment::value);
+    final var matchPiece =
+        profilePieces.stream().filter($ -> $.interval().contains(timepoint)).findFirst();
+    return matchPiece.map(Segment::value);
   }
 
-  public static DiscreteProfile fromSimulatedProfile(final List<ProfileSegment<SerializedValue>> simulatedProfile) {
+  public static DiscreteProfile fromSimulatedProfile(
+      final List<ProfileSegment<SerializedValue>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }
 
-  public static DiscreteProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<ProfileSegment<Optional<SerializedValue>>> externalProfile) {
+  public static DiscreteProfile fromExternalProfile(
+      final Duration offsetFromPlanStart,
+      final List<ProfileSegment<Optional<SerializedValue>>> externalProfile) {
     return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
   }
 
   private static <T> DiscreteProfile fromProfileHelper(
       final Duration offsetFromPlanStart,
       final List<ProfileSegment<T>> profile,
-      final Function<T, Optional<SerializedValue>> transform
-  ) {
+      final Function<T, Optional<SerializedValue>> transform) {
     final var result = new IntervalMap.Builder<SerializedValue>();
     var cursor = offsetFromPlanStart;
-    for (final var pair: profile) {
+    for (final var pair : profile) {
       final var nextCursor = cursor.plus(pair.extent());
 
       final var value = transform.apply(pair.dynamics());
       final Duration finalCursor = cursor;
       value.ifPresent(
-          $ -> result.set(
-              Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
-              $
-          )
-      );
+          $ -> result.set(Interval.between(finalCursor, Inclusive, nextCursor, Exclusive), $));
 
       cursor = nextCursor;
     }

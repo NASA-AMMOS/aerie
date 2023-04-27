@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
@@ -22,7 +21,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
   private Lifecycle lifecycle = Lifecycle.Inactive;
   private Return returnValue;
 
-  public ThreadedTask(final Executor executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
+  public ThreadedTask(
+      final Executor executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
     this.executor = Objects.requireNonNull(executor);
@@ -74,10 +74,10 @@ public final class ThreadedTask<Return> implements Task<Return> {
           throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
         }
       } else {
-        throw new Error(String.format(
-            "Unexpected variant of %s: %s",
-            TaskResponse.class.getCanonicalName(),
-            response.getClass().getCanonicalName()));
+        throw new Error(
+            String.format(
+                "Unexpected variant of %s: %s",
+                TaskResponse.class.getCanonicalName(), response.getClass().getCanonicalName()));
       }
     } catch (final InterruptedException ex) {
       throw new Error("Merlin host unexpectedly interrupted", ex);
@@ -87,27 +87,28 @@ public final class ThreadedTask<Return> implements Task<Return> {
   private void beginAsync() {
     final var handle = new ThreadedTaskHandle();
 
-    this.executor.execute(() -> {
-      final TaskRequest request;
-      try {
-        request = ThreadedTask.this.hostToTask.take();
-      } catch (final InterruptedException ex) {
-        throw new Error("Merlin task unexpectedly interrupted", ex);
-      }
+    this.executor.execute(
+        () -> {
+          final TaskRequest request;
+          try {
+            request = ThreadedTask.this.hostToTask.take();
+          } catch (final InterruptedException ex) {
+            throw new Error("Merlin task unexpectedly interrupted", ex);
+          }
 
-      TaskResponse<Return> response;
-      try {
-        response = handle.run(request);
-      } catch (final Throwable ex) {
-        response = new TaskResponse.Failure<>(ex);
-      }
+          TaskResponse<Return> response;
+          try {
+            response = handle.run(request);
+          } catch (final Throwable ex) {
+            response = new TaskResponse.Failure<>(ex);
+          }
 
-      try {
-        ThreadedTask.this.taskToHost.put(response);
-      } catch (final InterruptedException ex) {
-        throw new Error("Merlin task unexpectedly interrupted", ex);
-      }
-    });
+          try {
+            ThreadedTask.this.taskToHost.put(response);
+          } catch (final InterruptedException ex) {
+            throw new Error("Merlin task unexpectedly interrupted", ex);
+          }
+        });
   }
 
   @Override
@@ -135,7 +136,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
+        final var context =
+            new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
@@ -147,10 +149,10 @@ public final class ThreadedTask<Return> implements Task<Return> {
       } else if (request instanceof TaskRequest.Abort) {
         return new TaskResponse.Success<>(TaskStatus.completed(null));
       } else {
-        throw new Error(String.format(
-            "Unexpected variant of %s: %s",
-            TaskRequest.class.getCanonicalName(),
-            request.getClass().getCanonicalName()));
+        throw new Error(
+            String.format(
+                "Unexpected variant of %s: %s",
+                TaskRequest.class.getCanonicalName(), request.getClass().getCanonicalName()));
       }
     }
 
@@ -185,15 +187,16 @@ public final class ThreadedTask<Return> implements Task<Return> {
         // TODO: Don't let the ReactionContext interact directly with the scheduler.
         //   We should intercept calls to the scheduler so that they, too, cause a `TaskAbort`.
         //   As it stands, they will cause a `NullPointerException`, since `ReactionContext`
-        //   sets its `scheduler` field to null before yielding. That's fine -- it keeps us bailing --
+        //   sets its `scheduler` field to null before yielding. That's fine -- it keeps us bailing
+        // --
         //   but it's not great to have this interaction logic spread out.
         this.isAborting = true;
         throw TaskAbort;
       } else {
-        throw new Error(String.format(
-            "Unexpected variant of %s: %s",
-            TaskRequest.class.getCanonicalName(),
-            request.getClass().getCanonicalName()));
+        throw new Error(
+            String.format(
+                "Unexpected variant of %s: %s",
+                TaskRequest.class.getCanonicalName(), request.getClass().getCanonicalName()));
       }
     }
 
@@ -213,7 +216,11 @@ public final class ThreadedTask<Return> implements Task<Return> {
     }
   }
 
-  private enum Lifecycle { Inactive, Running, Terminated }
+  private enum Lifecycle {
+    Inactive,
+    Running,
+    Terminated
+  }
 
   sealed interface TaskRequest {
     record Resume(Scheduler scheduler) implements TaskRequest {}
@@ -242,7 +249,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
    */
   private static final class TaskAbort extends Error {
     public TaskAbort() {
-      super(null, null, /* capture suppressed exceptions? */ true, /* capture stack trace? */ false);
+      super(
+          null, null, /* capture suppressed exceptions? */ true, /* capture stack trace? */ false);
     }
   }
 }

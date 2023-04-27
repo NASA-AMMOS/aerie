@@ -1,19 +1,19 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
+
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
-
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
+import org.intellij.lang.annotations.Language;
 
 /*package local*/ final class CreateSimulationDatasetAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     insert into simulation_dataset
       (
         simulation_id,
@@ -40,8 +40,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final long simulationId,
       final Timestamp simulationStart,
       final Timestamp simulationEnd,
-      final Map<String, SerializedValue> arguments
-  ) throws SQLException {
+      final Map<String, SerializedValue> arguments)
+      throws SQLException {
     this.statement.setLong(1, simulationId);
     PreparedStatements.setTimestamp(this.statement, 2, simulationStart);
     PreparedStatements.setTimestamp(this.statement, 3, simulationEnd);
@@ -69,8 +69,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           canceled,
           simulationStart,
           simulationEnd,
-          simulationDatasetId
-      );
+          simulationDatasetId);
     }
   }
 

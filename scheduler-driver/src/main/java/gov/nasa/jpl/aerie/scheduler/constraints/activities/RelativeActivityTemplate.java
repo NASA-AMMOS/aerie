@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.IntervalRelation;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
-
 import java.util.Map;
 
 /**
@@ -22,5 +21,4 @@ public record RelativeActivityTemplate(
     ActivityType type,
     Map<String, DiscreteProfile> parameterProfiles,
     Expression<Spans> relativeTo,
-    IntervalRelation relation
-) {}
+    IntervalRelation relation) {}

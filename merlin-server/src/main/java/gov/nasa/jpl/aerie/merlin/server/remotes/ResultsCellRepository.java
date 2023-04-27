@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-
 import java.util.Optional;
 
 public interface ResultsCellRepository {

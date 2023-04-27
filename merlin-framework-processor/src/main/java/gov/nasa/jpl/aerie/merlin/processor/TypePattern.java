@@ -5,43 +5,53 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 
 public abstract class TypePattern {
   private TypePattern() {}
 
   public static TypePattern from(final TypeMirror mirror) {
     switch (mirror.getKind()) {
-      case BOOLEAN: return new PrimitivePattern(Primitive.BOOLEAN);
-      case BYTE: return new PrimitivePattern(Primitive.BYTE);
-      case SHORT: return new PrimitivePattern(Primitive.SHORT);
-      case INT: return new PrimitivePattern(Primitive.INT);
-      case LONG: return new PrimitivePattern(Primitive.LONG);
-      case CHAR: return new PrimitivePattern(Primitive.CHAR);
-      case FLOAT: return new PrimitivePattern(Primitive.FLOAT);
-      case DOUBLE: return new PrimitivePattern(Primitive.DOUBLE);
-      case ARRAY: return new ArrayPattern(TypePattern.from(((ArrayType) mirror).getComponentType()));
-      case TYPEVAR: return new TypeVariablePattern(mirror.toString());
-      case DECLARED: {
-        // DeclaredType element can be cast as TypeElement because it's a Type
-        final var className = ClassName.get((TypeElement) ((DeclaredType) mirror).asElement());
-        final var typeArguments = ((DeclaredType) mirror).getTypeArguments();
-        final var argumentPatterns = new ArrayList<TypePattern>(typeArguments.size());
-        for (final var typeArgument : typeArguments) {
-          argumentPatterns.add(TypePattern.from(typeArgument));
+      case BOOLEAN:
+        return new PrimitivePattern(Primitive.BOOLEAN);
+      case BYTE:
+        return new PrimitivePattern(Primitive.BYTE);
+      case SHORT:
+        return new PrimitivePattern(Primitive.SHORT);
+      case INT:
+        return new PrimitivePattern(Primitive.INT);
+      case LONG:
+        return new PrimitivePattern(Primitive.LONG);
+      case CHAR:
+        return new PrimitivePattern(Primitive.CHAR);
+      case FLOAT:
+        return new PrimitivePattern(Primitive.FLOAT);
+      case DOUBLE:
+        return new PrimitivePattern(Primitive.DOUBLE);
+      case ARRAY:
+        return new ArrayPattern(TypePattern.from(((ArrayType) mirror).getComponentType()));
+      case TYPEVAR:
+        return new TypeVariablePattern(mirror.toString());
+      case DECLARED:
+        {
+          // DeclaredType element can be cast as TypeElement because it's a Type
+          final var className = ClassName.get((TypeElement) ((DeclaredType) mirror).asElement());
+          final var typeArguments = ((DeclaredType) mirror).getTypeArguments();
+          final var argumentPatterns = new ArrayList<TypePattern>(typeArguments.size());
+          for (final var typeArgument : typeArguments) {
+            argumentPatterns.add(TypePattern.from(typeArgument));
+          }
+          return new ClassPattern(className, argumentPatterns);
         }
-        return new ClassPattern(className, argumentPatterns);
-      }
 
       default:
         throw new Error("Cannot construct a pattern for type " + mirror);

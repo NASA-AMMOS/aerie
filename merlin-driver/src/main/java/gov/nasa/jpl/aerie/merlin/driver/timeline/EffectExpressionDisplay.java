@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -49,14 +48,19 @@ public final class EffectExpressionDisplay {
    * @param <Event> The type of event contained by the event graph.
    * @return A textual representation of the graph.
    */
-  public static <Event> String displayGraph(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
+  public static <Event> String displayGraph(
+      final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
         .map(stringifier)
         .evaluate(new Display.Trait(), Display.Atom::new)
         .accept(Parent.Unrestricted);
   }
 
-  private enum Parent { Unrestricted, Par, Seq }
+  private enum Parent {
+    Unrestricted,
+    Par,
+    Seq
+  }
 
   // An effect algebra for computing string representations of transactions.
   private sealed interface Display {

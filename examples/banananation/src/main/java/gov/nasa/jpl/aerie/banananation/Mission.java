@@ -10,12 +10,11 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.spice.SpiceLoader;
-import spice.basic.CSPICE;
-import spice.basic.SpiceErrorException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import spice.basic.CSPICE;
+import spice.basic.SpiceErrorException;
 
 public final class Mission {
   public final Accumulator fruit;
@@ -54,7 +53,7 @@ public final class Mission {
 
   private static int countLines(final Path path) {
     try {
-      return (int)Files.lines(path).count();
+      return (int) Files.lines(path).count();
     } catch (IOException e) {
       throw new Error(e);
     }

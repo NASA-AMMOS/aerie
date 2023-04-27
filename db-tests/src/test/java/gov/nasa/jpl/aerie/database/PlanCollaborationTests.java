@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.database;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,13 +14,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PlanCollaborationTests {
@@ -64,11 +63,8 @@ public class PlanCollaborationTests {
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "aerie_merlin_test",
-        "Merlin Database Tests",
-        initSqlScriptFile
-    );
+    helper =
+        new DatabaseTestHelper("aerie_merlin_test", "Merlin Database Tests", initSqlScriptFile);
     helper.startDatabase();
     connection = helper.connection();
   }
@@ -80,17 +76,16 @@ public class PlanCollaborationTests {
     helper = null;
   }
 
-  //region Helper Methods from MerlinDatabaseTests
+  // region Helper Methods from MerlinDatabaseTests
   int insertFileUpload() throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
+      final var res =
+          statement.executeQuery(
               """
                   INSERT INTO uploaded_file (path, name)
                   VALUES ('test-path', 'test-name-%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString())
-          );
+                  .formatted(UUID.randomUUID().toString()));
       res.next();
       return res.getInt("id");
     }
@@ -98,14 +93,13 @@ public class PlanCollaborationTests {
 
   int insertMissionModel(final int fileId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
+      final var res =
+          statement.executeQuery(
               """
                   INSERT INTO mission_model (name, mission, owner, version, jar_id)
                   VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), fileId)
-          );
+                  .formatted(UUID.randomUUID().toString(), fileId));
       res.next();
       return res.getInt("id");
     }
@@ -113,14 +107,13 @@ public class PlanCollaborationTests {
 
   int insertPlan(final int missionModelId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
+      final var res =
+          statement.executeQuery(
               """
                   INSERT INTO plan (name, model_id, duration, start_time)
                   VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00")
-          );
+                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00"));
       res.next();
       return res.getInt("id");
     }
@@ -132,38 +125,41 @@ public class PlanCollaborationTests {
 
   int insertActivity(final int planId, final String startOffset) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
+      final var res =
+          statement.executeQuery(
               """
                   INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
                   VALUES ('test-activity', '%s', '%s', '{}')
                   RETURNING id;"""
-                  .formatted(planId, startOffset)
-          );
+                  .formatted(planId, startOffset));
 
       res.next();
       return res.getInt("id");
     }
   }
-  //endregion
+  // endregion
 
-  //region Helper Methods
+  // region Helper Methods
   private void updateActivityName(String newName, int activityId, int planId) throws SQLException {
-    try(final var statement = connection.createStatement()) {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
-        """
+          """
         update activity_directive
         set name = '%s'
         where id = %d and plan_id = %d;
-        """.formatted(newName, activityId, planId));
+        """
+              .formatted(newName, activityId, planId));
     }
   }
 
   int duplicatePlan(final int planId, final String newPlanName) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
         select duplicate_plan(%s, '%s') as id;
-      """.formatted(planId, newPlanName));
+      """
+                  .formatted(planId, newPlanName));
       res.next();
       return res.getInt("id");
     }
@@ -171,180 +167,198 @@ public class PlanCollaborationTests {
 
   int createSnapshot(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
                                                    select create_snapshot(%s) as id;
-                                                   """.formatted(planId));
+                                                   """
+                  .formatted(planId));
       res.next();
       return res.getInt("id");
     }
   }
 
-  int getParentPlanId(final int planId) throws SQLException{
+  int getParentPlanId(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
                                                    select parent_id
                                                    from plan
                                                    where plan.id = %d;
-                                                   """.formatted(planId));
+                                                   """
+                  .formatted(planId));
       res.next();
       return res.getInt("parent_id");
     }
   }
 
-  private void lockPlan(final int planId) throws SQLException{
-    try(final var statement = connection.createStatement()){
-      statement.execute("""
+  private void lockPlan(final int planId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          """
           update plan
           set is_locked = true
           where id = %d;
-          """.formatted(planId));
+          """
+              .formatted(planId));
     }
   }
 
-  private void unlockPlan(final int planId) throws SQLException{
-    //Unlock first to allow for after tasks
-    try(final var statement = connection.createStatement()){
-      statement.execute("""
+  private void unlockPlan(final int planId) throws SQLException {
+    // Unlock first to allow for after tasks
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          """
           update plan
           set is_locked = false
           where id = %d;
-          """.formatted(planId));
+          """
+              .formatted(planId));
     }
   }
 
-  int getMergeBaseFromPlanIds(final int planIdReceivingChanges, final int planIdSupplyingChanges) throws SQLException{
-    try(final var statement = connection.createStatement()){
-      final var snapshotRes = statement.executeQuery(
-          """
+  int getMergeBaseFromPlanIds(final int planIdReceivingChanges, final int planIdSupplyingChanges)
+      throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var snapshotRes =
+          statement.executeQuery(
+              """
               select snapshot_id
               from plan_latest_snapshot
               where plan_id = %d
               order by snapshot_id desc
               limit 1;
-              """.formatted(planIdSupplyingChanges));
+              """
+                  .formatted(planIdSupplyingChanges));
       snapshotRes.first();
       final int snapshotIdSupplyingChanges = snapshotRes.getInt(1);
 
-      final var res = statement.executeQuery(
-          """
+      final var res =
+          statement.executeQuery(
+              """
               select get_merge_base(%d, %d);
-              """.formatted(planIdReceivingChanges, snapshotIdSupplyingChanges));
+              """
+                  .formatted(planIdReceivingChanges, snapshotIdSupplyingChanges));
 
       res.first();
 
       return res.getInt(1);
     }
-
   }
 
-  private int createMergeRequest(final int planId_receiving, final int planId_supplying) throws SQLException{
-    try(final var statement = connection.createStatement()){
-      final var res = statement.executeQuery(
-          """
+  private int createMergeRequest(final int planId_receiving, final int planId_supplying)
+      throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res =
+          statement.executeQuery(
+              """
               select create_merge_request(%d, %d, 'PlanCollaborationTests Requester');
-              """.formatted(planId_supplying, planId_receiving)
-      );
+              """
+                  .formatted(planId_supplying, planId_receiving));
       res.first();
       return res.getInt(1);
     }
   }
 
-  private void beginMerge(final int mergeRequestId) throws SQLException{
-    try(final var statement = connection.createStatement()){
+  private void beginMerge(final int mergeRequestId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
           """
           call begin_merge(%d, 'PlanCollaborationTests Reviewer')
-          """.formatted(mergeRequestId)
-      );
+          """
+              .formatted(mergeRequestId));
     }
   }
 
-  private void commitMerge(final int mergeRequestId) throws SQLException{
-    try(final var statement = connection.createStatement()){
+  private void commitMerge(final int mergeRequestId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
           """
           call commit_merge(%d)
-          """.formatted(mergeRequestId)
-      );
+          """.formatted(mergeRequestId));
     }
   }
 
-  private void withdrawMergeRequest(final int mergeRequestId) throws SQLException{
-    try(final var statement = connection.createStatement()){
+  private void withdrawMergeRequest(final int mergeRequestId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
           """
           call withdraw_merge_request(%d)
-          """.formatted(mergeRequestId)
-      );
+          """.formatted(mergeRequestId));
     }
   }
 
-  private void denyMerge(final int mergeRequestId) throws SQLException{
-    try(final var statement = connection.createStatement()){
-      statement.execute(
-          """
+  private void denyMerge(final int mergeRequestId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute("""
           call deny_merge(%d)
-          """.formatted(mergeRequestId)
-      );
+          """.formatted(mergeRequestId));
     }
   }
 
-  private void cancelMerge(final int mergeRequestId) throws SQLException{
-    try(final var statement = connection.createStatement()){
+  private void cancelMerge(final int mergeRequestId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
           """
           call cancel_merge(%d)
-          """.formatted(mergeRequestId)
-      );
+          """.formatted(mergeRequestId));
     }
   }
 
-  private void setResolution(final int mergeRequestId, final int activityId, final String status) throws SQLException {
-    try(final var statement = connection.createStatement()){
-        statement.execute(
-            """
+  private void setResolution(final int mergeRequestId, final int activityId, final String status)
+      throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          """
             update conflicting_activities
             set resolution = '%s'::conflict_resolution
             where merge_request_id = %d and activity_id = %d;
-            """.formatted(status, mergeRequestId, activityId)
-        );
+            """
+              .formatted(status, mergeRequestId, activityId));
     }
   }
 
-  ArrayList<ConflictingActivity> getConflictingActivities(final int mergeRequestId) throws SQLException {
+  ArrayList<ConflictingActivity> getConflictingActivities(final int mergeRequestId)
+      throws SQLException {
     final var conflicts = new ArrayList<ConflictingActivity>();
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
                                                    select activity_id, change_type_supplying, change_type_receiving
                                                    from conflicting_activities
                                                    where merge_request_id = %s
                                                    order by activity_id asc;
-                                                 """.formatted(mergeRequestId));
+                                                 """
+                  .formatted(mergeRequestId));
       while (res.next()) {
-        conflicts.add(new ConflictingActivity(
-            res.getInt("activity_id"),
-            res.getString("change_type_supplying"),
-            res.getString("change_type_receiving")
-        ));
+        conflicts.add(
+            new ConflictingActivity(
+                res.getInt("activity_id"),
+                res.getString("change_type_supplying"),
+                res.getString("change_type_receiving")));
       }
     }
     return conflicts;
   }
 
-  ArrayList<StagingAreaActivity> getStagingAreaActivities(final int mergeRequestId) throws SQLException{
+  ArrayList<StagingAreaActivity> getStagingAreaActivities(final int mergeRequestId)
+      throws SQLException {
     final var activities = new ArrayList<StagingAreaActivity>();
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
                                                    select activity_id, change_type
                                                    from merge_staging_area
                                                    where merge_request_id = %s
                                                    order by activity_id asc;
-                                                 """.formatted(mergeRequestId));
+                                                 """
+                  .formatted(mergeRequestId));
       while (res.next()) {
-        activities.add(new StagingAreaActivity(
-            res.getInt("activity_id"),
-            res.getString("change_type")
-        ));
+        activities.add(
+            new StagingAreaActivity(res.getInt("activity_id"), res.getString("change_type")));
       }
     }
     return activities;
@@ -352,20 +366,25 @@ public class PlanCollaborationTests {
 
   private void deleteActivityDirective(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      statement.executeUpdate("""
+      statement.executeUpdate(
+          """
         delete from activity_directive where id = %s and plan_id = %s
-      """.formatted(activityId, planId));
+      """
+              .formatted(activityId, planId));
     }
   }
 
   private Activity getActivity(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
         SELECT *
         FROM activity_directive
         WHERE id = %d
         AND plan_id = %d;
-      """.formatted(activityId, planId));
+      """
+                  .formatted(activityId, planId));
       res.first();
       return new Activity(
           res.getInt("id"),
@@ -381,70 +400,76 @@ public class PlanCollaborationTests {
           res.getString("last_modified_arguments_at"),
           res.getString("metadata"),
           res.getString("anchor_id"),
-          res.getBoolean("anchored_to_start")
-      );
+          res.getBoolean("anchored_to_start"));
     }
   }
 
   private ArrayList<Activity> getActivities(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
         SELECT *
         FROM activity_directive
         WHERE plan_id = %d
         ORDER BY id;
-      """.formatted(planId));
+      """
+                  .formatted(planId));
 
       final var activities = new ArrayList<Activity>();
-      while (res.next()){
-        activities.add(new Activity(
-            res.getInt("id"),
-            res.getInt("plan_id"),
-            res.getString("name"),
-            (String[]) res.getArray("tags").getArray(),
-            res.getInt("source_scheduling_goal_id"),
-            res.getString("created_at"),
-            res.getString("last_modified_at"),
-            res.getString("start_offset"),
-            res.getString("type"),
-            res.getString("arguments"),
-            res.getString("last_modified_arguments_at"),
-            res.getString("metadata"),
-            res.getString("anchor_id"),
-            res.getBoolean("anchored_to_start")
-        ));
+      while (res.next()) {
+        activities.add(
+            new Activity(
+                res.getInt("id"),
+                res.getInt("plan_id"),
+                res.getString("name"),
+                (String[]) res.getArray("tags").getArray(),
+                res.getInt("source_scheduling_goal_id"),
+                res.getString("created_at"),
+                res.getString("last_modified_at"),
+                res.getString("start_offset"),
+                res.getString("type"),
+                res.getString("arguments"),
+                res.getString("last_modified_arguments_at"),
+                res.getString("metadata"),
+                res.getString("anchor_id"),
+                res.getBoolean("anchored_to_start")));
       }
       return activities;
     }
   }
 
-  private ArrayList<SnapshotActivity> getSnapshotActivities(final int snapshotId) throws SQLException {
+  private ArrayList<SnapshotActivity> getSnapshotActivities(final int snapshotId)
+      throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
         SELECT *
         FROM plan_snapshot_activities
         WHERE snapshot_id = %d
         ORDER BY id;
-      """.formatted(snapshotId));
+      """
+                  .formatted(snapshotId));
 
       final var activities = new ArrayList<SnapshotActivity>();
-      while (res.next()){
-        activities.add(new SnapshotActivity(
-            res.getInt("id"),
-            res.getInt("snapshot_id"),
-            res.getString("name"),
-            (String[]) res.getArray("tags").getArray(),
-            res.getInt("source_scheduling_goal_id"),
-            res.getString("created_at"),
-            res.getString("last_modified_at"),
-            res.getString("start_offset"),
-            res.getString("type"),
-            res.getString("arguments"),
-            res.getString("last_modified_arguments_at"),
-            res.getString("metadata"),
-            res.getString("anchor_id"),
-            res.getBoolean("anchored_to_start")
-        ));
+      while (res.next()) {
+        activities.add(
+            new SnapshotActivity(
+                res.getInt("id"),
+                res.getInt("snapshot_id"),
+                res.getString("name"),
+                (String[]) res.getArray("tags").getArray(),
+                res.getInt("source_scheduling_goal_id"),
+                res.getString("created_at"),
+                res.getString("last_modified_at"),
+                res.getString("start_offset"),
+                res.getString("type"),
+                res.getString("arguments"),
+                res.getString("last_modified_arguments_at"),
+                res.getString("metadata"),
+                res.getString("anchor_id"),
+                res.getBoolean("anchored_to_start")));
       }
       return activities;
     }
@@ -452,31 +477,34 @@ public class PlanCollaborationTests {
 
   private MergeRequest getMergeRequest(final int requestId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res =
+          statement.executeQuery(
+              """
         SELECT *
         FROM merge_request
         WHERE id = %d;
-      """.formatted(requestId));
+      """
+                  .formatted(requestId));
       res.first();
       return new MergeRequest(
           res.getInt("id"),
           res.getInt("plan_id_receiving_changes"),
           res.getInt("snapshot_id_supplying_changes"),
           res.getInt("merge_base_snapshot_id"),
-          res.getString("status")
-      );
+          res.getString("status"));
     }
   }
 
-  private void setMergeRequestStatus(final int requestId, final String newStatus) throws SQLException {
-    try(final var statement = connection.createStatement()) {
+  private void setMergeRequestStatus(final int requestId, final String newStatus)
+      throws SQLException {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
           """
           UPDATE merge_request
           SET status = '%s'
           WHERE id = %d;
-          """.formatted(newStatus, requestId)
-      );
+          """
+              .formatted(newStatus, requestId));
     }
   }
 
@@ -492,14 +520,13 @@ public class PlanCollaborationTests {
     assertEquals(expected.anchorId, actual.anchorId);
     assertEquals(expected.anchoredToStart, actual.anchoredToStart);
     assertEquals(expected.tags.length, actual.tags.length);
-    for(int j = 0; j < expected.tags.length; ++j)
-    {
+    for (int j = 0; j < expected.tags.length; ++j) {
       assertEquals(expected.tags[j], actual.tags[j]);
     }
   }
-  //endregion
+  // endregion
 
-  //region Records
+  // region Records
   private record Activity(
       int activityId,
       int planId,
@@ -513,9 +540,11 @@ public class PlanCollaborationTests {
       String arguments,
       String lastModifiedArgumentsAt,
       String metadata,
-      String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
-      boolean anchoredToStart
-  ) {}
+      String
+          anchorId, // Since anchor_id allows for null values, this is a String to avoid confusion
+      // over what the number means.
+      boolean anchoredToStart) {}
+
   private record SnapshotActivity(
       int activityId,
       int snapshotId,
@@ -529,16 +558,26 @@ public class PlanCollaborationTests {
       String arguments,
       String lastModifiedArgumentsAt,
       String metadata,
-      String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
-      boolean anchoredToStart
-  ) {}
-  record ConflictingActivity(int activityId, String changeTypeSupplying, String changeTypeReceiving) {}
-  record StagingAreaActivity(int activityId, String changeType) {} //only relevant fields
-  private record MergeRequest(int requestId, int receivingPlan, int supplyingSnapshot, int mergeBaseSnapshot, String status) {}
-  //endregion
+      String
+          anchorId, // Since anchor_id allows for null values, this is a String to avoid confusion
+      // over what the number means.
+      boolean anchoredToStart) {}
+
+  record ConflictingActivity(
+      int activityId, String changeTypeSupplying, String changeTypeReceiving) {}
+
+  record StagingAreaActivity(int activityId, String changeType) {} // only relevant fields
+
+  private record MergeRequest(
+      int requestId,
+      int receivingPlan,
+      int supplyingSnapshot,
+      int mergeBaseSnapshot,
+      String status) {}
+  // endregion
 
   @Nested
-  class PlanSnapshotTests{
+  class PlanSnapshotTests {
     @Test
     void snapshotCapturesAllActivities() throws SQLException {
       final var planId = insertPlan(missionModelId);
@@ -552,34 +591,39 @@ public class PlanCollaborationTests {
       final var snapshotId = createSnapshot(planId);
       final var snapshotActivities = getSnapshotActivities(snapshotId);
 
-      //assert the correct number of activities were copied
+      // assert the correct number of activities were copied
       assertFalse(planActivities.isEmpty());
       assertFalse(snapshotActivities.isEmpty());
       assertEquals(planActivities.size(), snapshotActivities.size());
       assertEquals(activityCount, planActivities.size());
 
       for (int i = 0; i < activityCount; ++i) {
-        //assert that this activity exists
+        // assert that this activity exists
         assertTrue(activityIds.contains(planActivities.get(i).activityId));
         assertTrue(activityIds.contains(snapshotActivities.get(i).activityId));
         // validate all shared properties
         assertEquals(planActivities.get(i).activityId, snapshotActivities.get(i).activityId);
         assertEquals(planActivities.get(i).name, snapshotActivities.get(i).name);
 
-        assertEquals(planActivities.get(i).sourceSchedulingGoalId, snapshotActivities.get(i).sourceSchedulingGoalId);
+        assertEquals(
+            planActivities.get(i).sourceSchedulingGoalId,
+            snapshotActivities.get(i).sourceSchedulingGoalId);
         assertEquals(planActivities.get(i).createdAt, snapshotActivities.get(i).createdAt);
-        assertEquals(planActivities.get(i).lastModifiedAt, snapshotActivities.get(i).lastModifiedAt);
+        assertEquals(
+            planActivities.get(i).lastModifiedAt, snapshotActivities.get(i).lastModifiedAt);
         assertEquals(planActivities.get(i).startOffset, snapshotActivities.get(i).startOffset);
         assertEquals(planActivities.get(i).type, snapshotActivities.get(i).type);
         assertEquals(planActivities.get(i).arguments, snapshotActivities.get(i).arguments);
-        assertEquals(planActivities.get(i).lastModifiedArgumentsAt, snapshotActivities.get(i).lastModifiedArgumentsAt);
+        assertEquals(
+            planActivities.get(i).lastModifiedArgumentsAt,
+            snapshotActivities.get(i).lastModifiedArgumentsAt);
         assertEquals(planActivities.get(i).metadata, snapshotActivities.get(i).metadata);
         assertEquals(planActivities.get(i).anchorId, snapshotActivities.get(i).anchorId);
-        assertEquals(planActivities.get(i).anchoredToStart, snapshotActivities.get(i).anchoredToStart);
+        assertEquals(
+            planActivities.get(i).anchoredToStart, snapshotActivities.get(i).anchoredToStart);
 
         assertEquals(planActivities.get(i).tags.length, snapshotActivities.get(i).tags.length);
-        for(int j = 0; j < planActivities.get(i).tags.length; ++j)
-        {
+        for (int j = 0; j < planActivities.get(i).tags.length; ++j) {
           assertEquals(planActivities.get(i).tags[j], snapshotActivities.get(i).tags[j]);
         }
 
@@ -589,55 +633,66 @@ public class PlanCollaborationTests {
     }
 
     @Test
-    void snapshotInheritsAllLatestAsParents() throws SQLException{
+    void snapshotInheritsAllLatestAsParents() throws SQLException {
       final int planId = insertPlan(missionModelId);
 
-      //take n snapshots, then insert them all into the latest table
+      // take n snapshots, then insert them all into the latest table
       final int numberOfSnapshots = 4;
       final int[] snapshotIds = new int[numberOfSnapshots];
-      for(int i = 0; i < numberOfSnapshots; ++i){
+      for (int i = 0; i < numberOfSnapshots; ++i) {
         snapshotIds[i] = createSnapshot(planId);
       }
 
-      try(final var statement = connection.createStatement()) {
-        //assert that there is exactly one entry for this plan in plan_latest_snapshot
-        var res = statement.executeQuery(
-            """
+      try (final var statement = connection.createStatement()) {
+        // assert that there is exactly one entry for this plan in plan_latest_snapshot
+        var res =
+            statement.executeQuery(
+                """
             select snapshot_id from plan_latest_snapshot where plan_id = %d;
-            """.formatted(planId));
+            """
+                    .formatted(planId));
         assertTrue(res.first());
         assertTrue(res.isLast());
 
-        //delete the current entry of plan_latest_snapshot for this plan to avoid any confusion when it is readded below
-        statement.execute("""
+        // delete the current entry of plan_latest_snapshot for this plan to avoid any confusion
+        // when it is readded below
+        statement.execute(
+            """
                                 delete from plan_latest_snapshot where plan_id = %d;
-                                """.formatted(planId));
+                                """
+                .formatted(planId));
 
         for (final int snapshotId : snapshotIds) {
-          statement.execute("""
+          statement.execute(
+              """
                                 insert into plan_latest_snapshot(plan_id, snapshot_id) VALUES (%d, %d);
-                                """.formatted(planId, snapshotId));
+                                """
+                  .formatted(planId, snapshotId));
         }
 
         final int finalSnapshotId = createSnapshot(planId);
 
-        //assert that there is now only one entry for this plan in plan_latest_snapshot
-        res = statement.executeQuery(
-            """
+        // assert that there is now only one entry for this plan in plan_latest_snapshot
+        res =
+            statement.executeQuery(
+                """
             select snapshot_id from plan_latest_snapshot where plan_id = %d;
-            """.formatted(planId));
+            """
+                    .formatted(planId));
         assertTrue(res.first());
         assertTrue(res.isLast());
 
-        //assert that the snapshot history is n+1 long
-        res = statement.executeQuery(
-            """
+        // assert that the snapshot history is n+1 long
+        res =
+            statement.executeQuery(
+                """
             select get_snapshot_history(%d);
-            """.formatted(finalSnapshotId));
+            """
+                    .formatted(finalSnapshotId));
         assertTrue(res.last());
-        assertEquals(res.getRow(), numberOfSnapshots+1);
+        assertEquals(res.getRow(), numberOfSnapshots + 1);
 
-        //assert that res contains, in order: finalSnapshotId, snapshotId[0,1,...,n]
+        // assert that res contains, in order: finalSnapshotId, snapshotId[0,1,...,n]
         res.first();
         assertEquals(res.getInt(1), finalSnapshotId);
         for (final int snapshotId : snapshotIds) {
@@ -648,21 +703,18 @@ public class PlanCollaborationTests {
     }
 
     @Test
-    void snapshotFailsForNonexistentPlanId() throws SQLException{
+    void snapshotFailsForNonexistentPlanId() throws SQLException {
       try {
         createSnapshot(1000);
         fail();
-      }
-      catch(SQLException sqlEx)
-      {
-        if(!sqlEx.getMessage().contains("Plan 1000 does not exist."))
-          throw sqlEx;
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Plan 1000 does not exist.")) throw sqlEx;
       }
     }
   }
 
   @Nested
-  class DuplicatePlanTests{
+  class DuplicatePlanTests {
     @Test
     void duplicateCapturesAllActivities() throws SQLException {
       /*
@@ -681,35 +733,38 @@ public class PlanCollaborationTests {
 
       final var childPlan = duplicatePlan(planId, "My new duplicated plan");
       final var childActivities = getActivities(childPlan);
-      //assert the correct number of activities were copied
+      // assert the correct number of activities were copied
       assertFalse(planActivities.isEmpty());
       assertFalse(childActivities.isEmpty());
       assertEquals(planActivities.size(), childActivities.size());
       assertEquals(activityCount, planActivities.size());
 
       for (int i = 0; i < activityCount; ++i) {
-        //assert that this activity exists
+        // assert that this activity exists
         assertTrue(activityIds.contains(planActivities.get(i).activityId));
         assertTrue(activityIds.contains(childActivities.get(i).activityId));
         // validate all shared properties
         assertEquals(planActivities.get(i).activityId, childActivities.get(i).activityId);
         assertEquals(planActivities.get(i).name, childActivities.get(i).name);
 
-        assertEquals(planActivities.get(i).sourceSchedulingGoalId, childActivities.get(i).sourceSchedulingGoalId);
+        assertEquals(
+            planActivities.get(i).sourceSchedulingGoalId,
+            childActivities.get(i).sourceSchedulingGoalId);
         assertEquals(planActivities.get(i).createdAt, childActivities.get(i).createdAt);
         assertEquals(planActivities.get(i).lastModifiedAt, childActivities.get(i).lastModifiedAt);
         assertEquals(planActivities.get(i).startOffset, childActivities.get(i).startOffset);
         assertEquals(planActivities.get(i).type, childActivities.get(i).type);
         assertEquals(planActivities.get(i).arguments, childActivities.get(i).arguments);
-        assertEquals(planActivities.get(i).lastModifiedArgumentsAt, childActivities.get(i).lastModifiedArgumentsAt);
+        assertEquals(
+            planActivities.get(i).lastModifiedArgumentsAt,
+            childActivities.get(i).lastModifiedArgumentsAt);
         assertEquals(planActivities.get(i).metadata, childActivities.get(i).metadata);
 
         assertEquals(planActivities.get(i).anchorId, childActivities.get(i).anchorId);
         assertEquals(planActivities.get(i).anchoredToStart, childActivities.get(i).anchoredToStart);
 
         assertEquals(planActivities.get(i).tags.length, childActivities.get(i).tags.length);
-        for(int j = 0; j < planActivities.get(i).tags.length; ++j)
-        {
+        for (int j = 0; j < planActivities.get(i).tags.length; ++j) {
           assertEquals(planActivities.get(i).tags[j], childActivities.get(i).tags[j]);
         }
 
@@ -719,23 +774,29 @@ public class PlanCollaborationTests {
     }
 
     @Test
-    void duplicateSetsLatestSnapshot() throws SQLException{
+    void duplicateSetsLatestSnapshot() throws SQLException {
       final int parentPlanId = insertPlan(missionModelId);
       final int parentOldSnapshot = createSnapshot(parentPlanId);
       final int childPlanId = duplicatePlan(parentPlanId, "Child Plan");
 
-      try(final var statement = connection.createStatement()){
-        var res = statement.executeQuery("""
+      try (final var statement = connection.createStatement()) {
+        var res =
+            statement.executeQuery(
+                """
                                                      select snapshot_id from plan_latest_snapshot
                                                      where plan_id = %s;
-                                                   """.formatted(parentPlanId));
+                                                   """
+                    .formatted(parentPlanId));
         assertTrue(res.next());
         final int parentLatestSnapshot = res.getInt(1);
         assertFalse(res.next()); // Should only be 1 latest snapshot
-        res = statement.executeQuery("""
+        res =
+            statement.executeQuery(
+                """
                                                      select snapshot_id from plan_latest_snapshot
                                                      where plan_id = %s;
-                                                   """.formatted(childPlanId));
+                                                   """
+                    .formatted(childPlanId));
         assertTrue(res.next());
         final int childLatestSnapshot = res.getInt(1);
         assertFalse(res.next());
@@ -745,38 +806,44 @@ public class PlanCollaborationTests {
     }
 
     @Test
-    void duplicateAttachesParentHistoryToChild() throws SQLException{
+    void duplicateAttachesParentHistoryToChild() throws SQLException {
       final int parentPlanId = insertPlan(missionModelId);
       final int numberOfSnapshots = 4;
-      for(int i = 0; i < numberOfSnapshots; ++i){
+      for (int i = 0; i < numberOfSnapshots; ++i) {
         createSnapshot(parentPlanId);
       }
       final int childPlanId = duplicatePlan(parentPlanId, "Snapshot Inheritance Test");
 
-      try(final var statementParent = connection.createStatement();
+      try (final var statementParent = connection.createStatement();
           final var statementChild = connection.createStatement()) {
-        final var parentRes = statementParent.executeQuery(
-            """
+        final var parentRes =
+            statementParent.executeQuery(
+                """
                 select get_snapshot_history_from_plan(%d);
-            """.formatted(parentPlanId));
-        final var childRes = statementChild.executeQuery(
             """
+                    .formatted(parentPlanId));
+        final var childRes =
+            statementChild.executeQuery(
+                """
                 select get_snapshot_history_from_plan(%d);
-            """.formatted(childPlanId));
+            """
+                    .formatted(childPlanId));
 
         parentRes.last();
         childRes.last();
-        assertEquals(parentRes.getRow(), childRes.getRow()); //assert the history length is the same
-        assertEquals(numberOfSnapshots+1, parentRes.getRow()); //assert the history is the length expected
+        assertEquals(
+            parentRes.getRow(), childRes.getRow()); // assert the history length is the same
+        assertEquals(
+            numberOfSnapshots + 1, parentRes.getRow()); // assert the history is the length expected
 
-        //assert the history is the same
+        // assert the history is the same
         parentRes.first();
         childRes.first();
-        do{
+        do {
           assertEquals(parentRes.getInt(1), childRes.getInt(1));
           childRes.next();
           parentRes.next();
-        }while(!parentRes.isAfterLast());
+        } while (!parentRes.isAfterLast());
       }
     }
 
@@ -785,14 +852,10 @@ public class PlanCollaborationTests {
       try {
         duplicatePlan(1000, "Nonexistent Parent Duplicate");
         fail();
-      }
-      catch(SQLException sqlEx)
-      {
-        if(!sqlEx.getMessage().contains("Plan 1000 does not exist."))
-          throw sqlEx;
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Plan 1000 does not exist.")) throw sqlEx;
       }
     }
-
   }
 
   @Nested
@@ -801,19 +864,20 @@ public class PlanCollaborationTests {
     void getPlanHistoryCapturesAllAncestors() throws SQLException {
       final int[] plans = new int[10];
       plans[0] = insertPlan(missionModelId);
-      for(int i = 1; i < plans.length; ++i){
-        plans[i] = duplicatePlan(plans[i-1], "Child of "+(i-1));
+      for (int i = 1; i < plans.length; ++i) {
+        plans[i] = duplicatePlan(plans[i - 1], "Child of " + (i - 1));
       }
 
       try (final var statement = connection.createStatement()) {
-        final var res = statement.executeQuery("""
+        final var res =
+            statement.executeQuery(
+                """
           SELECT get_plan_history(%d);
-          """.formatted(plans[9])
-        );
+          """.formatted(plans[9]));
         assertTrue(res.first());
         assertEquals(plans[9], res.getInt(1));
 
-        for(int i = plans.length-2; i >= 0; --i){
+        for (int i = plans.length - 2; i >= 0; --i) {
           assertTrue(res.next());
           assertEquals(plans[i], res.getInt(1));
         }
@@ -824,12 +888,13 @@ public class PlanCollaborationTests {
     void getPlanHistoryNoAncestors() throws SQLException {
       final int planId = insertPlan(missionModelId);
 
-      //The history of a plan with no ancestors is itself.
+      // The history of a plan with no ancestors is itself.
       try (final var statement = connection.createStatement()) {
-        final var res = statement.executeQuery("""
+        final var res =
+            statement.executeQuery(
+                """
           SELECT get_plan_history(%d);
-          """.formatted(planId)
-        );
+          """.formatted(planId));
         assertTrue(res.first());
         assertTrue(res.isLast());
         assertEquals(planId, res.getInt(1));
@@ -841,18 +906,16 @@ public class PlanCollaborationTests {
       try (final var statement = connection.createStatement()) {
         statement.execute("""
           SELECT get_plan_history(-1);
-          """
-        );
+          """);
         fail();
-      }
-      catch (SQLException sqlException) {
+      } catch (SQLException sqlException) {
         if (!sqlException.getMessage().contains("Plan ID -1 is not present in plan table."))
           throw sqlException;
       }
     }
 
     @Test
-    void grandparentAdoptsChildrenOnDelete() throws SQLException{
+    void grandparentAdoptsChildrenOnDelete() throws SQLException {
       final int grandparentPlan = insertPlan(missionModelId);
       final int parentPlan = duplicatePlan(grandparentPlan, "Parent Plan");
       final int sibling1 = duplicatePlan(parentPlan, "Older Sibling");
@@ -862,7 +925,8 @@ public class PlanCollaborationTests {
       final int childOfUnrelatedPlan = duplicatePlan(unrelatedPlan, "Child of Related Plan");
 
       // Assert that parentage starts as expected
-      assertEquals(0, getParentPlanId(grandparentPlan)); // When the value is null, res.getInt returns 0
+      assertEquals(
+          0, getParentPlanId(grandparentPlan)); // When the value is null, res.getInt returns 0
       assertEquals(grandparentPlan, getParentPlanId(parentPlan));
       assertEquals(parentPlan, getParentPlanId(sibling1));
       assertEquals(parentPlan, getParentPlanId(sibling2));
@@ -871,11 +935,13 @@ public class PlanCollaborationTests {
       assertEquals(unrelatedPlan, getParentPlanId(childOfUnrelatedPlan));
 
       // Delete Parent Plan
-      try(final var statement = connection.createStatement()){
-        statement.execute("""
+      try (final var statement = connection.createStatement()) {
+        statement.execute(
+            """
           delete from plan
           where id = %d;
-          """.formatted(parentPlan));
+          """
+                .formatted(parentPlan));
       }
 
       // Assert that sibling1 and sibling2 now have grandparentPlan set as their parent
@@ -903,13 +969,12 @@ public class PlanCollaborationTests {
         lockPlan(planId);
         updateActivityName(newName, activityId, planId);
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked.")) throw sqlEx;
       } finally {
         unlockPlan(planId);
       }
 
-      //Assert that there is one activity and it is the one that was added earlier.
+      // Assert that there is one activity and it is the one that was added earlier.
       final var activitiesBefore = getActivities(planId);
       assertEquals(1, activitiesBefore.size());
       assertEquals(activityId, activitiesBefore.get(0).activityId);
@@ -931,13 +996,12 @@ public class PlanCollaborationTests {
         lockPlan(planId);
         deleteActivityDirective(planId, activityId);
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked.")) throw sqlEx;
       } finally {
         unlockPlan(planId);
       }
 
-      //Assert that there is one activity and it is the one that was added earlier.
+      // Assert that there is one activity and it is the one that was added earlier.
       final var activitiesBefore = getActivities(planId);
       assertEquals(1, activitiesBefore.size());
       assertEquals(activityId, activitiesBefore.get(0).activityId);
@@ -955,13 +1019,12 @@ public class PlanCollaborationTests {
         lockPlan(planId);
         insertActivity(planId);
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked.")) throw sqlEx;
       } finally {
         unlockPlan(planId);
       }
 
-      //Assert that there are no activities for this plan.
+      // Assert that there are no activities for this plan.
       final var activitiesBefore = getActivities(planId);
       assertTrue(activitiesBefore.isEmpty());
 
@@ -984,7 +1047,9 @@ public class PlanCollaborationTests {
         lockPlan(planId);
         beginMerge(mergeRequest);
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot begin merge request. Plan to receive changes is locked."))
+        if (!sqlEx
+            .getMessage()
+            .contains("Cannot begin merge request. Plan to receive changes is locked."))
           throw sqlEx;
       } finally {
         unlockPlan(planId);
@@ -997,14 +1062,14 @@ public class PlanCollaborationTests {
 
       try (final var statement = connection.createStatement()) {
         lockPlan(planId);
-        statement.execute("""
+        statement.execute(
+            """
         delete from plan
         where id = %d
         """.formatted(planId));
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot delete locked plan."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot delete locked plan.")) throw sqlEx;
       } finally {
         unlockPlan(planId);
       }
@@ -1025,7 +1090,7 @@ public class PlanCollaborationTests {
       try {
         lockPlan(planId);
 
-        //Update the activity in the unlocked plans
+        // Update the activity in the unlocked plans
         final String newName = "Test";
 
         updateActivityName(newName, activityId, relatedPlanId);
@@ -1041,8 +1106,7 @@ public class PlanCollaborationTests {
         assertEquals(newName, relatedActivities.get(0).name);
         assertEquals(newName, unrelatedActivities.get(0).name);
 
-
-        //Insert a new activity into the unlocked plans
+        // Insert a new activity into the unlocked plans
         final int newActivityRelated = insertActivity(relatedPlanId);
         final int newActivityUnrelated = insertActivity(unrelatedPlanId);
 
@@ -1056,7 +1120,7 @@ public class PlanCollaborationTests {
         assertEquals(newActivityRelated, relatedActivities.get(1).activityId);
         assertEquals(newActivityUnrelated, unrelatedActivities.get(1).activityId);
 
-        //Delete the first activity in the unlocked plans
+        // Delete the first activity in the unlocked plans
         deleteActivityDirective(relatedPlanId, activityId);
         deleteActivityDirective(unrelatedPlanId, unrelatedActivityId);
 
@@ -1070,12 +1134,11 @@ public class PlanCollaborationTests {
       } finally {
         unlockPlan(planId);
       }
-
     }
   }
 
   @Nested
-  class MergeBaseTests{
+  class MergeBaseTests {
     /**
      * The MB between a plan and itself is its latest snapshot.
      * Create additional snapshots between creation and MB to verify this.
@@ -1089,14 +1152,15 @@ public class PlanCollaborationTests {
       createSnapshot(planId);
       final int mostRecentSnapshotId = createSnapshot(planId);
 
-      try(final var statement = connection.createStatement()){
-        final var results = statement.executeQuery(
-            """
+      try (final var statement = connection.createStatement()) {
+        final var results =
+            statement.executeQuery(
+                """
             SELECT snapshot_id
             FROM plan_latest_snapshot
             WHERE plan_id = %d;
-            """.formatted(planId)
-        );
+            """
+                    .formatted(planId));
         assertTrue(results.first());
         assertEquals(mostRecentSnapshotId, results.getInt(1));
       }
@@ -1112,14 +1176,15 @@ public class PlanCollaborationTests {
       final int childPlanId = duplicatePlan(parentPlanId, "New Plan");
       final int childCreationSnapshotId;
 
-      try(final var statement = connection.createStatement()){
-        final var results = statement.executeQuery(
-            """
+      try (final var statement = connection.createStatement()) {
+        final var results =
+            statement.executeQuery(
+                """
             SELECT snapshot_id
             FROM plan_latest_snapshot
             WHERE plan_id = %d;
-            """.formatted(childPlanId)
-        );
+            """
+                    .formatted(childPlanId));
         assertTrue(results.first());
         childCreationSnapshotId = results.getInt(1);
       }
@@ -1143,27 +1208,27 @@ public class PlanCollaborationTests {
       final int olderSibling = duplicatePlan(parentPlan, "Older");
       final int olderSibCreationId;
 
-      try(final var statement = connection.createStatement()){
-        final var results = statement.executeQuery(
-            """
+      try (final var statement = connection.createStatement()) {
+        final var results =
+            statement.executeQuery(
+                """
             SELECT snapshot_id
             FROM plan_latest_snapshot
             WHERE plan_id = %d;
-            """.formatted(olderSibling)
-        );
+            """
+                    .formatted(olderSibling));
         assertTrue(results.first());
         olderSibCreationId = results.getInt(1);
       }
 
       final int youngerSibling = duplicatePlan(parentPlan, "Younger");
 
-      final int mbOlderYounger = getMergeBaseFromPlanIds(olderSibling,youngerSibling);
+      final int mbOlderYounger = getMergeBaseFromPlanIds(olderSibling, youngerSibling);
       final int mbYoungerOlder = getMergeBaseFromPlanIds(youngerSibling, olderSibling);
 
       assertEquals(mbOlderYounger, mbYoungerOlder);
       assertEquals(olderSibCreationId, mbOlderYounger);
     }
-
 
     /**
      * The MB between a plan and its nth child is the creation snapshot of the child plan's n-1's ancestor.
@@ -1174,15 +1239,16 @@ public class PlanCollaborationTests {
       int priorAncestor = duplicatePlan(ancestor, "Child of " + ancestor);
 
       final int ninthGrandparentCreation;
-      //get creation snapshot of the 9th grandparent
+      // get creation snapshot of the 9th grandparent
       try (final var statement = connection.createStatement()) {
-        final var results = statement.executeQuery(
-            """
+        final var results =
+            statement.executeQuery(
+                """
                 SELECT snapshot_id
                 FROM plan_latest_snapshot
                 WHERE plan_id = %d;
-                """.formatted(priorAncestor)
-        );
+                """
+                    .formatted(priorAncestor));
         assertTrue(results.first());
         ninthGrandparentCreation = results.getInt(1);
       }
@@ -1203,19 +1269,20 @@ public class PlanCollaborationTests {
      * The MB between nth-cousins is the creation snapshot of the eldest of the n-1 ancestors.
      */
     @Test
-    void mergeBase10thCousin() throws SQLException{
+    void mergeBase10thCousin() throws SQLException {
       final int commonAncestor = insertPlan(missionModelId);
       final int olderSibling = duplicatePlan(commonAncestor, "Older Sibling");
 
       final int olderSiblingCreation;
       try (final var statement = connection.createStatement()) {
-        final var results = statement.executeQuery(
-            """
+        final var results =
+            statement.executeQuery(
+                """
                 SELECT snapshot_id
                 FROM plan_latest_snapshot
                 WHERE plan_id = %d;
-                """.formatted(olderSibling)
-        );
+                """
+                    .formatted(olderSibling));
         assertTrue(results.first());
         olderSiblingCreation = results.getInt(1);
       }
@@ -1231,7 +1298,8 @@ public class PlanCollaborationTests {
       }
 
       final int olderTenthCousin = duplicatePlan(olderDescendant, "Child of " + olderDescendant);
-      final int youngerTenthCousin = duplicatePlan(youngerDescendant, "Child of " + youngerDescendant);
+      final int youngerTenthCousin =
+          duplicatePlan(youngerDescendant, "Child of " + youngerDescendant);
 
       final int mbOlderYounger = getMergeBaseFromPlanIds(olderTenthCousin, youngerTenthCousin);
       final int mbYoungerOlder = getMergeBaseFromPlanIds(youngerTenthCousin, olderTenthCousin);
@@ -1250,13 +1318,14 @@ public class PlanCollaborationTests {
       final int postMergeSnapshot;
 
       try (final var statement = connection.createStatement()) {
-        final var results = statement.executeQuery(
-            """
+        final var results =
+            statement.executeQuery(
+                """
                 SELECT snapshot_id
                 FROM plan_latest_snapshot
                 WHERE plan_id = %d;
-                """.formatted(newPlan)
-        );
+                """
+                    .formatted(newPlan));
         assertTrue(results.first());
         creationSnapshot = results.getInt(1);
       }
@@ -1268,13 +1337,14 @@ public class PlanCollaborationTests {
       commitMerge(mergeRequest);
 
       try (final var statement = connection.createStatement()) {
-        final var results = statement.executeQuery(
-            """
+        final var results =
+            statement.executeQuery(
+                """
                 SELECT snapshot_id_supplying_changes
                 FROM merge_request mr
                 WHERE mr.id = %d;
-                """.formatted(mergeRequest)
-        );
+                """
+                    .formatted(mergeRequest));
         assertTrue(results.first());
         postMergeSnapshot = results.getInt(1);
       }
@@ -1294,28 +1364,26 @@ public class PlanCollaborationTests {
       final int planId = insertPlan(missionModelId);
       final int snapshotId = createSnapshot(planId);
 
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
             select get_merge_base(%d, -1);
-            """.formatted(planId)
-        );
-      }
-      catch (SQLException sqlEx){
-        if(!sqlEx.getMessage().contains("Snapshot ID "+-1 +" is not present in plan_snapshot table."))
-          throw sqlEx;
+            """.formatted(planId));
+      } catch (SQLException sqlEx) {
+        if (!sqlEx
+            .getMessage()
+            .contains("Snapshot ID " + -1 + " is not present in plan_snapshot table.")) throw sqlEx;
       }
 
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
             select get_merge_base(-2, %d);
-            """.formatted(snapshotId)
-        );
-      }
-      catch (SQLException sqlEx){
-        if(!sqlEx.getMessage().contains("Snapshot ID "+-2 +" is not present in plan_snapshot table."))
-          throw sqlEx;
+            """.formatted(snapshotId));
+      } catch (SQLException sqlEx) {
+        if (!sqlEx
+            .getMessage()
+            .contains("Snapshot ID " + -2 + " is not present in plan_snapshot table.")) throw sqlEx;
       }
     }
 
@@ -1330,28 +1398,28 @@ public class PlanCollaborationTests {
       final int plan1Snapshot = createSnapshot(plan1);
       final int plan2Snapshot = createSnapshot(plan2);
 
-      //Create artificial Merge Bases
-      try(final var statement = connection.createStatement()){
+      // Create artificial Merge Bases
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
             insert into plan_latest_snapshot(plan_id, snapshot_id) VALUES (%d, %d);
-            """.formatted(plan2, plan1Snapshot)
-        );
+            """
+                .formatted(plan2, plan1Snapshot));
         statement.execute(
             """
             insert into plan_latest_snapshot(plan_id, snapshot_id) VALUES (%d, %d);
-            """.formatted(plan1, plan2Snapshot)
-        );
+            """
+                .formatted(plan1, plan2Snapshot));
 
-        //Plan2Snapshot is created after Plan1Snapshot, therefore it must have a higher id
+        // Plan2Snapshot is created after Plan1Snapshot, therefore it must have a higher id
         assertEquals(plan2Snapshot, getMergeBaseFromPlanIds(plan1, plan2));
 
         statement.execute(
             """
             delete from plan_latest_snapshot
             where snapshot_id = %d;
-            """.formatted(plan2Snapshot)
-        );
+            """
+                .formatted(plan2Snapshot));
 
         assertEquals(plan1Snapshot, getMergeBaseFromPlanIds(plan1, plan2));
       }
@@ -1361,19 +1429,20 @@ public class PlanCollaborationTests {
      * The MB between two plans that are unrelated is null.
      */
     @Test
-    void noValidMergeBases() throws SQLException{
+    void noValidMergeBases() throws SQLException {
       final int plan1 = insertPlan(missionModelId);
       final int plan2 = insertPlan(missionModelId);
 
       createSnapshot(plan1);
       final int plan2Snapshot = createSnapshot(plan2);
 
-      try(final var statement = connection.createStatement()){
-        final var res = statement.executeQuery(
-            """
+      try (final var statement = connection.createStatement()) {
+        final var res =
+            statement.executeQuery(
+                """
             select get_merge_base(%d, %d);
-            """.formatted(plan1, plan2Snapshot)
-        );
+            """
+                    .formatted(plan1, plan2Snapshot));
         assertTrue(res.first());
         assertNull(res.getObject(1));
       }
@@ -1381,7 +1450,7 @@ public class PlanCollaborationTests {
   }
 
   @Nested
-  class MergeRequestTests{
+  class MergeRequestTests {
     /**
      * First, check that it fails if plan_id_supplying is invalid and plan_id_receiving is valid
      * Then, check that it fails if plan_id_supplying is valid and plan_id_receiving is invalid
@@ -1390,21 +1459,19 @@ public class PlanCollaborationTests {
     void createRequestFailsForNonexistentPlans() throws SQLException {
       final int planId = insertPlan(missionModelId);
 
-      try{
+      try {
         createMergeRequest(planId, -1);
         fail();
-      }
-      catch (SQLException sqEx){
-        if(!sqEx.getMessage().contains("Plan supplying changes (Plan -1) does not exist."))
+      } catch (SQLException sqEx) {
+        if (!sqEx.getMessage().contains("Plan supplying changes (Plan -1) does not exist."))
           throw sqEx;
       }
 
-      try{
+      try {
         createMergeRequest(-1, planId);
         fail();
-      }
-      catch (SQLException sqEx){
-        if(!sqEx.getMessage().contains("Plan receiving changes (Plan -1) does not exist."))
+      } catch (SQLException sqEx) {
+        if (!sqEx.getMessage().contains("Plan receiving changes (Plan -1) does not exist."))
           throw sqEx;
       }
     }
@@ -1414,15 +1481,14 @@ public class PlanCollaborationTests {
       final int plan1 = insertPlan(missionModelId);
       final int plan2 = insertPlan(missionModelId);
 
-      //Creating a snapshot so that the error comes from create_merge_request, not get_merge_base
+      // Creating a snapshot so that the error comes from create_merge_request, not get_merge_base
       createSnapshot(plan1);
 
-      try{
+      try {
         createMergeRequest(plan1, plan2);
         fail();
-      }
-      catch (SQLException sqEx){
-        if(!sqEx.getMessage().contains("Cannot create merge request between unrelated plans."))
+      } catch (SQLException sqEx) {
+        if (!sqEx.getMessage().contains("Cannot create merge request between unrelated plans."))
           throw sqEx;
       }
     }
@@ -1430,25 +1496,23 @@ public class PlanCollaborationTests {
     @Test
     void createRequestFailsBetweenPlanAndSelf() throws SQLException {
       final int plan = insertPlan(missionModelId);
-      try{
+      try {
         createMergeRequest(plan, plan);
         fail();
-      } catch (SQLException sqEx){
-        if(!sqEx.getMessage().contains("Cannot create a merge request between a plan and itself."))
+      } catch (SQLException sqEx) {
+        if (!sqEx.getMessage().contains("Cannot create a merge request between a plan and itself."))
           throw sqEx;
       }
-
     }
 
     @Test
     void withdrawFailsForNonexistentRequest() throws SQLException {
-      try{
+      try {
         withdrawMergeRequest(-1);
         fail();
-      }
-      catch (SQLException sqEx){
-        if(!sqEx.getMessage().contains("Merge request -1 does not exist. Cannot withdraw request."))
-          throw sqEx;
+      } catch (SQLException sqEx) {
+        if (!sqEx.getMessage()
+            .contains("Merge request -1 does not exist. Cannot withdraw request.")) throw sqEx;
       }
     }
   }
@@ -1461,11 +1525,11 @@ public class PlanCollaborationTests {
   class BeginMergeTests {
     @Test
     void beginMergeFailsOnInvalidRequestId() throws SQLException {
-      try{
+      try {
         beginMerge(-1);
         fail();
-      }catch (SQLException sqlEx){
-        if(!sqlEx.getMessage().contains("Request ID -1 is not present in merge_request table."))
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Request ID -1 is not present in merge_request table."))
           throw sqlEx;
       }
     }
@@ -1480,13 +1544,13 @@ public class PlanCollaborationTests {
 
       // Artificially inject a new merge base.
       final int newMB = createSnapshot(planId);
-      try(final var statement = connection.createStatement()){
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
             insert into plan_snapshot_parent(snapshot_id, parent_snapshot_id)
                 VALUES (%d, %d);
-            """.formatted(mergeRQ.supplyingSnapshot, newMB)
-        );
+            """
+                .formatted(mergeRQ.supplyingSnapshot, newMB));
       }
       assertEquals(newMB, getMergeBaseFromPlanIds(planId, childId));
 
@@ -1504,22 +1568,25 @@ public class PlanCollaborationTests {
       final int childPlan = duplicatePlan(planId, "Child");
 
       try {
-        beginMerge(createMergeRequest(planId,childPlan));
+        beginMerge(createMergeRequest(planId, childPlan));
         fail();
       } catch (SQLException sqlex) {
-          if(!sqlex.getMessage().contains("Cannot begin merge. The contents of the two plans are identical.")){
-            throw sqlex;
-          }
+        if (!sqlex
+            .getMessage()
+            .contains("Cannot begin merge. The contents of the two plans are identical.")) {
+          throw sqlex;
+        }
       }
       // Assert that the plan was not locked
       try (final var statement = connection.createStatement()) {
-        final var res = statement.executeQuery(
-            """
+        final var res =
+            statement.executeQuery(
+                """
             select is_locked
             from plan
             where id = %d;
-            """.formatted(planId)
-        );
+            """
+                    .formatted(planId));
         assertTrue(res.first());
         assertFalse(res.getBoolean(1));
       }
@@ -1817,19 +1884,17 @@ public class PlanCollaborationTests {
 
       unlockPlan(basePlan);
     }
-
   }
 
   @Nested
-  class CommitMergeTests{
+  class CommitMergeTests {
     @Test
     void commitMergeFailsForNonexistentId() throws SQLException {
       try {
         commitMerge(-1);
         fail();
-      } catch (SQLException sqlex){
-        if(!sqlex.getMessage().contains("Invalid merge request id -1."))
-          throw sqlex;
+      } catch (SQLException sqlex) {
+        if (!sqlex.getMessage().contains("Invalid merge request id -1.")) throw sqlex;
       }
     }
 
@@ -1844,17 +1909,21 @@ public class PlanCollaborationTests {
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
-      try{
+      try {
         commitMerge(mergeRQ);
         fail();
-      } catch (SQLException sqlex){
-        if(!sqlex.getMessage().contains("There are unresolved conflicts in merge request "+mergeRQ+". Cannot commit merge."))
-          throw sqlex;
+      } catch (SQLException sqlex) {
+        if (!sqlex
+            .getMessage()
+            .contains(
+                "There are unresolved conflicts in merge request "
+                    + mergeRQ
+                    + ". Cannot commit merge.")) throw sqlex;
       }
     }
 
     @Test
-    void commitMergeSucceedsIfAllConflictsAreResolved() throws SQLException{
+    void commitMergeSucceedsIfAllConflictsAreResolved() throws SQLException {
       final int basePlan = insertPlan(missionModelId);
       final int modifyModifyActivityId = insertActivity(basePlan);
       final int modifyDeleteActivityId = insertActivity(basePlan);
@@ -1879,7 +1948,7 @@ public class PlanCollaborationTests {
       assertEquals(3, conflicts.size());
       assertTrue(stagingArea.isEmpty());
 
-      for(final var conflict : conflicts){
+      for (final var conflict : conflicts) {
         setResolution(mergeRQ, conflict.activityId, "receiving");
       }
 
@@ -1894,35 +1963,45 @@ public class PlanCollaborationTests {
     void commitMergeSucceedsIfNoConflictsExist() throws SQLException {
       final int basePlan = insertPlan(missionModelId);
       final int[] baseActivities = new int[200];
-      for(int i = 0; i < baseActivities.length; ++i){
-        baseActivities[i] = insertActivity(basePlan, "00:00:"+(i%60));
+      for (int i = 0; i < baseActivities.length; ++i) {
+        baseActivities[i] = insertActivity(basePlan, "00:00:" + (i % 60));
       }
 
       final int childPlan = duplicatePlan(basePlan, "Child");
-      for(int i = 0; i < 200; ++i){
-        insertActivity(childPlan, "00:00:"+(i%60));
+      for (int i = 0; i < 200; ++i) {
+        insertActivity(childPlan, "00:00:" + (i % 60));
       }
 
       /*
-        Does the following non-conflicting updates:
-         -- leave the first 50 activities untouched
-         -- delete the next 25 from the parent
-         -- delete the next 25 from the child
-         -- modify the next 50 in the parent
-         -- modify the next 50 in the child
-         -- add 25 activities to the parent
-       */
-      for(int i = 50;  i < 75;  ++i) { deleteActivityDirective(basePlan, baseActivities[i]); }
-      for(int i = 75;  i < 100; ++i) { deleteActivityDirective(childPlan, baseActivities[i]); }
-      for(int i = 100; i < 150; ++i) { updateActivityName("Renamed Activity " + i, baseActivities[i], basePlan); }
-      for(int i = 150; i < 200; ++i) { updateActivityName("Renamed Activity " + i, baseActivities[i], childPlan); }
-      for(int i = 0;   i < 25;  ++i) { insertActivity(basePlan); }
+       Does the following non-conflicting updates:
+        -- leave the first 50 activities untouched
+        -- delete the next 25 from the parent
+        -- delete the next 25 from the child
+        -- modify the next 50 in the parent
+        -- modify the next 50 in the child
+        -- add 25 activities to the parent
+      */
+      for (int i = 50; i < 75; ++i) {
+        deleteActivityDirective(basePlan, baseActivities[i]);
+      }
+      for (int i = 75; i < 100; ++i) {
+        deleteActivityDirective(childPlan, baseActivities[i]);
+      }
+      for (int i = 100; i < 150; ++i) {
+        updateActivityName("Renamed Activity " + i, baseActivities[i], basePlan);
+      }
+      for (int i = 150; i < 200; ++i) {
+        updateActivityName("Renamed Activity " + i, baseActivities[i], childPlan);
+      }
+      for (int i = 0; i < 25; ++i) {
+        insertActivity(basePlan);
+      }
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
       commitMerge(mergeRQ);
-      //assert that all activities are included now
-      assertEquals(375, getActivities(basePlan).size()); //425-50
+      // assert that all activities are included now
+      assertEquals(375, getActivities(basePlan).size()); // 425-50
     }
 
     @Test
@@ -1955,23 +2034,39 @@ public class PlanCollaborationTests {
 
       deleteActivityDirective(childPlan, deleteUncontestedActId);
 
-      updateActivityName("Modify Contested Supplying Parent", modifyContestedSupplyingActId, basePlan);
-      updateActivityName("Modify Contested Supplying Child", modifyContestedSupplyingActId, childPlan);
+      updateActivityName(
+          "Modify Contested Supplying Parent", modifyContestedSupplyingActId, basePlan);
+      updateActivityName(
+          "Modify Contested Supplying Child", modifyContestedSupplyingActId, childPlan);
 
-      updateActivityName("Modify Contested Receiving Parent", modifyContestedReceivingActId, basePlan);
-      updateActivityName("Modify Contested Receiving Child", modifyContestedReceivingActId, childPlan);
+      updateActivityName(
+          "Modify Contested Receiving Parent", modifyContestedReceivingActId, basePlan);
+      updateActivityName(
+          "Modify Contested Receiving Child", modifyContestedReceivingActId, childPlan);
 
-      updateActivityName("Delete Contested Supplying Parent Resolve Supplying", deleteContestedSupplyingResolveSupplyingActId, basePlan);
+      updateActivityName(
+          "Delete Contested Supplying Parent Resolve Supplying",
+          deleteContestedSupplyingResolveSupplyingActId,
+          basePlan);
       deleteActivityDirective(childPlan, deleteContestedSupplyingResolveSupplyingActId);
 
-      updateActivityName("Delete Contested Supplying Parent Resolve Receiving", deleteContestedSupplyingResolveReceivingActId, basePlan);
+      updateActivityName(
+          "Delete Contested Supplying Parent Resolve Receiving",
+          deleteContestedSupplyingResolveReceivingActId,
+          basePlan);
       deleteActivityDirective(childPlan, deleteContestedSupplyingResolveReceivingActId);
 
       deleteActivityDirective(basePlan, deleteContestedReceivingResolveReceivingActId);
-      updateActivityName("Delete Contested Receiving Child Resolve Receiving", deleteContestedReceivingResolveReceivingActId, childPlan);
+      updateActivityName(
+          "Delete Contested Receiving Child Resolve Receiving",
+          deleteContestedReceivingResolveReceivingActId,
+          childPlan);
 
       deleteActivityDirective(basePlan, deleteContestedReceivingResolveSupplyingActId);
-      updateActivityName("Delete Contested Receiving Child Resolve Supplying", deleteContestedReceivingResolveSupplyingActId, childPlan);
+      updateActivityName(
+          "Delete Contested Receiving Child Resolve Supplying",
+          deleteContestedReceivingResolveSupplyingActId,
+          childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1987,7 +2082,8 @@ public class PlanCollaborationTests {
       final Activity muActivityBefore = getActivity(basePlan, modifyUncontestedActId);
       final Activity mcsActivityBefore = getActivity(basePlan, modifyContestedSupplyingActId);
       final Activity mcrActivityBefore = getActivity(basePlan, modifyContestedReceivingActId);
-      final Activity dcsActivityBefore = getActivity(basePlan, deleteContestedSupplyingResolveReceivingActId);
+      final Activity dcsActivityBefore =
+          getActivity(basePlan, deleteContestedSupplyingResolveReceivingActId);
 
       commitMerge(mergeRQ);
 
@@ -2013,18 +2109,23 @@ public class PlanCollaborationTests {
           assertActivityEquals(dcsActivityBefore, activity);
         } else if (activity.activityId == deleteContestedReceivingResolveSupplyingActId) {
           // validate all shared properties
-          assertActivityEquals(getActivity(childPlan, deleteContestedReceivingResolveSupplyingActId), activity);
+          assertActivityEquals(
+              getActivity(childPlan, deleteContestedReceivingResolveSupplyingActId), activity);
         } else fail();
       }
     }
 
     @Test
-    void commitMergeCleansUpSuccessfully() throws SQLException{
+    void commitMergeCleansUpSuccessfully() throws SQLException {
       final int basePlan = insertPlan(missionModelId);
       final int conflictActivityId = insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      for(int i = 0; i < 5; ++i){ insertActivity(basePlan, "00:00:"+(i%60)); }
-      for(int i = 0; i < 5; ++i){ insertActivity(basePlan, "00:00:"+(i%60)); }
+      for (int i = 0; i < 5; ++i) {
+        insertActivity(basePlan, "00:00:" + (i % 60));
+      }
+      for (int i = 0; i < 5; ++i) {
+        insertActivity(basePlan, "00:00:" + (i % 60));
+      }
 
       updateActivityName("Conflict!", conflictActivityId, basePlan);
       updateActivityName("Conflict >:-)", conflictActivityId, childPlan);
@@ -2044,15 +2145,17 @@ public class PlanCollaborationTests {
 
       assertTrue(getConflictingActivities(mergeRQ).isEmpty());
       assertTrue(getConflictingActivities(mergeRQ).isEmpty());
-      try(final var statement = connection.createStatement()){
-        final var res = statement.executeQuery("""
+      try (final var statement = connection.createStatement()) {
+        final var res =
+            statement.executeQuery(
+                """
              SELECT plan.id as plan_id, is_locked, status
              FROM plan
              JOIN merge_request
              ON plan_id_receiving_changes = plan.id
              WHERE plan.id = %d;
-             """.formatted(basePlan)
-        );
+             """
+                    .formatted(basePlan));
         assertTrue(res.first());
         assertEquals(basePlan, res.getInt("plan_id"));
         assertFalse(res.getBoolean("is_locked"));
@@ -2062,36 +2165,36 @@ public class PlanCollaborationTests {
   }
 
   @Nested
-  class MergeStateMachineTests{
+  class MergeStateMachineTests {
     @Test
-    void cancelFailsForInvalidId() throws SQLException{
-      try{
+    void cancelFailsForInvalidId() throws SQLException {
+      try {
         cancelMerge(-1);
         fail();
       } catch (SQLException sqlException) {
-        if(!sqlException.getMessage().contains("Invalid merge request id -1."))
-          throw sqlException;
+        if (!sqlException.getMessage().contains("Invalid merge request id -1.")) throw sqlException;
       }
     }
 
     @Test
     void denyFailsForInvalidId() throws SQLException {
-      try{
+      try {
         denyMerge(-1);
         fail();
       } catch (SQLException sqlException) {
-        if(!sqlException.getMessage().contains("Invalid merge request id -1."))
-          throw sqlException;
+        if (!sqlException.getMessage().contains("Invalid merge request id -1.")) throw sqlException;
       }
     }
 
     @Test
     void withdrawFailsForInvalidId() throws SQLException {
-      try{
+      try {
         withdrawMergeRequest(-1);
         fail();
-      } catch (SQLException sqlException){
-        if(!sqlException.getMessage().contains("Merge request -1 does not exist. Cannot withdraw request."))
+      } catch (SQLException sqlException) {
+        if (!sqlException
+            .getMessage()
+            .contains("Merge request -1 does not exist. Cannot withdraw request."))
           throw sqlException;
       }
     }
@@ -2114,8 +2217,11 @@ public class PlanCollaborationTests {
       setMergeRequestStatus(mergeRQ, "withdrawn");
       try {
         beginMerge(mergeRQ);
-      } catch (SQLException sqlEx){
-        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+      } catch (SQLException sqlEx) {
+        if (!sqlEx
+            .getMessage()
+            .contains(
+                "Cannot begin request. Merge request " + mergeRQ + " is not in pending state."))
           throw sqlEx;
       }
 
@@ -2124,7 +2230,10 @@ public class PlanCollaborationTests {
         beginMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+        if (!sqlEx
+            .getMessage()
+            .contains(
+                "Cannot begin request. Merge request " + mergeRQ + " is not in pending state."))
           throw sqlEx;
       }
 
@@ -2133,7 +2242,10 @@ public class PlanCollaborationTests {
         beginMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+        if (!sqlEx
+            .getMessage()
+            .contains(
+                "Cannot begin request. Merge request " + mergeRQ + " is not in pending state."))
           throw sqlEx;
       }
 
@@ -2142,7 +2254,10 @@ public class PlanCollaborationTests {
         beginMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+        if (!sqlEx
+            .getMessage()
+            .contains(
+                "Cannot begin request. Merge request " + mergeRQ + " is not in pending state."))
           throw sqlEx;
       }
 
@@ -2168,8 +2283,7 @@ public class PlanCollaborationTests {
         withdrawMergeRequest(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot withdraw request."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot withdraw request.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "rejected");
@@ -2177,8 +2291,7 @@ public class PlanCollaborationTests {
         withdrawMergeRequest(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot withdraw request."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot withdraw request.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "in-progress");
@@ -2186,8 +2299,7 @@ public class PlanCollaborationTests {
         withdrawMergeRequest(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot withdraw request."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot withdraw request.")) throw sqlEx;
       }
     }
 
@@ -2207,8 +2319,7 @@ public class PlanCollaborationTests {
         cancelMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot cancel merge."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot cancel merge.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "accepted");
@@ -2216,8 +2327,7 @@ public class PlanCollaborationTests {
         cancelMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot cancel merge."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot cancel merge.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "rejected");
@@ -2225,8 +2335,7 @@ public class PlanCollaborationTests {
         cancelMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot cancel merge."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot cancel merge.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "in-progress");
@@ -2246,8 +2355,7 @@ public class PlanCollaborationTests {
         denyMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "withdrawn");
@@ -2255,8 +2363,7 @@ public class PlanCollaborationTests {
         denyMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "accepted");
@@ -2264,8 +2371,7 @@ public class PlanCollaborationTests {
         denyMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "rejected");
@@ -2273,8 +2379,7 @@ public class PlanCollaborationTests {
         denyMerge(mergeRQ);
         fail();
       } catch (SQLException sqlEx) {
-        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
-          throw sqlEx;
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress.")) throw sqlEx;
       }
 
       setMergeRequestStatus(mergeRQ, "in-progress");
@@ -2379,80 +2484,84 @@ public class PlanCollaborationTests {
       beginMerge(mergeRQ1);
       beginMerge(mergeRQ2);
 
-      //Assert the request status
+      // Assert the request status
       assertEquals("in-progress", getMergeRequest(mergeRQ1).status);
       assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
 
-      //Assert the staging area
+      // Assert the staging area
       assertEquals(1, getStagingAreaActivities(mergeRQ1).size());
       assertEquals(childActivity1, getStagingAreaActivities(mergeRQ1).get(0).activityId);
       assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
       assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
 
-      //Assert the conflict
+      // Assert the conflict
       assertEquals(1, getConflictingActivities(mergeRQ1).size());
       assertEquals(baseActivity1, getConflictingActivities(mergeRQ1).get(0).activityId);
       assertEquals(1, getConflictingActivities(mergeRQ2).size());
       assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
 
-      //Assert both plans are locked
-      try(final var statement = connection.createStatement()){
-        var res = statement.executeQuery(
-              """
+      // Assert both plans are locked
+      try (final var statement = connection.createStatement()) {
+        var res =
+            statement.executeQuery(
+                """
               SELECT is_locked
               FROM plan
               WHERE id = %d;
-              """.formatted(basePlan1)
-        );
+              """
+                    .formatted(basePlan1));
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
 
-        res = statement.executeQuery(
-            """
+        res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan2)
-        );
+            """
+                    .formatted(basePlan2));
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
       }
 
       denyMerge(mergeRQ1);
 
-      //Assert the request status
+      // Assert the request status
       assertEquals("rejected", getMergeRequest(mergeRQ1).status);
       assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
 
-      //Assert the staging area
+      // Assert the staging area
       assertTrue(getStagingAreaActivities(mergeRQ1).isEmpty());
       assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
       assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
 
-      //Assert the conflict
+      // Assert the conflict
       assertTrue(getConflictingActivities(mergeRQ1).isEmpty());
       assertEquals(1, getConflictingActivities(mergeRQ2).size());
       assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
 
-      //Assert only the in-progress merge is now locked
-      try(final var statement = connection.createStatement()){
-        var res = statement.executeQuery(
-            """
+      // Assert only the in-progress merge is now locked
+      try (final var statement = connection.createStatement()) {
+        var res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan1)
-        );
+            """
+                    .formatted(basePlan1));
         assertTrue(res.first());
         assertFalse(res.getBoolean(1));
 
-        res = statement.executeQuery(
-            """
+        res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan2)
-        );
+            """
+                    .formatted(basePlan2));
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
       }
@@ -2487,80 +2596,84 @@ public class PlanCollaborationTests {
       beginMerge(mergeRQ1);
       beginMerge(mergeRQ2);
 
-      //Assert the request status
+      // Assert the request status
       assertEquals("in-progress", getMergeRequest(mergeRQ1).status);
       assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
 
-      //Assert the staging area
+      // Assert the staging area
       assertEquals(1, getStagingAreaActivities(mergeRQ1).size());
       assertEquals(childActivity1, getStagingAreaActivities(mergeRQ1).get(0).activityId);
       assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
       assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
 
-      //Assert the conflict
+      // Assert the conflict
       assertEquals(1, getConflictingActivities(mergeRQ1).size());
       assertEquals(baseActivity1, getConflictingActivities(mergeRQ1).get(0).activityId);
       assertEquals(1, getConflictingActivities(mergeRQ2).size());
       assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
 
-      //Assert both plans are locked
-      try(final var statement = connection.createStatement()){
-        var res = statement.executeQuery(
-            """
+      // Assert both plans are locked
+      try (final var statement = connection.createStatement()) {
+        var res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan1)
-        );
+            """
+                    .formatted(basePlan1));
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
 
-        res = statement.executeQuery(
-            """
+        res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan2)
-        );
+            """
+                    .formatted(basePlan2));
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
       }
 
       cancelMerge(mergeRQ1);
 
-      //Assert the request status
+      // Assert the request status
       assertEquals("pending", getMergeRequest(mergeRQ1).status);
       assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
 
-      //Assert the staging area
+      // Assert the staging area
       assertTrue(getStagingAreaActivities(mergeRQ1).isEmpty());
       assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
       assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
 
-      //Assert the conflict
+      // Assert the conflict
       assertTrue(getConflictingActivities(mergeRQ1).isEmpty());
       assertEquals(1, getConflictingActivities(mergeRQ2).size());
       assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
 
-      //Assert only the in-progress merge is now locked
-      try(final var statement = connection.createStatement()){
-        var res = statement.executeQuery(
-            """
+      // Assert only the in-progress merge is now locked
+      try (final var statement = connection.createStatement()) {
+        var res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan1)
-        );
+            """
+                    .formatted(basePlan1));
         assertTrue(res.first());
         assertFalse(res.getBoolean(1));
 
-        res = statement.executeQuery(
-            """
+        res =
+            statement.executeQuery(
+                """
             SELECT is_locked
             FROM plan
             WHERE id = %d;
-            """.formatted(basePlan2)
-        );
+            """
+                    .formatted(basePlan2));
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
       }
@@ -2568,11 +2681,12 @@ public class PlanCollaborationTests {
   }
 
   @Nested
-  class AnchorMergeTests{
+  class AnchorMergeTests {
 
     // Method is taken from AnchorTests
-    private void setAnchor(int anchorId, boolean anchoredToStart, int activityId, int planId) throws SQLException {
-      try(final var statement = connection.createStatement()) {
+    private void setAnchor(int anchorId, boolean anchoredToStart, int activityId, int planId)
+        throws SQLException {
+      try (final var statement = connection.createStatement()) {
         if (anchorId == -1) {
           statement.execute(
               """
@@ -2580,7 +2694,8 @@ public class PlanCollaborationTests {
                   set anchor_id = null,
                       anchored_to_start = %b
                   where id = %d and plan_id = %d;
-                  """.formatted(anchoredToStart, activityId, planId));
+                  """
+                  .formatted(anchoredToStart, activityId, planId));
         } else {
           statement.execute(
               """
@@ -2588,13 +2703,14 @@ public class PlanCollaborationTests {
                   set anchor_id = %d,
                       anchored_to_start = %b
                   where id = %d and plan_id = %d;
-                  """.formatted(anchorId, anchoredToStart, activityId, planId));
+                  """
+                  .formatted(anchorId, anchoredToStart, activityId, planId));
         }
       }
     }
 
     @Test
-    void cantMergeCycle() throws SQLException{
+    void cantMergeCycle() throws SQLException {
       final int planId = insertPlan(missionModelId);
       final int activityA = insertActivity(planId);
       final int activityB = insertActivity(planId);
@@ -2613,15 +2729,16 @@ public class PlanCollaborationTests {
         commitMerge(mergeRQ);
         fail();
       } catch (SQLException ex) {
-        if(!ex.getMessage().contains("Cycle detected. Cannot apply changes.")){
+        if (!ex.getMessage().contains("Cycle detected. Cannot apply changes.")) {
           throw ex;
         }
       }
     }
 
     @Test
-    void anchorMustBeInTargetPlanAtEndOfMerge() throws SQLException{
-      // Can't merge in a version of an activity that is anchored to an activity that is deleted from the target plan.
+    void anchorMustBeInTargetPlanAtEndOfMerge() throws SQLException {
+      // Can't merge in a version of an activity that is anchored to an activity that is deleted
+      // from the target plan.
       final int planId = insertPlan(missionModelId);
       final int activityA = insertActivity(planId);
       final int activityB = insertActivity(planId);
@@ -2633,20 +2750,21 @@ public class PlanCollaborationTests {
 
       final int mergeRQ = createMergeRequest(planId, childPlan);
       beginMerge(mergeRQ);
-      try{
+      try {
         commitMerge(mergeRQ);
         fail();
-      } catch (SQLException ex){
-        if(!ex.getMessage().contains(
-            "insert or update on table \"activity_directive\" violates foreign key constraint \"anchor_in_plan\"")){
+      } catch (SQLException ex) {
+        if (!ex.getMessage()
+            .contains(
+                "insert or update on table \"activity_directive\" violates foreign key constraint"
+                    + " \"anchor_in_plan\"")) {
           throw ex;
         }
       }
-
     }
 
     @Test
-    void deleteSubtreeDoesNotImpactRelatedPlans() throws SQLException{
+    void deleteSubtreeDoesNotImpactRelatedPlans() throws SQLException {
       final int planId = insertPlan(missionModelId);
       final int activityAId = insertActivity(planId);
       final int activityBId = insertActivity(planId);
@@ -2656,11 +2774,12 @@ public class PlanCollaborationTests {
       final Activity activityABefore = getActivity(childPlanId, activityAId);
       final Activity activityBBefore = getActivity(childPlanId, activityBId);
 
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
              select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d)
-             """.formatted(activityAId, planId));
+             """
+                .formatted(activityAId, planId));
       }
       assertEquals(0, getActivities(planId).size());
       assertEquals(2, getActivities(childPlanId).size());
@@ -2669,7 +2788,7 @@ public class PlanCollaborationTests {
     }
 
     @Test
-    void deletePlanReanchorDoesNotImpactRelatedPlans() throws SQLException{
+    void deletePlanReanchorDoesNotImpactRelatedPlans() throws SQLException {
       final int planId = insertPlan(missionModelId);
       final int activityAId = insertActivity(planId);
       final int activityBId = insertActivity(planId);
@@ -2679,19 +2798,21 @@ public class PlanCollaborationTests {
       final Activity activityABefore = getActivity(childPlanId, activityAId);
       final Activity activityBBefore = getActivity(childPlanId, activityBId);
 
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
              select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d)
-             """.formatted(activityAId, planId));
+             """
+                .formatted(activityAId, planId));
       }
       assertEquals(1, getActivities(planId).size());
       assertEquals(2, getActivities(childPlanId).size());
       assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
       assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
     }
+
     @Test
-    void deleteActivityReanchorDoesNotImpactRelatedPlans() throws SQLException{
+    void deleteActivityReanchorDoesNotImpactRelatedPlans() throws SQLException {
       final int planId = insertPlan(missionModelId);
       final int activityAId = insertActivity(planId);
       final int activityBId = insertActivity(planId);
@@ -2704,11 +2825,12 @@ public class PlanCollaborationTests {
       final Activity activityBBefore = getActivity(childPlanId, activityBId);
       final Activity activityCBefore = getActivity(childPlanId, activityCId);
 
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         statement.execute(
             """
              select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d)
-             """.formatted(activityAId, planId));
+             """
+                .formatted(activityAId, planId));
       }
       assertEquals(2, getActivities(planId).size());
       assertEquals(3, getActivities(childPlanId).size());
@@ -2719,12 +2841,13 @@ public class PlanCollaborationTests {
   }
 
   @Nested
-  class PresetTests{
-    private final gov.nasa.jpl.aerie.database.PresetTests presetTests = new gov.nasa.jpl.aerie.database.PresetTests();
+  class PresetTests {
+    private final gov.nasa.jpl.aerie.database.PresetTests presetTests =
+        new gov.nasa.jpl.aerie.database.PresetTests();
 
     // Activities added in branches keep their preset information when merged
     @Test
-    void presetPersistsWithAdd() throws SQLException{
+    void presetPersistsWithAdd() throws SQLException {
       presetTests.setConnection(helper);
       presetTests.insertActivityType(missionModelId, "test-activity");
       final int planId = insertPlan(missionModelId);
@@ -2747,13 +2870,15 @@ public class PlanCollaborationTests {
 
     // The preset set in the supplying activity persists
     @Test
-    void presetPersistsWithModify() throws SQLException{
+    void presetPersistsWithModify() throws SQLException {
       presetTests.setConnection(helper);
       presetTests.insertActivityType(missionModelId, "test-activity");
       final int planId = insertPlan(missionModelId);
       final int activityId = insertActivity(planId);
       final int branchId = duplicatePlan(planId, "Modify Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity", "{\"destination\": \"Mars\"}");
+      final int presetId =
+          presetTests.insertPreset(
+              missionModelId, "Demo Preset", "test-activity", "{\"destination\": \"Mars\"}");
       presetTests.assignPreset(presetId, activityId, branchId);
 
       // Merge
@@ -2768,9 +2893,10 @@ public class PlanCollaborationTests {
       assertEquals(presetId, presetTests.getPresetAssignedToActivity(activityId, branchId).id());
     }
 
-    // If the preset used in a snapshot is deleted during the merge, the activity does not have a preset after the merge.
+    // If the preset used in a snapshot is deleted during the merge, the activity does not have a
+    // preset after the merge.
     @Test
-    void postMergeNoPresetIfPresetDeleted() throws SQLException{
+    void postMergeNoPresetIfPresetDeleted() throws SQLException {
       presetTests.setConnection(helper);
       presetTests.insertActivityType(missionModelId, "test-activity");
       final int planId = insertPlan(missionModelId);

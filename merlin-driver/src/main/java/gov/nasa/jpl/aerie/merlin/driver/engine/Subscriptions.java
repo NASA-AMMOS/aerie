@@ -15,7 +15,8 @@ public final class Subscriptions<TopicRef, QueryRef> {
   @DerivedFrom("topicsByQuery")
   private final Map<TopicRef, Set<QueryRef>> queriesByTopic = new HashMap<>();
 
-  // This method takes ownership of `topics`; the set should not be referenced after calling this method.
+  // This method takes ownership of `topics`; the set should not be referenced after calling this
+  // method.
   public void subscribeQuery(final QueryRef query, final Set<TopicRef> topics) {
     this.topicsByQuery.put(query, topics);
 
@@ -37,9 +38,8 @@ public final class Subscriptions<TopicRef, QueryRef> {
   }
 
   public Set<QueryRef> invalidateTopic(final TopicRef topic) {
-    final var queries = Optional
-        .ofNullable(this.queriesByTopic.remove(topic))
-        .orElseGet(Collections::emptySet);
+    final var queries =
+        Optional.ofNullable(this.queriesByTopic.remove(topic)).orElseGet(Collections::emptySet);
 
     for (final var query : queries) unsubscribeQuery(query);
 

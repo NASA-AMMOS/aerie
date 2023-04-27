@@ -18,7 +18,8 @@ public class TimeExpressionFromExpr extends TimeExpression {
   }
 
   @Override
-  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+  public Interval computeTime(
+      final SimulationResults simulationResults, final Plan plan, final Interval interval) {
     Interval rangeExpr = expression.computeTime(simulationResults, plan, interval);
     Interval retRange = null;
 
@@ -31,7 +32,6 @@ public class TimeExpressionFromExpr extends TimeExpression {
       }
 
       retRange = Interval.between(resMin, resMax);
-
     }
     return retRange;
   }

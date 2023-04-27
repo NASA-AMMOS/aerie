@@ -3,9 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 
-public record CachedSchedulerService(
-    ResultsCellRepository store
-) implements SchedulerService {
+public record CachedSchedulerService(ResultsCellRepository store) implements SchedulerService {
 
   @Override
   public ResultsProtocol.State getScheduleResults(final ScheduleRequest request) {
@@ -17,7 +15,8 @@ public record CachedSchedulerService(
       // Allocate a fresh cell.
       final var cell = this.store.allocate(specificationId);
 
-      // Return the current value of the reader; if it's incomplete, the caller can check it again later.
+      // Return the current value of the reader; if it's incomplete, the caller can check it again
+      // later.
       return cell.get();
     }
   }

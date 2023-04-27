@@ -17,15 +17,16 @@ public class FilterMinDuration extends FilterFunctional {
   }
 
   @Override
-  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
+  public Windows filter(
+      final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Windows result = windows;
     result = result.filterByDuration(this.minDuration, Duration.MAX_VALUE);
     return result;
   }
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
+  public boolean shouldKeep(
+      final SimulationResults simulationResults, final Plan plan, final Interval range) {
     return range.duration().noShorterThan(minDuration);
   }
-
 }

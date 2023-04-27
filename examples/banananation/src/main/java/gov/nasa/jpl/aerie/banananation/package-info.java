@@ -1,9 +1,6 @@
 @MissionModel(model = Mission.class)
-
 @WithMappers(BasicValueMappers.class)
-
 @WithConfiguration(Configuration.class)
-
 @WithActivityType(BiteBananaActivity.class)
 @WithActivityType(PeelBananaActivity.class)
 @WithActivityType(ParameterTestActivity.class)
@@ -22,7 +19,6 @@
 @WithActivityType(DurationParameterActivity.class)
 @WithActivityType(ControllableDurationActivity.class)
 @WithActivityType(RipenBananaActivity.class)
-
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.activities.BakeBananaBreadActivity;

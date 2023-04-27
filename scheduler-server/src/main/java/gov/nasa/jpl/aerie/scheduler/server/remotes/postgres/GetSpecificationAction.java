@@ -2,18 +2,18 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
-import org.intellij.lang.annotations.Language;
-
-import javax.json.Json;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
+import javax.json.Json;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetSpecificationAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
     select
       spec.revision,
       spec.plan_id,
@@ -32,9 +32,7 @@ import java.util.Optional;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<SpecificationRecord> get(
-      final long specificationId
-  ) throws SQLException {
+  public Optional<SpecificationRecord> get(final long specificationId) throws SQLException {
     this.statement.setLong(1, specificationId);
 
     try (final var resultSet = this.statement.executeQuery()) {
@@ -45,19 +43,20 @@ import java.util.Optional;
       final var planRevision = resultSet.getLong("plan_revision");
       final var horizonStart = Timestamp.fromString(resultSet.getString("horizon_start"));
       final var horizonEnd = Timestamp.fromString(resultSet.getString("horizon_end"));
-      final var arguments = parseSimulationArguments(resultSet.getCharacterStream("simulation_arguments"));
+      final var arguments =
+          parseSimulationArguments(resultSet.getCharacterStream("simulation_arguments"));
       final var analysisOnly = resultSet.getBoolean("analysis_only");
 
-      return Optional.of(new SpecificationRecord(
-          specificationId,
-          revision,
-          planId,
-          planRevision,
-          horizonStart,
-          horizonEnd,
-          arguments,
-          analysisOnly
-      ));
+      return Optional.of(
+          new SpecificationRecord(
+              specificationId,
+              revision,
+              planId,
+              planRevision,
+              horizonStart,
+              horizonEnd,
+              arguments,
+              analysisOnly));
     }
   }
 
@@ -67,8 +66,9 @@ import java.util.Optional;
       return PostgresParsers.simulationArgumentsP
           .parse(json)
           .getSuccessOrThrow(
-              failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
-          );
+              failureReason ->
+                  new Error(
+                      "Corrupt simulation arguments cannot be parsed: " + failureReason.reason()));
     }
   }
 

@@ -1,15 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
-import javax.json.Json;
-import javax.json.stream.JsonParsingException;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
-import java.util.Objects;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.*;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMissionModelIdActionP;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.*;
+
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
@@ -18,6 +13,12 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.Plugin;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Objects;
+import javax.json.Json;
+import javax.json.stream.JsonParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public record SchedulerBindings(
     SchedulerService schedulerService,
     ScheduleAction scheduleAction,
-    GenerateSchedulingLibAction generateSchedulingLibAction
-) implements Plugin {
+    GenerateSchedulingLibAction generateSchedulingLibAction)
+    implements Plugin {
   public SchedulerBindings {
     Objects.requireNonNull(schedulerService);
     Objects.requireNonNull(scheduleAction);
@@ -47,13 +48,14 @@ public record SchedulerBindings(
    */
   @Override
   public void apply(final Javalin javalin) {
-    javalin.routes(() -> {
-      before(ctx -> ctx.contentType("application/json"));
+    javalin.routes(
+        () -> {
+          before(ctx -> ctx.contentType("application/json"));
 
-      path("schedule", () -> post(this::schedule));
-      path("health", () -> get(ctx -> ctx.status(200)));
-      path("schedulingDslTypescript", () -> post(this::getSchedulingDslTypescript));
-    });
+          path("schedule", () -> post(this::schedule));
+          path("health", () -> get(ctx -> ctx.status(200)));
+          path("schedulingDslTypescript", () -> post(this::getSchedulingDslTypescript));
+        });
   }
 
   /**
@@ -63,7 +65,7 @@ public record SchedulerBindings(
    */
   private void schedule(final Context ctx) {
     try {
-      //TODO: is plan enough to locate goal set to use, or need more args in body?
+      // TODO: is plan enough to locate goal set to use, or need more args in body?
       final var body = parseJson(ctx.body(), hasuraSpecificationActionP);
       final var specificationId = body.input().specificationId();
 
@@ -96,23 +98,26 @@ public record SchedulerBindings(
       if (response instanceof GenerateSchedulingLibAction.Response.Success r) {
         var files = Json.createArrayBuilder();
         for (final var entry : r.files().entrySet()) {
-          files = files.add(
-              Json.createObjectBuilder()
-                  .add("filePath", entry.getKey())
-                  .add("content", entry.getValue())
-                  .build());
+          files =
+              files.add(
+                  Json.createObjectBuilder()
+                      .add("filePath", entry.getKey())
+                      .add("content", entry.getValue())
+                      .build());
         }
-        resultString = Json
-            .createObjectBuilder()
-            .add("status", "success")
-            .add("typescriptFiles", files)
-            .build().toString();
+        resultString =
+            Json.createObjectBuilder()
+                .add("status", "success")
+                .add("typescriptFiles", files)
+                .build()
+                .toString();
       } else if (response instanceof GenerateSchedulingLibAction.Response.Failure r) {
-        resultString = Json
-            .createObjectBuilder()
-            .add("status", "failure")
-            .add("reason", r.reason())
-            .build().toString();
+        resultString =
+            Json.createObjectBuilder()
+                .add("status", "failure")
+                .add("reason", r.reason())
+                .build()
+                .toString();
       } else {
         throw new Error("Unhandled variant of Response: " + response);
       }
@@ -134,11 +139,11 @@ public record SchedulerBindings(
    * @throws InvalidEntityException if the parser rejects the input json
    * @throws InvalidJsonException if the json structure itself is malformed
    */
-  //TODO: unify these little parser utility methods nearby parser code itself (copied from MerlinBindings)
-  //TODO: elevate these exceptions to json utility itself
+  // TODO: unify these little parser utility methods nearby parser code itself (copied from
+  // MerlinBindings)
+  // TODO: elevate these exceptions to json utility itself
   private <T> T parseJson(final String jsonStr, final JsonParser<T> parser)
-  throws InvalidJsonException, InvalidEntityException
-  {
+      throws InvalidJsonException, InvalidEntityException {
     try {
       final var requestJson = Json.createReader(new StringReader(jsonStr)).readValue();
       final var result = parser.parse(requestJson);

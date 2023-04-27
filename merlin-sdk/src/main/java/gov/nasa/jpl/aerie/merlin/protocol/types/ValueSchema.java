@@ -48,13 +48,21 @@ public sealed interface ValueSchema {
    */
   interface Visitor<T> {
     T onReal();
+
     T onInt();
+
     T onBoolean();
+
     T onString();
+
     T onDuration();
+
     T onPath();
+
     T onSeries(ValueSchema value);
+
     T onStruct(Map<String, ValueSchema> value);
+
     T onVariant(List<Variant> variants);
   }
 
@@ -243,12 +251,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Unit> asReal() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Unit> onReal() {
-        return Optional.of(Unit.UNIT);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Unit> onReal() {
+            return Optional.of(Unit.UNIT);
+          }
+        });
   }
 
   /**
@@ -258,12 +267,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Unit> asInt() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Unit> onInt() {
-        return Optional.of(Unit.UNIT);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Unit> onInt() {
+            return Optional.of(Unit.UNIT);
+          }
+        });
   }
 
   /**
@@ -273,12 +283,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Unit> asBoolean() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Unit> onBoolean() {
-        return Optional.of(Unit.UNIT);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Unit> onBoolean() {
+            return Optional.of(Unit.UNIT);
+          }
+        });
   }
 
   /**
@@ -288,12 +299,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Unit> asString() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Unit> onString() {
-        return Optional.of(Unit.UNIT);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Unit> onString() {
+            return Optional.of(Unit.UNIT);
+          }
+        });
   }
 
   /**
@@ -303,12 +315,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Unit> asDuration() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Unit> onDuration() {
-        return Optional.of(Unit.UNIT);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Unit> onDuration() {
+            return Optional.of(Unit.UNIT);
+          }
+        });
   }
 
   /**
@@ -318,12 +331,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Unit> asPath() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Unit> onPath() {
-        return Optional.of(Unit.UNIT);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Unit> onPath() {
+            return Optional.of(Unit.UNIT);
+          }
+        });
   }
 
   /**
@@ -333,12 +347,13 @@ public sealed interface ValueSchema {
    *   object represents a series. Otherwise, returns an empty {@link Optional}.
    */
   default Optional<ValueSchema> asSeries() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<ValueSchema> onSeries(final ValueSchema value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<ValueSchema> onSeries(final ValueSchema value) {
+            return Optional.of(value);
+          }
+        });
   }
 
   /**
@@ -348,12 +363,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Map<String, ValueSchema>> asStruct() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Map<String, ValueSchema>> onStruct(final Map<String, ValueSchema> value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Map<String, ValueSchema>> onStruct(final Map<String, ValueSchema> value) {
+            return Optional.of(value);
+          }
+        });
   }
 
   /**
@@ -363,12 +379,13 @@ public sealed interface ValueSchema {
    *   Otherwise, returns an empty {@link Optional}
    */
   default Optional<List<Variant>> asVariant() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<List<Variant>> onVariant(final List<Variant> variants) {
-        return Optional.of(variants);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<List<Variant>> onVariant(final List<Variant> variants) {
+            return Optional.of(variants);
+          }
+        });
   }
   /**
    * @param key The unique internal name of this variant

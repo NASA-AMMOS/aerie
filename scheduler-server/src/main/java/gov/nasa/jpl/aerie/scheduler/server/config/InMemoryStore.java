@@ -1,3 +1,3 @@
 package gov.nasa.jpl.aerie.scheduler.server.config;
 
-public record InMemoryStore() implements Store { }
+public record InMemoryStore() implements Store {}

@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class UpdateProfileDurationAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       update profile
       set duration = ?
       where dataset_id=? and id=?;
@@ -20,11 +20,8 @@ import java.sql.Statement;
     this.statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
   }
 
-  public void apply(
-      final long datasetId,
-      final long profileId,
-      final Duration newDuration
-  ) throws SQLException {
+  public void apply(final long datasetId, final long profileId, final Duration newDuration)
+      throws SQLException {
     PreparedStatements.setDuration(this.statement, 1, newDuration);
     this.statement.setLong(2, datasetId);
     this.statement.setLong(3, profileId);

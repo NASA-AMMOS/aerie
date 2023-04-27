@@ -10,7 +10,7 @@ public class ConstraintState {
   /**
    * constraint concerned by this state
    */
-  final public GlobalConstraint constraint;
+  public final GlobalConstraint constraint;
 
   /**
    * boolean stating whether the constraint is violated or not
@@ -20,12 +20,13 @@ public class ConstraintState {
   /**
    * intervals during which the constraint is violated
    */
-  final public Windows violationWindows;
+  public final Windows violationWindows;
 
-  //readable explanation when possible
+  // readable explanation when possible
   public String cause;
 
-  public ConstraintState(GlobalConstraint constraint, boolean isViolation, Windows violationWindows) {
+  public ConstraintState(
+      GlobalConstraint constraint, boolean isViolation, Windows violationWindows) {
     this.isViolation = isViolation;
     this.violationWindows = violationWindows;
     this.constraint = constraint;

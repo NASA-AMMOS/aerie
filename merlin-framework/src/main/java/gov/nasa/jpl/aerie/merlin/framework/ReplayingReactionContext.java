@@ -6,12 +6,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.mutable.MutableInt;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 /* package-local */
 final class ReplayingReactionContext implements Context {
@@ -25,8 +24,7 @@ final class ReplayingReactionContext implements Context {
       final Scoped<Context> rootContext,
       final Memory memory,
       final Scheduler scheduler,
-      final TaskHandle handle)
-  {
+      final TaskHandle handle) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.memory = new MemoryCursor(memory, new MutableInt(0), new MutableInt(0));
     this.scheduler = scheduler;
@@ -40,62 +38,74 @@ final class ReplayingReactionContext implements Context {
 
   @Override
   public <State> State ask(final CellId<State> cellId) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.get(cellId);
-    });
+    return this.memory.doOnce(
+        () -> {
+          return this.scheduler.get(cellId);
+        });
   }
 
   @Override
-  public <Event, Effect, State>
-  CellId<State> allocate(
+  public <Event, Effect, State> CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> interpretation,
-      final Topic<Event> topic)
-  {
+      final Topic<Event> topic) {
     throw new IllegalStateException("Cannot allocate during simulation");
   }
 
   @Override
   public <Event> void emit(final Event event, final Topic<Event> topic) {
-    this.memory.doOnce(() -> {
-      this.scheduler.emit(event, topic);
-    });
+    this.memory.doOnce(
+        () -> {
+          this.scheduler.emit(event, topic);
+        });
   }
 
   @Override
   public void spawn(final TaskFactory<?> task) {
-    this.memory.doOnce(() -> {
-      this.scheduler.spawn(task);
-    });
+    this.memory.doOnce(
+        () -> {
+          this.scheduler.spawn(task);
+        });
   }
 
   @Override
   public <T> void call(final TaskFactory<T> task) {
-    this.memory.doOnce(() -> {
-      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-      this.scheduler = this.handle.call(task);
-    });
+    this.memory.doOnce(
+        () -> {
+          this.scheduler =
+              null; // Relinquish the current scheduler before yielding, in case an exception is
+          // thrown.
+          this.scheduler = this.handle.call(task);
+        });
   }
 
   @Override
   public void delay(final Duration duration) {
-    this.memory.doOnce(() -> {
-      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-      this.scheduler = this.handle.delay(duration);
-    });
+    this.memory.doOnce(
+        () -> {
+          this.scheduler =
+              null; // Relinquish the current scheduler before yielding, in case an exception is
+          // thrown.
+          this.scheduler = this.handle.delay(duration);
+        });
   }
 
   @Override
   public void waitUntil(final Condition condition) {
-    this.memory.doOnce(() -> {
-      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-      this.scheduler = this.handle.await((now, atLatest) -> {
-        try (final var restore = this.rootContext.set(new QueryContext(now))) {
-          return condition.nextSatisfied(true, Duration.ZERO, atLatest);
-        }
-      });
-    });
+    this.memory.doOnce(
+        () -> {
+          this.scheduler =
+              null; // Relinquish the current scheduler before yielding, in case an exception is
+          // thrown.
+          this.scheduler =
+              this.handle.await(
+                  (now, atLatest) -> {
+                    try (final var restore = this.rootContext.set(new QueryContext(now))) {
+                      return condition.nextSatisfied(true, Duration.ZERO, atLatest);
+                    }
+                  });
+        });
   }
 
   public record Memory(List<Object> reads, MutableInt writes) {

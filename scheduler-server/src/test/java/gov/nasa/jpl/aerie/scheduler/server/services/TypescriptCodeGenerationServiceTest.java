@@ -1,15 +1,17 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import org.junit.jupiter.api.Test;
-
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 public final class TypescriptCodeGenerationServiceTest {
 
   @Test
   void testCodeGen() {
-    final var expected = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES);
+    final var expected =
+        TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(
+            MISSION_MODEL_TYPES);
     assertEquals(
         """
 /** Start Codegen */

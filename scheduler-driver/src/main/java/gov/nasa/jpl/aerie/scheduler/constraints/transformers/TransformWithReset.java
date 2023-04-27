@@ -1,17 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.transformers;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
 
 /**
  * this filter turns any filter into a filter with resets
  */
 public class TransformWithReset implements TimeWindowsTransformer {
-
 
   public TransformWithReset(final TimeRangeExpression reset, final TimeWindowsTransformer filter) {
     this.transform = filter;
@@ -22,7 +19,10 @@ public class TransformWithReset implements TimeWindowsTransformer {
   private final TimeRangeExpression resetExpr;
 
   @Override
-  public Windows transformWindows(final Plan plan, final Windows windowsToTransform, final SimulationResults simulationResults) {
+  public Windows transformWindows(
+      final Plan plan,
+      final Windows windowsToTransform,
+      final SimulationResults simulationResults) {
     Windows ret = new Windows();
     int totalFiltered = 0;
 
@@ -38,7 +38,7 @@ public class TransformWithReset implements TimeWindowsTransformer {
           ret = ret.add(transform.transformWindows(plan, cur, simulationResults));
           totalFiltered += cur.size();
         }
-        //short circuit
+        // short circuit
         if (totalFiltered >= windowsToTransform.size()) {
           break;
         }

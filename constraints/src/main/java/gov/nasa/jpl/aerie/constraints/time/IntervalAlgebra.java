@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 /**
  * Provides helpful static methods for transforming and operating on {@link Interval}s.
@@ -71,12 +71,7 @@ public class IntervalAlgebra {
    */
   public static Interval strictLowerBoundsOf(final Interval x) {
     if (x.isEmpty()) return Interval.FOREVER;
-    return Interval.between(
-        Duration.MIN_VALUE,
-        Inclusive,
-        x.start,
-        x.startInclusivity.opposite()
-    );
+    return Interval.between(Duration.MIN_VALUE, Inclusive, x.start, x.startInclusivity.opposite());
   }
 
   /**
@@ -94,12 +89,7 @@ public class IntervalAlgebra {
    */
   public static Interval strictUpperBoundsOf(final Interval x) {
     if (x.isEmpty()) return Interval.FOREVER;
-    return Interval.between(
-        x.end,
-        x.endInclusivity.opposite(),
-        Duration.MAX_VALUE,
-        Inclusive
-    );
+    return Interval.between(x.end, x.endInclusivity.opposite(), Duration.MAX_VALUE, Inclusive);
   }
 
   /**
@@ -123,7 +113,8 @@ public class IntervalAlgebra {
   static boolean contains(Interval outer, Interval inner) {
     // If `inner` doesn't overlap with the complement of `outer`,
     // then `inner` must exist entirely within `outer`.
-    return !(overlaps(inner, strictUpperBoundsOf(outer)) || overlaps(inner, strictLowerBoundsOf(outer)));
+    return !(overlaps(inner, strictUpperBoundsOf(outer))
+        || overlaps(inner, strictLowerBoundsOf(outer)));
   }
 
   /**

@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -21,10 +20,11 @@ import java.util.stream.StreamSupport;
 /**
  * A collection of intervals that can overlap.
  */
-public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optional<Spans.Metadata>>> {
+public class Spans
+    implements IntervalContainer<Spans>, Iterable<Segment<Optional<Spans.Metadata>>> {
   private final List<Segment<Optional<Metadata>>> intervals;
 
-  public record Metadata(ActivityInstance activityInstance){}
+  public record Metadata(ActivityInstance activityInstance) {}
 
   public Spans() {
     this.intervals = new ArrayList<>();
@@ -34,19 +34,22 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
     this.intervals = new ArrayList<>(intervals);
   }
 
-  public Spans(final Spans spans){
+  public Spans(final Spans spans) {
     this.intervals = new ArrayList<>(spans.intervals);
   }
 
   public Spans(final Iterable<Interval> iter) {
     this.intervals = new ArrayList<>();
-    StreamSupport.stream(iter.spliterator(), false).filter($ -> !$.isEmpty())
-                 .forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
+    StreamSupport.stream(iter.spliterator(), false)
+        .filter($ -> !$.isEmpty())
+        .forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
   }
 
   public Spans(final Interval... intervals) {
     this.intervals = new ArrayList<>();
-    Arrays.stream(intervals).filter($ -> !$.isEmpty()).forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
+    Arrays.stream(intervals)
+        .filter($ -> !$.isEmpty())
+        .forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
   }
 
   @SafeVarargs
@@ -70,41 +73,46 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
       this.intervals.add(Segment.of(window, metadata));
     }
   }
+
   public void addAll(final Spans iter) {
     this.intervals.addAll(iter.intervals);
   }
 
   public void addAll(final Iterable<Segment<Optional<Metadata>>> iter) {
-    StreamSupport
-        .stream(iter.spliterator(), false)
+    StreamSupport.stream(iter.spliterator(), false)
         .filter($ -> !$.interval().isEmpty())
         .forEach(this.intervals::add);
   }
 
   public Spans map(final Function<Interval, Interval> mapper) {
     final var ret = new Spans();
-    this.intervals.forEach(interval -> {
-        final var newInterval = mapper.apply(interval.interval());
-        if(!newInterval.isEmpty())
-          ret.add(newInterval, interval.value());
-    });
+    this.intervals.forEach(
+        interval -> {
+          final var newInterval = mapper.apply(interval.interval());
+          if (!newInterval.isEmpty()) ret.add(newInterval, interval.value());
+        });
     return ret;
   }
 
   public Spans flatMap(final Function<Interval, ? extends Stream<Interval>> mapper) {
     final var ret = new Spans();
-    this.intervals.forEach(interval -> mapper.apply(interval.interval()).filter(x -> !x.isEmpty()).forEach(
-        newInterval -> ret.add(newInterval, interval.value())));
+    this.intervals.forEach(
+        interval ->
+            mapper
+                .apply(interval.interval())
+                .filter(x -> !x.isEmpty())
+                .forEach(newInterval -> ret.add(newInterval, interval.value())));
     return ret;
   }
 
   public Spans filter(final Predicate<Interval> filter) {
-    final var pred = new Predicate<Segment<Optional<Metadata>>>() {
-      @Override
-      public boolean test(final Segment<Optional<Metadata>> intervalOptionalPair) {
-        return filter.test(intervalOptionalPair.interval());
-      }
-    };
+    final var pred =
+        new Predicate<Segment<Optional<Metadata>>>() {
+          @Override
+          public boolean test(final Segment<Optional<Metadata>> intervalOptionalPair) {
+            return filter.test(intervalOptionalPair.interval());
+          }
+        };
     return new Spans(this.intervals.stream().filter(pred).toList());
   }
 
@@ -119,46 +127,68 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
    * @throws UnsplittableSpanException if any span contains {@link Duration#MIN_VALUE} or {@link Duration#MAX_VALUE} (representing unbounded intervals)
    */
   @Override
-  public Spans split(final Interval bounds, final int numberOfSubSpans, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
+  public Spans split(
+      final Interval bounds,
+      final int numberOfSubSpans,
+      final Inclusivity internalStartInclusivity,
+      final Inclusivity internalEndInclusivity) {
     if (numberOfSubSpans == 1) {
       return new Spans(this);
     }
-    return this.flatMap(x -> {
-      // Width of each sub-window, rounded down to the microsecond
-      final var width = Duration.divide(Duration.subtract(x.end, x.start), numberOfSubSpans);
+    return this.flatMap(
+        x -> {
+          // Width of each sub-window, rounded down to the microsecond
+          final var width = Duration.divide(Duration.subtract(x.end, x.start), numberOfSubSpans);
 
-      final var numberOfMicroSeconds = Duration.subtract(x.end, x.start).in(Duration.MICROSECOND);
+          final var numberOfMicroSeconds =
+              Duration.subtract(x.end, x.start).in(Duration.MICROSECOND);
 
-      // We throw an exception if the interval contains fewer microseconds than the requested number of sub-spans.
-      if (x.isSingleton()) {
-        throw new UnsplittableSpanException("Cannot split an instantaneous span into " + numberOfSubSpans + " pieces.");
-      } else if (numberOfMicroSeconds < numberOfSubSpans) {
-        throw new UnsplittableSpanException("Cannot split a span only " + numberOfMicroSeconds + " microseconds long into " + numberOfSubSpans + " pieces.");
-      }
+          // We throw an exception if the interval contains fewer microseconds than the requested
+          // number of sub-spans.
+          if (x.isSingleton()) {
+            throw new UnsplittableSpanException(
+                "Cannot split an instantaneous span into " + numberOfSubSpans + " pieces.");
+          } else if (numberOfMicroSeconds < numberOfSubSpans) {
+            throw new UnsplittableSpanException(
+                "Cannot split a span only "
+                    + numberOfMicroSeconds
+                    + " microseconds long into "
+                    + numberOfSubSpans
+                    + " pieces.");
+          }
 
-      // Throw an exception if trying to split an "unbounded" interval.
-      // It is unlikely that a user will ever need to split a Windows or Spans that includes +/- infinity.
-      //
-      // If they do, and it is a legitimate use case that we should support, this block should be replaced
-      // with a check that returns the unbounded interval unchanged, because the split points on an unbounded
-      // interval will be outside the finite range of `Duration`.
-      if (x.contains(Duration.MIN_VALUE)) {
-        throw new UnsplittableSpanException("Cannot split an unbounded span. (interval contains MIN_VALUE, which is a stand-in for -infinity.");
-      } else if (x.contains(Duration.MAX_VALUE)) {
-        throw new UnsplittableSpanException("Cannot split an unbounded span. (interval contains MAX_VALUE, which is a stand-in for +infinity.");
-      }
+          // Throw an exception if trying to split an "unbounded" interval.
+          // It is unlikely that a user will ever need to split a Windows or Spans that includes +/-
+          // infinity.
+          //
+          // If they do, and it is a legitimate use case that we should support, this block should
+          // be replaced
+          // with a check that returns the unbounded interval unchanged, because the split points on
+          // an unbounded
+          // interval will be outside the finite range of `Duration`.
+          if (x.contains(Duration.MIN_VALUE)) {
+            throw new UnsplittableSpanException(
+                "Cannot split an unbounded span. (interval contains MIN_VALUE, which is a stand-in"
+                    + " for -infinity.");
+          } else if (x.contains(Duration.MAX_VALUE)) {
+            throw new UnsplittableSpanException(
+                "Cannot split an unbounded span. (interval contains MAX_VALUE, which is a stand-in"
+                    + " for +infinity.");
+          }
 
-      var cursor = Duration.add(x.start, width);
-      final List<Interval> ret = new ArrayList<>();
-      ret.add(Interval.between(x.start, x.startInclusivity, cursor, internalEndInclusivity));
-      for (int i = 1; i < numberOfSubSpans - 1; i++) {
-        final var nextCursor = Duration.add(cursor, width);
-        ret.add(Interval.between(cursor, internalStartInclusivity, nextCursor, internalEndInclusivity));
-        cursor = nextCursor;
-      }
-      ret.add(Interval.between(cursor, internalStartInclusivity, x.end, x.endInclusivity));
-      return ret.stream().map($ -> Interval.intersect(bounds, $));
-    });
+          var cursor = Duration.add(x.start, width);
+          final List<Interval> ret = new ArrayList<>();
+          ret.add(Interval.between(x.start, x.startInclusivity, cursor, internalEndInclusivity));
+          for (int i = 1; i < numberOfSubSpans - 1; i++) {
+            final var nextCursor = Duration.add(cursor, width);
+            ret.add(
+                Interval.between(
+                    cursor, internalStartInclusivity, nextCursor, internalEndInclusivity));
+            cursor = nextCursor;
+          }
+          ret.add(Interval.between(cursor, internalStartInclusivity, x.end, x.endInclusivity));
+          return ret.stream().map($ -> Interval.intersect(bounds, $));
+        });
   }
 
   /**
@@ -168,13 +198,18 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
    * @param otherSpans the other set of spans
    * @return true if the other set of spans contains exactly all the spans in this set, false otherwise
    */
-  public boolean isCollectionSubsetOf(final Spans otherSpans){
+  public boolean isCollectionSubsetOf(final Spans otherSpans) {
     return new HashSet<>(otherSpans.intervals).containsAll(this.intervals);
   }
 
-  public Spans intersectWith(final Windows windows){
+  public Spans intersectWith(final Windows windows) {
     final var ret = new Spans();
-    this.intervals.forEach(x -> windows.iterateEqualTo(true).iterator().forEachRemaining(y -> ret.add(Interval.intersect(x.interval(), y), x.value())));
+    this.intervals.forEach(
+        x ->
+            windows
+                .iterateEqualTo(true)
+                .iterator()
+                .forEachRemaining(y -> ret.add(Interval.intersect(x.interval(), y), x.value())));
     return ret;
   }
 
@@ -184,26 +219,34 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
 
     final var zero = new LinearEquation(Duration.ZERO, 0, 0);
 
-    for (final var segment: this.intervals) {
+    for (final var segment : this.intervals) {
       final var interval = segment.interval();
       if (interval.isPoint()) continue; // ignore instantaneous point spans
       final var rate = Duration.SECOND.ratioOver(unit);
       final var total = interval.duration().ratioOver(unit);
-      final var slopedLine = new LinearEquation(
-          interval.start,
-          0.0,
-          rate
-      );
-      profiles.add(new LinearProfile(
-          Segment.of(Interval.between(Duration.MIN_VALUE, Inclusivity.Inclusive, interval.start, interval.startInclusivity.opposite()), zero),
-          Segment.of(interval, slopedLine),
-          Segment.of(Interval.between(interval.end, interval.endInclusivity.opposite(), Duration.MAX_VALUE, Inclusivity.Inclusive), new LinearEquation(Duration.ZERO, total, 0))
-      ));
+      final var slopedLine = new LinearEquation(interval.start, 0.0, rate);
+      profiles.add(
+          new LinearProfile(
+              Segment.of(
+                  Interval.between(
+                      Duration.MIN_VALUE,
+                      Inclusivity.Inclusive,
+                      interval.start,
+                      interval.startInclusivity.opposite()),
+                  zero),
+              Segment.of(interval, slopedLine),
+              Segment.of(
+                  Interval.between(
+                      interval.end,
+                      interval.endInclusivity.opposite(),
+                      Duration.MAX_VALUE,
+                      Inclusivity.Inclusive),
+                  new LinearEquation(Duration.ZERO, total, 0))));
     }
 
-    return profiles.stream().reduce(new LinearProfile(Segment.of(Interval.FOREVER, zero)), LinearProfile::plus);
+    return profiles.stream()
+        .reduce(new LinearProfile(Segment.of(Interval.FOREVER, zero)), LinearProfile::plus);
   }
-
 
   @Override
   public Spans starts() {

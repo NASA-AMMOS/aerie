@@ -4,9 +4,8 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import java.time.Instant;
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class AerieLanderTestUtility {
     }
   }
 
-  public static MissionModel<?> getMerlinSightMissionModel(){
+  public static MissionModel<?> getMerlinSightMissionModel() {
     final var builder = new MissionModelBuilder();
     final var configuration = gov.nasa.jpl.aerielander.config.Configuration.defaultConfiguration();
     final var modelType = new gov.nasa.jpl.aerielander.generated.GeneratedModelType();

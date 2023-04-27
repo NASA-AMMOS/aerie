@@ -3,20 +3,30 @@ package gov.nasa.jpl.aerie.merlin.processor;
 import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -30,18 +40,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Repeatable;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /** Parses mission model annotations to record type metamodels. */
 /*package-private*/ record MissionModelParser(Elements elementUtils, Types typeUtils) {
@@ -51,8 +49,7 @@ import java.util.stream.Collectors;
   //
 
   public MissionModelRecord parseMissionModel(final PackageElement missionModelElement)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var topLevelModel = this.getMissionModel(missionModelElement);
 
     final var typeRules = new ArrayList<TypeRule>();
@@ -75,19 +72,17 @@ import java.util.stream.Collectors;
   }
 
   private record MissionModelTypeRecord(
-      TypeElement type,
-      boolean expectsPlanStart,
-      Optional<InputTypeRecord> configurationType) { }
+      TypeElement type, boolean expectsPlanStart, Optional<InputTypeRecord> configurationType) {}
 
   private MissionModelTypeRecord getMissionModel(final PackageElement missionModelElement)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var configurationType = this.getMissionModelConfigurationType(missionModelElement);
     final var modelTypeElement = this.getMissionModelTypeElement(missionModelElement);
 
-    final var parameters = this.getMissionModelConstructor(modelTypeElement).getParameters().stream()
-        .map(p -> ClassName.get(p.asType()))
-        .toList();
+    final var parameters =
+        this.getMissionModelConstructor(modelTypeElement).getParameters().stream()
+            .map(p -> ClassName.get(p.asType()))
+            .toList();
     final var nParameters = parameters.size();
     final var foundPlanStart = parameters.contains(ClassName.get(Instant.class));
 
@@ -96,15 +91,27 @@ import java.util.stream.Collectors;
     // - (Registrar, Configuration)
     // - (Registrar, Instant)
     // - (Registrar)
-    final var expectedParameters = configurationType
-        // Configuration expected
-        .map(configType -> foundPlanStart && nParameters > 2 ? // If plan start `Instant` truly is expected
-            List.of(ClassName.get(Registrar.class), ClassName.get(Instant.class), ClassName.get(configType.declaration())) :
-            List.of(ClassName.get(Registrar.class), ClassName.get(configType.declaration())))
-        // No configuration expected
-        .orElseGet(() -> foundPlanStart && nParameters > 1 ? // If plan start `Instant` truly is expected
-            List.of(ClassName.get(Registrar.class), ClassName.get(Instant.class)) :
-            List.of(ClassName.get(Registrar.class)));
+    final var expectedParameters =
+        configurationType
+            // Configuration expected
+            .map(
+                configType ->
+                    foundPlanStart && nParameters > 2
+                        ? // If plan start `Instant` truly is expected
+                        List.of(
+                            ClassName.get(Registrar.class),
+                            ClassName.get(Instant.class),
+                            ClassName.get(configType.declaration()))
+                        : List.of(
+                            ClassName.get(Registrar.class),
+                            ClassName.get(configType.declaration())))
+            // No configuration expected
+            .orElseGet(
+                () ->
+                    foundPlanStart && nParameters > 1
+                        ? // If plan start `Instant` truly is expected
+                        List.of(ClassName.get(Registrar.class), ClassName.get(Instant.class))
+                        : List.of(ClassName.get(Registrar.class)));
 
     if (!parameters.equals(expectedParameters)) {
       throw new InvalidMissionModelException(
@@ -120,13 +127,14 @@ import java.util.stream.Collectors;
   }
 
   private TypeElement getMissionModelTypeElement(final PackageElement missionModelElement)
-  throws InvalidMissionModelException
-  {
-    final var annotationMirror = this
-        .getAnnotationMirrorByType(missionModelElement, MissionModel.class)
-        .orElseThrow(() -> new InvalidMissionModelException(
-            "The missionModel package is somehow missing an @MissionModel annotation",
-            missionModelElement));
+      throws InvalidMissionModelException {
+    final var annotationMirror =
+        this.getAnnotationMirrorByType(missionModelElement, MissionModel.class)
+            .orElseThrow(
+                () ->
+                    new InvalidMissionModelException(
+                        "The missionModel package is somehow missing an @MissionModel annotation",
+                        missionModelElement));
 
     final var modelAttribute = getAnnotationAttribute(annotationMirror, "model").orElseThrow();
     if (!(modelAttribute.getValue() instanceof final DeclaredType model)) {
@@ -140,27 +148,27 @@ import java.util.stream.Collectors;
   }
 
   private ExecutableElement getMissionModelConstructor(final TypeElement missionModelTypeElement)
-  throws InvalidMissionModelException
-  {
-    final var constructors = missionModelTypeElement.getEnclosedElements().stream()
-        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR && e.getModifiers().contains(Modifier.PUBLIC))
-        .toList();
+      throws InvalidMissionModelException {
+    final var constructors =
+        missionModelTypeElement.getEnclosedElements().stream()
+            .filter(
+                e ->
+                    e.getKind() == ElementKind.CONSTRUCTOR
+                        && e.getModifiers().contains(Modifier.PUBLIC))
+            .toList();
     if (constructors.isEmpty()) {
       throw new InvalidMissionModelException(
-          "The top-level model declares no public constructor",
-          missionModelTypeElement);
+          "The top-level model declares no public constructor", missionModelTypeElement);
     }
     if (constructors.size() > 1) {
       throw new InvalidMissionModelException(
-          "The top-level model declares more than one public constructor",
-          missionModelTypeElement);
+          "The top-level model declares more than one public constructor", missionModelTypeElement);
     }
     return (ExecutableElement) constructors.get(0);
   }
 
-  private Optional<InputTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
-  throws InvalidMissionModelException
-  {
+  private Optional<InputTypeRecord> getMissionModelConfigurationType(
+      final PackageElement missionModelElement) throws InvalidMissionModelException {
     final var annotationMirror =
         this.getAnnotationMirrorByType(missionModelElement, MissionModel.WithConfiguration.class);
     if (annotationMirror.isEmpty()) return Optional.empty();
@@ -180,24 +188,21 @@ import java.util.stream.Collectors;
     final var validations = this.getExportValidations(declaration, parameters);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
-    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
+    return Optional.of(
+        new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var mapperClassElements = new ArrayList<TypeElement>();
 
-    for (final var withMappersAnnotation : getRepeatableAnnotation(missionModelElement, MissionModel.WithMappers.class)) {
-      final var attribute =
-          getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
+    for (final var withMappersAnnotation :
+        getRepeatableAnnotation(missionModelElement, MissionModel.WithMappers.class)) {
+      final var attribute = getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
         throw new InvalidMissionModelException(
-            "Mappers class not yet defined",
-            missionModelElement,
-            withMappersAnnotation,
-            attribute);
+            "Mappers class not yet defined", missionModelElement, withMappersAnnotation, attribute);
       }
 
       mapperClassElements.add((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
@@ -207,13 +212,13 @@ import java.util.stream.Collectors;
   }
 
   private List<TypeRule> parseValueMappers(final TypeElement factory)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var valueMappers = new ArrayList<TypeRule>();
 
     for (final var element : factory.getEnclosedElements()) {
       if (element.getKind().equals(ElementKind.METHOD)) {
-        valueMappers.add(this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
+        valueMappers.add(
+            this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
       }
     }
 
@@ -221,13 +226,10 @@ import java.util.stream.Collectors;
   }
 
   private TypeRule parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
       throw new InvalidMissionModelException(
-          "Value Mapper method must be public and static",
-          element
-      );
+          "Value Mapper method must be public and static", element);
     }
 
     final var head = TypePattern.from(element.getReturnType());
@@ -242,8 +244,7 @@ import java.util.stream.Collectors;
   }
 
   private Set<String> getEnumBoundedTypeParameters(final ExecutableElement element)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var enumBoundedTypeParameters = new HashSet<String>();
     // Ensure type parameters are unbounded or bounded only by enum type.
     // Supporting value mapper resolvers for types like:
@@ -255,7 +256,8 @@ import java.util.stream.Collectors;
       for (final var bound : bounds) {
         final var erasure = typeUtils.erasure(bound);
         final var objectType = elementUtils.getTypeElement("java.lang.Object").asType();
-        final var enumType = typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
+        final var enumType =
+            typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
         if (typeUtils.isSameType(erasure, objectType)) {
           // Nothing to do
         } else if (typeUtils.isSameType(erasure, enumType)) {
@@ -263,8 +265,7 @@ import java.util.stream.Collectors;
         } else {
           throw new InvalidMissionModelException(
               "Value Mapper method type parameter must be unbounded, or bounded by enum type only",
-              element
-          );
+              element);
         }
       }
     }
@@ -272,15 +273,12 @@ import java.util.stream.Collectors;
   }
 
   private List<TypeElement> getMissionModelActivityTypes(final PackageElement missionModelElement)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var activityTypeElements = new ArrayList<TypeElement>();
 
-    for (final var activityTypeAnnotation : getRepeatableAnnotation(
-        missionModelElement,
-        MissionModel.WithActivityType.class)) {
-      final var attribute =
-          getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
+    for (final var activityTypeAnnotation :
+        getRepeatableAnnotation(missionModelElement, MissionModel.WithActivityType.class)) {
+      final var attribute = getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
         throw new InvalidMissionModelException(
@@ -302,9 +300,9 @@ import java.util.stream.Collectors;
   // ACTIVITY TYPE PARSING
   //
 
-  private ActivityTypeRecord parseActivityType(final PackageElement missionModelElement, final TypeElement activityTypeElement)
-  throws InvalidMissionModelException
-  {
+  private ActivityTypeRecord parseActivityType(
+      final PackageElement missionModelElement, final TypeElement activityTypeElement)
+      throws InvalidMissionModelException {
     final var fullyQualifiedClassName = activityTypeElement.getQualifiedName();
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getExportMapper(missionModelElement, activityTypeElement);
@@ -331,7 +329,8 @@ import java.util.stream.Collectors;
     return new ActivityTypeRecord(
         fullyQualifiedClassName.toString(),
         name,
-        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
+        new InputTypeRecord(
+            name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
         effectModel);
   }
 
@@ -339,25 +338,36 @@ import java.util.stream.Collectors;
       final String activityName,
       final List<ParameterRecord> parameters,
       final String durationParameterName)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     final var durationParameterRecord = lookupParameterByName(parameters, durationParameterName);
     if (durationParameterRecord.isEmpty()) {
       throw new InvalidMissionModelException(
-          "In activity " + activityName + ", \"" + durationParameterName + "\"" +
-          " is declared as the ControllableDuration parameter, but there is no parameter with that name");
+          "In activity "
+              + activityName
+              + ", \""
+              + durationParameterName
+              + "\" is declared as the ControllableDuration parameter, but there is no parameter"
+              + " with that name");
     }
     final var record = durationParameterRecord.get();
-    if (!this.typeUtils.isSameType(record.type, this.elementUtils.getTypeElement(Duration.class.getName()).asType())) {
+    if (!this.typeUtils.isSameType(
+        record.type, this.elementUtils.getTypeElement(Duration.class.getName()).asType())) {
       throw new InvalidMissionModelException(
-          "In activity " + activityName +
-          ", parameter \"" + record.name + "\"" +
-          " is declared as the ControllableDuration parameter, but does not have type " + Duration.class.getName() + "." +
-          " Instead, it has type " + record.type);
+          "In activity "
+              + activityName
+              + ", parameter \""
+              + record.name
+              + "\""
+              + " is declared as the ControllableDuration parameter, but does not have type "
+              + Duration.class.getName()
+              + "."
+              + " Instead, it has type "
+              + record.type);
     }
   }
 
-  private static Optional<ParameterRecord> lookupParameterByName(final Iterable<ParameterRecord> parameters, final String name) {
+  private static Optional<ParameterRecord> lookupParameterByName(
+      final Iterable<ParameterRecord> parameters, final String name) {
     for (final var param : parameters) {
       if (param.name.equals(name)) {
         return Optional.of(param);
@@ -366,8 +376,7 @@ import java.util.stream.Collectors;
     return Optional.empty();
   }
 
-  private ExportDefaultsStyle getExportDefaultsStyle(final TypeElement exportTypeElement)
-  {
+  private ExportDefaultsStyle getExportDefaultsStyle(final TypeElement exportTypeElement) {
     for (final var element : exportTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(Export.Parameter.class) != null)
         return ExportDefaultsStyle.AllDefined;
@@ -380,70 +389,78 @@ import java.util.stream.Collectors;
   }
 
   private String getActivityTypeName(final TypeElement activityTypeElement)
-  throws InvalidMissionModelException
-  {
-    final var annotationMirror = this
-        .getAnnotationMirrorByType(activityTypeElement, ActivityType.class)
-        .orElseThrow(() -> new InvalidMissionModelException(
-            "An activity is somehow missing an @Activity annotation",
-            activityTypeElement));
+      throws InvalidMissionModelException {
+    final var annotationMirror =
+        this.getAnnotationMirrorByType(activityTypeElement, ActivityType.class)
+            .orElseThrow(
+                () ->
+                    new InvalidMissionModelException(
+                        "An activity is somehow missing an @Activity annotation",
+                        activityTypeElement));
 
-    final var nameAttribute = getAnnotationAttribute(annotationMirror, "value")
-        .orElseThrow(() -> new InvalidMissionModelException(
-            "Unable to get value attribute of annotation",
-            activityTypeElement,
-            annotationMirror));
+    final var nameAttribute =
+        getAnnotationAttribute(annotationMirror, "value")
+            .orElseThrow(
+                () ->
+                    new InvalidMissionModelException(
+                        "Unable to get value attribute of annotation",
+                        activityTypeElement,
+                        annotationMirror));
 
     return (String) nameAttribute.getValue();
   }
 
-  private MapperRecord getExportMapper(final PackageElement missionModelElement, final TypeElement exportTypeElement)
-  throws InvalidMissionModelException
-  {
-    final var annotationMirror = this.getAnnotationMirrorByType(exportTypeElement, ActivityType.WithMapper.class);
+  private MapperRecord getExportMapper(
+      final PackageElement missionModelElement, final TypeElement exportTypeElement)
+      throws InvalidMissionModelException {
+    final var annotationMirror =
+        this.getAnnotationMirrorByType(exportTypeElement, ActivityType.WithMapper.class);
     if (annotationMirror.isEmpty()) {
-      return MapperRecord.generatedFor(
-          ClassName.get(exportTypeElement),
-          missionModelElement);
+      return MapperRecord.generatedFor(ClassName.get(exportTypeElement), missionModelElement);
     }
 
-    final var mapperType = (DeclaredType) getAnnotationAttribute(annotationMirror.get(), "value")
-        .orElseThrow(() -> new InvalidMissionModelException(
-            "Unable to get value attribute of annotation",
-            exportTypeElement,
-            annotationMirror.get()))
-        .getValue();
+    final var mapperType =
+        (DeclaredType)
+            getAnnotationAttribute(annotationMirror.get(), "value")
+                .orElseThrow(
+                    () ->
+                        new InvalidMissionModelException(
+                            "Unable to get value attribute of annotation",
+                            exportTypeElement,
+                            annotationMirror.get()))
+                .getValue();
 
-    return MapperRecord.custom(
-        ClassName.get((TypeElement) mapperType.asElement()));
+    return MapperRecord.custom(ClassName.get((TypeElement) mapperType.asElement()));
   }
 
   private List<ParameterValidationRecord> getExportValidations(
-      final TypeElement exportTypeElement,
-      final List<ParameterRecord> parameters)
-  throws InvalidMissionModelException
-  {
+      final TypeElement exportTypeElement, final List<ParameterRecord> parameters)
+      throws InvalidMissionModelException {
     final var validations = new ArrayList<ParameterValidationRecord>();
-    final var parameterNames = parameters.stream().map(p -> p.name).collect(Collectors.toUnmodifiableSet());
+    final var parameterNames =
+        parameters.stream().map(p -> p.name).collect(Collectors.toUnmodifiableSet());
 
     for (final var element : exportTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(Export.Validation.class) == null) continue;
 
       final var name = element.getSimpleName().toString();
       final var message = element.getAnnotation(Export.Validation.class).value();
-      final var subjects = element.getAnnotation(Export.Validation.Subject.class) == null ?
-          new String[] { } :
-          element.getAnnotation(Export.Validation.Subject.class).value();
+      final var subjects =
+          element.getAnnotation(Export.Validation.Subject.class) == null
+              ? new String[] {}
+              : element.getAnnotation(Export.Validation.Subject.class).value();
 
-      final var missingSubjects$ = Arrays.stream(subjects)
-          .filter(Predicate.not(parameterNames::contains))
-          .map("\"%s\""::formatted)
-          .reduce((x, y) -> x + ", " + y);
+      final var missingSubjects$ =
+          Arrays.stream(subjects)
+              .filter(Predicate.not(parameterNames::contains))
+              .map("\"%s\""::formatted)
+              .reduce((x, y) -> x + ", " + y);
 
       if (missingSubjects$.isPresent()) {
         throw new InvalidMissionModelException(
             "Validation subjects for validation \"%s\" do not exist: %s"
-                .formatted(name, missingSubjects$.get()), exportTypeElement);
+                .formatted(name, missingSubjects$.get()),
+            exportTypeElement);
       }
 
       validations.add(new ParameterValidationRecord(name, subjects, message));
@@ -453,38 +470,45 @@ import java.util.stream.Collectors;
   }
 
   /** Parse a list of parameters from an export type element, depending on the export defaults style in use. */
-  private List<ParameterRecord> getExportParameters(final TypeElement exportTypeElement)
-  {
+  private List<ParameterRecord> getExportParameters(final TypeElement exportTypeElement) {
     final var defaultsStyle = this.getExportDefaultsStyle(exportTypeElement);
-    final Predicate<Element> excludeParamPred = switch (defaultsStyle) {
-      case AllDefined -> e -> e.getAnnotation(Export.Parameter.class) == null; // Exclude class members with @Parameter annotations
-      default ->         e -> e.getModifiers().contains(Modifier.STATIC);      // Exclude static class members
-    };
+    final Predicate<Element> excludeParamPred =
+        switch (defaultsStyle) {
+          case AllDefined -> e ->
+              e.getAnnotation(Export.Parameter.class)
+                  == null; // Exclude class members with @Parameter annotations
+          default -> e ->
+              e.getModifiers().contains(Modifier.STATIC); // Exclude static class members
+        };
 
     return exportTypeElement.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.FIELD) // Element must be a field
-        .filter(e -> !excludeParamPred.test(e))        // Element must not be deemed excluded for the defaults style
+        .filter(
+            e ->
+                !excludeParamPred.test(
+                    e)) // Element must not be deemed excluded for the defaults style
         .map(e -> new ParameterRecord(e.getSimpleName().toString(), e.asType(), e))
         .toList();
   }
 
   private Optional<EffectModelRecord> getActivityEffectModel(final TypeElement activityTypeElement)
-  throws InvalidMissionModelException
-  {
+      throws InvalidMissionModelException {
     Optional<String> fixedDuration = Optional.empty();
-    for (final var element: activityTypeElement.getEnclosedElements()) {
+    for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.FixedDuration.class) == null) continue;
 
-      if (fixedDuration.isPresent()) throw new InvalidMissionModelException(
-          "FixedDuration annotation cannot be applied multiple times in one activity type."
-      );
+      if (fixedDuration.isPresent())
+        throw new InvalidMissionModelException(
+            "FixedDuration annotation cannot be applied multiple times in one activity type.");
 
       if (element.getKind() == ElementKind.METHOD) {
-        if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException("FixedDuration method annotation must be an executable element.");
+        if (!(element instanceof ExecutableElement executableElement))
+          throw new InvalidMissionModelException(
+              "FixedDuration method annotation must be an executable element.");
 
-        if (!executableElement.getParameters().isEmpty()) throw new InvalidMissionModelException(
-            "FixedDuration annotation must be applied to a method with no arguments."
-        );
+        if (!executableElement.getParameters().isEmpty())
+          throw new InvalidMissionModelException(
+              "FixedDuration annotation must be applied to a method with no arguments.");
 
         fixedDuration = Optional.of(executableElement.getSimpleName().toString() + "()");
       } else if (element.getKind() == ElementKind.FIELD) {
@@ -500,16 +524,28 @@ import java.util.stream.Collectors;
 
       if (!(element instanceof ExecutableElement executableElement)) continue;
 
-      final var durationTypeAnnotation = element.getAnnotation(ActivityType.ControllableDuration.class);
-      final var durationParameter = Optional.ofNullable(durationTypeAnnotation).map(ActivityType.ControllableDuration::parameterName);
-      if (durationParameter.isPresent() && fixedDuration.isPresent()) throw new InvalidMissionModelException("Activity cannot have both FixedDuration and ControllableDuration annotations");
+      final var durationTypeAnnotation =
+          element.getAnnotation(ActivityType.ControllableDuration.class);
+      final var durationParameter =
+          Optional.ofNullable(durationTypeAnnotation)
+              .map(ActivityType.ControllableDuration::parameterName);
+      if (durationParameter.isPresent() && fixedDuration.isPresent())
+        throw new InvalidMissionModelException(
+            "Activity cannot have both FixedDuration and ControllableDuration annotations");
 
       final var returnType = executableElement.getReturnType();
-      final var nonVoidReturnType = returnType.getKind() == TypeKind.VOID
-          ? Optional.<TypeMirror>empty()
-          : Optional.of(returnType);
+      final var nonVoidReturnType =
+          returnType.getKind() == TypeKind.VOID
+              ? Optional.<TypeMirror>empty()
+              : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration));
+      return Optional.of(
+          new EffectModelRecord(
+              element.getSimpleName().toString(),
+              executorAnnotation.value(),
+              nonVoidReturnType,
+              durationParameter,
+              fixedDuration));
     }
 
     return Optional.empty();
@@ -519,12 +555,14 @@ import java.util.stream.Collectors;
   // ANNOTATION PARSING
   //
 
-  private List<AnnotationMirror> getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass)
-  {
+  private List<AnnotationMirror> getRepeatableAnnotation(
+      final Element element, final Class<? extends Annotation> annotationClass) {
     final var containerClass = annotationClass.getAnnotation(Repeatable.class).value();
 
-    final var annotationType = this.elementUtils.getTypeElement(annotationClass.getCanonicalName()).asType();
-    final var containerType = this.elementUtils.getTypeElement(containerClass.getCanonicalName()).asType();
+    final var annotationType =
+        this.elementUtils.getTypeElement(annotationClass.getCanonicalName()).asType();
+    final var containerType =
+        this.elementUtils.getTypeElement(containerClass.getCanonicalName()).asType();
 
     final var mirrors = new ArrayList<AnnotationMirror>();
     for (final var mirror : element.getAnnotationMirrors()) {
@@ -535,9 +573,7 @@ import java.util.stream.Collectors;
         @SuppressWarnings("unchecked")
         final var containedMirrors =
             (List<AnnotationMirror>)
-                getAnnotationAttribute(mirror, "value")
-                    .orElseThrow()
-                    .getValue();
+                getAnnotationAttribute(mirror, "value").orElseThrow().getValue();
 
         mirrors.addAll(containedMirrors);
       }
@@ -546,11 +582,10 @@ import java.util.stream.Collectors;
     return mirrors;
   }
 
-  private Optional<AnnotationMirror> getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass)
-  {
-    final var annotationType = this.elementUtils
-        .getTypeElement(annotationClass.getCanonicalName())
-        .asType();
+  private Optional<AnnotationMirror> getAnnotationMirrorByType(
+      final Element element, final Class<? extends Annotation> annotationClass) {
+    final var annotationType =
+        this.elementUtils.getTypeElement(annotationClass.getCanonicalName()).asType();
 
     for (final var x : element.getAnnotationMirrors()) {
       if (this.typeUtils.isSameType(annotationType, x.getAnnotationType())) {
@@ -561,8 +596,8 @@ import java.util.stream.Collectors;
     return Optional.empty();
   }
 
-  private static Optional<AnnotationValue> getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName)
-  {
+  private static Optional<AnnotationValue> getAnnotationAttribute(
+      final AnnotationMirror annotationMirror, final String attributeName) {
     for (final var entry : annotationMirror.getElementValues().entrySet()) {
       if (Objects.equals(attributeName, entry.getKey().getSimpleName().toString())) {
         return Optional.of(entry.getValue());

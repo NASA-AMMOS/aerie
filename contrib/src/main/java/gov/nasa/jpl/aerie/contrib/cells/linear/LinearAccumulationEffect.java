@@ -13,7 +13,8 @@ public final class LinearAccumulationEffect {
     this(0, deltaRate, clearVolume);
   }
 
-  public LinearAccumulationEffect(final double deltaVolume, final double deltaRate, final boolean clearVolume) {
+  public LinearAccumulationEffect(
+      final double deltaVolume, final double deltaRate, final boolean clearVolume) {
     this.deltaVolume = deltaVolume;
     this.deltaRate = deltaRate;
     this.clearVolume = clearVolume;
@@ -45,7 +46,7 @@ public final class LinearAccumulationEffect {
   }
 
   public static LinearAccumulationEffect empty() {
-    return new LinearAccumulationEffect(0,0,  false);
+    return new LinearAccumulationEffect(0, 0, false);
   }
 
   @Override

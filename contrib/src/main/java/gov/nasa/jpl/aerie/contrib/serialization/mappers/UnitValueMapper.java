@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-
 import java.util.Map;
 
 public record UnitValueMapper() implements ValueMapper<Unit> {

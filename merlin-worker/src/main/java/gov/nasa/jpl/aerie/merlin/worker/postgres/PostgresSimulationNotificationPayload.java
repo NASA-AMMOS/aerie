@@ -9,5 +9,4 @@ public record PostgresSimulationNotificationPayload(
     Optional<Long> simulationTemplateRevision,
     long planId,
     long datasetId,
-    long simulationId
-) {}
+    long simulationId) {}

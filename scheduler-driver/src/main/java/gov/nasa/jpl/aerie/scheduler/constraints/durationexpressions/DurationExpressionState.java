@@ -9,12 +9,14 @@ public class DurationExpressionState implements DurationExpression {
 
   final StateQueryParam state;
 
-  public DurationExpressionState(StateQueryParam state){
+  public DurationExpressionState(StateQueryParam state) {
     this.state = state;
   }
 
   @Override
   public Duration compute(final Interval interval, final SimulationResults simulationResults) {
-    return Duration.of(state.getValue(simulationResults, null, interval).asInt().orElseThrow(), Duration.MICROSECONDS);
+    return Duration.of(
+        state.getValue(simulationResults, null, interval).asInt().orElseThrow(),
+        Duration.MICROSECONDS);
   }
 }

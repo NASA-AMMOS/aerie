@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +20,7 @@ public final class EmptyInputType implements InputType<Unit> {
 
   @Override
   public Unit instantiate(final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
+      throws InstantiationException {
     final var invalidArgsExBuilder = new InstantiationException.Builder(getClass().getSimpleName());
     arguments.forEach((k, v) -> invalidArgsExBuilder.withExtraneousArgument(k));
     invalidArgsExBuilder.throwIfAny();

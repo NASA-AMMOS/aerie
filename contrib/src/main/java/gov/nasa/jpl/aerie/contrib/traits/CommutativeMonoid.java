@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.traits;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-
 import java.util.function.BinaryOperator;
 
 /**
@@ -25,9 +24,8 @@ import java.util.function.BinaryOperator;
  *
  * @see EffectTrait
  */
-public record CommutativeMonoid<T> (T empty, BinaryOperator<T> combinator)
-    implements EffectTrait<T>
-{
+public record CommutativeMonoid<T>(T empty, BinaryOperator<T> combinator)
+    implements EffectTrait<T> {
   @Override
   public T sequentially(final T prefix, final T suffix) {
     return this.combinator.apply(prefix, suffix);

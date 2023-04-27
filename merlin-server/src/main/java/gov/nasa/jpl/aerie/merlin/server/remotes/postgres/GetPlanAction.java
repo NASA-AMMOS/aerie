@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetPlanAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     select
       p.name,
       p.revision,
@@ -39,13 +39,7 @@ import java.util.Optional;
       final var endTimestamp = Timestamp.fromString(results.getString(5));
 
       return Optional.of(
-          new PlanRecord(
-              planId,
-              revision,
-              name,
-              missionModelId,
-              startTimestamp,
-              endTimestamp));
+          new PlanRecord(planId, revision, name, missionModelId, startTimestamp, endTimestamp));
     }
   }
 

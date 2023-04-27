@@ -16,7 +16,7 @@ public interface ValueMapper<T> {
   ValueSchema getValueSchema();
 
   /**
-    * Produces an mission model-specific domain value from a mission-agnostic representation.
+   * Produces an mission model-specific domain value from a mission-agnostic representation.
    *
    * @param serializedValue A mission-agnostic representation of a domain value.
    * @return Either an mission model-specific domain object, or a deserialization failure.

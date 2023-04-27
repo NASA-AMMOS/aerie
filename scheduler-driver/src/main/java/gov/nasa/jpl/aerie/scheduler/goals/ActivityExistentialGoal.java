@@ -30,7 +30,9 @@ public class ActivityExistentialGoal extends Goal {
      * {@inheritDoc}
      */
     @Override
-    public ActivityExistentialGoal build() { return fill(new ActivityExistentialGoal()); }
+    public ActivityExistentialGoal build() {
+      return fill(new ActivityExistentialGoal());
+    }
 
     /**
      * populates the provided goal with specifiers from this builder and above
@@ -43,7 +45,7 @@ public class ActivityExistentialGoal extends Goal {
      * @return the provided goal object, with details filled in
      */
     protected ActivityExistentialGoal fill(ActivityExistentialGoal goal) {
-      //first fill in any general specifiers from parent
+      // first fill in any general specifiers from parent
       super.fill(goal);
 
       if (childCustody == null) {
@@ -54,17 +56,16 @@ public class ActivityExistentialGoal extends Goal {
 
       return goal;
     }
-
-  }//Builder
+  } // Builder
 
   /**
    * ctor creates new empty goal without identification / specification
    *
    * client code should use derived type builders to instance goals
    */
-  public ActivityExistentialGoal() { }
+  public ActivityExistentialGoal() {}
 
-  public ChildCustody getChildCustody(){
+  public ChildCustody getChildCustody() {
     return this.childCustody;
   }
 
@@ -73,5 +74,4 @@ public class ActivityExistentialGoal extends Goal {
    * calculating its own satisfaction
    */
   protected ChildCustody childCustody;
-
 }

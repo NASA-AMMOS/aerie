@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -17,10 +16,7 @@ final class ThreadedReactionContext implements Context {
   private Scheduler scheduler;
 
   public ThreadedReactionContext(
-      final Scoped<Context> rootContext,
-      final Scheduler scheduler,
-      final TaskHandle handle)
-  {
+      final Scoped<Context> rootContext, final Scheduler scheduler, final TaskHandle handle) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.scheduler = scheduler;
     this.handle = handle;
@@ -37,13 +33,11 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public <Event, Effect, State>
-  CellId<State> allocate(
+  public <Event, Effect, State> CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> interpretation,
-      final Topic<Event> topic)
-  {
+      final Topic<Event> topic) {
     throw new IllegalStateException("Cannot allocate during simulation");
   }
 
@@ -59,23 +53,28 @@ final class ThreadedReactionContext implements Context {
 
   @Override
   public <T> void call(final TaskFactory<T> task) {
-    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler =
+        null; // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.call(task);
   }
 
   @Override
   public void delay(final Duration duration) {
-    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler =
+        null; // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.delay(duration);
   }
 
   @Override
   public void waitUntil(final Condition condition) {
-    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.await((now, atLatest) -> {
-      try (final var restore = this.rootContext.set(new QueryContext(now))) {
-        return condition.nextSatisfied(true, Duration.ZERO, atLatest);
-      }
-    });
+    this.scheduler =
+        null; // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler =
+        this.handle.await(
+            (now, atLatest) -> {
+              try (final var restore = this.rootContext.set(new QueryContext(now))) {
+                return condition.nextSatisfied(true, Duration.ZERO, atLatest);
+              }
+            });
   }
 }

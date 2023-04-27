@@ -1,31 +1,28 @@
 package gov.nasa.jpl.aerie.json;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonValue;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
+import org.apache.commons.lang3.tuple.Pair;
 
 public abstract class ProductParsers {
   private ProductParsers() {}
 
   public static final EmptyProductParser productP = new EmptyProductParser();
 
-
   public static final class EmptyProductParser implements JsonObjectParser<Unit> {
     private EmptyProductParser() {}
 
     @Override
     public JsonObject getSchema(final SchemaCache anchors) {
-      return Json
-          .createObjectBuilder()
+      return Json.createObjectBuilder()
           .add("type", "object")
           .add("additionalProperties", JsonValue.FALSE)
           .build();
@@ -48,7 +45,8 @@ public abstract class ProductParsers {
       return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, false)), false);
     }
 
-    public <S> VariadicProductParser<Optional<S>> optionalField(final String key, final JsonParser<S> valueParser) {
+    public <S> VariadicProductParser<Optional<S>> optionalField(
+        final String key, final JsonParser<S> valueParser) {
       return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, true)), false);
     }
 
@@ -56,10 +54,7 @@ public abstract class ProductParsers {
       return new JsonObjectParser<>() {
         @Override
         public JsonObject getSchema(final SchemaCache anchors) {
-          return Json
-              .createObjectBuilder()
-              .add("type", "object")
-              .build();
+          return Json.createObjectBuilder().add("type", "object").build();
         }
 
         @Override
@@ -83,7 +78,8 @@ public abstract class ProductParsers {
     private final boolean acceptUnspecified;
 
     /** @param fields must be non-empty. */
-    private VariadicProductParser(final @Owned List<FieldSpec<?>> fields, final boolean acceptUnspecified) {
+    private VariadicProductParser(
+        final @Owned List<FieldSpec<?>> fields, final boolean acceptUnspecified) {
       this.fields = fields;
       this.acceptUnspecified = acceptUnspecified;
     }
@@ -103,11 +99,8 @@ public abstract class ProductParsers {
           final var name = param.getKey();
 
           if (getFieldSpec(name).isEmpty()) {
-            return JsonParseResult
-                .<T>failure("Unexpected field present")
-                .prependBreadcrumb(
-                    Breadcrumb.ofString(name)
-                );
+            return JsonParseResult.<T>failure("Unexpected field present")
+                .prependBreadcrumb(Breadcrumb.ofString(name));
           }
         }
       }
@@ -124,12 +117,13 @@ public abstract class ProductParsers {
         accumulator = accumulator.parWith(parseField(iter.next(), obj)).mapSuccess(x -> x);
       }
 
-      return accumulator.mapSuccess(result -> {
-        // SAFETY: established by loop invariant.
-        @SuppressWarnings("unchecked")
-        final var tmp = (T) result;
-        return tmp;
-      });
+      return accumulator.mapSuccess(
+          result -> {
+            // SAFETY: established by loop invariant.
+            @SuppressWarnings("unchecked")
+            final var tmp = (T) result;
+            return tmp;
+          });
     }
 
     @Override
@@ -171,15 +165,16 @@ public abstract class ProductParsers {
         if (!field.isOptional) requiredFields.add(field.name);
       }
 
-      return Json
-          .createObjectBuilder()
+      return Json.createObjectBuilder()
           // an object containing all and only the listed properties
           .add("type", "object")
           .add("properties", fieldSchemas)
-          .add("required", // all
-               requiredFields)
-          .add("additionalProperties", // and only
-               (this.acceptUnspecified) ? JsonValue.TRUE : JsonValue.FALSE)
+          .add(
+              "required", // all
+              requiredFields)
+          .add(
+              "additionalProperties", // and only
+              (this.acceptUnspecified) ? JsonValue.TRUE : JsonValue.FALSE)
           .build();
     }
 
@@ -210,8 +205,8 @@ public abstract class ProductParsers {
     }
 
     // PRECONDITION: `value` is of type `Ti` or `Optional<Ti>` (depending on `field.isOptional`).
-    private static <Ti>
-    JsonObjectBuilder unparseField(final JsonObjectBuilder builder, final FieldSpec<Ti> field, final Object value) {
+    private static <Ti> JsonObjectBuilder unparseField(
+        final JsonObjectBuilder builder, final FieldSpec<Ti> field, final Object value) {
       if (field.isOptional) { // type(value) = Optional<Ti>
         // SAFETY: By precondition.
         @SuppressWarnings("unchecked")
@@ -228,22 +223,20 @@ public abstract class ProductParsers {
       }
     }
 
-    public <S>
-    VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {
+    public <S> VariadicProductParser<Pair<T, S>> field(
+        final String key, final JsonParser<S> valueParser) {
       throwIfKeyExists(key);
 
       return new VariadicProductParser<>(
-          extend(this.fields, new FieldSpec<>(key, valueParser, false)),
-          this.acceptUnspecified);
+          extend(this.fields, new FieldSpec<>(key, valueParser, false)), this.acceptUnspecified);
     }
 
-    public <S>
-    VariadicProductParser<Pair<T, Optional<S>>> optionalField(final String key, final JsonParser<S> valueParser) {
+    public <S> VariadicProductParser<Pair<T, Optional<S>>> optionalField(
+        final String key, final JsonParser<S> valueParser) {
       throwIfKeyExists(key);
 
       return new VariadicProductParser<>(
-          extend(this.fields, new FieldSpec<>(key, valueParser, true)),
-          this.acceptUnspecified);
+          extend(this.fields, new FieldSpec<>(key, valueParser, true)), this.acceptUnspecified);
     }
 
     private void throwIfKeyExists(final String key) {

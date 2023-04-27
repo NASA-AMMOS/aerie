@@ -38,7 +38,7 @@ import java.util.List;
  * value of a fixed-point type is simply the largest value that can be represented by the underlying integer type.
  * For a {@code long} this yields a range of (-2^63) to (2^63 - 1), or almost 600,000 years, at microsecond
  * resolution.</p>
-
+ *
  * <p>
  * Note that derived units such as DAY, WEEK, MONTH, and YEAR are <em>not</em> included, because their values
  * depend on properties of the particular calendrical system in use. For example:
@@ -214,7 +214,8 @@ public final class Duration implements Comparable<Duration> {
    * @throws ArithmeticException If the input duration is {@link #MIN_VALUE}.
    */
   public static Duration negate(final Duration duration) throws ArithmeticException {
-    // amusingly, -MIN_VALUE = MIN_VALUE in 2's complement -- `multiplyExact` will correctly fail out in that case.
+    // amusingly, -MIN_VALUE = MIN_VALUE in 2's complement -- `multiplyExact` will correctly fail
+    // out in that case.
     return new Duration(Math.multiplyExact(-1, duration.durationInMicroseconds));
   }
 
@@ -231,7 +232,8 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public static Duration saturatingAdd(final Duration left, final Duration right) {
-    return new Duration(saturatingAddInternal(left.durationInMicroseconds, right.durationInMicroseconds));
+    return new Duration(
+        saturatingAddInternal(left.durationInMicroseconds, right.durationInMicroseconds));
   }
 
   private static long saturatingAddInternal(final long left, final long right) {
@@ -250,8 +252,10 @@ public final class Duration implements Comparable<Duration> {
    * @return The difference between the input durations.
    * @throws ArithmeticException If the result would be less than {@link #MIN_VALUE} or greater than {@link #MAX_VALUE}.
    */
-  public static Duration subtract(final Duration left, final Duration right) throws ArithmeticException {
-    return new Duration(Math.subtractExact(left.durationInMicroseconds, right.durationInMicroseconds));
+  public static Duration subtract(final Duration left, final Duration right)
+      throws ArithmeticException {
+    return new Duration(
+        Math.subtractExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }
 
   /**
@@ -262,7 +266,8 @@ public final class Duration implements Comparable<Duration> {
    * @return The scaled duration.
    * @throws ArithmeticException If the result would be less than {@link #MIN_VALUE} or greater than {@link #MAX_VALUE}.
    */
-  public static Duration multiply(final long scalar, final Duration unit) throws ArithmeticException {
+  public static Duration multiply(final long scalar, final Duration unit)
+      throws ArithmeticException {
     return new Duration(Math.multiplyExact(scalar, unit.durationInMicroseconds));
   }
 
@@ -312,7 +317,7 @@ public final class Duration implements Comparable<Duration> {
     final long integralPart = dividend.durationInMicroseconds / divisor.durationInMicroseconds;
     final double fractionalPart =
         ((double) (dividend.durationInMicroseconds % divisor.durationInMicroseconds))
-        / ((double) divisor.durationInMicroseconds);
+            / ((double) divisor.durationInMicroseconds);
 
     return integralPart + fractionalPart;
   }
@@ -342,12 +347,14 @@ public final class Duration implements Comparable<Duration> {
   }
 
   /** Apply a duration to a {@link java.time.Instant}. */
-  public static java.time.Instant addToInstant(final java.time.Instant instant, final Duration duration) {
+  public static java.time.Instant addToInstant(
+      final java.time.Instant instant, final Duration duration) {
     // Java Instants don't provide capability to add microseconds
     // Add millis and micros separately to avoid possible overflow
     return instant
         .plusMillis(duration.dividedBy(Duration.MILLISECONDS))
-        .plusNanos(1000 * duration.remainderOf(Duration.MILLISECONDS).dividedBy(Duration.MICROSECONDS));
+        .plusNanos(
+            1000 * duration.remainderOf(Duration.MILLISECONDS).dividedBy(Duration.MICROSECONDS));
   }
 
   /** @see Duration#add(Duration, Duration) */
@@ -474,7 +481,6 @@ public final class Duration implements Comparable<Duration> {
    *
    * @see Duration#compareTo(Duration)
    */
-
   public boolean isZero() {
     return this.durationInMicroseconds == 0;
   }
@@ -488,7 +494,7 @@ public final class Duration implements Comparable<Duration> {
   @Deprecated
   public boolean equals(final Object o) {
     if (!(o instanceof Duration)) return false;
-    final var other = (Duration)o;
+    final var other = (Duration) o;
 
     return this.isEqualTo(other);
   }

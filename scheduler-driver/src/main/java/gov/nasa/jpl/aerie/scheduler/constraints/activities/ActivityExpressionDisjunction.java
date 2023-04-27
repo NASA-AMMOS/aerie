@@ -2,14 +2,12 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
-
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ActivityExpressionDisjunction extends ActivityExpression {
-
 
   final List<ActivityExpression> actExpressions;
 
@@ -17,9 +15,9 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
     this.actExpressions = new ArrayList<>(actExpressions);
   }
 
-
   @SuppressWarnings("unchecked")
-  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
+  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression>
+      AbstractBuilder<B, AT> getNewBuilder() {
     return (AbstractBuilder<B, AT>) new OrBuilder();
   }
 
@@ -29,7 +27,10 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
    * @return true if the act instance matches one of the activity expression of the disjunction
    */
   @Override
-  public boolean matches(@NotNull SchedulingActivityDirective act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  public boolean matches(
+      @NotNull SchedulingActivityDirective act,
+      SimulationResults simulationResults,
+      EvaluationEnvironment evaluationEnvironment) {
     for (var expr : actExpressions) {
       if (expr.matches(act, simulationResults, evaluationEnvironment)) {
         return true;
@@ -56,8 +57,7 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
     /**
      * {@inheritDoc}
      */
-    public @NotNull
-    OrBuilder getThis() {
+    public @NotNull OrBuilder getThis() {
       return this;
     }
 
@@ -73,6 +73,4 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
       return getThis();
     }
   }
-
-
 }

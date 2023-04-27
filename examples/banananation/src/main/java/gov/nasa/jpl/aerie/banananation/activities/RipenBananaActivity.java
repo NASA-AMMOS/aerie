@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
+
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 
 /**
  * Monke is patient.

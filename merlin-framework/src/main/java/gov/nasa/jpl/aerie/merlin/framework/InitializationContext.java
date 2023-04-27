@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,8 +17,7 @@ public final class InitializationContext implements Context {
     this.builder = Objects.requireNonNull(builder);
   }
 
-  public static <T>
-  T initializing(final Initializer builder, final Supplier<T> initializer) {
+  public static <T> T initializing(final Initializer builder, final Supplier<T> initializer) {
     try (final var restore = ModelActions.context.set(new InitializationContext(builder))) {
       return initializer.get();
     }
@@ -36,13 +34,11 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public <Event, Effect, State>
-  CellId<State> allocate(
+  public <Event, Effect, State> CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> interpretation,
-      final Topic<Event> topic
-  ) {
+      final Topic<Event> topic) {
     return this.builder.allocate(initialState, cellType, interpretation, topic);
   }
 

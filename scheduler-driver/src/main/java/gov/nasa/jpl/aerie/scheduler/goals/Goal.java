@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -137,7 +136,6 @@ public class Goal {
 
     protected Expression<Windows> range;
 
-
     /**
      * allows to attach state constraints to the goal
      *
@@ -149,7 +147,7 @@ public class Goal {
       return getThis();
     }
 
-    protected  final List<Expression<Windows>> resourceConstraints = new LinkedList<>();
+    protected final List<Expression<Windows>> resourceConstraints = new LinkedList<>();
 
     public T shouldRollbackIfUnsatisfied(final boolean shouldRollbackIfUnsatisfied) {
       this.shouldRollbackIfUnsatisfied = shouldRollbackIfUnsatisfied;
@@ -174,7 +172,9 @@ public class Goal {
      *
      * @return a newly allocated goal object matching all specifications
      */
-    public Goal build() { return fill(new Goal()); }
+    public Goal build() {
+      return fill(new Goal());
+    }
 
     /**
      * returns the current builder object (but typed at the lowest level)
@@ -184,7 +184,6 @@ public class Goal {
      * @return reference to the current builder object (specifically typed)
      */
     protected abstract T getThis();
-
 
     /**
      * populates the provided goal with specifiers from this builder and above
@@ -210,11 +209,12 @@ public class Goal {
         }
       }
 
-      //REVIEW: collapse boolean logic
+      // REVIEW: collapse boolean logic
       if (((starting != null || ending != null) && (range != null))
           || (starting == null && ending == null && range == null)) {
         throw new IllegalArgumentException(
-            "creating goal requires either startingAt/endingAt terms or an \"forAllTime\" range, but not both");
+            "creating goal requires either startingAt/endingAt terms or an \"forAllTime\" range,"
+                + " but not both");
       }
       if (range != null) {
         goal.temporalContext = range;
@@ -227,9 +227,7 @@ public class Goal {
 
       return goal;
     }
-
-  }//Builder
-
+  } // Builder
 
   /**
    * fetches the human-legible identifier of the goal
@@ -245,13 +243,17 @@ public class Goal {
    *
    * @return the (dis)contiguous range of time over which the goal applies
    */
-  public Expression<Windows> getTemporalContext() { return temporalContext; }
+  public Expression<Windows> getTemporalContext() {
+    return temporalContext;
+  }
 
   /**
    * set the (dis)contiguous range of time over which the goal applies
    *
    */
-  public void setTemporalContext(Expression<Windows> tc) { temporalContext = tc; }
+  public void setTemporalContext(Expression<Windows> tc) {
+    temporalContext = tc;
+  }
 
   /**
    * identifies issues in a plan that diminishes this goal's satisfaction
@@ -266,7 +268,8 @@ public class Goal {
    * @param simulationResults
    * @return a list of issues in the plan that diminish goal satisfaction
    */
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  public java.util.Collection<Conflict> getConflicts(
+      Plan plan, final SimulationResults simulationResults) {
     return java.util.Collections.emptyList();
   }
 
@@ -279,7 +282,7 @@ public class Goal {
    *
    * client code should use derived type builders to instance goals
    */
-  protected Goal() { }
+  protected Goal() {}
 
   /**
    * ctor creates a new empty goal with default priority
@@ -288,8 +291,7 @@ public class Goal {
    */
   protected Goal(String name) {
     if (name == null) {
-      throw new IllegalArgumentException(
-          "creating goal with null name");
+      throw new IllegalArgumentException("creating goal with null name");
     }
     this.name = name;
   }

@@ -1,18 +1,15 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
-
 import java.util.Optional;
 
 public record PostgresPlanRevisionData(
-    long modelRevision,
-    long planRevision,
-    long simulationRevision,
-    Optional<Long> templateRevision
-) implements RevisionData {
+    long modelRevision, long planRevision, long simulationRevision, Optional<Long> templateRevision)
+    implements RevisionData {
   @Override
   public MatchResult matches(final RevisionData other) {
-    if (!(other instanceof PostgresPlanRevisionData o)) return MatchResult.failure("RevisionData type mismatch");
+    if (!(other instanceof PostgresPlanRevisionData o))
+      return MatchResult.failure("RevisionData type mismatch");
 
     if (planRevision != o.planRevision()) {
       return MatchResult.failure("Plan revision mismatch");

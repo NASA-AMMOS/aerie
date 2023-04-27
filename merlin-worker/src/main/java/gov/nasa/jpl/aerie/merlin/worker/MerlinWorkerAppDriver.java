@@ -17,7 +17,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
 import io.javalin.Javalin;
-
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
@@ -44,17 +43,20 @@ public final class MerlinWorkerAppDriver {
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 
-    final var stores = new Stores(
-        new PostgresPlanRepository(hikariDataSource),
-        new PostgresMissionModelRepository(hikariDataSource),
-        new PostgresResultsCellRepository(hikariDataSource));
+    final var stores =
+        new Stores(
+            new PostgresPlanRepository(hikariDataSource),
+            new PostgresMissionModelRepository(hikariDataSource),
+            new PostgresResultsCellRepository(hikariDataSource));
 
-    final var missionModelController = new LocalMissionModelService(
-        configuration.merlinFileStore(),
-        stores.missionModels(),
-        configuration.untruePlanStart());
+    final var missionModelController =
+        new LocalMissionModelService(
+            configuration.merlinFileStore(),
+            stores.missionModels(),
+            configuration.untruePlanStart());
     final var planController = new LocalPlanService(stores.plans());
-    final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController);
+    final var simulationAgent =
+        new SynchronousSimulationAgent(planController, missionModelController);
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
@@ -71,25 +73,27 @@ public final class MerlinWorkerAppDriver {
       final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
       if (owner.isEmpty()) continue;
 
-      final var revisionData = new PostgresPlanRevisionData(
-          notification.modelRevision(),
-          notification.planRevision(),
-          notification.simulationRevision(),
-          notification.simulationTemplateRevision());
+      final var revisionData =
+          new PostgresPlanRevisionData(
+              notification.modelRevision(),
+              notification.planRevision(),
+              notification.simulationRevision(),
+              notification.simulationTemplateRevision());
       final ResultsProtocol.WriterRole writer = owner.get();
       try {
         simulationAgent.simulate(planId, revisionData, writer);
       } catch (final Throwable ex) {
         ex.printStackTrace(System.err);
-        writer.failWith(b -> b
-            .type("UNEXPECTED_SIMULATION_EXCEPTION")
-            .message("Something went wrong while simulating")
-            .trace(ex));
+        writer.failWith(
+            b ->
+                b.type("UNEXPECTED_SIMULATION_EXCEPTION")
+                    .message("Something went wrong while simulating")
+                    .trace(ex));
       }
     }
   }
 
-  private static String getEnv(final String key, final String fallback){
+  private static String getEnv(final String key, final String fallback) {
     final var env = System.getenv(key);
     return env == null ? fallback : env;
   }
@@ -97,12 +101,12 @@ public final class MerlinWorkerAppDriver {
   private static WorkerAppConfiguration loadConfiguration() {
     return new WorkerAppConfiguration(
         Path.of(getEnv("MERLIN_WORKER_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        new PostgresStore(getEnv("MERLIN_WORKER_DB_SERVER", "postgres"),
-                          getEnv("MERLIN_WORKER_DB_USER", ""),
-                          Integer.parseInt(getEnv("MERLIN_WORKER_DB_PORT", "5432")),
-                          getEnv("MERLIN_WORKER_DB_PASSWORD", ""),
-                          getEnv("MERLIN_WORKER_DB", "aerie_merlin")),
-        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
-    );
+        new PostgresStore(
+            getEnv("MERLIN_WORKER_DB_SERVER", "postgres"),
+            getEnv("MERLIN_WORKER_DB_USER", ""),
+            Integer.parseInt(getEnv("MERLIN_WORKER_DB_PORT", "5432")),
+            getEnv("MERLIN_WORKER_DB_PASSWORD", ""),
+            getEnv("MERLIN_WORKER_DB", "aerie_merlin")),
+        Instant.parse(getEnv("UNTRUE_PLAN_START", "")));
   }
 }

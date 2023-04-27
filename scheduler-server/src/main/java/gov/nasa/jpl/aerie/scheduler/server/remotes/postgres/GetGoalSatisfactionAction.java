@@ -1,15 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetGoalSatisfactionAction implements AutoCloseable {
-  private final static @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     select
       goal.goal_id,
       goal.satisfied
@@ -29,10 +30,7 @@ import org.intellij.lang.annotations.Language;
 
     final var goals = new HashMap<GoalId, Boolean>();
     while (resultSet.next()) {
-      goals.put(
-          new GoalId(resultSet.getLong("goal_id")),
-          resultSet.getBoolean("satisfied")
-      );
+      goals.put(new GoalId(resultSet.getLong("goal_id")), resultSet.getBoolean("satisfied"));
     }
 
     return goals;

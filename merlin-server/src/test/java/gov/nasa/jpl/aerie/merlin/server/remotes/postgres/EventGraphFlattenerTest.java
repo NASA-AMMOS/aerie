@@ -1,5 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import static gov.nasa.jpl.aerie.merlin.driver.timeline.EffectExpressionDisplay.displayGraph;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphFlattener.flatten;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphUnflattener.unflatten;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -8,11 +13,6 @@ import net.jqwik.api.Label;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
-
-import static gov.nasa.jpl.aerie.merlin.driver.timeline.EffectExpressionDisplay.displayGraph;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphFlattener.flatten;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphUnflattener.unflatten;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class EventGraphFlattenerTest {
   @Test
@@ -23,9 +23,7 @@ public final class EventGraphFlattenerTest {
             EventGraph.sequentially(
                 EventGraph.atom("x"),
                 EventGraph.sequentially(
-                    EventGraph.concurrently(
-                        EventGraph.atom("y"),
-                        EventGraph.atom("z")),
+                    EventGraph.concurrently(EventGraph.atom("y"), EventGraph.atom("z")),
                     EventGraph.atom("w"))));
 
     final var flattenedLex = flatten(eventGraph);
@@ -39,30 +37,28 @@ public final class EventGraphFlattenerTest {
   @Property
   @Label("unflatten is a left inverse of flatten")
   public void flattenThenUnflatten(@ForAll("fanout") final EventGraph<String> graph)
-  throws EventGraphUnflattener.InvalidTagException
-  {
+      throws EventGraphUnflattener.InvalidTagException {
     final var result = unflatten(flatten(graph));
 
     // Equivalent graphs have equal string representations.
     assertEquals(displayGraph(graph), displayGraph(result));
   }
 
-  // Generates arbitrary graphs with the "fanout" property: no event has a Concurrently node in its past.
+  // Generates arbitrary graphs with the "fanout" property: no event has a Concurrently node in its
+  // past.
   // TaskFrame can't generate graphs with the subgraph `(x | y); z`; events cannot be emitted
   // with two branches in their history. We exclude such graphs from generation.
   @Provide("fanout")
   public static Arbitrary<EventGraph<String>> fanoutGraphs() {
-    return eventGraphs(Arbitraries.strings())
-        .filter(EventGraphFlattenerTest::isFanoutGraph);
+    return eventGraphs(Arbitraries.strings()).filter(EventGraphFlattenerTest::isFanoutGraph);
   }
 
   private static <T> Arbitrary<EventGraph<T>> eventGraphs(final Arbitrary<T> atoms) {
-    return Arbitraries
-        .lazyOf(
-            () -> Arbitraries.just(EventGraph.empty()),
-            () -> atoms.map(EventGraph::atom),
-            () -> eventGraphs(atoms).tuple2().map($ -> EventGraph.concurrently($.get1(), $.get2())),
-            () -> eventGraphs(atoms).tuple2().map($ -> EventGraph.sequentially($.get1(), $.get2())));
+    return Arbitraries.lazyOf(
+        () -> Arbitraries.just(EventGraph.empty()),
+        () -> atoms.map(EventGraph::atom),
+        () -> eventGraphs(atoms).tuple2().map($ -> EventGraph.concurrently($.get1(), $.get2())),
+        () -> eventGraphs(atoms).tuple2().map($ -> EventGraph.sequentially($.get1(), $.get2())));
   }
 
   private static <T> boolean isFanoutGraph(final EventGraph<T> graph) {

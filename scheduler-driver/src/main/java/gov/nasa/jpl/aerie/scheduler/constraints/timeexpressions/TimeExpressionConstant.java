@@ -14,7 +14,8 @@ public class TimeExpressionConstant extends TimeExpression {
   }
 
   @Override
-  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+  public Interval computeTime(
+      final SimulationResults simulationResults, final Plan plan, final Interval interval) {
     return Interval.at(this.instant);
   }
 }

@@ -11,17 +11,14 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class LocalPlanService implements PlanService {
   private final PlanRepository planRepository;
 
-  public LocalPlanService(
-      final PlanRepository planRepository
-  ) {
+  public LocalPlanService(final PlanRepository planRepository) {
     this.planRepository = planRepository;
   }
 
@@ -41,31 +38,33 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraintsForPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, Constraint> getConstraintsForPlan(final PlanId planId)
+      throws NoSuchPlanException {
     return this.planRepository.getAllConstraintsInPlan(planId);
   }
 
   @Override
-  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
-  throws NoSuchPlanException
-  {
+  public long addExternalDataset(
+      final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
+      throws NoSuchPlanException {
     return this.planRepository.addExternalDataset(planId, datasetStart, profileSet);
   }
 
   @Override
   public void extendExternalDataset(final DatasetId datasetId, final ProfileSet profileSet)
-  throws NoSuchPlanDatasetException
-  {
+      throws NoSuchPlanDatasetException {
     this.planRepository.extendExternalDataset(datasetId, profileSet);
   }
 
   @Override
-  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId)
+      throws NoSuchPlanException {
     return this.planRepository.getExternalDatasets(planId);
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId)
+      throws NoSuchPlanException {
     return this.planRepository.getExternalResourceSchemas(planId);
   }
 }

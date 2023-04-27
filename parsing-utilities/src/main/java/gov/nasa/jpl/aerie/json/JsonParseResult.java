@@ -1,14 +1,14 @@
 package gov.nasa.jpl.aerie.json;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import org.apache.commons.lang3.tuple.Pair;
 
 public sealed interface JsonParseResult<T> {
   record Success<T>(T result) implements JsonParseResult<T> {}
+
   record Failure<T>(FailureReason reason) implements JsonParseResult<T> {
     public <S> Failure<S> cast() {
       // SAFETY: `Failure<T>` contains no values of type `T`.
@@ -35,7 +35,8 @@ public sealed interface JsonParseResult<T> {
   }
 
   /** Combine two results together. If either is a failure, returns a failure. */
-  default <S, Result> JsonParseResult<Result> parWith(final JsonParseResult<S> other, final BiFunction<T, S, Result> step) {
+  default <S, Result> JsonParseResult<Result> parWith(
+      final JsonParseResult<S> other, final BiFunction<T, S, Result> step) {
     if (this instanceof Failure<T> f) {
       return new Failure<>(f.reason());
     } else if (this instanceof Success<T> s1) {
@@ -80,8 +81,8 @@ public sealed interface JsonParseResult<T> {
     return (this instanceof Failure);
   }
 
-  default <Throws extends Throwable>
-  T getSuccessOrThrow(final Function<FailureReason, ? extends Throws> throwsSupplier) throws Throws {
+  default <Throws extends Throwable> T getSuccessOrThrow(
+      final Function<FailureReason, ? extends Throws> throwsSupplier) throws Throws {
     if (this instanceof Success<T> s) {
       return s.result();
     } else if (this instanceof Failure<T> f) {
@@ -92,7 +93,8 @@ public sealed interface JsonParseResult<T> {
   }
 
   default T getSuccessOrThrow() {
-    return this.getSuccessOrThrow($ -> new RuntimeException("Called getSuccessOrThrow on a Failure case: " + $));
+    return this.getSuccessOrThrow(
+        $ -> new RuntimeException("Called getSuccessOrThrow on a Failure case: " + $));
   }
 
   record FailureReason(List<Breadcrumb> breadcrumbs, String reason) {

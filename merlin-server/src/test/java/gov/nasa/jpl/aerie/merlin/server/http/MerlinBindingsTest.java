@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
@@ -10,17 +12,14 @@ import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import io.javalin.Javalin;
 import io.javalin.plugin.bundled.CorsPluginConfig;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public final class MerlinBindingsTest {
   private static Javalin SERVER = null;
@@ -30,33 +29,41 @@ public final class MerlinBindingsTest {
     final var planApp = new StubPlanService();
     final var missionModelApp = new StubMissionModelService();
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelApp, planApp);
+    final var typescriptCodeGenerationService =
+        new TypescriptCodeGenerationServiceAdapter(missionModelApp, planApp);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
-      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+      constraintsDSLCompilationService =
+          new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
     } catch (IOException e) {
       throw new Error("Failed to start ConstraintsDSLCompilationService", e);
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
-    final var simulationAction = new GetSimulationResultsAction(
-        planApp,
-        missionModelApp,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)),
-        constraintsDSLCompilationService
-    );
+    final var simulationAction =
+        new GetSimulationResultsAction(
+            planApp,
+            missionModelApp,
+            new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)),
+            constraintsDSLCompilationService);
 
-    final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+    final var generateConstraintsLibAction =
+        new GenerateConstraintsLibAction(typescriptCodeGenerationService);
 
-    SERVER = Javalin.create(config -> {
-      config.showJavalinBanner = false;
-      config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
-      config.plugins.register(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction));
-    });
+    SERVER =
+        Javalin.create(
+            config -> {
+              config.showJavalinBanner = false;
+              config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
+              config.plugins.register(
+                  new MerlinBindings(
+                      missionModelApp, planApp, simulationAction, generateConstraintsLibAction));
+            });
 
-    SERVER.start(54321); // Use likely unused port to avoid clash with any currently hosted port 80 services
+    SERVER.start(
+        54321); // Use likely unused port to avoid clash with any currently hosted port 80 services
   }
 
   @AfterAll
@@ -73,13 +80,15 @@ public final class MerlinBindingsTest {
     final String origin = "http://localhost";
 
     // WHEN
-    final HttpRequest request = HttpRequest.newBuilder()
-        .uri(baseUri.resolve("/plans"))
-        .header("Origin", origin)
-        .GET()
-        .build();
+    final HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(baseUri.resolve("/plans"))
+            .header("Origin", origin)
+            .GET()
+            .build();
 
-    final HttpResponse<String> response = rawHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    final HttpResponse<String> response =
+        rawHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
     // THEN
     assertThat(response.headers().allValues("Access-Control-Allow-Origin")).isNotEmpty();

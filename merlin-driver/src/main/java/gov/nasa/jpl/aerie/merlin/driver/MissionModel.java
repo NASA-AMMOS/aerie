@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +27,7 @@ public final class MissionModel<Model> {
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
       final List<TaskFactory<?>> daemons,
-      final DirectiveTypeRegistry<Model> directiveTypes)
-  {
+      final DirectiveTypeRegistry<Model> directiveTypes) {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resources = Collections.unmodifiableMap(resources);
@@ -46,7 +44,8 @@ public final class MissionModel<Model> {
     return this.directiveTypes;
   }
 
-  public TaskFactory<?> getTaskFactory(final SerializedActivity specification) throws InstantiationException {
+  public TaskFactory<?> getTaskFactory(final SerializedActivity specification)
+      throws InstantiationException {
     return this.directiveTypes
         .directiveTypes()
         .get(specification.getTypeName())
@@ -54,10 +53,11 @@ public final class MissionModel<Model> {
   }
 
   public TaskFactory<Unit> getDaemon() {
-    return executor -> scheduler -> {
-      MissionModel.this.daemons.forEach(scheduler::spawn);
-      return TaskStatus.completed(Unit.UNIT);
-    };
+    return executor ->
+        scheduler -> {
+          MissionModel.this.daemons.forEach(scheduler::spawn);
+          return TaskStatus.completed(Unit.UNIT);
+        };
   }
 
   public Map<String, Resource<?>> getResources() {
@@ -72,9 +72,6 @@ public final class MissionModel<Model> {
     return this.topics;
   }
 
-  public record SerializableTopic<EventType> (
-      String name,
-      Topic<EventType> topic,
-      OutputType<EventType> outputType
-  ) {}
+  public record SerializableTopic<EventType>(
+      String name, Topic<EventType> topic, OutputType<EventType> outputType) {}
 }

@@ -1,10 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.worker;
 
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.concurrent.LinkedBlockingQueue;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -24,6 +19,11 @@ import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNot
 import gov.nasa.jpl.aerie.scheduler.worker.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.worker.services.SynchronousSchedulerAgent;
 import io.javalin.Javalin;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public final class SchedulerWorkerAppDriver {
   public static void main(String[] args) throws Exception {
@@ -57,20 +57,24 @@ public final class SchedulerWorkerAppDriver {
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 
-    final var stores = new Stores(
-      new PostgresSpecificationRepository(hikariDataSource),
-      new PostgresResultsCellRepository(hikariDataSource));
+    final var stores =
+        new Stores(
+            new PostgresSpecificationRepository(hikariDataSource),
+            new PostgresResultsCellRepository(hikariDataSource));
 
     final var specificationService = new LocalSpecificationService(stores.specifications());
-    final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
-        merlinService,
-        merlinService,
-        config.merlinFileStore(),
-        config.missionRuleJarPath(),
-        config.outputMode(),
-        schedulingDSLCompilationService);
+    final var scheduleAgent =
+        new SynchronousSchedulerAgent(
+            specificationService,
+            merlinService,
+            merlinService,
+            config.merlinFileStore(),
+            config.missionRuleJarPath(),
+            config.outputMode(),
+            schedulingDSLCompilationService);
 
-    final var notificationQueue = new LinkedBlockingQueue<PostgresSchedulingRequestNotificationPayload>();
+    final var notificationQueue =
+        new LinkedBlockingQueue<PostgresSchedulingRequestNotificationPayload>();
     final var listenAction = new ListenSchedulerCapability(hikariDataSource, notificationQueue);
     listenAction.registerListener();
 
@@ -91,30 +95,32 @@ public final class SchedulerWorkerAppDriver {
         scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer);
       } catch (final Throwable ex) {
         ex.printStackTrace(System.err);
-        writer.failWith(b -> b
-            .type("UNEXPECTED_SCHEDULER_EXCEPTION")
-            .message("Something went wrong while scheduling")
-            .trace(ex));
+        writer.failWith(
+            b ->
+                b.type("UNEXPECTED_SCHEDULER_EXCEPTION")
+                    .message("Something went wrong while scheduling")
+                    .trace(ex));
       }
     }
   }
 
-  private static String getEnv(final String key, final String fallback){
+  private static String getEnv(final String key, final String fallback) {
     final var env = System.getenv(key);
     return env == null ? fallback : env;
   }
 
   private static WorkerAppConfiguration loadConfiguration() {
     return new WorkerAppConfiguration(
-        new PostgresStore(getEnv("SCHEDULER_WORKER_DB_SERVER", "postgres"),
-                          getEnv("SCHEDULER_WORKER_DB_USER", ""),
-                          Integer.parseInt(getEnv("SCHEDULER_WORKER_DB_PORT", "5432")),
-                          getEnv("SCHEDULER_WORKER_DB_PASSWORD", ""),
-                          getEnv("SCHEDULER_WORKER_DB", "aerie_scheduler")),
+        new PostgresStore(
+            getEnv("SCHEDULER_WORKER_DB_SERVER", "postgres"),
+            getEnv("SCHEDULER_WORKER_DB_USER", ""),
+            Integer.parseInt(getEnv("SCHEDULER_WORKER_DB_PORT", "5432")),
+            getEnv("SCHEDULER_WORKER_DB_PASSWORD", ""),
+            getEnv("SCHEDULER_WORKER_DB", "aerie_scheduler")),
         URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
-        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan")))
-    );
+        Path.of(
+            getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
+        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))));
   }
 }

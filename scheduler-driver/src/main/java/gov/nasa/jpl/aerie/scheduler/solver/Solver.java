@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
 import java.util.Optional;
 
 /**
@@ -45,5 +44,4 @@ public interface Solver {
    *     cannot provide any more solutions right now
    */
   Optional<Plan> getNextSolution();
-
 }

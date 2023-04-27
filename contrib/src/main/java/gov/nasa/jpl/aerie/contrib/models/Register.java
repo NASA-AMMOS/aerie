@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.aerie.contrib.cells.register.RegisterEffect;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-
 import java.util.function.UnaryOperator;
 
 public final class Register<Value> implements DiscreteResource<Value> {
@@ -14,8 +13,8 @@ public final class Register<Value> implements DiscreteResource<Value> {
     this.ref = RegisterCell.allocate(duplicator, initialValue, RegisterEffect::set);
   }
 
-
-  public static <Value> Register<Value> create(final Value initialValue, final UnaryOperator<Value> duplicator) {
+  public static <Value> Register<Value> create(
+      final Value initialValue, final UnaryOperator<Value> duplicator) {
     return new Register<>(duplicator, initialValue);
   }
 

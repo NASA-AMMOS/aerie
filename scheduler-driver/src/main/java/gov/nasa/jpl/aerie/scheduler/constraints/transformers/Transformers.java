@@ -14,7 +14,6 @@ public class Transformers {
     return new TransformerBeforeEach(Duration.ZERO);
   }
 
-
   public static TimeWindowsTransformer afterEach(final Duration dur) {
     return new TransformerAfterEach(dur);
   }
@@ -38,7 +37,6 @@ public class Transformers {
       return this;
     }
 
-
     public EnvelopeBuilder when(final ActivityExpression expr) {
       insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
       return this;
@@ -52,9 +50,5 @@ public class Transformers {
     public TimeWindowsTransformer build() {
       return new TransformWithReset(resetExpr, new TransformerEnvelope(insideExprs));
     }
-
-
   }
-
-
 }

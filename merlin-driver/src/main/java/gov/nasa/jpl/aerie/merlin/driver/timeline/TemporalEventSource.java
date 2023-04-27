@@ -4,11 +4,11 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-
 import java.util.Iterator;
 import java.util.Set;
 
-public record TemporalEventSource(SlabList<TimePoint> points) implements EventSource, Iterable<TemporalEventSource.TimePoint> {
+public record TemporalEventSource(SlabList<TimePoint> points)
+    implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public TemporalEventSource() {
     this(new SlabList<>());
   }
@@ -34,7 +34,8 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
   }
 
   public final class TemporalCursor implements Cursor {
-    private final SlabList<TimePoint>.SlabIterator iterator = TemporalEventSource.this.points.iterator();
+    private final SlabList<TimePoint>.SlabIterator iterator =
+        TemporalEventSource.this.points.iterator();
 
     private TemporalCursor() {}
 
@@ -53,7 +54,6 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
       }
     }
   }
-
 
   private static Set<Topic<?>> extractTopics(final EventGraph<Event> graph) {
     final var set = new ReferenceOpenHashSet<Topic<?>>();
@@ -84,6 +84,7 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
 
   public sealed interface TimePoint {
     record Delta(Duration delta) implements TimePoint {}
+
     record Commit(EventGraph<Event> events, Set<Topic<?>> topics) implements TimePoint {}
   }
 }

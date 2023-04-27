@@ -1,17 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
-import org.intellij.lang.annotations.Language;
+import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedStatements.getDatasetId;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedStatements.getDatasetId;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class CreateRequestAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       insert into scheduling_request (specification_id, specification_revision)
       values (?, ?)
       returning
@@ -54,8 +52,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedState
         status,
         failureReason$,
         canceled,
-        datasetId
-    );
+        datasetId);
   }
 
   @Override

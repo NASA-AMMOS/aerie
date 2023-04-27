@@ -8,6 +8,10 @@ import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
@@ -19,14 +23,11 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 import org.junit.jupiter.api.extension.TestInstancePreDestroyCallback;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Objects;
-
 public final class MerlinExtension
-    implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback
-{
+    implements BeforeAllCallback,
+        ParameterResolver,
+        InvocationInterceptor,
+        TestInstancePreDestroyCallback {
   private State getState(final ExtensionContext context) {
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
@@ -35,23 +36,24 @@ public final class MerlinExtension
 
   @Override
   public void beforeAll(final ExtensionContext context) {
-    final var lifecycle = context.getTestInstanceLifecycle().orElse(TestInstance.Lifecycle.PER_METHOD);
+    final var lifecycle =
+        context.getTestInstanceLifecycle().orElse(TestInstance.Lifecycle.PER_METHOD);
     if (lifecycle != TestInstance.Lifecycle.PER_CLASS) {
       throw new IllegalTestLifetimeException(context.getRequiredTestClass());
     }
   }
 
   @Override
-  public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
-  throws ParameterResolutionException
-  {
+  public boolean supportsParameter(
+      final ParameterContext parameterContext, final ExtensionContext extensionContext)
+      throws ParameterResolutionException {
     return parameterContext.getParameter().getType().equals(Registrar.class);
   }
 
   @Override
-  public Object resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
-  throws ParameterResolutionException
-  {
+  public Object resolveParameter(
+      final ParameterContext parameterContext, final ExtensionContext extensionContext)
+      throws ParameterResolutionException {
     final var state = this.getState(extensionContext);
     final var paramType = parameterContext.getParameter().getType();
 
@@ -67,8 +69,8 @@ public final class MerlinExtension
   public <T> T interceptTestClassConstructor(
       final Invocation<T> invocation,
       final ReflectiveInvocationContext<Constructor<T>> invocationContext,
-      final ExtensionContext extensionContext) throws Throwable
-  {
+      final ExtensionContext extensionContext)
+      throws Throwable {
     return this.getState(extensionContext).constructModel(invocation);
   }
 
@@ -76,8 +78,8 @@ public final class MerlinExtension
   public void interceptTestTemplateMethod(
       final Invocation<Void> invocation,
       final ReflectiveInvocationContext<Method> invocationContext,
-      final ExtensionContext extensionContext) throws Throwable
-  {
+      final ExtensionContext extensionContext)
+      throws Throwable {
     this.getState(extensionContext).simulate(invocation);
   }
 
@@ -85,16 +87,17 @@ public final class MerlinExtension
   public void interceptTestMethod(
       final Invocation<Void> invocation,
       final ReflectiveInvocationContext<Method> invocationContext,
-      final ExtensionContext extensionContext
-  ) throws Throwable
-  {
+      final ExtensionContext extensionContext)
+      throws Throwable {
     this.getState(extensionContext).simulate(invocation);
   }
 
   @Override
-  public void interceptDynamicTest(final Invocation<Void> invocation, final DynamicTestInvocationContext invocationContext, final ExtensionContext extensionContext)
-  throws Throwable
-  {
+  public void interceptDynamicTest(
+      final Invocation<Void> invocation,
+      final DynamicTestInvocationContext invocationContext,
+      final ExtensionContext extensionContext)
+      throws Throwable {
     this.getState(extensionContext).simulate(invocation);
   }
 
@@ -118,22 +121,26 @@ public final class MerlinExtension
     public <T> T constructModel(final Invocation<T> invocation) throws Throwable {
       final T value;
       try {
-        value = InitializationContext.initializing(this.builder, () -> {
-          try {
-            return invocation.proceed();
-          } catch (final RuntimeException ex) {
-            throw ex;
-          } catch (final Throwable ex) {
-            throw new WrappedException(ex);
-          }
-        });
+        value =
+            InitializationContext.initializing(
+                this.builder,
+                () -> {
+                  try {
+                    return invocation.proceed();
+                  } catch (final RuntimeException ex) {
+                    throw ex;
+                  } catch (final Throwable ex) {
+                    throw new WrappedException(ex);
+                  }
+                });
       } catch (final WrappedException ex) {
         throw ex.wrapped;
       }
 
       this.missionModel = this.builder.build(Unit.UNIT, new DirectiveTypeRegistry<>(Map.of()));
 
-      // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
+      // Clear the builder; it shouldn't be used from here on, and if it is, an error should be
+      // raised.
       this.builder = null;
       this.registrar = null;
 
@@ -141,18 +148,22 @@ public final class MerlinExtension
     }
 
     private void simulate(final Invocation<Void> invocation) throws Throwable {
-      final var completed = new Object() { boolean value = false; };
+      final var completed =
+          new Object() {
+            boolean value = false;
+          };
 
-      final var task = ModelActions
-          .threaded(() -> {
-            try {
-              invocation.proceed();
-            } catch (final Throwable ex) {
-              throw new WrappedException(ex);
-            } finally {
-              completed.value = true;
-            }
-          });
+      final var task =
+          ModelActions.threaded(
+              () -> {
+                try {
+                  invocation.proceed();
+                } catch (final Throwable ex) {
+                  throw new WrappedException(ex);
+                } finally {
+                  completed.value = true;
+                }
+              });
 
       try {
         SimulationDriver.simulateTask(this.missionModel, task);
@@ -178,8 +189,9 @@ public final class MerlinExtension
 
   private static final class IllegalTestLifetimeException extends RuntimeException {
     public IllegalTestLifetimeException(final Class<?> offendingClass) {
-      super("%s expects %s to be annotated with @TestInstance(Lifecycle.PER_CLASS)"
-                .formatted(MerlinExtension.class.getSimpleName(), offendingClass));
+      super(
+          "%s expects %s to be annotated with @TestInstance(Lifecycle.PER_CLASS)"
+              .formatted(MerlinExtension.class.getSimpleName(), offendingClass));
     }
   }
 }

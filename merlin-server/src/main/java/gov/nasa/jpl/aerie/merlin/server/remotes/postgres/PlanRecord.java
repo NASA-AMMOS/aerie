@@ -8,5 +8,4 @@ public record PlanRecord(
     String name,
     long missionModelId,
     Timestamp startTime,
-    Timestamp endTime
-) {}
+    Timestamp endTime) {}

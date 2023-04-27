@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-
 import java.util.Optional;
 
 public record SimulationStateRecord(Status status, Optional<SimulationFailure> reason) {
@@ -28,12 +27,13 @@ public record SimulationStateRecord(Status status, Optional<SimulationFailure> r
     SUCCESS("success");
 
     public final String label;
+
     Status(final String label) {
       this.label = label;
     }
 
     public static Status fromString(final String label) throws InvalidSimulationStatusException {
-      return switch(label) {
+      return switch (label) {
         case "pending" -> PENDING;
         case "incomplete" -> INCOMPLETE;
         case "failed" -> FAILED;

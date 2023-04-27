@@ -25,8 +25,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
   public MissingActivityInstanceConflict(
       ActivityExistentialGoal goal,
       SchedulingActivityDirective instance,
-      EvaluationEnvironment evaluationEnvironment)
-  {
+      EvaluationEnvironment evaluationEnvironment) {
     super(goal, evaluationEnvironment);
 
     if (instance == null) {
@@ -59,7 +58,8 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   @Override
   public Windows getTemporalContext() {
-    return new Windows(false).set(Interval.between(instance.startOffset(), instance.getEndTime()), true);
+    return new Windows(false)
+        .set(Interval.between(instance.startOffset(), instance.getEndTime()), true);
   }
 
   /**
@@ -85,5 +85,4 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    * the specific activity instance that is desired in the plan
    */
   protected SchedulingActivityDirective instance;
-
 }

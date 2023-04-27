@@ -13,9 +13,9 @@ public class TransformerBeforeEach implements TimeWindowsTransformer {
     this.dur = dur;
   }
 
-
   @Override
-  public Windows transformWindows(final Plan plan, final Windows windows, final SimulationResults simulationResults) {
+  public Windows transformWindows(
+      final Plan plan, final Windows windows, final SimulationResults simulationResults) {
     var retWin = windows;
     retWin = retWin.not();
     retWin = retWin.removeTrueSegment(-1);

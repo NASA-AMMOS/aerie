@@ -1,22 +1,22 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.negate;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+
 public class SimulationException extends RuntimeException {
   // This builder must be used to get optional subsecond values
-  // See: https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+  // See:
+  // https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
   public static final DateTimeFormatter format =
       new DateTimeFormatterBuilder()
           .appendPattern("uuuu-DDD'T'HH:mm:ss")
@@ -27,8 +27,14 @@ public class SimulationException extends RuntimeException {
   public final Instant instant;
   public final Throwable cause;
 
-  public SimulationException(final Duration elapsedTime, final Instant startTime, final Throwable cause) {
-    super("Exception occurred " + formatDuration(elapsedTime) + " into the simulation at " + formatInstant(addDurationToInstant(startTime, elapsedTime)), cause);
+  public SimulationException(
+      final Duration elapsedTime, final Instant startTime, final Throwable cause) {
+    super(
+        "Exception occurred "
+            + formatDuration(elapsedTime)
+            + " into the simulation at "
+            + formatInstant(addDurationToInstant(startTime, elapsedTime)),
+        cause);
     this.elapsedTime = elapsedTime;
     this.instant = addDurationToInstant(startTime, elapsedTime);
     this.cause = cause;
@@ -64,8 +70,6 @@ public class SimulationException extends RuntimeException {
   private static Instant addDurationToInstant(final Instant instant, final Duration duration) {
     return instant
         .plusSeconds(duration.in(Duration.SECONDS))
-        .plusNanos(duration
-                       .remainderOf(Duration.SECONDS)
-                       .in(Duration.MICROSECONDS) * 1000);
+        .plusNanos(duration.remainderOf(Duration.SECONDS).in(Duration.MICROSECONDS) * 1000);
   }
 }

@@ -1,5 +1,3 @@
 package gov.nasa.jpl.aerie.merlin.server.config;
 
-public sealed interface Store
-    permits PostgresStore
-{}
+public sealed interface Store permits PostgresStore {}

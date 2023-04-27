@@ -3,16 +3,15 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A boolean profile, which can contain gaps (a.k.a. nulls).
@@ -20,7 +19,8 @@ import java.util.stream.StreamSupport;
  * Backed by an {@link IntervalMap} of type {@link Boolean}. This class provides additional operations
  * which are only valid on bools.
  */
-public final class Windows implements Iterable<Segment<Boolean>>, IntervalContainer<Windows>, Profile<Windows> {
+public final class Windows
+    implements Iterable<Segment<Boolean>>, IntervalContainer<Windows>, Profile<Windows> {
   private final IntervalMap<Boolean> segments;
 
   /** Creates an empty Windows */
@@ -74,20 +74,21 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @return a new Windows
    */
   public Windows and(final Windows other) {
-    return new Windows(IntervalMap.map2(
-        this.segments, other.segments,
-        (l, r) -> {
-          if (l.isPresent() && r.isPresent()) {
-            return Optional.of(l.get() && r.get());
-          } else if (l.isPresent()) {
-            return l.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
-          } else if (r.isPresent()) {
-            return r.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
-          } else {
-            return Optional.empty();
-          }
-        }
-    ));
+    return new Windows(
+        IntervalMap.map2(
+            this.segments,
+            other.segments,
+            (l, r) -> {
+              if (l.isPresent() && r.isPresent()) {
+                return Optional.of(l.get() && r.get());
+              } else if (l.isPresent()) {
+                return l.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
+              } else if (r.isPresent()) {
+                return r.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
+              } else {
+                return Optional.empty();
+              }
+            }));
   }
 
   /**
@@ -110,20 +111,21 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @return a new Windows
    */
   public Windows or(final Windows other) {
-    return new Windows(IntervalMap.map2(
-        this.segments, other.segments,
-        (l, r) -> {
-          if (l.isPresent() && r.isPresent()) {
-            return Optional.of(l.get() || r.get());
-          } else if (l.isPresent()) {
-            return l.get() ? Optional.of(true) : Optional.empty();
-          } else if (r.isPresent()) {
-            return r.get() ? Optional.of(true) : Optional.empty();
-          } else {
-            return Optional.empty();
-          }
-        }
-    ));
+    return new Windows(
+        IntervalMap.map2(
+            this.segments,
+            other.segments,
+            (l, r) -> {
+              if (l.isPresent() && r.isPresent()) {
+                return Optional.of(l.get() || r.get());
+              } else if (l.isPresent()) {
+                return l.get() ? Optional.of(true) : Optional.empty();
+              } else if (r.isPresent()) {
+                return r.get() ? Optional.of(true) : Optional.empty();
+              } else {
+                return Optional.empty();
+              }
+            }));
   }
 
   /**
@@ -146,16 +148,17 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @return a new Windows
    */
   public Windows add(final Windows other) {
-    return new Windows(IntervalMap.map2(
-        this.segments, other.segments,
-        (l, r) -> {
-          if (l.isPresent() && r.isPresent()) {
-            return Optional.of(l.get() || r.get());
-          } else if (l.isPresent()) {
-            return l;
-          } else return r;
-        }
-    ));
+    return new Windows(
+        IntervalMap.map2(
+            this.segments,
+            other.segments,
+            (l, r) -> {
+              if (l.isPresent() && r.isPresent()) {
+                return Optional.of(l.get() || r.get());
+              } else if (l.isPresent()) {
+                return l;
+              } else return r;
+            }));
   }
 
   /**
@@ -166,15 +169,17 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @return a new Windows
    */
   public Windows not() {
-    //should not be a subtraction because then if it was null originally, then subtracting original from forever
-    //  yields true where once was null, which isn't good. we want a simple inversion of true and false here, without
+    // should not be a subtraction because then if it was null originally, then subtracting original
+    // from forever
+    //  yields true where once was null, which isn't good. we want a simple inversion of true and
+    // false here, without
     //  filling nulls.
     return new Windows(this.segments.map(b -> !b));
   }
 
   /** Gets the time and inclusivity of the leading edge of the first true segment */
-  public Optional<Pair<Duration, Interval.Inclusivity>> minTrueTimePoint(){
-    for (final var segment: this.segments) {
+  public Optional<Pair<Duration, Interval.Inclusivity>> minTrueTimePoint() {
+    for (final var segment : this.segments) {
       if (segment.value()) {
         final var window = segment.interval();
         return Optional.of(Pair.of(window.start, window.startInclusivity));
@@ -184,7 +189,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   }
 
   /** Gets the time and inclusivity of the trailing edge of the last true segment */
-  public Optional<Pair<Duration, Interval.Inclusivity>> maxTrueTimePoint(){
+  public Optional<Pair<Duration, Interval.Inclusivity>> maxTrueTimePoint() {
     for (int i = this.segments.size() - 1; i >= 0; i--) {
       final var segment = this.segments.get(i);
       if (segment.value()) {
@@ -202,7 +207,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    */
   public Windows trueSubsetContainedIn(final Interval interval) {
     var result = new Windows(interval, false);
-    for (final var segment: this.segments) {
+    for (final var segment : this.segments) {
       if (segment.value() && interval.contains(segment.interval())) {
         result = result.set(segment.interval(), true);
       }
@@ -280,30 +285,38 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
 
   /** Whether all the true segments of the given Windows are contained in the true segments of this. */
   public boolean includes(final Windows other) {
-    //if you have:
+    // if you have:
     //  other:    ---TTTT---TTT------
     //  original: ---------TTTFF-----
-    //  then you fail twice, once because first interval not contained at all, second because overlap with false
-    //  we can do this with a map2 with a truthtable, so wherever inclusion holds we say true, if its wrong we say false
+    //  then you fail twice, once because first interval not contained at all, second because
+    // overlap with false
+    //  we can do this with a map2 with a truthtable, so wherever inclusion holds we say true, if
+    // its wrong we say false
     //  and then reduce and if there's any falses you failed overall.
 
     // other |  orig   | output
     //  T    |    T     |   T
     //  T    |    F     |   F
     //  T    |    N     |   F
-    //  F    |    T     |   T     //probably won't pass false as a value anyways, but just in case we should handle
-    //  F    |    F     |   T     //  in case user passes a NewWindows from another method that has falses...
-    //  F    |    N     |   N     //since its false, not a problem if undefined. we handle actual null checks in isNotNull
+    //  F    |    T     |   T     //probably won't pass false as a value anyways, but just in case
+    // we should handle
+    //  F    |    F     |   T     //  in case user passes a NewWindows from another method that has
+    // falses...
+    //  F    |    N     |   N     //since its false, not a problem if undefined. we handle actual
+    // null checks in isNotNull
     //  N    |    T     |   N
     //  N    |    F     |   N
     //  N    |    N     |   N
 
-    final var inclusion = IntervalMap.map2(
-        this.segments, other.segments,
-        ($original, $other) -> $other.map($ -> !$ || ($original.isPresent() && $original.get()))
-    );
+    final var inclusion =
+        IntervalMap.map2(
+            this.segments,
+            other.segments,
+            ($original, $other) ->
+                $other.map($ -> !$ || ($original.isPresent() && $original.get())));
 
-    //anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth value:
+    // anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth
+    // value:
     return StreamSupport.stream(inclusion.spliterator(), false).allMatch(Segment::value);
   }
 
@@ -319,15 +332,19 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    */
   public Windows filterByDuration(Duration minDur, Duration maxDur) {
     if (minDur.longerThan(maxDur)) {
-      throw new IllegalArgumentException("MaxDur %s must be greater than MinDur %s".formatted(minDur.toString(), maxDur.toString()));
+      throw new IllegalArgumentException(
+          "MaxDur %s must be greater than MinDur %s"
+              .formatted(minDur.toString(), maxDur.toString()));
     }
 
-    return new Windows(this.segments.map((value, interval) -> {
-      if (!value) return false;
+    return new Windows(
+        this.segments.map(
+            (value, interval) -> {
+              if (!value) return false;
 
-      final var duration = interval.duration();
-      return !(duration.shorterThan(minDur) || duration.longerThan(maxDur));
-    }));
+              final var duration = interval.duration();
+              return !(duration.shorterThan(minDur) || duration.longerThan(maxDur));
+            }));
   }
 
   /**
@@ -348,15 +365,14 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     for (final var segment : this.segments) {
       final var interval = segment.interval();
 
-      final var shiftedInterval = (segment.value()) ? (
-          Interval.between(
-              interval.start.saturatingPlus(fromStart), interval.startInclusivity,
-              interval.end.saturatingPlus(fromEnd),     interval.endInclusivity)
-      ) : (
-          Interval.between(
-              interval.start.saturatingPlus(fromEnd), interval.startInclusivity,
-              interval.end.saturatingPlus(fromStart), interval.endInclusivity)
-      );
+      final var shiftedInterval =
+          (segment.value())
+              ? (Interval.between(
+                  interval.start.saturatingPlus(fromStart), interval.startInclusivity,
+                  interval.end.saturatingPlus(fromEnd), interval.endInclusivity))
+              : (Interval.between(
+                  interval.start.saturatingPlus(fromEnd), interval.startInclusivity,
+                  interval.end.saturatingPlus(fromStart), interval.endInclusivity));
 
       builder.set(Segment.of(shiftedInterval, segment.value()));
     }
@@ -375,8 +391,13 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @throws InvalidGapsException if there are any gaps in the windows.
    */
   @Override
-  public Spans split(final Interval bounds, final int numberOfSubWindows, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
-    return this.intoSpans(bounds).split(bounds, numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
+  public Spans split(
+      final Interval bounds,
+      final int numberOfSubWindows,
+      final Inclusivity internalStartInclusivity,
+      final Inclusivity internalEndInclusivity) {
+    return this.intoSpans(bounds)
+        .split(bounds, numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
   }
 
   @Override
@@ -384,14 +405,15 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     final var builder = IntervalMap.<LinearEquation>builder();
 
     double accumulator = 0.0;
-    for (final var segment: this.segments) {
+    for (final var segment : this.segments) {
       final var interval = segment.interval();
       final var rate = segment.value() ? Duration.SECOND.ratioOver(unit) : 0.0;
-      final var line = new LinearEquation(
-          segment.value() ? interval.start : Duration.ZERO,
-          accumulator,
-          !interval.isPoint() ? rate : 0.0 // allows coalescing of instantaneous true points
-      );
+      final var line =
+          new LinearEquation(
+              segment.value() ? interval.start : Duration.ZERO,
+              accumulator,
+              !interval.isPoint() ? rate : 0.0 // allows coalescing of instantaneous true points
+              );
       builder.set(Segment.of(interval, line));
       accumulator += segment.value() ? segment.interval().duration().ratioOver(unit) : 0.0;
     }
@@ -424,11 +446,14 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         }
         if (meetsFalse) {
           result = result.set(Interval.at(segment.interval().start), true);
-          result = result.set(Interval.between(
-              segment.interval().start,
-              Inclusivity.Exclusive,
-              segment.interval().end,
-              segment.interval().endInclusivity), false);
+          result =
+              result.set(
+                  Interval.between(
+                      segment.interval().start,
+                      Inclusivity.Exclusive,
+                      segment.interval().end,
+                      segment.interval().endInclusivity),
+                  false);
         } else {
           result = result.set(segment.interval(), false);
           if (!segment.interval().contains(Duration.MIN_VALUE)) {
@@ -459,17 +484,20 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
       final var segment = this.segments.get(i);
       if (segment.value()) {
         final boolean meetsFalse;
-        if (i == this.segments.size()-1) {
+        if (i == this.segments.size() - 1) {
           meetsFalse = false;
         } else {
           meetsFalse = Interval.meets(segment.interval(), this.segments.get(i + 1).interval());
         }
         if (meetsFalse) {
-          result = result.set(Interval.between(
-              segment.interval().start,
-              segment.interval().startInclusivity,
-              segment.interval().end,
-              Inclusivity.Exclusive), false);
+          result =
+              result.set(
+                  Interval.between(
+                      segment.interval().start,
+                      segment.interval().startInclusivity,
+                      segment.interval().end,
+                      Inclusivity.Exclusive),
+                  false);
           result = result.set(Interval.at(segment.interval().end), true);
         } else {
           result = result.set(segment.interval(), false);
@@ -490,32 +518,44 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   public Spans intoSpans(final Interval bounds) {
     boolean boundsStartContained = false;
     boolean boundsEndContained = false;
-    if(this.segments.size() == 1){
+    if (this.segments.size() == 1) {
       if (segments.get(0).interval().contains(bounds.start)) boundsStartContained = true;
       if (segments.get(0).interval().contains(bounds.end)) boundsEndContained = true;
     }
     for (int i = 0; i < this.segments.size() - 1; i++) {
       final var leftInterval = this.segments.get(i).interval();
-      final var rightInterval = this.segments.get(i+1).interval();
-      if (leftInterval.contains(bounds.start) || rightInterval.contains(bounds.start)) boundsStartContained = true;
-      if (leftInterval.contains(bounds.end) || rightInterval.contains(bounds.end)) boundsEndContained = true;
+      final var rightInterval = this.segments.get(i + 1).interval();
+      if (leftInterval.contains(bounds.start) || rightInterval.contains(bounds.start))
+        boundsStartContained = true;
+      if (leftInterval.contains(bounds.end) || rightInterval.contains(bounds.end))
+        boundsEndContained = true;
       if (leftInterval.isStrictlyBefore(bounds)) continue;
       if (rightInterval.isStrictlyAfter(bounds)) continue;
       if (!leftInterval.adjacent(rightInterval)) {
         var message = new StringBuilder("cannot convert Windows with gaps into Spans (gap at ");
-        final var gap = Interval.between(leftInterval.end, leftInterval.endInclusivity.opposite(), rightInterval.start, rightInterval.startInclusivity.opposite());
+        final var gap =
+            Interval.between(
+                leftInterval.end,
+                leftInterval.endInclusivity.opposite(),
+                rightInterval.start,
+                rightInterval.startInclusivity.opposite());
         message.append(gap.toString());
         message.append(").");
         throw new InvalidGapsException(message.toString());
       }
     }
-    if (!boundsStartContained) throw new InvalidGapsException("cannot convert Windows with gaps into Spans (gap detected at plan bounds start)");
-    if (!boundsEndContained) throw new InvalidGapsException("cannot convert Windows with gaps into Spans (gap detected at plan bounds end)");
-    return new Spans(stream()
-        .filter(Segment::value)
-        .map($ -> Interval.intersect(bounds, $.interval()))
-        .filter($ -> !$.isEmpty())
-        .toList());
+    if (!boundsStartContained)
+      throw new InvalidGapsException(
+          "cannot convert Windows with gaps into Spans (gap detected at plan bounds start)");
+    if (!boundsEndContained)
+      throw new InvalidGapsException(
+          "cannot convert Windows with gaps into Spans (gap detected at plan bounds end)");
+    return new Spans(
+        stream()
+            .filter(Segment::value)
+            .map($ -> Interval.intersect(bounds, $.interval()))
+            .filter($ -> !$.isEmpty())
+            .toList());
   }
 
   @Override
@@ -528,32 +568,28 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   public Windows assignGaps(final Windows def) {
     return new Windows(
         IntervalMap.map2(
-            this.segments, def.segments,
-            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
-        )
-    );
+            this.segments,
+            def.segments,
+            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment));
   }
 
   @Override
   public Optional<SerializedValue> valueAt(final Duration timepoint) {
-    final var matchPiece = segments
-        .stream()
-        .filter($ -> $.interval().contains(timepoint))
-        .findFirst();
-    return matchPiece
-        .map(a -> SerializedValue.of(a.value()));
+    final var matchPiece =
+        segments.stream().filter($ -> $.interval().contains(timepoint)).findFirst();
+    return matchPiece.map(a -> SerializedValue.of(a.value()));
   }
 
   @Override
   public Windows equalTo(final Windows other) {
     return new Windows(
         IntervalMap.map2(
-            this.segments, other.segments,
-            (left, right) -> left.isPresent() && right.isPresent()
-                ? Optional.of(left.get() == right.get())
-                : Optional.empty()
-        )
-    );
+            this.segments,
+            other.segments,
+            (left, right) ->
+                left.isPresent() && right.isPresent()
+                    ? Optional.of(left.get() == right.get())
+                    : Optional.empty()));
   }
 
   @Override
@@ -571,7 +607,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
           result.unset(Interval.at(segment.interval().start));
         }
       } else {
-        final var previousSegment = this.segments.get(i-1);
+        final var previousSegment = this.segments.get(i - 1);
         if (Interval.meets(previousSegment.interval(), segment.interval())) {
           if (!previousSegment.value().equals(segment.value())) {
             result.set(Interval.at(segment.interval().start), true);

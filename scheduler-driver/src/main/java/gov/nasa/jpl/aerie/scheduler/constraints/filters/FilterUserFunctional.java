@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
 import java.util.function.Function;
 
 public class FilterUserFunctional extends FilterFunctional {
@@ -15,7 +14,8 @@ public class FilterUserFunctional extends FilterFunctional {
   }
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
+  public boolean shouldKeep(
+      final SimulationResults simulationResults, final Plan plan, final Interval range) {
     return function.apply(range);
   }
 }

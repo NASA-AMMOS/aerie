@@ -5,8 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.intellij.lang.annotations.Language;
 
-/*package local*/ public class ListenSchedulingRequestStatusAction implements AutoCloseable{
-  private static final @Language("SQL") String sql = """
+/*package local*/ public class ListenSchedulingRequestStatusAction implements AutoCloseable {
+  private static final @Language("SQL") String sql =
+      """
     LISTEN "scheduling_request_notification"
   """;
 

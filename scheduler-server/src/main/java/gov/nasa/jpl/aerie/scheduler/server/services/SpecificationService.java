@@ -7,6 +7,9 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 public interface SpecificationService {
   // Queries
-  Specification getSpecification(SpecificationId specificationId) throws NoSuchSpecificationException, SpecificationLoadException;
-  RevisionData getSpecificationRevisionData(SpecificationId specificationId) throws NoSuchSpecificationException;
+  Specification getSpecification(SpecificationId specificationId)
+      throws NoSuchSpecificationException, SpecificationLoadException;
+
+  RevisionData getSpecificationRevisionData(SpecificationId specificationId)
+      throws NoSuchSpecificationException;
 }

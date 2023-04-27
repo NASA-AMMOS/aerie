@@ -3,13 +3,12 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
@@ -66,13 +65,17 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
      * {@inheritDoc}
      */
     @Override
-    public ProceduralCreationGoal build() { return fill(new ProceduralCreationGoal()); }
+    public ProceduralCreationGoal build() {
+      return fill(new ProceduralCreationGoal());
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Builder getThis() { return this; }
+    protected Builder getThis() {
+      return this;
+    }
 
     /**
      * populates the provided goal with specifiers from this builder and above
@@ -85,7 +88,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
      * @return the provided object, with details filled in
      */
     protected ProceduralCreationGoal fill(ProceduralCreationGoal goal) {
-      //first fill in any general specifiers from parents
+      // first fill in any general specifiers from parents
       super.fill(goal);
 
       if (generateWith == null) {
@@ -96,9 +99,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
 
       return goal;
     }
-
-  }//Builder
-
+  } // Builder
 
   /**
    * {@inheritDoc}
@@ -111,53 +112,53 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
   public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
-    //run the generator to see what acts are still desired
-    //REVIEW: maybe some caching on plan hash here?
+    // run the generator to see what acts are still desired
+    // REVIEW: maybe some caching on plan hash here?
     final var requestedActs = getRelevantGeneratedActivities(plan, simulationResults);
 
-    //walk each requested act and try to find an exact match in the plan
+    // walk each requested act and try to find an exact match in the plan
     for (final var requestedAct : requestedActs) {
 
-      //use a strict matching based on all arguments of the instance
-      //(including exact start time, but not name)
-      //REVIEW: should strict name also match? but what if uuid names?
-      final var satisfyingActSearch = new ActivityExpression.Builder()
-          .basedOn(requestedAct)
-          .build();
-      final var matchingActs = plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
+      // use a strict matching based on all arguments of the instance
+      // (including exact start time, but not name)
+      // REVIEW: should strict name also match? but what if uuid names?
+      final var satisfyingActSearch =
+          new ActivityExpression.Builder().basedOn(requestedAct).build();
+      final var matchingActs =
+          plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
 
       var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
-      for(var act : matchingActs){
-        //has already been associated to this goal
-        if(associatedActivitiesToThisGoal.contains(act)){
+      for (var act : matchingActs) {
+        // has already been associated to this goal
+        if (associatedActivitiesToThisGoal.contains(act)) {
           alreadyOneActivityAssociated = true;
           break;
         }
       }
-      if(!alreadyOneActivityAssociated){
-        //fetch all activities that can be associated, scheduler will make a choice
-        for(var act : matchingActs){
-          if(planEvaluation.canAssociateMoreToCreatorOf(act)){
+      if (!alreadyOneActivityAssociated) {
+        // fetch all activities that can be associated, scheduler will make a choice
+        for (var act : matchingActs) {
+          if (planEvaluation.canAssociateMoreToCreatorOf(act)) {
             missingActAssociations.add(act);
           }
         }
       }
-      //adding appropriate conflicts
-      if(!alreadyOneActivityAssociated) {
-        //generate a conflict if no matching acts found
+      // adding appropriate conflicts
+      if (!alreadyOneActivityAssociated) {
+        // generate a conflict if no matching acts found
         if (matchingActs.isEmpty()) {
-          conflicts.add(new MissingActivityInstanceConflict(
-              this, requestedAct, new EvaluationEnvironment()));
-          //REVIEW: pass the requested instance to conflict or otherwise cache it
+          conflicts.add(
+              new MissingActivityInstanceConflict(this, requestedAct, new EvaluationEnvironment()));
+          // REVIEW: pass the requested instance to conflict or otherwise cache it
           //        for the imminent request to create it in the plan
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }
       }
-    }//for(requestedAct)
+    } // for(requestedAct)
 
     return conflicts;
   }
@@ -167,7 +168,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *
    * client code should use builders to instance goals
    */
-  protected ProceduralCreationGoal() { }
+  protected ProceduralCreationGoal() {}
 
   /**
    * specifies the procedure used to generate desired activities
@@ -202,20 +203,22 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *     are deemed relevant to this goal (eg within the temporal context
    *     of this goal)
    */
-  private Collection<SchedulingActivityDirective> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults) {
+  private Collection<SchedulingActivityDirective> getRelevantGeneratedActivities(
+      Plan plan, SimulationResults simulationResults) {
 
-    //run the generator in the plan context
+    // run the generator in the plan context
     final var allActs = generator.apply(plan);
 
-    //filter out acts that don't have a start time within the goal purview
+    // filter out acts that don't have a start time within the goal purview
     final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
-    final var filteredActs = allActs.stream().filter(
-        act -> ((act.startOffset() != null)
-                && evaluatedGoalContext.includes(Interval.at(0, act.startOffset())))
-    ).collect(java.util.stream.Collectors.toList());
+    final var filteredActs =
+        allActs.stream()
+            .filter(
+                act ->
+                    ((act.startOffset() != null)
+                        && evaluatedGoalContext.includes(Interval.at(0, act.startOffset()))))
+            .collect(java.util.stream.Collectors.toList());
 
     return filteredActs;
   }
-
-
 }

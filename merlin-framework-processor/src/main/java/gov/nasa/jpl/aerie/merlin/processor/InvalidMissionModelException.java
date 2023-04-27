@@ -13,15 +13,15 @@ public class InvalidMissionModelException extends Exception {
       final String message,
       final Element element,
       final AnnotationMirror annotation,
-      final AnnotationValue attribute)
-  {
+      final AnnotationValue attribute) {
     super(message);
     this.element = element;
     this.annotation = annotation;
     this.attribute = attribute;
   }
 
-  public InvalidMissionModelException(final String message, final Element element, final AnnotationMirror annotation) {
+  public InvalidMissionModelException(
+      final String message, final Element element, final AnnotationMirror annotation) {
     this(message, element, annotation, null);
   }
 

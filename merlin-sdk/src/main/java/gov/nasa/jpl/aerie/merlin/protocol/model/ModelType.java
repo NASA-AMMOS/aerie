@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-
 import java.time.Instant;
 import java.util.Map;
 
@@ -73,7 +72,8 @@ public interface ModelType<Config, Model> {
    * @return
    *   An instance of this model.
    */
-  // TODO: Every model instance should export the same resources and topics, independent of any provided configuration.
+  // TODO: Every model instance should export the same resources and topics, independent of any
+  // provided configuration.
   //   Extract resource and topic registration from the `Initializer` to the top-level `ModelType`.
   Model instantiate(Instant planStart, Config configuration, Initializer builder);
 }

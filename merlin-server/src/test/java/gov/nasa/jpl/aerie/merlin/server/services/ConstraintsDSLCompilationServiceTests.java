@@ -1,7 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
@@ -47,18 +51,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConstraintsDSLCompilationServiceTests {
@@ -68,9 +67,10 @@ class ConstraintsDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws IOException {
-    constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
-        new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService())
-    );
+    constraintsDSLCompilationService =
+        new ConstraintsDSLCompilationService(
+            new TypescriptCodeGenerationServiceAdapter(
+                new StubMissionModelService(), new StubPlanService()));
   }
 
   @AfterAll
@@ -78,34 +78,39 @@ class ConstraintsDSLCompilationServiceTests {
     constraintsDSLCompilationService.close();
   }
 
-  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
-  {
+  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint));
-    if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
+    result =
+        assertDoesNotThrow(
+            () ->
+                constraintsDSLCompilationService.compileConstraintsDSL(
+                    MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint));
+    if (result
+        instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
-    } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
+    } else if (result
+        instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
       fail(r.toString());
     }
   }
 
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
-    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
-        MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint
-    ));
-    if (actualErrors.errors()
-                    .stream()
-                    .noneMatch(e -> e.message().contains(error))) {
+    actualErrors =
+        (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error)
+            assertDoesNotThrow(
+                () ->
+                    constraintsDSLCompilationService.compileConstraintsDSL(
+                        MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint));
+    if (actualErrors.errors().stream().noneMatch(e -> e.message().contains(error))) {
       fail("Expected error:\n" + error + "\nIn list of errors:\n" + actualErrors.errors() + "\n");
     }
   }
 
   @Test
-  void testConstraintsDSL_helper_function()
-  {
+  void testConstraintsDSL_helper_function() {
     checkSuccessfulCompilation(
-      """
+        """
         export default function myConstraint() {
           return times2(Real.Resource("state of charge")).changes()
         }
@@ -113,22 +118,26 @@ class ConstraintsDSLCompilationServiceTests {
           return e.times(2)
         }
       """,
-      new ViolationsOfWindows(
-          new Changes<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
-      )
-    );
+        new ViolationsOfWindows(
+            new Changes<>(
+                new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))));
   }
 
   @Test
-  void testConstraintDSL_during(){
+  void testConstraintDSL_during() {
     checkSuccessfulCompilation(
         """
           export default () => {
               return Windows.During(ActivityType.activity)
           }
         """,
-        new ViolationsOfWindows(new Or(new WindowsFromSpans(new ForEachActivitySpans("activity", "span activity alias 0", new ActivitySpan("span activity alias 0")))))
-    );
+        new ViolationsOfWindows(
+            new Or(
+                new WindowsFromSpans(
+                    new ForEachActivitySpans(
+                        "activity",
+                        "span activity alias 0",
+                        new ActivitySpan("span activity alias 0"))))));
   }
 
   @Test
@@ -143,8 +152,7 @@ class ConstraintsDSLCompilationServiceTests {
             return e.times(x)
           }
         """,
-       "TypeError: TS2304 Cannot find name 'x'."
-    );
+        "TypeError: TS2304 Cannot find name 'x'.");
   }
 
   @Test
@@ -155,8 +163,8 @@ class ConstraintsDSLCompilationServiceTests {
              return Real.Resource("state of charge");
           }
         """,
-        "TypeError: TS2322 Incorrect return type. Expected: 'Constraint | Promise<Constraint>', Actual: 'Real'."
-    );
+        "TypeError: TS2322 Incorrect return type. Expected: 'Constraint | Promise<Constraint>',"
+            + " Actual: 'Real'.");
   }
 
   //// TESTS FOR `Discrete` CLASS API
@@ -169,8 +177,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").changes();
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))));
   }
 
   @Test
@@ -181,8 +189,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(5).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5))))));
   }
 
   @Test
@@ -196,11 +204,17 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(
-            SerializedValue.of(5),
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty()))
-        ))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(
+                new ProfileExpression<>(
+                    new DiscreteValue(
+                        SerializedValue.of(5),
+                        Optional.of(
+                            new AbsoluteInterval(
+                                Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")),
+                                Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")),
+                                Optional.empty(),
+                                Optional.empty())))))));
   }
 
   @Test
@@ -212,13 +226,13 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").valueAt(new ActivityInstance(ActivityType.activity, "alias1").span().starts()).notEqual("Option1")
             }
         """,
-        new ViolationsOfWindows(new NotEqual<>(
-            new ValueAt<>(
-                new ProfileExpression<>(new DiscreteResource("mode")),
-                new Starts<>(new ActivitySpan("alias1"))),
-            new DiscreteValue(SerializedValue.of("Option1")))));
+        new ViolationsOfWindows(
+            new NotEqual<>(
+                new ValueAt<>(
+                    new ProfileExpression<>(new DiscreteResource("mode")),
+                    new Starts<>(new ActivitySpan("alias1"))),
+                new DiscreteValue(SerializedValue.of("Option1")))));
   }
-
 
   @Test
   void testDiscreteParameter() {
@@ -232,9 +246,9 @@ class ConstraintsDSLCompilationServiceTests {
         new ForEachActivityViolations(
             "activity",
             "activity alias 0",
-            new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
-        )
-    );
+            new ViolationsOfWindows(
+                new Changes<>(
+                    new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))));
   }
 
   @Test
@@ -249,10 +263,7 @@ class ConstraintsDSLCompilationServiceTests {
             new Transition(
                 new DiscreteResource("mode"),
                 SerializedValue.of("Option1"),
-                SerializedValue.of("Option2")
-            )
-        )
-    );
+                SerializedValue.of("Option2"))));
   }
 
   @Test
@@ -263,8 +274,8 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").transition("something else", 5);
           }
         """,
-        "TS2345 Argument of type '\"something else\"' is not assignable to parameter of type '\"Option1\" | \"Option2\"'."
-    );
+        "TS2345 Argument of type '\"something else\"' is not assignable to parameter of type"
+            + " '\"Option1\" | \"Option2\"'.");
   }
 
   @Test
@@ -275,8 +286,9 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal("Option2");
         }
         """,
-        new ViolationsOfWindows(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2"))))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(
+                new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2")))));
   }
 
   @Test
@@ -287,8 +299,9 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("an integer").notEqual(4.0);
         }
         """,
-        new ViolationsOfWindows(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4))))
-    );
+        new ViolationsOfWindows(
+            new NotEqual<>(
+                new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4)))));
   }
 
   @Test
@@ -299,8 +312,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(4).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4))))));
   }
 
   @Test
@@ -311,8 +324,9 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").equal("Option1")
           }
         """,
-        new ViolationsOfWindows(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(
+                new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1")))));
   }
 
   @Test
@@ -326,13 +340,8 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOfWindows(
             new Equal<>(
                 new AssignGaps<>(
-                    new DiscreteResource("mode"),
-                    new DiscreteValue(SerializedValue.of("Option1"))
-                ),
-                new DiscreteValue(SerializedValue.of("Option1"))
-            )
-        )
-    );
+                    new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))),
+                new DiscreteValue(SerializedValue.of("Option1")))));
 
     checkSuccessfulCompilation(
         """
@@ -340,8 +349,10 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").assignGaps(Discrete.Resource("mode")).equal("Option1");
           }
         """,
-        new ViolationsOfWindows(new Equal<>(new AssignGaps<>(new DiscreteResource("mode"), new DiscreteResource("mode")), new DiscreteValue(SerializedValue.of("Option1"))))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(
+                new AssignGaps<>(new DiscreteResource("mode"), new DiscreteResource("mode")),
+                new DiscreteValue(SerializedValue.of("Option1")))));
   }
 
   //// TESTS FOR `Real` CLASS API
@@ -354,8 +365,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").changes();
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealResource("state of charge"))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(new ProfileExpression<>(new RealResource("state of charge")))));
   }
 
   @Test
@@ -366,8 +377,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(5).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
-    );
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(5.0)))));
   }
 
   @Test
@@ -381,11 +391,18 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty()))
-        ))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(
+                new ProfileExpression<>(
+                    new RealValue(
+                        5,
+                        3,
+                        Optional.of(
+                            new AbsoluteInterval(
+                                Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")),
+                                Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")),
+                                Optional.empty(),
+                                Optional.empty())))))));
 
     checkSuccessfulCompilation(
         """
@@ -398,12 +415,18 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.of(
-                Interval.Inclusivity.Exclusive), Optional.of(Interval.Inclusivity.Inclusive)))
-        ))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(
+                new ProfileExpression<>(
+                    new RealValue(
+                        5,
+                        3,
+                        Optional.of(
+                            new AbsoluteInterval(
+                                Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")),
+                                Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")),
+                                Optional.of(Interval.Inclusivity.Exclusive),
+                                Optional.of(Interval.Inclusivity.Inclusive))))))));
 
     checkSuccessfulCompilation(
         """
@@ -413,11 +436,18 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.empty(), Optional.empty()))
-        ))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(
+                new ProfileExpression<>(
+                    new RealValue(
+                        5,
+                        3,
+                        Optional.of(
+                            new AbsoluteInterval(
+                                Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")),
+                                Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")),
+                                Optional.empty(),
+                                Optional.empty())))))));
 
     checkSuccessfulCompilation(
         """
@@ -425,11 +455,18 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(5, 3, Interval.Horizon()).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))
-        ))))
-    );
+        new ViolationsOfWindows(
+            new Changes<>(
+                new ProfileExpression<>(
+                    new RealValue(
+                        5,
+                        3,
+                        Optional.of(
+                            new AbsoluteInterval(
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty())))))));
   }
 
   @Test
@@ -444,9 +481,10 @@ class ConstraintsDSLCompilationServiceTests {
         new ForEachActivityViolations(
             "activity",
             "activity alias 0",
-            new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
-        )
-    );
+            new ViolationsOfWindows(
+                new Changes<>(
+                    new ProfileExpression<>(
+                        new RealParameter("activity alias 0", "AnotherParam"))))));
   }
 
   @Test
@@ -457,8 +495,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0))));
   }
 
   @Test
@@ -469,8 +507,10 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(Temporal.Duration.from({seconds: 1}));
             }
         """,
-        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), new DurationLiteral(Duration.of(1000, Duration.MILLISECONDS))))
-    );
+        new ViolationsOfWindows(
+            new LongerThan(
+                new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
+                new DurationLiteral(Duration.of(1000, Duration.MILLISECONDS)))));
   }
 
   @Test
@@ -481,8 +521,10 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(Temporal.Duration.from({hours: 2}));
             }
         """,
-        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), new DurationLiteral(Duration.of(2, Duration.HOURS))))
-    );
+        new ViolationsOfWindows(
+            new ShorterThan(
+                new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
+                new DurationLiteral(Duration.of(2, Duration.HOURS)))));
   }
 
   @Test
@@ -494,12 +536,11 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(minute(2), minute(-20))
             }
         """,
-        new ViolationsOfWindows(new ShiftBy(
-            new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
-            new DurationLiteral(Duration.of(2, Duration.MINUTE)),
-            new DurationLiteral(Duration.of(-20, Duration.MINUTE)))
-        )
-    );
+        new ViolationsOfWindows(
+            new ShiftBy(
+                new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
+                new DurationLiteral(Duration.of(-20, Duration.MINUTE)))));
   }
 
   @Test
@@ -510,8 +551,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").times(2).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0)))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0))));
   }
 
   @Test
@@ -522,8 +563,10 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").plus(Real.Value(2.0)).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(
+                new Plus(new RealResource("state of charge"), new RealValue(2.0)),
+                new RealValue(4.0))));
   }
 
   @Test
@@ -534,8 +577,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").negate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Times(new RealResource("state of charge"), -1.0), new RealValue(4.0)))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(new Times(new RealResource("state of charge"), -1.0), new RealValue(4.0))));
   }
 
   @Test
@@ -546,8 +589,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").lessThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new LessThan(new RealResource("state of charge"), new RealValue(2.0)))
-    );
+        new ViolationsOfWindows(
+            new LessThan(new RealResource("state of charge"), new RealValue(2.0))));
   }
 
   @Test
@@ -558,8 +601,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").lessThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
-    );
+        new ViolationsOfWindows(
+            new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0))));
   }
 
   @Test
@@ -570,8 +613,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").greaterThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new GreaterThan(new RealResource("state of charge"), new RealValue(2.0)))
-    );
+        new ViolationsOfWindows(
+            new GreaterThan(new RealResource("state of charge"), new RealValue(2.0))));
   }
 
   @Test
@@ -582,8 +625,8 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").greaterThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
-    );
+        new ViolationsOfWindows(
+            new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0))));
   }
 
   @Test
@@ -594,8 +637,8 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").equal(Real.Value(-1));
         }
         """,
-        new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(new RealResource("state of charge"), new RealValue(-1.0))));
   }
 
   @Test
@@ -606,8 +649,8 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("an integer").notEqual(Real.Value(-1));
         }
         """,
-        new ViolationsOfWindows(new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0)))
-    );
+        new ViolationsOfWindows(
+            new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0))));
   }
 
   @Test
@@ -618,8 +661,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(4).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(4.0))))
-    );
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(4.0)))));
   }
 
   @Test
@@ -630,8 +672,8 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Value(2.2).plus(-3).lessThan(5);
           }
         """,
-        new ViolationsOfWindows(new LessThan(new Plus(new RealValue(2.2), new RealValue(-3.0)), new RealValue(5.0)))
-    );
+        new ViolationsOfWindows(
+            new LessThan(new Plus(new RealValue(2.2), new RealValue(-3.0)), new RealValue(5.0))));
   }
 
   @Test
@@ -642,8 +684,10 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("an integer").assignGaps(0).lessThan(5);
           }
         """,
-        new ViolationsOfWindows(new LessThan(new AssignGaps<>(new RealResource("an integer"), new RealValue(0.0)), new RealValue(5.0)))
-    );
+        new ViolationsOfWindows(
+            new LessThan(
+                new AssignGaps<>(new RealResource("an integer"), new RealValue(0.0)),
+                new RealValue(5.0))));
 
     checkSuccessfulCompilation(
         """
@@ -651,8 +695,10 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("an integer").assignGaps(Real.Resource("an integer")).lessThan(5);
           }
         """,
-        new ViolationsOfWindows(new LessThan(new AssignGaps<>(new RealResource("an integer"), new RealResource("an integer")), new RealValue(5.0)))
-    );
+        new ViolationsOfWindows(
+            new LessThan(
+                new AssignGaps<>(new RealResource("an integer"), new RealResource("an integer")),
+                new RealValue(5.0))));
   }
 
   //// TESTS FOR `Windows` CLASS API
@@ -665,8 +711,10 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
           }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
-    );
+        new ForEachActivityViolations(
+            "activity",
+            "activity alias 0",
+            new ViolationsOfWindows(new ActivityWindow("activity alias 0"))));
   }
 
   @Test
@@ -677,8 +725,11 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.start().windows());
           }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new WindowsFromSpans(new Starts<>(new ActivitySpan("activity alias 0")))))
-    );
+        new ForEachActivityViolations(
+            "activity",
+            "activity alias 0",
+            new ViolationsOfWindows(
+                new WindowsFromSpans(new Starts<>(new ActivitySpan("activity alias 0"))))));
   }
 
   @Test
@@ -689,8 +740,11 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.end().windows());
           }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new WindowsFromSpans(new Ends<>(new ActivitySpan("activity alias 0")))))
-    );
+        new ForEachActivityViolations(
+            "activity",
+            "activity alias 0",
+            new ViolationsOfWindows(
+                new WindowsFromSpans(new Ends<>(new ActivitySpan("activity alias 0"))))));
   }
 
   @Test
@@ -704,13 +758,8 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new Or(
-                new Not(new Changes<>(
-                    new ProfileExpression<>(new DiscreteResource("mode"))
-                )),
-                new LessThan(new RealResource("state of charge"), new RealValue(2.0))
-            )
-        )
-    );
+                new Not(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))),
+                new LessThan(new RealResource("state of charge"), new RealValue(2.0)))));
   }
 
   @Test
@@ -729,12 +778,10 @@ class ConstraintsDSLCompilationServiceTests {
             new And(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-                )
-            )
-        )
-    );
+                    new NotEqual<>(
+                        new DiscreteValue(SerializedValue.of("hello there")),
+                        new DiscreteValue(SerializedValue.of("hello there"))),
+                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))))));
   }
 
   @Test
@@ -753,12 +800,10 @@ class ConstraintsDSLCompilationServiceTests {
             new Or(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-                )
-            )
-        )
-    );
+                    new NotEqual<>(
+                        new DiscreteValue(SerializedValue.of("hello there")),
+                        new DiscreteValue(SerializedValue.of("hello there"))),
+                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))))));
   }
 
   @Test
@@ -770,11 +815,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOfWindows(
-            new Not(
-                new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
-            )
-        )
-    );
+            new Not(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))));
   }
 
   @Test
@@ -786,9 +827,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOfWindows(
-            new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
-        )
-    );
+            new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))));
 
     checkSuccessfulCompilation(
         """
@@ -797,9 +836,10 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOfWindows(
-            new WindowsFromSpans(new Starts<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
-        )
-    );
+            new WindowsFromSpans(
+                new Starts<>(
+                    new SpansFromWindows(
+                        new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))));
   }
 
   @Test
@@ -811,9 +851,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOfWindows(
-            new Ends<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
-        )
-    );
+            new Ends<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))));
 
     checkSuccessfulCompilation(
         """
@@ -822,9 +860,10 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOfWindows(
-            new WindowsFromSpans(new Ends<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
-        )
-    );
+            new WindowsFromSpans(
+                new Ends<>(
+                    new SpansFromWindows(
+                        new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))));
   }
 
   @Test
@@ -837,15 +876,11 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(
-              new Split<>(
-                  new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
-                  4,
-                  Interval.Inclusivity.Inclusive,
-                  Interval.Inclusivity.Exclusive
-              )
-            )
-        )
-    );
+                new Split<>(
+                    new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
+                    4,
+                    Interval.Inclusivity.Inclusive,
+                    Interval.Inclusivity.Exclusive))));
 
     checkSuccessfulCompilation(
         """
@@ -855,15 +890,12 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(
-              new Split<>(
-                  new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
-                  4,
-                  Interval.Inclusivity.Inclusive,
-                  Interval.Inclusivity.Exclusive
-              )
-            )
-        )
-    );
+                new Split<>(
+                    new SpansFromWindows(
+                        new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
+                    4,
+                    Interval.Inclusivity.Inclusive,
+                    Interval.Inclusivity.Exclusive))));
 
     checkSuccessfulCompilation(
         """
@@ -877,11 +909,7 @@ class ConstraintsDSLCompilationServiceTests {
                     new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
                     4,
                     Interval.Inclusivity.Exclusive,
-                    Interval.Inclusivity.Inclusive
-                )
-            )
-        )
-    );
+                    Interval.Inclusivity.Inclusive))));
 
     checkSuccessfulCompilation(
         """
@@ -892,14 +920,11 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOfWindows(
             new WindowsFromSpans(
                 new Split<>(
-                    new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
+                    new SpansFromWindows(
+                        new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
                     4,
                     Interval.Inclusivity.Exclusive,
-                    Interval.Inclusivity.Exclusive
-                )
-            )
-        )
-    );
+                    Interval.Inclusivity.Exclusive))));
   }
 
   @Test
@@ -910,8 +935,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).split(0).windows()
           }
         """,
-        ".split numberOfSubSpans cannot be less than 1, but was: 0"
-    );
+        ".split numberOfSubSpans cannot be less than 1, but was: 0");
 
     checkFailedCompilation(
         """
@@ -919,8 +943,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).split(-2).windows()
           }
         """,
-        ".split numberOfSubSpans cannot be less than 1, but was: -2"
-    );
+        ".split numberOfSubSpans cannot be less than 1, but was: -2");
 
     checkFailedCompilation(
         """
@@ -928,8 +951,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().split(0).windows()
           }
         """,
-        ".split numberOfSubSpans cannot be less than 1, but was: 0"
-    );
+        ".split numberOfSubSpans cannot be less than 1, but was: 0");
 
     checkFailedCompilation(
         """
@@ -937,8 +959,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().split(-2).windows()
           }
         """,
-        ".split numberOfSubSpans cannot be less than 1, but was: -2"
-    );
+        ".split numberOfSubSpans cannot be less than 1, but was: -2");
   }
 
   @Test
@@ -953,11 +974,10 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new LessThan(
-                new AccumulatedDuration<>(new Equal<>(new RealResource("state of charge"), new RealValue(4.0)), new DurationLiteral(Duration.MINUTE)),
-                new RealValue(5.0)
-            )
-        )
-    );
+                new AccumulatedDuration<>(
+                    new Equal<>(new RealResource("state of charge"), new RealValue(4.0)),
+                    new DurationLiteral(Duration.MINUTE)),
+                new RealValue(5.0))));
   }
 
   @Test
@@ -968,8 +988,8 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").equal(Real.Value(-1)).violations();
         }
         """,
-        new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
-    );
+        new ViolationsOfWindows(
+            new Equal<>(new RealResource("state of charge"), new RealValue(-1.0))));
   }
 
   @Test
@@ -980,8 +1000,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Windows.Value(false);
           }
         """,
-        new ViolationsOfWindows(new WindowsValue(false))
-    );
+        new ViolationsOfWindows(new WindowsValue(false)));
   }
 
   @Test
@@ -992,8 +1011,10 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("an integer").lessThan(5).assignGaps(false);
           }
         """,
-        new ViolationsOfWindows(new AssignGaps<>(new LessThan(new RealResource("an integer"), new RealValue(5.0)), new WindowsValue(false)))
-    );
+        new ViolationsOfWindows(
+            new AssignGaps<>(
+                new LessThan(new RealResource("an integer"), new RealValue(5.0)),
+                new WindowsValue(false))));
   }
 
   //// TESTS FOR `Spans` API CLASS
@@ -1006,8 +1027,10 @@ class ConstraintsDSLCompilationServiceTests {
                 return Real.Resource("state of charge").equal(0.3).spans().windows();
             }
         """,
-        new ViolationsOfWindows(new WindowsFromSpans(new SpansFromWindows(new Equal<>(new RealResource("state of charge"), new RealValue(0.3)))))
-    );
+        new ViolationsOfWindows(
+            new WindowsFromSpans(
+                new SpansFromWindows(
+                    new Equal<>(new RealResource("state of charge"), new RealValue(0.3))))));
   }
 
   //// TESTS FOR `Constraint` API CLASS
@@ -1026,10 +1049,11 @@ class ConstraintsDSLCompilationServiceTests {
             new ForEachActivityViolations(
                 "activity",
                 "activity alias 1",
-                new ViolationsOfWindows(new Not(new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
-            )
-        )
-    );
+                new ViolationsOfWindows(
+                    new Not(
+                        new And(
+                            new ActivityWindow("activity alias 0"),
+                            new ActivityWindow("activity alias 1")))))));
   }
 
   @Test
@@ -1043,8 +1067,10 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
-    );
+        new ForEachActivityViolations(
+            "activity",
+            "activity alias 0",
+            new ViolationsOfWindows(new ActivityWindow("activity alias 0"))));
 
     checkSuccessfulCompilation(
         """
@@ -1060,8 +1086,10 @@ class ConstraintsDSLCompilationServiceTests {
           return instance.window();
         }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
-    );
+        new ForEachActivityViolations(
+            "activity",
+            "activity alias 0",
+            new ViolationsOfWindows(new ActivityWindow("activity alias 0"))));
   }
 
   @Test
@@ -1078,10 +1106,16 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ForEachActivityViolations("activity", "activity alias 1", new ViolationsOfWindows(
-            new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
-        )))
-    );
+        new ForEachActivityViolations(
+            "activity",
+            "activity alias 0",
+            new ForEachActivityViolations(
+                "activity",
+                "activity alias 1",
+                new ViolationsOfWindows(
+                    new And(
+                        new ActivityWindow("activity alias 0"),
+                        new ActivityWindow("activity alias 1"))))));
   }
 
   @Test
@@ -1094,16 +1128,11 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new Or(
-              new WindowsFromSpans(
-                      new ForEachActivitySpans(
-                          "activity",
-                          "span activity alias 0",
-                          new ActivitySpan("span activity alias 0")
-                      )
-              )
-            )
-        )
-    );
+                new WindowsFromSpans(
+                    new ForEachActivitySpans(
+                        "activity",
+                        "span activity alias 0",
+                        new ActivitySpan("span activity alias 0"))))));
   }
 
   @Test
@@ -1116,21 +1145,16 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new Or(
-              new WindowsFromSpans(
-                  new ForEachActivitySpans(
-                      "activity",
-                      "span activity alias 0",
-                      new ActivitySpan("span activity alias 0"))
-              ),
-              new WindowsFromSpans(
-                  new ForEachActivitySpans(
-                      "activity2",
-                      "span activity alias 1",
-                      new ActivitySpan("span activity alias 1"))
-              )
-            )
-        )
-    );
+                new WindowsFromSpans(
+                    new ForEachActivitySpans(
+                        "activity",
+                        "span activity alias 0",
+                        new ActivitySpan("span activity alias 0"))),
+                new WindowsFromSpans(
+                    new ForEachActivitySpans(
+                        "activity2",
+                        "span activity alias 1",
+                        new ActivitySpan("span activity alias 1"))))));
   }
 
   // TYPECHECKING FAILURE TESTS
@@ -1146,8 +1170,8 @@ class ConstraintsDSLCompilationServiceTests {
           );
         }
         """,
-        "TypeError: TS2345 Argument of type '\"other activity\"' is not assignable to parameter of type 'ActivityType'."
-    );
+        "TypeError: TS2345 Argument of type '\"other activity\"' is not assignable to parameter of"
+            + " type 'ActivityType'.");
   }
 
   @Test
@@ -1158,8 +1182,8 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("wrong resource").changes()
         }
         """,
-        "TypeError: TS2345 Argument of type '\"wrong resource\"' is not assignable to parameter of type 'ResourceName'."
-    );
+        "TypeError: TS2345 Argument of type '\"wrong resource\"' is not assignable to parameter of"
+            + " type 'ResourceName'.");
   }
 
   @Test
@@ -1170,8 +1194,8 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("mode").changes()
         }
         """,
-        "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type 'RealResourceName'."
-    );
+        "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type"
+            + " 'RealResourceName'.");
   }
 
   @Test
@@ -1182,8 +1206,8 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal(5)
         }
         """,
-        "TypeError: TS2345 Argument of type '5' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
-    );
+        "TypeError: TS2345 Argument of type '5' is not assignable to parameter of type '\"Option1\""
+            + " | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'.");
 
     checkFailedCompilation(
         """
@@ -1191,8 +1215,9 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal(Discrete.Resource("state of charge"))
         }
         """,
-        "TypeError: TS2345 Argument of type 'Discrete<{ initial: number; rate: number; }>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
-    );
+        "TypeError: TS2345 Argument of type 'Discrete<{ initial: number; rate: number; }>' is not"
+            + " assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" |"
+            + " \"Option2\">'.");
 
     checkFailedCompilation(
         """
@@ -1203,7 +1228,7 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        "TypeError: TS2345 Argument of type 'Discrete<string>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
-    );
+        "TypeError: TS2345 Argument of type 'Discrete<string>' is not assignable to parameter of"
+            + " type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'.");
   }
 }

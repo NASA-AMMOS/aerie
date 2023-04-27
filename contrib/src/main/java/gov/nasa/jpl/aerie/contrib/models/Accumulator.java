@@ -17,7 +17,8 @@ public final class Accumulator implements RealResource {
   }
 
   public Accumulator(final double initialVolume, final double initialRate) {
-    this.ref = LinearIntegrationCell.allocate(initialVolume, initialRate, LinearAccumulationEffect::of);
+    this.ref =
+        LinearIntegrationCell.allocate(initialVolume, initialRate, LinearAccumulationEffect::of);
   }
 
   public void add(final double deltaVolume) {
@@ -38,7 +39,6 @@ public final class Accumulator implements RealResource {
   public boolean equals(final Object obj) {
     return super.equals(obj);
   }
-
 
   public final class Rate implements RealResource {
     @Override

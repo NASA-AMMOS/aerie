@@ -5,11 +5,14 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.function.Function;
 
 public interface Context {
-  enum ContextType { Initializing, Reacting, Querying }
+  enum ContextType {
+    Initializing,
+    Reacting,
+    Querying
+  }
 
   // Usable in all contexts
   ContextType getContextType();
@@ -18,9 +21,7 @@ public interface Context {
   <State> State ask(CellId<State> cellId);
 
   // Usable during initialization
-  <Event, Effect, State>
-  CellId<State>
-  allocate(
+  <Event, Effect, State> CellId<State> allocate(
       State initialState,
       CellType<Effect, State> cellType,
       Function<Event, Effect> interpretation,
@@ -30,8 +31,10 @@ public interface Context {
   <Event> void emit(Event event, Topic<Event> topic);
 
   void spawn(TaskFactory<?> task);
+
   <Return> void call(TaskFactory<Return> task);
 
   void delay(Duration duration);
+
   void waitUntil(Condition condition);
 }

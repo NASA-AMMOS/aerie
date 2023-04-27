@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
-
 import java.util.function.Function;
 
 /**
@@ -38,8 +37,7 @@ public interface Initializer {
    * @return
    *   The current state of the cell.
    */
-  <State>
-  State getInitialState(CellId<State> cellId);
+  <State> State getInitialState(CellId<State> cellId);
 
   /**
    * Allocates a stateful cell with the given initial state, which may evolve over time and under effects. The cell is
@@ -74,8 +72,7 @@ public interface Initializer {
    * @return
    *   A unique token identifying the allocated cell.
    */
-  <Event, Effect, State>
-  CellId<State> allocate(
+  <Event, Effect, State> CellId<State> allocate(
       State initialState,
       CellType<Effect, State> cellType,
       Function<Event, Effect> interpretation,
@@ -105,9 +102,7 @@ public interface Initializer {
    * @param resource
    *   The method to use to observe the value of the resource.
    */
-  void resource(
-      String name,
-      Resource<?> resource);
+  void resource(String name, Resource<?> resource);
 
   /**
    * Registers a stream of events (a "topic") observable by the environment.
@@ -121,9 +116,5 @@ public interface Initializer {
    * @param <Event>
    *   The type of data carried by events on the topic.
    */
-  <Event>
-  void topic(
-      String name,
-      Topic<Event> topic,
-      OutputType<Event> outputType);
+  <Event> void topic(String name, Topic<Event> topic, OutputType<Event> outputType);
 }

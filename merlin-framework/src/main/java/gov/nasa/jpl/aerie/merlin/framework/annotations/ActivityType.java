@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.framework.annotations;
 
 import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,7 +18,10 @@ public @interface ActivityType {
     Class<? extends ActivityMapper<?, ?, ?>> value();
   }
 
-  enum Executor { Threaded, Replaying }
+  enum Executor {
+    Threaded,
+    Replaying
+  }
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
@@ -98,6 +100,6 @@ public @interface ActivityType {
    * will cause extra simulations in scheduling.
    */
   @Retention(RetentionPolicy.CLASS)
-  @Target({ ElementType.FIELD, ElementType.METHOD })
+  @Target({ElementType.FIELD, ElementType.METHOD})
   @interface FixedDuration {}
 }

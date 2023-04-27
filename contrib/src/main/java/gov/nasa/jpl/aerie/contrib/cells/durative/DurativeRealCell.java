@@ -6,8 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,12 +14,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.function.Function;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class DurativeRealCell {
   private final PriorityQueue<Pair<Duration, RealDynamics>> activeEffects;
   private Duration elapsedTime;
 
-  private DurativeRealCell(final PriorityQueue<Pair<Duration, RealDynamics>> activeEffects, final Duration elapsedTime) {
+  private DurativeRealCell(
+      final PriorityQueue<Pair<Duration, RealDynamics>> activeEffects, final Duration elapsedTime) {
     this.activeEffects = new PriorityQueue<>(activeEffects);
     this.elapsedTime = Objects.requireNonNull(elapsedTime);
   }
@@ -30,8 +30,8 @@ public final class DurativeRealCell {
     this(new PriorityQueue<>(Comparator.comparing(Pair::getLeft)), Duration.ZERO);
   }
 
-  public static <Event>
-  CellRef<Event, DurativeRealCell> allocate(final Function<Event, Collection<Pair<Duration, RealDynamics>>> interpreter) {
+  public static <Event> CellRef<Event, DurativeRealCell> allocate(
+      final Function<Event, Collection<Pair<Duration, RealDynamics>>> interpreter) {
     return CellRef.allocate(new DurativeRealCell(), new DurativeCellType(), interpreter);
   }
 
@@ -46,19 +46,20 @@ public final class DurativeRealCell {
   }
 
   public static final class DurativeCellType
-      implements CellType<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell>
-  {
+      implements CellType<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell> {
     private static final EffectTrait<Collection<Pair<Duration, RealDynamics>>> monoid =
-        new CommutativeMonoid<>(List.of(), ($1, $2) -> {
-          if ($1.isEmpty()) return $2;
-          if ($2.isEmpty()) return $1;
+        new CommutativeMonoid<>(
+            List.of(),
+            ($1, $2) -> {
+              if ($1.isEmpty()) return $2;
+              if ($2.isEmpty()) return $1;
 
-          final var $ = new ArrayList<Pair<Duration, RealDynamics>>($1.size() + $2.size());
-          $.addAll($1);
-          $.addAll($2);
+              final var $ = new ArrayList<Pair<Duration, RealDynamics>>($1.size() + $2.size());
+              $.addAll($1);
+              $.addAll($2);
 
-          return $;
-        });
+              return $;
+            });
 
     @Override
     public EffectTrait<Collection<Pair<Duration, RealDynamics>>> getEffectType() {
@@ -71,11 +72,10 @@ public final class DurativeRealCell {
     }
 
     @Override
-    public void apply(final DurativeRealCell cell, final Collection<Pair<Duration, RealDynamics>> effects) {
+    public void apply(
+        final DurativeRealCell cell, final Collection<Pair<Duration, RealDynamics>> effects) {
       for (final var effect : effects) {
-        cell.activeEffects.add(Pair.of(
-            cell.elapsedTime.plus(effect.getLeft()),
-            effect.getRight()));
+        cell.activeEffects.add(Pair.of(cell.elapsedTime.plus(effect.getLeft()), effect.getRight()));
       }
     }
 

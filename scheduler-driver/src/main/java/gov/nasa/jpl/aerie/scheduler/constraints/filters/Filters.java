@@ -5,12 +5,12 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-
 import java.util.function.Function;
 
-//directory class from which the user can create filters
+// directory class from which the user can create filters
 public class Filters {
-  public static TimeWindowsFilter withinEach(final TimeRangeExpression expr, final TimeWindowsFilter filter) {
+  public static TimeWindowsFilter withinEach(
+      final TimeRangeExpression expr, final TimeWindowsFilter filter) {
     return new FilterWithReset(expr, filter);
   }
 
@@ -38,20 +38,15 @@ public class Filters {
     public TimeWindowsFilter build() {
       return Filters.withinEach(expr, new FilterLatching(filter1, filter2));
     }
-
-
   }
-
 
   public static FilterElementSequence last() {
     return FilterElementSequence.last();
   }
 
-
   public static FilterElementSequence first() {
     return FilterElementSequence.first();
   }
-
 
   public static FilterElementSequence numbered(int i) {
     return FilterElementSequence.numbered(i);
@@ -60,7 +55,6 @@ public class Filters {
   public static FilterFunctional alwaysSatisfied(Expression<Windows> expr) {
     return new FilterAlwaysSatisfied(expr);
   }
-
 
   public static FilterFunctional everViolated(Expression<Windows> expr) {
     return new FilterEverViolated(expr);
@@ -80,22 +74,17 @@ public class Filters {
 
   public static TimeWindowsFilter minGapAfter(Duration dur) {
     return new FilterSequenceMinGapAfter(dur);
-
   }
 
   public static TimeWindowsFilter maxGapBefore(Duration dur) {
     return new FilterSequenceMaxGapBefore(dur);
-
   }
 
   public static TimeWindowsFilter maxGapAfter(Duration dur) {
     return new FilterSequenceMaxGapAfter(dur);
-
   }
 
   public static TimeWindowsFilter functionalFilter(Function<Interval, Boolean> function) {
     return new FilterUserFunctional(function);
   }
-
-
 }

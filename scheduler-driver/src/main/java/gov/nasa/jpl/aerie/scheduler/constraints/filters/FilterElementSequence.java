@@ -31,7 +31,8 @@ public class FilterElementSequence implements TimeWindowsFilter {
   }
 
   @Override
-  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
+  public Windows filter(
+      final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     return windows.keepTrueSegment(elementIndex);
   }
 }

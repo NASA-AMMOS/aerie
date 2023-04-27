@@ -5,25 +5,23 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.Range;
+import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-
+import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -42,7 +40,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    *  */
   private Range<Integer> occurrenceRange;
 
-  // Following members are related to diagnosis of the scheduler being stuck with inserting 0-duration activities
+  // Following members are related to diagnosis of the scheduler being stuck with inserting
+  // 0-duration activities
   /**
    * Activities inserted so far to satisfy this goal
    */
@@ -78,13 +77,17 @@ public class CardinalityGoal extends ActivityTemplateGoal {
      * {@inheritDoc}
      */
     @Override
-    public CardinalityGoal build() { return fill(new CardinalityGoal()); }
+    public CardinalityGoal build() {
+      return fill(new CardinalityGoal());
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Builder getThis() { return this; }
+    protected Builder getThis() {
+      return this;
+    }
 
     /**
      * populates the provided goal with specifiers from this builder and above
@@ -97,20 +100,18 @@ public class CardinalityGoal extends ActivityTemplateGoal {
      * @return the provided object, with details filled in
      */
     protected CardinalityGoal fill(CardinalityGoal goal) {
-      //first fill in any general specifiers from parents
+      // first fill in any general specifiers from parents
       super.fill(goal);
 
       if (durationRange != null) {
         goal.durationRange = durationRange;
-
       }
       if (occurrenceRange != null) {
         goal.occurrenceRange = occurrenceRange;
       }
       return goal;
     }
-  }//Builder
-
+  } // Builder
 
   /**
    * {@inheritDoc}
@@ -122,26 +123,34 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   @Override
   public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
 
-    //unwrap temporalContext
+    // unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults);
 
-    //make sure it hasn't changed
-    if (this.initiallyEvaluatedTemporalContext != null && !windows.equals(this.initiallyEvaluatedTemporalContext)) {
-      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
-    }
-    else if (this.initiallyEvaluatedTemporalContext == null) {
+    // make sure it hasn't changed
+    if (this.initiallyEvaluatedTemporalContext != null
+        && !windows.equals(this.initiallyEvaluatedTemporalContext)) {
+      throw new UnexpectedTemporalContextChangeException(
+          "The temporalContext Windows has changed from: "
+              + this.initiallyEvaluatedTemporalContext.toString()
+              + " to "
+              + windows.toString());
+    } else if (this.initiallyEvaluatedTemporalContext == null) {
       this.initiallyEvaluatedTemporalContext = windows;
     }
 
-    //iterate through it and then within each iteration do exactly what you did before
+    // iterate through it and then within each iteration do exactly what you did before
     final var conflicts = new LinkedList<Conflict>();
 
-    for(Interval subInterval : windows.iterateEqualTo(true)) {
+    for (Interval subInterval : windows.iterateEqualTo(true)) {
       final var subIntervalWindows = new Windows(false).set(subInterval, true);
       final var actTB =
-          new ActivityExpression.Builder().basedOn(this.matchActTemplate).startsOrEndsIn(subIntervalWindows).build();
+          new ActivityExpression.Builder()
+              .basedOn(this.matchActTemplate)
+              .startsOrEndsIn(subIntervalWindows)
+              .build();
 
-      final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
+      final var acts =
+          new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
       acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       int nbActs = 0;
@@ -149,7 +158,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       for (var act : acts) {
-        if (planEvaluation.canAssociateMoreToCreatorOf(act) || associatedActivitiesToThisGoal.contains(act)) {
+        if (planEvaluation.canAssociateMoreToCreatorOf(act)
+            || associatedActivitiesToThisGoal.contains(act)) {
           total = total.plus(act.duration());
           nbActs++;
         }
@@ -162,41 +172,53 @@ public class CardinalityGoal extends ActivityTemplateGoal {
           durToSchedule = this.durationRange.start.minus(total);
         } else if (total.compareTo(this.durationRange.end) > 0) {
           logger.warn(
-              "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities");
-          return List.of(new UnsatisfiableGoalConflict(
-              this,
-              "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities"));
+              "Need to decrease duration of activities from the plan, impossible because scheduler"
+                  + " cannot remove activities");
+          return List.of(
+              new UnsatisfiableGoalConflict(
+                  this,
+                  "Need to decrease duration of activities from the plan, impossible because"
+                      + " scheduler cannot remove activities"));
         }
       }
       if (this.occurrenceRange != null && !this.occurrenceRange.contains(nbActs)) {
         if (nbActs < this.occurrenceRange.getMinimum()) {
           nbToSchedule = this.occurrenceRange.getMinimum() - nbActs;
         } else if (nbActs > this.occurrenceRange.getMaximum()) {
-          logger.warn("Need to remove activities from the plan to satify cardinality goal, impossible");
-          return List.of(new UnsatisfiableGoalConflict(
-              this,
-              "Need to remove activities from the plan to satify cardinality goal, impossible"));
+          logger.warn(
+              "Need to remove activities from the plan to satify cardinality goal, impossible");
+          return List.of(
+              new UnsatisfiableGoalConflict(
+                  this,
+                  "Need to remove activities from the plan to satify cardinality goal,"
+                      + " impossible"));
         }
       }
 
-      if (stuckInsertingZeroDurationActivities(plan, this.occurrenceRange == null || nbToSchedule == 0)) return List.of(
-          new UnsatisfiableGoalConflict(
-              this,
-              "During "
-              + this.maxNoProgressSteps
-              + " steps, solver has created only 0-duration activities to satisfy duration cardinality goal, exiting. "));
+      if (stuckInsertingZeroDurationActivities(
+          plan, this.occurrenceRange == null || nbToSchedule == 0))
+        return List.of(
+            new UnsatisfiableGoalConflict(
+                this,
+                "During "
+                    + this.maxNoProgressSteps
+                    + " steps, solver has created only 0-duration activities to satisfy duration"
+                    + " cardinality goal, exiting. "));
 
-      //at this point, have thrown exception if not satisfiable
-      //compute the missing association conflicts
+      // at this point, have thrown exception if not satisfiable
+      // compute the missing association conflicts
       for (final var act : acts) {
-        if (!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)) {
-          //they ALL have to be associated
+        if (!associatedActivitiesToThisGoal.contains(act)
+            && planEvaluation.canAssociateMoreToCreatorOf(act)) {
+          // they ALL have to be associated
           conflicts.add(new MissingAssociationConflict(this, List.of(act)));
         }
       }
-      //1) solve occurence part, we just need a certain number of activities
+      // 1) solve occurence part, we just need a certain number of activities
       for (int i = 0; i < nbToSchedule; i++) {
-        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
+        conflicts.add(
+            new MissingActivityTemplateConflict(
+                this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
       }
       /*
        * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
@@ -204,25 +226,34 @@ public class CardinalityGoal extends ActivityTemplateGoal {
        * conflict will be posted and so on
        * */
       if (nbToSchedule == 0 && durToSchedule.isPositive()) {
-        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
+        conflicts.add(
+            new MissingActivityTemplateConflict(
+                this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
       }
     }
 
     return conflicts;
   }
 
-  private boolean stuckInsertingZeroDurationActivities(final Plan plan, final boolean occurrencePartIsSatisfied){
-    if(this.durationRange != null && occurrencePartIsSatisfied){
+  private boolean stuckInsertingZeroDurationActivities(
+      final Plan plan, final boolean occurrencePartIsSatisfied) {
+    if (this.durationRange != null && occurrencePartIsSatisfied) {
       final var inserted = plan.getEvaluation().forGoal(this).getInsertedActivities();
-      final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();
-      final var durationNewlyInserted = newlyInsertedActivities.stream().reduce(Duration.ZERO, (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.duration()), Duration::plus);
-      if(durationNewlyInserted.isZero()) {
+      final var newlyInsertedActivities =
+          inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();
+      final var durationNewlyInserted =
+          newlyInsertedActivities.stream()
+              .reduce(
+                  Duration.ZERO,
+                  (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.duration()),
+                  Duration::plus);
+      if (durationNewlyInserted.isZero()) {
         this.stepsWithoutProgress++;
-        //otherwise, reset it, we have made some progress
-      } else{
+        // otherwise, reset it, we have made some progress
+      } else {
         this.stepsWithoutProgress = 0;
       }
-      if(stepsWithoutProgress > maxNoProgressSteps){
+      if (stepsWithoutProgress > maxNoProgressSteps) {
         return true;
       }
       newlyInsertedActivities.forEach(a -> insertedSoFar.add(a.getId()));
@@ -236,7 +267,5 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    *
    * client code should use builders to instance goals
    */
-  protected CardinalityGoal() { }
-
-
+  protected CardinalityGoal() {}
 }

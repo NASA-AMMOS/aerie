@@ -1,18 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class EventGraphUnflattener {
   private EventGraphUnflattener() {}
 
-  public static <T> EventGraph<T> unflatten(final List<Pair<String, T>> events) throws InvalidTagException {
+  public static <T> EventGraph<T> unflatten(final List<Pair<String, T>> events)
+      throws InvalidTagException {
     final var iter = events.iterator();
     if (!iter.hasNext()) return EventGraph.empty();
 
@@ -69,7 +69,8 @@ public final class EventGraphUnflattener {
           self.children.put(tag.index(), Trie.of(tag.suffix(), event));
         }
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
+        throw new IllegalArgumentException(
+            "Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
@@ -83,7 +84,8 @@ public final class EventGraphUnflattener {
         }
         return graph;
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
+        throw new IllegalArgumentException(
+            "Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
@@ -97,13 +99,13 @@ public final class EventGraphUnflattener {
         }
         return graph;
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
+        throw new IllegalArgumentException(
+            "Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
     class CollisionException extends Exception {}
   }
-
 
   private static final class TagReader {
     private final String subject;
@@ -126,8 +128,10 @@ public final class EventGraphUnflattener {
     }
 
     public void readChar(final char ch) throws InvalidTagException {
-      if (this.eof()) throw new InvalidTagException("Expected '" + ch + "' at offset " + this.offset);
-      if (this.peek() != ch) throw new InvalidTagException("Expected '" + ch + "' at offset " + this.offset);
+      if (this.eof())
+        throw new InvalidTagException("Expected '" + ch + "' at offset " + this.offset);
+      if (this.peek() != ch)
+        throw new InvalidTagException("Expected '" + ch + "' at offset " + this.offset);
       this.advance();
     }
 
@@ -161,9 +165,7 @@ public final class EventGraphUnflattener {
       this.readChar('.');
       final var index = this.readInt();
 
-      final var suffix = (!this.eof())
-          ? Optional.of(this.readTag())
-          : Optional.<Tag>empty();
+      final var suffix = (!this.eof()) ? Optional.of(this.readTag()) : Optional.<Tag>empty();
 
       return new Tag(index, suffix);
     }

@@ -25,8 +25,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
       ActivityTemplateGoal goal,
       Windows temporalContext,
       ActivityCreationTemplate template,
-      EvaluationEnvironment evaluationEnvironment)
-  {
+      EvaluationEnvironment evaluationEnvironment) {
     super(goal, evaluationEnvironment);
 
     if (temporalContext == null) {

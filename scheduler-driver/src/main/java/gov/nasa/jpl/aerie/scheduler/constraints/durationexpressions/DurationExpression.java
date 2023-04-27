@@ -12,8 +12,7 @@ public interface DurationExpression {
 
   Duration compute(final Interval interval, final SimulationResults simulationResults);
 
-  default DurationExpression minus(DurationExpression other){
+  default DurationExpression minus(DurationExpression other) {
     return new DurationExpressionMinus(this, other);
   }
-
 }

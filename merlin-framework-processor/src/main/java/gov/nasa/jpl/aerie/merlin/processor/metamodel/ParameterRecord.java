@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
-import java.util.Objects;
 
 public final class ParameterRecord {
   public final String name;

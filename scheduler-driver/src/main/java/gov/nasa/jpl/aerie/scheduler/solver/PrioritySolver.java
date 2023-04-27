@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -19,10 +21,6 @@ import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -30,8 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * prototype scheduling algorithm that schedules activities for a plan
@@ -66,7 +65,8 @@ public class PrioritySolver implements Solver {
    */
   Plan plan;
 
-  List<Pair<SchedulingActivityDirective, SchedulingActivityDirective>> generatedActivityInstances = new ArrayList<>();
+  List<Pair<SchedulingActivityDirective, SchedulingActivityDirective>> generatedActivityInstances =
+      new ArrayList<>();
 
   /**
    * tracks how well this solver thinks it has satisfied goals
@@ -109,28 +109,29 @@ public class PrioritySolver implements Solver {
    */
   public Optional<Plan> getNextSolution() {
     if (plan == null) {
-      //on first call to solver; setup fresh solution workspace for problem
+      // on first call to solver; setup fresh solution workspace for problem
       try {
         initializePlan();
       } catch (SimulationFacade.SimulationException e) {
-        logger.error("Tried to initializePlan but at least one activity could not be instantiated", e);
+        logger.error(
+            "Tried to initializePlan but at least one activity could not be instantiated", e);
         return Optional.empty();
       }
 
-      //attempt to satisfy the goals in the problem
+      // attempt to satisfy the goals in the problem
       solve();
 
       return Optional.of(plan);
 
-    } else { //plan!=null
+    } else { // plan!=null
 
-      //subsequent call after initial solution, so return null
-      //(this simple solver only produces a single solution)
+      // subsequent call after initial solution, so return null
+      // (this simple solver only produces a single solution)
       return Optional.empty();
     }
   }
 
-  private boolean checkAndInsertAct(SchedulingActivityDirective act){
+  private boolean checkAndInsertAct(SchedulingActivityDirective act) {
     return checkAndInsertActs(List.of(act));
   }
 
@@ -140,20 +141,27 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private boolean checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
-    // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
+  private boolean checkAndInsertActs(Collection<SchedulingActivityDirective> acts) {
+    // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities
+    // one at a time should be reconsidered
     boolean allGood = true;
 
-    for(var act: acts){
-      //if some parameters are left uninstantiated, this is the last moment to do it
+    for (var act : acts) {
+      // if some parameters are left uninstantiated, this is the last moment to do it
       var duration = act.duration();
-      if(duration != null && act.startOffset().plus(duration).longerThan(this.problem.getPlanningHorizon().getEndAerie())) {
-        logger.warn("Activity " + act
-                           + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
+      if (duration != null
+          && act.startOffset()
+              .plus(duration)
+              .longerThan(this.problem.getPlanningHorizon().getEndAerie())) {
+        logger.warn(
+            "Activity "
+                + act
+                + " is planned to finish after the end of the planning horizon, not simulating."
+                + " Extend the planning horizon.");
         allGood = false;
         break;
       }
-      if(checkSimBeforeInsertingActivities) {
+      if (checkSimBeforeInsertingActivities) {
         try {
           simulationFacade.simulateActivity(act);
         } catch (SimulationFacade.SimulationException e) {
@@ -169,27 +177,35 @@ public class PrioritySolver implements Solver {
         }
         if (act.duration() == null || simDur.get().compareTo(act.duration()) != 0) {
           allGood = false;
-          logger.error("When simulated, activity " + act
-                             + " has a different duration than expected (exp=" + act.duration() + ", real=" + simDur + ")");
+          logger.error(
+              "When simulated, activity "
+                  + act
+                  + " has a different duration than expected (exp="
+                  + act.duration()
+                  + ", real="
+                  + simDur
+                  + ")");
           break;
         }
       }
     }
 
-    if(allGood) {
-      //update plan with regard to simulation
-      for(var act: acts) {
+    if (allGood) {
+      // update plan with regard to simulation
+      for (var act : acts) {
         plan.add(act);
       }
-      final var allGeneratedActivities = simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
+      final var allGeneratedActivities =
+          simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
       processNewGeneratedActivities(allGeneratedActivities);
       pullActivityDurationsIfNecessary();
-    } else{
-      //update simulation with regard to plan
+    } else {
+      // update simulation with regard to plan
       try {
         simulationFacade.removeActivitiesFromSimulation(acts);
       } catch (SimulationFacade.SimulationException e) {
-        // We do not expect to get SimulationExceptions from re-simulating activities that have been simulated before
+        // We do not expect to get SimulationExceptions from re-simulating activities that have been
+        // simulated before
         throw new Error("Simulation failed after removing activities");
       }
     }
@@ -202,22 +218,26 @@ public class PrioritySolver implements Solver {
   public void initializePlan() throws SimulationFacade.SimulationException {
     plan = new PlanInMemory();
 
-    //turn off simulation checking for initial plan contents (must accept user input regardless)
+    // turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
     problem.getInitialPlan().getActivitiesByTime().stream()
-      .filter( act -> (act.startOffset()==null)
-               || problem.getPlanningHorizon().contains( act.startOffset() ) )
-      .forEach(this::checkAndInsertAct);
+        .filter(
+            act ->
+                (act.startOffset() == null)
+                    || problem.getPlanningHorizon().contains(act.startOffset()))
+        .forEach(this::checkAndInsertAct);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
 
-    //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
+    // if backed by real models, initialize the simulation states/resources/profiles for the plan so
+    // state queries work
     if (problem.getMissionModel() != null) {
       simulationFacade.simulateActivities(plan.getActivities());
-      final var allGeneratedActivities = simulationFacade.getAllChildActivities(problem.getPlanningHorizon().getEndAerie());
+      final var allGeneratedActivities =
+          simulationFacade.getAllChildActivities(problem.getPlanningHorizon().getEndAerie());
       processNewGeneratedActivities(allGeneratedActivities);
       pullActivityDurationsIfNecessary();
     }
@@ -234,15 +254,26 @@ public class PrioritySolver implements Solver {
       if (activity.duration() == null) {
         final var duration = simulationFacade.getActivityDuration(activity);
         if (duration.isPresent()) {
-          final var replacementAct = SchedulingActivityDirective.copyOf(
-              activity,
-              duration.get()
-              );
+          final var replacementAct = SchedulingActivityDirective.copyOf(activity, duration.get());
           simulationFacade.replaceActivityFromSimulation(activity, replacementAct);
           toAddToPlan.add(replacementAct);
           toRemoveFromPlan.add(activity);
-          generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getLeft().equals(activity) ? Pair.of(replacementAct, pair.getRight()): pair).collect(Collectors.toList());
-          generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getRight().equals(activity) ? Pair.of(pair.getLeft(), replacementAct): pair).collect(Collectors.toList());
+          generatedActivityInstances =
+              generatedActivityInstances.stream()
+                  .map(
+                      pair ->
+                          pair.getLeft().equals(activity)
+                              ? Pair.of(replacementAct, pair.getRight())
+                              : pair)
+                  .collect(Collectors.toList());
+          generatedActivityInstances =
+              generatedActivityInstances.stream()
+                  .map(
+                      pair ->
+                          pair.getRight().equals(activity)
+                              ? Pair.of(pair.getLeft(), replacementAct)
+                              : pair)
+                  .collect(Collectors.toList());
         }
       }
     }
@@ -255,32 +286,39 @@ public class PrioritySolver implements Solver {
    * Filters generated activities and makes sure that simulations are only adding activities and not removing them
    * @param allNewGeneratedActivities all the generated activities from the last simulation results.
    */
-  private void processNewGeneratedActivities(Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> allNewGeneratedActivities) {
+  private void processNewGeneratedActivities(
+      Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> allNewGeneratedActivities) {
     final var activitiesById = plan.getActivitiesById();
-    final var formattedNewGeneratedActivities = new ArrayList<Pair<SchedulingActivityDirective, SchedulingActivityDirective>>();
-    allNewGeneratedActivities.entrySet().forEach(entry -> formattedNewGeneratedActivities.add(Pair.of(entry.getKey(), activitiesById.get(entry.getValue()))));
+    final var formattedNewGeneratedActivities =
+        new ArrayList<Pair<SchedulingActivityDirective, SchedulingActivityDirective>>();
+    allNewGeneratedActivities
+        .entrySet()
+        .forEach(
+            entry ->
+                formattedNewGeneratedActivities.add(
+                    Pair.of(entry.getKey(), activitiesById.get(entry.getValue()))));
 
     final var copyOld = new ArrayList<>(this.generatedActivityInstances);
     final var copyNew = new ArrayList<>(formattedNewGeneratedActivities);
 
-    for(final var pairOld: this.generatedActivityInstances){
-      for (final var pairNew : formattedNewGeneratedActivities){
-        if(pairOld.getLeft().equalsInProperties(pairNew.getLeft()) &&
-           pairNew.getRight().equals(pairOld.getRight())){
+    for (final var pairOld : this.generatedActivityInstances) {
+      for (final var pairNew : formattedNewGeneratedActivities) {
+        if (pairOld.getLeft().equalsInProperties(pairNew.getLeft())
+            && pairNew.getRight().equals(pairOld.getRight())) {
           copyNew.remove(pairNew);
           copyOld.remove(pairOld);
-          //break at first occurrence. there may be several activities equal in properties.
+          // break at first occurrence. there may be several activities equal in properties.
           break;
         }
       }
     }
 
-    //TODO: continuous goal satisfaction
-    //copyNew contains only things that are new
-    //copyOld contains only present in old but absent in new
-    //if(copyOld.size() != 0){
-      //throw new Error("Activities have disappeared from simulation, failing");
-    //}
+    // TODO: continuous goal satisfaction
+    // copyNew contains only things that are new
+    // copyOld contains only present in old but absent in new
+    // if(copyOld.size() != 0){
+    //     throw new Error("Activities have disappeared from simulation, failing");
+    // }
     this.generatedActivityInstances.addAll(copyNew);
     this.plan.add(copyNew.stream().map(Pair::getLeft).toList());
   }
@@ -303,19 +341,18 @@ public class PrioritySolver implements Solver {
    * the output plan member is updated directly with the devised solution
    */
   private void solve() {
-    //construct a priority sorted goal container
+    // construct a priority sorted goal container
     final var goalQ = getGoalQueue();
     assert goalQ != null;
 
-    //process each goal independently in that order
+    // process each goal independently in that order
     while (!goalQ.isEmpty()) {
       var goal = goalQ.remove();
       assert goal != null;
 
-      //update the output solution plan directly to satisfy goal
+      // update the output solution plan directly to satisfy goal
       satisfyGoal(goal);
     }
-
   }
 
   /**
@@ -337,11 +374,11 @@ public class PrioritySolver implements Solver {
     final var rawGoals = problem.getGoals();
     assert rawGoals != null;
 
-    //create queue container using comparator and pre-sized for all goals
+    // create queue container using comparator and pre-sized for all goals
     final var capacity = rawGoals.size();
     assert capacity >= 0;
 
-    //fill the comparator-imbued container with goals to get sorted queue
+    // fill the comparator-imbued container with goals to get sorted queue
     final var goalQ = new LinkedList<>(rawGoals);
     assert goalQ.size() == rawGoals.size();
 
@@ -362,77 +399,83 @@ public class PrioritySolver implements Solver {
     this.checkSimBeforeInsertingActivities = checkSimConfig;
   }
 
-
   private void satisfyOptionGoal(OptionGoal goal) {
-      if (goal.hasOptimizer()) {
-        //try to satisfy all and see what is best
-        Goal currentSatisfiedGoal = null;
-        Collection<SchedulingActivityDirective> actsToInsert = null;
-        Collection<SchedulingActivityDirective> actsToAssociateWith = null;
-        for (var subgoal : goal.getSubgoals()) {
-          satisfyGoal(subgoal);
-          if(evaluation.forGoal(subgoal).getScore() == 0 || !subgoal.shouldRollbackIfUnsatisfied()) {
-            var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
-            var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
-            var aggregatedActivities = new ArrayList<SchedulingActivityDirective>();
-            aggregatedActivities.addAll(associatedActivities);
-            aggregatedActivities.addAll(insertedActivities);
-            if (!aggregatedActivities.isEmpty() &&
-                (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
-                 currentSatisfiedGoal == null)) {
-              actsToInsert = insertedActivities;
-              actsToAssociateWith = associatedActivities;
-              currentSatisfiedGoal = subgoal;
-            }
+    if (goal.hasOptimizer()) {
+      // try to satisfy all and see what is best
+      Goal currentSatisfiedGoal = null;
+      Collection<SchedulingActivityDirective> actsToInsert = null;
+      Collection<SchedulingActivityDirective> actsToAssociateWith = null;
+      for (var subgoal : goal.getSubgoals()) {
+        satisfyGoal(subgoal);
+        if (evaluation.forGoal(subgoal).getScore() == 0 || !subgoal.shouldRollbackIfUnsatisfied()) {
+          var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
+          var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
+          var aggregatedActivities = new ArrayList<SchedulingActivityDirective>();
+          aggregatedActivities.addAll(associatedActivities);
+          aggregatedActivities.addAll(insertedActivities);
+          if (!aggregatedActivities.isEmpty()
+              && (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities)
+                  || currentSatisfiedGoal == null)) {
+            actsToInsert = insertedActivities;
+            actsToAssociateWith = associatedActivities;
+            currentSatisfiedGoal = subgoal;
           }
-          rollback(subgoal);
         }
-        //we should have the best solution
-        if (currentSatisfiedGoal != null) {
-          for(var act: actsToAssociateWith){
-            //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
+        rollback(subgoal);
+      }
+      // we should have the best solution
+      if (currentSatisfiedGoal != null) {
+        for (var act : actsToAssociateWith) {
+          // we do not care about ownership here as it is not really a piggyback but just the
+          // validation of the supergoal
+          evaluation.forGoal(goal).associate(act, false);
+        }
+        if (checkAndInsertActs(actsToInsert)) {
+          for (var act : actsToInsert) {
             evaluation.forGoal(goal).associate(act, false);
           }
-          if(checkAndInsertActs(actsToInsert)) {
-            for(var act: actsToInsert){
-              evaluation.forGoal(goal).associate(act, false);
-            }
-            evaluation.forGoal(goal).setScore(0);
-          } else{
-            //this should not happen because we have already tried to insert the same set of activities in the plan and it
-            //did not fail
-            throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
-          }
-        } else {
-          evaluation.forGoal(goal).setScore(-1);
-        }
-      } else {
-        var atLeastOneSatisfied = false;
-        //just satisfy any goal
-        for (var subgoal : goal.getSubgoals()) {
-          satisfyGoal(subgoal);
-          final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getScore() == 0);
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
-          if(subgoalIsSatisfied){
-            atLeastOneSatisfied = true;
-            break;
-          }
-        }
-        if(atLeastOneSatisfied){
           evaluation.forGoal(goal).setScore(0);
         } else {
-          evaluation.forGoal(goal).setScore(-1);
-          if(goal.shouldRollbackIfUnsatisfied()) {
-            for (var subgoal : goal.getSubgoals()) {
-              rollback(subgoal);
-            }
+          // this should not happen because we have already tried to insert the same set of
+          // activities in the plan and it
+          // did not fail
+          throw new IllegalStateException(
+              "Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
+        }
+      } else {
+        evaluation.forGoal(goal).setScore(-1);
+      }
+    } else {
+      var atLeastOneSatisfied = false;
+      // just satisfy any goal
+      for (var subgoal : goal.getSubgoals()) {
+        satisfyGoal(subgoal);
+        final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getScore() == 0);
+        evaluation
+            .forGoal(goal)
+            .associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
+        evaluation
+            .forGoal(goal)
+            .associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
+        if (subgoalIsSatisfied) {
+          atLeastOneSatisfied = true;
+          break;
+        }
+      }
+      if (atLeastOneSatisfied) {
+        evaluation.forGoal(goal).setScore(0);
+      } else {
+        evaluation.forGoal(goal).setScore(-1);
+        if (goal.shouldRollbackIfUnsatisfied()) {
+          for (var subgoal : goal.getSubgoals()) {
+            rollback(subgoal);
           }
         }
       }
+    }
   }
 
-  private void rollback(Goal goal){
+  private void rollback(Goal goal) {
     var evalForGoal = evaluation.forGoal(goal);
     var associatedActivities = evalForGoal.getAssociatedActivities();
     var insertedActivities = evalForGoal.getInsertedActivities();
@@ -460,19 +503,22 @@ public class PrioritySolver implements Solver {
       evaluation.forGoal(goal).setScore(-1);
     }
 
-    if(!goalIsSatisfied && goal.shouldRollbackIfUnsatisfied()){
+    if (!goalIsSatisfied && goal.shouldRollbackIfUnsatisfied()) {
       for (var subgoal : goal.getSubgoals()) {
         rollback(subgoal);
       }
     }
-    if(goalIsSatisfied) {
+    if (goalIsSatisfied) {
       for (var subgoal : goal.getSubgoals()) {
-        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
+        evaluation
+            .forGoal(goal)
+            .associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
+        evaluation
+            .forGoal(goal)
+            .associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
       }
     }
   }
-
 
   /**
    * attempts to satisfy the specified goal as much as possible
@@ -500,65 +546,67 @@ public class PrioritySolver implements Solver {
     assert goal != null;
     assert plan != null;
 
-    //continue creating activities as long as goal wants more and we can do so
+    // continue creating activities as long as goal wants more and we can do so
     var missingConflicts = getConflicts(goal);
-    //setting the number of conflicts detected at first evaluation, will be used at backtracking
+    // setting the number of conflicts detected at first evaluation, will be used at backtracking
     evaluation.forGoal(goal).setNbConflictsDetected(missingConflicts.size());
     assert missingConflicts != null;
     boolean madeProgress = true;
 
-
     while (!missingConflicts.isEmpty() && madeProgress) {
       madeProgress = false;
 
-      //create new activity instances for each missing conflict
+      // create new activity instances for each missing conflict
       for (final var missing : missingConflicts) {
         assert missing != null;
 
-        //determine the best activities to satisfy the conflict
-        if (!analysisOnly && (missing instanceof MissingActivityInstanceConflict || missing instanceof MissingActivityTemplateConflict)) {
+        // determine the best activities to satisfy the conflict
+        if (!analysisOnly
+            && (missing instanceof MissingActivityInstanceConflict
+                || missing instanceof MissingActivityTemplateConflict)) {
           final var acts = getBestNewActivities((MissingActivityConflict) missing);
           assert acts != null;
-          //add the activities to the output plan
+          // add the activities to the output plan
           if (!acts.isEmpty()) {
-            if(checkAndInsertActs(acts)){
+            if (checkAndInsertActs(acts)) {
               madeProgress = true;
 
               evaluation.forGoal(goal).associate(acts, true);
-              //REVIEW: really association should be via the goal's own query...
+              // REVIEW: really association should be via the goal's own query...
 
-              //NB: repropagation of new activity effects occurs on demand
+              // NB: repropagation of new activity effects occurs on demand
               //    at next constraint query, if relevant
             }
           }
-        } else if(missing instanceof MissingAssociationConflict missingAssociationConflict){
+        } else if (missing instanceof MissingAssociationConflict missingAssociationConflict) {
           var actToChooseFrom = missingAssociationConflict.getActivityInstancesToChooseFrom();
-          //no act type constraint to consider as the activities have been scheduled
-          //no global constraint for the same reason above mentioned
-          //only the target goal state constraints to consider
-          for(var act : actToChooseFrom){
-            var actWindow = new Windows(false).set(Interval.between(act.startOffset(), act.getEndTime()), true);
+          // no act type constraint to consider as the activities have been scheduled
+          // no global constraint for the same reason above mentioned
+          // only the target goal state constraints to consider
+          for (var act : actToChooseFrom) {
+            var actWindow =
+                new Windows(false).set(Interval.between(act.startOffset(), act.getEndTime()), true);
             var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
-            if(stateConstraints!= null) {
+            if (stateConstraints != null) {
               narrowed = narrowByResourceConstraints(actWindow, List.of(stateConstraints));
             }
-            if(narrowed.includes(actWindow)){
-              //decision-making here, we choose the first satisfying activity
+            if (narrowed.includes(actWindow)) {
+              // decision-making here, we choose the first satisfying activity
               evaluation.forGoal(goal).associate(act, false);
               madeProgress = true;
               break;
             }
           }
         }
-      }//for(missing)
+      } // for(missing)
 
       if (madeProgress) {
         missingConflicts = getConflicts(goal);
       }
-    }//while(missingConflicts&&madeProgress)
+    } // while(missingConflicts&&madeProgress)
 
-    if(!missingConflicts.isEmpty() && goal.shouldRollbackIfUnsatisfied()){
+    if (!missingConflicts.isEmpty() && goal.shouldRollbackIfUnsatisfied()) {
       rollback(goal);
     }
     evaluation.forGoal(goal).setScore(-missingConflicts.size());
@@ -573,15 +621,14 @@ public class PrioritySolver implements Solver {
    * @return the set of missing activity conflicts in the current solution
    *     plan due to the specified goal
    */
-  private Collection<Conflict>
-  getConflicts(Goal goal)
-  {
+  private Collection<Conflict> getConflicts(Goal goal) {
     assert goal != null;
     assert plan != null;
-    //REVIEW: maybe should have way to request only certain kinds of conflicts
+    // REVIEW: maybe should have way to request only certain kinds of conflicts
     var lastSimResults = this.simulationFacade.getLatestConstraintSimulationResults();
     if (lastSimResults == null || this.checkSimBeforeEvaluatingGoal) {
-      this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
+      this.simulationFacade.computeSimulationResultsUntil(
+          this.problem.getPlanningHorizon().getEndAerie());
       lastSimResults = this.simulationFacade.getLatestConstraintSimulationResults();
     }
     final var rawConflicts = goal.getConflicts(plan, lastSimResults);
@@ -625,26 +672,25 @@ public class PrioritySolver implements Solver {
    *     added to the plan to best satisfy the conflict without disrupting
    *     the rest of the plan, or null if there are no such suggestions
    */
-  private Collection<SchedulingActivityDirective>
-  getBestNewActivities(MissingActivityConflict missing)
-  {
+  private Collection<SchedulingActivityDirective> getBestNewActivities(
+      MissingActivityConflict missing) {
     assert missing != null;
     var newActs = new LinkedList<SchedulingActivityDirective>();
 
-    //REVIEW: maybe push into polymorphic method of conflict/goal? (picking best act
-    //may depend on the source goal)
+    // REVIEW: maybe push into polymorphic method of conflict/goal? (picking best act
+    // may depend on the source goal)
     final var goal = missing.getGoal();
 
-    //start from the time interval where the missing activity causes a problem
-    //NB: these are start windows
+    // start from the time interval where the missing activity causes a problem
+    // NB: these are start windows
     var possibleWindows = missing.getTemporalContext();
 
-    //prune based on constraints on goal and activity type (mutex, state,
-    //event, etc)
-    //TODO: move this into polymorphic method. don't want to be demuxing types
+    // prune based on constraints on goal and activity type (mutex, state,
+    // event, etc)
+    // TODO: move this into polymorphic method. don't want to be demuxing types
     Collection<Expression<Windows>> resourceConstraints = new LinkedList<>();
 
-    //add all goal constraints
+    // add all goal constraints
     final var goalConstraints = goal.getResourceConstraints();
 
     if (goalConstraints != null) {
@@ -658,49 +704,58 @@ public class PrioritySolver implements Solver {
       final var c = activityTemplateGoal.getActivityStateConstraints();
       if (c != null) resourceConstraints.add(c);
     } else {
-      //TODO: placeholder for now to avoid mutex fall through
-      throw new IllegalArgumentException("request to create activities for conflict of unrecognized type");
+      // TODO: placeholder for now to avoid mutex fall through
+      throw new IllegalArgumentException(
+          "request to create activities for conflict of unrecognized type");
     }
     possibleWindows = narrowByResourceConstraints(possibleWindows, resourceConstraints);
 
-    possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints(), missing.getEvaluationEnvironment());
+    possibleWindows =
+        narrowGlobalConstraints(
+            plan,
+            missing,
+            possibleWindows,
+            this.problem.getGlobalConstraints(),
+            missing.getEvaluationEnvironment());
 
-    //narrow to windows where activity duration will fit
+    // narrow to windows where activity duration will fit
     var startWindows = possibleWindows;
-    //for now handling just start-time windows, so no need to prune duration
+    // for now handling just start-time windows, so no need to prune duration
     //    //REVIEW: how to handle dynamic durations? for now pessimistic!
     //    final var durationMax = goal.getActivityDurationRange().getMaximum();
     //    possibleWindows = null;
     //    startWindows.contractBy( Duration.ofZero(), durationMax );
 
-    //create new act if there is any valid time (otherwise conflict is
-    //unsatisfiable in current plan)
+    // create new act if there is any valid time (otherwise conflict is
+    // unsatisfiable in current plan)
     if (!startWindows.stream().noneMatch(Segment::value)) {
-      //TODO: move this into a polymorphic method? definitely don't want to be
-      //demuxing on all the conflict types here
+      // TODO: move this into a polymorphic method? definitely don't want to be
+      // demuxing on all the conflict types here
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
-        //FINISH: clean this up code dupl re windows etc
+        // FINISH: clean this up code dupl re windows etc
         final var act = missingInstance.getInstance();
         newActs.add(SchedulingActivityDirective.of(act));
 
       } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
-        //select the "best" time among the possibilities, and latest among ties
-        //REVIEW: currently not handling preferences / ranked windows
+        // select the "best" time among the possibilities, and latest among ties
+        // REVIEW: currently not handling preferences / ranked windows
 
         startWindows = startWindows.and(missing.getTemporalContext());
-        //create the new activity instance (but don't place in schedule)
-        //REVIEW: not yet handling multiple activities at a time
-        final var act = missingTemplate.getActTemplate().createActivity(
-            goal.getName() + "_" + java.util.UUID.randomUUID(),
-            startWindows,
-            simulationFacade,
-            plan,
-            this.problem.getPlanningHorizon(),
-            missing.getEvaluationEnvironment());
+        // create the new activity instance (but don't place in schedule)
+        // REVIEW: not yet handling multiple activities at a time
+        final var act =
+            missingTemplate
+                .getActTemplate()
+                .createActivity(
+                    goal.getName() + "_" + java.util.UUID.randomUUID(),
+                    startWindows,
+                    simulationFacade,
+                    plan,
+                    this.problem.getPlanningHorizon(),
+                    missing.getEvaluationEnvironment());
         act.ifPresent(newActs::add);
       }
-
-    }//if(startWindows)
+    } // if(startWindows)
 
     return newActs;
   }
@@ -720,33 +775,36 @@ public class PrioritySolver implements Solver {
    * @param constraints IN the constraints to use to narrow the windows,
    *     may be empty (but not null)
    */
-  private Windows narrowByResourceConstraints(Windows windows,
-                                              Collection<Expression<Windows>> constraints)
-  {
+  private Windows narrowByResourceConstraints(
+      Windows windows, Collection<Expression<Windows>> constraints) {
     assert windows != null;
     assert constraints != null;
     Windows ret = windows;
-    //short circuit on already empty windows or no constraints: no work to do!
+    // short circuit on already empty windows or no constraints: no work to do!
     if (windows.stream().noneMatch(Segment::value) || constraints.isEmpty()) {
       return ret;
     }
 
-    final var totalDomain = Interval.between(windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
-    //make sure the simulation results cover the domain
+    final var totalDomain =
+        Interval.between(
+            windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
+    // make sure the simulation results cover the domain
     simulationFacade.computeSimulationResultsUntil(totalDomain.end);
 
-    //iteratively narrow the windows from each constraint
-    //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
+    // iteratively narrow the windows from each constraint
+    // REVIEW: could be some optimization in constraint ordering (smallest domain first to fail
+    // fast)
     for (final var constraint : constraints) {
-      //REVIEW: loop through windows more efficient than enveloppe(windows) ?
-      final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
+      // REVIEW: loop through windows more efficient than enveloppe(windows) ?
+      final var validity =
+          constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
       ret = ret.and(validity);
-      //short-circuit if no possible windows left
+      // short-circuit if no possible windows left
       if (ret.stream().noneMatch(Segment::value)) {
         break;
       }
     }
-  return ret;
+    return ret;
   }
 
   private Windows narrowGlobalConstraints(
@@ -756,30 +814,41 @@ public class PrioritySolver implements Solver {
       Collection<GlobalConstraint> constraints,
       EvaluationEnvironment evaluationEnvironment) {
     Windows tmp = windows;
-    if(tmp.stream().noneMatch(Segment::value)){
+    if (tmp.stream().noneMatch(Segment::value)) {
       return tmp;
     }
-    //make sure the simulation results cover the domain
+    // make sure the simulation results cover the domain
     simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof GlobalConstraintWithIntrospection c) {
-        tmp = c.findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults(), evaluationEnvironment);
+        tmp =
+            c.findWindows(
+                plan,
+                tmp,
+                mac,
+                simulationFacade.getLatestConstraintSimulationResults(),
+                evaluationEnvironment);
       } else {
         throw new Error("Unhandled variant of GlobalConstraint: %s".formatted(gc));
       }
     }
-  return tmp;
+    return tmp;
   }
 
   public void printEvaluation() {
     logger.warn("Remaining conflicts for goals ");
     for (var goalEval : evaluation.getGoals()) {
       logger.warn(goalEval.getName() + " -> " + evaluation.forGoal(goalEval).score);
-      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(SchedulingActivityDirective::toString).collect(
-          Collectors.joining(" ")));
-      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(SchedulingActivityDirective::toString).collect(
-          Collectors.joining(" ")));
+      logger.warn(
+          "Activities created by this goal:"
+              + evaluation.forGoal(goalEval).getInsertedActivities().stream()
+                  .map(SchedulingActivityDirective::toString)
+                  .collect(Collectors.joining(" ")));
+      logger.warn(
+          "Activities associated to this goal:"
+              + evaluation.forGoal(goalEval).getAssociatedActivities().stream()
+                  .map(SchedulingActivityDirective::toString)
+                  .collect(Collectors.joining(" ")));
     }
   }
-
 }

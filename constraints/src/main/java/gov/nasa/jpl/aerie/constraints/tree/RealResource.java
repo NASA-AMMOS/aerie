@@ -1,17 +1,13 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,7 +19,10 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public LinearProfile evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment) {
     if (results.realProfiles.containsKey(this.name)) {
       return results.realProfiles.get(this.name);
     } else if (results.discreteProfiles.containsKey(this.name)) {
@@ -38,11 +37,18 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   private LinearProfile convertDiscreteProfile(final DiscreteProfile profile) {
-    return new LinearProfile(profile.profilePieces.map(
-        $ -> new LinearEquation(Duration.ZERO, $.asReal().orElseThrow(
-            () -> new InputMismatchException("Discrete profile of non-real type cannot be converted to linear")
-        ), 0.0)
-    ));
+    return new LinearProfile(
+        profile.profilePieces.map(
+            $ ->
+                new LinearEquation(
+                    Duration.ZERO,
+                    $.asReal()
+                        .orElseThrow(
+                            () ->
+                                new InputMismatchException(
+                                    "Discrete profile of non-real type cannot be converted to"
+                                        + " linear")),
+                    0.0)));
   }
 
   @Override
@@ -52,17 +58,13 @@ public final class RealResource implements Expression<LinearProfile> {
 
   @Override
   public String prettyPrint(final String prefix) {
-    return String.format(
-        "\n%s(resource %s)",
-        prefix,
-        this.name
-    );
+    return String.format("\n%s(resource %s)", prefix, this.name);
   }
 
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof RealResource)) return false;
-    final var o = (RealResource)obj;
+    final var o = (RealResource) obj;
 
     return Objects.equals(this.name, o.name);
   }

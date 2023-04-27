@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.server.models;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -26,7 +25,4 @@ public record PlanMetadata(
     Path modelPath,
     String modelName,
     String modelVersion,
-    Map<String, SerializedValue> modelConfiguration
-)
-{
-}
+    Map<String, SerializedValue> modelConfiguration) {}

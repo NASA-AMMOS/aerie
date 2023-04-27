@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.function.Function;
 
 public final class QueryContext implements Context {
@@ -27,13 +26,11 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public <Event, Effect, State>
-  CellId<State> allocate(
+  public <Event, Effect, State> CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> interpretation,
-      final Topic<Event> topic)
-  {
+      final Topic<Event> topic) {
     throw new IllegalStateException("Cannot allocate in a query-only context");
   }
 

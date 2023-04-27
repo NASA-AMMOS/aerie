@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,8 +21,7 @@ public final class Cell<State> {
       final CellType<Effect, State> cellType,
       final Selector<Effect> selector,
       final EventGraphEvaluator evaluator,
-      final State state
-  ) {
+      final State state) {
     this(new GenericCell<>(cellType, cellType.getEffectType(), selector, evaluator), state);
   }
 
@@ -64,12 +62,11 @@ public final class Cell<State> {
     return this.state.toString();
   }
 
-  private record GenericCell<Effect, State> (
+  private record GenericCell<Effect, State>(
       CellType<Effect, State> cellType,
       EffectTrait<Effect> algebra,
       Selector<Effect> selector,
-      EventGraphEvaluator evaluator
-  ) {
+      EventGraphEvaluator evaluator) {
     public void apply(final State state, final EventGraph<Event> events) {
       final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events);
       if (effect$.isPresent()) this.cellType.apply(state, effect$.get());

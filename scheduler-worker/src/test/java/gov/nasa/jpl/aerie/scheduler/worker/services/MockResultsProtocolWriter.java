@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
-import java.util.ArrayList;
-import java.util.Optional;
-
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
+import java.util.ArrayList;
+import java.util.Optional;
 
 class MockResultsProtocolWriter implements ResultsProtocol.WriterRole {
   final ArrayList<Result> results;

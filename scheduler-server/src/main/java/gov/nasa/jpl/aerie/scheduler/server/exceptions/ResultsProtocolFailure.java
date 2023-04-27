@@ -14,14 +14,18 @@ public class ResultsProtocolFailure extends RuntimeException {
    *
    * @param msg the detail of the error that should be reported in the ResultsProtocol
    */
-  public ResultsProtocolFailure(String msg) {super(msg);}
+  public ResultsProtocolFailure(String msg) {
+    super(msg);
+  }
 
   /**
    * create a new exception that should be reported to the ResultsProtocol
    *
    * @param cause the underlying cause of the error, whose own getMessage should be reported
    */
-  public ResultsProtocolFailure(Throwable cause) {super(cause.getMessage(), cause);}
+  public ResultsProtocolFailure(Throwable cause) {
+    super(cause.getMessage(), cause);
+  }
 
   /**
    * create a new exception that should be reported to the ResultsProtocol
@@ -29,5 +33,7 @@ public class ResultsProtocolFailure extends RuntimeException {
    * @param msg the detail of the error that should be reported in the ResultsProtocol
    * @param cause the underlying cause of the error, when known
    */
-  public ResultsProtocolFailure(String msg, Throwable cause) {super(msg, cause);}
+  public ResultsProtocolFailure(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 }

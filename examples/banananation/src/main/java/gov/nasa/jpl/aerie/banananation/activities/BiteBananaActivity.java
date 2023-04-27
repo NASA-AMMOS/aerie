@@ -18,8 +18,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
  */
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity {
-  @Parameter
-  public double biteSize = 1.0;
+  @Parameter public double biteSize = 1.0;
 
   @Validation("bite size must be positive")
   @Validation.Subject("biteSize")

@@ -16,11 +16,10 @@ import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface PlanService {
   interface ReaderRole {
@@ -32,7 +31,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     long getPlanRevision(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+        throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
      * fetch current metadata of the target plan (not the activity instance content)
@@ -42,7 +41,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     PlanMetadata getPlanMetadata(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+        throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
      * create an in-memory snapshot of the target plan's activity contents from aerie
@@ -53,7 +52,11 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
-    throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InstantiationException;
+        throws IOException,
+            NoSuchPlanException,
+            PlanServiceException,
+            InvalidJsonException,
+            InstantiationException;
 
     /**
      * confirms that the specified plan exists in the aerie database, throwing exception if not
@@ -61,9 +64,10 @@ public interface PlanService {
      * @param planId the target plan database identifier
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    //TODO: (defensive) should combine such checks into the mutations they are guarding, but not possible in graphql?
+    // TODO: (defensive) should combine such checks into the mutations they are guarding, but not
+    // possible in graphql?
     void ensurePlanExists(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+        throws IOException, NoSuchPlanException, PlanServiceException;
   }
 
   interface WriterRole {
@@ -77,12 +81,12 @@ public interface PlanService {
      * @return the database id of the newly created aerie plan container
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
-    Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
-        final PlanMetadata planMetadata,
-        final Plan plan,
-        final Map<SchedulingActivityDirective, GoalId> activityToGoalId
-    )
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>>
+        createNewPlanWithActivityDirectives(
+            final PlanMetadata planMetadata,
+            final Plan plan,
+            final Map<SchedulingActivityDirective, GoalId> activityToGoalId)
+            throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
      * create a new empty plan container based on specifications
@@ -96,8 +100,9 @@ public interface PlanService {
      * @return the database id of the newly created aerie plan container
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
-    PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    PlanId createEmptyPlan(
+        final String name, final long modelId, final Instant startTime, final Duration duration)
+        throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
      * synchronize the in-memory plan back over to aerie data stores via update operations
@@ -114,9 +119,11 @@ public interface PlanService {
         Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
         MerlinPlan initialPlan,
         Plan plan,
-        Map<SchedulingActivityDirective, GoalId> activityToGoalId
-    )
-    throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException;
+        Map<SchedulingActivityDirective, GoalId> activityToGoalId)
+        throws IOException,
+            NoSuchPlanException,
+            PlanServiceException,
+            NoSuchActivityInstanceException;
 
     /**
      * delete all the activity instances stored in the target plan container
@@ -127,7 +134,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     void clearPlanActivityDirectives(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+        throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
      * create activity instances in the target plan container for each activity in the input plan
@@ -144,9 +151,8 @@ public interface PlanService {
     Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
         final PlanId planId,
         final Plan plan,
-        final Map<SchedulingActivityDirective, GoalId> activityToGoalId
-    )
-    throws IOException, NoSuchPlanException, PlanServiceException;
+        final Map<SchedulingActivityDirective, GoalId> activityToGoalId)
+        throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
      * Stores the simulation results produced during scheduling
@@ -159,8 +165,12 @@ public interface PlanService {
      * @throws PlanServiceException
      * @throws IOException
      */
-   DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResults results,
-                                    final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws PlanServiceException, IOException;
+    DatasetId storeSimulationResults(
+        final PlanMetadata planMetadata,
+        final SimulationResults results,
+        final Map<ActivityDirectiveId, ActivityDirectiveId>
+            simulationActivityDirectiveIdToMerlinActivityDirectiveId)
+        throws PlanServiceException, IOException;
   }
 
   interface OwnerRole extends ReaderRole, WriterRole {}

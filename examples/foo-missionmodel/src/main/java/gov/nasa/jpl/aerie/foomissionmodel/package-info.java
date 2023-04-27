@@ -1,10 +1,7 @@
 @MissionModel(model = Mission.class)
-
 @WithConfiguration(Configuration.class)
-
 @WithMappers(BasicValueMappers.class)
 @WithMappers(FooValueMappers.class)
-
 @WithActivityType(BasicActivity.class)
 @WithActivityType(FooActivity.class)
 @WithActivityType(BarActivity.class)
@@ -15,10 +12,8 @@
 @WithActivityType(BasicFooActivity.class)
 @WithActivityType(ZeroDurationUncontrollableActivity.class)
 @WithActivityType(DaemonCheckerActivity.class)
-
 @WithActivityType(DecompositionTestActivities.ParentActivity.class)
 @WithActivityType(DecompositionTestActivities.ChildActivity.class)
-
 package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;

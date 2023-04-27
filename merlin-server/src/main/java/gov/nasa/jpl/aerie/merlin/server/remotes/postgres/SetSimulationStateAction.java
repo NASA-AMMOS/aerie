@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class SetSimulationStateAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
         update simulation_dataset
           set
             status = ?,
@@ -22,15 +22,17 @@ import java.sql.SQLException;
   }
 
   public void apply(final long datasetId, final SimulationStateRecord state)
-  throws SQLException, NoSuchSimulationDatasetException
-  {
+      throws SQLException, NoSuchSimulationDatasetException {
     this.statement.setString(1, state.status().label);
     PreparedStatements.setFailureReason(this.statement, 2, state.reason().orElse(null));
     this.statement.setLong(3, datasetId);
 
     final var count = this.statement.executeUpdate();
     if (count < 1) throw new NoSuchSimulationDatasetException(datasetId);
-    if (count > 1) throw new Error("More than one row affected by dataset update by primary key. Is the database corrupted?");
+    if (count > 1)
+      throw new Error(
+          "More than one row affected by dataset update by primary key. Is the database"
+              + " corrupted?");
   }
 
   @Override

@@ -7,8 +7,6 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-import java.util.Map;
-
 /**
  * filter in intervals if constraint expression @expr is ever violated during it
  */
@@ -21,7 +19,9 @@ public class FilterEverViolated extends FilterFunctional {
   }
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
-    return !(expr.evaluate(simulationResults, range, new EvaluationEnvironment()).equals(new Windows(range, true)));
+  public boolean shouldKeep(
+      final SimulationResults simulationResults, final Plan plan, final Interval range) {
+    return !(expr.evaluate(simulationResults, range, new EvaluationEnvironment())
+        .equals(new Windows(range, true)));
   }
 }

@@ -5,15 +5,13 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-import java.util.Optional;
-
 public abstract class FilterFunctional implements TimeWindowsFilter {
 
-
   @Override
-  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
+  public Windows filter(
+      final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Windows ret = windows;
-    for (final var interval: windows.iterateEqualTo(true)) {
+    for (final var interval : windows.iterateEqualTo(true)) {
       if (!shouldKeep(simulationResults, plan, interval)) {
         ret = ret.set(interval, false);
       }
@@ -21,6 +19,6 @@ public abstract class FilterFunctional implements TimeWindowsFilter {
     return ret;
   }
 
-
-  public abstract boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range);
+  public abstract boolean shouldKeep(
+      final SimulationResults simulationResults, final Plan plan, final Interval range);
 }

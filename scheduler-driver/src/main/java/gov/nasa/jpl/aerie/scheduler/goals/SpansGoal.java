@@ -4,8 +4,6 @@ import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.RelativeActivityTemplate;
 
-import java.util.Map;
-
 /**
  * Describes the desired relation between activities and a set of Spans computed from simulation results.
  *
@@ -59,8 +57,7 @@ public class SpansGoal {
             "Creating spans goal requires non-null \"spansExpression\"");
       }
       if (spanAlias == null) {
-        throw new IllegalArgumentException(
-            "Creating spans goal requires non-null \"spanAlias\"");
+        throw new IllegalArgumentException("Creating spans goal requires non-null \"spanAlias\"");
       }
       if (relativeActivity == null) {
         throw new IllegalArgumentException(
@@ -75,5 +72,5 @@ public class SpansGoal {
     }
   }
 
-  private SpansGoal() { }
+  private SpansGoal() {}
 }

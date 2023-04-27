@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.framework.Result;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-
 import java.util.function.Function;
 
 public final class ByteValueMapper implements ValueMapper<Byte> {
@@ -18,7 +17,8 @@ public final class ByteValueMapper implements ValueMapper<Byte> {
     return serializedValue
         .asInt()
         .map((Function<Long, Result<Long, String>>) Result::success)
-        .orElseGet(() -> Result.failure("Expected integral number, got " + serializedValue.toString()))
+        .orElseGet(
+            () -> Result.failure("Expected integral number, got " + serializedValue.toString()))
         .match(
             (Long x) -> {
               final var y = x.byteValue();
@@ -28,8 +28,7 @@ public final class ByteValueMapper implements ValueMapper<Byte> {
                 return Result.success(y);
               }
             },
-            Result::failure
-        );
+            Result::failure);
   }
 
   @Override

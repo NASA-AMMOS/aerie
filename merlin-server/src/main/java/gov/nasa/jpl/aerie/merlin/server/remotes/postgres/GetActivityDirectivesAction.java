@@ -1,18 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetActivityDirectivesAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     select
       a.id,
       a.type,
@@ -42,10 +42,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
                 results.getString("type"),
                 results.getLong("start_offset_in_micros"),
                 getJsonColumn(results, "arguments", activityArgumentsP)
-                    .getSuccessOrThrow($ -> new Error("Corrupt activity arguments cannot be parsed: " + $.reason())),
-                (Integer)results.getObject("anchor_id"),
-                results.getBoolean("anchored_to_start"))
-        );
+                    .getSuccessOrThrow(
+                        $ ->
+                            new Error(
+                                "Corrupt activity arguments cannot be parsed: " + $.reason())),
+                (Integer) results.getObject("anchor_id"),
+                results.getBoolean("anchored_to_start")));
       }
     }
 

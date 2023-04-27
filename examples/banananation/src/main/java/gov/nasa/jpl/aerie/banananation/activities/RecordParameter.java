@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.List;
 import java.util.Map;
 
@@ -80,21 +79,17 @@ public record RecordParameter<T>(
 
     // Complex Parameters
     Map<Integer, List<String>> mappyBoi,
-
     int[][] doublePrimIntArray,
-
     List<Integer>[][] intListArrayArray,
-
     List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious,
-
     Nested nested,
-
-    T genericParameter
-)
-{
-  public enum Tenum { A, B, C }
+    T genericParameter) {
+  public enum Tenum {
+    A,
+    B,
+    C
+  }
 
   @AutoValueMapper.Record
-  public record Nested(String a, Map<Integer, Character> b) {
-  }
+  public record Nested(String a, Map<Integer, Character> b) {}
 }

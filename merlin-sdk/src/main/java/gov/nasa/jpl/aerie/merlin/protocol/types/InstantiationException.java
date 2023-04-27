@@ -17,18 +17,19 @@ public final class InstantiationException extends Exception {
       final List<ExtraneousArgument> extraneousArguments,
       final List<UnconstructableArgument> unconstructableArguments,
       final List<MissingArgument> missingArguments,
-      final List<ValidArgument> validArguments)
-  {
-    super(("Invalid arguments for input type \"%s\": "+
-          "extraneous arguments: %s, "+
-          "unconstructable arguments: %s, "+
-          "missing arguments: %s, "+
-          "valid arguments: %s"
-          ).formatted(containerName,
-                      extraneousArguments,
-                      unconstructableArguments,
-                      missingArguments,
-                      validArguments));
+      final List<ValidArgument> validArguments) {
+    super(
+        ("Invalid arguments for input type \"%s\": "
+                + "extraneous arguments: %s, "
+                + "unconstructable arguments: %s, "
+                + "missing arguments: %s, "
+                + "valid arguments: %s")
+            .formatted(
+                containerName,
+                extraneousArguments,
+                unconstructableArguments,
+                missingArguments,
+                validArguments));
 
     this.containerName = containerName;
     this.extraneousArguments = Collections.unmodifiableList(extraneousArguments);
@@ -37,13 +38,13 @@ public final class InstantiationException extends Exception {
     this.validArguments = Collections.unmodifiableList(validArguments);
   }
 
-  public record ExtraneousArgument(String parameterName) { }
+  public record ExtraneousArgument(String parameterName) {}
 
-  public record UnconstructableArgument(String parameterName, String failure) { }
+  public record UnconstructableArgument(String parameterName, String failure) {}
 
-  public record MissingArgument(String parameterName, ValueSchema schema) { } // TODO remove schema
+  public record MissingArgument(String parameterName, ValueSchema schema) {} // TODO remove schema
 
-  public record ValidArgument(String parameterName, SerializedValue serializedValue) { }
+  public record ValidArgument(String parameterName, SerializedValue serializedValue) {}
 
   public static final class Builder {
 
@@ -72,17 +73,16 @@ public final class InstantiationException extends Exception {
       return this;
     }
 
-    public Builder withValidArgument(final String parameterName, final SerializedValue serializedValue) {
+    public Builder withValidArgument(
+        final String parameterName, final SerializedValue serializedValue) {
       validArguments.add(new ValidArgument(parameterName, serializedValue));
       return this;
     }
 
-    public void throwIfAny() throws InstantiationException
-    {
-      if (!(extraneousArguments.isEmpty() &&
-            unconstructableArguments.isEmpty() &&
-            missingArguments.isEmpty()))
-      {
+    public void throwIfAny() throws InstantiationException {
+      if (!(extraneousArguments.isEmpty()
+          && unconstructableArguments.isEmpty()
+          && missingArguments.isEmpty())) {
         throw this.build();
       }
     }

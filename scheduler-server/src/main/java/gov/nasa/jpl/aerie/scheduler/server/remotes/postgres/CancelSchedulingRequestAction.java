@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class CancelSchedulingRequestAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     update scheduling_request
       set
         canceled = true
@@ -22,16 +22,17 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(
-      final long specificationId,
-      final long specificationRevision
-  ) throws SQLException {
+  public void apply(final long specificationId, final long specificationRevision)
+      throws SQLException {
     this.statement.setLong(1, specificationId);
     this.statement.setLong(2, specificationRevision);
 
     final var count = this.statement.executeUpdate();
     if (count < 1) throw new FailedUpdateException("scheduling_request");
-    if (count > 1) throw new Error("More than one row affected by scheduling_request update by primary key. Is the database corrupted?");
+    if (count > 1)
+      throw new Error(
+          "More than one row affected by scheduling_request update by primary key. Is the database"
+              + " corrupted?");
   }
 
   @Override

@@ -25,8 +25,7 @@ public abstract class Conflict {
    */
   public Conflict(Goal goal, EvaluationEnvironment evaluationEnvironment) {
     if (goal == null) {
-      throw new IllegalArgumentException(
-          "creating conflict from null goal");
+      throw new IllegalArgumentException("creating conflict from null goal");
     }
     this.evaluationEnvironment = evaluationEnvironment;
     this.goal = goal;
@@ -41,7 +40,7 @@ public abstract class Conflict {
     return goal;
   }
 
-  public EvaluationEnvironment getEvaluationEnvironment(){
+  public EvaluationEnvironment getEvaluationEnvironment() {
     return evaluationEnvironment;
   }
 
@@ -65,5 +64,4 @@ public abstract class Conflict {
    * the evaluation environment is used to pass information to the scheduler
    */
   private final EvaluationEnvironment evaluationEnvironment;
-
 }

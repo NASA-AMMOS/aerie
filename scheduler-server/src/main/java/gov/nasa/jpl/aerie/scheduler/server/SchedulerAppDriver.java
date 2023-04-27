@@ -1,13 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
-import java.net.URI;
-import java.nio.file.Path;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
-import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
@@ -24,6 +21,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
+import java.net.URI;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.LowResourceMonitor;
 import org.eclipse.jetty.server.Server;
@@ -49,50 +47,55 @@ public final class SchedulerAppDriver {
    *     [...] all arguments are ignored
    */
   public static void main(final String[] args) {
-    //load the service configuration options
+    // load the service configuration options
     final var config = loadConfiguration();
 
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
 
     final var stores = loadStores(config);
 
-    //create objects in each service abstraction layer (mirroring MerlinApp)
+    // create objects in each service abstraction layer (mirroring MerlinApp)
     final var specificationService = new LocalSpecificationService(stores.specifications());
     final var schedulerService = new CachedSchedulerService(stores.results());
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
     final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
 
-    //establish bindings to the service layers
-    final var bindings = new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);
+    // establish bindings to the service layers
+    final var bindings =
+        new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);
 
-    //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
+    // default javalin jetty server has a QueuedThreadPool with maxThreads to 250
     final var server = new Server(new QueuedThreadPool(250));
     final var connector = new ServerConnector(server);
     connector.setPort(config.httpPort());
-    //set idle timeout to be equal to the idle timeout of hasura
+    // set idle timeout to be equal to the idle timeout of hasura
     connector.setIdleTimeout(180000);
     server.addBean(new LowResourceMonitor(server));
     server.insertHandler(new StatisticsHandler());
-    server.setConnectors(new Connector[]{connector});
-    //configure the http server (the consumer lambda overlays additional config on the input javalinConfig)
-    final var javalin = Javalin.create(javalinConfig -> {
-      javalinConfig.showJavalinBanner = false;
-      if (config.enableJavalinDevLogging()) javalinConfig.plugins.enableDevLogging();
-      javalinConfig.plugins.enableCors(cors -> cors.add(it -> it.anyHost())); //TODO: probably don't want literally any cross-origin request...
-      javalinConfig.plugins.register(bindings);
-      javalinConfig.jetty.server(() -> server);
-      //TODO: exception handling (shxould elevate/reuse from MerlinApp for consistency?)
-    });
+    server.setConnectors(new Connector[] {connector});
+    // configure the http server (the consumer lambda overlays additional config on the input
+    // javalinConfig)
+    final var javalin =
+        Javalin.create(
+            javalinConfig -> {
+              javalinConfig.showJavalinBanner = false;
+              if (config.enableJavalinDevLogging()) javalinConfig.plugins.enableDevLogging();
+              javalinConfig.plugins.enableCors(
+                  cors -> cors.add(it -> it.anyHost())); // TODO: probably don't want literally any
+              // cross-origin request...
+              javalinConfig.plugins.register(bindings);
+              javalinConfig.jetty.server(() -> server);
+              // TODO: exception handling (shxould elevate/reuse from MerlinApp for consistency?)
+            });
 
-    //start the http server and handle requests as configured above
+    // start the http server and handle requests as configured above
     javalin.start(config.httpPort());
   }
 
-  private record Stores(SpecificationRepository specifications, ResultsCellRepository results) { }
+  private record Stores(SpecificationRepository specifications, ResultsCellRepository results) {}
 
-  private static Stores loadStores(
-      final AppConfiguration config) {
+  private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
       final var pgDataSource = new PGDataSource();
@@ -147,12 +150,12 @@ public final class SchedulerAppDriver {
     return new AppConfiguration(
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27185")),
         logger.isDebugEnabled(),
-        new PostgresStore(getEnv("SCHEDULER_DB_SERVER", "postgres"),
-                          getEnv("SCHEDULER_DB_USER", ""),
-                          Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
-                          getEnv("SCHEDULER_DB_PASSWORD", ""),
-                          getEnv("SCHEDULER_DB", "aerie_scheduler")),
-        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql"))
-    );
+        new PostgresStore(
+            getEnv("SCHEDULER_DB_SERVER", "postgres"),
+            getEnv("SCHEDULER_DB_USER", ""),
+            Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
+            getEnv("SCHEDULER_DB_PASSWORD", ""),
+            getEnv("SCHEDULER_DB", "aerie_scheduler")),
+        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")));
   }
 }

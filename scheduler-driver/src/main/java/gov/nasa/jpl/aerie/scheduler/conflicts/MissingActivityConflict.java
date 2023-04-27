@@ -16,10 +16,7 @@ public abstract class MissingActivityConflict extends Conflict {
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    */
-  public MissingActivityConflict(
-      ActivityExistentialGoal goal,
-      EvaluationEnvironment environment)
-  {
+  public MissingActivityConflict(ActivityExistentialGoal goal, EvaluationEnvironment environment) {
     super(goal, environment);
   }
 
@@ -41,6 +38,4 @@ public abstract class MissingActivityConflict extends Conflict {
    */
   @Override
   public abstract Windows getTemporalContext();
-
-
 }

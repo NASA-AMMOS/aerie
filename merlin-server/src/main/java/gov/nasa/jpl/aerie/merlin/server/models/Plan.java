@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -41,9 +40,7 @@ public final class Plan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final Map<ActivityDirectiveId, ActivityDirective> activityDirectives
-  )
-  {
+      final Map<ActivityDirectiveId, ActivityDirective> activityDirectives) {
     this.name = name;
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
@@ -62,8 +59,7 @@ public final class Plan {
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
       final Map<String, SerializedValue> configuration,
       final Timestamp simulationStartTimestamp,
-      final Timestamp simulationEndTimestamp
-  ) {
+      final Timestamp simulationEndTimestamp) {
     this.name = name;
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
@@ -80,16 +76,14 @@ public final class Plan {
       return false;
     }
 
-    return
-        (Objects.equals(this.name, other.name)
-         && Objects.equals(this.missionModelId, other.missionModelId)
-         && Objects.equals(this.startTimestamp, other.startTimestamp)
-         && Objects.equals(this.endTimestamp, other.endTimestamp)
-         && Objects.equals(this.activityDirectives, other.activityDirectives)
-         && Objects.equals(this.configuration, other.configuration)
-         && Objects.equals(this.simulationStartTimestamp, other.simulationStartTimestamp)
-         && Objects.equals(this.simulationEndTimestamp, other.simulationEndTimestamp)
-        );
+    return (Objects.equals(this.name, other.name)
+        && Objects.equals(this.missionModelId, other.missionModelId)
+        && Objects.equals(this.startTimestamp, other.startTimestamp)
+        && Objects.equals(this.endTimestamp, other.endTimestamp)
+        && Objects.equals(this.activityDirectives, other.activityDirectives)
+        && Objects.equals(this.configuration, other.configuration)
+        && Objects.equals(this.simulationStartTimestamp, other.simulationStartTimestamp)
+        && Objects.equals(this.simulationEndTimestamp, other.simulationEndTimestamp));
   }
 
   @Override
@@ -102,7 +96,6 @@ public final class Plan {
         activityDirectives,
         configuration,
         simulationStartTimestamp,
-        simulationEndTimestamp
-    );
+        simulationEndTimestamp);
   }
 }

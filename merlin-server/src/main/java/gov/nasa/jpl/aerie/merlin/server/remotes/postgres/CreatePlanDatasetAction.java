@@ -1,17 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class CreatePlanDatasetAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       insert into plan_dataset (plan_id, offset_from_plan_start)
       values (?, ?::timestamptz - ?::timestamptz)
       returning dataset_id
@@ -24,10 +24,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
   }
 
   public PlanDatasetRecord apply(
-      final long planId,
-      final Timestamp planStart,
-      final Timestamp datasetStart
-  ) throws SQLException {
+      final long planId, final Timestamp planStart, final Timestamp datasetStart)
+      throws SQLException {
     final var offsetFromPlanStart = Duration.of(planStart.microsUntil(datasetStart), MICROSECONDS);
 
     this.statement.setLong(1, planId);

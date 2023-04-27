@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
@@ -12,13 +12,12 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class InMemoryPlanRepository implements PlanRepository {
   private final Map<PlanId, Pair<Long, Plan>> plans = new HashMap<>();
@@ -27,38 +26,35 @@ public final class InMemoryPlanRepository implements PlanRepository {
 
   @Override
   public Map<PlanId, Plan> getAllPlans() {
-    return this.plans
-        .entrySet()
-        .stream()
-        .collect(Collectors.toMap(
-            entry -> entry.getKey(),
-            entry -> new Plan(entry.getValue().getRight())));
+    return this.plans.entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                entry -> entry.getKey(), entry -> new Plan(entry.getValue().getRight())));
   }
 
   @Override
   public Plan getPlanForValidation(final PlanId planId) throws NoSuchPlanException {
-    final Plan plan = Optional
-        .ofNullable(this.plans.get(planId))
-        .orElseThrow(() -> new NoSuchPlanException(planId))
-        .getRight();
+    final Plan plan =
+        Optional.ofNullable(this.plans.get(planId))
+            .orElseThrow(() -> new NoSuchPlanException(planId))
+            .getRight();
 
     return new Plan(plan);
   }
 
   @Override
   public Plan getPlanForSimulation(final PlanId planId) throws NoSuchPlanException {
-    final Plan plan = Optional
-        .ofNullable(this.plans.get(planId))
-        .orElseThrow(() -> new NoSuchPlanException(planId))
-        .getRight();
+    final Plan plan =
+        Optional.ofNullable(this.plans.get(planId))
+            .orElseThrow(() -> new NoSuchPlanException(planId))
+            .getRight();
 
     return new Plan(plan);
   }
 
   @Override
   public long getPlanRevision(final PlanId planId) throws NoSuchPlanException {
-    return Optional
-        .ofNullable(this.plans.get(planId))
+    return Optional.ofNullable(this.plans.get(planId))
         .orElseThrow(() -> new NoSuchPlanException(planId))
         .getLeft();
   }
@@ -66,8 +62,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   @Override
   public InMemoryRevisionData getPlanRevisionData(final PlanId planId) throws NoSuchPlanException {
     return new InMemoryRevisionData(
-        Optional
-            .ofNullable(this.plans.get(planId))
+        Optional.ofNullable(this.plans.get(planId))
             .orElseThrow(() -> new NoSuchPlanException(planId))
             .getLeft());
   }
@@ -76,7 +71,9 @@ public final class InMemoryPlanRepository implements PlanRepository {
     final PlanId planId = new PlanId(this.nextPlanId++);
     final Plan plan = new Plan(other);
     final List<ActivityDirectiveId> activityIds =
-        other.activityDirectives != null ? List.copyOf(plan.activityDirectives.keySet()) : List.of();
+        other.activityDirectives != null
+            ? List.copyOf(plan.activityDirectives.keySet())
+            : List.of();
     if (other.activityDirectives == null) plan.activityDirectives = new HashMap<>();
 
     this.plans.put(planId, Pair.of(0L, plan));
@@ -92,7 +89,8 @@ public final class InMemoryPlanRepository implements PlanRepository {
     this.plans.remove(planId);
   }
 
-  public ActivityDirectiveId createActivity(final PlanId planId, final ActivityDirective activity) throws NoSuchPlanException {
+  public ActivityDirectiveId createActivity(final PlanId planId, final ActivityDirective activity)
+      throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
@@ -123,14 +121,15 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
-  {
+  public long addExternalDataset(
+      final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet) {
     return 0;
   }
 
   @Override
   public void extendExternalDataset(final DatasetId datasetId, final ProfileSet profileSet) {
-    throw new UnsupportedOperationException("InMemoryPlanRepository does not store external datasets, so they cannot be extended");
+    throw new UnsupportedOperationException(
+        "InMemoryPlanRepository does not store external datasets, so they cannot be extended");
   }
 
   @Override

@@ -48,7 +48,8 @@ public interface Convert<S, T> {
    * @param to
    *   an infallible transformation to the source type from the target type
    */
-  static <S, T> Convert<S, T> between(final Function<S, ? extends T> from, final Function<? super T, S> to) {
+  static <S, T> Convert<S, T> between(
+      final Function<S, ? extends T> from, final Function<? super T, S> to) {
     Objects.requireNonNull(from);
     Objects.requireNonNull(to);
 
@@ -92,9 +93,7 @@ public interface Convert<S, T> {
   default <X> Convert<S, X> compose(final Convert<T, X> other) {
     Objects.requireNonNull(other);
 
-    return Convert.between(
-        $ -> other.from(this.from($)),
-        $ -> this.to(other.to($)));
+    return Convert.between($ -> other.from(this.from($)), $ -> this.to(other.to($)));
   }
 
   /**

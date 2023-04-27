@@ -1,5 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -30,39 +37,30 @@ import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
-import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingDSLCompilationServiceTests {
   private static final PlanId PLAN_ID = new PlanId(1L);
-  private static final MissionModelService missionModelService = new MissionModelService() {
-    @Override
-    public MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
-    {
-      return MISSION_MODEL_TYPES;
-    }
+  private static final MissionModelService missionModelService =
+      new MissionModelService() {
+        @Override
+        public MissionModelTypes getMissionModelTypes(final PlanId missionModelId) {
+          return MISSION_MODEL_TYPES;
+        }
 
-    @Override
-    public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-    {
-      return MISSION_MODEL_TYPES;
-    }
-  };
+        @Override
+        public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId) {
+          return MISSION_MODEL_TYPES;
+        }
+      };
   SchedulingDSLCompilationService schedulingDSLCompilationService;
 
   @BeforeAll
@@ -76,89 +74,133 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void  testSchedulingDSL_mutex()
-  {
-    final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_mutex() {
+    final var result =
+        schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+            missionModelService,
+            PLAN_ID,
+            """
                   export default function myCondition() {
                     return GlobalSchedulingCondition.mutex([ActivityTypes.SampleActivity2], [ActivityTypes.SampleActivity1])
                   }
               """);
-    final var expectedGoalDefinition = new SchedulingDSL.ConditionSpecifier.AndCondition(List.of(
-        new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
-            new Not(
-                new Or(
-                    new WindowsFromSpans(
-                        new ForEachActivitySpans(
-                            "SampleActivity1",
-                            "span activity alias 0",
-                            new ActivitySpan("span activity alias 0"))
-                    )
-                )
-            ),
-            List.of("SampleActivity2")
-        ),
-        new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
-            new Not(
-                new Or(
-                    new WindowsFromSpans(
-                        new ForEachActivitySpans(
-                            "SampleActivity2",
-                            "span activity alias 1",
-                            new ActivitySpan("span activity alias 1"))
-                    )
-                )
-            ),
-            List.of("SampleActivity1")
-        )
-    ));
+    final var expectedGoalDefinition =
+        new SchedulingDSL.ConditionSpecifier.AndCondition(
+            List.of(
+                new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
+                    new Not(
+                        new Or(
+                            new WindowsFromSpans(
+                                new ForEachActivitySpans(
+                                    "SampleActivity1",
+                                    "span activity alias 0",
+                                    new ActivitySpan("span activity alias 0"))))),
+                    List.of("SampleActivity2")),
+                new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
+                    new Not(
+                        new Or(
+                            new WindowsFromSpans(
+                                new ForEachActivitySpans(
+                                    "SampleActivity2",
+                                    "span activity alias 1",
+                                    new ActivitySpan("span activity alias 1"))))),
+                    List.of("SampleActivity1"))));
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.ConditionSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.ConditionSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   private static StructExpressionAt getSampleActivity1Parameters() {
-    return new StructExpressionAt(Map.ofEntries(
-        Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
-        Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
-                      Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
-                      Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
-                                                                                                        new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2 )))))))))))
-                  ))
-        ),
-        Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
-    ));
+    return new StructExpressionAt(
+        Map.ofEntries(
+            Map.entry(
+                "variant",
+                new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
+            Map.entry(
+                "fancy",
+                new ProfileExpression<>(
+                    new StructExpressionAt(
+                        Map.ofEntries(
+                            Map.entry(
+                                "subfield1",
+                                new ProfileExpression<>(
+                                    new DiscreteValue(SerializedValue.of("value1")))),
+                            Map.entry(
+                                "subfield2",
+                                new ProfileExpression<>(
+                                    new ListExpressionAt(
+                                        List.of(
+                                            new ProfileExpression<>(
+                                                new StructExpressionAt(
+                                                    Map.of(
+                                                        "subsubfield1",
+                                                        new ProfileExpression<>(
+                                                            new DiscreteValue(
+                                                                SerializedValue.of(2)))))))))))))),
+            Map.entry(
+                "duration",
+                new ProfileExpression<>(
+                    new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))));
   }
 
   private static StructExpressionAt getSampleActivity1ParametersWithDurationReference() {
-    return new StructExpressionAt(Map.ofEntries(
-        Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
-        Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
-                      Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
-                      Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
-                                                                                                                                                        new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2 )))))))))))
-                  ))
-        ),
-        Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new IntervalDuration(new IntervalAlias("coexistence interval alias 0")))))
-    ));
+    return new StructExpressionAt(
+        Map.ofEntries(
+            Map.entry(
+                "variant",
+                new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
+            Map.entry(
+                "fancy",
+                new ProfileExpression<>(
+                    new StructExpressionAt(
+                        Map.ofEntries(
+                            Map.entry(
+                                "subfield1",
+                                new ProfileExpression<>(
+                                    new DiscreteValue(SerializedValue.of("value1")))),
+                            Map.entry(
+                                "subfield2",
+                                new ProfileExpression<>(
+                                    new ListExpressionAt(
+                                        List.of(
+                                            new ProfileExpression<>(
+                                                new StructExpressionAt(
+                                                    Map.of(
+                                                        "subsubfield1",
+                                                        new ProfileExpression<>(
+                                                            new DiscreteValue(
+                                                                SerializedValue.of(2)))))))))))))),
+            Map.entry(
+                "duration",
+                new ProfileExpression<>(
+                    new DiscreteProfileFromDuration(
+                        new IntervalDuration(
+                            new IntervalAlias("coexistence interval alias 0")))))));
   }
 
   private static StructExpressionAt getSampleActivity2PresetParameters() {
-    return new StructExpressionAt(Map.of(
-        "quantity", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))
-    ));
+    return new StructExpressionAt(
+        Map.of("quantity", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))));
   }
 
   @Test
-  void  testSchedulingDSL_basic()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_basic() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivity1({
@@ -170,27 +212,34 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity1",
-            getSampleActivity1Parameters()
-        ),
-        Optional.empty(),
-        HOUR,
-        false);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void testSchedulingDSL_recurrence_activityFinder()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_recurrence_activityFinder() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityFinder: ActivityExpression.build(ActivityTypes.SampleActivity1, {variant:'option2'}),
@@ -203,29 +252,42 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity1",
-            getSampleActivity1Parameters()
-        ),
-        Optional.of(new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity1",Optional.of(
-            new StructExpressionAt(Map.of("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))))
-        ))),
-        HOUR,
-        false);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+            Optional.of(
+                new SchedulingDSL.ConstraintExpression.ActivityExpression(
+                    "SampleActivity1",
+                    Optional.of(
+                        new StructExpressionAt(
+                            Map.of(
+                                "variant",
+                                new ProfileExpression<>(
+                                    new DiscreteValue(SerializedValue.of("option2")))))))),
+            HOUR,
+            false);
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void  testSchedulingDSL_partial()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_partial() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivity1({
@@ -237,27 +299,34 @@ class SchedulingDSLCompilationServiceTests {
                   }).shouldRollbackIfUnsatisfied(true)
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity1",
-            getSampleActivity1Parameters()
-        ),
-        Optional.empty(),
-        HOUR,
-        true);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+            Optional.empty(),
+            HOUR,
+            true);
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void testSchedulingDSL_helper_function()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_helper_function() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return myHelper(ActivityTemplates.SampleActivity1({
                     variant: 'option2',
@@ -272,27 +341,36 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity1",
-            getSampleActivity1Parameters()
-        ),
-        Optional.empty(),
-        HOUR,
-        false);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testSchedulingDSL_variable_not_defined() {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> actualErrors;
-    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier>) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-          PLAN_ID, """
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        actualErrors;
+    actualErrors =
+        (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+                SchedulingDSL.GoalSpecifier>)
+            schedulingDSLCompilationService.compileSchedulingGoalDSL(
+                missionModelService,
+                PLAN_ID,
+                """
                 export default function myGoal() {
                   const x = 4 - 2
                   return myHelper(ActivityTemplates.SampleActivity1({
@@ -309,18 +387,17 @@ class SchedulingDSLCompilationServiceTests {
                 }
               """);
     assertTrue(
-        actualErrors.errors()
-                    .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2304 Cannot find name 'x'."))
-    );
+        actualErrors.errors().stream()
+            .anyMatch(e -> e.message().contains("TypeError: TS2304 Cannot find name 'x'.")));
   }
 
   @Test
-  void testSchedulingDSL_applyWhen()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_applyWhen() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
         export default function myGoal() {
           return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivity1({
@@ -332,52 +409,61 @@ class SchedulingDSLCompilationServiceTests {
                   }).applyWhen(Real.Resource(Resources["/sample/resource/1"]).greaterThan(2.0))
         }
         """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalApplyWhen(
-        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-            new SchedulingDSL.ActivityTemplate(
-                "SampleActivity1",
-                getSampleActivity1Parameters()
-            ),
-            Optional.empty(),
-            HOUR,
-            false
-        ),
-        new GreaterThan(
-            new RealResource("/sample/resource/1"),
-            new RealValue(2.0)
-        )
-    );
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.GoalApplyWhen(
+            new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+                new SchedulingDSL.ActivityTemplate(
+                    "SampleActivity1", getSampleActivity1Parameters()),
+                Optional.empty(),
+                HOUR,
+                false),
+            new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(2.0)));
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testSchedulingDSL_wrong_return_type() {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> actualErrors;
-    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier>) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-          PLAN_ID, """
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        actualErrors;
+    actualErrors =
+        (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+                SchedulingDSL.GoalSpecifier>)
+            schedulingDSLCompilationService.compileSchedulingGoalDSL(
+                missionModelService,
+                PLAN_ID,
+                """
                 export default function myGoal() {
                   return 5
                 }
               """);
     assertTrue(
-        actualErrors.errors()
-                    .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'number'."))
-    );
+        actualErrors.errors().stream()
+            .anyMatch(
+                e ->
+                    e.message()
+                        .contains(
+                            "TypeError: TS2322 Incorrect return type. Expected: 'Goal |"
+                                + " Promise<Goal>', Actual: 'number'.")));
   }
 
   @Test
   void testSchedulingDSL_temporal() {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult<?> result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID,
-        """
+    result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                     export default () => Goal.ActivityRecurrenceGoal({
                       activityTemplate: ActivityTemplates.SampleActivity1({
                         variant: 'option2',
@@ -387,29 +473,30 @@ class SchedulingDSLCompilationServiceTests {
                       interval:  Temporal.Duration.from({days: 1})
                     })
                     """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity1",
-            getSampleActivity1Parameters()
-        ),
-        Optional.empty(),
-        Duration.HOURS.times(24),
-        false
-    );
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+            Optional.empty(),
+            Duration.HOURS.times(24),
+            false);
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    } else if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }
   }
 
-
   @Test
   void testHugeGoal() {
-    // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    // This test is intended to create a Goal that is bigger than the node subprocess's standard
+    // input buffer
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivity1({
@@ -420,28 +507,33 @@ class SchedulingDSLCompilationServiceTests {
                     interval: Temporal.Duration.from({ hours: 1 })
                   })
                 }
-            """ + " ".repeat(9001));
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity1",
-            getSampleActivity1Parameters()
-        ),
-        Optional.empty(),
-        HOUR,
-        false
-    );
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+            """
+                + " ".repeat(9001));
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testCoexistenceGoalActivityExpression() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: (span) => ActivityTemplates.SampleActivity1({
@@ -455,31 +547,37 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
-              new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 getSampleActivity1Parameters()
-              ),
+              new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
               Optional.empty(),
               "coexistence activity alias 0",
-              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              new SchedulingDSL.ConstraintExpression.ActivityExpression(
+                  "SampleActivity2", Optional.empty()),
+              Optional.of(
+                  new SchedulingDSL.ActivityTimingConstraint(
+                      TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
-              false
-          ),
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+              false),
+          r.value());
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testCoexistenceGoalActivityFinder() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           export default function() {
             return Goal.CoexistenceGoal({
               activityFinder: ActivityExpression.build(ActivityTypes.SampleActivity1, {variant:'option2'}),
@@ -494,33 +592,45 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
-              new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 getSampleActivity1Parameters()
-              ),
-              Optional.of(new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity1", Optional.of(
-                  new StructExpressionAt(Map.of("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))))
-              ))),
+              new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
+              Optional.of(
+                  new SchedulingDSL.ConstraintExpression.ActivityExpression(
+                      "SampleActivity1",
+                      Optional.of(
+                          new StructExpressionAt(
+                              Map.of(
+                                  "variant",
+                                  new ProfileExpression<>(
+                                      new DiscreteValue(SerializedValue.of("option2")))))))),
               "coexistence activity alias 0",
-              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              new SchedulingDSL.ConstraintExpression.ActivityExpression(
+                  "SampleActivity2", Optional.empty()),
+              Optional.of(
+                  new SchedulingDSL.ActivityTimingConstraint(
+                      TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
-              false
-          ),
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+              false),
+          r.value());
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testCoexistenceGoalParameterReference() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: (anchorActivity) => ActivityTemplates.SampleActivity1({
@@ -534,40 +644,72 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
-              new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                   new StructExpressionAt(Map.ofEntries(
-                      Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
-                      Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
-                                    Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
-                                    Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
-                                                                                                                                                                      new ProfileExpression<>(new RealParameter("coexistence activity alias 0", "quantity"))))))))))
-                                ))
-                      ),
-                      Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
-                  ))
-              ),
+              new SchedulingDSL.ActivityTemplate(
+                  "SampleActivity1",
+                  new StructExpressionAt(
+                      Map.ofEntries(
+                          Map.entry(
+                              "variant",
+                              new ProfileExpression<>(
+                                  new DiscreteValue(SerializedValue.of("option2")))),
+                          Map.entry(
+                              "fancy",
+                              new ProfileExpression<>(
+                                  new StructExpressionAt(
+                                      Map.ofEntries(
+                                          Map.entry(
+                                              "subfield1",
+                                              new ProfileExpression<>(
+                                                  new DiscreteValue(SerializedValue.of("value1")))),
+                                          Map.entry(
+                                              "subfield2",
+                                              new ProfileExpression<>(
+                                                  new ListExpressionAt(
+                                                      List.of(
+                                                          new ProfileExpression<>(
+                                                              new StructExpressionAt(
+                                                                  Map.of(
+                                                                      "subsubfield1",
+                                                                      new ProfileExpression<>(
+                                                                          new RealParameter(
+                                                                              "coexistence activity"
+                                                                                  + " alias 0",
+                                                                              "quantity"))))))))))))),
+                          Map.entry(
+                              "duration",
+                              new ProfileExpression<>(
+                                  new DiscreteProfileFromDuration(
+                                      new DurationLiteral(Duration.of(1, HOUR)))))))),
               Optional.empty(),
               "coexistence activity alias 0",
-              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              new SchedulingDSL.ConstraintExpression.ActivityExpression(
+                  "SampleActivity2", Optional.empty()),
+              Optional.of(
+                  new SchedulingDSL.ActivityTimingConstraint(
+                      TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
-              false
-          ),
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+              false),
+          r.value());
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testCoexistenceGoalParameterReferenceValueAt() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: (anchorActivity) => ActivityTemplates.SampleActivity1({
@@ -581,41 +723,75 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
-              new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 new StructExpressionAt(Map.ofEntries(
-                                                     Map.entry("variant", new ProfileExpression<>(new ValueAt<>(new ProfileExpression<>(new DiscreteResource("/sample/resource/3")),new Starts<>(new ActivitySpan("coexistence activity alias 0"))))),
-                                                     Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
-                                                                   Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
-                                                                   Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
-                                                                                                                                                                                                     new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2)))))))))))
-                                                               ))
-                                                     ),
-                                                     Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
-                                                 ))
-              ),
+              new SchedulingDSL.ActivityTemplate(
+                  "SampleActivity1",
+                  new StructExpressionAt(
+                      Map.ofEntries(
+                          Map.entry(
+                              "variant",
+                              new ProfileExpression<>(
+                                  new ValueAt<>(
+                                      new ProfileExpression<>(
+                                          new DiscreteResource("/sample/resource/3")),
+                                      new Starts<>(
+                                          new ActivitySpan("coexistence activity alias 0"))))),
+                          Map.entry(
+                              "fancy",
+                              new ProfileExpression<>(
+                                  new StructExpressionAt(
+                                      Map.ofEntries(
+                                          Map.entry(
+                                              "subfield1",
+                                              new ProfileExpression<>(
+                                                  new DiscreteValue(SerializedValue.of("value1")))),
+                                          Map.entry(
+                                              "subfield2",
+                                              new ProfileExpression<>(
+                                                  new ListExpressionAt(
+                                                      List.of(
+                                                          new ProfileExpression<>(
+                                                              new StructExpressionAt(
+                                                                  Map.of(
+                                                                      "subsubfield1",
+                                                                      new ProfileExpression<>(
+                                                                          new DiscreteValue(
+                                                                              SerializedValue.of(
+                                                                                  2)))))))))))))),
+                          Map.entry(
+                              "duration",
+                              new ProfileExpression<>(
+                                  new DiscreteProfileFromDuration(
+                                      new DurationLiteral(Duration.of(1, HOUR)))))))),
               Optional.empty(),
               "coexistence activity alias 0",
-              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              new SchedulingDSL.ConstraintExpression.ActivityExpression(
+                  "SampleActivity2", Optional.empty()),
+              Optional.of(
+                  new SchedulingDSL.ActivityTimingConstraint(
+                      TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
-              false
-          ),
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+              false),
+          r.value());
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void strictTypeCheckingTest_astNode() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID,
-        """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           interface FakeGoal {
             and(...others: FakeGoal[]): FakeGoal;
             or(...others: FakeGoal[]): FakeGoal;
@@ -637,18 +813,28 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(1, r.errors().size());
-      assertTrue(r.errors().get(0).message().contains("Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'FakeGoal'."));
+      assertTrue(
+          r.errors()
+              .get(0)
+              .message()
+              .contains(
+                  "Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'FakeGoal'."));
     }
   }
 
   @Test
   void strictTypeCheckingTest_transition() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID,
-        """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: ActivityTemplates.SampleActivity1({
@@ -662,21 +848,26 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(1, r.errors().size());
       assertEquals(
-          "TypeError: TS2345 Argument of type 'string' is not assignable to parameter of type 'number'.",
-          r.errors().get(0).message()
-      );
+          "TypeError: TS2345 Argument of type 'string' is not assignable to parameter of type"
+              + " 'number'.",
+          r.errors().get(0).message());
     }
   }
 
   @Test
-  void testSchedulingDSL_emptyActivityCorrect()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_emptyActivityCorrect() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivityEmpty(),
@@ -684,28 +875,32 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivityEmpty",
-            new StructExpressionAt(Map.of())
-        ),
-        Optional.empty(),
-        HOUR,
-        false
-    );
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivityEmpty", new StructExpressionAt(Map.of())),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void testSchedulingDSL_emptyActivityBogus()
-  {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testSchedulingDSL_emptyActivityBogus() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivityEmpty({ fake: "bogus" }),
@@ -713,24 +908,27 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(1, r.errors().size());
       assertEquals(
-          "TypeError: TS2554 Expected 0 arguments, but got 1.",
-          r.errors().get(0).message()
-      );
-    }
-    else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+          "TypeError: TS2554 Expected 0 arguments, but got 1.", r.errors().get(0).message());
+    } else if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       fail(r.value().toString());
     }
   }
 
   @Test
   void testCoexistenceGoalStateConstraint() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID,
-        """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           const micro = (m: number) => Temporal.Duration.from({microseconds: m});
           export default function() {
             return Goal.CoexistenceGoal({
@@ -745,32 +943,39 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<?> r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<?> r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
-              new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 getSampleActivity1Parameters()
-              ),
+              new SchedulingDSL.ActivityTemplate("SampleActivity1", getSampleActivity1Parameters()),
               Optional.empty(),
               "coexistence interval alias 0",
-              new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
+              new SchedulingDSL.ConstraintExpression.WindowsExpression(
+                  new LongerThan(
+                      new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)),
+                      new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
+              Optional.of(
+                  new SchedulingDSL.ActivityTimingConstraint(
+                      TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty(),
-              false
-          ),
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+              false),
+          r.value());
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testCoexistenceGoalReferenceWindowDuration() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID,
-        """
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
           const micro = (m: number) => Temporal.Duration.from({microseconds: m});
           export default function() {
             return Goal.CoexistenceGoal({
@@ -785,54 +990,63 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<?> r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<?> r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
-              new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 getSampleActivity1ParametersWithDurationReference()
-              ),
+              new SchedulingDSL.ActivityTemplate(
+                  "SampleActivity1", getSampleActivity1ParametersWithDurationReference()),
               Optional.empty(),
               "coexistence interval alias 0",
-              new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
+              new SchedulingDSL.ConstraintExpression.WindowsExpression(
+                  new LongerThan(
+                      new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)),
+                      new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
+              Optional.of(
+                  new SchedulingDSL.ActivityTimingConstraint(
+                      TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty(),
-              false
-          ),
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+              false),
+          r.value());
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testWindowsExpression() {
-    final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
-        missionModelService,
-        PLAN_ID,
-        """
+    final var result =
+        schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+            missionModelService,
+            PLAN_ID,
+            """
           export default function() {
             return GlobalSchedulingCondition.scheduleOnlyWhen([], Real.Resource("/sample/resource/1").lessThan(5.0));
           }
         """);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
-              new LessThan(
-                  new RealResource("/sample/resource/1"),
-                  new RealValue(5.0)),
-              List.of()),
+              new LessThan(new RealResource("/sample/resource/1"), new RealValue(5.0)), List.of()),
           r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    } else if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void testAndGoal(){
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testAndGoal() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivityEmpty(),
@@ -845,39 +1059,38 @@ class SchedulingDSLCompilationServiceTests {
                   )
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalAnd(List.of(
-        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-          new SchedulingDSL.ActivityTemplate(
-              "SampleActivityEmpty",
-              new StructExpressionAt(Map.of())
-          ),
-          Optional.empty(),
-          HOUR,
-          false
-    ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-            new SchedulingDSL.ActivityTemplate(
-                "SampleActivityEmpty",
-                new StructExpressionAt(Map.of())
-            ),
-            Optional.empty(),
-            HOUR.times(2),
-            false
-        )),false);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(
-          expectedGoalDefinition,
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.GoalAnd(
+            List.of(
+                new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+                    new SchedulingDSL.ActivityTemplate(
+                        "SampleActivityEmpty", new StructExpressionAt(Map.of())),
+                    Optional.empty(),
+                    HOUR,
+                    false),
+                new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+                    new SchedulingDSL.ActivityTemplate(
+                        "SampleActivityEmpty", new StructExpressionAt(Map.of())),
+                    Optional.empty(),
+                    HOUR.times(2),
+                    false)),
+            false);
+    if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void testOrGoal(){
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testOrGoal() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivityEmpty(),
@@ -890,39 +1103,41 @@ class SchedulingDSLCompilationServiceTests {
                   )
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalOr(List.of(
-        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-            new SchedulingDSL.ActivityTemplate(
-                "SampleActivityEmpty",
-                new StructExpressionAt(Map.of())
-            ),
-            Optional.empty(),
-            HOUR,
-            false
-        ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-            new SchedulingDSL.ActivityTemplate(
-                "SampleActivityEmpty",
-                new StructExpressionAt(Map.of())
-            ),
-            Optional.empty(),
-            HOUR.times(2),
-            false
-        )),false);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
-      assertEquals(
-          expectedGoalDefinition,
-          r.value()
-      );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.GoalOr(
+            List.of(
+                new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+                    new SchedulingDSL.ActivityTemplate(
+                        "SampleActivityEmpty", new StructExpressionAt(Map.of())),
+                    Optional.empty(),
+                    HOUR,
+                    false),
+                new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+                    new SchedulingDSL.ActivityTemplate(
+                        "SampleActivityEmpty", new StructExpressionAt(Map.of())),
+                    Optional.empty(),
+                    HOUR.times(2),
+                    false)),
+            false);
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result
+        instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }
   }
 
   @Test
-  void  testActivityPreset() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+  void testActivityPreset() {
+    final var result =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default (): Goal => {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivity2(ActivityPresets.SampleActivity2["my preset"]),
@@ -930,17 +1145,24 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity2",
-            getSampleActivity2PresetParameters()
-        ),
-        Optional.empty(),
-        HOUR,
-        false);
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+    final var expectedGoalDefinition =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivity2", getSampleActivity2PresetParameters()),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition, r.value());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
@@ -948,9 +1170,11 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testSchedulingDSLMutatingPreset() {
 
-    final var result1 = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    final var result1 =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default (): Goal => {
                   let preset = ActivityPresets.SampleActivity2["my preset"];
                   preset.quantity = 9;
@@ -960,23 +1184,32 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition1 = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity2",
-            getSampleActivity2PresetParameters()
-        ),
-        Optional.empty(),
-        HOUR,
-        false);
-    if (result1 instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+    final var expectedGoalDefinition1 =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivity2", getSampleActivity2PresetParameters()),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result1
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition1, r.value());
-    } else if (result1 instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result1
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
 
-    final var result2 = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        PLAN_ID, """
+    final var result2 =
+        schedulingDSLCompilationService.compileSchedulingGoalDSL(
+            missionModelService,
+            PLAN_ID,
+            """
                 export default (): Goal => {
                   let preset = {
                     ...ActivityPresets.SampleActivity2["my preset"],
@@ -988,21 +1221,29 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """);
-    final var expectedGoalDefinition2 = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
-        new SchedulingDSL.ActivityTemplate(
-            "SampleActivity2",
-            new StructExpressionAt(Map.of(
-                "quantity", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(9)))
-            ))
-        ),
-        Optional.empty(),
-        HOUR,
-        false);
-    if (result2 instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+    final var expectedGoalDefinition2 =
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivity2",
+                new StructExpressionAt(
+                    Map.of(
+                        "quantity",
+                        new ProfileExpression<>(new DiscreteValue(SerializedValue.of(9)))))),
+            Optional.empty(),
+            HOUR,
+            false);
+    if (result2
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       assertEquals(expectedGoalDefinition2, r.value());
-    } else if (result2 instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+    } else if (result2
+        instanceof
+        SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<
+            SchedulingDSL.GoalSpecifier>
+        r) {
       fail(r.toString());
     }
   }
-
 }

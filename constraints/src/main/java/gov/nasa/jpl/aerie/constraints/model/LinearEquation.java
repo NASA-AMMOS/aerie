@@ -1,16 +1,15 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
-
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 
 /**
  * A linear equation in point-slope form.
@@ -27,16 +26,18 @@ public final class LinearEquation {
   }
 
   public double valueAt(final Duration time) {
-    final var change = this.rate*time.ratioOver(Duration.SECOND) - this.rate*this.initialTime.ratioOver(Duration.SECOND);
+    final var change =
+        this.rate * time.ratioOver(Duration.SECOND)
+            - this.rate * this.initialTime.ratioOver(Duration.SECOND);
     return this.initialValue + change;
   }
 
   public LinearEquation shiftInitialTime(final Duration newInitialTime) {
     return new LinearEquation(
         newInitialTime,
-        this.initialValue + newInitialTime.minus(this.initialTime).ratioOver(Duration.SECOND)*this.rate,
-        this.rate
-    );
+        this.initialValue
+            + newInitialTime.minus(this.initialTime).ratioOver(Duration.SECOND) * this.rate,
+        this.rate);
   }
 
   public boolean changing() {
@@ -53,22 +54,18 @@ public final class LinearEquation {
     This can cause the denominator below to be tiny, leading to long overflow later.
      */
 
-    // If the following causes an exception, something really has gone wrong, and we don't want to catch it.
-    final double numSeconds = (other.valueAt(this.initialTime) - this.initialValue) / (this.rate - other.rate);
+    // If the following causes an exception, something really has gone wrong, and we don't want to
+    // catch it.
+    final double numSeconds =
+        (other.valueAt(this.initialTime) - this.initialValue) / (this.rate - other.rate);
 
     // Check if numSeconds is too big before putting it in a long.
-    if (Math.abs(numSeconds) > ((double) Long.MAX_VALUE) / Duration.SECOND.dividedBy(Duration.MICROSECOND)) {
+    if (Math.abs(numSeconds)
+        > ((double) Long.MAX_VALUE) / Duration.SECOND.dividedBy(Duration.MICROSECOND)) {
       return Optional.empty();
     }
 
-    return Optional.of(
-        this.initialTime.plus(
-            Duration.roundNearest(
-                numSeconds,
-                Duration.SECONDS
-            )
-        )
-    );
+    return Optional.of(this.initialTime.plus(Duration.roundNearest(numSeconds, Duration.SECONDS)));
   }
 
   public Windows intervalsLessThan(final LinearEquation other) {
@@ -88,9 +85,7 @@ public final class LinearEquation {
   }
 
   private Windows getInequalityIntervals(
-      final LinearEquation other,
-      final BiFunction<Double, Double, Boolean> op
-  ) {
+      final LinearEquation other, final BiFunction<Double, Double, Boolean> op) {
     final var intersectionOption = this.intersectionPointWith(other);
 
     if (intersectionOption.isEmpty()) {
@@ -103,17 +98,13 @@ public final class LinearEquation {
       return new Windows(
           Segment.of(
               Interval.between(Duration.MIN_VALUE, Inclusive, intersection, Exclusive),
-              op.apply(this.valueAt(oneSecondBefore), other.valueAt(oneSecondBefore))
-          ),
+              op.apply(this.valueAt(oneSecondBefore), other.valueAt(oneSecondBefore))),
           Segment.of(
               Interval.at(intersection),
-              op.apply(this.valueAt(intersection), other.valueAt(intersection))
-          ),
+              op.apply(this.valueAt(intersection), other.valueAt(intersection))),
           Segment.of(
               Interval.between(intersection, Exclusive, Duration.MAX_VALUE, Inclusive),
-              op.apply(this.valueAt(oneSecondAfter), other.valueAt(oneSecondAfter))
-          )
-      );
+              op.apply(this.valueAt(oneSecondAfter), other.valueAt(oneSecondAfter))));
     }
   }
 
@@ -127,8 +118,7 @@ public final class LinearEquation {
       return new Windows(
           Segment.of(Interval.between(Duration.MIN_VALUE, Inclusive, t, Exclusive), false),
           Segment.of(Interval.at(t), true),
-          Segment.of(Interval.between(t, Exclusive, Duration.MAX_VALUE, Inclusive), false)
-      );
+          Segment.of(Interval.between(t, Exclusive, Duration.MAX_VALUE, Inclusive), false));
     }
   }
 
@@ -148,7 +138,8 @@ public final class LinearEquation {
     return left.intervalsGreaterThan(right);
   }
 
-  public static Windows greaterThanOrEqualTo(final LinearEquation left, final LinearEquation right) {
+  public static Windows greaterThanOrEqualTo(
+      final LinearEquation left, final LinearEquation right) {
     return left.intervalsGreaterThanOrEqualTo(right);
   }
 
@@ -162,20 +153,13 @@ public final class LinearEquation {
 
   public String toString() {
     return String.format(
-            "{\n" +
-            "  Initial Time: %s\n" +
-            "  Initial Value: %s\n" +
-            "  Rate: %s\n" +
-            "}",
-            this.initialTime,
-            this.initialValue,
-            this.rate
-    );
+        "{\n" + "  Initial Time: %s\n" + "  Initial Value: %s\n" + "  Rate: %s\n" + "}",
+        this.initialTime, this.initialValue, this.rate);
   }
 
   @Override
   public boolean equals(final Object obj) {
-    if(!(obj instanceof final LinearEquation other)) return false;
+    if (!(obj instanceof final LinearEquation other)) return false;
 
     return this.valueAt(Duration.ZERO) == other.valueAt(Duration.ZERO)
         && this.valueAt(Duration.MINUTE) == other.valueAt(Duration.MINUTE);

@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,20 +24,16 @@ public final class MissionModelBuilder implements Initializer {
   private MissionModelBuilderState state = new UnbuiltState();
 
   @Override
-  public <State> State getInitialState(
-      final CellId<State> cellId)
-  {
+  public <State> State getInitialState(final CellId<State> cellId) {
     return this.state.getInitialState(cellId);
   }
 
   @Override
-  public <EventType, Effect, State>
-  CellId<State> allocate(
+  public <EventType, Effect, State> CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<EventType, Effect> interpretation,
-      final Topic<EventType> topic
-  ) {
+      final Topic<EventType> topic) {
     return this.state.allocate(initialState, cellType, interpretation, topic);
   }
 
@@ -49,10 +44,7 @@ public final class MissionModelBuilder implements Initializer {
 
   @Override
   public <Event> void topic(
-      final String name,
-      final Topic<Event> topic,
-      final OutputType<Event> outputType)
-  {
+      final String name, final Topic<Event> topic, final OutputType<Event> outputType) {
     this.state.topic(name, topic, outputType);
   }
 
@@ -61,16 +53,13 @@ public final class MissionModelBuilder implements Initializer {
     this.state.daemon(task);
   }
 
-  public <Model>
-  MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
+  public <Model> MissionModel<Model> build(
+      final Model model, final DirectiveTypeRegistry<Model> registry) {
     return this.state.build(model, registry);
   }
 
   private interface MissionModelBuilderState extends Initializer {
-    <Model> MissionModel<Model>
-    build(
-        Model model,
-        DirectiveTypeRegistry<Model> registry);
+    <Model> MissionModel<Model> build(Model model, DirectiveTypeRegistry<Model> registry);
   }
 
   private final class UnbuiltState implements MissionModelBuilderState {
@@ -81,10 +70,9 @@ public final class MissionModelBuilder implements Initializer {
     private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
 
     @Override
-    public <State> State getInitialState(
-        final CellId<State> token)
-    {
-      // SAFETY: The only `Query` objects the model should have were returned by `UnbuiltState#allocate`.
+    public <State> State getInitialState(final CellId<State> token) {
+      // SAFETY: The only `Query` objects the model should have were returned by
+      // `UnbuiltState#allocate`.
       @SuppressWarnings("unchecked")
       final var query = (EngineCellId<?, State>) token;
 
@@ -94,24 +82,22 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <EventType, Effect, State>
-    CellId<State> allocate(
+    public <EventType, Effect, State> CellId<State> allocate(
         final State initialState,
         final CellType<Effect, State> cellType,
         final Function<EventType, Effect> interpretation,
-        final Topic<EventType> topic
-    ) {
+        final Topic<EventType> topic) {
       // TODO: The evaluator should probably be specified later, after the model is built.
-      //   To achieve this, we'll need to defer the construction of the initial `LiveCells` until later,
-      //   instead simply storing the cell specification provided to us (and its associated `Query` token).
+      //   To achieve this, we'll need to defer the construction of the initial `LiveCells` until
+      // later,
+      //   instead simply storing the cell specification provided to us (and its associated `Query`
+      // token).
       final var evaluator = new RecursiveEventGraphEvaluator();
 
       final var query = new Query<State>();
-      this.initialCells.put(query, new Cell<>(
-          cellType,
-          new Selector<>(topic, interpretation),
-          evaluator,
-          initialState));
+      this.initialCells.put(
+          query,
+          new Cell<>(cellType, new Selector<>(topic, interpretation), evaluator, initialState));
 
       return new EngineCellId<>(topic, query);
     }
@@ -123,10 +109,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Event> void topic(
-        final String name,
-        final Topic<Event> topic,
-        final OutputType<Event> outputType)
-    {
+        final String name, final Topic<Event> topic, final OutputType<Event> outputType) {
       this.topics.add(new MissionModel.SerializableTopic<>(name, topic, outputType));
     }
 
@@ -136,15 +119,11 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <Model>
-    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
-      final var missionModel = new MissionModel<>(
-          model,
-          this.initialCells,
-          this.resources,
-          this.topics,
-          this.daemons,
-          registry);
+    public <Model> MissionModel<Model> build(
+        final Model model, final DirectiveTypeRegistry<Model> registry) {
+      final var missionModel =
+          new MissionModel<>(
+              model, this.initialCells, this.resources, this.topics, this.daemons, registry);
 
       MissionModelBuilder.this.state = new BuiltState();
 
@@ -154,20 +133,16 @@ public final class MissionModelBuilder implements Initializer {
 
   private static final class BuiltState implements MissionModelBuilderState {
     @Override
-    public <State> State getInitialState(
-        final CellId<State> cellId)
-    {
+    public <State> State getInitialState(final CellId<State> cellId) {
       throw new IllegalStateException("Cannot interact with the builder after it is built");
     }
 
     @Override
-    public <EventType, Effect, State>
-    CellId<State> allocate(
+    public <EventType, Effect, State> CellId<State> allocate(
         final State initialState,
         final CellType<Effect, State> cellType,
         final Function<EventType, Effect> interpretation,
-        final Topic<EventType> topic
-    ) {
+        final Topic<EventType> topic) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");
     }
 
@@ -178,10 +153,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Event> void topic(
-        final String name,
-        final Topic<Event> topic,
-        final OutputType<Event> outputType)
-    {
+        final String name, final Topic<Event> topic, final OutputType<Event> outputType) {
       throw new IllegalStateException("Topics cannot be added after the schema is built");
     }
 
@@ -191,8 +163,8 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <Model>
-    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
+    public <Model> MissionModel<Model> build(
+        final Model model, final DirectiveTypeRegistry<Model> registry) {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }

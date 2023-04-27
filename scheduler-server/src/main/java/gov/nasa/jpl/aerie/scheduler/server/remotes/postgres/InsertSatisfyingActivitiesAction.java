@@ -2,17 +2,17 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.Map;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class InsertSatisfyingActivitiesAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     insert into scheduling_goal_analysis_satisfying_activities (analysis_id, goal_id, activity_id)
     values (?, ?, ?)
     """;
@@ -25,8 +25,8 @@ import java.util.Map;
 
   public void apply(
       final long analysisId,
-      final Map<GoalId, Collection<ActivityDirectiveId>> satisfyingActivities
-  ) throws SQLException {
+      final Map<GoalId, Collection<ActivityDirectiveId>> satisfyingActivities)
+      throws SQLException {
     for (final var entry : satisfyingActivities.entrySet()) {
       final var goalId = entry.getKey().id();
       for (final var activityId : entry.getValue()) {
@@ -39,7 +39,8 @@ import java.util.Map;
 
     final var resultSet = this.statement.executeBatch();
     for (final var result : resultSet) {
-      if (result == Statement.EXECUTE_FAILED) throw new FailedInsertException("scheduling_goal_analysis_satisfying_activities");
+      if (result == Statement.EXECUTE_FAILED)
+        throw new FailedInsertException("scheduling_goal_analysis_satisfying_activities");
     }
   }
 

@@ -27,7 +27,6 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.UnitValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,9 @@ public final class BasicValueMappers {
 
   // Unit is an enum, so `$unit` needs to be defined before `$enum()`
   // in order to override the latter's representation.
-  public static ValueMapper<Unit> $unit() { return new UnitValueMapper(); }
+  public static ValueMapper<Unit> $unit() {
+    return new UnitValueMapper();
+  }
 
   public static ValueMapper<Boolean> $boolean() {
     return new BooleanValueMapper();
@@ -70,7 +71,6 @@ public final class BasicValueMappers {
     return new DoubleValueMapper();
   }
 
-
   public static ValueMapper<byte[]> byteArray() {
     return new PrimitiveByteArrayValueMapper();
   }
@@ -103,15 +103,14 @@ public final class BasicValueMappers {
     return new PrimitiveBooleanArrayValueMapper();
   }
 
-
-  public static <T> ValueMapper<T[]> array(final Class<T> elementClass, final ValueMapper<T> elementMapper) {
+  public static <T> ValueMapper<T[]> array(
+      final Class<T> elementClass, final ValueMapper<T> elementMapper) {
     return new ArrayValueMapper<>(elementMapper, elementClass);
   }
 
   public static <E extends Enum<E>> ValueMapper<E> $enum(final Class<E> enumClass) {
     return new EnumValueMapper<>(enumClass);
   }
-
 
   public static ValueMapper<String> string() {
     return new StringValueMapper();
@@ -121,7 +120,8 @@ public final class BasicValueMappers {
     return new ListValueMapper<>(elementMapper);
   }
 
-  public static <K, V> ValueMapper<Map<K, V>> map(final ValueMapper<K> keyMapper, final ValueMapper<V> valueMapper) {
+  public static <K, V> ValueMapper<Map<K, V>> map(
+      final ValueMapper<K> keyMapper, final ValueMapper<V> valueMapper) {
     return new MapValueMapper<>(keyMapper, valueMapper);
   }
 

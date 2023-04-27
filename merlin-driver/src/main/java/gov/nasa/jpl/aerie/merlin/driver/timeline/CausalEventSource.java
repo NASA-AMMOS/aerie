@@ -22,7 +22,7 @@ public final class CausalEventSource implements EventSource {
   // into a very linear form that is easy to evaluate: (ev1 ; (ev2 ; (ev3 ; andThen)))
   public EventGraph<Event> commit(EventGraph<Event> andThen) {
     for (var i = this.size; i > 0; i -= 1) {
-      andThen = EventGraph.sequentially(EventGraph.atom(this.points[i-1]), andThen);
+      andThen = EventGraph.sequentially(EventGraph.atom(this.points[i - 1]), andThen);
     }
     return andThen;
   }

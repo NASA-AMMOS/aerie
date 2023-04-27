@@ -32,4 +32,3 @@ public record ThrowBananaActivity(double speed) {
     mission.plant.add(-1);
   }
 }
-

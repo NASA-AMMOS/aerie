@@ -21,7 +21,6 @@ public class CompositeAndGoal extends Goal {
       return this;
     }
 
-
     public CompositeAndGoal build() {
       CompositeAndGoal cg = new CompositeAndGoal();
       fill(cg);
@@ -37,6 +36,4 @@ public class CompositeAndGoal extends Goal {
   public List<Goal> getSubgoals() {
     return goals;
   }
-
-
 }

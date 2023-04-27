@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -18,10 +17,11 @@ public final class WindowsOf implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
+  public Windows evaluate(
+      SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
     var ret = new Windows(bounds, false);
     final var unsatisfiedWindows = this.expression.evaluate(results, bounds, environment);
-    for(var unsatisfiedWindow : unsatisfiedWindows){
+    for (var unsatisfiedWindow : unsatisfiedWindows) {
       ret = ret.set(unsatisfiedWindow.violationWindows, true);
     }
     return ret.not();
@@ -40,7 +40,7 @@ public final class WindowsOf implements Expression<Windows> {
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof WindowsOf)) return false;
-    final var o = (WindowsOf)obj;
+    final var o = (WindowsOf) obj;
 
     return Objects.equals(this.expression, o.expression);
   }

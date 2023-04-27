@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-
 import java.util.List;
 import java.util.function.Function;
 
@@ -20,8 +19,7 @@ public final class SimpleData {
   }
 
   public void downlinkData() {
-    List.of(this.a, this.b)
-        .forEach(InstrumentData::clearVolume);
+    List.of(this.a, this.b).forEach(InstrumentData::clearVolume);
   }
 
   public static final class InstrumentData {

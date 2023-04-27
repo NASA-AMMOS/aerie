@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
+
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -17,11 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.tuple.Pair;
+import org.intellij.lang.annotations.Language;
 
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
 /*package-local*/ final class PostProfilesAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       insert into profile (dataset_id, name, type, duration)
       values (?, ?, ?, ?::interval)
     """;
@@ -33,9 +34,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public Map<String, ProfileRecord> apply(
       final long datasetId,
-      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles
-  ) throws SQLException {
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>>
+          realProfiles,
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>>
+          discreteProfiles)
+      throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
     final var durations = new ArrayList<Duration>();
@@ -79,26 +82,18 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var resource = resourceNames.get(i);
       final var type = resourceTypes.get(i);
       final var duration = durations.get(i);
-      if (!resultSet.next()) throw new Error("Not enough generated IDs returned from batch insertion.");
+      if (!resultSet.next())
+        throw new Error("Not enough generated IDs returned from batch insertion.");
       final long id = resultSet.getLong(1);
-      profileRecords.put(resource, new ProfileRecord(
-          id,
-          datasetId,
-          resource,
-          type,
-          duration
-      ));
+      profileRecords.put(resource, new ProfileRecord(id, datasetId, resource, type, duration));
     }
 
     return profileRecords;
   }
 
   private static <T> Duration sumDurations(final List<ProfileSegment<Optional<T>>> segments) {
-    return segments.stream().reduce(
-        Duration.ZERO,
-        (acc, pair) -> acc.plus(pair.extent()),
-        Duration::plus
-    );
+    return segments.stream()
+        .reduce(Duration.ZERO, (acc, pair) -> acc.plus(pair.extent()), Duration::plus);
   }
 
   @Override

@@ -2,11 +2,9 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,14 +27,13 @@ public class Problem {
 
   private final SimulationFacade simulationFacade;
 
-  //should be accessible inside problem definition
+  // should be accessible inside problem definition
   protected final PlanningHorizon planningHorizon;
 
   /**
    * global constraints in the mission model, indexed by name
    */
-  private final List<GlobalConstraint> globalConstraints
-      = new java.util.LinkedList<>();
+  private final List<GlobalConstraint> globalConstraints = new java.util.LinkedList<>();
   /**
    * the initial seed plan to start scheduling from
    */
@@ -50,40 +47,47 @@ public class Problem {
   /**
    * activity type definitions in the mission model, indexed by name
    */
-  private final java.util.Map<String, ActivityType> actTypeByName
-      = new java.util.HashMap<>();
+  private final java.util.Map<String, ActivityType> actTypeByName = new java.util.HashMap<>();
 
   /**
    * creates a new empty problem based in the given mission model
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon, SimulationFacade simulationFacade, SchedulerModel schedulerModel) {
+  public Problem(
+      MissionModel<?> mission,
+      PlanningHorizon planningHorizon,
+      SimulationFacade simulationFacade,
+      SchedulerModel schedulerModel) {
     this.missionModel = mission;
     this.schedulerModel = schedulerModel;
     this.initialPlan = new PlanInMemory();
     this.planningHorizon = planningHorizon;
-    //add all activity types known to aerie to scheduler index
-    if( missionModel != null ) {
-      for(var taskType : missionModel.getDirectiveTypes().directiveTypes().entrySet()){
-        this.add(new ActivityType(taskType.getKey(), taskType.getValue(), schedulerModel.getDurationTypes().get(taskType.getKey())));
+    // add all activity types known to aerie to scheduler index
+    if (missionModel != null) {
+      for (var taskType : missionModel.getDirectiveTypes().directiveTypes().entrySet()) {
+        this.add(
+            new ActivityType(
+                taskType.getKey(),
+                taskType.getValue(),
+                schedulerModel.getDurationTypes().get(taskType.getKey())));
       }
     }
     this.simulationFacade = simulationFacade;
-    if(this.simulationFacade != null) {
+    if (this.simulationFacade != null) {
       this.simulationFacade.setActivityTypes(this.getActivityTypes());
     }
   }
 
-  public Problem(PlanningHorizon planningHorizon){
+  public Problem(PlanningHorizon planningHorizon) {
     this(null, planningHorizon, null, null);
   }
 
-  public SimulationFacade getSimulationFacade(){
+  public SimulationFacade getSimulationFacade() {
     return simulationFacade;
   }
 
-  public PlanningHorizon getPlanningHorizon(){
+  public PlanningHorizon getPlanningHorizon() {
     return planningHorizon;
   }
 
@@ -127,7 +131,7 @@ public class Problem {
     initialPlan = plan;
   }
 
-  public void setGoals(List<Goal> goals){
+  public void setGoals(List<Goal> goals) {
     goalsOrderedByPriority.clear();
     goalsOrderedByPriority.addAll(goals);
   }
@@ -146,11 +150,13 @@ public class Problem {
     return Collections.unmodifiableList(goalsOrderedByPriority);
   }
 
-  private void failIfActivityTypeAbsent(String name){
+  private void failIfActivityTypeAbsent(String name) {
     if (!this.actTypeByName.containsKey(name)) {
       throw new IllegalArgumentException(
-          "no activity type definition name=" + name +
-          " in mission model. Either add it manually to the Problem or it should already exists in the mission model");
+          "no activity type definition name="
+              + name
+              + " in mission model. Either add it manually to the Problem or it should already"
+              + " exists in the mission model");
     }
   }
 
@@ -164,8 +170,7 @@ public class Problem {
   public void add(ActivityType actType) {
 
     if (actType == null) {
-      throw new IllegalArgumentException(
-          "adding null activity type to mission model");
+      throw new IllegalArgumentException("adding null activity type to mission model");
     }
 
     final String name = actType.getName();
@@ -193,8 +198,7 @@ public class Problem {
     return actTypeByName.get(name);
   }
 
-  public Collection<ActivityType> getActivityTypes(){
+  public Collection<ActivityType> getActivityTypes() {
     return Collections.unmodifiableCollection(actTypeByName.values());
   }
-
 }

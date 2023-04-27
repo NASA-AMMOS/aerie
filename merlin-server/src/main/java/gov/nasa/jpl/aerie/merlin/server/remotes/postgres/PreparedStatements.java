@@ -7,9 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.intellij.lang.annotations.Language;
-
-import javax.json.Json;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -21,6 +18,8 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.List;
 import java.util.Optional;
+import javax.json.Json;
+import org.intellij.lang.annotations.Language;
 
 public final class PreparedStatements {
   private PreparedStatements() {}
@@ -58,55 +57,64 @@ public final class PreparedStatements {
    *
    * Call this before any statement that requires intervals to be serialized.
    */
-  public static void setIntervalStyle(final Connection connection, final PGIntervalStyle style) throws SQLException {
+  public static void setIntervalStyle(final Connection connection, final PGIntervalStyle style)
+      throws SQLException {
     final var prepared = connection.prepareStatement(intervalStylePrefix + "'" + style + "';");
     prepared.execute();
   }
 
-  public static void setTimestamp(final PreparedStatement statement, final int parameter, final Timestamp argument)
-  throws SQLException {
+  public static void setTimestamp(
+      final PreparedStatement statement, final int parameter, final Timestamp argument)
+      throws SQLException {
     statement.setString(parameter, TIMESTAMP_FORMAT.format(argument.time()));
   }
 
-  public static void setDuration(final PreparedStatement statement, final int parameter, final Duration argument) throws SQLException {
+  public static void setDuration(
+      final PreparedStatement statement, final int parameter, final Duration argument)
+      throws SQLException {
     final var micros = argument.in(Duration.MICROSECONDS);
     statement.setString(parameter, "PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
   }
 
-  public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters)
-  throws SQLException {
+  public static void setParameters(
+      final PreparedStatement statement, final int parameter, final List<Parameter> parameters)
+      throws SQLException {
     statement.setString(parameter, ResponseSerializers.serializeParameters(parameters).toString());
   }
 
-  public static void setRequiredParameters(final PreparedStatement statement, final int parameter, final List<String> requiredParameters)
-  throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
+  public static void setRequiredParameters(
+      final PreparedStatement statement, final int parameter, final List<String> requiredParameters)
+      throws SQLException {
+    statement.setString(
+        parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
   }
 
-  public static void setValidationNotices(final PreparedStatement statement, final int parameter, final List<ValidationNotice> notices)
-  throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeValidationNotices(notices).toString());
+  public static void setValidationNotices(
+      final PreparedStatement statement, final int parameter, final List<ValidationNotice> notices)
+      throws SQLException {
+    statement.setString(
+        parameter, ResponseSerializers.serializeValidationNotices(notices).toString());
   }
 
-  public static void setFailureReason(final PreparedStatement statement, final int parameter, final SimulationFailure reason)
-  throws SQLException
-  {
-    statement.setString(parameter, reason == null ?
-        null :
-        MerlinParsers.simulationFailureP.unparse(reason).toString());
+  public static void setFailureReason(
+      final PreparedStatement statement, final int parameter, final SimulationFailure reason)
+      throws SQLException {
+    statement.setString(
+        parameter,
+        reason == null ? null : MerlinParsers.simulationFailureP.unparse(reason).toString());
   }
 
-  public static Optional<SimulationFailure> getFailureReason(final ResultSet results, final int column)
-  throws SQLException
-  {
+  public static Optional<SimulationFailure> getFailureReason(
+      final ResultSet results, final int column) throws SQLException {
     final var failureJson = results.getString(column);
-    return failureJson == null || failureJson.isBlank() ?
-        Optional.empty() :
-        Optional.of(PreparedStatements.deserializeScheduleFailure(results.getString(column)));
+    return failureJson == null || failureJson.isBlank()
+        ? Optional.empty()
+        : Optional.of(PreparedStatements.deserializeScheduleFailure(results.getString(column)));
   }
 
   private static SimulationFailure deserializeScheduleFailure(final String failureJson) {
-    try (final var reader = Json.createReader(new ByteArrayInputStream(failureJson.getBytes(StandardCharsets.UTF_8)))) {
+    try (final var reader =
+        Json.createReader(new ByteArrayInputStream(failureJson.getBytes(StandardCharsets.UTF_8)))) {
       return MerlinParsers.simulationFailureP.parse(reader.readValue()).getSuccessOrThrow();
     }
   }

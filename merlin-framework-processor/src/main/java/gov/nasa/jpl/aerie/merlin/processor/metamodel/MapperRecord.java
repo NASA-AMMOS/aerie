@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
 import com.squareup.javapoet.ClassName;
-
-import javax.lang.model.element.PackageElement;
 import java.util.Objects;
+import javax.lang.model.element.PackageElement;
 
 public final class MapperRecord {
   public final ClassName name;
@@ -18,8 +17,8 @@ public final class MapperRecord {
     return new MapperRecord(name, true);
   }
 
-  public static MapperRecord
-  generatedFor(final ClassName activityTypeName, final PackageElement missionModelElement) {
+  public static MapperRecord generatedFor(
+      final ClassName activityTypeName, final PackageElement missionModelElement) {
     final var missionModelPackage = missionModelElement.getQualifiedName().toString();
     final var activityPackage = activityTypeName.packageName();
 
@@ -30,9 +29,10 @@ public final class MapperRecord {
       generatedSuffix = activityPackage;
     }
 
-    final var mapperName = ClassName.get(
-        missionModelPackage + ".generated" + generatedSuffix,
-        activityTypeName.simpleName() + "Mapper");
+    final var mapperName =
+        ClassName.get(
+            missionModelPackage + ".generated" + generatedSuffix,
+            activityTypeName.simpleName() + "Mapper");
 
     return new MapperRecord(mapperName, false);
   }

@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
  */
 public interface TimeWindowsFilter {
 
-  Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windowsToFilter);
-
-
+  Windows filter(
+      final SimulationResults simulationResults, final Plan plan, final Windows windowsToFilter);
 }

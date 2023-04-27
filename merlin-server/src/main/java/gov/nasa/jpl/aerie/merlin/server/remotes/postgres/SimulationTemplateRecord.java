@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-
 import java.util.Map;
 
 public record SimulationTemplateRecord(
@@ -9,6 +8,4 @@ public record SimulationTemplateRecord(
     long revision,
     long modelId,
     String description,
-    Map<String, SerializedValue> arguments
-    ) {}
-
+    Map<String, SerializedValue> arguments) {}

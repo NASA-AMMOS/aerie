@@ -1,49 +1,53 @@
-//package gov.nasa.jpl.aerie.scheduler;
+// package gov.nasa.jpl.aerie.scheduler;
 //
-//import gov.nasa.jpl.aerie.constraints.time.Interval;
-//import gov.nasa.jpl.aerie.constraints.time.Windows;
-//import gov.nasa.jpl.aerie.constraints.tree.And;
-//import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
-//import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
-//import gov.nasa.jpl.aerie.constraints.tree.Equal;
-//import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
-//import gov.nasa.jpl.aerie.constraints.tree.Or;
-//import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-//import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-//import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-//import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-//import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-//import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-//import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-//import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressions;
-//import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
-//import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
-//import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
-//import gov.nasa.jpl.aerie.scheduler.constraints.transformers.Transformers;
-//import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
-//import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
-//import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
-//import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-//import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
-//import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-//import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-//import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-//import gov.nasa.jpl.aerie.scheduler.model.Problem;
-//import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-//import org.apache.commons.lang3.tuple.Pair;
+// import gov.nasa.jpl.aerie.constraints.time.Interval;
+// import gov.nasa.jpl.aerie.constraints.time.Windows;
+// import gov.nasa.jpl.aerie.constraints.tree.And;
+// import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+// import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+// import gov.nasa.jpl.aerie.constraints.tree.Equal;
+// import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+// import gov.nasa.jpl.aerie.constraints.tree.Or;
+// import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+// import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
+// import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+// import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+// import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+// import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+// import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+// import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressions;
+// import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
+// import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+// import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+// import gov.nasa.jpl.aerie.scheduler.constraints.transformers.Transformers;
+// import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
+// import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+// import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
+// import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+// import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
+// import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+// import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+// import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+// import gov.nasa.jpl.aerie.scheduler.model.Problem;
+// import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+// import org.apache.commons.lang3.tuple.Pair;
 //
-//import java.util.ArrayList;
-//import java.util.Collections;
-//import java.util.List;
-//import java.util.SortedMap;
-//import java.util.TreeMap;
+// import java.util.ArrayList;
+// import java.util.Collections;
+// import java.util.List;
+// import java.util.SortedMap;
+// import java.util.TreeMap;
 //
-//public class AerieLanderRules extends Problem {
+// public class AerieLanderRules extends Problem {
 //
-//  static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 * 3600));
+//  static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new
+// PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 *
+// 3600));
 //
-//  public AerieLanderRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
-//    super(missionModel, planningHorizon, new SimulationFacade(planningHorizon, missionModel), schedulerModel);
+//  public AerieLanderRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon,
+// SchedulerModel schedulerModel) {
+//    super(missionModel, planningHorizon, new SimulationFacade(planningHorizon, missionModel),
+// schedulerModel);
 //  }
 //
 //  @Override
@@ -72,7 +76,8 @@
 //    while(time.shorterThan(DEFAULT_PLANNING_HORIZON.getHor().end)){
 //      var curStation = values[index];
 //
-//      var actInstance = ActivityInstance.of(actType2, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period), null, true);
+//      var actInstance = ActivityInstance.of(actType2, time,
+// Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period), null, true);
 //      actInstance.addArgument("dsnStation", SerializedValue.of(curStation));
 //      actList.add(actInstance);
 //      index +=1;
@@ -83,7 +88,8 @@
 //      curAlloc +=1;
 //      if(curAlloc == ratioAlloc){
 //        //allocate this to insight
-//        var actInstanceAlloc = ActivityInstance.of(actType1, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period), null, true);
+//        var actInstanceAlloc = ActivityInstance.of(actType1, time,
+// Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period), null, true);
 //        actInstanceAlloc.addArgument("dsnStation", SerializedValue.of(curStation));
 //        actList.add(actInstanceAlloc);
 //        curAlloc = 1;
@@ -95,7 +101,8 @@
 //
 //    ProceduralCreationGoal dsnGoal = new ProceduralCreationGoal.Builder()
 //        .named("Schedule DSN contacts for initial setup")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(planningHorizon.getHor(), true)))
 //        .generateWith((plan) -> actList)
 //        .build();
 //
@@ -113,7 +120,8 @@
 //   (show off periodic scheduling, simple resource condition, and parameter filling from res)
 //   - schedule an HP3_TEMP activity
 //   - with parameters
-//   - duration = current value of resource HP3_Parameters_Current["PARAM_HP3_MON_TEMP_DURATION"] (typically 5min)
+//   - duration = current value of resource HP3_Parameters_Current["PARAM_HP3_MON_TEMP_DURATION"]
+// (typically 5min)
 //   - setNewSSATime = true
 //   - once every 60 minutes
 //   - while the HP3_SSA_State is "Monitoring"
@@ -132,13 +140,15 @@
 //                             Duration.of(1,Duration.MINUTE), null, true));
 //    ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
 //        .named("TurnOnAndOFFMonitoring")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(planningHorizon.getHor(), true)))
 //        .generateWith((plan) -> turnONFFMonitoring)
 //        .owned(ChildCustody.Jointly)
 //        .build();
 //    goals.put(10, pro);
 //
-//    var sce = new Equal<>(new DiscreteResource("/HeatProbe/ssaState"), new DiscreteValue(SerializedValue.of("Monitoring")));
+//    var sce = new Equal<>(new DiscreteResource("/HeatProbe/ssaState"), new
+// DiscreteValue(SerializedValue.of("Monitoring")));
 //
 //    var HP3Acts = new ActivityCreationTemplate.Builder()
 //        .ofType(HP3actType)
@@ -152,7 +162,8 @@
 //        .named("1a")
 //        .repeatingEvery(Duration.of(60, Duration.MINUTE))
 //        .attachStateConstraint(sce)
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //        .thereExistsOne(HP3Acts)
 //        .owned(ChildCustody.Jointly)
 //        .build();
@@ -170,7 +181,8 @@
 //
 //    CardinalityGoal goal1c = new CardinalityGoal.Builder()
 //        .named("1c")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(planningHorizon.getHor(), true)))
 //        .thereExistsOne(HP3Acts)
 //        .attachStateConstraint(sce)
 //        .owned(ChildCustody.Jointly)
@@ -188,8 +200,10 @@
 //  /**
 //   *
 //   === Rule 2: device placement with arm and contextual imaging, with necessary heating ===
-//   basically: move arm to offboard device, grapple the device, move arm to target location, release grapple
-//   with images: ICC image before and after unstowing device, IDC before and after each grapple operation
+//   basically: move arm to offboard device, grapple the device, move arm to target location,
+// release grapple
+//   with images: ICC image before and after unstowing device, IDC before and after each grapple
+// operation
 //   with heating: each zone heated only when needed
 //   should all be one large composite rule!
 //
@@ -197,10 +211,12 @@
 //   - schedule IDAMoveArm
 //   - once
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAMoveArm.java
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAMoveArm.java
 //   ref: apgen activities
-//   https://github.jpl.nasa.gov/insight-mst/apgen_surface/blob/b909cf5eb570ab5d4020795f181cf81190d3bfb4/model/IDS_tactical_activities.aaf
-//*/
+//
+// https://github.jpl.nasa.gov/insight-mst/apgen_surface/blob/b909cf5eb570ab5d4020795f181cf81190d3bfb4/model/IDS_tactical_activities.aaf
+// */
 //
 //  var actTypeIDAMoveArm = getActivityType("IDAMoveArm");
 //  //starts at middle of horizon
@@ -209,8 +225,10 @@
 //
 //  ProceduralCreationGoal goal2a = new ProceduralCreationGoal.Builder()
 //      .named("SchedIDAMoveArm")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
-//      .generateWith((plan) -> List.of(ActivityInstance.of(actTypeIDAMoveArm,stMoveArm, duroveArm, null, true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(),
+// true)))
+//      .generateWith((plan) -> List.of(ActivityInstance.of(actTypeIDAMoveArm,stMoveArm, duroveArm,
+// null, true)))
 //      .build();
 //
 //  goals.put(30, goal2a);
@@ -219,13 +237,15 @@
 //   * Rule 2b: pick up the device from its stowed location
 //   - schedule IDAGrapple
 //   - starts at end of first IDSMoveArm
-//   ref: merlin act model https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAGrapple.java
-//*/
+//   ref: merlin act model
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAGrapple.java
+// */
 //  var atGrapple = getActivityType("IDAGrapple");
 //
 //  CoexistenceGoal goal2b= new CoexistenceGoal.Builder()
 //      .named("Grapple IDA")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(atGrapple)
 //                          .duration(Duration.of(20, Duration.MINUTE))
@@ -242,7 +262,8 @@
 //  */
 //  CoexistenceGoal goal2c= new CoexistenceGoal.Builder()
 //      .named("SchedIDAMoveArm Back")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDAMoveArm)
 //                          .duration(Duration.of(1, Duration.HOUR))
@@ -256,7 +277,7 @@
 //   * Rule 2d: release the device at its target location
 //   - schedule IDAGrapple
 //   - starts at end of second IDSMoveArm
-//*/
+// */
 //
 //    var secondIdaMoveArm = new TimeRangeExpression.Builder()
 //        .from(ActivityExpression.ofType(actTypeIDAMoveArm))
@@ -265,7 +286,8 @@
 //
 //    CoexistenceGoal goal2d= new CoexistenceGoal.Builder()
 //        .named("Grapple IDA second")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //        .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                            .ofType(atGrapple)
 //                            .duration(Duration.of(20, Duration.MINUTE))
@@ -282,8 +304,9 @@
 //   - schedule IDAHeatersOn
 //   - ends before start of earliest IDAGrapple or IDAMoveArm
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAHeatersOn.java
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAHeatersOn.java
+// */
 //  var enveloppeAllGrappleMove = new TimeRangeExpression.Builder()
 //      .from(new Windows(Interval.FOREVER, true))
 //      .thenTransform(new Transformers.EnvelopeBuilder()
@@ -297,7 +320,8 @@
 //
 //  CoexistenceGoal goal2e= new CoexistenceGoal.Builder()
 //      .named("Heaters ON")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDAHeatersOn)
 //                          .duration(Duration.of(3, Duration.MINUTE))
@@ -314,14 +338,16 @@
 //   - schedule IDAHeatersOff
 //   - starts after end of latest IDAGrapple or IDAMoveArm
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAHeatersOff.java
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAHeatersOff.java
+// */
 //
 //  var actTypeIDAHeatersOff = getActivityType("IDAHeatersOff");
 //
 //  CoexistenceGoal goal2f= new CoexistenceGoal.Builder()
 //      .named("Heaters Off")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDAHeatersOff)
 //                          .duration(Duration.of(3, Duration.MINUTE))
@@ -337,13 +363,15 @@
 //   - schedule IDCImage
 //   - ends immediately before start each IDAGrapple (both pickup and dropoff)
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCImages.java#L28
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCImages.java#L28
+// */
 //  var actTypeIDCImage= getActivityType("IDCImages");
 //
 //  CoexistenceGoal goal2g= new CoexistenceGoal.Builder()
 //      .named("Image before grapple")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDCImage)
 //                          .duration(Duration.of(6, Duration.MINUTE))
@@ -362,10 +390,11 @@
 //   * Rule 2h: image from arm just after each grapple operation
 //   - schedule IDCImage
 //   - ends immediately after end each IDAGrapple (both pickup and dropoff)
-//*/
+// */
 //  CoexistenceGoal goal2h= new CoexistenceGoal.Builder()
 //      .named("Image after grapple")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDCImage)
 //                          .duration(Duration.of(6, Duration.MINUTE))
@@ -385,8 +414,9 @@
 //   - schedule IDCHeatersOn
 //   - so that ends before earliest start of any IDCImage acts above
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCHeatersOn.java
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCHeatersOn.java
+// */
 //
 //  var enveloppeAllIDCImage = new TimeRangeExpression.Builder()
 //      .from(new Windows(Interval.FOREVER, true))
@@ -401,7 +431,8 @@
 //
 //  CoexistenceGoal goal2i= new CoexistenceGoal.Builder()
 //      .named("Heaters before earliest image")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDCHeatersOn)
 //                          .duration(Duration.of(15, Duration.MINUTE))
@@ -419,14 +450,16 @@
 //   - so that ends after end of any IDCImage act above
 //   * CORRECTION ADRIEN : Starts after end of any IDC image
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCHeatersOff.java
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCHeatersOff.java
+// */
 //
 //  var actTypeIDCHeatersOff= getActivityType("IDCHeatersOff");
 //
 //  CoexistenceGoal goal2j= new CoexistenceGoal.Builder()
 //      .named("Heaters after latest image")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIDCHeatersOff)
 //                          .duration(Duration.of(15, Duration.MINUTE))
@@ -442,8 +475,9 @@
 //   - schedule ICCImages
 //   - ends immediately before start of first IDAMoveArm
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCImages.java
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCImages.java
+// */
 //  var firstIdaMoveArm = new TimeRangeExpression.Builder()
 //      .from(ActivityExpression.ofType(actTypeIDAMoveArm))
 //      .thenFilter(Filters.first())
@@ -453,7 +487,8 @@
 //
 //  CoexistenceGoal goal2k= new CoexistenceGoal.Builder()
 //      .named("image stowed device in context before pickup")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeICCImages)
 //                          .duration(Duration.of(6, Duration.MINUTE))
@@ -472,11 +507,12 @@
 //   * Rule 2l: image stowage area after relocating device
 //   - schedule ICCImages
 //   - starts at +2 min from start of the second (placement) IDAMoveArm
-//*/
+// */
 //
 //  CoexistenceGoal goal2l= new CoexistenceGoal.Builder()
 //      .named("image stowage area after relocating device")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeICCImages)
 //                          .duration(Duration.of(6, Duration.MINUTE))
@@ -495,8 +531,9 @@
 //   - schedule ICCHeatersOn
 //   - so that ends before earliest start of any ICCImage acts above
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/ICCHeatersOn.java
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/ICCHeatersOn.java
+// */
 //
 //  var firstICCImages = new TimeRangeExpression.Builder()
 //      .from(ActivityExpression.ofType(actTypeICCImages))
@@ -506,7 +543,8 @@
 //
 //  CoexistenceGoal goal2m= new CoexistenceGoal.Builder()
 //      .named("preheat for ICC image")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIccHeatersOn)
 //                          .duration(Duration.of(15, Duration.MINUTE))
@@ -523,9 +561,10 @@
 //   - schedule ICCHeatersOff
 //   - so that ends after end of any ICCImage act above
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/ICCHeatersOff.java#L15
 //
-//*/
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/ICCHeatersOff.java#L15
+//
+// */
 //  var lastICCImages = new TimeRangeExpression.Builder()
 //      .from(ActivityExpression.ofType(actTypeICCImages))
 //      .thenFilter(Filters.last())
@@ -535,7 +574,8 @@
 //
 //  CoexistenceGoal goal2n= new CoexistenceGoal.Builder()
 //      .named("turn off heaters for ICC image")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeIccHeatersOff)
 //                          .duration(Duration.of(10, Duration.SECONDS))
@@ -546,19 +586,26 @@
 //
 //  goals.put(17, goal2n);
 //  return goals;
-//}
+// }
 //  public SortedMap<Integer, Goal> getThirdRuleGoals(){
 //
 //    var goals = new TreeMap<Integer, Goal>(Collections.reverseOrder());
 //
-//    //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the following goals
+//    //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the
+// following goals
 //
-//    var sc1 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Canberra"), new DiscreteValue(SerializedValue.of("InView"))),
-//                      new Equal<>(new DiscreteResource("/dsn/allocated/Canberra"),new DiscreteValue(SerializedValue.of("Allocated"))));
-//    var sc2 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Madrid"), new DiscreteValue(SerializedValue.of("InView"))),
-//                      new Equal<>(new DiscreteResource("/dsn/allocated/Madrid"),new DiscreteValue(SerializedValue.of("Allocated"))));
-//    var sc3 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Goldstone"), new DiscreteValue(SerializedValue.of("InView"))),
-//                      new Equal<>(new DiscreteResource("/dsn/allocated/Goldstone"),new DiscreteValue(SerializedValue.of("Allocated"))));
+//    var sc1 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Canberra"), new
+// DiscreteValue(SerializedValue.of("InView"))),
+//                      new Equal<>(new DiscreteResource("/dsn/allocated/Canberra"),new
+// DiscreteValue(SerializedValue.of("Allocated"))));
+//    var sc2 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Madrid"), new
+// DiscreteValue(SerializedValue.of("InView"))),
+//                      new Equal<>(new DiscreteResource("/dsn/allocated/Madrid"),new
+// DiscreteValue(SerializedValue.of("Allocated"))));
+//    var sc3 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Goldstone"), new
+// DiscreteValue(SerializedValue.of("InView"))),
+//                      new Equal<>(new DiscreteResource("/dsn/allocated/Goldstone"),new
+// DiscreteValue(SerializedValue.of("Allocated"))));
 //
 //    var disj = new Or(sc1, sc2, sc3);
 //
@@ -585,19 +632,23 @@
 //   (will need initial plan to include changing visibility/allocation states)
 //   - and the contact interval is at least 20min
 //   ref: merlin activity model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandActive.java#L17
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandActive.java#L17
 //   ref: merlin comm model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/models/comm/CommModel.java#L12
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/models/comm/CommModel.java#L12
 //   (does not have states for visibility, so will have to create them, per dsn complex)
 //   ref: merlin accumulated data model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/models/data/DataModel.java#L64
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/models/data/DataModel.java#L64
+// */
 //
 //  var actTypeXbandActive = getActivityType("XBandActive");
 //
 //  CoexistenceGoal goal3a= new CoexistenceGoal.Builder()
 //      .named("xbandactivegoal")
-//      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//      .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //      .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                          .ofType(actTypeXbandActive)
 //                          .build())
@@ -605,7 +656,8 @@
 //      .startsAt(TimeExpression.offsetByAfterStart(prepDur))
 //      .durationIn(DurationExpressions.max(
 //          DurationExpressions.constant(Duration.of(2, Duration.HOUR)),
-//          DurationExpressions.windowDuration().minus(DurationExpressions.constant(cleanupDur)).minus(DurationExpressions.constant(prepDur))))
+//
+// DurationExpressions.windowDuration().minus(DurationExpressions.constant(cleanupDur)).minus(DurationExpressions.constant(prepDur))))
 //      .build();
 //
 //    goals.put(37, goal3a);
@@ -617,16 +669,19 @@
 //   - duration: not sure! see ref below
 //   - so that ends at beginning of XBandActive
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandPregoals.java
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandPregoals.java
 //   ref: duration calculation from old decompositional parent act
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L39
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L39
+// */
 //
 //    var actTypeXbandPrep = getActivityType("XBandPrep");
 //
 //    CoexistenceGoal goal3b= new CoexistenceGoal.Builder()
 //        .named("xbandprepgoal")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //        .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                            .ofType(actTypeXbandPrep)
 //                            .duration(prepDur)
@@ -644,16 +699,19 @@
 //   - duration: not sure! see ref below
 //   - so that starts at end of XBandActive
 //   ref: merlin act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandCleanugoals.java#L16
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandCleanugoals.java#L16
 //   ref: duration calculation from old decompositional parent act
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L39
-//*/
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L39
+// */
 //    var actTypeXbandCleanup= getActivityType("XBandCleanup");
 //
 //
 //    CoexistenceGoal goal3c= new CoexistenceGoal.Builder()
 //        .named("xbandcleanupgoal")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //        .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                            .ofType(actTypeXbandCleanup)
 //                            .duration(cleanupDur)
@@ -671,11 +729,15 @@
 //   - but don't want all the inner timing params...
 //   - that tightly envelopes each entire prep-comm-cleanup triple
 //   ref: existing higher level merlin decompositional act model
-//   https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L48
-//   (will need a place to store the summary info like dsnTrack station and dlRate, as well as do the one setXBandAntenna() call)
-//   (can create a new non-decomposition mirror of this act, still with setXBandAnt and only params unrelated to decomp timing)
+//
+// https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L48
+//   (will need a place to store the summary info like dsnTrack station and dlRate, as well as do
+// the one setXBandAntenna() call)
+//   (can create a new non-decomposition mirror of this act, still with setXBandAnt and only params
+// unrelated to decomp timing)
 //   ref: apgen decompositional parent
-//   https://github.jpl.nasa.gov/insight-mst/apgen_surface/blob/3f8c09da174315b57a28f08fa2a9df9688b6edc4/model/Master_activities.aaf#L1269
+//
+// https://github.jpl.nasa.gov/insight-mst/apgen_surface/blob/3f8c09da174315b57a28f08fa2a9df9688b6edc4/model/Master_activities.aaf#L1269
 //
 //   */
 //    var actTypeXbandCommched= getActivityType("XBandCommSched");
@@ -694,7 +756,8 @@
 //
 //    CoexistenceGoal goal3d= new CoexistenceGoal.Builder()
 //        .named("xbancommgoal")
-//        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+//        .forAllTimeIn(new WindowsWrapperExpression(new
+// Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
 //        .thereExistsOne(new ActivityCreationTemplate.Builder()
 //                            .ofType(actTypeXbandCommched)
 //                            .withArgument("DSNTrack", "/dsn/allocstation")
@@ -710,4 +773,4 @@
 //  }
 //
 //
-//}
+// }

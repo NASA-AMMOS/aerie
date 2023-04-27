@@ -6,9 +6,6 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Filter in windows that have another window preceding separated at least by delay
  */
@@ -25,10 +22,11 @@ public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
   }
 
   @Override
-  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
+  public Windows filter(
+      final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Interval before = null;
     var result = windows;
-    for (final var interval: windows.iterateEqualTo(true)) {
+    for (final var interval : windows.iterateEqualTo(true)) {
       if (before != null) {
         if (interval.start.minus(before.end).compareTo(delay) < 0) {
           result = result.set(interval, false);
@@ -38,6 +36,4 @@ public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
     }
     return result;
   }
-
-
 }

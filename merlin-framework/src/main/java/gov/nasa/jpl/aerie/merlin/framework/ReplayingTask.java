@@ -5,17 +5,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import org.apache.commons.lang3.mutable.MutableInt;
-
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Supplier;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 public final class ReplayingTask<Return> implements Task<Return> {
   private final Scoped<Context> rootContext;
   private final Supplier<Return> task;
 
-  private final ReplayingReactionContext.Memory memory = new ReplayingReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
+  private final ReplayingReactionContext.Memory memory =
+      new ReplayingReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
   public ReplayingTask(final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -25,16 +25,18 @@ public final class ReplayingTask<Return> implements Task<Return> {
   @Override
   public TaskStatus<Return> step(final Scheduler scheduler) {
     final var handle = new ReplayingTaskHandle();
-    final var context = new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
+    final var context =
+        new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
 
-    try (final var restore = this.rootContext.set(context)){
+    try (final var restore = this.rootContext.set(context)) {
       final var returnValue = this.task.get();
 
       // If we get here, the activity has completed normally.
       return TaskStatus.completed(returnValue);
     } catch (final Yield ignored) {
       // If we get here, the activity has suspended.
-      return Objects.requireNonNull(handle.status, "Task status is null, but it should have been assigned a value on yield.");
+      return Objects.requireNonNull(
+          handle.status, "Task status is null, but it should have been assigned a value on yield.");
     }
   }
 
@@ -67,5 +69,6 @@ public final class ReplayingTask<Return> implements Task<Return> {
   //   to avoid some of the overhead of exceptions
   //   (most notably the call stack snapshotting).
   private static final class Yield extends RuntimeException {}
+
   private static final Yield Yield = new Yield();
 }

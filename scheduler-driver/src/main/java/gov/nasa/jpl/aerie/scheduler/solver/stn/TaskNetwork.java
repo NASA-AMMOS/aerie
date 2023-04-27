@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.solver.stn;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A task network is a set of tasks and temporal constraints between these tasks.
@@ -22,24 +21,24 @@ public class TaskNetwork {
 
   private final STN stn;
 
-  public TaskNetwork(){
+  public TaskNetwork() {
     this(0., Double.MAX_VALUE);
   }
 
-  public TaskNetwork(double horizonStart, double horizonEnd){
+  public TaskNetwork(double horizonStart, double horizonEnd) {
     stn = new STN();
     startActTimepoints = new HashMap<>();
     endActTimepoints = new HashMap<>();
     setHorizon(horizonStart, horizonEnd);
-
   }
 
-  public record TNActData(Pair<Double,Double> start, Pair<Double,Double> end, Pair<Double,Double> duration) {}
+  public record TNActData(
+      Pair<Double, Double> start, Pair<Double, Double> end, Pair<Double, Double> duration) {}
 
-  public TNActData getAllData(String nameAct){
+  public TNActData getAllData(String nameAct) {
     var st = getStartInterval(nameAct);
     var et = getEndInterval(nameAct);
-    var d =  getDurationInterval(nameAct);
+    var d = getDurationInterval(nameAct);
     return new TNActData(st, et, d);
   }
 
@@ -48,45 +47,46 @@ public class TaskNetwork {
    * @param start start horizon
    * @param end end horizon
    */
-  protected void setHorizon(double start, double end){
+  protected void setHorizon(double start, double end) {
     stHorizon = start;
     stn.addTimepoint(startHorizon);
     stn.addTimepoint(endHorizon);
-    stn.addDurCst(startHorizon, endHorizon, end-start, end-start);
+    stn.addDurCst(startHorizon, endHorizon, end - start, end - start);
 
-    for(var nameTp:startActTimepoints.entrySet()){
+    for (var nameTp : startActTimepoints.entrySet()) {
       stn.addBeforeCst(nameTp.getValue(), endHorizon);
-      stn.addBeforeCst(startHorizon,nameTp.getValue());
+      stn.addBeforeCst(startHorizon, nameTp.getValue());
     }
-    for(var nameTp:endActTimepoints.entrySet()){
+    for (var nameTp : endActTimepoints.entrySet()) {
       stn.addBeforeCst(nameTp.getValue(), endHorizon);
-      stn.addBeforeCst(startHorizon,nameTp.getValue());
+      stn.addBeforeCst(startHorizon, nameTp.getValue());
     }
   }
 
-  public void addDurationInterval(String nameAct, double lb, double ub){
+  public void addDurationInterval(String nameAct, double lb, double ub) {
     stn.addDurCst(startActTimepoints.get(nameAct), endActTimepoints.get(nameAct), lb, ub);
   }
 
-
-  public Pair<Double,Double> getStartInterval(String actName) {
+  public Pair<Double, Double> getStartInterval(String actName) {
     var st = startActTimepoints.get(actName);
-    return Pair.of(-stn.getDist(st, startHorizon) + stHorizon, stn.getDist(startHorizon, st) + stHorizon);
-  }
-  public Pair<Double, Double> getEndInterval(String actName){
-    var et = endActTimepoints.get(actName);
-    return Pair.of(-stn.getDist(et, startHorizon) + stHorizon, stn.getDist(startHorizon, et) + stHorizon);
+    return Pair.of(
+        -stn.getDist(st, startHorizon) + stHorizon, stn.getDist(startHorizon, st) + stHorizon);
   }
 
-  public Pair<Double, Double> getDurationInterval(String actName){
+  public Pair<Double, Double> getEndInterval(String actName) {
+    var et = endActTimepoints.get(actName);
+    return Pair.of(
+        -stn.getDist(et, startHorizon) + stHorizon, stn.getDist(startHorizon, et) + stHorizon);
+  }
+
+  public Pair<Double, Double> getDurationInterval(String actName) {
     var et = endActTimepoints.get(actName);
     var st = startActTimepoints.get(actName);
     return Pair.of(Math.abs(stn.getDist(et, st)), Math.abs(stn.getDist(st, et)));
   }
 
-
-  private void failIfActDoesNotExist(String nameAct){
-    if(!startActTimepoints.containsKey(nameAct)){
+  private void failIfActDoesNotExist(String nameAct) {
+    if (!startActTimepoints.containsKey(nameAct)) {
       throw new IllegalArgumentException("Trying to insert enveloppe to non existing act");
     }
   }
@@ -94,55 +94,53 @@ public class TaskNetwork {
   /**
    * Adds an enveloppe at absolute times t1, t2 for activity nameAct
    */
-  public void addEnveloppe(String nameAct, String envName, double t1, double t2){
+  public void addEnveloppe(String nameAct, String envName, double t1, double t2) {
     failIfActDoesNotExist(nameAct);
 
     var stAct = startActTimepoints.get(nameAct);
     var etAct = endActTimepoints.get(nameAct);
 
-    var stenvTpName = "st"+envName;
-    var etenvTpName = "et"+envName;
+    var stenvTpName = "st" + envName;
+    var etenvTpName = "et" + envName;
 
     stn.addTimepoint(stenvTpName);
     stn.addTimepoint(etenvTpName);
 
-    stn.addDurCst(startHorizon, stenvTpName, t1-stHorizon, t1-stHorizon);
-    stn.addDurCst(startHorizon, etenvTpName, t2-stHorizon, t2-stHorizon);
+    stn.addDurCst(startHorizon, stenvTpName, t1 - stHorizon, t1 - stHorizon);
+    stn.addDurCst(startHorizon, etenvTpName, t2 - stHorizon, t2 - stHorizon);
 
-    stn.addBeforeCst(stenvTpName,etenvTpName);
+    stn.addBeforeCst(stenvTpName, etenvTpName);
 
-    //enveloppe start is before act start
+    // enveloppe start is before act start
     stn.addBeforeCst(stenvTpName, stAct);
-    //act starts after end of enveloppe
-    stn.addBeforeCst(etAct,etenvTpName);
+    // act starts after end of enveloppe
+    stn.addBeforeCst(etAct, etenvTpName);
   }
 
-  public void addStartInterval(String actName, double t1, double t2){
+  public void addStartInterval(String actName, double t1, double t2) {
     failIfActDoesNotExist(actName);
     var stAct = startActTimepoints.get(actName);
-    stn.addDurCst(startHorizon, stAct, t1-stHorizon, t2-stHorizon);
+    stn.addDurCst(startHorizon, stAct, t1 - stHorizon, t2 - stHorizon);
   }
 
   /**
    * Adds an absolute time interval for activity
    */
-  public void addEndInterval(String actName, double lb, double ub){
+  public void addEndInterval(String actName, double lb, double ub) {
     failIfActDoesNotExist(actName);
     var etAct = endActTimepoints.get(actName);
-    stn.addDurCst(startHorizon, etAct,lb-stHorizon, ub-stHorizon);
+    stn.addDurCst(startHorizon, etAct, lb - stHorizon, ub - stHorizon);
   }
 
-
-  public void startsAfterEnd(String actBefore, String actAfter){
+  public void startsAfterEnd(String actBefore, String actAfter) {
     failIfActDoesNotExist(actBefore);
     failIfActDoesNotExist(actAfter);
-    stn.addBeforeCst(endActTimepoints.get(actBefore),startActTimepoints.get(actAfter));
+    stn.addBeforeCst(endActTimepoints.get(actBefore), startActTimepoints.get(actAfter));
   }
 
-
-  public void addAct(String name){
-    var namevertexst = "st"+name;
-    var namevertexet = "et"+name;
+  public void addAct(String name) {
+    var namevertexst = "st" + name;
+    var namevertexet = "et" + name;
 
     stn.addTimepoint(namevertexst);
     stn.addTimepoint(namevertexet);
@@ -150,22 +148,17 @@ public class TaskNetwork {
     endActTimepoints.put(name, namevertexet);
 
     stn.addBeforeCst(namevertexst, namevertexet);
-    stn.addBeforeCst(startHorizon,namevertexst);
-    stn.addBeforeCst(startHorizon,namevertexet);
-    stn.addBeforeCst(namevertexst,endHorizon);
-    stn.addBeforeCst(namevertexet,endHorizon);
+    stn.addBeforeCst(startHorizon, namevertexst);
+    stn.addBeforeCst(startHorizon, namevertexet);
+    stn.addBeforeCst(namevertexst, endHorizon);
+    stn.addBeforeCst(namevertexet, endHorizon);
   }
 
-  public void print(){
+  public void print() {
     stn.print();
   }
 
-
-  public boolean propagate(){
+  public boolean propagate() {
     return stn.update();
   }
-
-
-
-
 }

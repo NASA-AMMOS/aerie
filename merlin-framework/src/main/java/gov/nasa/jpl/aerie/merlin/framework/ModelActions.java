@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-
 import java.util.function.Supplier;
 
 public /*non-final*/ class ModelActions {
@@ -13,16 +12,16 @@ public /*non-final*/ class ModelActions {
   /* package-local */
   static final Scoped<Context> context = Scoped.create();
 
-
   public static <T> TaskFactory<T> threaded(final Supplier<T> task) {
     return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
 
   public static TaskFactory<Unit> threaded(final Runnable task) {
-    return threaded(() -> {
-      task.run();
-      return Unit.UNIT;
-    });
+    return threaded(
+        () -> {
+          task.run();
+          return Unit.UNIT;
+        });
   }
 
   public static <T> TaskFactory<T> replaying(final Supplier<T> task) {
@@ -30,27 +29,27 @@ public /*non-final*/ class ModelActions {
   }
 
   public static TaskFactory<Unit> replaying(final Runnable task) {
-    return replaying(() -> {
-      task.run();
-      return Unit.UNIT;
-    });
+    return replaying(
+        () -> {
+          task.run();
+          return Unit.UNIT;
+        });
   }
-
 
   public static <T> void emit(final T event, final Topic<T> topic) {
     context.get().emit(event, topic);
   }
-
 
   public static <T> void spawn(final Supplier<T> task) {
     spawn(threaded(task));
   }
 
   public static void spawn(final Runnable task) {
-    spawn(() -> {
-      task.run();
-      return Unit.UNIT;
-    });
+    spawn(
+        () -> {
+          task.run();
+          return Unit.UNIT;
+        });
   }
 
   public static <T> void spawn(final TaskFactory<T> task) {
@@ -70,21 +69,40 @@ public /*non-final*/ class ModelActions {
   }
 
   public static void defer(final Duration duration, final Runnable task) {
-    spawn(replaying(() -> { delay(duration); spawn(task); }));
+    spawn(
+        replaying(
+            () -> {
+              delay(duration);
+              spawn(task);
+            }));
   }
 
   public static void defer(final Duration duration, final TaskFactory<?> task) {
-    spawn(replaying(() -> { delay(duration); spawn(task); }));
+    spawn(
+        replaying(
+            () -> {
+              delay(duration);
+              spawn(task);
+            }));
   }
 
   public static void defer(final long quantity, final Duration unit, final Runnable task) {
-    spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
+    spawn(
+        replaying(
+            () -> {
+              delay(quantity, unit);
+              spawn(task);
+            }));
   }
 
   public static void defer(final long quantity, final Duration unit, final TaskFactory<?> task) {
-    spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
+    spawn(
+        replaying(
+            () -> {
+              delay(quantity, unit);
+              spawn(task);
+            }));
   }
-
 
   public static void delay(final Duration duration) {
     context.get().delay(duration);

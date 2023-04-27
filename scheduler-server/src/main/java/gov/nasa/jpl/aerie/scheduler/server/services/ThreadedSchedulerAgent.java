@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
-
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,7 +8,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public final class ThreadedSchedulerAgent implements SchedulerAgent {
 
   private sealed interface SchedulingRequest {
-    record Schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer) implements SchedulingRequest {}
+    record Schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer)
+        implements SchedulingRequest {}
 
     record Terminate() implements SchedulingRequest {}
   }
@@ -22,8 +22,7 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
 
   @Override
   public void schedule(final ScheduleRequest request, final ResultsProtocol.WriterRole writer)
-  throws InterruptedException
-  {
+      throws InterruptedException {
     this.requestQueue.put(new SchedulingRequest.Schedule(request, writer));
   }
 
@@ -31,7 +30,8 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
     this.requestQueue.put(new SchedulingRequest.Terminate());
   }
 
-  public static ThreadedSchedulerAgent spawn(final String threadName, final SchedulerAgent schedulerAgent) {
+  public static ThreadedSchedulerAgent spawn(
+      final String threadName, final SchedulerAgent schedulerAgent) {
     final var requestQueue = new LinkedBlockingQueue<SchedulingRequest>();
 
     final var thread = new Thread(new Worker(requestQueue, schedulerAgent));
@@ -46,9 +46,7 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
     private final SchedulerAgent schedulerAgent;
 
     public Worker(
-        final BlockingQueue<SchedulingRequest> requestQueue,
-        final SchedulerAgent schedulerAgent)
-    {
+        final BlockingQueue<SchedulingRequest> requestQueue, final SchedulerAgent schedulerAgent) {
       this.requestQueue = Objects.requireNonNull(requestQueue);
       this.schedulerAgent = Objects.requireNonNull(schedulerAgent);
     }
@@ -64,10 +62,12 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
               this.schedulerAgent.schedule(req.request(), req.writer());
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
-              req.writer().failWith(b -> b
-                  .type("UNEXPECTED_SCHEDULER_EXCEPTION")
-                  .message("Something went wrong while scheduling")
-                  .trace(ex));
+              req.writer()
+                  .failWith(
+                      b ->
+                          b.type("UNEXPECTED_SCHEDULER_EXCEPTION")
+                              .message("Something went wrong while scheduling")
+                              .trace(ex));
             }
             // continue
           } else if (request instanceof SchedulingRequest.Terminate) {

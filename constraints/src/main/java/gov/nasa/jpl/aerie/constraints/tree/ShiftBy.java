@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,16 +13,24 @@ public final class ShiftBy implements Expression<Windows> {
   public final Expression<Duration> fromStart;
   public final Expression<Duration> fromEnd;
 
-  public ShiftBy(final Expression<Windows> left, final Expression<Duration> fromStart, final Expression<Duration> fromEnd) {
+  public ShiftBy(
+      final Expression<Windows> left,
+      final Expression<Duration> fromStart,
+      final Expression<Duration> fromEnd) {
     this.windows = left;
     this.fromStart = fromStart;
     this.fromEnd = fromEnd;
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment) {
     final var windows = this.windows.evaluate(results, bounds, environment);
-    return windows.shiftBy(this.fromStart.evaluate(results, bounds, environment), this.fromEnd.evaluate(results, bounds, environment));
+    return windows.shiftBy(
+        this.fromStart.evaluate(results, bounds, environment),
+        this.fromEnd.evaluate(results, bounds, environment));
   }
 
   @Override
@@ -38,18 +45,17 @@ public final class ShiftBy implements Expression<Windows> {
         prefix,
         this.windows.prettyPrint(prefix + "  "),
         this.fromStart.toString(),
-        this.fromEnd.toString()
-    );
+        this.fromEnd.toString());
   }
 
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof ShiftBy)) return false;
-    final var o = (ShiftBy)obj;
+    final var o = (ShiftBy) obj;
 
-    return Objects.equals(this.windows, o.windows) &&
-           Objects.equals(this.fromStart, o.fromStart) &&
-           Objects.equals(this.fromEnd, o.fromEnd);
+    return Objects.equals(this.windows, o.windows)
+        && Objects.equals(this.fromStart, o.fromStart)
+        && Objects.equals(this.fromEnd, o.fromEnd);
   }
 
   @Override

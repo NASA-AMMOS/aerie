@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.config;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -9,17 +8,13 @@ import java.util.Objects;
  * @param enableJavalinDevLogging controls the level of http access logging from javalin endpoints
  * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to fetch/store plan data
  */
-//TODO: remove backdoor access to directly mounted merlinFileStore (eg via merlin endpoint for downloading mission jars)
+// TODO: remove backdoor access to directly mounted merlinFileStore (eg via merlin endpoint for
+// downloading mission jars)
 public record AppConfiguration(
-    int httpPort,
-    boolean enableJavalinDevLogging,
-    Store store,
-    URI merlinGraphqlURI
-)
-{
+    int httpPort, boolean enableJavalinDevLogging, Store store, URI merlinGraphqlURI) {
   public AppConfiguration {
     Objects.requireNonNull(store);
     Objects.requireNonNull(merlinGraphqlURI);
-    //NB: ok if the merlin file store not created yet at app init; just needs to exist by first use
+    // NB: ok if the merlin file store not created yet at app init; just needs to exist by first use
   }
 }

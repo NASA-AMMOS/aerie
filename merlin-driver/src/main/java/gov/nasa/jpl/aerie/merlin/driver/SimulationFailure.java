@@ -1,17 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import javax.json.JsonValue;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Instant;
+import javax.json.JsonValue;
 
 public record SimulationFailure(
-    String type,
-    String message,
-    JsonValue data,
-    String trace,
-    Instant timestamp
-) {
+    String type, String message, JsonValue data, String trace, Instant timestamp) {
   public static final class Builder {
     private String type = "";
     private String message = "";

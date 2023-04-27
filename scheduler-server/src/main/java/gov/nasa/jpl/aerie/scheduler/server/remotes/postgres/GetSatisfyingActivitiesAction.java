@@ -2,8 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -11,9 +9,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetSatisfyingActivitiesAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     select
       s.goal_id,
       s.activity_id
@@ -36,9 +36,7 @@ import java.util.Map;
       final var goalId = new GoalId(resultSet.getLong("goal_id"));
       final var activityId = new ActivityDirectiveId(resultSet.getLong("activity_id"));
 
-      satisfyingActivities
-          .computeIfAbsent(goalId, x -> new ArrayList<>())
-          .add(activityId);
+      satisfyingActivities.computeIfAbsent(goalId, x -> new ArrayList<>()).add(activityId);
     }
 
     return satisfyingActivities;

@@ -1,12 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A latching filter is a filter applying a different filter on the first element of a sequence and another filter on
@@ -23,10 +19,11 @@ public class FilterLatching implements TimeWindowsFilter {
   }
 
   @Override
-  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
+  public Windows filter(
+      final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Windows ret = windows;
     boolean first = true;
-    for (final var interval: windows.iterateEqualTo(true)) {
+    for (final var interval : windows.iterateEqualTo(true)) {
       if (first) {
         if (firstFilter.shouldKeep(simulationResults, plan, interval)) {
           first = false;

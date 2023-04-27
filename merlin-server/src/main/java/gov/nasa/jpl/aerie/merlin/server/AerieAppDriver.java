@@ -24,6 +24,9 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.Instant;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.LowResourceMonitor;
 import org.eclipse.jetty.server.Server;
@@ -32,10 +35,6 @@ import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.time.Instant;
-
 public final class AerieAppDriver {
 
   public static void main(final String[] args) {
@@ -43,17 +42,20 @@ public final class AerieAppDriver {
     final var configuration = loadConfiguration();
     final var stores = loadStores(configuration);
 
-    final var missionModelController = new LocalMissionModelService(
-        configuration.merlinFileStore(),
-        stores.missionModels(),
-        configuration.untruePlanStart());
+    final var missionModelController =
+        new LocalMissionModelService(
+            configuration.merlinFileStore(),
+            stores.missionModels(),
+            configuration.untruePlanStart());
     final var planController = new LocalPlanService(stores.plans());
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController, planController);
+    final var typescriptCodeGenerationService =
+        new TypescriptCodeGenerationServiceAdapter(missionModelController, planController);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
-      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+      constraintsDSLCompilationService =
+          new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
     } catch (IOException e) {
       throw new Error("Failed to start ConstraintsDSLCompilationService", e);
     }
@@ -62,44 +64,45 @@ public final class AerieAppDriver {
 
     // Assemble the core non-web object graph.
     final var simulationController = new CachedSimulationService(stores.results());
-    final var simulationAction = new GetSimulationResultsAction(
-        planController,
-        missionModelController,
-        simulationController,
-        constraintsDSLCompilationService
-    );
-    final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
-    final var merlinBindings = new MerlinBindings(
-        missionModelController,
-        planController,
-        simulationAction,
-        generateConstraintsLibAction
-    );
+    final var simulationAction =
+        new GetSimulationResultsAction(
+            planController,
+            missionModelController,
+            simulationController,
+            constraintsDSLCompilationService);
+    final var generateConstraintsLibAction =
+        new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+    final var merlinBindings =
+        new MerlinBindings(
+            missionModelController, planController, simulationAction, generateConstraintsLibAction);
     // Configure an HTTP server.
-    //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
+    // default javalin jetty server has a QueuedThreadPool with maxThreads to 250
     final var server = new Server(new QueuedThreadPool(250));
     final var connector = new ServerConnector(server);
     connector.setPort(configuration.httpPort());
-    //set idle timeout to be equal to the idle timeout of hasura
+    // set idle timeout to be equal to the idle timeout of hasura
     connector.setIdleTimeout(180000);
     server.addBean(new LowResourceMonitor(server));
     server.insertHandler(new StatisticsHandler());
-    server.setConnectors(new Connector[]{connector});
-    final var javalin = Javalin.create(config -> {
-      config.showJavalinBanner = false;
-      if (configuration.enableJavalinDevLogging()) config.plugins.enableDevLogging();
-      config.plugins.enableCors(cors -> cors.add(it -> it.anyHost()));
-      config.plugins.register(merlinBindings);
-      config.plugins.register(new LocalAppExceptionBindings());
-      config.plugins.register(new MissionModelRepositoryExceptionBindings());
-      config.jetty.server(() -> server);
-    });
+    server.setConnectors(new Connector[] {connector});
+    final var javalin =
+        Javalin.create(
+            config -> {
+              config.showJavalinBanner = false;
+              if (configuration.enableJavalinDevLogging()) config.plugins.enableDevLogging();
+              config.plugins.enableCors(cors -> cors.add(it -> it.anyHost()));
+              config.plugins.register(merlinBindings);
+              config.plugins.register(new LocalAppExceptionBindings());
+              config.plugins.register(new MissionModelRepositoryExceptionBindings());
+              config.jetty.server(() -> server);
+            });
 
     // Start the HTTP server.
     javalin.start(configuration.httpPort());
   }
 
-  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results) {}
+  private record Stores(
+      PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results) {}
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
@@ -137,12 +140,12 @@ public final class AerieAppDriver {
         Integer.parseInt(getEnv("MERLIN_PORT", "27183")),
         logger.isDebugEnabled(),
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        new PostgresStore(getEnv("MERLIN_DB_SERVER", "postgres"),
-                          getEnv("MERLIN_DB_USER", ""),
-                          Integer.parseInt(getEnv("MERLIN_DB_PORT", "5432")),
-                          getEnv("MERLIN_DB_PASSWORD", ""),
-                          getEnv("MERLIN_DB", "aerie_merlin")),
-        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
-    );
+        new PostgresStore(
+            getEnv("MERLIN_DB_SERVER", "postgres"),
+            getEnv("MERLIN_DB_USER", ""),
+            Integer.parseInt(getEnv("MERLIN_DB_PORT", "5432")),
+            getEnv("MERLIN_DB_PASSWORD", ""),
+            getEnv("MERLIN_DB", "aerie_merlin")),
+        Instant.parse(getEnv("UNTRUE_PLAN_START", "")));
   }
 }

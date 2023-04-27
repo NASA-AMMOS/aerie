@@ -2,16 +2,16 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Optional;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class SetRequestStateAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     update scheduling_request
       set
         status = ?,
@@ -33,13 +33,13 @@ import java.util.Optional;
       final long specificationRevision,
       final RequestRecord.Status status,
       final ScheduleFailure failureReason,
-      final Optional<DatasetId> datasetId
-  ) throws SQLException {
+      final Optional<DatasetId> datasetId)
+      throws SQLException {
     this.statement.setString(1, status.label);
     PreparedStatements.setFailureReason(this.statement, 2, failureReason);
-    if(datasetId.isPresent()) {
+    if (datasetId.isPresent()) {
       statement.setLong(3, datasetId.get().id());
-    } else{
+    } else {
       statement.setNull(3, Types.INTEGER);
     }
     this.statement.setLong(4, specificationId);
@@ -47,7 +47,10 @@ import java.util.Optional;
 
     final var count = this.statement.executeUpdate();
     if (count < 1) throw new FailedUpdateException("scheduling_request");
-    if (count > 1) throw new Error("More than one row affected by scheduling_request update by primary key. Is the database corrupted?");
+    if (count > 1)
+      throw new Error(
+          "More than one row affected by scheduling_request update by primary key. Is the database"
+              + " corrupted?");
   }
 
   @Override

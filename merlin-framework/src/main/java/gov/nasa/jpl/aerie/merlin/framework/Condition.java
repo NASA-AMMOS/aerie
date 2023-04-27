@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Optional;
 
 public interface Condition {
@@ -19,14 +18,14 @@ public interface Condition {
     return not(this);
   }
 
-
   Condition TRUE = (positive, atEarliest, atLatest) -> Optional.of(atEarliest);
   Condition FALSE = (positive, atEarliest, atLatest) -> Optional.empty();
 
   static Condition or(final Condition left, final Condition right) {
     return (positive, atEarliest, atLatest) -> {
       if (atLatest.shorterThan(atEarliest)) return Optional.empty();
-      if (!positive) return and(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
+      if (!positive)
+        return and(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
 
       final var left$ = left.nextSatisfied(positive, atEarliest, atLatest);
       final var right$ = right.nextSatisfied(positive, atEarliest, left$.orElse(atLatest));
@@ -68,7 +67,6 @@ public interface Condition {
   }
 
   static Condition not(final Condition base) {
-    return (positive, atEarlist, atLatest) ->
-        base.nextSatisfied(!positive, atEarlist, atLatest);
+    return (positive, atEarlist, atLatest) -> base.nextSatisfied(!positive, atEarlist, atLatest);
   }
 }

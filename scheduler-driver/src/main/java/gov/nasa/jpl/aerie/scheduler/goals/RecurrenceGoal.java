@@ -5,16 +5,15 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import org.jetbrains.annotations.NotNull;
-
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * describes the desired recurrence of an activity every time period
@@ -57,13 +56,17 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
      * {@inheritDoc}
      */
     @Override
-    public RecurrenceGoal build() { return fill(new RecurrenceGoal()); }
+    public RecurrenceGoal build() {
+      return fill(new RecurrenceGoal());
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Builder getThis() { return this; }
+    protected Builder getThis() {
+      return this;
+    }
     /**
      * populates the provided goal with specifiers from this builder and above
      *
@@ -75,25 +78,27 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
      * @return the provided object, with details filled in
      */
     protected RecurrenceGoal fill(RecurrenceGoal goal) {
-      //first fill in any general specifiers from parents
+      // first fill in any general specifiers from parents
       super.fill(goal);
 
       if (every == null) {
-        throw new IllegalArgumentException("creating recurrence goal requires non-null \"every\" duration interval");
+        throw new IllegalArgumentException(
+            "creating recurrence goal requires non-null \"every\" duration interval");
       }
       if (every.min.isNegative()) {
-        throw new IllegalArgumentException("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!");
-      }
-      else if (every.max.isNegative()) {
-        throw new IllegalArgumentException("Duration passed to RecurrenceGoal as the goal's maximum recurrence interval cannot be negative!");
+        throw new IllegalArgumentException(
+            "Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be"
+                + " negative!");
+      } else if (every.max.isNegative()) {
+        throw new IllegalArgumentException(
+            "Duration passed to RecurrenceGoal as the goal's maximum recurrence interval cannot be"
+                + " negative!");
       }
       goal.recurrenceInterval = every;
 
       return goal;
     }
-
-  }//Builder
-
+  } // Builder
 
   /**
    * {@inheritDoc}
@@ -102,34 +107,39 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * exist over a timespan longer than the allowed range (and one should
    * probably be created!)
    */
-  public java.util.Collection<Conflict> getConflicts(@NotNull Plan plan, final SimulationResults simulationResults) {
+  public java.util.Collection<Conflict> getConflicts(
+      @NotNull Plan plan, final SimulationResults simulationResults) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
-    //unwrap temporalContext
+    // unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults);
 
-    //make sure it hasn't changed
-    if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
-      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows);
-    }
-    else if (this.initiallyEvaluatedTemporalContext == null) {
+    // make sure it hasn't changed
+    if (this.initiallyEvaluatedTemporalContext != null
+        && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
+      throw new UnexpectedTemporalContextChangeException(
+          "The temporalContext Windows has changed from: "
+              + this.initiallyEvaluatedTemporalContext.toString()
+              + " to "
+              + windows);
+    } else if (this.initiallyEvaluatedTemporalContext == null) {
       this.initiallyEvaluatedTemporalContext = windows;
     }
 
-    //iterate through it and then within each iteration do exactly what you did before
+    // iterate through it and then within each iteration do exactly what you did before
     for (Interval subInterval : windows.iterateEqualTo(true)) {
-      //collect all matching target acts ordered by start time
-      //REVIEW: could collapse with prior template start time query too?
-      final var satisfyingActSearch = new ActivityExpression.Builder()
-          .basedOn(matchActTemplate)
-          .startsIn(subInterval)
-          .build();
-      final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
+      // collect all matching target acts ordered by start time
+      // REVIEW: could collapse with prior template start time query too?
+      final var satisfyingActSearch =
+          new ActivityExpression.Builder().basedOn(matchActTemplate).startsIn(subInterval).build();
+      final var acts =
+          new java.util.LinkedList<>(
+              plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
       acts.sort(java.util.Comparator.comparing(SchedulingActivityDirective::startOffset));
 
-      //walk through existing matching activities to find too-large gaps,
-      //starting from the goal's own start time
-      //REVIEW: some clever implementation with stream reduce / combine?
+      // walk through existing matching activities to find too-large gaps,
+      // starting from the goal's own start time
+      // REVIEW: some clever implementation with stream reduce / combine?
       final var actI = acts.iterator();
       final var lastStartT = subInterval.end;
       var prevStartT = subInterval.start;
@@ -137,29 +147,34 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
         final var act = actI.next();
         final var actStartT = act.startOffset();
 
-        //check if the inter-activity gap is too large
-        //REVIEW: should do any check based on min gap duration?
+        // check if the inter-activity gap is too large
+        // REVIEW: should do any check based on min gap duration?
         final var strideDur = actStartT.minus(prevStartT);
         if (strideDur.compareTo(this.recurrenceInterval.max) > 0) {
-          //fill conflicts for all the missing activities in that long span
+          // fill conflicts for all the missing activities in that long span
           conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
 
         } else {
           /*TODO: right now, we associate with all the activities that are satisfying but we should aim for the minimum
           set which itself is a combinatoric problem */
           var planEval = plan.getEvaluation();
-          if (!planEval.forGoal(this).getAssociatedActivities().contains(act) && planEval.canAssociateMoreToCreatorOf(
-              act)) {
+          if (!planEval.forGoal(this).getAssociatedActivities().contains(act)
+              && planEval.canAssociateMoreToCreatorOf(act)) {
             conflicts.add(new MissingAssociationConflict(this, List.of(act)));
           }
         }
 
         prevStartT =
-            actStartT.plus(recurrenceInterval.max); //if we dont do this sum it'll just restart where the last event started and keep adding an instance of the last event. it required you to go out of bounds on the last event which was a problem, so this accommodates.
+            actStartT.plus(
+                recurrenceInterval
+                    .max); // if we dont do this sum it'll just restart where the last event started
+        // and keep adding an instance of the last event. it required you to go
+        // out of bounds on the last event which was a problem, so this
+        // accommodates.
       }
 
-      //fill in conflicts for all missing activities in the last span up to the
-      //goal's own end time (also handles case of no matching acts at all)
+      // fill in conflicts for all missing activities in the last span up to the
+      // goal's own end time (also handles case of no matching acts at all)
       conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT));
     }
 
@@ -171,7 +186,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    *
    * client code should use builders to instance goals
    */
-  protected RecurrenceGoal() { }
+  protected RecurrenceGoal() {}
 
   /**
    * the allowable range of durations over which a target activity must repeat
@@ -191,21 +206,27 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * @param start IN the start time of the span to fill with conflicts (inclusive)
    * @param end IN the end time of the span to fill with conflicts (exclusive)
    */
-  private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(Duration start, Duration end)
-  {
+  private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(
+      Duration start, Duration end) {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
-    if(end.minus(start).noLongerThan(recurrenceInterval.max)){
+    if (end.minus(start).noLongerThan(recurrenceInterval.max)) {
       return conflicts;
     }
 
     for (var intervalT = start.plus(recurrenceInterval.max);
-         ;
-         intervalT = intervalT.plus(recurrenceInterval.max)
-    ) {
-      final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
-      conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment()));
-      if(intervalT.compareTo(end) >= 0){
+        ;
+        intervalT = intervalT.plus(recurrenceInterval.max)) {
+      final var windows =
+          new Windows(false)
+              .set(
+                  Interval.betweenClosedOpen(
+                      intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)),
+                  true);
+      conflicts.add(
+          new MissingActivityTemplateConflict(
+              this, windows, this.getActTemplate(), new EvaluationEnvironment()));
+      if (intervalT.compareTo(end) >= 0) {
         break;
       }
     }

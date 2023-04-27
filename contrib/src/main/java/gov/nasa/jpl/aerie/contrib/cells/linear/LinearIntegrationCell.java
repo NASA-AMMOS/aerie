@@ -5,18 +5,19 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
-
 import java.util.function.Function;
 
 public final class LinearIntegrationCell {
   // We split `initialVolume` from `accumulatedVolume` to avoid loss of floating-point precision.
   // The rate is usually smaller than the volume by some orders of magnitude,
-  // so accumulated deltas will usually be closer to each other in magnitude than to the current volume.
+  // so accumulated deltas will usually be closer to each other in magnitude than to the current
+  // volume.
   private double initialVolume;
   private double accumulatedVolume;
   private double rate;
 
-  public LinearIntegrationCell(final double initialVolume, final double rate, final double accumulatedVolume) {
+  public LinearIntegrationCell(
+      final double initialVolume, final double rate, final double accumulatedVolume) {
     this.initialVolume = initialVolume;
     this.accumulatedVolume = accumulatedVolume;
     this.rate = rate;
@@ -26,8 +27,10 @@ public final class LinearIntegrationCell {
     this(initialVolume, rate, 0.0);
   }
 
-  public static <Event> CellRef<Event, LinearIntegrationCell>
-  allocate(final double initialVolume, final double rate, final Function<Event, LinearAccumulationEffect> interpreter) {
+  public static <Event> CellRef<Event, LinearIntegrationCell> allocate(
+      final double initialVolume,
+      final double rate,
+      final Function<Event, LinearAccumulationEffect> interpreter) {
     return CellRef.allocate(
         new LinearIntegrationCell(initialVolume, rate),
         new LinearIntegrationCellType(),
@@ -43,8 +46,7 @@ public final class LinearIntegrationCell {
   }
 
   public static final class LinearIntegrationCellType
-      implements CellType<LinearAccumulationEffect, LinearIntegrationCell>
-  {
+      implements CellType<LinearAccumulationEffect, LinearIntegrationCell> {
     @Override
     public EffectTrait<LinearAccumulationEffect> getEffectType() {
       return LinearAccumulationEffect.TRAIT;

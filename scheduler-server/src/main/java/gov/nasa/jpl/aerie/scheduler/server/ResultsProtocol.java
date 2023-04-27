@@ -1,24 +1,24 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
-import java.util.Optional;
-import java.util.function.Consumer;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * interfaces used to coordinate parties interested in the scheduling results
  *
  * (following example of merlin.server.ResultsProtocol)
  */
-//TODO: see if this could reduce to some flavor of a java.util.concurrent.CompletableFuture<>
+// TODO: see if this could reduce to some flavor of a java.util.concurrent.CompletableFuture<>
 public final class ResultsProtocol {
   private ResultsProtocol() {}
 
   /**
    * common interface for different possible results of scheduling
    */
-  //TODO: unify with ScheduleAction.Response which has overlapping options/data
+  // TODO: unify with ScheduleAction.Response which has overlapping options/data
   public sealed interface State {
 
     /**
@@ -32,7 +32,7 @@ public final class ResultsProtocol {
     /**
      * scheduling in progress, full results not yet available
      */
-    //TODO: could probably provide some partial results
+    // TODO: could probably provide some partial results
     record Incomplete(long analysisId) implements State {}
 
     /**
@@ -40,7 +40,8 @@ public final class ResultsProtocol {
      *
      * @param results the results of the scheduling run
      */
-    record Success(ScheduleResults results, long analysisId, Optional<Long> datasetId) implements State {}
+    record Success(ScheduleResults results, long analysisId, Optional<Long> datasetId)
+        implements State {}
 
     /**
      * scheduling failed; likely need to change inputs before re-running
@@ -69,7 +70,8 @@ public final class ResultsProtocol {
      *
      * it is illegal to call get() after a cancel() call
      */
-    //TODO: determine if this also kills the actual run itself (ie should plan possibly mutate after a cancel?)
+    // TODO: determine if this also kills the actual run itself (ie should plan possibly mutate
+    // after a cancel?)
     void cancel();
   }
 
@@ -85,7 +87,8 @@ public final class ResultsProtocol {
      *
      * @return true iff a cancel has been invoked on the corresponding reader
      */
-    //TODO: determine if this also kills the actual run itself (ie should plan possibly mutate after a cancel?)
+    // TODO: determine if this also kills the actual run itself (ie should plan possibly mutate
+    // after a cancel?)
     boolean isCanceled();
 
     /**

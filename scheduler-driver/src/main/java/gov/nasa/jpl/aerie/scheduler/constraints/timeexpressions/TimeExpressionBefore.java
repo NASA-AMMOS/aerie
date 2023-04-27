@@ -17,9 +17,10 @@ public class TimeExpressionBefore extends TimeExpression {
   }
 
   @Override
-  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+  public Interval computeTime(
+      final SimulationResults simulationResults, final Plan plan, final Interval interval) {
     final var origin = expr.computeTime(simulationResults, plan, interval);
-    assert(origin.isSingleton());
+    assert (origin.isSingleton());
     final var from = origin.start;
 
     Duration res = from;
@@ -27,8 +28,9 @@ public class TimeExpressionBefore extends TimeExpression {
       res = TimeUtility.performOperation(entry.getKey(), res, entry.getValue());
     }
 
-    return res.compareTo(from) > 0 ? // If we want a range of possibles
-        Interval.between(from, res) :
-        Interval.between(res, from);
+    return res.compareTo(from) > 0
+        ? // If we want a range of possibles
+        Interval.between(from, res)
+        : Interval.between(res, from);
   }
 }

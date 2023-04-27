@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
@@ -22,12 +26,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Triple;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -36,15 +34,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.commons.lang3.tuple.Triple;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 public class AnchorSchedulerTest {
   private final Duration tenDays = Duration.duration(10 * 60 * 60 * 24, Duration.SECONDS);
-  private final static Duration oneMinute = Duration.of(60, Duration.SECONDS);
-  private final Map<String, SerializedValue> arguments = Map.of("unusedArg", SerializedValue.of("test-param"));
+  private static final Duration oneMinute = Duration.of(60, Duration.SECONDS);
+  private final Map<String, SerializedValue> arguments =
+      Map.of("unusedArg", SerializedValue.of("test-param"));
   private ResumableSimulationDriver<Object> driver;
 
   @BeforeEach
@@ -54,8 +54,10 @@ public class AnchorSchedulerTest {
 
   @Nested
   public final class AnchorsSimulationDriverTests {
-    private final SerializedActivity serializedDelayDirective = new SerializedActivity("DelayActivityDirective", arguments);
-    private final SerializedActivity serializedDecompositionDirective = new SerializedActivity("DecomposingActivityDirective", arguments);
+    private final SerializedActivity serializedDelayDirective =
+        new SerializedActivity("DelayActivityDirective", arguments);
+    private final SerializedActivity serializedDecompositionDirective =
+        new SerializedActivity("DecomposingActivityDirective", arguments);
     private final SerializedValue computedAttributes = new SerializedValue.MapValue(Map.of());
     private final Instant planStart = Instant.EPOCH;
 
@@ -67,11 +69,13 @@ public class AnchorSchedulerTest {
      *  - topics
      *  Any resource profiles and events are not checked.
      */
-    private static void assertEqualsSimulationResults(SimulationResults expected, SimulationResults actual){
+    private static void assertEqualsSimulationResults(
+        SimulationResults expected, SimulationResults actual) {
       assertEquals(expected.startTime, actual.startTime);
       assertEquals(expected.duration, actual.duration);
-      assertEquals(expected.simulatedActivities.entrySet().size(), actual.simulatedActivities.size());
-      for(final var entry : expected.simulatedActivities.entrySet()){
+      assertEquals(
+          expected.simulatedActivities.entrySet().size(), actual.simulatedActivities.size());
+      for (final var entry : expected.simulatedActivities.entrySet()) {
         final var key = entry.getKey();
         final var expectedValue = entry.getValue();
         final var actualValue = actual.simulatedActivities.get(key);
@@ -80,18 +84,27 @@ public class AnchorSchedulerTest {
       }
       assertTrue(actual.unfinishedActivities.isEmpty());
       assertEquals(expected.topics.size(), actual.topics.size());
-      for(int i = 0; i < expected.topics.size(); ++i){
+      for (int i = 0; i < expected.topics.size(); ++i) {
         assertEquals(expected.topics.get(i), actual.topics.get(i));
       }
     }
 
-    private void constructFullComplete5AryTree(int maxLevel, int currentLevel, long parentNode, Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate, Map<SimulatedActivityId, SimulatedActivity> simulatedActivities){
-      if(currentLevel > maxLevel) return;
-      for(int i = 1; i <= 5; i++) {
-        long curElement = parentNode*5+i;
+    private void constructFullComplete5AryTree(
+        int maxLevel,
+        int currentLevel,
+        long parentNode,
+        Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate,
+        Map<SimulatedActivityId, SimulatedActivity> simulatedActivities) {
+      if (currentLevel > maxLevel) return;
+      for (int i = 1; i <= 5; i++) {
+        long curElement = parentNode * 5 + i;
         activitiesToSimulate.put(
             new ActivityDirectiveId(curElement),
-            new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(parentNode), false));
+            new ActivityDirective(
+                Duration.ZERO,
+                serializedDelayDirective,
+                new ActivityDirectiveId(parentNode),
+                false));
         simulatedActivities.put(
             new SimulatedActivityId(curElement),
             new SimulatedActivity(
@@ -101,12 +114,15 @@ public class AnchorSchedulerTest {
                 oneMinute,
                 null,
                 List.of(),
-                Optional.of(new ActivityDirectiveId(curElement)), computedAttributes));
-        constructFullComplete5AryTree(maxLevel, currentLevel+1, curElement, activitiesToSimulate, simulatedActivities);
+                Optional.of(new ActivityDirectiveId(curElement)),
+                computedAttributes));
+        constructFullComplete5AryTree(
+            maxLevel, currentLevel + 1, curElement, activitiesToSimulate, simulatedActivities);
       }
     }
 
-    private static void assertEqualsAsideFromChildren(SimulatedActivity expected, SimulatedActivity actual){
+    private static void assertEqualsAsideFromChildren(
+        SimulatedActivity expected, SimulatedActivity actual) {
       assertEquals(expected.type(), actual.type());
       assertEquals(expected.arguments(), actual.arguments());
       assertEquals(expected.start(), actual.start());
@@ -120,7 +136,8 @@ public class AnchorSchedulerTest {
     @DisplayName("Activities depending on no activities simulate at the correct time")
     public void activitiesAnchoredToPlan() {
       final var minusOneMinute = Duration.of(-60, Duration.SECONDS);
-      final var resolveToPlanStartAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(415);
+      final var resolveToPlanStartAnchors =
+          new HashMap<ActivityDirectiveId, ActivityDirective>(415);
       final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>(415);
 
       // Anchored to Plan Start (only positive is allowed)
@@ -128,95 +145,109 @@ public class AnchorSchedulerTest {
         final var activityDirectiveId = new ActivityDirectiveId(l);
         resolveToPlanStartAnchors.put(
             activityDirectiveId,
-            new ActivityDirective(Duration.of(l, Duration.SECONDS), serializedDelayDirective, null, true));
-        simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
-            serializedDelayDirective.getTypeName(),
-            Map.of(),
-            Instant.EPOCH.plus(l, ChronoUnit.SECONDS),
-            oneMinute,
-            null,
-            List.of(),
-            Optional.of(activityDirectiveId),
-            computedAttributes
-        ));
+            new ActivityDirective(
+                Duration.of(l, Duration.SECONDS), serializedDelayDirective, null, true));
+        simulatedActivities.put(
+            new SimulatedActivityId(l),
+            new SimulatedActivity(
+                serializedDelayDirective.getTypeName(),
+                Map.of(),
+                Instant.EPOCH.plus(l, ChronoUnit.SECONDS),
+                oneMinute,
+                null,
+                List.of(),
+                Optional.of(activityDirectiveId),
+                computedAttributes));
       }
       // Anchored to Plan End (only negative will be simulated)
       for (long l = 10; l < 15; l++) {
         final var activityDirectiveId = new ActivityDirectiveId(l);
         resolveToPlanStartAnchors.put(
             activityDirectiveId,
-            new ActivityDirective(Duration.of(-l, Duration.MINUTES), serializedDelayDirective, null, false)); // Minutes so they finish by simulation end
-        simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
-            serializedDelayDirective.getTypeName(),
-            Map.of(),
-            Instant.EPOCH.plus(10, ChronoUnit.DAYS).minus(l, ChronoUnit.MINUTES),
-            oneMinute,
-            null,
-            List.of(),
-            Optional.of(activityDirectiveId),
-            computedAttributes
-        ));
+            new ActivityDirective(
+                Duration.of(-l, Duration.MINUTES),
+                serializedDelayDirective,
+                null,
+                false)); // Minutes so they finish by simulation end
+        simulatedActivities.put(
+            new SimulatedActivityId(l),
+            new SimulatedActivity(
+                serializedDelayDirective.getTypeName(),
+                Map.of(),
+                Instant.EPOCH.plus(10, ChronoUnit.DAYS).minus(l, ChronoUnit.MINUTES),
+                oneMinute,
+                null,
+                List.of(),
+                Optional.of(activityDirectiveId),
+                computedAttributes));
       }
 
       // Chained to plan start
       resolveToPlanStartAnchors.put(
           new ActivityDirectiveId(15),
-          new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(0), true));
-      simulatedActivities.put(new SimulatedActivityId(15), new SimulatedActivity(
-          serializedDelayDirective.getTypeName(),
-          Map.of(),
-          Instant.EPOCH,
-          oneMinute,
-          null,
-          List.of(),
-          Optional.of(new ActivityDirectiveId(15)),
-          computedAttributes
-      ));
-
-      for (long l = 16; l < 415; l++) {
-        final var activityDirectiveId = new ActivityDirectiveId(l);
-        if ((l & 1) == 0) { // If even
-          resolveToPlanStartAnchors.put(
-              activityDirectiveId,
-              new ActivityDirective(oneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), true));
-          simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
-              serializedDelayDirective.getTypeName(),
-              Map.of(),
-              Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
-              oneMinute,
-              null,
-              List.of(),
-              Optional.of(activityDirectiveId),
-              computedAttributes
-          ));
-        } else {
-          resolveToPlanStartAnchors.put(
-              activityDirectiveId,
-              new ActivityDirective(minusOneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), true));
-          simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(0), true));
+      simulatedActivities.put(
+          new SimulatedActivityId(15),
+          new SimulatedActivity(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
               oneMinute,
               null,
               List.of(),
-              Optional.of(activityDirectiveId),
-              computedAttributes
-          ));
+              Optional.of(new ActivityDirectiveId(15)),
+              computedAttributes));
+
+      for (long l = 16; l < 415; l++) {
+        final var activityDirectiveId = new ActivityDirectiveId(l);
+        if ((l & 1) == 0) { // If even
+          resolveToPlanStartAnchors.put(
+              activityDirectiveId,
+              new ActivityDirective(
+                  oneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), true));
+          simulatedActivities.put(
+              new SimulatedActivityId(l),
+              new SimulatedActivity(
+                  serializedDelayDirective.getTypeName(),
+                  Map.of(),
+                  Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
+                  oneMinute,
+                  null,
+                  List.of(),
+                  Optional.of(activityDirectiveId),
+                  computedAttributes));
+        } else {
+          resolveToPlanStartAnchors.put(
+              activityDirectiveId,
+              new ActivityDirective(
+                  minusOneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), true));
+          simulatedActivities.put(
+              new SimulatedActivityId(l),
+              new SimulatedActivity(
+                  serializedDelayDirective.getTypeName(),
+                  Map.of(),
+                  Instant.EPOCH,
+                  oneMinute,
+                  null,
+                  List.of(),
+                  Optional.of(activityDirectiveId),
+                  computedAttributes));
         }
       }
 
       // Assert Simulation results
-      final var expectedSimResults = new SimulationResults(
-          Map.of(), //real
-          Map.of(), //discrete
-          simulatedActivities,
-          Map.of(), //unfinished
-          planStart,
-          tenDays, // simulation duration
-          modelTopicList,
-          new TreeMap<>() //events
-      );
+      final var expectedSimResults =
+          new SimulationResults(
+              Map.of(), // real
+              Map.of(), // discrete
+              simulatedActivities,
+              Map.of(), // unfinished
+              planStart,
+              tenDays, // simulation duration
+              modelTopicList,
+              new TreeMap<>() // events
+              );
 
       driver.simulateActivities(resolveToPlanStartAnchors);
       final var actualSimResults = driver.getSimulationResultsUpTo(planStart, tenDays);
@@ -268,16 +299,13 @@ public class AnchorSchedulerTest {
         allEndTimeAnchors.put(
             activityDirectiveIdAETA,
             new ActivityDirective(
-                oneMinute,
-                serializedDelayDirective,
-                new ActivityDirectiveId(l - 1),
-                false));
+                oneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), false));
         simulatedActivities.put(
             new SimulatedActivityId(l),
             new SimulatedActivity(
                 serializedDelayDirective.getTypeName(),
                 Map.of(),
-                Instant.EPOCH.plus((2*l)+1, ChronoUnit.MINUTES),
+                Instant.EPOCH.plus((2 * l) + 1, ChronoUnit.MINUTES),
                 oneMinute,
                 null,
                 List.of(),
@@ -288,26 +316,20 @@ public class AnchorSchedulerTest {
           endTimeAnchorEveryFifth.put(
               activityDirectiveIdEveryFifth,
               new ActivityDirective(
-                  oneMinute,
-                  serializedDelayDirective,
-                  new ActivityDirectiveId(k - 1),
-                  false));
+                  oneMinute, serializedDelayDirective, new ActivityDirectiveId(k - 1), false));
           c++;
         } else {
           endTimeAnchorEveryFifth.put(
               activityDirectiveIdEveryFifth,
               new ActivityDirective(
-                  oneMinute,
-                  serializedDelayDirective,
-                  new ActivityDirectiveId(k - 1),
-                  true));
+                  oneMinute, serializedDelayDirective, new ActivityDirectiveId(k - 1), true));
         }
         simulatedActivities.put(
             new SimulatedActivityId(k),
             new SimulatedActivity(
                 serializedDelayDirective.getTypeName(),
                 Map.of(),
-                Instant.EPOCH.plus(l+c, ChronoUnit.MINUTES),
+                Instant.EPOCH.plus(l + c, ChronoUnit.MINUTES),
                 oneMinute,
                 null,
                 List.of(),
@@ -319,16 +341,20 @@ public class AnchorSchedulerTest {
       activitiesToSimulate.putAll(endTimeAnchorEveryFifth);
 
       // Assert Simulation results
-      final var expectedSimResults = new SimulationResults(
-          Map.of(), //real
-          Map.of(), //discrete
-          simulatedActivities,
-          Map.of(), //unfinished
-          planStart,
-          Duration.of(800, Duration.MINUTES), // duration. 800 because 400 * 2 (AETA is the temporally longer chain), NOT because of number of activities
-          modelTopicList,
-          new TreeMap<>() //events
-      );
+      final var expectedSimResults =
+          new SimulationResults(
+              Map.of(), // real
+              Map.of(), // discrete
+              simulatedActivities,
+              Map.of(), // unfinished
+              planStart,
+              Duration.of(
+                  800,
+                  Duration.MINUTES), // duration. 800 because 400 * 2 (AETA is the temporally longer
+              // chain), NOT because of number of activities
+              modelTopicList,
+              new TreeMap<>() // events
+              );
 
       driver.simulateActivities(activitiesToSimulate);
       final var actualSimResults = driver.getSimulationResults(planStart);
@@ -338,193 +364,455 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Decomposition and anchors do not interfere with each other")
-    public void decomposingActivitiesAndAnchors(){
-      // Given positions Left, Center, Right in an anchor chain, where each position can either contain a Non-Decomposition (ND) activity or a Decomposition (D) activity,
-      // and the connection between Center and Left and Right and Center can be either Start (<-s-) or End (<-e-),
+    public void decomposingActivitiesAndAnchors() {
+      // Given positions Left, Center, Right in an anchor chain, where each position can either
+      // contain a Non-Decomposition (ND) activity or a Decomposition (D) activity,
+      // and the connection between Center and Left and Right and Center can be either Start (<-s-)
+      // or End (<-e-),
       // and two NDs cannot be adjacent to each other, there are 20 permutations.
 
-      // In order to have fewer activities and more complex subtrees, the first and second elements of a set of sequences will be reused when possible
+      // In order to have fewer activities and more complex subtrees, the first and second elements
+      // of a set of sequences will be reused when possible
       final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(23);
       // NOTE: This list is intentionally keyed on ActivityDirectiveId, not on SimulatedActivityId.
-      // Additionally, because we do not know the order the child activities will generate in, DecompositionDirectives will have a List.of() rather than the correct value
-      final var topLevelSimulatedActivities = new HashMap<ActivityDirectiveId, SimulatedActivity>(23);
+      // Additionally, because we do not know the order the child activities will generate in,
+      // DecompositionDirectives will have a List.of() rather than the correct value
+      final var topLevelSimulatedActivities =
+          new HashMap<ActivityDirectiveId, SimulatedActivity>(23);
       final var threeMinutes = Duration.of(3, Duration.MINUTES);
 
       // ND <-s- D <-s- D
-      activitiesToSimulate.put(new ActivityDirectiveId(1), new ActivityDirective(Duration.ZERO, serializedDelayDirective, null, true));
-      activitiesToSimulate.put(new ActivityDirectiveId(2), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(1), true));
-      activitiesToSimulate.put(new ActivityDirectiveId(3), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(2), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(1),
+          new ActivityDirective(Duration.ZERO, serializedDelayDirective, null, true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(2),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(1), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(3),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(2), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(1),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH, oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(1)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(1)),
+              computedAttributes));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(2),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH, threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(2)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(2)),
+              computedAttributes));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(3),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH, threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(3)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(3)),
+              computedAttributes));
 
       // ND <-s- D <-e- D
-      activitiesToSimulate.put(new ActivityDirectiveId(4), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(2), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(4),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(2), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(4),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(4)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(4)),
+              computedAttributes));
 
       // ND <-s- D <-s- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(5), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(2), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(5),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(2), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(5),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH, oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(5)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(5)),
+              computedAttributes));
 
       // ND <-s- D <-e- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(6), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(2), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(6),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(2), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(6),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(6)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(6)),
+              computedAttributes));
 
       // ND <-e- D <-s- D
-      activitiesToSimulate.put(new ActivityDirectiveId(7), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(1), false));
-      activitiesToSimulate.put(new ActivityDirectiveId(8), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(7), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(7),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(1), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(8),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(7), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(7),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(1, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(7)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(7)),
+              computedAttributes));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(8),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(1, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(8)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(8)),
+              computedAttributes));
 
       // ND <-e- D <-e- D
-      activitiesToSimulate.put(new ActivityDirectiveId(9), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(7), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(9),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(7), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(9),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(4, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(9)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(4, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(9)),
+              computedAttributes));
 
       // ND <-e- D <-s- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(10), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(7), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(10),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(7), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(10),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(1, ChronoUnit.MINUTES), oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(10)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(10)),
+              computedAttributes));
 
       // ND <-e- D <-e- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(11), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(7), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(11),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(7), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(11),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(4, ChronoUnit.MINUTES), oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(11)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(4, ChronoUnit.MINUTES),
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(11)),
+              computedAttributes));
 
       // D <-s- D <-s- D
-      activitiesToSimulate.put(new ActivityDirectiveId(12), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(3), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(12),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(3), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(12),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH, threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(12)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(12)),
+              computedAttributes));
 
       // D <-s- D <-e- D
-      activitiesToSimulate.put(new ActivityDirectiveId(13), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(3), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(13),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(3), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(13),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(13)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(13)),
+              computedAttributes));
 
       // D <-s- D <-s- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(14), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(3), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(14),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(3), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(14),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH, oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(14)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(14)),
+              computedAttributes));
 
       // D <-s- D <-e- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(15), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(3), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(15),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(3), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(15),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(15)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(15)),
+              computedAttributes));
 
       // D <-e- D <-s- D
-      activitiesToSimulate.put(new ActivityDirectiveId(16), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(4), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(16),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(4), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(16),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(16)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(16)),
+              computedAttributes));
 
       // D <-e- D <-e- D
-      activitiesToSimulate.put(new ActivityDirectiveId(17), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(4), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(17),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(4), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(17),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(6, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(17)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(6, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(17)),
+              computedAttributes));
 
       // D <-e- D <-s- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(18), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(4), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(18),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(4), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(18),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(18)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(18)),
+              computedAttributes));
 
       // D <-e- D <-e- ND
-      activitiesToSimulate.put(new ActivityDirectiveId(19), new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(4), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(19),
+          new ActivityDirective(
+              Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(4), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(19),
-          new SimulatedActivity(serializedDelayDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(6, ChronoUnit.MINUTES), oneMinute, null, List.of(), Optional.of(new ActivityDirectiveId(19)), computedAttributes));
+          new SimulatedActivity(
+              serializedDelayDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(6, ChronoUnit.MINUTES),
+              oneMinute,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(19)),
+              computedAttributes));
 
       // D <-s- ND <-s- D
-      activitiesToSimulate.put(new ActivityDirectiveId(20), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(14), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(20),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(14), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(20),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH, threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(20)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH,
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(20)),
+              computedAttributes));
 
       // D <-s- ND <-e- D
-      activitiesToSimulate.put(new ActivityDirectiveId(21), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(14), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(21),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(14), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(21),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(1, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(21)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(21)),
+              computedAttributes));
 
       // D <-e- ND <-s- D
-      activitiesToSimulate.put(new ActivityDirectiveId(22), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(15), true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(22),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(15), true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(22),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(3, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(22)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(22)),
+              computedAttributes));
 
       // D <-e- ND <-e- D
-      activitiesToSimulate.put(new ActivityDirectiveId(23), new ActivityDirective(Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(15), false));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(23),
+          new ActivityDirective(
+              Duration.ZERO, serializedDecompositionDirective, new ActivityDirectiveId(15), false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(23),
-          new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(4, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(23)), computedAttributes));
+          new SimulatedActivity(
+              serializedDecompositionDirective.getTypeName(),
+              Map.of(),
+              Instant.EPOCH.plus(4, ChronoUnit.MINUTES),
+              threeMinutes,
+              null,
+              List.of(),
+              Optional.of(new ActivityDirectiveId(23)),
+              computedAttributes));
 
-      // Custom assertion, as Decomposition children can end up simulated in different positions between runs
+      // Custom assertion, as Decomposition children can end up simulated in different positions
+      // between runs
       driver.simulateActivities(activitiesToSimulate);
       final var actualSimResults = driver.getSimulationResults(planStart);
 
       assertEquals(planStart, actualSimResults.startTime);
       assertTrue(actualSimResults.unfinishedActivities.isEmpty());
       assertEquals(modelTopicList.size(), actualSimResults.topics.size());
-      for(int i = 0; i < modelTopicList.size(); ++i){
+      for (int i = 0; i < modelTopicList.size(); ++i) {
         assertEquals(modelTopicList.get(i), actualSimResults.topics.get(i));
       }
 
       final var childSimulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(28);
       final var otherSimulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(23);
-      assertEquals(51, actualSimResults.simulatedActivities.size()); // 23 + 2*(14 Decomposing activities)
+      assertEquals(
+          51, actualSimResults.simulatedActivities.size()); // 23 + 2*(14 Decomposing activities)
 
-      for(final var entry : actualSimResults.simulatedActivities.entrySet()) {
-        if(entry.getValue().parentId()==null){
+      for (final var entry : actualSimResults.simulatedActivities.entrySet()) {
+        if (entry.getValue().parentId() == null) {
           otherSimulatedActivities.put(entry.getKey(), entry.getValue());
-        }
-        else {
+        } else {
           childSimulatedActivities.put(entry.getKey(), entry.getValue());
         }
       }
       assertEquals(23, otherSimulatedActivities.size());
       assertEquals(28, childSimulatedActivities.size());
 
-      for(final var entry : otherSimulatedActivities.entrySet()){
+      for (final var entry : otherSimulatedActivities.entrySet()) {
         assertTrue(entry.getValue().directiveId().isPresent());
         final ActivityDirectiveId topLevelKey = entry.getValue().directiveId().get();
-        assertEqualsAsideFromChildren(topLevelSimulatedActivities.get(topLevelKey), entry.getValue());
+        assertEqualsAsideFromChildren(
+            topLevelSimulatedActivities.get(topLevelKey), entry.getValue());
         // For decompositions, examine the children
-        if(entry.getValue().type().equals(serializedDecompositionDirective.getTypeName())){
+        if (entry.getValue().type().equals(serializedDecompositionDirective.getTypeName())) {
           assertEquals(2, entry.getValue().childIds().size());
-          final var firstChild = childSimulatedActivities.remove(entry.getValue().childIds().get(0));
-          final var secondChild = childSimulatedActivities.remove(entry.getValue().childIds().get(1));
+          final var firstChild =
+              childSimulatedActivities.remove(entry.getValue().childIds().get(0));
+          final var secondChild =
+              childSimulatedActivities.remove(entry.getValue().childIds().get(1));
 
-          // Assert the children look as expected and one starts and the parent's start time, and one starts two minutes later
+          // Assert the children look as expected and one starts and the parent's start time, and
+          // one starts two minutes later
           assertNotNull(firstChild);
           assertNotNull(secondChild);
           assertTrue(firstChild.childIds().isEmpty());
           assertTrue(secondChild.childIds().isEmpty());
 
-          if(firstChild.start().isBefore(secondChild.start())){
+          if (firstChild.start().isBefore(secondChild.start())) {
             assertEqualsAsideFromChildren(
                 new SimulatedActivity(
                     serializedDelayDirective.getTypeName(),
@@ -605,16 +893,17 @@ public class AnchorSchedulerTest {
       constructFullComplete5AryTree(5, 1, 0, activitiesToSimulate, simulatedActivities);
 
       // Assert Simulation results
-      final var expectedSimResults = new SimulationResults(
-          Map.of(), //real
-          Map.of(), //discrete
-          simulatedActivities,
-          Map.of(), //unfinished
-          planStart,
-          Duration.of(6, Duration.MINUTES), // duration. wide tree, but max branch length is 6
-          modelTopicList,
-          new TreeMap<>() //events
-      );
+      final var expectedSimResults =
+          new SimulationResults(
+              Map.of(), // real
+              Map.of(), // discrete
+              simulatedActivities,
+              Map.of(), // unfinished
+              planStart,
+              Duration.of(6, Duration.MINUTES), // duration. wide tree, but max branch length is 6
+              modelTopicList,
+              new TreeMap<>() // events
+              );
       driver.simulateActivities(activitiesToSimulate);
       final var actualSimResults = driver.getSimulationResults(planStart);
 
@@ -623,168 +912,190 @@ public class AnchorSchedulerTest {
     }
   }
 
-  //region Mission Model
-  private static final List<Triple<Integer, String, ValueSchema>> modelTopicList = Arrays.asList(
-      Triple.of(0, "ActivityType.Input.DelayActivityDirective", new ValueSchema.StructSchema(Map.of())),
-      Triple.of(1, "ActivityType.Output.DelayActivityDirective", new ValueSchema.StructSchema(Map.of())),
-      Triple.of(2, "ActivityType.Input.DecomposingActivityDirective", new ValueSchema.StructSchema(Map.of())),
-      Triple.of(3, "ActivityType.Output.DecomposingActivityDirective", new ValueSchema.StructSchema(Map.of())));
+  // region Mission Model
+  private static final List<Triple<Integer, String, ValueSchema>> modelTopicList =
+      Arrays.asList(
+          Triple.of(
+              0,
+              "ActivityType.Input.DelayActivityDirective",
+              new ValueSchema.StructSchema(Map.of())),
+          Triple.of(
+              1,
+              "ActivityType.Output.DelayActivityDirective",
+              new ValueSchema.StructSchema(Map.of())),
+          Triple.of(
+              2,
+              "ActivityType.Input.DecomposingActivityDirective",
+              new ValueSchema.StructSchema(Map.of())),
+          Triple.of(
+              3,
+              "ActivityType.Output.DecomposingActivityDirective",
+              new ValueSchema.StructSchema(Map.of())));
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
   private static final Topic<Object> delayedActivityDirectiveOutputTopic = new Topic<>();
-  private static final DirectiveType<Object, Object, Object> delayedActivityDirective = new DirectiveType<>() {
-    @Override
-    public InputType<Object> getInputType() {
-      return testModelInputType;
-    }
+  private static final DirectiveType<Object, Object, Object> delayedActivityDirective =
+      new DirectiveType<>() {
+        @Override
+        public InputType<Object> getInputType() {
+          return testModelInputType;
+        }
 
-    @Override
-    public OutputType<Object> getOutputType() {
-      return testModelOutputType;
-    }
+        @Override
+        public OutputType<Object> getOutputType() {
+          return testModelOutputType;
+        }
 
-    @Override
-    public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
-        $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
-          $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
-          return TaskStatus.completed(Unit.UNIT);
-        });
+        @Override
+        public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
+          return executor ->
+              $ -> {
+                $.emit(this, delayedActivityDirectiveInputTopic);
+                return TaskStatus.delayed(
+                    oneMinute,
+                    $$ -> {
+                      $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
+                      return TaskStatus.completed(Unit.UNIT);
+                    });
+              };
+        }
       };
-    }
-  };
 
   private static final Topic<Object> decomposingActivityDirectiveInputTopic = new Topic<>();
   private static final Topic<Object> decomposingActivityDirectiveOutputTopic = new Topic<>();
-  private static final DirectiveType<Object, Object, Object> decomposingActivityDirective = new DirectiveType<>() {
-    @Override
-    public InputType<Object> getInputType() {
-      return testModelInputType;
-    }
+  private static final DirectiveType<Object, Object, Object> decomposingActivityDirective =
+      new DirectiveType<>() {
+        @Override
+        public InputType<Object> getInputType() {
+          return testModelInputType;
+        }
 
-    @Override
-    public OutputType<Object> getOutputType() {
-      return testModelOutputType;
-    }
+        @Override
+        public OutputType<Object> getOutputType() {
+          return testModelOutputType;
+        }
 
-    @Override
-    public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> scheduler -> {
-        scheduler.emit(this, decomposingActivityDirectiveInputTopic);
-        return TaskStatus.delayed(
-            Duration.ZERO,
-            $ -> {
-              try {
-                $.spawn(delayedActivityDirective.getTaskFactory(null, null));
-              } catch (final InstantiationException ex) {
-                throw new Error("Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
-                    ex.toString()));
-              }
-              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), $$ -> {
-                try {
-                  $$.spawn(delayedActivityDirective.getTaskFactory(null, null));
-                } catch (final InstantiationException ex) {
-                  throw new Error(
-                      "Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
-                          ex.toString()));
-                }
-                $$.emit(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
-                return TaskStatus.completed(Unit.UNIT);
-              });
-            });
+        @Override
+        public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
+          return executor ->
+              scheduler -> {
+                scheduler.emit(this, decomposingActivityDirectiveInputTopic);
+                return TaskStatus.delayed(
+                    Duration.ZERO,
+                    $ -> {
+                      try {
+                        $.spawn(delayedActivityDirective.getTaskFactory(null, null));
+                      } catch (final InstantiationException ex) {
+                        throw new Error(
+                            "Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s"
+                                .formatted(ex.toString()));
+                      }
+                      return TaskStatus.delayed(
+                          Duration.of(120, Duration.SECOND),
+                          $$ -> {
+                            try {
+                              $$.spawn(delayedActivityDirective.getTaskFactory(null, null));
+                            } catch (final InstantiationException ex) {
+                              throw new Error(
+                                  "Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s"
+                                      .formatted(ex.toString()));
+                            }
+                            $$.emit(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
+                            return TaskStatus.completed(Unit.UNIT);
+                          });
+                    });
+              };
+        }
       };
-    }
-  };
 
-  private static final InputType<Object> testModelInputType = new InputType<>() {
-    @Override
-    public List<Parameter> getParameters() {
-      return List.of();
-    }
+  private static final InputType<Object> testModelInputType =
+      new InputType<>() {
+        @Override
+        public List<Parameter> getParameters() {
+          return List.of();
+        }
 
-    @Override
-    public List<String> getRequiredParameters() {
-      return List.of();
-    }
+        @Override
+        public List<String> getRequiredParameters() {
+          return List.of();
+        }
 
-    @Override
-    public Object instantiate(final Map arguments) {
-      return new Object();
-    }
+        @Override
+        public Object instantiate(final Map arguments) {
+          return new Object();
+        }
 
-    @Override
-    public Map<String, SerializedValue> getArguments(final Object value) {
-      return Map.of();
-    }
+        @Override
+        public Map<String, SerializedValue> getArguments(final Object value) {
+          return Map.of();
+        }
 
-    @Override
-    public List<ValidationNotice> getValidationFailures(final Object value) {
-      return List.of();
-    }
-  };
+        @Override
+        public List<ValidationNotice> getValidationFailures(final Object value) {
+          return List.of();
+        }
+      };
 
-  private static final OutputType<Object> testModelOutputType = new OutputType<>() {
-    @Override
-    public ValueSchema getSchema() {
-      return ValueSchema.ofStruct(Map.of());
-    }
+  private static final OutputType<Object> testModelOutputType =
+      new OutputType<>() {
+        @Override
+        public ValueSchema getSchema() {
+          return ValueSchema.ofStruct(Map.of());
+        }
 
-    @Override
-    public SerializedValue serialize(final Object value) {
-      return SerializedValue.of(Map.of());
-    }
-  };
+        @Override
+        public SerializedValue serialize(final Object value) {
+          return SerializedValue.of(Map.of());
+        }
+      };
 
-  private static final MissionModel<Object> AnchorTestModel = new MissionModel<>(
-      new Object(),
-      new LiveCells(null),
-      Map.of(),
-      List.of(
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Input.DelayActivityDirective",
-              delayedActivityDirectiveInputTopic,
-              testModelOutputType),
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Output.DelayActivityDirective",
-              delayedActivityDirectiveOutputTopic,
-              testModelOutputType),
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Input.DecomposingActivityDirective",
-              decomposingActivityDirectiveInputTopic,
-              testModelOutputType),
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Output.DecomposingActivityDirective",
-              decomposingActivityDirectiveOutputTopic,
-              testModelOutputType)),
-      List.of(),
-      DirectiveTypeRegistry.extract(
-          new ModelType<>() {
+  private static final MissionModel<Object> AnchorTestModel =
+      new MissionModel<>(
+          new Object(),
+          new LiveCells(null),
+          Map.of(),
+          List.of(
+              new MissionModel.SerializableTopic<>(
+                  "ActivityType.Input.DelayActivityDirective",
+                  delayedActivityDirectiveInputTopic,
+                  testModelOutputType),
+              new MissionModel.SerializableTopic<>(
+                  "ActivityType.Output.DelayActivityDirective",
+                  delayedActivityDirectiveOutputTopic,
+                  testModelOutputType),
+              new MissionModel.SerializableTopic<>(
+                  "ActivityType.Input.DecomposingActivityDirective",
+                  decomposingActivityDirectiveInputTopic,
+                  testModelOutputType),
+              new MissionModel.SerializableTopic<>(
+                  "ActivityType.Output.DecomposingActivityDirective",
+                  decomposingActivityDirectiveOutputTopic,
+                  testModelOutputType)),
+          List.of(),
+          DirectiveTypeRegistry.extract(
+              new ModelType<>() {
 
-            @Override
-            public Map<String, ? extends DirectiveType<Object, ?, ?>> getDirectiveTypes() {
-              return Map.of(
-                  "DelayActivityDirective",
-                  delayedActivityDirective,
-                  "DecomposingActivityDirective",
-                  decomposingActivityDirective);
-            }
+                @Override
+                public Map<String, ? extends DirectiveType<Object, ?, ?>> getDirectiveTypes() {
+                  return Map.of(
+                      "DelayActivityDirective",
+                      delayedActivityDirective,
+                      "DecomposingActivityDirective",
+                      decomposingActivityDirective);
+                }
 
-            @Override
-            public InputType<Object> getConfigurationType() {
-              return testModelInputType;
-            }
+                @Override
+                public InputType<Object> getConfigurationType() {
+                  return testModelInputType;
+                }
 
-            @Override
-            public Object instantiate(
-                final Instant planStart,
-                final Object configuration,
-                final Initializer builder)
-            {
-              return new Object();
-            }
-          }
-      )
-  );
-  //endregion
+                @Override
+                public Object instantiate(
+                    final Instant planStart,
+                    final Object configuration,
+                    final Initializer builder) {
+                  return new Object();
+                }
+              }));
+  // endregion
 }

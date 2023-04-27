@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +17,10 @@ public final class Times implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public LinearProfile evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment) {
     return this.profile.evaluate(results, bounds, environment).times(this.multiplier);
   }
 
@@ -33,17 +35,15 @@ public final class Times implements Expression<LinearProfile> {
         "\n%s(* %s %s)",
         prefix,
         this.profile.prettyPrint(prefix + "  "),
-        String.format("\n%s  %s", prefix, this.multiplier)
-    );
+        String.format("\n%s  %s", prefix, this.multiplier));
   }
 
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof Times)) return false;
-    final var o = (Times)obj;
+    final var o = (Times) obj;
 
-    return Objects.equals(this.profile, o.profile) &&
-           Objects.equals(this.multiplier, o.multiplier);
+    return Objects.equals(this.profile, o.profile) && Objects.equals(this.multiplier, o.multiplier);
   }
 
   @Override

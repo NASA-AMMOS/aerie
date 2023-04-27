@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-
 import java.util.Map;
 
 /**
@@ -68,9 +67,9 @@ public interface DirectiveType<Model, Arguments, Result> {
    * @see InputType#instantiate(Map)
    * @see #createTask(Model, Arguments)
    */
-  default TaskFactory<Result> getTaskFactory(final Model model, final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
+  default TaskFactory<Result> getTaskFactory(
+      final Model model, final Map<String, SerializedValue> arguments)
+      throws InstantiationException {
     return this.getTaskFactory(model, this.getInputType().instantiate(arguments));
   }
 }

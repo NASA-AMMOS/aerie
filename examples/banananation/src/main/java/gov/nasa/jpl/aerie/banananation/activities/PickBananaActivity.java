@@ -11,8 +11,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
  */
 @ActivityType("PickBanana")
 public final class PickBananaActivity {
-  @Parameter
-  public int quantity = 10;
+  @Parameter public int quantity = 10;
 
   @Validation("quantity must be positive")
   @Validation.Subject("quantity")

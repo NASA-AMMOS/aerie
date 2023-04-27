@@ -7,6 +7,7 @@ public abstract class Breadcrumb {
 
   public interface BreadcrumbVisitor<Result> {
     Result onString(String s);
+
     Result onInteger(Integer i);
   }
 

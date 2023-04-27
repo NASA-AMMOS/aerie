@@ -9,5 +9,4 @@ public class Optimizers {
   public static Optimizer latestStartTime() {
     return new OptimizerLatestStartTime();
   }
-
 }

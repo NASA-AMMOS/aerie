@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import static java.util.Collections.unmodifiableMap;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.Map;
 import java.util.Objects;
-
-import static java.util.Collections.unmodifiableMap;
 
 /**
  * A serializable representation of a mission model-specific activity domain object.
@@ -54,11 +53,9 @@ public final class SerializedActivity {
   public boolean equals(final Object o) {
     if (!(o instanceof SerializedActivity)) return false;
 
-    final SerializedActivity other = (SerializedActivity)o;
-    return
-        (  Objects.equals(this.typeName, other.typeName)
-        && Objects.equals(this.arguments, other.arguments)
-        );
+    final SerializedActivity other = (SerializedActivity) o;
+    return (Objects.equals(this.typeName, other.typeName)
+        && Objects.equals(this.arguments, other.arguments));
   }
 
   @Override
@@ -68,6 +65,10 @@ public final class SerializedActivity {
 
   @Override
   public String toString() {
-    return "SerializedActivity { typeName = " + this.typeName + ", arguments = " + this.arguments.toString() + " }";
+    return "SerializedActivity { typeName = "
+        + this.typeName
+        + ", arguments = "
+        + this.arguments.toString()
+        + " }";
   }
 }

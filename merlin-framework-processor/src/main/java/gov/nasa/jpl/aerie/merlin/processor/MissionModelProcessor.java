@@ -5,7 +5,13 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -15,20 +21,12 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Top-level annotation processor for mission models.
@@ -73,17 +71,19 @@ public final class MissionModelProcessor implements Processor {
   }
 
   @Override
-  public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+  public boolean process(
+      final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
 
     if (!roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).isEmpty()) {
       this.messager.printMessage(
           Diagnostic.Kind.WARNING,
-          "@%s does nothing, perhaps you meant to use @%s.%s".formatted(
-              AutoValueMapper.class.getSimpleName(),
-              AutoValueMapper.class.getSimpleName(),
-              AutoValueMapper.Record.class.getSimpleName()));
+          "@%s does nothing, perhaps you meant to use @%s.%s"
+              .formatted(
+                  AutoValueMapper.class.getSimpleName(),
+                  AutoValueMapper.class.getSimpleName(),
+                  AutoValueMapper.Record.class.getSimpleName()));
     }
 
     final var missionModelParser = new MissionModelParser(elementUtils, typeUtils);
@@ -91,49 +91,58 @@ public final class MissionModelProcessor implements Processor {
 
     // Iterate over all elements annotated with @MissionModel
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
-      final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
+      final var autoValueMapperRequests =
+          roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
         for (final var request : autoValueMapperRequests) {
-          concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
+          concatenatedTypeRules.add(
+              AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
         }
 
-        final var missionModelRecord = new MissionModelRecord(
-            missionModelRecord$.$package,
-            missionModelRecord$.topLevelModel,
-            missionModelRecord$.expectsPlanStart,
-            missionModelRecord$.modelConfigurationType,
-            concatenatedTypeRules,
-            missionModelRecord$.activityTypes
-        );
+        final var missionModelRecord =
+            new MissionModelRecord(
+                missionModelRecord$.$package,
+                missionModelRecord$.topLevelModel,
+                missionModelRecord$.expectsPlanStart,
+                missionModelRecord$.modelConfigurationType,
+                concatenatedTypeRules,
+                missionModelRecord$.activityTypes);
 
-        final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord),
-            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
+        final var generatedFiles =
+            new ArrayList<>(
+                List.of(
+                    missionModelGen.generateMerlinPlugin(missionModelRecord),
+                    missionModelGen.generateSchedulerPlugin(missionModelRecord)));
 
-        missionModelRecord.modelConfigurationType
-            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+        missionModelRecord
+            .modelConfigurationType
+            .flatMap(
+                configType ->
+                    missionModelGen.generateMissionModelConfigurationMapper(
+                        missionModelRecord, configType))
             .ifPresent(generatedFiles::add);
 
-        generatedFiles.addAll(List.of(
-            missionModelGen.generateModelType(missionModelRecord),
-            missionModelGen.generateSchedulerModel(missionModelRecord),
-            missionModelGen.generateActivityActions(missionModelRecord),
-            missionModelGen.generateActivityTypes(missionModelRecord)
-        ));
+        generatedFiles.addAll(
+            List.of(
+                missionModelGen.generateModelType(missionModelRecord),
+                missionModelGen.generateSchedulerModel(missionModelRecord),
+                missionModelGen.generateActivityActions(missionModelRecord),
+                missionModelGen.generateActivityTypes(missionModelRecord)));
 
-        final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
-            missionModelRecord,
-            autoValueMapperRequests);
+        final var autoValueMappers =
+            AutoValueMappers.generateAutoValueMappers(missionModelRecord, autoValueMapperRequests);
         generatedFiles.add(autoValueMappers);
 
         for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.inputType().declaration());
           if (!activityRecord.inputType().mapper().isCustom) {
-            missionModelGen.generateActivityMapper(missionModelRecord, activityRecord).ifPresent(generatedFiles::add);
+            missionModelGen
+                .generateActivityMapper(missionModelRecord, activityRecord)
+                .ifPresent(generatedFiles::add);
           }
         }
 
@@ -148,12 +157,11 @@ public final class MissionModelProcessor implements Processor {
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
             (ex.getMessage()
-             + "\n"
-             + Arrays
-                 .stream(trace)
-                 .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
-                 .map(Object::toString)
-                 .collect(Collectors.joining("\n"))),
+                + "\n"
+                + Arrays.stream(trace)
+                    .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
+                    .map(Object::toString)
+                    .collect(Collectors.joining("\n"))),
             ex.element,
             ex.annotation,
             ex.attribute);
@@ -162,12 +170,11 @@ public final class MissionModelProcessor implements Processor {
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
             (ex.getMessage()
-             + "\n"
-             + Arrays
-                 .stream(trace)
-                 .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
-                 .map(Object::toString)
-                 .collect(Collectors.joining("\n"))));
+                + "\n"
+                + Arrays.stream(trace)
+                    .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
+                    .map(Object::toString)
+                    .collect(Collectors.joining("\n"))));
       }
     }
 
@@ -191,8 +198,7 @@ public final class MissionModelProcessor implements Processor {
       final Element element,
       final AnnotationMirror annotation,
       final ExecutableElement member,
-      final String userText)
-  {
+      final String userText) {
     return Collections::emptyIterator;
   }
 }

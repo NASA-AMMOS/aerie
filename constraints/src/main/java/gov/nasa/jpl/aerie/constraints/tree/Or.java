@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -22,12 +21,13 @@ public final class Or implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment) {
     Windows windows = new Windows(false);
     for (final var expression : this.expressions) {
-      windows = windows.or(
-          expression.evaluate(results, bounds, environment)
-      );
+      windows = windows.or(expression.evaluate(results, bounds, environment));
     }
     return windows.select(bounds);
   }
@@ -40,9 +40,7 @@ public final class Or implements Expression<Windows> {
   @Override
   public String prettyPrint(final String prefix) {
     final var builder = new StringBuilder();
-    builder.append("\n")
-           .append(prefix)
-           .append("(or ");
+    builder.append("\n").append(prefix).append("(or ");
 
     final var iter = this.expressions.iterator();
     while (iter.hasNext()) {
@@ -57,7 +55,7 @@ public final class Or implements Expression<Windows> {
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof Or)) return false;
-    Or o = (Or)obj;
+    Or o = (Or) obj;
 
     return Objects.equals(this.expressions, o.expressions);
   }

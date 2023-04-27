@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,7 +15,10 @@ public final class ProfileExpression<P extends Profile<P>> implements Expression
   }
 
   @Override
-  public Profile<P> evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Profile<P> evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment) {
     return this.expression.evaluate(results, bounds, environment);
   }
 

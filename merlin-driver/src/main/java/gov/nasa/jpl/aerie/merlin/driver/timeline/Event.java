@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -15,18 +14,17 @@ public final class Event {
     this.inner = inner;
   }
 
-  public static <EventType>
-  Event create(final Topic<EventType> topic, final EventType event, final TaskId provenance) {
+  public static <EventType> Event create(
+      final Topic<EventType> topic, final EventType event, final TaskId provenance) {
     return new Event(new Event.GenericEvent<>(topic, event, provenance));
   }
 
-  public <EventType, Target>
-  Optional<Target> extract(final Topic<EventType> topic, final Function<EventType, Target> transform) {
+  public <EventType, Target> Optional<Target> extract(
+      final Topic<EventType> topic, final Function<EventType, Target> transform) {
     return this.inner.extract(topic, transform);
   }
 
-  public <EventType>
-  Optional<EventType> extract(final Topic<EventType> topic) {
+  public <EventType> Optional<EventType> extract(final Topic<EventType> topic) {
     return this.inner.extract(topic, $ -> $);
   }
 
@@ -43,19 +41,22 @@ public final class Event {
     return "<@%s, %s>".formatted(System.identityHashCode(this.inner.topic), this.inner.event);
   }
 
-  private record GenericEvent<EventType>(Topic<EventType> topic, EventType event, TaskId provenance) {
+  private record GenericEvent<EventType>(
+      Topic<EventType> topic, EventType event, TaskId provenance) {
     private GenericEvent {
       Objects.requireNonNull(topic);
       Objects.requireNonNull(event);
       Objects.requireNonNull(provenance);
     }
 
-    private <Other, Target>
-    Optional<Target> extract(final Topic<Other> otherTopic, final Function<Other, Target> transform) {
+    private <Other, Target> Optional<Target> extract(
+        final Topic<Other> otherTopic, final Function<Other, Target> transform) {
       if (this.topic != otherTopic) return Optional.empty();
 
-      // SAFETY: If `this.topic` and `otherTopic` are identical references, then their types are also equal.
-      //  So `Topic<EventType> = Topic<Other>`, and since Java generics are injective families, `EventType = Other`.
+      // SAFETY: If `this.topic` and `otherTopic` are identical references, then their types are
+      // also equal.
+      //  So `Topic<EventType> = Topic<Other>`, and since Java generics are injective families,
+      // `EventType = Other`.
       @SuppressWarnings("unchecked")
       final var event = (Other) this.event;
 

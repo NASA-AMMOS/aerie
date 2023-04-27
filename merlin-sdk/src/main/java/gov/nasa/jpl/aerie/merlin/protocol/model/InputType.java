@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-
 import java.util.List;
 import java.util.Map;
 
@@ -128,8 +127,7 @@ public interface InputType<T> {
   //   and provide actionable information specific to each kind of failure.
   //  * Under-specification: We can usually tell what arguments remain to be specified.
   //  * Over-specification: We can usually tell which specified arguments are in error.
-  T instantiate(Map<String, SerializedValue> arguments)
-      throws InstantiationException;
+  T instantiate(Map<String, SerializedValue> arguments) throws InstantiationException;
 
   /**
    * Extracts the complete set of arguments for a given value of type {@code T}.
@@ -173,7 +171,7 @@ public interface InputType<T> {
   record Parameter(String name, ValueSchema schema) {}
 
   /** A human-readable advisory concerning a subset of the arguments for an instance of an {@link InputType}. */
-  record ValidationNotice(List<String> subjects, String message) { }
+  record ValidationNotice(List<String> subjects, String message) {}
 
   /**
    * Provides validation information about the value of type {@code T} determined by a set of arguments.
@@ -195,8 +193,7 @@ public interface InputType<T> {
    * @see #getValidationFailures(T)
    */
   default List<ValidationNotice> validateArguments(final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
+      throws InstantiationException {
     return this.getValidationFailures(this.instantiate(arguments));
   }
 
@@ -219,9 +216,8 @@ public interface InputType<T> {
    * @see #instantiate(Map)
    * @see #getArguments(T)
    */
-  default Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
+  default Map<String, SerializedValue> getEffectiveArguments(
+      final Map<String, SerializedValue> arguments) throws InstantiationException {
     return this.getArguments(this.instantiate(arguments));
   }
 }

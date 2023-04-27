@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.TimeWindowsFilter;
 import gov.nasa.jpl.aerie.scheduler.constraints.transformers.TimeWindowsTransformer;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -23,7 +22,6 @@ import java.util.function.Function;
  */
 public class TimeRangeExpression {
 
-
   /**
    * TODO: for now, acts like a big AND. We need a OR.
    *
@@ -31,66 +29,91 @@ public class TimeRangeExpression {
    * @param domain x
    * @return x
    */
-  public Windows computeRange(final SimulationResults simulationResults, final Plan plan, final Windows domain) {
+  public Windows computeRange(
+      final SimulationResults simulationResults, final Plan plan, final Windows domain) {
 
     Windows inter = domain;
-    if(inter.stream().noneMatch(Segment::value)) return inter;
+    if (inter.stream().noneMatch(Segment::value)) return inter;
 
     if (constantWin != null) {
       inter = inter.and(constantWin);
-      if(inter.stream().noneMatch(Segment::value)) return inter;
+      if (inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     if (actTemplate != null) {
       Windows actTw = new Windows(false);
       var minTimepoint = inter.minTrueTimePoint();
       var maxTimepoint = inter.maxTrueTimePoint();
-      if(minTimepoint.isPresent() && maxTimepoint.isPresent()) {
-        final var anchorActSearch = new ActivityExpression.Builder()
-            .basedOn(actTemplate)
-            .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the interval
-        final var anchorActs = plan.find(anchorActSearch, simulationResults, new EvaluationEnvironment());
+      if (minTimepoint.isPresent() && maxTimepoint.isPresent()) {
+        final var anchorActSearch =
+            new ActivityExpression.Builder()
+                .basedOn(actTemplate)
+                .startsIn(inter)
+                .build(); // check if it exists IN the windows, not just the upper and lower bounds
+        // of the interval
+        final var anchorActs =
+            plan.find(anchorActSearch, simulationResults, new EvaluationEnvironment());
         for (var anchorAct : anchorActs) {
           var endInclusivity = Interval.Inclusivity.Exclusive;
-          if(anchorAct.duration().isZero()){
+          if (anchorAct.duration().isZero()) {
             endInclusivity = Interval.Inclusivity.Inclusive;
           }
-          actTw = actTw.set(Interval.between(anchorAct.duration(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity), true);
+          actTw =
+              actTw.set(
+                  Interval.between(
+                      anchorAct.duration(),
+                      Interval.Inclusivity.Inclusive,
+                      anchorAct.getEndTime(),
+                      endInclusivity),
+                  true);
         }
       }
       inter = inter.and(actTw);
-      if(inter.stream().noneMatch(Segment::value)) return inter;
+      if (inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var otherExpr : timeRangeExpressions) {
       Windows windowsState = otherExpr.computeRange(simulationResults, plan, domain);
       inter = inter.and(windowsState);
-      if(inter.stream().noneMatch(Segment::value)) return inter;
+      if (inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var expr : stateExpr) {
-      final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
-      Windows windowsState = expr.evaluate(simulationResults, domainOfInter, new EvaluationEnvironment());
+      final var domainOfInter =
+          Interval.between(
+              inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
+      Windows windowsState =
+          expr.evaluate(simulationResults, domainOfInter, new EvaluationEnvironment());
       inter = inter.and(windowsState);
-      if(inter.stream().noneMatch(Segment::value)) return inter;
+      if (inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var constState : constantsStates) {
-      final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
+      final var domainOfInter =
+          Interval.between(
+              inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
       final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints();
 
       // can't use non-final variables in lambdas, so its an array now.
       final Windows[] timeline = {new Windows(false)};
 
-
       final var container = new ArrayList<Interval>();
       changePoints.iterateEqualTo(true).iterator().forEachRemaining(container::add);
-      container.stream().reduce((a, b) -> {
-        timeline[0] = timeline[0].set(Interval.interval(a.start, Interval.Inclusivity.Exclusive, b.start, Interval.Inclusivity.Exclusive), true);
-        return b;
-      });
+      container.stream()
+          .reduce(
+              (a, b) -> {
+                timeline[0] =
+                    timeline[0].set(
+                        Interval.interval(
+                            a.start,
+                            Interval.Inclusivity.Exclusive,
+                            b.start,
+                            Interval.Inclusivity.Exclusive),
+                        true);
+                return b;
+              });
       inter = inter.and(timeline[0]);
-      if(inter.stream().noneMatch(Segment::value)) return inter;
+      if (inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var filterOrTransform : filtersAndTransformers) {
@@ -99,7 +122,7 @@ public class TimeRangeExpression {
       } else if (filterOrTransform instanceof TimeWindowsTransformer timeWindowsTransformer) {
         inter = timeWindowsTransformer.transformWindows(plan, inter, simulationResults);
       }
-      if(inter.stream().noneMatch(Segment::value)) return inter;
+      if (inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     return inter;
@@ -138,7 +161,6 @@ public class TimeRangeExpression {
     final List<Windows> constantWin = new ArrayList<>();
 
     private ActivityExpression actTemplate;
-
 
     public Builder thenFilter(TimeWindowsFilter filter) {
       filtersAndTransformers.add(filter);
@@ -200,7 +222,6 @@ public class TimeRangeExpression {
       return getThis();
     }
 
-
     public TimeRangeExpression build() {
       TimeRangeExpression tre = new TimeRangeExpression();
 
@@ -209,7 +230,8 @@ public class TimeRangeExpression {
           && actTemplate == null
           && timeRangeExpressions.isEmpty()
           && constantWin.isEmpty()) {
-        throw new RuntimeException("either from or constantValuesOf has to be used to build a valid expression");
+        throw new RuntimeException(
+            "either from or constantValuesOf has to be used to build a valid expression");
       }
       tre.filtersAndTransformers = filtersAndTransformers;
       tre.constantsStates = constantsStates;
@@ -234,12 +256,7 @@ public class TimeRangeExpression {
     public Builder getThis() {
       return this;
     }
-
   }
 
-
-  private TimeRangeExpression() {
-
-  }
-
+  private TimeRangeExpression() {}
 }

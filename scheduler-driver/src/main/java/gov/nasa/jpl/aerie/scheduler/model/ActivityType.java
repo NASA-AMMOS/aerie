@@ -1,17 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 
 /**
  * general re-usable description of a modeled system behavior
@@ -63,7 +61,8 @@ public class ActivityType {
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType(final String name, final DirectiveType<?, ?, ?> specType, final DurationType durationType) {
+  public ActivityType(
+      final String name, final DirectiveType<?, ?, ?> specType, final DurationType durationType) {
     checkNotNull(name, "creating activity type with null name");
     this.name = name;
     this.activityConstraints = null;
@@ -87,13 +86,12 @@ public class ActivityType {
   }
 
   static Parameter getParameterSpecification(final List<Parameter> params, final String name) {
-    final var parameterSpecifications = params.stream()
-        .filter(var -> var.name().equals(name))
-        .collect(Collectors.toList());
-    if(parameterSpecifications.isEmpty()){
+    final var parameterSpecifications =
+        params.stream().filter(var -> var.name().equals(name)).collect(Collectors.toList());
+    if (parameterSpecifications.isEmpty()) {
       return null;
     }
-    assert(parameterSpecifications.size()==1);
+    assert (parameterSpecifications.size() == 1);
     return parameterSpecifications.get(0);
   }
 
@@ -120,23 +118,24 @@ public class ActivityType {
     return this.activityConstraints;
   }
 
-  public DirectiveType<?, ?, ?> getSpecType(){
+  public DirectiveType<?, ?, ?> getSpecType() {
     return this.specType;
   }
 
-  public DurationType getDurationType(){
+  public DurationType getDurationType() {
     return this.durationType;
   }
 
-  public boolean isParamLegal(final String name){
-    if(this.specType != null){
-      final var paramSpec = getParameterSpecification(this.specType.getInputType().getParameters(), name);
+  public boolean isParamLegal(final String name) {
+    if (this.specType != null) {
+      final var paramSpec =
+          getParameterSpecification(this.specType.getInputType().getParameters(), name);
       return paramSpec != null;
     }
     return true;
   }
 
-  public void setResourceConstraint(Expression<Windows> constraint){
+  public void setResourceConstraint(Expression<Windows> constraint) {
     this.activityConstraints = constraint;
   }
 
@@ -146,8 +145,8 @@ public class ActivityType {
     if (o == null || getClass() != o.getClass()) return false;
     final var that = (ActivityType) o;
     return Objects.equals(this.name, that.name)
-           && Objects.equals(this.activityConstraints, that.activityConstraints)
-           && Objects.equals(this.specType, that.specType);
+        && Objects.equals(this.activityConstraints, that.activityConstraints)
+        && Objects.equals(this.specType, that.specType);
   }
 
   @Override

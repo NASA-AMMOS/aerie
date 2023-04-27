@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
 import gov.nasa.jpl.aerie.foomissionmodel.models.SimpleData;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -7,10 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 
 // The `@ExtendWith` annotation injects the given extension into JUnit's testing apparatus.
 // Our `MerlinExtension` hooks test class construction and test method execution,
@@ -24,8 +24,10 @@ public final class SimpleDataTest {
   private final SimpleData model = new SimpleData();
 
   // Test methods are executed in a "simulation" Merlin context.
-  // This means that simulation control like `spawn`, `delay`, `waitFor`, and `emit` can be performed,
-  // but additional cell storage cannot be allocated (and hence models cannot typically be constructed).
+  // This means that simulation control like `spawn`, `delay`, `waitFor`, and `emit` can be
+  // performed,
+  // but additional cell storage cannot be allocated (and hence models cannot typically be
+  // constructed).
   @Test
   public void testTotalVolume() {
     // Within a Merlin test, simulation actions and test assertions can be mixed freely.

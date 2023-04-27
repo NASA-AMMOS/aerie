@@ -14,5 +14,4 @@ public enum PlanOutputMode {
    * update the input plan container itself with the new activities in the output schedule
    */
   UpdateInputPlanWithNewActivities
-
 }

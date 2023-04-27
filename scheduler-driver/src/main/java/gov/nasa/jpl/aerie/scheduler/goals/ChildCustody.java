@@ -24,5 +24,4 @@ public enum ChildCustody {
    * way besides their constrainable parameters
    */
   Solely
-
 }

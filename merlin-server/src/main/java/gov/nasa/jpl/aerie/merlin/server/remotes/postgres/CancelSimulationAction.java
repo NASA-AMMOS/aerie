@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.intellij.lang.annotations.Language;
 
 /*package local*/ final class CancelSimulationAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     update simulation_dataset
         set canceled = true
         where dataset_id = ?

@@ -2,15 +2,15 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class LookupSimulationDatasetAction implements AutoCloseable {
-  private static final @Language("Sql") String sql = """
+  private static final @Language("Sql") String sql =
+      """
     with
       revisions as
         ( select
@@ -73,7 +73,8 @@ import java.util.Optional;
       final var datasetId = results.getLong("dataset_id");
       final var reason = PreparedStatements.getFailureReason(results, 3);
       final var canceled = results.getBoolean("canceled");
-      final var simulationStartTime = Timestamp.fromString(results.getString("simulation_start_time"));
+      final var simulationStartTime =
+          Timestamp.fromString(results.getString("simulation_start_time"));
       final var simulationEndTime = Timestamp.fromString(results.getString("simulation_end_time"));
       final var simulationDatasetId = results.getLong("id");
       final var state = new SimulationStateRecord(status, reason);

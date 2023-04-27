@@ -6,13 +6,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 public class DurationExpressionDur implements DurationExpression {
 
-
   final Duration dur;
 
-  public DurationExpressionDur(Duration dur){
+  public DurationExpressionDur(Duration dur) {
     this.dur = dur;
   }
-
 
   @Override
   public Duration compute(final Interval interval, final SimulationResults simulationResults) {

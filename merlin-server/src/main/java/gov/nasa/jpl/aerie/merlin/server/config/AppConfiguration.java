@@ -4,13 +4,12 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Objects;
 
-public record AppConfiguration (
+public record AppConfiguration(
     int httpPort,
     boolean enableJavalinDevLogging,
     Path merlinFileStore,
     Store store,
-    Instant untruePlanStart
-) {
+    Instant untruePlanStart) {
   public AppConfiguration {
     Objects.requireNonNull(merlinFileStore);
     Objects.requireNonNull(store);

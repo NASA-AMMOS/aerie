@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-
 import java.time.Instant;
 
 public final class Clock {

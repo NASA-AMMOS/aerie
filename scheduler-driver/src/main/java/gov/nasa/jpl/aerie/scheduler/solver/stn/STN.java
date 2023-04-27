@@ -26,35 +26,37 @@ public class STN {
 
   private static final Logger logger = LoggerFactory.getLogger(STN.class);
 
-  public void print(){
-    for(var edge :graph.edgeSet()){
-      logger.info(edge.toString() + " "+graph.getEdgeWeight(edge));
-    }  }
+  public void print() {
+    for (var edge : graph.edgeSet()) {
+      logger.info(edge.toString() + " " + graph.getEdgeWeight(edge));
+    }
+  }
+
   private final Graph<String, DefaultWeightedEdge> graph;
 
   private BellmanFordShortestPath<String, DefaultWeightedEdge> latestComputation;
 
   public STN() {
-    graph = GraphTypeBuilder
-        .<String, DefaultWeightedEdge>directed()
-        .allowingMultipleEdges(false)
-        .allowingSelfLoops(false)
-        .edgeClass(DefaultWeightedEdge.class)
-        .weighted(true)
-        .buildGraph();
+    graph =
+        GraphTypeBuilder.<String, DefaultWeightedEdge>directed()
+            .allowingMultipleEdges(false)
+            .allowingSelfLoops(false)
+            .edgeClass(DefaultWeightedEdge.class)
+            .weighted(true)
+            .buildGraph();
   }
 
   /**
    * tp1 is before tp2
    * equivalent to the constraint
    * tp1 --- [0, +inf] ---> tp2
-   Maps to two edges in a distance graph
-   i --- +inf ---> j
-   i {@literal <}--- -0 --- j
-
-   we can remove the first one and keep only the second one
+   * Maps to two edges in a distance graph
+   * i --- +inf ---> j
+   * i {@literal <}--- -0 --- j
+   *
+   * we can remove the first one and keep only the second one
    */
-  public void addBeforeCst(String tp1, String tp2){
+  public void addBeforeCst(String tp1, String tp2) {
     var e1 = getOrCreateEdge(tp2, tp1);
     graph.setEdgeWeight(e1, -0);
   }
@@ -71,24 +73,23 @@ public class STN {
 
     graph.setEdgeWeight(e1, -min);
     graph.setEdgeWeight(e2, max);
-
   }
 
-  public Pair<Double, Double> getDurCst(String a, String b){
+  public Pair<Double, Double> getDurCst(String a, String b) {
     failIfUpdateNotLaunched();
     failIfTimepointAbsent(a);
     failIfTimepointAbsent(b);
     return Pair.of(-getDist(b, a), getDist(a, b));
   }
 
-  public void addTimepoint(String tp){
+  public void addTimepoint(String tp) {
     graph.addVertex(tp);
   }
 
   public boolean update() {
     boolean ret = false;
     BellmanFordShortestPath<String, DefaultWeightedEdge> algo = null;
-    if(graph.vertexSet().isEmpty()){
+    if (graph.vertexSet().isEmpty()) {
       return ret;
     }
     try {
@@ -96,7 +97,10 @@ public class STN {
       var a = algo.getPaths(graph.vertexSet().iterator().next());
       ret = true;
     } catch (NegativeCycleDetectedException e) {
-      logger.debug("Negative cycle ", e); //this is normal behavior, shouldn't be flagged as an error! If debugging is on, drop the stack trace.
+      logger.debug(
+          "Negative cycle ",
+          e); // this is normal behavior, shouldn't be flagged as an error! If debugging is on, drop
+      // the stack trace.
     }
     latestComputation = algo;
     return ret;
@@ -105,7 +109,7 @@ public class STN {
   /**
    * gets the weight on link a-->b
    */
-  public double getDist(String a, String b){
+  public double getDist(String a, String b) {
     failIfUpdateNotLaunched();
     return latestComputation.getPathWeight(a, b);
   }
@@ -121,16 +125,16 @@ public class STN {
     return edge;
   }
 
-  private void failIfTimepointAbsent(String tp){
-    if(!graph.vertexSet().contains(tp)){
-      throw new IllegalArgumentException("Timepoint is not present in temporal network, insert it before use");
+  private void failIfTimepointAbsent(String tp) {
+    if (!graph.vertexSet().contains(tp)) {
+      throw new IllegalArgumentException(
+          "Timepoint is not present in temporal network, insert it before use");
     }
   }
 
-  private void failIfUpdateNotLaunched(){
-    if(latestComputation == null){
+  private void failIfUpdateNotLaunched() {
+    if (latestComputation == null) {
       throw new IllegalArgumentException("Must call update() before getting results");
     }
   }
-
 }

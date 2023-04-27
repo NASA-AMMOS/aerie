@@ -1,14 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class UpdateSimulatedActivityParentsAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
       update span
       set parent_id = ?
       where dataset_id = ?
@@ -24,11 +24,11 @@ import java.util.Map;
   public void apply(
       final long datasetId,
       final Map<Long, SpanRecord> simulatedActivities,
-      final Map<Long, Long> simIdToPgId
-  ) throws SQLException {
+      final Map<Long, Long> simIdToPgId)
+      throws SQLException {
     for (final var entry : simulatedActivities.entrySet()) {
-      final var activity =  entry.getValue();
-      final var id =  entry.getKey();
+      final var activity = entry.getValue();
+      final var id = entry.getKey();
       if (activity.parentId().isEmpty()) continue;
 
       this.statement.setLong(1, simIdToPgId.get(activity.parentId().get()));

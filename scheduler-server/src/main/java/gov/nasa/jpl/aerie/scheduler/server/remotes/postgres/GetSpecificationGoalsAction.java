@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
     select
       s.goal_id,
       g.name,

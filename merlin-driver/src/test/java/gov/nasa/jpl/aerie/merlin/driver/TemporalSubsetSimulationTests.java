@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import static gov.nasa.jpl.aerie.merlin.driver.AnchorSimulationTest.AnchorsSimulationDriverTests.AnchorTestModel;
+import static gov.nasa.jpl.aerie.merlin.driver.AnchorSimulationTest.AnchorsSimulationDriverTests.modelTopicList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -12,11 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-
-import static gov.nasa.jpl.aerie.merlin.driver.AnchorSimulationTest.AnchorsSimulationDriverTests.AnchorTestModel;
-import static gov.nasa.jpl.aerie.merlin.driver.AnchorSimulationTest.AnchorsSimulationDriverTests.modelTopicList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Scenarios tested:
@@ -31,23 +30,26 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * 9) One-day plan, no anchors: Simulate no duration. Start at hour 5
  */
 public class TemporalSubsetSimulationTests {
-  final Duration tenDays = Duration.of(10*24, Duration.HOURS);
-  final Duration fiveDays = Duration.of(5*24, Duration.HOURS);
+  final Duration tenDays = Duration.of(10 * 24, Duration.HOURS);
+  final Duration fiveDays = Duration.of(5 * 24, Duration.HOURS);
   final Duration oneDay = Duration.of(24, Duration.HOURS);
   final Duration oneMinute = Duration.of(1, Duration.MINUTES);
   final Duration fourAndAHalfHours = Duration.of(270, Duration.MINUTES);
 
   private final Instant planStart = Instant.parse("2023-01-01T00:00:00Z");
 
-  private final Map<String, SerializedValue> arguments = Map.of("unusedArg", SerializedValue.of("test-param"));
-  private final SerializedActivity serializedDelayDirective = new SerializedActivity("DelayActivityDirective", arguments);
+  private final Map<String, SerializedValue> arguments =
+      Map.of("unusedArg", SerializedValue.of("test-param"));
+  private final SerializedActivity serializedDelayDirective =
+      new SerializedActivity("DelayActivityDirective", arguments);
   private final SerializedValue computedAttributes = new SerializedValue.MapValue(Map.of());
 
-  private static void assertEqualsSimulationResults(SimulationResults expected, SimulationResults actual){
+  private static void assertEqualsSimulationResults(
+      SimulationResults expected, SimulationResults actual) {
     assertEquals(expected.startTime, actual.startTime);
     assertEquals(expected.duration, actual.duration);
     assertEquals(expected.simulatedActivities.size(), actual.simulatedActivities.size());
-    for(final var entry : expected.simulatedActivities.entrySet()){
+    for (final var entry : expected.simulatedActivities.entrySet()) {
       final var key = entry.getKey();
       final var expectedValue = entry.getValue();
       final var actualValue = actual.simulatedActivities.get(key);
@@ -55,7 +57,7 @@ public class TemporalSubsetSimulationTests {
       assertEquals(expectedValue, actualValue);
     }
     assertEquals(expected.unfinishedActivities.size(), actual.unfinishedActivities.size());
-    for(final var entry: expected.unfinishedActivities.entrySet()){
+    for (final var entry : expected.unfinishedActivities.entrySet()) {
       final var key = entry.getKey();
       final var expectedValue = entry.getValue();
       final var actualValue = actual.unfinishedActivities.get(key);
@@ -63,22 +65,23 @@ public class TemporalSubsetSimulationTests {
       assertEquals(expectedValue, actualValue);
     }
     assertEquals(expected.topics.size(), actual.topics.size());
-    for(int i = 0; i < expected.topics.size(); ++i){
+    for (int i = 0; i < expected.topics.size(); ++i) {
       assertEquals(expected.topics.get(i), actual.topics.get(i));
     }
   }
 
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate first half of plan")
-  public void simulateFirstHalf(){
+  public void simulateFirstHalf() {
     final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
-    for(int i = 0; i < 120; ++i){
+    for (int i = 0; i < 120; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
           new SimulatedActivity(
@@ -92,10 +95,11 @@ public class TemporalSubsetSimulationTests {
               computedAttributes));
     }
 
-    for(int i = 120; i < 240; ++i){
+    for (int i = 120; i < 240; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
     // Activity 120 won't be finished since it starts at the simulation end time
@@ -110,40 +114,38 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(120))));
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart,
-        fiveDays,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart,
-        fiveDays,
-        planStart,
-        tenDays);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart,
+            fiveDays,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel, activitiesInPlan, planStart, fiveDays, planStart, tenDays);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
 
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate second half of plan")
-  public void simulateSecondHalf(){
+  public void simulateSecondHalf() {
     final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
-    for(int i = 0; i < 120; ++i){
+    for (int i = 0; i < 120; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
-    for(int i = 120; i < 240; ++i){
+    for (int i = 120; i < 240; ++i) {
       simulatedActivities.put(
           new SimulatedActivityId(i),
           new SimulatedActivity(
@@ -157,27 +159,30 @@ public class TemporalSubsetSimulationTests {
               computedAttributes));
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        Map.of(), //The last activity starts an hour before the simulation ends
-        planStart.plus(5, ChronoUnit.DAYS),
-        fiveDays,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(5, ChronoUnit.DAYS),
-        fiveDays,
-        planStart,
-        tenDays);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            Map.of(), // The last activity starts an hour before the simulation ends
+            planStart.plus(5, ChronoUnit.DAYS),
+            fiveDays,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(5, ChronoUnit.DAYS),
+            fiveDays,
+            planStart,
+            tenDays);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -189,16 +194,18 @@ public class TemporalSubsetSimulationTests {
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
-    for(int i = 0; i < 72; ++i){
+    for (int i = 0; i < 72; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
-    for(int i = 72; i < 192; ++i){
+    for (int i = 72; i < 192; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
           new SimulatedActivity(
@@ -212,10 +219,11 @@ public class TemporalSubsetSimulationTests {
               computedAttributes));
     }
 
-    for(int i = 192; i < 240; ++i){
+    for (int i = 192; i < 240; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
     // Activity 192 won't be finished since it starts at the simulation end time
@@ -230,23 +238,25 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(192))));
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(3, ChronoUnit.DAYS),
-        fiveDays,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(3, ChronoUnit.DAYS),
-        fiveDays,
-        planStart,
-        tenDays);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(3, ChronoUnit.DAYS),
+            fiveDays,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(3, ChronoUnit.DAYS),
+            fiveDays,
+            planStart,
+            tenDays);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -258,10 +268,11 @@ public class TemporalSubsetSimulationTests {
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
-    for(int i = -48; i < 72; ++i){
+    for (int i = -48; i < 72; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
           new SimulatedActivity(
@@ -275,10 +286,11 @@ public class TemporalSubsetSimulationTests {
               computedAttributes));
     }
 
-    for(int i = 72; i < 240; ++i){
+    for (int i = 72; i < 240; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
     // Activity 72 won't be finished since it starts at the simulation end time
@@ -293,23 +305,25 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(72))));
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(-2, ChronoUnit.DAYS),
-        fiveDays,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(-2, ChronoUnit.DAYS),
-        fiveDays,
-        planStart,
-        tenDays);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(-2, ChronoUnit.DAYS),
+            fiveDays,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(-2, ChronoUnit.DAYS),
+            fiveDays,
+            planStart,
+            tenDays);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -321,16 +335,18 @@ public class TemporalSubsetSimulationTests {
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
-    for(int i = 72; i < 192; ++i){
+    for (int i = 72; i < 192; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
-    for(int i = 192; i < 312; ++i){
+    for (int i = 192; i < 312; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
           new SimulatedActivity(
@@ -345,23 +361,25 @@ public class TemporalSubsetSimulationTests {
     }
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(8, ChronoUnit.DAYS),
-        fiveDays,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(8, ChronoUnit.DAYS),
-        fiveDays,
-        planStart,
-        tenDays);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(8, ChronoUnit.DAYS),
+            fiveDays,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(8, ChronoUnit.DAYS),
+            fiveDays,
+            planStart,
+            tenDays);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -377,7 +395,8 @@ public class TemporalSubsetSimulationTests {
     // Base
     activitiesInPlan.put(
         new ActivityDirectiveId(0),
-        new ActivityDirective(Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(0),
         new SimulatedActivity(
@@ -393,7 +412,11 @@ public class TemporalSubsetSimulationTests {
     // Set 1: Start Time Anchor Chain
     activitiesInPlan.put(
         new ActivityDirectiveId(1),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(0),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(1),
         new SimulatedActivity(
@@ -407,7 +430,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(2),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(1), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(1),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(2),
         new SimulatedActivity(
@@ -421,7 +448,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(3),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(2), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(2),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(3),
         new SimulatedActivity(
@@ -435,7 +466,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(4),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(3), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(3),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(4),
         new SimulatedActivity(
@@ -451,7 +486,11 @@ public class TemporalSubsetSimulationTests {
     // Set 2: End Time Anchor Chain
     activitiesInPlan.put(
         new ActivityDirectiveId(5),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(0),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(5),
         new SimulatedActivity(
@@ -465,7 +504,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(6),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(5), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(5),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(6),
         new SimulatedActivity(
@@ -479,7 +522,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(7),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(6), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(6),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(7),
         new SimulatedActivity(
@@ -493,7 +540,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(8),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(7), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(7),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(8),
         new SimulatedActivity(
@@ -509,7 +560,11 @@ public class TemporalSubsetSimulationTests {
     // Set 3: Start-End-Start-End Anchor Chain
     activitiesInPlan.put(
         new ActivityDirectiveId(9),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(0),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(9),
         new SimulatedActivity(
@@ -523,7 +578,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(10),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(9), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(9),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(10),
         new SimulatedActivity(
@@ -537,7 +596,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(11),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(10), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(10),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(11),
         new SimulatedActivity(
@@ -551,7 +614,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(12),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(11), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(11),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(12),
         new SimulatedActivity(
@@ -564,15 +631,16 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(12)),
             computedAttributes));
 
-    for(int i = 0; i < 24; i++){
+    for (int i = 0; i < 24; i++) {
       activitiesInPlan.put(
-          new ActivityDirectiveId(i+13),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirectiveId(i + 13),
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
     // Set 4: No Anchors
-    for(int i = 3; i < 8; i++){
+    for (int i = 3; i < 8; i++) {
       simulatedActivities.put(
-          new SimulatedActivityId(i+13),
+          new SimulatedActivityId(i + 13),
           new SimulatedActivity(
               serializedDelayDirective.getTypeName(),
               Map.of(),
@@ -580,28 +648,30 @@ public class TemporalSubsetSimulationTests {
               oneMinute,
               null,
               List.of(),
-              Optional.of(new ActivityDirectiveId(i+13)),
+              Optional.of(new ActivityDirectiveId(i + 13)),
               computedAttributes));
     }
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(3, ChronoUnit.HOURS),
-        fourAndAHalfHours,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(3, ChronoUnit.HOURS),
-        fourAndAHalfHours,
-        planStart,
-        oneDay);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(3, ChronoUnit.HOURS),
+            fourAndAHalfHours,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(3, ChronoUnit.HOURS),
+            fourAndAHalfHours,
+            planStart,
+            oneDay);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -617,24 +687,42 @@ public class TemporalSubsetSimulationTests {
     // Chain 1: Interrupted, end-time
     activitiesInPlan.put(
         new ActivityDirectiveId(0),
-        new ActivityDirective(Duration.of(2, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(2, Duration.HOURS), serializedDelayDirective, null, true));
     activitiesInPlan.put(
         new ActivityDirectiveId(1),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(0),
+            false));
     activitiesInPlan.put(
         new ActivityDirectiveId(2),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(1), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(1),
+            false));
     activitiesInPlan.put(
         new ActivityDirectiveId(3),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(2), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(2),
+            false));
 
     // Chain 2: Interrupted, start-time
     activitiesInPlan.put(
         new ActivityDirectiveId(4),
-        new ActivityDirective(Duration.of(2, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(2, Duration.HOURS), serializedDelayDirective, null, true));
     activitiesInPlan.put(
         new ActivityDirectiveId(5),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(4), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(4),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(5),
         new SimulatedActivity(
@@ -648,7 +736,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(6),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(5), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(5),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(6),
         new SimulatedActivity(
@@ -662,7 +754,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(7),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(6), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(6),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(7),
         new SimulatedActivity(
@@ -678,7 +774,8 @@ public class TemporalSubsetSimulationTests {
     // Chain 3: Uninterrupted
     activitiesInPlan.put(
         new ActivityDirectiveId(8),
-        new ActivityDirective(Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(8),
         new SimulatedActivity(
@@ -692,7 +789,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(9),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(8), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(8),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(9),
         new SimulatedActivity(
@@ -706,7 +807,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(10),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(9), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(9),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(10),
         new SimulatedActivity(
@@ -720,7 +825,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(11),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(10), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(10),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(11),
         new SimulatedActivity(
@@ -733,35 +842,39 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(11)),
             computedAttributes));
 
-    for(int i = 0; i < 3; ++i){
+    for (int i = 0; i < 3; ++i) {
       activitiesInPlan.put(
-          new ActivityDirectiveId(i+24),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirectiveId(i + 24),
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
-    for(int i = 8; i < 24; ++i){
+    for (int i = 8; i < 24; ++i) {
       activitiesInPlan.put(
-          new ActivityDirectiveId(i+24),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirectiveId(i + 24),
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(3, ChronoUnit.HOURS),
-        fourAndAHalfHours,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(3, ChronoUnit.HOURS),
-        fourAndAHalfHours,
-        planStart,
-        oneDay);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(3, ChronoUnit.HOURS),
+            fourAndAHalfHours,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(3, ChronoUnit.HOURS),
+            fourAndAHalfHours,
+            planStart,
+            oneDay);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -777,7 +890,8 @@ public class TemporalSubsetSimulationTests {
     // Chain 1: Interrupted, end-time
     activitiesInPlan.put(
         new ActivityDirectiveId(0),
-        new ActivityDirective(Duration.of(5, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(5, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(0),
         new SimulatedActivity(
@@ -791,7 +905,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(1),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(0),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(1),
         new SimulatedActivity(
@@ -805,7 +923,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(2),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(1), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(1),
+            false));
     simulatedActivities.put(
         new SimulatedActivityId(2),
         new SimulatedActivity(
@@ -819,12 +941,17 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(3),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(2), false));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(2),
+            false));
 
     // Chain 2: Interrupted, start-time
     activitiesInPlan.put(
         new ActivityDirectiveId(4),
-        new ActivityDirective(Duration.of(5, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(5, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(4),
         new SimulatedActivity(
@@ -838,7 +965,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(5),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(4), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(4),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(5),
         new SimulatedActivity(
@@ -852,7 +983,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(6),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(5), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(5),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(6),
         new SimulatedActivity(
@@ -866,12 +1001,17 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(7),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(6), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(6),
+            true));
 
     // Chain 3: Uninterrupted
     activitiesInPlan.put(
         new ActivityDirectiveId(8),
-        new ActivityDirective(Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
+        new ActivityDirective(
+            Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(8),
         new SimulatedActivity(
@@ -885,7 +1025,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(9),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(8), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(8),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(9),
         new SimulatedActivity(
@@ -899,7 +1043,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(10),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(9), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(9),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(10),
         new SimulatedActivity(
@@ -913,7 +1061,11 @@ public class TemporalSubsetSimulationTests {
             computedAttributes));
     activitiesInPlan.put(
         new ActivityDirectiveId(11),
-        new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(10), true));
+        new ActivityDirective(
+            Duration.of(1, Duration.HOURS),
+            serializedDelayDirective,
+            new ActivityDirectiveId(10),
+            true));
     simulatedActivities.put(
         new SimulatedActivityId(11),
         new SimulatedActivity(
@@ -926,36 +1078,39 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(11)),
             computedAttributes));
 
-
-    for(int i = 0; i < 3; ++i){
+    for (int i = 0; i < 3; ++i) {
       activitiesInPlan.put(
-          new ActivityDirectiveId(i+24),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirectiveId(i + 24),
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
-    for(int i = 8; i < 24; ++i){
+    for (int i = 8; i < 24; ++i) {
       activitiesInPlan.put(
-          new ActivityDirectiveId(i+24),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirectiveId(i + 24),
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(3, ChronoUnit.HOURS),
-        fourAndAHalfHours,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(3, ChronoUnit.HOURS),
-        fourAndAHalfHours,
-        planStart,
-        oneDay);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(3, ChronoUnit.HOURS),
+            fourAndAHalfHours,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(3, ChronoUnit.HOURS),
+            fourAndAHalfHours,
+            planStart,
+            oneDay);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -967,10 +1122,11 @@ public class TemporalSubsetSimulationTests {
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(24);
 
-    for(int i = 0; i < 24; ++i){
+    for (int i = 0; i < 24; ++i) {
       activitiesInPlan.put(
           new ActivityDirectiveId(i),
-          new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
+          new ActivityDirective(
+              Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
     }
     unfinishedActivities.put(
         new SimulatedActivityId(12),
@@ -983,23 +1139,25 @@ public class TemporalSubsetSimulationTests {
             Optional.of(new ActivityDirectiveId(12))));
 
     // Assert Simulation results
-    final var expectedSimResults = new SimulationResults(
-        Map.of(), //real
-        Map.of(), //discrete
-        simulatedActivities,
-        unfinishedActivities,
-        planStart.plus(12, ChronoUnit.HOURS),
-        Duration.ZERO,
-        modelTopicList,
-        new TreeMap<>() //events
-    );
-    final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
-        activitiesInPlan,
-        planStart.plus(12, ChronoUnit.HOURS),
-        Duration.ZERO,
-        planStart,
-        oneDay);
+    final var expectedSimResults =
+        new SimulationResults(
+            Map.of(), // real
+            Map.of(), // discrete
+            simulatedActivities,
+            unfinishedActivities,
+            planStart.plus(12, ChronoUnit.HOURS),
+            Duration.ZERO,
+            modelTopicList,
+            new TreeMap<>() // events
+            );
+    final var actualSimResults =
+        SimulationDriver.simulate(
+            AnchorTestModel,
+            activitiesInPlan,
+            planStart.plus(12, ChronoUnit.HOURS),
+            Duration.ZERO,
+            planStart,
+            oneDay);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }

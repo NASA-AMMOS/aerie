@@ -7,24 +7,26 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
 import java.util.List;
 
 public class TransformerEnvelope implements TimeWindowsTransformer {
 
   private final List<TimeRangeExpression> insideExprs;
 
-
   public TransformerEnvelope(final List<TimeRangeExpression> insideExprs) {
     this.insideExprs = insideExprs;
   }
 
   @Override
-  public Windows transformWindows(final Plan plan, final Windows windowsToTransform, final SimulationResults simulationResults) {
+  public Windows transformWindows(
+      final Plan plan,
+      final Windows windowsToTransform,
+      final SimulationResults simulationResults) {
 
     Windows ret = new Windows(false);
-    if(!windowsToTransform.stream().noneMatch(Segment::value)) {
-      Duration min = windowsToTransform.maxTrueTimePoint().get().getKey(), max = windowsToTransform.minTrueTimePoint().get().getKey();
+    if (!windowsToTransform.stream().noneMatch(Segment::value)) {
+      Duration min = windowsToTransform.maxTrueTimePoint().get().getKey(),
+          max = windowsToTransform.minTrueTimePoint().get().getKey();
       boolean atLeastOne = false;
       for (var insideExpr : insideExprs) {
 
@@ -37,12 +39,11 @@ public class TransformerEnvelope implements TimeWindowsTransformer {
       }
 
       if (atLeastOne) {
-        //register new transformed interval
+        // register new transformed interval
         ret = ret.set(Interval.between(min, max), true);
       }
     }
 
     return ret;
-
   }
 }

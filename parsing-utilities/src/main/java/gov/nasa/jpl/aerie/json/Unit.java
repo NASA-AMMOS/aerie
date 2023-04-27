@@ -9,4 +9,6 @@ package gov.nasa.jpl.aerie.json;
  * If a unit type is desired for other purposes, one should be defined for that context specifically.
  * No other component should depend on this library just because it defines this type. </p>
  */
-public enum Unit { UNIT }
+public enum Unit {
+  UNIT
+}

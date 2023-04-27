@@ -1,21 +1,21 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
-import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
-
 public final class TypescriptCodeGenerationService {
-  private TypescriptCodeGenerationService() { }
+  private TypescriptCodeGenerationService() {}
 
-  public static String generateTypescriptTypesFromMissionModel(final MissionModelService.MissionModelTypes missionModelTypes) {
+  public static String generateTypescriptTypesFromMissionModel(
+      final MissionModelService.MissionModelTypes missionModelTypes) {
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {
       activityTypeCodes.add(getActivityTypeInformation(activityType));
@@ -27,7 +27,9 @@ public final class TypescriptCodeGenerationService {
     result.add("import type * as ConstraintEDSL from './constraints-edsl-fluent-api.js'");
 
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add("interface %s extends ActivityTemplate<ActivityType.%s> {}".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
+      result.add(
+          "interface %s extends ActivityTemplate<ActivityType.%s> {}"
+              .formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
     }
     result.add(getCastingMethod());
     result.add(generateActivityTemplateConstructors(activityTypeCodes));
@@ -49,7 +51,8 @@ public final class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
+  private static String generateResourceTypes(
+      final Collection<MissionModelService.ResourceType> resourceTypes) {
     final var result = new ArrayList<String>();
     result.add("export enum Resource {");
     for (final var resourceType : resourceTypes) {
@@ -59,7 +62,7 @@ public final class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String getCastingMethod(){
+  private static String getCastingMethod() {
     return """
 export function makeAllDiscreteProfile (argument: any) : any{
   if (argument === undefined){
@@ -101,22 +104,40 @@ return (<T>makeAllDiscreteProfile(args))
 """;
   }
 
-  private static String generateActivityTemplateConstructors(final Iterable<ActivityTypeCode> activityTypeCodes) {
+  private static String generateActivityTemplateConstructors(
+      final Iterable<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
     result.add("const ActivityTemplateConstructors = {");
     for (final var activityTypeCode : activityTypeCodes) {
-      if(activityTypeCode.parameterTypes().isEmpty()) {
-        result.add(indent("%s: function %sConstructor(): %s {".formatted(
-            activityTypeCode.activityTypeName(),
-            activityTypeCode.activityTypeName(),
-            activityTypeCode.activityTypeName())));
-        result.add(indent(indent("return { activityType: ActivityType.%s, args: {} };".formatted(activityTypeCode.activityTypeName()))));
+      if (activityTypeCode.parameterTypes().isEmpty()) {
+        result.add(
+            indent(
+                "%s: function %sConstructor(): %s {"
+                    .formatted(
+                        activityTypeCode.activityTypeName(),
+                        activityTypeCode.activityTypeName(),
+                        activityTypeCode.activityTypeName())));
+        result.add(
+            indent(
+                indent(
+                    "return { activityType: ActivityType.%s, args: {} };"
+                        .formatted(activityTypeCode.activityTypeName()))));
         result.add(indent("},"));
       } else {
-        result.add(indent("%s: function %sConstructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
+        result.add(
+            indent(
+                "%s: function %sConstructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.%s]"
+                    .formatted(
+                        activityTypeCode.activityTypeName,
+                        activityTypeCode.activityTypeName,
+                        activityTypeCode.activityTypeName)));
         result.add(indent("): %s {".formatted(activityTypeCode.activityTypeName())));
         result.add(indent("// @ts-ignore"));
-        result.add(indent(indent("return { activityType: ActivityType.%s, args: makeArgumentsDiscreteProfiles(args) };".formatted(activityTypeCode.activityTypeName()))));
+        result.add(
+            indent(
+                indent(
+                    "return { activityType: ActivityType.%s, args: makeArgumentsDiscreteProfiles(args) };"
+                        .formatted(activityTypeCode.activityTypeName()))));
         result.add(indent("},"));
       }
     }
@@ -124,17 +145,28 @@ return (<T>makeAllDiscreteProfile(args))
     return joinLines(result);
   }
 
-  private static String generateActivityPresetConstructors(final Iterable<ActivityTypeCode> activityTypeCodes) {
+  private static String generateActivityPresetConstructors(
+      final Iterable<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
     result.add("const ActivityPresetMap = Object.freeze({");
     for (final var activityTypeCode : activityTypeCodes) {
       result.add(indent("%s: Object.freeze({".formatted(activityTypeCode.activityTypeName)));
-      for (final var preset: activityTypeCode.presets.entrySet()) {
-        result.add(indent(indent("get \"%s\"(): %s {".formatted(preset.getKey(), serializedValueToType(SerializedValue.of(preset.getValue()))))));
+      for (final var preset : activityTypeCode.presets.entrySet()) {
+        result.add(
+            indent(
+                indent(
+                    "get \"%s\"(): %s {"
+                        .formatted(
+                            preset.getKey(),
+                            serializedValueToType(SerializedValue.of(preset.getValue()))))));
         result.add(indent(indent(indent("return {"))));
-        for (final var argument: preset.getValue().entrySet()) {
+        for (final var argument : preset.getValue().entrySet()) {
           final var deserializedJson = serializedValueP.unparse(argument.getValue());
-          result.add(indent(indent(indent(indent("\"%s\": %s,".formatted(argument.getKey(), deserializedJson))))));
+          result.add(
+              indent(
+                  indent(
+                      indent(
+                          indent("\"%s\": %s,".formatted(argument.getKey(), deserializedJson))))));
         }
         result.add(indent(indent(indent("};"))));
         result.add(indent(indent("},")));
@@ -153,18 +185,28 @@ return (<T>makeAllDiscreteProfile(args))
     return joinLines(s.lines().map(line -> "  " + line).toList());
   }
 
-  private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes, Map<String, Map<String, SerializedValue>> presets) {}
+  private record ActivityTypeCode(
+      String activityTypeName,
+      List<ActivityParameter> parameterTypes,
+      Map<String, Map<String, SerializedValue>> presets) {}
 
   private record ActivityParameter(String name, TypescriptType type) {}
 
   private sealed interface TypescriptType {
     record TSString() implements TypescriptType {}
+
     record TSDouble() implements TypescriptType {}
+
     record TSBoolean() implements TypescriptType {}
+
     record TSInt() implements TypescriptType {}
+
     record TSDuration() implements TypescriptType {}
+
     record TSArray(TypescriptType elementType) implements TypescriptType {}
+
     record TSStruct(List<Pair<String, TypescriptType>> keysAndTypes) implements TypescriptType {}
+
     record TSEnum(List<String> values) implements TypescriptType {}
 
     /**
@@ -174,7 +216,7 @@ return (<T>makeAllDiscreteProfile(args))
       if (type instanceof TSString) {
         return "(string | Discrete<string>)";
       } else if (type instanceof TSDouble) {
-        //return "(Double | Real)";
+        // return "(Double | Real)";
         return "(number | Real)";
       } else if (type instanceof TSBoolean) {
         return "(boolean | Discrete<boolean>)";
@@ -184,17 +226,18 @@ return (<T>makeAllDiscreteProfile(args))
         return "(Temporal.Duration | Discrete<Temporal.Duration>)";
       } else if (type instanceof TSArray t) {
         final var typeStr = toString(t.elementType());
-        return "((" +typeStr+ ")[] | Discrete<("+typeStr+")[]>)";
+        return "((" + typeStr + ")[] | Discrete<(" + typeStr + ")[]>)";
       } else if (type instanceof TSStruct t) {
 
         var typeStr = "{ ";
-        for(final var keyAndType :  t.keysAndTypes()){
-          typeStr += keyAndType.getLeft() + ":"+ toString(keyAndType.getRight())+",";
+        for (final var keyAndType : t.keysAndTypes()) {
+          typeStr += keyAndType.getLeft() + ":" + toString(keyAndType.getRight()) + ",";
         }
-        typeStr+="}";
+        typeStr += "}";
         return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);
       } else if (type instanceof TSEnum t) {
-        final var typeStr = "(" + String.join(" | ", t.values().stream().map(x -> "\"" + x + "\"").toList()) + ")";
+        final var typeStr =
+            "(" + String.join(" | ", t.values().stream().map(x -> "\"" + x + "\"").toList()) + ")";
         return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);
       } else {
         throw new Error("Unhandled variant of TypescriptType: " + type);
@@ -202,125 +245,128 @@ return (<T>makeAllDiscreteProfile(args))
     }
   }
 
-  private static ActivityTypeCode getActivityTypeInformation(final MissionModelService.ActivityType activityType) {
-    return new ActivityTypeCode(activityType.name(), generateActivityParameterTypes(activityType), activityType.presets());
+  private static ActivityTypeCode getActivityTypeInformation(
+      final MissionModelService.ActivityType activityType) {
+    return new ActivityTypeCode(
+        activityType.name(), generateActivityParameterTypes(activityType), activityType.presets());
   }
 
-  private static List<ActivityParameter> generateActivityParameterTypes(final MissionModelService.ActivityType activityType) {
-    return activityType
-        .parameters()
-        .entrySet()
-        .stream()
+  private static List<ActivityParameter> generateActivityParameterTypes(
+      final MissionModelService.ActivityType activityType) {
+    return activityType.parameters().entrySet().stream()
         .sorted(Map.Entry.comparingByKey())
-        .map($ -> new ActivityParameter($.getKey(), valueSchemaToTypescriptTypeOrProfile($.getValue())))
+        .map(
+            $ ->
+                new ActivityParameter(
+                    $.getKey(), valueSchemaToTypescriptTypeOrProfile($.getValue())))
         .toList();
   }
 
-  private static TypescriptType valueSchemaToTypescriptTypeOrProfile(final ValueSchema valueSchema) {
-    return valueSchema.match(new ValueSchema.Visitor<>() {
-      @Override
-      public TypescriptType onReal() {
-        return new TypescriptType.TSDouble();
-      }
+  private static TypescriptType valueSchemaToTypescriptTypeOrProfile(
+      final ValueSchema valueSchema) {
+    return valueSchema.match(
+        new ValueSchema.Visitor<>() {
+          @Override
+          public TypescriptType onReal() {
+            return new TypescriptType.TSDouble();
+          }
 
-      @Override
-      public TypescriptType onInt() {
-        return new TypescriptType.TSInt();
-      }
+          @Override
+          public TypescriptType onInt() {
+            return new TypescriptType.TSInt();
+          }
 
-      @Override
-      public TypescriptType onBoolean() {
-        return new TypescriptType.TSBoolean();
-      }
+          @Override
+          public TypescriptType onBoolean() {
+            return new TypescriptType.TSBoolean();
+          }
 
-      @Override
-      public TypescriptType onString() {
-        return new TypescriptType.TSString();
-      }
+          @Override
+          public TypescriptType onString() {
+            return new TypescriptType.TSString();
+          }
 
-      @Override
-      public TypescriptType onDuration() {
-        return new TypescriptType.TSDuration();
-      }
+          @Override
+          public TypescriptType onDuration() {
+            return new TypescriptType.TSDuration();
+          }
 
-      @Override
-      public TypescriptType onPath() {
-        return new TypescriptType.TSString();
-      }
+          @Override
+          public TypescriptType onPath() {
+            return new TypescriptType.TSString();
+          }
 
-      @Override
-      public TypescriptType onSeries(final ValueSchema value) {
-        return new TypescriptType.TSArray(valueSchemaToTypescriptTypeOrProfile(value));
-      }
+          @Override
+          public TypescriptType onSeries(final ValueSchema value) {
+            return new TypescriptType.TSArray(valueSchemaToTypescriptTypeOrProfile(value));
+          }
 
-      @Override
-      public TypescriptType onStruct(final Map<String, ValueSchema> value) {
-        return new TypescriptType.TSStruct(
-            value
-                .entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map($ ->
-                         Pair.of(
-                             $.getKey(),
-                             valueSchemaToTypescriptTypeOrProfile($.getValue())))
-                .toList());
-      }
+          @Override
+          public TypescriptType onStruct(final Map<String, ValueSchema> value) {
+            return new TypescriptType.TSStruct(
+                value.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(
+                        $ ->
+                            Pair.of($.getKey(), valueSchemaToTypescriptTypeOrProfile($.getValue())))
+                    .toList());
+          }
 
-      @Override
-      public TypescriptType onVariant(final List<ValueSchema.Variant> variants) {
-        return new TypescriptType.TSEnum(
-            variants
-                .stream()
-                .map(ValueSchema.Variant::label)
-                .toList());
-      }
-    });
+          @Override
+          public TypescriptType onVariant(final List<ValueSchema.Variant> variants) {
+            return new TypescriptType.TSEnum(
+                variants.stream().map(ValueSchema.Variant::label).toList());
+          }
+        });
   }
 
   private static String serializedValueToType(final SerializedValue value) {
-    return value.match(new SerializedValue.Visitor<>() {
-      @Override
-      public String onNull() {
-        return "null";
-      }
+    return value.match(
+        new SerializedValue.Visitor<>() {
+          @Override
+          public String onNull() {
+            return "null";
+          }
 
-      @Override
-      public String onNumeric(final BigDecimal value) {
-        return "number";
-      }
+          @Override
+          public String onNumeric(final BigDecimal value) {
+            return "number";
+          }
 
-      @Override
-      public String onBoolean(final boolean value) {
-        return "boolean";
-      }
+          @Override
+          public String onBoolean(final boolean value) {
+            return "boolean";
+          }
 
-      @Override
-      public String onString(final String value) {
-        return "string";
-      }
+          @Override
+          public String onString(final String value) {
+            return "string";
+          }
 
-      @Override
-      public String onMap(final Map<String, SerializedValue> value) {
-        final var result = new ArrayList<String>();
-        result.add("{");
-        for (final var entry : value.entrySet()) {
-          result.add(indent("\"%s\": %s,".formatted(entry.getKey(), serializedValueToType(entry.getValue()))));
-        }
-        result.add("}");
-        return joinLines(result);
-      }
+          @Override
+          public String onMap(final Map<String, SerializedValue> value) {
+            final var result = new ArrayList<String>();
+            result.add("{");
+            for (final var entry : value.entrySet()) {
+              result.add(
+                  indent(
+                      "\"%s\": %s,"
+                          .formatted(entry.getKey(), serializedValueToType(entry.getValue()))));
+            }
+            result.add("}");
+            return joinLines(result);
+          }
 
-      @Override
-      public String onList(final List<SerializedValue> value) {
-        final var result = new ArrayList<String>();
-        result.add("[");
-        for (final var entry : value) {
-          result.add(indent(serializedValueToType(entry) + ','));
-        }
-        result.add("]");
-        return joinLines(result);
-      }
-    });
+          @Override
+          public String onList(final List<SerializedValue> value) {
+            final var result = new ArrayList<String>();
+            result.add("[");
+            for (final var entry : value) {
+              result.add(indent(serializedValueToType(entry) + ','));
+            }
+            result.add("]");
+            return joinLines(result);
+          }
+        });
   }
 }

@@ -27,7 +27,6 @@ public final class RealDynamics {
     return new RealDynamics(initial, rate);
   }
 
-
   public RealDynamics scaledBy(final double scalar) {
     return linear(this.initial * scalar, this.rate * scalar);
   }
@@ -40,9 +39,8 @@ public final class RealDynamics {
     return this.plus(other.scaledBy(-1.0));
   }
 
-
-  public Optional<Duration>
-  whenBetween(final double min, final double max, final Duration atEarliest, final Duration atLatest) {
+  public Optional<Duration> whenBetween(
+      final double min, final double max, final Duration atEarliest, final Duration atLatest) {
     if (this.rate == 0) {
       if (this.initial < min || max < this.initial) {
         return Optional.empty();
@@ -67,8 +65,8 @@ public final class RealDynamics {
     return Optional.of(entry);
   }
 
-  public Optional<Duration>
-  whenNotBetween(final double min, final double max, final Duration atEarliest, final Duration atLatest) {
+  public Optional<Duration> whenNotBetween(
+      final double min, final double max, final Duration atEarliest, final Duration atLatest) {
     if (this.rate == 0) {
       if (min <= this.initial && this.initial <= max) {
         return Optional.empty();
@@ -92,7 +90,6 @@ public final class RealDynamics {
 
     return Optional.of(entry);
   }
-
 
   @Override
   public String toString() {

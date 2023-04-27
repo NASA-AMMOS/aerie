@@ -1,21 +1,20 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import java.time.Instant;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.time.Instant;
-
-import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 
 public final class MissionConfigurationTest {
   @TestInstance(Lifecycle.PER_CLASS)

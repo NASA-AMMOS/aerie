@@ -1,5 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
@@ -24,16 +29,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 public class InstantiateArgumentsTest {
   private static final Duration oneMinute = Duration.of(1, Duration.MINUTES);
@@ -48,43 +47,66 @@ public class InstantiateArgumentsTest {
     - RealValue
   */
   @Test
-  public void instantiateArgumentsSingletonBoundsTest(){
+  public void instantiateArgumentsSingletonBoundsTest() {
     // Environment needs data
-    final ActivityInstance activityInstance = new ActivityInstance(0, "Faux", Map.of("PeelCount", SerializedValue.of(1)), Interval.between(Duration.of(1, HOUR), Duration.of(2, HOUR)));
+    final ActivityInstance activityInstance =
+        new ActivityInstance(
+            0,
+            "Faux",
+            Map.of("PeelCount", SerializedValue.of(1)),
+            Interval.between(Duration.of(1, HOUR), Duration.of(2, HOUR)));
 
-    final EvaluationEnvironment environment = new EvaluationEnvironment(
-        Map.of("Faux", activityInstance),
-        Map.of(),
-        Map.of(),
-        Map.of(),
-        Map.of());
-    final SimulationResults simulationResults = new SimulationResults(
-        Instant.EPOCH,
-        Interval.FOREVER,
-        List.of(activityInstance),
-        Map.of(),
-        Map.of());
-    final ActivityType fauxType = new ActivityType("Faux", delayedActivityDirective, DurationType.uncontrollable());
+    final EvaluationEnvironment environment =
+        new EvaluationEnvironment(
+            Map.of("Faux", activityInstance), Map.of(), Map.of(), Map.of(), Map.of());
+    final SimulationResults simulationResults =
+        new SimulationResults(
+            Instant.EPOCH, Interval.FOREVER, List.of(activityInstance), Map.of(), Map.of());
+    final ActivityType fauxType =
+        new ActivityType("Faux", delayedActivityDirective, DurationType.uncontrollable());
 
-    final StructExpressionAt sea = new StructExpressionAt(
-        Map.ofEntries(
-            Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
-            Map.entry("struct", new ProfileExpression<>(new StructExpressionAt(
-                Map.ofEntries(
-                    Map.entry("subfield", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
-                    Map.entry("subList", new ProfileExpression<>(
-                        new ListExpressionAt(
-                            List.of(
-                                new ProfileExpression<>(new StructExpressionAt(
-                                    Map.of("subListSubStruct", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2)))))))))))
-                  ))),
-            Map.entry("valueAt", new ProfileExpression<>(new ValueAt<>(
-                new ProfileExpression<>(new RealValue(20)),
-                new ActivitySpan("Faux")))),
-            Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
-    );
+    final StructExpressionAt sea =
+        new StructExpressionAt(
+            Map.ofEntries(
+                Map.entry(
+                    "variant",
+                    new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
+                Map.entry(
+                    "struct",
+                    new ProfileExpression<>(
+                        new StructExpressionAt(
+                            Map.ofEntries(
+                                Map.entry(
+                                    "subfield",
+                                    new ProfileExpression<>(
+                                        new DiscreteValue(SerializedValue.of("value1")))),
+                                Map.entry(
+                                    "subList",
+                                    new ProfileExpression<>(
+                                        new ListExpressionAt(
+                                            List.of(
+                                                new ProfileExpression<>(
+                                                    new StructExpressionAt(
+                                                        Map.of(
+                                                            "subListSubStruct",
+                                                            new ProfileExpression<>(
+                                                                new DiscreteValue(
+                                                                    SerializedValue.of(
+                                                                        2)))))))))))))),
+                Map.entry(
+                    "valueAt",
+                    new ProfileExpression<>(
+                        new ValueAt<>(
+                            new ProfileExpression<>(new RealValue(20)), new ActivitySpan("Faux")))),
+                Map.entry(
+                    "duration",
+                    new ProfileExpression<>(
+                        new DiscreteValue(
+                            SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS)))))));
 
-    final var arguments = SchedulingActivityDirective.instantiateArguments(sea.fields(), Duration.of(1, HOUR), simulationResults, environment, fauxType);
+    final var arguments =
+        SchedulingActivityDirective.instantiateArguments(
+            sea.fields(), Duration.of(1, HOUR), simulationResults, environment, fauxType);
 
     assertEquals(4, arguments.size());
 
@@ -128,71 +150,84 @@ public class InstantiateArgumentsTest {
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
   private static final Topic<Object> delayedActivityDirectiveOutputTopic = new Topic<>();
-  private static final DirectiveType<Object, Object, Object> delayedActivityDirective = new DirectiveType<>() {
-    @Override
-    public InputType<Object> getInputType() {
-      return testModelInputType;
-    }
+  private static final DirectiveType<Object, Object, Object> delayedActivityDirective =
+      new DirectiveType<>() {
+        @Override
+        public InputType<Object> getInputType() {
+          return testModelInputType;
+        }
 
-    @Override
-    public OutputType<Object> getOutputType() {
-      return testModelOutputType;
-    }
+        @Override
+        public OutputType<Object> getOutputType() {
+          return testModelOutputType;
+        }
 
-    @Override
-    public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
-        $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
-          $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
-          return TaskStatus.completed(Unit.UNIT);
-        });
+        @Override
+        public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
+          return executor ->
+              $ -> {
+                $.emit(this, delayedActivityDirectiveInputTopic);
+                return TaskStatus.delayed(
+                    oneMinute,
+                    $$ -> {
+                      $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
+                      return TaskStatus.completed(Unit.UNIT);
+                    });
+              };
+        }
       };
-    }
-  };
 
-  private static final InputType<Object> testModelInputType = new InputType<>() {
-    @Override
-    public List<Parameter> getParameters() {
-      return List.of(
-          new Parameter("variant", ValueSchema.ofVariant(List.of(new ValueSchema.Variant("option2", "2")))),
-          new Parameter("struct", ValueSchema.ofStruct(
-              Map.of("subfield", ValueSchema.STRING,
-                     "subList", ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of("subListSubStruct", ValueSchema.INT))))
-          )),
-          new Parameter("valueAt", ValueSchema.REAL),
-          new Parameter("duration", ValueSchema.DURATION));
-    }
+  private static final InputType<Object> testModelInputType =
+      new InputType<>() {
+        @Override
+        public List<Parameter> getParameters() {
+          return List.of(
+              new Parameter(
+                  "variant",
+                  ValueSchema.ofVariant(List.of(new ValueSchema.Variant("option2", "2")))),
+              new Parameter(
+                  "struct",
+                  ValueSchema.ofStruct(
+                      Map.of(
+                          "subfield",
+                          ValueSchema.STRING,
+                          "subList",
+                          ValueSchema.ofSeries(
+                              ValueSchema.ofStruct(Map.of("subListSubStruct", ValueSchema.INT)))))),
+              new Parameter("valueAt", ValueSchema.REAL),
+              new Parameter("duration", ValueSchema.DURATION));
+        }
 
-    @Override
-    public List<String> getRequiredParameters() {
-      return List.of();
-    }
+        @Override
+        public List<String> getRequiredParameters() {
+          return List.of();
+        }
 
-    @Override
-    public Object instantiate(final Map arguments) {
-      return new Object();
-    }
+        @Override
+        public Object instantiate(final Map arguments) {
+          return new Object();
+        }
 
-    @Override
-    public Map<String, SerializedValue> getArguments(final Object value) {
-      return Map.of();
-    }
+        @Override
+        public Map<String, SerializedValue> getArguments(final Object value) {
+          return Map.of();
+        }
 
-    @Override
-    public List<ValidationNotice> getValidationFailures(final Object value) {
-      return List.of();
-    }
-  };
-  private static final OutputType<Object> testModelOutputType = new OutputType<>() {
-    @Override
-    public ValueSchema getSchema() {
-      return ValueSchema.ofStruct(Map.of());
-    }
+        @Override
+        public List<ValidationNotice> getValidationFailures(final Object value) {
+          return List.of();
+        }
+      };
+  private static final OutputType<Object> testModelOutputType =
+      new OutputType<>() {
+        @Override
+        public ValueSchema getSchema() {
+          return ValueSchema.ofStruct(Map.of());
+        }
 
-    @Override
-    public SerializedValue serialize(final Object value) {
-      return SerializedValue.of(Map.of());
-    }
-  };
+        @Override
+        public SerializedValue serialize(final Object value) {
+          return SerializedValue.of(Map.of());
+        }
+      };
 }

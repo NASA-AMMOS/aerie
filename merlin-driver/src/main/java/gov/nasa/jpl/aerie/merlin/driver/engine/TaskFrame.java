@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +18,7 @@ import java.util.function.BiConsumer;
  *   branches[0].base |-> branches[1].base  ... |-> branches[n].base   |-> tip
  *                    +-> branches[0].job       +-> branches[n-1].job  +-> branches[n].job
  * </pre>
-*/
+ */
 public final class TaskFrame<Job> {
   private record Branch<Job>(CausalEventSource base, LiveCells context, Job job) {}
 
@@ -39,8 +38,8 @@ public final class TaskFrame<Job> {
   //   so when we accumulate the branches' events back up, we need to make sure to interleave
   //   the shared segments of the parent's history correctly. The diagram at the top of this class
   //   illustrates the idea.
-  public static <Job>
-  EventGraph<Event> run(final Job job, final LiveCells context, final BiConsumer<Job, TaskFrame<Job>> executor) {
+  public static <Job> EventGraph<Event> run(
+      final Job job, final LiveCells context, final BiConsumer<Job, TaskFrame<Job>> executor) {
     final var frame = new TaskFrame<Job>(context);
     executor.accept(job, frame);
 
@@ -54,7 +53,6 @@ public final class TaskFrame<Job> {
 
     return tip;
   }
-
 
   public <State> Optional<State> getState(final Query<State> query) {
     return this.cells.getState(query);
@@ -70,8 +68,10 @@ public final class TaskFrame<Job> {
 
   public void signal(final Job target) {
     if (this.tip.isEmpty()) {
-      // If we haven't emitted any events, subscribe the target to the previous branch point instead.
-      // This avoids making long chains of LiveCells over segments where no events have actually been accumulated.
+      // If we haven't emitted any events, subscribe the target to the previous branch point
+      // instead.
+      // This avoids making long chains of LiveCells over segments where no events have actually
+      // been accumulated.
       this.branches.add(new Branch<>(new CausalEventSource(), this.previousCells, target));
     } else {
       this.branches.add(new Branch<>(this.tip, this.cells, target));

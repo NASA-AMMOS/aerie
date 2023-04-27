@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -8,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -16,10 +18,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
-
-public final class LinearProfile implements Profile<LinearProfile>, Iterable<Segment<LinearEquation>> {
+public final class LinearProfile
+    implements Profile<LinearProfile>, Iterable<Segment<LinearEquation>> {
   public final IntervalMap<LinearEquation> profilePieces;
 
   public LinearProfile(final IntervalMap<LinearEquation> profilePieces) {
@@ -64,76 +64,85 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
   public LinearProfile plus(final LinearProfile other) {
     return new LinearProfile(
         IntervalMap.map2(
-            this.profilePieces, other.profilePieces,
+            this.profilePieces,
+            other.profilePieces,
             (l, r) -> {
               if (l.isPresent() && r.isPresent()) {
                 final var left = l.get();
                 final var right = r.get();
                 final var shiftedRight = right.shiftInitialTime(left.initialTime);
-                return Optional.of(new LinearEquation(left.initialTime, left.initialValue + shiftedRight.initialValue, left.rate + right.rate));
+                return Optional.of(
+                    new LinearEquation(
+                        left.initialTime,
+                        left.initialValue + shiftedRight.initialValue,
+                        left.rate + right.rate));
               } else {
                 return Optional.empty();
               }
-            }
-        )
-    );
+            }));
   }
 
   public LinearProfile times(final double multiplier) {
-    return new LinearProfile(this.profilePieces.map(
-        $ -> new LinearEquation($.initialTime, $.initialValue * multiplier, $.rate * multiplier)
-    ));
+    return new LinearProfile(
+        this.profilePieces.map(
+            $ ->
+                new LinearEquation(
+                    $.initialTime, $.initialValue * multiplier, $.rate * multiplier)));
   }
 
   public LinearProfile rate() {
-    return new LinearProfile(this.profilePieces.map(
-        $ -> new LinearEquation($.initialTime, $.rate, 0.0)
-    ));
+    return new LinearProfile(
+        this.profilePieces.map($ -> new LinearEquation($.initialTime, $.rate, 0.0)));
   }
 
-  private Windows getWindowsSatisfying(final LinearProfile other, final BiFunction<LinearEquation, LinearEquation, Windows> condition) {
+  private Windows getWindowsSatisfying(
+      final LinearProfile other,
+      final BiFunction<LinearEquation, LinearEquation, Windows> condition) {
     return new Windows(
-        IntervalMap.map2(this.profilePieces, other.profilePieces, (l, r) -> {
-          if (l.isPresent() && r.isPresent()) {
-            return Optional.of(condition.apply(l.get(), r.get()));
-          } else {
-            return Optional.empty();
-          }
-        }).flatMap((windows, interval) -> windows.select(interval).stream())
-    );
+        IntervalMap.map2(
+                this.profilePieces,
+                other.profilePieces,
+                (l, r) -> {
+                  if (l.isPresent() && r.isPresent()) {
+                    return Optional.of(condition.apply(l.get(), r.get()));
+                  } else {
+                    return Optional.empty();
+                  }
+                })
+            .flatMap((windows, interval) -> windows.select(interval).stream()));
   }
 
-    @Override
-    public Windows changePoints() {
-      final var result = IntervalMap.<Boolean>builder().set(this.profilePieces.map(LinearEquation::changing));
-      for (int i = 0; i < this.profilePieces.size(); i++) {
-        final var segment = this.profilePieces.get(i);
-        final var startTime = segment.interval().start;
-        if (i == 0) {
-          if (!segment.interval().contains(Duration.MIN_VALUE)) {
-            result.unset(Interval.at(startTime));
+  @Override
+  public Windows changePoints() {
+    final var result =
+        IntervalMap.<Boolean>builder().set(this.profilePieces.map(LinearEquation::changing));
+    for (int i = 0; i < this.profilePieces.size(); i++) {
+      final var segment = this.profilePieces.get(i);
+      final var startTime = segment.interval().start;
+      if (i == 0) {
+        if (!segment.interval().contains(Duration.MIN_VALUE)) {
+          result.unset(Interval.at(startTime));
+        }
+      } else {
+        final var previousSegment = this.profilePieces.get(i - 1);
+
+        if (Interval.meets(previousSegment.interval(), segment.interval())) {
+          if (previousSegment.value().valueAt(startTime) != segment.value().valueAt(startTime)) {
+            result.set(Interval.at(startTime), true);
           }
         } else {
-          final var previousSegment = this.profilePieces.get(i-1);
-
-          if (Interval.meets(previousSegment.interval(), segment.interval())) {
-            if (previousSegment.value().valueAt(startTime) != segment.value().valueAt(startTime)) {
-              result.set(Interval.at(startTime), true);
-            }
-          } else {
-            result.unset(Interval.at(startTime));
-          }
+          result.unset(Interval.at(startTime));
         }
       }
-
-      return new Windows(result.build());
     }
 
+    return new Windows(result.build());
+  }
 
   @Override
   public boolean isConstant() {
-    return profilePieces.isEmpty() ||
-           (profilePieces.size() == 1 && !profilePieces.get(0).value().changing());
+    return profilePieces.isEmpty()
+        || (profilePieces.size() == 1 && !profilePieces.get(0).value().changing());
   }
 
   /** Assigns a default value to all gaps in the profile. */
@@ -141,51 +150,48 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
   public LinearProfile assignGaps(final LinearProfile def) {
     return new LinearProfile(
         IntervalMap.map2(
-            this.profilePieces, def.profilePieces,
-            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
-        )
-    );
+            this.profilePieces,
+            def.profilePieces,
+            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment));
   }
 
   @Override
   public Optional<SerializedValue> valueAt(final Duration timepoint) {
-    return profilePieces
-        .stream()
+    return profilePieces.stream()
         .filter($ -> $.interval().contains(timepoint))
         .findFirst()
-        .map(linearEquationSegment -> SerializedValue.of(linearEquationSegment.value().valueAt(timepoint)));
+        .map(
+            linearEquationSegment ->
+                SerializedValue.of(linearEquationSegment.value().valueAt(timepoint)));
   }
 
-  public static LinearProfile fromSimulatedProfile(final List<ProfileSegment<RealDynamics>> simulatedProfile) {
+  public static LinearProfile fromSimulatedProfile(
+      final List<ProfileSegment<RealDynamics>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }
 
-  public static LinearProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<ProfileSegment<Optional<RealDynamics>>> externalProfile) {
+  public static LinearProfile fromExternalProfile(
+      final Duration offsetFromPlanStart,
+      final List<ProfileSegment<Optional<RealDynamics>>> externalProfile) {
     return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
   }
 
   private static <T> LinearProfile fromProfileHelper(
       final Duration offsetFromPlanStart,
       final List<ProfileSegment<T>> profile,
-      final Function<T, Optional<RealDynamics>> transform
-  ) {
+      final Function<T, Optional<RealDynamics>> transform) {
     final var result = new IntervalMap.Builder<LinearEquation>();
     var cursor = offsetFromPlanStart;
-    for (final var pair: profile) {
+    for (final var pair : profile) {
       final var nextCursor = cursor.plus(pair.extent());
 
       final var value = transform.apply(pair.dynamics());
       final Duration finalCursor = cursor;
       value.ifPresent(
-          $ -> result.set(
-              Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
-              new LinearEquation(
-                  finalCursor,
-                  $.initial,
-                  $.rate
-              )
-          )
-      );
+          $ ->
+              result.set(
+                  Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
+                  new LinearEquation(finalCursor, $.initial, $.rate)));
 
       cursor = nextCursor;
     }

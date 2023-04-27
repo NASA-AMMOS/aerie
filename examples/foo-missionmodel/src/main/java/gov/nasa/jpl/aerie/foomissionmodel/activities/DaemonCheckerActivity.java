@@ -13,8 +13,12 @@ public record DaemonCheckerActivity(int minutesElapsed) {
   @EffectModel
   public void run(final Mission mission) {
     if (mission.timeTrackerDaemon.getMinutesElapsed() != minutesElapsed) {
-      throw new RuntimeException("Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped."
-                                 + "\n\tExpected: " +minutesElapsed+" Actual: "+mission.timeTrackerDaemon.getMinutesElapsed() );
+      throw new RuntimeException(
+          "Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped."
+              + "\n\tExpected: "
+              + minutesElapsed
+              + " Actual: "
+              + mission.timeTrackerDaemon.getMinutesElapsed());
     }
   }
 }

@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.json;
 
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import java.util.Objects;
 import java.util.function.Function;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 
 public interface JsonObjectParser<T> extends JsonParser<T> {
   @Override

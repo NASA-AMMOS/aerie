@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -42,7 +41,8 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId) {
     try {
       final var planRevision = planRepository.getPlanRevision(planId);
-      return Optional.ofNullable(this.cells.get(new InMemoryResultsCellRepository.Key(planId, planRevision)));
+      return Optional.ofNullable(
+          this.cells.get(new InMemoryResultsCellRepository.Key(planId, planRevision)));
     } catch (final NoSuchPlanException ex) {
       throw new Error("Cannot allocate simulation cell for nonexistent plan", ex);
     }
@@ -99,8 +99,9 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     @Override
     public void succeedWith(final SimulationResults results) {
       if (!(this.state instanceof ResultsProtocol.State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to success state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
+        throw new IllegalStateException(
+            "Cannot transition to success state from state %s"
+                .formatted(this.state.getClass().getCanonicalName()));
       }
 
       this.state = new ResultsProtocol.State.Success(0, results);
@@ -109,8 +110,9 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     @Override
     public void failWith(final SimulationFailure reason) {
       if (!(this.state instanceof ResultsProtocol.State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to failed state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
+        throw new IllegalStateException(
+            "Cannot transition to failed state from state %s"
+                .formatted(this.state.getClass().getCanonicalName()));
       }
 
       this.state = new ResultsProtocol.State.Failed(0, reason);

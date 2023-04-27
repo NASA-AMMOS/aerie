@@ -1,14 +1,13 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import org.junit.jupiter.api.Test;
-
 import javax.json.Json;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
+import org.junit.jupiter.api.Test;
 
 public final class FooValueMappersTest {
   @Test

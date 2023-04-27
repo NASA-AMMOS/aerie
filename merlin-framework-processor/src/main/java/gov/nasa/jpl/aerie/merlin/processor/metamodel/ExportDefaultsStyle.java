@@ -5,8 +5,8 @@ package gov.nasa.jpl.aerie.merlin.processor.metamodel;
  * default arguments have been defined within the mission model.
  */
 public enum ExportDefaultsStyle {
-  AllDefined,            // All default arguments provided within @Parameter annotations
-  AllStaticallyDefined,  // All default arguments provided within @Template static method
+  AllDefined, // All default arguments provided within @Parameter annotations
+  AllStaticallyDefined, // All default arguments provided within @Template static method
   SomeStaticallyDefined, // Some arguments provided within @WithDefaults static class
-  NoneDefined            // No default arguments provided
+  NoneDefined // No default arguments provided
 }

@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 /**
  * An append-only list comprising a chain of fixed-size slabs.

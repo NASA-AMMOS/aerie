@@ -5,24 +5,24 @@ import com.squareup.javapoet.CodeBlock;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern.ClassPattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-
-import javax.lang.model.type.PrimitiveType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 public final class Resolver {
   private final Types typeUtils;
   private final Elements elementUtils;
   private final List<TypeRule> typeRules;
 
-  public Resolver(final Types typeUtils, final Elements elementUtils, final List<TypeRule> typeRules) {
+  public Resolver(
+      final Types typeUtils, final Elements elementUtils, final List<TypeRule> typeRules) {
     this.typeUtils = Objects.requireNonNull(typeUtils);
     this.elementUtils = Objects.requireNonNull(elementUtils);
     this.typeRules = Objects.requireNonNull(typeRules);
@@ -44,10 +44,12 @@ public final class Resolver {
 
     // TODO: Do away with this null-checking stuff, somehow.
     if (mirror.getKind() == TypeKind.DECLARED || mirror.getKind() == TypeKind.ARRAY) {
-      return mapperCode.map($ -> CodeBlock.of(
-          "new $T<>(\n$>$>$L$<$<)",
-          gov.nasa.jpl.aerie.contrib.serialization.mappers.NullableValueMapper.class,
-          $));
+      return mapperCode.map(
+          $ ->
+              CodeBlock.of(
+                  "new $T<>(\n$>$>$L$<$<)",
+                  gov.nasa.jpl.aerie.contrib.serialization.mappers.NullableValueMapper.class,
+                  $));
     } else {
       return mapperCode;
     }
@@ -56,7 +58,8 @@ public final class Resolver {
   private TypePattern createInitialGoal(final TypeMirror mirror) {
     final List<TypePattern> mapperArguments;
     if (mirror.getKind().isPrimitive()) {
-      mapperArguments = List.of(TypePattern.from(typeUtils.boxedClass((PrimitiveType)mirror).asType()));
+      mapperArguments =
+          List.of(TypePattern.from(typeUtils.boxedClass((PrimitiveType) mirror).asType()));
     } else {
       mapperArguments = List.of(TypePattern.from(mirror));
     }
@@ -65,8 +68,9 @@ public final class Resolver {
   }
 
   public Optional<CodeBlock> applyRules(final TypePattern goal) {
-    if (goal instanceof ClassPattern && ((ClassPattern)goal).name.equals(ClassName.get(Class.class))) {
-      final var pattern = ((ClassPattern)goal).arguments.get(0);
+    if (goal instanceof ClassPattern
+        && ((ClassPattern) goal).name.equals(ClassName.get(Class.class))) {
+      final var pattern = ((ClassPattern) goal).arguments.get(0);
       return Optional.of(
           (pattern.render().equals(pattern.erasure()))
               ? CodeBlock.of("$T.class", pattern.erasure())
@@ -101,7 +105,8 @@ public final class Resolver {
       // - `List<? extends Map<? super Foo, ? extends Bar>>`
       // is not straightforward.
       final var patternType = elementUtils.getTypeElement(pattern.erasure().toString()).asType();
-      final var enumType = typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
+      final var enumType =
+          typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
       if (!typeUtils.isSubtype(patternType, enumType)) return Optional.empty();
     }
 

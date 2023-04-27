@@ -1,18 +1,19 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Triple;
-import org.intellij.lang.annotations.Language;
+import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
-
-import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
+import org.apache.commons.lang3.tuple.Triple;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class InsertSimulationTopicsAction implements AutoCloseable {
-  @Language("SQL") private static final String sql = """
+  @Language("SQL")
+  private static final String sql =
+      """
       insert into topic (dataset_id, topic_index, name, value_schema)
       values (?, ?, ?, ?)
     """;
@@ -23,10 +24,8 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(
-      final long datasetId,
-      final List<Triple<Integer, String, ValueSchema>> topics
-  ) throws SQLException {
+  public void apply(final long datasetId, final List<Triple<Integer, String, ValueSchema>> topics)
+      throws SQLException {
     for (final var topic : topics) {
       this.statement.setLong(1, datasetId);
       this.statement.setInt(2, topic.getLeft());

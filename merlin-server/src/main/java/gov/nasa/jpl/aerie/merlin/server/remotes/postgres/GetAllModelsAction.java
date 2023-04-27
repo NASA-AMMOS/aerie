@@ -1,16 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetAllModelsAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     select m.id, m.mission, m.name, m.version, m.owner, f.path
     from mission_model as m
     inner join uploaded_file as f on m.jar_id = f.id
@@ -34,14 +34,7 @@ import java.util.Map;
         final var owner = results.getString(5);
         final var path = Path.of(results.getString(6));
 
-        missionModels.put(
-            id,
-            new MissionModelRecord(
-                mission,
-                name,
-                version,
-                owner,
-                path));
+        missionModels.put(id, new MissionModelRecord(mission, name, version, owner, path));
       }
 
       return missionModels;

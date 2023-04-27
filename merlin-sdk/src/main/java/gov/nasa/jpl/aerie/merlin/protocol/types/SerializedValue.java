@@ -53,10 +53,15 @@ public sealed interface SerializedValue {
    */
   interface Visitor<T> {
     T onNull();
+
     T onNumeric(BigDecimal value);
+
     T onBoolean(boolean value);
+
     T onString(String value);
+
     T onMap(Map<String, SerializedValue> value);
+
     T onList(List<SerializedValue> value);
   }
 
@@ -73,7 +78,8 @@ public sealed interface SerializedValue {
       return visitor.onNumeric(value);
     }
 
-    // `BigDecimal#equals` is too strict -- values differing only in representation need to be considered the same.
+    // `BigDecimal#equals` is too strict -- values differing only in representation need to be
+    // considered the same.
     @Override
     public boolean equals(final Object obj) {
       if (!(obj instanceof NumericValue other)) return false;
@@ -198,7 +204,6 @@ public sealed interface SerializedValue {
     return new ListValue(value);
   }
 
-
   /**
    * Provides a default case on top of the base Visitor.
    *
@@ -259,17 +264,18 @@ public sealed interface SerializedValue {
    * @return True if this object represents a null value, and false otherwise.
    */
   default boolean isNull() {
-    return this.match(new DefaultVisitor<>() {
-      @Override
-      public Boolean onNull() {
-        return true;
-      }
+    return this.match(
+        new DefaultVisitor<>() {
+          @Override
+          public Boolean onNull() {
+            return true;
+          }
 
-      @Override
-      protected Boolean onDefault() {
-        return false;
-      }
-    });
+          @Override
+          protected Boolean onDefault() {
+            return false;
+          }
+        });
   }
 
   /**
@@ -279,12 +285,13 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<BigDecimal> asNumeric() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<BigDecimal> onNumeric(final BigDecimal value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<BigDecimal> onNumeric(final BigDecimal value) {
+            return Optional.of(value);
+          }
+        });
   }
 
   /**
@@ -294,12 +301,13 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Double> asReal() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Double> onNumeric(final BigDecimal value) {
-        return Optional.of(value.doubleValue());
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Double> onNumeric(final BigDecimal value) {
+            return Optional.of(value.doubleValue());
+          }
+        });
   }
 
   /**
@@ -309,16 +317,17 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Long> asInt() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Long> onNumeric(final BigDecimal value) {
-        try {
-          return Optional.of(value.longValueExact());
-        } catch (final ArithmeticException ex) {
-          return Optional.empty();
-        }
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Long> onNumeric(final BigDecimal value) {
+            try {
+              return Optional.of(value.longValueExact());
+            } catch (final ArithmeticException ex) {
+              return Optional.empty();
+            }
+          }
+        });
   }
 
   /**
@@ -328,12 +337,13 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Boolean> asBoolean() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Boolean> onBoolean(final boolean value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Boolean> onBoolean(final boolean value) {
+            return Optional.of(value);
+          }
+        });
   }
 
   /**
@@ -343,12 +353,13 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<String> asString() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<String> onString(final String value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<String> onString(final String value) {
+            return Optional.of(value);
+          }
+        });
   }
 
   /**
@@ -358,12 +369,14 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Map<String, SerializedValue>> asMap() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<Map<String, SerializedValue>> onMap(final Map<String, SerializedValue> value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<Map<String, SerializedValue>> onMap(
+              final Map<String, SerializedValue> value) {
+            return Optional.of(value);
+          }
+        });
   }
 
   /**
@@ -373,11 +386,12 @@ public sealed interface SerializedValue {
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<List<SerializedValue>> asList() {
-    return this.match(new OptionalVisitor<>() {
-      @Override
-      public Optional<List<SerializedValue>> onList(final List<SerializedValue> value) {
-        return Optional.of(value);
-      }
-    });
+    return this.match(
+        new OptionalVisitor<>() {
+          @Override
+          public Optional<List<SerializedValue>> onList(final List<SerializedValue> value) {
+            return Optional.of(value);
+          }
+        });
   }
 }

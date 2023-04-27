@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetSpecificationConditionsAction implements AutoCloseable {
-  private final @Language("SQL") String sql = """
+  private final @Language("SQL") String sql =
+      """
     select
       s.condition_id,
       s.enabled,
@@ -28,7 +28,8 @@ import java.util.List;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<PostgresSchedulingConditionRecord> get(final long specificationId) throws SQLException {
+  public List<PostgresSchedulingConditionRecord> get(final long specificationId)
+      throws SQLException {
     this.statement.setLong(1, specificationId);
     final var resultSet = this.statement.executeQuery();
 

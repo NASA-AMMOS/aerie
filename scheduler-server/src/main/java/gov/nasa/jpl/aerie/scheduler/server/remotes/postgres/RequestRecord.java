@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import java.util.Optional;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
+import java.util.Optional;
 
 public record RequestRecord(
     long specificationId,
@@ -10,8 +10,7 @@ public record RequestRecord(
     Status status,
     Optional<ScheduleFailure> reason,
     boolean canceled,
-    Optional<Long> datasetId
-) {
+    Optional<Long> datasetId) {
   public enum Status {
     PENDING("pending"),
     INCOMPLETE("incomplete"),
@@ -19,6 +18,7 @@ public record RequestRecord(
     SUCCESS("success");
 
     public final String label;
+
     Status(final String label) {
       this.label = label;
     }

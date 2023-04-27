@@ -1,18 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
+
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.intellij.lang.annotations.Language;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
-
-import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
+import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class CreateActivityTypeAction implements AutoCloseable {
-  private static final @Language("SQL") String sql = """
+  private static final @Language("SQL") String sql =
+      """
     insert into activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema)
     values (?, ?, ?::json, ?::json, ?::json)
     on conflict (model_id, name) do update
@@ -34,8 +34,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
       final List<Parameter> parameters,
       final List<String> requiredParameters,
       final ValueSchema computedAttributesValueSchema)
-  throws SQLException, FailedInsertException
-  {
+      throws SQLException, FailedInsertException {
     final var valueSchemaString = valueSchemaP.unparse(computedAttributesValueSchema).toString();
 
     this.statement.setLong(1, modelId);

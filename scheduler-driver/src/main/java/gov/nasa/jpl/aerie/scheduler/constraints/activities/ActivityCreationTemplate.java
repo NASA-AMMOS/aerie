@@ -12,18 +12,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -45,7 +44,6 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
 
   private static final Logger logger = LoggerFactory.getLogger(ActivityCreationTemplate.class);
 
-
   /**
    * ctor is private to prevent inconsistent construction
    *
@@ -53,11 +51,12 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
    *
    * leaves all criteria elements unspecified
    */
-  protected ActivityCreationTemplate() { }
+  protected ActivityCreationTemplate() {}
 
   @Override
   @SuppressWarnings("unchecked")
-  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
+  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression>
+      AbstractBuilder<B, AT> getNewBuilder() {
     return (AbstractBuilder<B, AT>) new Builder();
   }
 
@@ -66,7 +65,6 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     act.type = actType;
     return act;
   }
-
 
   /**
    * fluent builder class for constructing creation templates
@@ -89,7 +87,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
    */
   public static class Builder extends AbstractBuilder<Builder, ActivityCreationTemplate> {
 
-    //REVIEW: perhaps separate search criteria vs default specification,
+    // REVIEW: perhaps separate search criteria vs default specification,
     //        eg Range(0...5) allowed, but create with 4
 
     /**
@@ -99,23 +97,20 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
      *     this template. not null
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    Builder duration(@NotNull Duration duration) {
+    public @NotNull Builder duration(@NotNull Duration duration) {
       this.durationIn = new DiscreteProfileFromDuration(new DurationLiteral(duration));
       return getThis();
     }
 
-    public @NotNull
-    Builder duration(@NotNull Expression<? extends Profile<?>> duration) {
+    public @NotNull Builder duration(@NotNull Expression<? extends Profile<?>> duration) {
       this.durationIn = duration;
       return getThis();
     }
 
     // parametric dur
-    //-> either state value
+    // -> either state value
     // or
-    //recognize the dur in the parameters instead of a specific builder ?
-
+    // recognize the dur in the parameters instead of a specific builder ?
 
     @Override
     public Builder basedOn(ActivityCreationTemplate template) {
@@ -131,8 +126,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     /**
      * {@inheritDoc}
      */
-    public @NotNull
-    Builder getThis() {
+    public @NotNull Builder getThis() {
       return this;
     }
 
@@ -142,10 +136,12 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       template.startOrEndRange = this.startsOrEndsIn;
 
       if (this.type.getDurationType() instanceof DurationType.Uncontrollable) {
-        if(this.acceptableAbsoluteTimingError.isZero()){
-          //TODO: uncomment when precision can be set by user
-          //logger.warn("Root-finding is likely to fail as activity has an uncontrollable duration and the timing "
-          //+ "precision is 0. Setting it for you at 1s. Next time, use withTimingPrecision() when building the template.");
+        if (this.acceptableAbsoluteTimingError.isZero()) {
+          // TODO: uncomment when precision can be set by user
+          // logger.warn("Root-finding is likely to fail as activity has an uncontrollable duration
+          // and the timing "
+          // + "precision is 0. Setting it for you at 1s. Next time, use withTimingPrecision() when
+          // building the template.");
           this.acceptableAbsoluteTimingError = Duration.of(500, Duration.MILLISECOND);
         }
       }
@@ -155,7 +151,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       if (this.durationIn != null) {
         template.duration = this.durationIn;
       }
-      //REVIEW: probably want to store permissible rane separate from creation
+      // REVIEW: probably want to store permissible rane separate from creation
       //        default value
 
       template.arguments = this.arguments;
@@ -195,11 +191,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
    * @param windows the windows in which the activity can be instantiated
    * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
-  public @NotNull
-  Optional<SchedulingActivityDirective> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
-    //REVIEW: how to properly export any flexibility to instance?
+  public @NotNull Optional<SchedulingActivityDirective> createActivity(
+      String name,
+      Windows windows,
+      SimulationFacade facade,
+      Plan plan,
+      PlanningHorizon planningHorizon,
+      EvaluationEnvironment evaluationEnvironment) {
+    // REVIEW: how to properly export any flexibility to instance?
     for (var window : windows.iterateEqualTo(true)) {
-      var act = createInstanceForReal(name, window, facade, plan, planningHorizon, evaluationEnvironment);
+      var act =
+          createInstanceForReal(name, window, facade, plan, planningHorizon, evaluationEnvironment);
       if (act.isPresent()) {
         return act;
       }
@@ -207,13 +209,20 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     return Optional.empty();
   }
 
-  private Optional<SchedulingActivityDirective> createInstanceForReal(final String name, final Interval interval, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+  private Optional<SchedulingActivityDirective> createInstanceForReal(
+      final String name,
+      final Interval interval,
+      SimulationFacade facade,
+      Plan plan,
+      PlanningHorizon planningHorizon,
+      EvaluationEnvironment evaluationEnvironment) {
     final var tnw = new TaskNetworkAdapter(new TaskNetwork());
     tnw.addAct(name);
     if (interval != null) {
       tnw.addEnveloppe(name, "interval", interval.start, interval.end);
     }
-    tnw.addEnveloppe(name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
+    tnw.addEnveloppe(
+        name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
     if (this.startRange != null) {
       tnw.addStartInterval(name, this.startRange.start, this.startRange.end);
     }
@@ -223,97 +232,105 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     if (this.duration != null) {
       final Optional<Duration> duration;
       try {
-        duration = this.duration
-            .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
-            .valueAt(Duration.ZERO)
-            .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+        duration =
+            this.duration
+                .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
+                .valueAt(Duration.ZERO)
+                .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
       } catch (NullPointerException e) {
-        throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
+        throw new UnsupportedOperationException(
+            "Activity creation duration arguments cannot depend on simulation results.", e);
       }
       duration.ifPresent(d -> tnw.addDurationInterval(name, d, d));
     }
     final var success = tnw.solveConstraints();
     if (!success) {
-      logger.warn("Inconsistent temporal constraints, returning Optional.empty() instead of activity");
+      logger.warn(
+          "Inconsistent temporal constraints, returning Optional.empty() instead of activity");
       return Optional.empty();
     }
     final var solved = tnw.getAllData(name);
 
-    //the domain of user/scheduling temporal constraints have been reduced with the STN,
-    //now it is time to find an assignment compatible
-    //CASE 1: activity has an uncontrollable duration
-    if(this.type.getDurationType() instanceof DurationType.Uncontrollable){
-      final var f = new EquationSolvingAlgorithms.Function<Duration>(){
-        //As simulation is called, this is not an approximation
-        @Override
-        public boolean isApproximation(){
-          return false;
-        }
+    // the domain of user/scheduling temporal constraints have been reduced with the STN,
+    // now it is time to find an assignment compatible
+    // CASE 1: activity has an uncontrollable duration
+    if (this.type.getDurationType() instanceof DurationType.Uncontrollable) {
+      final var f =
+          new EquationSolvingAlgorithms.Function<Duration>() {
+            // As simulation is called, this is not an approximation
+            @Override
+            public boolean isApproximation() {
+              return false;
+            }
 
-        @Override
-        public Duration valueAt(final Duration start) {
-          final var actToSim = SchedulingActivityDirective.of(
-              type,
-              start,
-              null,
-              SchedulingActivityDirective.instantiateArguments(
-                  arguments,
-                  start,
-                  facade.getLatestConstraintSimulationResults(),
-                  evaluationEnvironment,
-                  type),
-              null,
-              null,
-              true);
-          try {
-            facade.simulateActivity(actToSim);
-            final var dur = facade.getActivityDuration(actToSim);
-            facade.removeActivitiesFromSimulation(List.of(actToSim));
-            return dur.map(start::plus).orElse(Duration.MAX_VALUE);
-          } catch (SimulationFacade.SimulationException e) {
-            return Duration.MAX_VALUE;
-          }
-        }
-
-      };
+            @Override
+            public Duration valueAt(final Duration start) {
+              final var actToSim =
+                  SchedulingActivityDirective.of(
+                      type,
+                      start,
+                      null,
+                      SchedulingActivityDirective.instantiateArguments(
+                          arguments,
+                          start,
+                          facade.getLatestConstraintSimulationResults(),
+                          evaluationEnvironment,
+                          type),
+                      null,
+                      null,
+                      true);
+              try {
+                facade.simulateActivity(actToSim);
+                final var dur = facade.getActivityDuration(actToSim);
+                facade.removeActivitiesFromSimulation(List.of(actToSim));
+                return dur.map(start::plus).orElse(Duration.MAX_VALUE);
+              } catch (SimulationFacade.SimulationException e) {
+                return Duration.MAX_VALUE;
+              }
+            }
+          };
       try {
         var endInterval = solved.end();
         var startInterval = solved.start();
 
         final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
 
-        final var result = new EquationSolvingAlgorithms
-            .SecantDurationAlgorithm()
-            .findRoot(
-                f,
-                startInterval.start,
-                startInterval.end,
-                endInterval.start.plus(durationHalfEndInterval),
-                durationHalfEndInterval,
-                durationHalfEndInterval,
-                startInterval.start,
-                startInterval.end,
-                20);
+        final var result =
+            new EquationSolvingAlgorithms.SecantDurationAlgorithm()
+                .findRoot(
+                    f,
+                    startInterval.start,
+                    startInterval.end,
+                    endInterval.start.plus(durationHalfEndInterval),
+                    durationHalfEndInterval,
+                    durationHalfEndInterval,
+                    startInterval.start,
+                    startInterval.end,
+                    20);
 
         Duration dur = null;
-        if(!f.isApproximation()){
-          //f is calling simulation -> we do not need to resimulate this activity later
+        if (!f.isApproximation()) {
+          // f is calling simulation -> we do not need to resimulate this activity later
           dur = result.fx().minus(result.x());
         }
-        // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-        return Optional.of(SchedulingActivityDirective.of(
-            type,
-            result.x(),
-            dur,
-            SchedulingActivityDirective.instantiateArguments(
-                this.arguments, result.x(),
-                facade.getLatestConstraintSimulationResults(),
-                evaluationEnvironment,
-                type),
-            null,
-            null,
-            true));
-      } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
+        // TODO: When scheduling is allowed to create activities with anchors, this constructor
+        // should pull from an expanded creation template
+        return Optional.of(
+            SchedulingActivityDirective.of(
+                type,
+                result.x(),
+                dur,
+                SchedulingActivityDirective.instantiateArguments(
+                    this.arguments,
+                    result.x(),
+                    facade.getLatestConstraintSimulationResults(),
+                    evaluationEnvironment,
+                    type),
+                null,
+                null,
+                true));
+      } catch (
+          EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
         logger.debug("Rootfinding encountered a zero-derivative");
       } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
         logger.debug("Rootfinding encountered an infinite-derivative");
@@ -327,69 +344,78 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         logger.debug("No solution");
       }
       return Optional.empty();
-      //CASE 2: activity has a controllable duration
+      // CASE 2: activity has a controllable duration
     } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
-      //select earliest start time, STN guarantees satisfiability
+      // select earliest start time, STN guarantees satisfiability
       final var earliestStart = solved.start().start;
-      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(
-          this.arguments,
-          earliestStart,
-          facade.getLatestConstraintSimulationResults(),
-          evaluationEnvironment,
-          type);
+      final var instantiatedArguments =
+          SchedulingActivityDirective.instantiateArguments(
+              this.arguments,
+              earliestStart,
+              facade.getLatestConstraintSimulationResults(),
+              evaluationEnvironment,
+              type);
 
       final var durationParameterName = dt.parameterName();
-      //handle variable duration parameter here
+      // handle variable duration parameter here
       final Duration setActivityDuration;
       if (instantiatedArguments.containsKey(durationParameterName)) {
-        final var argumentDuration = Duration.of(
-            instantiatedArguments.get(durationParameterName).asInt().get(),
-            Duration.MICROSECOND);
+        final var argumentDuration =
+            Duration.of(
+                instantiatedArguments.get(durationParameterName).asInt().get(),
+                Duration.MICROSECOND);
         if (solved.duration().contains(argumentDuration)) {
           setActivityDuration = argumentDuration;
         } else {
           logger.debug(
-              "Controllable duration set by user is incompatible with temporal constraints associated to the activity template");
+              "Controllable duration set by user is incompatible with temporal constraints"
+                  + " associated to the activity template");
           return Optional.empty();
         }
       } else {
-        //REVIEW: should take default duration of activity type maybe ?
+        // REVIEW: should take default duration of activity type maybe ?
         setActivityDuration = solved.end().start.minus(solved.start().start);
       }
-      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivityDirective.of(
-          type,
-          earliestStart,
-          setActivityDuration,
-          SchedulingActivityDirective.instantiateArguments(
-              this.arguments,
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should
+      // pull from an expanded creation template
+      return Optional.of(
+          SchedulingActivityDirective.of(
+              type,
               earliestStart,
-              facade.getLatestConstraintSimulationResults(),
-              evaluationEnvironment,
-              type),
-          null,
-          null,
-          true));
+              setActivityDuration,
+              SchedulingActivityDirective.instantiateArguments(
+                  this.arguments,
+                  earliestStart,
+                  facade.getLatestConstraintSimulationResults(),
+                  evaluationEnvironment,
+                  type),
+              null,
+              null,
+              true));
     } else if (this.type.getDurationType() instanceof DurationType.Fixed dt) {
-      //select earliest start time, STN guarantees satisfiability
+      // select earliest start time, STN guarantees satisfiability
       final var earliestStart = solved.start().start;
 
-      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivityDirective.of(
-          type,
-          earliestStart,
-          dt.duration(),
-          SchedulingActivityDirective.instantiateArguments(
-              this.arguments,
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should
+      // pull from an expanded creation template
+      return Optional.of(
+          SchedulingActivityDirective.of(
+              type,
               earliestStart,
-              facade.getLatestConstraintSimulationResults(),
-              evaluationEnvironment,
-              type),
-          null,
-          null,
-          true));
+              dt.duration(),
+              SchedulingActivityDirective.instantiateArguments(
+                  this.arguments,
+                  earliestStart,
+                  facade.getLatestConstraintSimulationResults(),
+                  evaluationEnvironment,
+                  type),
+              null,
+              null,
+              true));
     } else {
-     throw new UnsupportedOperationException("Duration types other than Uncontrollable, Controllable, and Fixed are not supported: " + this.type.getDurationType());
+      throw new UnsupportedOperationException(
+          "Duration types other than Uncontrollable, Controllable, and Fixed are not supported: "
+              + this.type.getDurationType());
     }
   }
 
@@ -408,10 +434,12 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
    * @return a newly constructed activity instance with values chosen
    *     according to any specified template criteria
    */
-  public @NotNull
-  Optional<SchedulingActivityDirective> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
-    return createInstanceForReal(name,null, facade, plan, planningHorizon, evaluationEnvironment);
+  public @NotNull Optional<SchedulingActivityDirective> createActivity(
+      String name,
+      SimulationFacade facade,
+      Plan plan,
+      PlanningHorizon planningHorizon,
+      EvaluationEnvironment evaluationEnvironment) {
+    return createInstanceForReal(name, null, facade, plan, planningHorizon, evaluationEnvironment);
   }
-
-
 }

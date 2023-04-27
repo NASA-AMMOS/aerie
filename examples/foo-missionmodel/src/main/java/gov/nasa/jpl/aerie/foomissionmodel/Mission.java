@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.aerie.contrib.models.Clock;
 import gov.nasa.jpl.aerie.contrib.models.Register;
@@ -15,13 +17,11 @@ import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.time.Instant;
 
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-
 public final class Mission {
-  // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
+  // Need a way to pose constraints against activities, and generally modeling activity behavior
+  // with resources.
   // Need a clear story for external models.
   // Need to generalize RealDynamics to nonlinear polynomials.
 
@@ -37,7 +37,8 @@ public final class Mission {
   public final RealResource combo = this.data.plus(this.data.rate);
 
   public final Clock utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
-  private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
+  private final Registrar
+      cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
   public final TimeTrackerDaemon timeTrackerDaemon = new TimeTrackerDaemon();
 
@@ -54,10 +55,12 @@ public final class Mission {
       throw new AssertionError("Registrar should not report initialization as complete");
 
     // TODO: Move resource registration out into an Aerie-specific binding layer.
-    //   (This binding layer should also be the one responsible for feeding in constructor parameters.)
+    //   (This binding layer should also be the one responsible for feeding in constructor
+    // parameters.)
     registrar.discrete("/foo", this.foo, new DoubleValueMapper());
     registrar.discrete("/foo/conflicted", this.foo::isConflicted, new BooleanValueMapper());
-    registrar.discrete("/foo/starting_after_unix_epoch", startingAfterUnixEpoch, new BooleanValueMapper());
+    registrar.discrete(
+        "/foo/starting_after_unix_epoch", startingAfterUnixEpoch, new BooleanValueMapper());
     registrar.real("/batterySoC", this.source.minus(this.sink));
     registrar.real("/data", this.data);
     registrar.real("/data/rate", this.data.rate);
@@ -76,11 +79,12 @@ public final class Mission {
 
     spawn(timeTrackerDaemon::run);
 
-    spawn(() -> { // Register a never-ending daemon task
-      while (true) {
-        ModelActions.delay(Duration.SECOND);
-      }
-    });
+    spawn(
+        () -> { // Register a never-ending daemon task
+          while (true) {
+            ModelActions.delay(Duration.SECOND);
+          }
+        });
   }
 
   public void test() {

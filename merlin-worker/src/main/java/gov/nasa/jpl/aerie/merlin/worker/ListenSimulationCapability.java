@@ -1,20 +1,19 @@
 package gov.nasa.jpl.aerie.merlin.worker;
 
+import static gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresNotificationJsonParsers.postgresSimulationNotificationP;
+
 import com.impossibl.postgres.api.jdbc.PGConnection;
 import com.impossibl.postgres.api.jdbc.PGNotificationListener;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.ListenSimulationStatusAction;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.json.Json;
-import javax.sql.DataSource;
 import java.io.StringReader;
 import java.sql.SQLException;
 import java.util.concurrent.BlockingQueue;
-
-import static gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresNotificationJsonParsers.postgresSimulationNotificationP;
+import javax.json.Json;
+import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListenSimulationCapability {
   private static final Logger logger = LoggerFactory.getLogger(ListenSimulationCapability.class);
@@ -34,7 +33,7 @@ public class ListenSimulationCapability {
     connection.addNotificationListener(new SimulationNotificationListener());
 
     try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
-       listenSimulationStatusAction.apply();
+      listenSimulationStatusAction.apply();
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
     }
@@ -43,12 +42,11 @@ public class ListenSimulationCapability {
   private class SimulationNotificationListener implements PGNotificationListener {
 
     @Override
-    public void notification(int processId, String channelName, String payload){
+    public void notification(int processId, String channelName, String payload) {
       logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
       final var jsonValue = Json.createReader(new StringReader(payload)).readValue();
-      final var notificationPayload = postgresSimulationNotificationP
-          .parse(jsonValue)
-          .getSuccessOrThrow();
+      final var notificationPayload =
+          postgresSimulationNotificationP.parse(jsonValue).getSuccessOrThrow();
       try {
         notificationQueue.put(notificationPayload);
       } catch (InterruptedException ex) {
