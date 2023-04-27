@@ -2187,4 +2187,21 @@ public class SchedulingIntegrationTests {
 
     // If invalid typescript is generated, an exception will be thrown.
   }
+
+  @Test
+  void testSchedulerAgentDurationTypeHandling() {
+    runScheduler(
+        BANANANATION,
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BananaNap",
+                Map.of(),
+                null,
+                true
+            )
+        ),
+        List.of(),
+        PLANNING_HORIZON);
+  }
 }
