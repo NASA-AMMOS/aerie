@@ -9,6 +9,7 @@
     "lib": [
       "esnext"
     ],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "ignoreDeprecations": "5.0"
   }
 }

@@ -3530,7 +3530,7 @@ describe('user sequence to seqjson', () => {
               immediate_commands: [
                 PEEL_BANANA({peelDirection: 'fromStem'})
               ],
-              requests: [
+              requests: ({ locals, parameters }) => ([
                 {
                   name: 'power',
                   steps: [
@@ -3564,7 +3564,7 @@ describe('user sequence to seqjson', () => {
                     author: 'rrgoet',
                   },
                 }
-              ],
+              ]),
             });
           `,
       },
