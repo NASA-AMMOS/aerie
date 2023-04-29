@@ -57,6 +57,7 @@ public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
         concurrentGraphs.add(rest.right());
         g = rest;
       }
+      concurrentGraphs.add(g.left());
 
       // gather effects of each branch, but if found last event, go ahead and return the Effect of that branch
       for (EventGraph<Event> cg : concurrentGraphs) {

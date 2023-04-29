@@ -50,7 +50,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public boolean equals(Object o) {
       // Making this explicit because a structural equals() is problematic in data structures of these
-      return ((Object)this).equals(o);
+      return this == o;
     }
   }
 
@@ -62,7 +62,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     }
     @Override
     public boolean equals(Object o) {
-      return ((Object)this).equals(o);
+      return this == o;
     }
   }
 
@@ -74,7 +74,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     }
     @Override
     public boolean equals(Object o) {
-      return ((Object)this).equals(o);
+      return this == o;
     }
   }
 
@@ -86,7 +86,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     }
     @Override
     public boolean equals(Object o) {
-      return ((Object)this).equals(o);
+      return this == o;
     }
   }
 

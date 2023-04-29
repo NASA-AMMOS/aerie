@@ -678,8 +678,10 @@ public final class SimulationEngine implements AutoCloseable {
     // Collect per-task information from the event graph.
     var serializableTopics = this.missionModel.getTopics();
     final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
-    final Collection<EventGraph<Event>> graphs = timeline.eventsByTopic.get(activityTopic).values();
-    graphs.forEach(events -> events.evaluate(trait, trait::atom).accept(this.taskInfo));
+    for (final var point : timeline) {
+      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+      p.events().evaluate(trait, trait::atom).accept(taskInfo);
+    }
 
     // Extract profiles for every resource.
     for (final var entry : this.resources.entrySet()) {
@@ -970,7 +972,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var query = (EngineCellId<?, State>) token;
 
       // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      var cell = timeline.getCell(query.query(), currentTime, false);
+      var cell = timeline.getCell(query.query(), currentTime, true);
 
       // Don't emit a noop event for the read if the task is not yet stale.
       // The time that this task becomes stale was determined when it was created.
