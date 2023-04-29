@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -83,13 +84,13 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    */
   protected void addIndices(final EventGraph<Event> graph, Duration time, Set<Topic<?>> topics) {
     eventsByTime.put(time, graph);
-    if (topics == null) topics = extractTopics(graph);
-    var tasks = extractTasks(graph);
+    final var finalTopics = topics == null ? extractTopics(graph) : topics;
+    final var tasks = extractTasks(graph);
     topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, graph));
     tasks.forEach(t -> this.eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, graph));
     // TODO: REVIEW -- do we really need all these maps?
-    topicsForEventGraph.computeIfAbsent(graph, $ -> new TreeSet<>()).addAll(topics);  // Tree over Hash for less memory/space
-    tasksForEventGraph.computeIfAbsent(graph, $ -> new TreeSet<>()).addAll(tasks);
+    topicsForEventGraph.computeIfAbsent(graph, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);  // Tree over Hash for less memory/space
+    tasksForEventGraph.computeIfAbsent(graph, $ -> HashSet.newHashSet(tasks.size())).addAll(tasks);
   }
 
   public void replaceEventGraph(EventGraph<Event> oldG, EventGraph<Event> newG) {
@@ -166,12 +167,23 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public void stepUpSimple(final Cell<?> cell, final Duration maxTime, final boolean includeMaxTime) {
     final NavigableMap<Duration, EventGraph<Event>> subTimeline;
     var cellTime = cellTimes.get(cell);
+    if (cellTime == null) {
+      cellTime = Duration.ZERO;
+      cellTimes.put(cell, cellTime);
+    }
     if (cellTime.longerThan(maxTime)) {
       throw new UnsupportedOperationException("Trying to step cell from the past");
     }
     try {
-      subTimeline =
-          eventsByTopic.get(cell.getTopic()).subMap(cellTime, true, maxTime, includeMaxTime);
+      final TreeMap<Duration, EventGraph<Event>> eventsByTimeForTopic = eventsByTopic.get(cell.getTopic());
+      if (eventsByTimeForTopic == null) {
+        if (maxTime.longerThan(cellTime)) {
+          cell.step(maxTime.minus(cellTime));
+          cellTimes.put(cell, maxTime);
+        }
+        return;
+      }
+      subTimeline = eventsByTimeForTopic.subMap(cellTime, true, maxTime, includeMaxTime);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

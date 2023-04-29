@@ -27,7 +27,7 @@ public final class SimulationDriver {
   ) {
     try (final var engine = new SimulationEngine(startTime, missionModel, null)) {
       /* The top-level simulation timeline. */
-      var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
+      //var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
 
@@ -111,7 +111,7 @@ public final class SimulationDriver {
     try (final var engine = new SimulationEngine(startTime, missionModel, null)) {
       /* The top-level simulation timeline. */
       //var timeline = new TemporalEventSource();
-      var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
+      //var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
 
