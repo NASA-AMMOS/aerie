@@ -2,17 +2,20 @@ table:
   name: expansion_run
   schema: public
 object_relationships:
-- name: expansion_set
-  using:
-    foreign_key_constraint_on: expansion_set_id
+  - name: expansion_set
+    using:
+      foreign_key_constraint_on: expansion_set_id
+  - name: expanded_sequences
+    using:
+      foreign_key_constraint_on: expansion_set_id
 array_relationships:
-- name: activity_instance_commands
-  using:
-    foreign_key_constraint_on:
-      column: expansion_run_id
-      table:
-        name: activity_instance_commands
-        schema: public
+  - name: activity_instance_commands
+    using:
+      foreign_key_constraint_on:
+        column: expansion_run_id
+        table:
+          name: activity_instance_commands
+          schema: public
 remote_relationships:
   - name: simulation_dataset
     definition:
