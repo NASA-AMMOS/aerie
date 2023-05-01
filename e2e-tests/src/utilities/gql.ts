@@ -206,7 +206,6 @@ const gql = {
           model_id
           name
           plan_id
-          summary
         }
         duration
         id
@@ -222,7 +221,6 @@ const gql = {
             model_id
             name
             plan_id
-            summary
           }
           id
           parameters {
