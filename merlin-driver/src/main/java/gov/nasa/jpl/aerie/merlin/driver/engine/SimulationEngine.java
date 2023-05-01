@@ -320,7 +320,10 @@ public final class SimulationEngine implements AutoCloseable {
     return profile != null && profile.segments().size() > 0;
   }
 
-  /** Register a resource whose profile should be accumulated over time. */
+  /**
+   * Register (if not already registered) a resource whose profile should be accumulated over time.
+   * Schedule a job to get resource values starting at the time specified.
+   */
   public <Dynamics>
   void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
     final var id = new ResourceId(name);
@@ -415,6 +418,9 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (job instanceof JobId.ConditionJobId j) {
       this.updateCondition(j.id(), frame, currentTime, maximumTime, queryTopic);
     } else if (job instanceof JobId.ResourceJobId j) {
+      // TODO: Would like to check if the cells on which this resource depends is stale.
+      //       Where is this info?  EngineQuerier.referencedTopics?
+      //       [Remove this comment when answered before merging changes.]
       this.updateResource(j.id(), frame, currentTime);
     } else {
       throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
@@ -562,6 +568,9 @@ public final class SimulationEngine implements AutoCloseable {
     final var querier = new EngineQuerier(currentTime, frame);
     this.resources.get(resource).append(currentTime, querier);
 
+    // TODO: FIXME? -- Won't querier.referencedTopics always be empty here?
+    //                 It was just created above and referencedTopics isn't
+    //                 populated until querier.getState() is called.
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
 
     final var expiry = querier.expiry.map(currentTime::plus);

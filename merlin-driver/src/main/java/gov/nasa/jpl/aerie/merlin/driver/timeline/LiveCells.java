@@ -57,16 +57,21 @@ public final class LiveCells {
   }
 
   public Set<LiveCell<?>> getCells(final Topic<?> topic) {
-    Set<LiveCell<?>> cells = new HashSet<>(cellsForTopic.get(topic));
+    var c4t = cellsForTopic.get(topic);
+    if (c4t != null && !c4t.isEmpty()) return c4t; // assumes one cell per topic; TODO: give up on multiple cells per topic and change signature to getCell(topic)->LiveCell ?
+    Set<LiveCell<?>> cells = new HashSet<>();
+    if (parent == null) return cells;
     var parentCells = parent.getCells(topic);
     // Need to get the duplicated cell in cells corresponding to each matching parent cell
     for (var c : parentCells) {
-      final Stream<Query<?>> queries = parent.cells.keySet().stream().filter(q -> parent.cells.get(q).equals(c));
-      // need to call getCell() to generate the duplicate of the parent cell
-      queries.map(q -> this.cells.get(getCell(q)));
-      // getCell() in statement above return Cell instead of LiveCell, so we throw that result away and get them directly.
-      var newCells = queries.map(q -> this.cells.get(q));
-      cells.addAll(newCells.collect(Collectors.toList()));
+      Stream<Query<?>> queries = parent.cells.keySet().stream().filter(q -> parent.cells.get(q).equals(c));
+      var newCells = queries.map(q -> {
+        // need to call getCell() just to generate the duplicate of the parent cell
+        getCell(q);
+        // getCell() above returns Cell instead of LiveCell, so we throw that result away and get it directly.
+        return this.cells.get(q);
+      });
+      cells.addAll(newCells.toList());
     }
     return cells;
   }

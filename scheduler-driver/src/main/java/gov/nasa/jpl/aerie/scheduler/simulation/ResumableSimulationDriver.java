@@ -82,28 +82,29 @@ public class ResumableSimulationDriver<Model> {
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
-    activitiesInserted.clear();
+    //activitiesInserted.clear();
     // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
-
-    /* The top-level simulation timeline. */
-    // this.timeline = new TemporalEventSource();
-
 
     /* The current real time. */
     curTime = Duration.ZERO;
 
     // Begin tracking any resources that have not already been simulated.
-    for (final var entry : missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-      if (!rerunning || !oldEngine.hasSimulatedResource(name)) {
-        engine.trackResource(name, resource, curTime);
-      }
-    }
+    trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
     if (!rerunning) {
       startDaemons(curTime);
+    }
+  }
+
+  private void trackResources() {
+    // Begin tracking any resources that have not already been simulated.
+    for (final var entry : missionModel.getResources().entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+      if (!rerunning || !engine.oldEngine.hasSimulatedResource(name)) {
+        engine.trackResource(name, resource, curTime);
+      }
     }
   }
 
