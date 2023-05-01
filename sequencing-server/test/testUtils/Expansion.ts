@@ -108,6 +108,34 @@ export async function expand(
   return result.expandAllActivities.id;
 }
 
+export async function getExpandedSequence(
+  graphqlClient: GraphQLClient,
+  expansionRunId: number,
+): Promise<{
+  expandedSequence: Sequence;
+}> {
+  const result = await graphqlClient.request<{
+    expanded_sequences: [
+      {
+        expanded_sequence: Sequence;
+      },
+    ];
+  }>(
+    gql`
+      query GetExpandedSequence($expansionRunId: Int!) {
+        expanded_sequences(where: { expansion_run_id: { _eq: $expansionRunId } }) {
+          expanded_sequence
+        }
+      }
+    `,
+    {
+      expansionRunId,
+    },
+  );
+
+  return { expandedSequence: result.expanded_sequences[0].expanded_sequence };
+}
+
 export async function removeExpansionRun(graphqlClient: GraphQLClient, expansionRunId: number): Promise<void> {
   await graphqlClient.request<{
     delete_expansion_run_by_pk: {

@@ -376,7 +376,7 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
         return {
           ...ai,
-          commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
+          commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
           errors: errors as { message: string; stack: string; location: { line: number; column: number } }[],
         };
       });

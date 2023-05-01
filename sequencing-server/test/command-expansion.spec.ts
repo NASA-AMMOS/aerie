@@ -8,6 +8,7 @@ import {
 import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import {
   expand,
+  getExpandedSequence,
   insertExpansion,
   insertExpansionSet,
   removeExpansion,
@@ -16,8 +17,9 @@ import {
 } from './testUtils/Expansion.js';
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
-import {executeSimulation, removeSimulationArtifacts, updateSimulationBounds} from './testUtils/Simulation.js';
-import {waitMs} from "./testUtils/testUtils";
+import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from './testUtils/Simulation.js';
+import { waitMs } from './testUtils/testUtils';
+import { insertSequence, linkActivityInstance } from './testUtils/Sequence.js';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
@@ -30,7 +32,11 @@ beforeEach(async () => {
   });
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
-  await updateSimulationBounds(graphqlClient, {plan_id: planId, simulation_start_time:"2020-001T00:00:00Z", simulation_end_time:"2020-002T00:00:00Z" });
+  await updateSimulationBounds(graphqlClient, {
+    plan_id: planId,
+    simulation_start_time: '2020-001T00:00:00Z',
+    simulation_end_time: '2020-002T00:00:00Z',
+  });
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
 });
 
@@ -265,5 +271,79 @@ describe('expansion', () => {
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansionRun(graphqlClient, expansionRunId);
+  }, 30000);
+
+  it('should save the expanded sequence on successful expansion', async () => {
+    const expansionId = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        A\`2023-091T10:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.GROW_BANANA({ quantity: 10, durationSecs: 7200 })
+      ];
+    }
+    `,
+    );
+    // Create Expansion Set
+    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+
+    // Create Activity Directives
+    const [activityId] = await Promise.all([insertActivityDirective(graphqlClient, planId, 'GrowBanana')]);
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    // Create Sequence
+    const sequencePk = await insertSequence(graphqlClient, {
+      seqId: 'test00000',
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
+    // Link Activity Instances to Sequence
+    await Promise.all([linkActivityInstance(graphqlClient, sequencePk, activityId)]);
+
+    // Get the simulated activity ids
+    const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
+      graphqlClient,
+      simulationArtifactPk.simulationDatasetId,
+      activityId,
+    );
+
+    // Expand Plan to Sequence Fragments
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+    /** End Setup */
+
+    const { expandedSequence } = await getExpandedSequence(graphqlClient, expansionRunPk);
+
+    expect(expandedSequence).toEqual({
+      id: 'test00000',
+      metadata: { planId: planId, simulationDatasetId: simulationArtifactPk.simulationDatasetId, timeSorted: false },
+      steps: [
+        {
+          args: [],
+          metadata: { simulatedActivityId: simulatedActivityId },
+          stem: 'ADD_WATER',
+          time: { tag: '2023-091T10:00:00.000', type: 'ABSOLUTE' },
+          type: 'command',
+        },
+        {
+          args: [
+            { name: 'quantity', type: 'number', value: 10 },
+            { name: 'durationSecs', type: 'number', value: 7200 },
+          ],
+          metadata: { simulatedActivityId: simulatedActivityId },
+          stem: 'GROW_BANANA',
+          time: { tag: '04:00:00.000', type: 'COMMAND_RELATIVE' },
+          type: 'command',
+        },
+      ],
+    });
+
+    // Cleanup
+    await removeActivityDirective(graphqlClient, activityId, planId);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    await removeExpansionRun(graphqlClient, expansionRunPk);
   }, 30000);
 });
