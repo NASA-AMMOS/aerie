@@ -15,5 +15,6 @@ begin;
   \ir tables/sequence.sql
   \ir tables/sequence_to_simulated_activity.sql
   \ir tables/user_sequence.sql
+  \ir tables/expanded_sequences.sql
 
 end;
