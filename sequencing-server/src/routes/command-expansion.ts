@@ -337,9 +337,9 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
     );
 
     // If the user has created a sequence, we can try to save the expanded sequences when an expansion runs.
-    if (seqRows.rows.length > 0) {
-      const seqId = seqRows.rows[0].seq_id;
-      const seqMetadata = seqRows.rows[0].metadata;
+    for (const seqRow of seqRows.rows) {
+      const seqId = seqRow.seq_id;
+      const seqMetadata = seqRow.metadata;
 
       const simulatedActivities = await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(
         expandedActivityInstances.map(row => ({
@@ -393,11 +393,11 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
       const { rows } = await db.query(
         `
-          insert into expanded_sequences (expansion_run_id, expanded_sequence)
-            values ($1, $2)
+          insert into expanded_sequences (expansion_run_id, seq_id, expanded_sequence)
+            values ($1, $2, $3)
             returning id
       `,
-        [expansionRunId, sequenceJson],
+        [expansionRunId, seqId, sequenceJson],
       );
 
       if (rows.length < 1) {

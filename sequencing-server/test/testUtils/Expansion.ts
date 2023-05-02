@@ -111,6 +111,7 @@ export async function expand(
 export async function getExpandedSequence(
   graphqlClient: GraphQLClient,
   expansionRunId: number,
+  seqId: string,
 ): Promise<{
   expandedSequence: Sequence;
 }> {
@@ -122,14 +123,15 @@ export async function getExpandedSequence(
     ];
   }>(
     gql`
-      query GetExpandedSequence($expansionRunId: Int!) {
-        expanded_sequences(where: { expansion_run_id: { _eq: $expansionRunId } }) {
+      query GetExpandedSequence($expansionRunId: Int!, $seqId: String!) {
+        expanded_sequences(where: { expansion_run_id: { _eq: $expansionRunId }, seq_id: { _eq: $seqId } }) {
           expanded_sequence
         }
       }
     `,
     {
       expansionRunId,
+      seqId,
     },
   );
 

@@ -313,7 +313,7 @@ describe('expansion', () => {
     const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
     /** End Setup */
 
-    const { expandedSequence } = await getExpandedSequence(graphqlClient, expansionRunPk);
+    const { expandedSequence } = await getExpandedSequence(graphqlClient, expansionRunPk, sequencePk.seqId);
 
     expect(expandedSequence).toEqual({
       id: 'test00000',
