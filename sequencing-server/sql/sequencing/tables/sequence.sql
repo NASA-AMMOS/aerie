@@ -5,6 +5,7 @@ create table sequence (
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  requested_by text not null default '',
 
   constraint sequence_primary_key
     primary key (seq_id, simulation_dataset_id)
@@ -17,6 +18,8 @@ comment on column sequence.simulation_dataset_id is e''
   'The simulation dataset id whose outputs are associated with this sequence';
 comment on column sequence.metadata is e''
   'The metadata associated with this sequence';
+comment on column sequence.requested_by is e''
+  'The user who requested the expanded sequence.';
 
 create or replace function sequence_set_updated_at()
 returns trigger

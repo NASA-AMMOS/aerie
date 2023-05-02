@@ -5,9 +5,12 @@ create table mission_model (
   mission text not null,
   name text not null,
   version text not null,
+  description text not null default '',
 
   owner text,
   jar_id integer not null,
+
+  created_at timestamptz not null default now(),
 
   constraint mission_model_synthetic_key
     primary key (id),
@@ -37,6 +40,10 @@ comment on column mission_model.owner is e''
   'A human-meaningful identifier for the user responsible for this model.';
 comment on column mission_model.jar_id is e''
   'An uploaded JAR file defining the mission model.';
+comment on column mission_model.created_at is e''
+  'The time this mission model was uploaded into Aerie.';
+comment on column mission_model.description is e''
+  'A human-meaningful description of the mission model.';
 
 
 create function increment_revision_on_update_mission_model()

@@ -4,6 +4,7 @@ create table activity_type (
   parameters merlin_parameter_set not null,
   required_parameters merlin_required_parameter_set not null,
   computed_attributes_value_schema jsonb,
+  category text null,
 
   constraint activity_type_natural_key
     primary key (model_id, name),
@@ -26,3 +27,5 @@ comment on column activity_type.required_parameters is e''
   'A description of which parameters are required to be provided to instantiate this activity type';
 comment on column activity_type.computed_attributes_value_schema is e''
   'The type of value returned by the effect model of this activity type';
+comment on column activity_type.category is e''
+  'The category this activity type belongs to.';

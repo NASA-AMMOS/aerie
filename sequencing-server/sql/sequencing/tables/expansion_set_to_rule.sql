@@ -29,11 +29,31 @@ comment on constraint max_one_expansion_of_each_activity_type_per_expansion_set 
   'Ensures that there is maximum one expansion of each activity type per expansion set.';
 
 create view expansion_set_rule_view as
-  select set_id, expansion_rule.*
-  from expansion_set_to_rule left join expansion_rule
-  on expansion_set_to_rule.rule_id = expansion_rule.id;
+select expansion_set_to_rule.set_id,
+			 rule.id,
+			 rule.activity_type,
+			 rule.expansion_logic,
+			 rule.authoring_command_dict_id,
+			 rule.authoring_mission_model_id,
+			 rule.created_at,
+			 rule.updated_at,
+			 rule.name,
+			 rule.owner,
+			 rule.updated_by,
+			 rule.description
+from expansion_set_to_rule left join expansion_rule rule
+  on expansion_set_to_rule.rule_id = rule.id;
 
 create view rule_expansion_set_view as
-  select rule_id, expansion_set.*
-  from expansion_set_to_rule left join expansion_set
-  on expansion_set_to_rule.set_id = expansion_set.id;
+select expansion_set_to_rule.rule_id,
+			 set.id,
+			 set.name,
+			 set.owner,
+			 set.description,
+			 set.command_dict_id,
+			 set.mission_model_id,
+			 set.created_at,
+			 set.updated_at,
+			 set.updated_by
+from expansion_set_to_rule left join expansion_set set
+  on expansion_set_to_rule.set_id = set.id;

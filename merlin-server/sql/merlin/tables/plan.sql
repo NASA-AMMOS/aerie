@@ -13,6 +13,12 @@ create table plan (
 
   is_locked boolean not null default false,
 
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  owner text not null default '',
+  updated_by text not null default '',
+
   constraint plan_synthetic_key
     primary key (id),
   constraint plan_natural_key
@@ -48,6 +54,14 @@ comment on column plan.parent_id is e''
   'The plan id of the parent of this plan. May be NULL if this plan does not have a parent.';
 comment on column plan.is_locked is e''
   'A boolean representing whether this plan can be deleted and if changes can happen to the activities of this plan.';
+comment on column plan.created_at is e''
+  'The time at which this plan was created.';
+comment on column plan.updated_at is e''
+  'The time at which this plan was last updated.';
+comment on column plan.owner is e''
+  'The user who owns the plan.';
+comment on column plan.updated_by is e''
+  'The user who last updated the plan.';
 
 
 create function increment_revision_on_update_plan()
@@ -124,3 +138,16 @@ create trigger simulation_row_for_new_plan_trigger
 after insert on plan
 for each row
 execute function create_simulation_row_for_new_plan();
+
+create function plan_set_updated_at()
+returns trigger
+security definer
+language plpgsql as $$begin
+  new.updated_at = now();
+  return new;
+end$$;
+
+create trigger set_timestamp
+  before update or insert on plan
+  for each row
+execute function plan_set_updated_at();
