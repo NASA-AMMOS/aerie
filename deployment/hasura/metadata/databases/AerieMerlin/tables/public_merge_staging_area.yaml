@@ -5,3 +5,16 @@ object_relationships:
   - name: merge_request
     using:
       foreign_key_constraint_on: merge_request_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, start_offset, type,
+                arguments, metadata, anchor_id, anchored_to_start, change_type]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, start_offset, type,
+                arguments, metadata, anchor_id, anchored_to_start, change_type]
+      filter: {}
+      allow_aggregations: true

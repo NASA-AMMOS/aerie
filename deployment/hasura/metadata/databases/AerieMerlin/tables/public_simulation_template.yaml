@@ -5,3 +5,34 @@ object_relationships:
 - name: mission_model
   using:
     foreign_key_constraint_on: model_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision, model_id, description, arguments]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision, model_id, description, arguments]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [model_id, description, arguments]
+      check: {}
+update_permissions:
+  - role: user
+    permission:
+      columns: [description, arguments]
+      filter: {"mission_model":
+                  {"plans":{"_or":[
+                    {"owner":{"_eq":"X-Hasura-User-Id"}},
+                    {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}} # Anyone who can edit a plan in the mission model
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"mission_model":
+                  {"plans":{"_or":[
+                    {"owner":{"_eq":"X-Hasura-User-Id"}},
+                    {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}} # Anyone who can edit a plan in the mission model

@@ -27,3 +27,16 @@ object_relationships:
       insertion_order: null
       column_mapping:
         directive_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, simulation_dataset_id, parent_id, start_offset, duration, attributes,
+                activity_type_name, directive_id, start_time, end_time]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, simulation_dataset_id, parent_id, start_offset, duration, attributes,
+                activity_type_name, directive_id, start_time, end_time]
+      filter: {}
+      allow_aggregations: true

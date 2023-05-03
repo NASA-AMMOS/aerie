@@ -1,3 +1,28 @@
 table:
   name: activity_presets
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, model_id, name, associated_activity_type, arguments]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, model_id, name, associated_activity_type, arguments]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [model_id, name, associated_activity_type, arguments]
+      check: {}
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, arguments]
+      filter: {}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

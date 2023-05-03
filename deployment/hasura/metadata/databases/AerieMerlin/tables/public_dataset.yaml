@@ -32,3 +32,14 @@ array_relationships:
       table:
         name: topic
         schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision]
+      filter: {}
+      allow_aggregations: true

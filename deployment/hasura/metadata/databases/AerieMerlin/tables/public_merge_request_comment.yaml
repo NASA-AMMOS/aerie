@@ -1,3 +1,43 @@
 table:
   name: merge_request_comment
   schema: public
+object_relationships:
+  - name: merge_request
+    using:
+      foreign_key_constraint_on: merge_request_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [merge_request_id, comment_text]
+      check: {"merge_request":
+                {"_or":[
+                  {"plan_receiving_changes":
+                    {"_or":[
+                      {"owner":{"_eq":"X-Hasura-User-Id"}},
+                      {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}},
+                  {"plan_snapshot_supplying_changes":{"plan":
+                    {"_or":[
+                      {"owner":{"_eq":"X-Hasura-User-Id"}},
+                      {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}]}}
+      set:
+        commenter_username: 'x-hasura-user-id'
+update_permissions:
+  - role: user
+    permission:
+      columns: [comment_text]
+      filter: {"commenter_username":{"_eq":"X-Hasura-User-Id"}}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"commenter_username":{"_eq":"X-Hasura-User-Id"}}

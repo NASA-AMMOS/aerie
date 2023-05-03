@@ -1,3 +1,14 @@
 table:
   name: event
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [dataset_id, real_time, transaction_index, causal_time, value, topic_index]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [dataset_id, real_time, transaction_index, causal_time, value, topic_index]
+      filter: {}
+      allow_aggregations: true

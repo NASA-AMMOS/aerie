@@ -23,3 +23,14 @@ array_relationships:
       remote_table:
         name: span
         schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, dataset_id, parent_id, start_offset, type, attributes]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, dataset_id, parent_id, start_offset, type, attributes]
+      filter: {}
+      allow_aggregations: true

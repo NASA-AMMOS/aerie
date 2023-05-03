@@ -11,3 +11,14 @@ array_relationships:
       column_mapping:
         dataset_id: dataset_id
         topic_index: topic_index
+select_permissions:
+  - role: user
+    permission:
+      columns: [dataset_id, topic_index, name, value_schema]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [dataset_id, topic_index, name, value_schema]
+      filter: {}
+      allow_aggregations: true

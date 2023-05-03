@@ -18,3 +18,14 @@ object_relationships:
         schema: public
       column_mapping:
         profile_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [dataset_id, profile_id, start_offset, dynamics, start_time, end_time]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [dataset_id, profile_id, start_offset, dynamics, start_time, end_time]
+      filter: {}
+      allow_aggregations: true

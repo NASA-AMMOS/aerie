@@ -8,3 +8,37 @@ object_relationships:
   - name: mission_model
     using:
       foreign_key_constraint_on: model_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, name, description, definition, tags, plan_id, model_id, created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, name, description, definition, tags, plan_id, model_id, created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [name, description, definition, tags, plan_id, model_id]
+      check: {"_or": [
+        {"plan":{"owner":{"_eq":"X-Hasura-User-Id"}}},
+        {"plan":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}},
+        {"mission_model":{"plans":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}}},
+        {"mission_model":{"plans":{"owner":{"_eq":"X-Hasura-User-Id"}}}}]}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, description, definition, tags, owner]
+      filter: {"_or": [
+        {"plan":{"owner":{"_eq":"X-Hasura-User-Id"}}},
+        {"plan":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}},
+        {"mission_model":{"plans":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}}},
+        {"mission_model":{"plans":{"owner":{"_eq":"X-Hasura-User-Id"}}}}]}
+      set:
+        updated_by: "x-hasura-user-id"
