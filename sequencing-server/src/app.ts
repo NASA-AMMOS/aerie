@@ -51,7 +51,9 @@ export type Context = {
 };
 
 app.use(async (_: Request, res: Response, next: NextFunction) => {
-  const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
+  const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL, {
+    headers: { 'x-hasura-admin-secret': getEnv().HASURA_GRAPHQL_ADMIN_SECRET },
+  });
 
   const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }), {
     cacheKeyFn: objectCacheKeyFunction,

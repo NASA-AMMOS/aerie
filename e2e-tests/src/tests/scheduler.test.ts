@@ -199,6 +199,7 @@ test.describe('Scheduling', () => {
       await delay(1000);
     }
     if (status_local == "failed") {
+      console.error(reason_local)
       throw new Error(reason_local);
     }
     expect(status_local).toEqual("complete")

@@ -24,30 +24,34 @@ See the example [docker-compose.yml](./docker-compose.yml) file for examples on 
 Inside the [.env](./.env) there is a collection of variables that **must** be set in order to deploy Aerie using the default [init-aerie.sh](./postgres-init-db/init-aerie.sh) and [docker-compose.yml](./docker-compose.yml).
 They are, as follows:
 
-| Name                    | Description                                                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `REPOSITORY_DOCKER_URL` | The URL used to fetch images of Aerie packages.                                                                              |
-| `DOCKER_TAG`            | The version of the Aerie images to fetch.                                                                                    |
-| `AERIE_USERNAME`        | The username used for Aerie services when they access the Postgres database.                                                 |
-| `AERIE_PASSWORD`        | The password used for Aerie services when they access the Postgres database.                                                 |
-| `POSTGRES_USER`         | The username of the superuser for the Postgres database. This cannot be the same as the `AERIE_USERNAME` value.              |
-| `POSTGRES_PASSWORD`     | The password of the superuser for the Postgres database.                                                                     |
-| `UNTRUE_PLAN_START`     | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on. |
+| Name                          | Description                                                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `REPOSITORY_DOCKER_URL`       | The URL used to fetch images of Aerie packages.                                                                              |
+| `DOCKER_TAG`                  | The version of the Aerie images to fetch.                                                                                    |
+| `AERIE_USERNAME`              | The username used for Aerie services when they access the Postgres database.                                                 |
+| `AERIE_PASSWORD`              | The password used for Aerie services when they access the Postgres database.                                                 |
+| `HASURA_GRAPHQL_ADMIN_SECRET` | The administrator secret for Hasura. Gives complete admin access to everything when used.                                    |
+| `HASURA_GRAPHQL_JWT_SECRET`   | The JWT secret for JSON web token auth.                                                                                      |
+| `POSTGRES_USER`               | The username of the superuser for the Postgres database. This cannot be the same as the `AERIE_USERNAME` value.              |
+| `POSTGRES_PASSWORD`           | The password of the superuser for the Postgres database.                                                                     |
+| `UNTRUE_PLAN_START`           | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on. |
 
 ### **At minimum, you _must_ assign values to the environment variables already present in [.env](./.env) in order to deploy Aerie. Additionally, the `POSTGRES_USER` value _cannot_ be the same as the `AERIE_USERNAME` value.**.
 
 ## Configuring Merlin Simulation Workers
-A Merlin simulation is executed by an aerie-merlin-worker. An Aerie deployment can configure one or 
-more workers to provide an Aerie deployment with the ability to execute multiple concurrent 
+
+A Merlin simulation is executed by an aerie-merlin-worker. An Aerie deployment can configure one or
+more workers to provide an Aerie deployment with the ability to execute multiple concurrent
 simulations. Without a worker Aerie will not execute any simulations. Workers are declared by adding
 a worker container definition in your docker-compose file for each worker. The default docker-compose.yml
-contained in this directory declares a single worker. The worker must configured to access the same 
-postgresql instance and database as the Merlin server. It is recommended that the number of workers 
-does not exceed the host's remaining available cores (considering other processes running on the host). 
+contained in this directory declares a single worker. The worker must configured to access the same
+postgresql instance and database as the Merlin server. It is recommended that the number of workers
+does not exceed the host's remaining available cores (considering other processes running on the host).
 
 ## Starting the Services
 
 Download and unzip the latest [Deployment.zip](https://github.com/NASA-AMMOS/aerie/releases) file onto your local machine, then do:
+
 ```sh
 cd deployment
 docker-compose up --build --detach

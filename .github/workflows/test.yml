@@ -10,6 +10,14 @@ on:
     tags:
       - v*
 
+env:
+  AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
+  AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
+  HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
+  HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
+  POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
+  POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+
 jobs:
   unit-test:
     runs-on: ubuntu-latest
@@ -76,11 +84,6 @@ jobs:
           docker compose -f ./e2e-tests/docker-compose-test.yml up -d --build
           docker images
           docker ps -a
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-          POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
-          POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
       - name: Sleep for 15 Seconds
         run: sleep 15s
         shell: bash
@@ -99,11 +102,14 @@ jobs:
           name: Test Results
           path: "**/sequencing-server/test-report.html"
       - name: Print Logs for Services
+        if: always()
         run: docker compose -f ./e2e-tests/docker-compose-test.yml logs -t
       - name: Stop Services
+        if: always()
         run: |
           docker ps -a
           docker compose -f ./e2e-tests/docker-compose-test.yml down
           docker ps -a
       - name: Prune Volumes
+        if: always()
         run: docker volume prune --force

@@ -6,7 +6,9 @@ let graphqlClient: GraphQLClient;
 let commandDictionaryId: number;
 
 beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
+    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
+  });
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
 });
 

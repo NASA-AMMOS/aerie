@@ -21,7 +21,9 @@ let activityId: number;
 let simulationArtifactIds: { simulationId: number; simulationDatasetId: number };
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
+    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
+  });
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
   activityId = await insertActivityDirective(graphqlClient, planId, 'ParameterTest');

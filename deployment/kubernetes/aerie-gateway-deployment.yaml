@@ -26,6 +26,11 @@ spec:
               value: none
             - name: GQL_API_URL
               value: http://localhost:8080/v1/graphql
+            - name: HASURA_GRAPHQL_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: HASURA_GRAPHQL_JWT_SECRET
             - name: LOG_FILE
               value: console
             - name: LOG_LEVEL

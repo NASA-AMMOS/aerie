@@ -78,7 +78,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.simulat
  *
  * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to access all plan data
  */
-public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.OwnerRole,
+public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdminSecret) implements PlanService.OwnerRole,
     MissionModelService
 {
 
@@ -105,6 +105,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .header("Content-Type", "application/json")
           .header("Accept", "application/json")
           .header("Origin", merlinGraphqlURI.toString())
+          .header("x-hasura-admin-secret", hasuraGraphQlAdminSecret)
           .POST(HttpRequest.BodyPublishers.ofString(reqBody.toString()))
           .build();
       //TODO: (net optimization) gzip compress the request body if large enough (eg for createAllActs)
@@ -140,6 +141,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .header("Content-Type", "application/json")
           .header("Accept", "application/json")
           .header("Origin", merlinGraphqlURI.toString())
+          .header("x-hasura-admin-secret", hasuraGraphQlAdminSecret)
           .POST(HttpRequest.BodyPublishers.ofString(reqBody.toString()))
           .build();
       //TODO: (net optimization) gzip compress the request body if large enough (eg for createAllActs)
