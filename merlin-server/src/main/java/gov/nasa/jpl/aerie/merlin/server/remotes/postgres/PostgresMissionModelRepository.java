@@ -112,16 +112,9 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
+      try (final var insertActivityTypesAction = new InsertActivityTypesAction(connection)) {
         final var id = toMissionModelId(missionModelId);
-        for (final var activityType : activityTypes.values()) {
-          createActivityTypeAction.apply(
-              id,
-              activityType.name(),
-              activityType.parameters(),
-              activityType.requiredParameters(),
-              activityType.computedAttributesValueSchema());
-        }
+        insertActivityTypesAction.apply((int) id, activityTypes.values());
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
