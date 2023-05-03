@@ -163,6 +163,7 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
+  @Deprecated
   private void getResourceTypes(final Context ctx) {
     try {
       final var missionModelId = parseJson(ctx.body(), hasuraMissionModelActionP).input().missionModelId();
