@@ -2188,6 +2188,7 @@ public class SchedulingIntegrationTests {
     // If invalid typescript is generated, an exception will be thrown.
   }
 
+  // Tests that the scheduler can handle an initial plan with various duration annotated activities.
   @Test
   void testSchedulerAgentDurationTypeHandling() {
     runScheduler(
@@ -2197,6 +2198,13 @@ public class SchedulingIntegrationTests {
                 Duration.ZERO,
                 "BananaNap",
                 Map.of(),
+                null,
+                true
+            ),
+            new ActivityDirective(
+                Duration.SECOND,
+                "DownloadBanana",
+                Map.of("connection", SerializedValue.of("DietaryFiberOptic")),
                 null,
                 true
             )
