@@ -384,20 +384,15 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
       // This is here to easily enable a future feature of allowing the mission to configure their own sequence
       // building. For now, we just use the 'defaultSeqBuilder' until such a feature request is made.
       const seqBuilder = defaultSeqBuilder;
-      const sequenceJson = seqBuilder(
-        sortedSimulatedActivitiesWithCommands,
-        seqId,
-        seqMetadata,
-        simulationDatasetId,
-      ).toSeqJson();
+      const sequence = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata, simulationDatasetId);
 
       const { rows } = await db.query(
         `
-          insert into expanded_sequences (expansion_run_id, seq_id, expanded_sequence)
-            values ($1, $2, $3)
+          insert into expanded_sequences (expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string)
+            values ($1, $2, $3, $4, $5)
             returning id
       `,
-        [expansionRunId, seqId, sequenceJson],
+        [expansionRunId, seqId, simulationDatasetId, sequence.toSeqJson(), sequence.toEDSLString()],
       );
 
       if (rows.length < 1) {

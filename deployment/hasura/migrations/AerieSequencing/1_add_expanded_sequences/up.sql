@@ -3,16 +3,24 @@ create table expanded_sequences (
 
   expansion_run_id integer not null,
   seq_id text not null,
+  simulation_dataset_id int not null,
   expanded_sequence jsonb not null,
-  
+  edsl_string text not null,
+
   created_at timestamptz not null default now(),
 
   constraint expanded_sequences_primary_key
     primary key (id),
 
-  foreign key (expansion_run_id)
-    references expansion_run (id)
-    on delete cascade
+  constraint expanded_sequences_to_expansion_run_id
+    foreign key (expansion_run_id)
+      references expansion_run
+      on delete cascade,
+
+  constraint expanded_sequences_to_seq_id
+    foreign key (seq_id, simulation_dataset_id)
+      references sequence (seq_id, simulation_dataset_id)
+      on delete cascade
 );
 
 call migrations.mark_migration_applied('1');

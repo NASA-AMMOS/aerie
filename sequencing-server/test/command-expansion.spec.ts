@@ -313,7 +313,7 @@ describe('expansion', () => {
     const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
     /** End Setup */
 
-    const { expandedSequence } = await getExpandedSequence(graphqlClient, expansionRunPk, sequencePk.seqId);
+    const { expandedSequence, edslString } = await getExpandedSequence(graphqlClient, expansionRunPk, sequencePk.seqId);
 
     expect(expandedSequence).toEqual({
       id: 'test00000',
@@ -338,6 +338,29 @@ describe('expansion', () => {
         },
       ],
     });
+
+    expect(edslString).toEqual(`export default () =>
+  Sequence.new({
+    seqId: 'test00000',
+    metadata: {
+      planId: ${planId},
+      simulationDatasetId: ${simulationArtifactPk.simulationDatasetId},
+      timeSorted: false,
+    },
+    steps: ({ locals, parameters }) => ([
+      A\`2023-091T10:00:00.000\`.ADD_WATER
+      .METADATA({
+        simulatedActivityId: ${simulatedActivityId},
+      }),
+      R\`04:00:00.000\`.GROW_BANANA({
+        quantity: 10,
+        durationSecs: 7200,
+      })
+      .METADATA({
+        simulatedActivityId: ${simulatedActivityId},
+      }),
+    ]),
+  });`);
 
     // Cleanup
     await removeActivityDirective(graphqlClient, activityId, planId);

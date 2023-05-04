@@ -114,11 +114,13 @@ export async function getExpandedSequence(
   seqId: string,
 ): Promise<{
   expandedSequence: Sequence;
+  edslString: string;
 }> {
   const result = await graphqlClient.request<{
     expanded_sequences: [
       {
         expanded_sequence: Sequence;
+        edsl_string: string;
       },
     ];
   }>(
@@ -126,6 +128,7 @@ export async function getExpandedSequence(
       query GetExpandedSequence($expansionRunId: Int!, $seqId: String!) {
         expanded_sequences(where: { expansion_run_id: { _eq: $expansionRunId }, seq_id: { _eq: $seqId } }) {
           expanded_sequence
+          edsl_string
         }
       }
     `,
@@ -135,7 +138,10 @@ export async function getExpandedSequence(
     },
   );
 
-  return { expandedSequence: result.expanded_sequences[0].expanded_sequence };
+  return {
+    expandedSequence: result.expanded_sequences[0].expanded_sequence,
+    edslString: result.expanded_sequences[0].edsl_string,
+  };
 }
 
 export async function removeExpansionRun(graphqlClient: GraphQLClient, expansionRunId: number): Promise<void> {
