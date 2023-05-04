@@ -189,7 +189,6 @@ public final class PostgresPlanRepository implements PlanRepository {
                 ConstraintRecord::name,
                 r -> new Constraint(
                     r.name(),
-                    r.summary(),
                     r.description(),
                     r.definition())));
       }
