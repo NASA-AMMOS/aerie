@@ -34,6 +34,13 @@ array_relationships:
       table:
         name: plan
         schema: public
+- name: resource_types
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: resource_type
+        schema: public
 event_triggers:
 - definition:
     enable_manual: false
@@ -73,3 +80,16 @@ event_triggers:
     num_retries: 0
     timeout_sec: 300
   webhook: "{{AERIE_MERLIN_URL}}/refreshModelParameters"
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+    update:
+      columns:
+        - jar_id
+  name: refreshResourceTypes
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 300
+  webhook: "{{AERIE_MERLIN_URL}}/refreshResourceTypes"
