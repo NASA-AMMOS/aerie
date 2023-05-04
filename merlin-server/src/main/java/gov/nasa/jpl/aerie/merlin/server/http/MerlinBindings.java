@@ -78,6 +78,7 @@ public final class MerlinBindings implements Plugin {
       path("refreshModelParameters", () -> post(this::postRefreshModelParameters));
       path("refreshActivityTypes", () -> post(this::postRefreshActivityTypes));
       path("refreshActivityValidations", () -> post(this::postRefreshActivityValidations));
+      path("refreshResourceTypes", () -> post(this::postRefreshResourceTypes));
       path("validateActivityArguments", () -> post(this::validateActivityArguments));
       path("validateModelArguments", () -> post(this::validateModelArguments));
       path("validatePlan", () -> post(this::validatePlan));
@@ -143,6 +144,20 @@ public final class MerlinBindings implements Plugin {
           .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    }
+  }
+
+  private void postRefreshResourceTypes(Context ctx) {
+    try {
+      final var missionModelId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).missionModelId();
+      this.missionModelService.refreshResourceTypes(missionModelId);
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }

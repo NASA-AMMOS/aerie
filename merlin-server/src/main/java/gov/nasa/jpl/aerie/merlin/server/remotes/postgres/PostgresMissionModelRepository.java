@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -121,6 +122,26 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
               activityType.requiredParameters(),
               activityType.computedAttributesValueSchema());
         }
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
+    }
+  }
+
+  @Override
+  public void updateResourceTypes(final String missionModelId, final Map<String, Resource<?>> resources)
+  throws NoSuchMissionModelException {
+    final var resourceTypes = resources.entrySet()
+                                       .stream()
+                                       .collect(Collectors.toMap(
+                                           Map.Entry::getKey,
+                                           entry -> entry.getValue().getOutputType().getSchema()));
+
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var insertResourceTypesAction = new InsertResourceTypesAction(connection)) {
+        final long id = toMissionModelId(missionModelId);
+        insertResourceTypesAction.apply((int) id, resourceTypes);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
