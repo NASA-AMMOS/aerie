@@ -278,6 +278,18 @@ const req = {
     const data = await req.hasura(request, gql.GET_TOPIC_EVENTS, {datasetId:datasetId});
     const { topic } = data;
     return topic
+  },
+
+  async getResourceTypes(request: APIRequestContext, missionModelId: number): Promise<ResourceType[]> {
+    const data = await req.hasura(request, gql.GET_RESOURCE_TYPES, {missionModelId:missionModelId});
+    const { resource_type } = data;
+    return <ResourceType[]> resource_type;
+  },
+
+  async getActivityTypes(request: APIRequestContext, missionModelId: number): Promise<ActivityType[]> {
+    const data = await req.hasura(request, gql.GET_ACTIVITY_TYPES, {missionModelId:missionModelId});
+    const { activity_type } = data;
+    return <ActivityType[]> activity_type;
   }
 };
 /**

@@ -18,6 +18,23 @@ const gql = {
     }
   `,
 
+  GET_RESOURCE_TYPES: `#graphql
+    query GetResourceTypes($missionModelId: Int!) {
+      resource_type(where: {model_id: {_eq: $missionModelId}}, order_by: {name: asc}) {
+        name
+        schema
+      }
+    }
+  `,
+
+  GET_ACTIVITY_TYPES: `#graphql
+    query GetActivityTypes($missionModelId: Int!) {
+      activity_type(where: {model_id: {_eq: $missionModelId}}, order_by: {name: asc}) {
+        name
+        parameters
+      }
+    }
+  `,
 
   GET_TOPIC_EVENTS:`#graphql
   query GetTopicsEvents($datasetId: Int!) {
