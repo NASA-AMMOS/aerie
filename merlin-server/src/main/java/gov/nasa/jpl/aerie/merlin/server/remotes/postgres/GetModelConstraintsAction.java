@@ -14,7 +14,7 @@ import java.util.Optional;
   //   a mission model without any constraints from a non-existent mission model.
   // A mission model without constraints will produce a placeholder row with nulls.
   private static final @Language("SQL") String sql = """
-    select c.id, c.name, c.summary, c.description, c.definition
+    select c.id, c.name, c.description, c.definition
     from mission_model AS m
     left join "constraint" AS c
       on m.id = c.model_id
@@ -41,8 +41,7 @@ import java.util.Optional;
             results.getLong(1),
             results.getString(2),
             results.getString(3),
-            results.getString(4),
-            results.getString(5));
+            results.getString(4));
 
         constraints.add(constraint);
       } while (results.next());

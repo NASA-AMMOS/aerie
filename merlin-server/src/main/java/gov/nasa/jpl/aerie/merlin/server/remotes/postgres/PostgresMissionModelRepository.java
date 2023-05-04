@@ -67,7 +67,6 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
                 ConstraintRecord::name,
                 r -> new Constraint(
                     r.name(),
-                    r.summary(),
                     r.description(),
                     r.definition())));
       }
