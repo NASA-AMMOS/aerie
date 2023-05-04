@@ -70,8 +70,9 @@ body:
       label: Severity
       description: Select the severity of this issue.
       options:
-        - Annoyance
-        - Blocking an upgrade
-        - Blocking all usage of Aerie
+        - Minor
+        - Moderate
+        - Major
+        - Critical
     validations:
       required: true
