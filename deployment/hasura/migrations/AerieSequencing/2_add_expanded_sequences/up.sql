@@ -23,4 +23,4 @@ create table expanded_sequences (
       on delete cascade
 );
 
-call migrations.mark_migration_applied('1');
+call migrations.mark_migration_applied('2');
