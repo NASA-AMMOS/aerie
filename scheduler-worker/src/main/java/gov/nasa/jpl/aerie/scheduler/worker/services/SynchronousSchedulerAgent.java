@@ -407,6 +407,7 @@ public record SynchronousSchedulerAgent(
         } else if (
             schedulerActType.getDurationType() instanceof DurationType.Uncontrollable
             || schedulerActType.getDurationType() instanceof DurationType.Fixed
+            || schedulerActType.getDurationType() instanceof DurationType.Parametric
         ) {
           // Do nothing
         } else {

@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
@@ -276,57 +277,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         }
 
       };
-      try {
-        var endInterval = solved.end();
-        var startInterval = solved.start();
-
-        final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
-
-        final var result = new EquationSolvingAlgorithms
-            .SecantDurationAlgorithm()
-            .findRoot(
-                f,
-                startInterval.start,
-                startInterval.end,
-                endInterval.start.plus(durationHalfEndInterval),
-                durationHalfEndInterval,
-                durationHalfEndInterval,
-                startInterval.start,
-                startInterval.end,
-                20);
-
-        Duration dur = null;
-        if(!f.isApproximation()){
-          //f is calling simulation -> we do not need to resimulate this activity later
-          dur = result.fx().minus(result.x());
-        }
-        // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-        return Optional.of(SchedulingActivityDirective.of(
-            type,
-            result.x(),
-            dur,
-            SchedulingActivityDirective.instantiateArguments(
-                this.arguments, result.x(),
-                facade.getLatestConstraintSimulationResults(),
-                evaluationEnvironment,
-                type),
-            null,
-            null,
-            true));
-      } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
-        logger.debug("Rootfinding encountered a zero-derivative");
-      } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
-        logger.debug("Rootfinding encountered an infinite-derivative");
-      } catch (EquationSolvingAlgorithms.DivergenceException e) {
-        logger.debug("Rootfinding diverged");
-        logger.debug(e.history.history().toString());
-      } catch (EquationSolvingAlgorithms.ExceededMaxIterationException e) {
-        logger.debug("Too many iterations");
-        logger.debug(e.history.history().toString());
-      } catch (EquationSolvingAlgorithms.NoSolutionException e) {
-        logger.debug("No solution");
-      }
-      return Optional.empty();
+      return rootFindingHelper(f, solved, facade, evaluationEnvironment);
       //CASE 2: activity has a controllable duration
     } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
@@ -371,7 +322,11 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           null,
           true));
     } else if (this.type.getDurationType() instanceof DurationType.Fixed dt) {
-      //select earliest start time, STN guarantees satisfiability
+      if (!solved.duration().contains(dt.duration())) {
+        logger.debug("Interval is too small");
+        return Optional.empty();
+      }
+
       final var earliestStart = solved.start().start;
 
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
@@ -388,8 +343,34 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           null,
           null,
           true));
+    } else if (this.type.getDurationType() instanceof DurationType.Parametric dt) {
+      final var f = new EquationSolvingAlgorithms.Function<Duration>() {
+        @Override
+        public boolean isApproximation(){
+          return false;
+        }
+
+        @Override
+        public Duration valueAt(final Duration start) {
+          final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
+              arguments,
+              start,
+              facade.getLatestConstraintSimulationResults(),
+              evaluationEnvironment,
+              type
+          );
+          try {
+            return dt.durationFunction().apply(instantiatedArgs).plus(start);
+          } catch (InstantiationException e) {
+            logger.error("Cannot instantiate parameterized duration activity type: " + type.getName());
+            throw new RuntimeException(e);
+          }
+        }
+      };
+
+      return rootFindingHelper(f, solved, facade, evaluationEnvironment);
     } else {
-     throw new UnsupportedOperationException("Duration types other than Uncontrollable, Controllable, and Fixed are not supported: " + this.type.getDurationType());
+     throw new UnsupportedOperationException("Unsupported duration type found: " + this.type.getDurationType());
     }
   }
 
@@ -411,6 +392,65 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
   public @NotNull
   Optional<SchedulingActivityDirective> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     return createInstanceForReal(name,null, facade, plan, planningHorizon, evaluationEnvironment);
+  }
+
+  private Optional<SchedulingActivityDirective> rootFindingHelper(
+      final EquationSolvingAlgorithms.Function<Duration> f,
+      final TaskNetworkAdapter.TNActData solved,
+      final SimulationFacade facade,
+      final EvaluationEnvironment evaluationEnvironment
+  ) {
+    try {
+      var endInterval = solved.end();
+      var startInterval = solved.start();
+
+      final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
+
+      final var result = new EquationSolvingAlgorithms
+          .SecantDurationAlgorithm()
+          .findRoot(
+              f,
+              startInterval.start,
+              startInterval.end,
+              endInterval.start.plus(durationHalfEndInterval),
+              durationHalfEndInterval,
+              durationHalfEndInterval,
+              startInterval.start,
+              startInterval.end,
+              20);
+
+      Duration dur = null;
+      if(!f.isApproximation()){
+        //f is calling simulation -> we do not need to resimulate this activity later
+        dur = result.fx().minus(result.x());
+      }
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
+      return Optional.of(SchedulingActivityDirective.of(
+          type,
+          result.x(),
+          dur,
+          SchedulingActivityDirective.instantiateArguments(
+              this.arguments, result.x(),
+              facade.getLatestConstraintSimulationResults(),
+              evaluationEnvironment,
+              type),
+          null,
+          null,
+          true));
+    } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
+      logger.debug("Rootfinding encountered a zero-derivative");
+    } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
+      logger.debug("Rootfinding encountered an infinite-derivative");
+    } catch (EquationSolvingAlgorithms.DivergenceException e) {
+      logger.debug("Rootfinding diverged");
+      logger.debug(e.history.history().toString());
+    } catch (EquationSolvingAlgorithms.ExceededMaxIterationException e) {
+      logger.debug("Too many iterations");
+      logger.debug(e.history.history().toString());
+    } catch (EquationSolvingAlgorithms.NoSolutionException e) {
+      logger.debug("No solution");
+    }
+    return Optional.empty();
   }
 
 

@@ -45,7 +45,7 @@ public @interface ActivityType {
    * }</pre>
    *
    * Keep in mind that it is not enough for the activity duration to be *determined* by the duration parameter.
-   * They must be exactly equal as above.
+   * They must be exactly equal as above. If that is not true, use {@link ParametricDuration} instead.
    */
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
@@ -100,4 +100,38 @@ public @interface ActivityType {
   @Retention(RetentionPolicy.CLASS)
   @Target({ ElementType.FIELD, ElementType.METHOD })
   @interface FixedDuration {}
+
+  /**
+   * Use when an activity's duration is indirectly determined only by its arguments.
+   *
+   * Apply to a getter method that returns this activity's duration. For correctness, it is recommended
+   * that you use the getter in the effect model to ensure the duration is what you say it is. Apply like this:
+   *
+   * <pre>{@code
+   * @ActivityType("ParametricDurationActivity")
+   * public record ParametricDurationActivity(boolean goFast) {
+   *   @ParametricDuration
+   *   public Duration duration() {
+   *     if (goFast) {
+   *       return Duration.MINUTE;
+   *     } else {
+   *       return Duration.HOUR;
+   *     }
+   *   }
+   *
+   *   @EffectModel
+   *   public void run(Mission mission) {
+   *     // ...
+   *     delay(duration);
+   *     // ...
+   *   }
+   * }
+   * }</pre>
+   *
+   * If the duration of the activity is exactly equal to one of the arguments, it is recommended to use the
+   * {@link ControllableDuration} annotation instead.
+   */
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.METHOD)
+  @interface ParametricDuration {}
 }
