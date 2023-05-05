@@ -15,13 +15,12 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public LiveCells liveCells;
   private final MissionModel<?> missionModel;
   public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
-  public TreeMap<Duration, EventGraph<Event>> eventsByTime = new TreeMap<>();
+  public TreeMap<Duration, TimePoint.Commit> commitsByTime = new TreeMap<>();
   public Map<Topic<?>, TreeMap<Duration, EventGraph<Event>>> eventsByTopic = new HashMap<>();
   public Map<TaskId, TreeMap<Duration, EventGraph<Event>>> eventsByTask = new HashMap<>();
   public Map<EventGraph<Event>, Set<Topic<?>>> topicsForEventGraph = new HashMap<>();
@@ -73,32 +72,36 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   public void add(final EventGraph<Event> graph, Duration time) {
     var topics = extractTopics(graph);
-    this.points.append(new TimePoint.Commit(graph, topics));
-    addIndices(graph, time, topics);
+    var commit = new TimePoint.Commit(graph, topics);
+    this.points.append(commit);
+    addIndices(commit, time, topics);
   }
 
   /**
-   * Index the graph by time, topic, and task.
-   * @param graph the graph of Events to add
+   * Index the commit and graph by time, topic, and task.
+   * @param commit the commit of Events to add
    * @param time the time as a Duration when the events occur
    */
-  protected void addIndices(final EventGraph<Event> graph, Duration time, Set<Topic<?>> topics) {
-    eventsByTime.put(time, graph);
-    final var finalTopics = topics == null ? extractTopics(graph) : topics;
-    final var tasks = extractTasks(graph);
-    topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, graph));
-    tasks.forEach(t -> this.eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, graph));
+  protected void addIndices(final TimePoint.Commit commit, Duration time, Set<Topic<?>> topics) {
+    commitsByTime.put(time, commit);
+    final var finalTopics = topics == null ? extractTopics(commit.events) : topics;
+    final var tasks = extractTasks(commit.events);
+    topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, commit.events));
+    tasks.forEach(t -> this.eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, commit.events));
     // TODO: REVIEW -- do we really need all these maps?
-    topicsForEventGraph.computeIfAbsent(graph, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);  // Tree over Hash for less memory/space
-    tasksForEventGraph.computeIfAbsent(graph, $ -> HashSet.newHashSet(tasks.size())).addAll(tasks);
+    topicsForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);  // Tree over Hash for less memory/space
+    tasksForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(tasks.size())).addAll(tasks);
   }
 
   public void replaceEventGraph(EventGraph<Event> oldG, EventGraph<Event> newG) {
+    var newTopics = extractTopics(newG);
+
     // time
     Duration time = timeForEventGraph.get(oldG);
     timeForEventGraph.remove(oldG);
     timeForEventGraph.put(newG, time);
-    eventsByTime.put(time, newG);
+    var commit = new TimePoint.Commit(newG, newTopics);
+    commitsByTime.put(time, commit);
 
     // task
     tasksForEventGraph.remove(oldG);
@@ -108,7 +111,6 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
     // topic
     topicsForEventGraph.remove(oldG);
-    var newTopics = extractTopics(newG);
     topicsForEventGraph.put(newG, newTopics);
     newTopics.forEach(t -> eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, newG));
   }

@@ -86,7 +86,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final HashMap<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
   private final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
   private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
-  public final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
+  public final Topic<ActivityDirectiveId> defaultActivityTopic;
 
   public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
     this.startTime = startTime;
@@ -97,8 +97,10 @@ public final class SimulationEngine implements AutoCloseable {
     if (oldEngine != null) {
       oldEngine.cells = new LiveCells(oldEngine.timeline, oldEngine.missionModel.getInitialCells());
       this.cells = new LiveCells(timeline, oldEngine.missionModel.getInitialCells());  // HACK: good for in-memory but with DB or difft mission model configuration,...
+      this.defaultActivityTopic = oldEngine.defaultActivityTopic;
     } else {
       this.cells = new LiveCells(timeline, missionModel.getInitialCells());
+      this.defaultActivityTopic = new Topic<>();
     }
     this.timeline.liveCells = this.cells;
   }
@@ -237,16 +239,16 @@ public final class SimulationEngine implements AutoCloseable {
         // for stepping further.
         var steppedCell = timeline.getCell(topic, timeOfStaleReads, false);
         final Cell<?> tempCell = steppedCell.duplicate();
-        EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
+        TemporalEventSource.TimePoint.Commit events = this.timeline.commitsByTime.get(timeOfStaleReads);
         if (events == null) throw new RuntimeException("No EventGraph for potentially stale read.");
-        this.timeline.stepUp(tempCell, events, noop, false);
+        this.timeline.stepUp(tempCell, events.events(), noop, false);
         // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
-        var oldEvents = this.timeline.oldTemporalEventSource.eventsByTime.get(timeOfStaleReads);
+        var oldEvents = this.timeline.oldTemporalEventSource.commitsByTime.get(timeOfStaleReads);
         if (oldEvents == null) throw new RuntimeException("No old EventGraph for potentially stale read.");
         if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
           // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
           var tempOldCell = timeline.getOldCell(steppedCell).map(Cell::duplicate);
-          this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(), oldEvents, noop, false);
+          this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(), oldEvents.events(), noop, false);
           if (!tempCell.getState().equals(tempOldCell.get().getState())) {
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads);
@@ -565,13 +567,45 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
-    final var querier = new EngineQuerier(currentTime, frame);
-    this.resources.get(resource).append(currentTime, querier);
+    // TODO -- this would be better with the ResourceTracker from the branch, prototype/excise-resources-from-sim-engine
 
-    // TODO: FIXME? -- Won't querier.referencedTopics always be empty here?
-    //                 It was just created above and referencedTopics isn't
-    //                 populated until querier.getState() is called.
-    this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
+    // We want to avoid saving profile segments if they aren't changing.  We also don't want to compute the resource if
+    // none of the cells on which it depends are stale.
+    boolean skipResourceEvaluation = false;
+    if (oldEngine != null) {
+      var ebt = oldEngine.timeline.commitsByTime;
+      var latestTime = ebt.floorKey(currentTime);
+      // If no events since plan start, then can't be stale, so nothing to do.
+      if (latestTime == null) skipResourceEvaluation = true;
+      else {
+        // Note that there may or may not be events at this currentTime.
+        // So, how can we know it is not stale?
+        // - No cells are stale
+        // - If the past resource value was not based on stale information and matched the previous simulation
+        //   (henceforth, the resource is not stale), and if the resource's referencedTopics in waitingResources
+        //   then the evaluation may be skipped.
+        // - So, should we choose a different expiry? Probably not--just make this evaluation fast.
+        //   And, with staleness, we can determine that we need not invalidate a topic in some cases.
+
+        // Check if any of the resource's referenced topics are stale
+        var topics = this.waitingResources.getTopics(resource);
+        var resourceIsStale = topics.stream().anyMatch(t -> timeline.isTopicStale(t, currentTime));
+        if (resourceIsStale) {
+          skipResourceEvaluation = true;
+        }
+      }
+    }
+
+    final var querier = new EngineQuerier(currentTime, frame);
+    if (!skipResourceEvaluation) {
+      var profiles = this.resources.get(resource);
+      // TODO: Should we check if the profile state hasn't been changing and if so not record them?
+      //       if (profileIsChanging)
+      {
+        profiles.append(currentTime, querier);
+        this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
+      }
+    }
 
     final var expiry = querier.expiry.map(currentTime::plus);
     if (expiry.isPresent()) {
@@ -684,6 +718,8 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic
   ) {
+    final boolean combine = true;  // whether to combine results with those of the oldEngine
+
     // Collect per-task information from the event graph.
     var serializableTopics = this.missionModel.getTopics();
     final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
@@ -693,6 +729,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Extract profiles for every resource.
+    var allResources = oldEngine == null ? this.resources : new HashMap<>(oldEngine.resources).putAll(this.resources);
     for (final var entry : this.resources.entrySet()) {
       final var id = entry.getKey();
       final var state = entry.getValue();

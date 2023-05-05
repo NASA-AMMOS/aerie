@@ -36,6 +36,15 @@ public final class Subscriptions<TopicRef, QueryRef> {
     }
   }
 
+  /**
+   * Get an unmodifiable set of topics for the specified query
+   * @param query the query whose subscribed topics are returned
+   * @return the topics to which the specified query is subscribed as an unmodifiable Set
+   */
+  public Set<TopicRef> getTopics(final QueryRef query) {
+    return Collections.unmodifiableSet(topicsByQuery.get(query));
+  }
+
   public Set<QueryRef> invalidateTopic(final TopicRef topic) {
     final var queries = Optional
         .ofNullable(this.queriesByTopic.remove(topic))
