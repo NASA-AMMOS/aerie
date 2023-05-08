@@ -1,4 +1,5 @@
 import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
+import pgFormat from 'pg-format';
 import { Context, db, piscina } from './../app.js';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 import express from 'express';
@@ -9,6 +10,8 @@ import type { executeExpansionFromBuildArtifacts, typecheckExpansion } from './.
 import getLogger from './../utils/logger.js';
 import { InheritedError } from '../utils/InheritedError.js';
 import { unwrapPromiseSettledResults } from '../lib/batchLoaders/index.js';
+import { defaultSeqBuilder } from '../defaultSeqBuilder.js';
+import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
 
 const logger = getLogger('app');
 
@@ -300,13 +303,112 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
       `POST /command-expansion/expand-all-activity-instances: No expansion run was inserted in the database`,
     );
   }
-  const id = rows[0].id;
+  const expansionRunId = rows[0].id;
   logger.info(
-    `POST /command-expansion/expand-all-activity-instances: Inserted expansion run to the database: id=${id}`,
+    `POST /command-expansion/expand-all-activity-instances: Inserted expansion run to the database: id=${expansionRunId}`,
   );
 
+  // Get all the sequence IDs that are assigned to simulated activities.
+  const seqToSimulatedActivity = await db.query(
+    `
+      select seq_id
+      from sequence_to_simulated_activity
+      where sequence_to_simulated_activity.simulated_activity_id in (${pgFormat(
+        '%L',
+        expandedActivityInstances.map(eai => eai.id),
+      )})
+      and simulation_dataset_id = $1
+    `,
+    [simulationDatasetId],
+  );
+
+  if (seqToSimulatedActivity.rows.length > 0) {
+    const seqRows = await db.query(
+      `
+        select metadata, seq_id, simulation_dataset_id
+        from sequence
+        where sequence.seq_id in (${pgFormat(
+          '%L',
+          seqToSimulatedActivity.rows.map(row => row.seq_id),
+        )})
+        and sequence.simulation_dataset_id = $1;
+      `,
+      [simulationDatasetId],
+    );
+
+    // If the user has created a sequence, we can try to save the expanded sequences when an expansion runs.
+    for (const seqRow of seqRows.rows) {
+      const seqId = seqRow.seq_id;
+      const seqMetadata = seqRow.metadata;
+
+      const simulatedActivities = await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(
+        expandedActivityInstances.map(row => ({
+          simulationDatasetId,
+          simulatedActivityId: row.id,
+        })),
+      );
+      const simulatedActivitiesLoadErrors = simulatedActivities.filter(ai => ai instanceof Error);
+      if (simulatedActivitiesLoadErrors.length > 0) {
+        res.status(500).json({
+          message: 'Error loading simulated activities',
+          cause: simulatedActivitiesLoadErrors,
+        });
+        return next();
+      }
+
+      const sortedActivityInstances = (
+        simulatedActivities as Exclude<(typeof simulatedActivities)[number], Error>[]
+      ).sort((a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset));
+
+      const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
+        const row = expandedActivityInstances.find(row => row.id === ai.id);
+
+        // Hasn't ever been expanded
+        if (!row) {
+          return {
+            ...ai,
+            commands: null,
+            errors: null,
+          };
+        }
+
+        const errors = row.errors as unknown;
+
+        return {
+          ...ai,
+          commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
+          errors: errors as { message: string; stack: string; location: { line: number; column: number } }[],
+        };
+      });
+
+      // This is here to easily enable a future feature of allowing the mission to configure their own sequence
+      // building. For now, we just use the 'defaultSeqBuilder' until such a feature request is made.
+      const seqBuilder = defaultSeqBuilder;
+      const sequence = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata, simulationDatasetId);
+
+      const { rows } = await db.query(
+        `
+          insert into expanded_sequences (expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string)
+            values ($1, $2, $3, $4, $5)
+            returning id
+      `,
+        [expansionRunId, seqId, simulationDatasetId, sequence.toSeqJson(), sequence.toEDSLString()],
+      );
+
+      if (rows.length < 1) {
+        throw new Error(
+          `POST /command-expansion/expand-all-activity-instances: No expanded sequences were inserted into the database`,
+        );
+      }
+      const expandedSequenceId = rows[0].id;
+      logger.info(
+        `POST /command-expansion/expand-all-activity-instances: Inserted expanded sequence to the database: id=${expandedSequenceId}`,
+      );
+    }
+  }
+
   res.status(200).json({
-    id,
+    id: expansionRunId,
     expandedActivityInstances,
   });
   return next();

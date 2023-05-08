@@ -1,0 +1,7 @@
+table:
+  name: expanded_sequences
+  schema: public
+object_relationships:
+  - name: expansion_run
+    using:
+      foreign_key_constraint_on: expansion_run_id
