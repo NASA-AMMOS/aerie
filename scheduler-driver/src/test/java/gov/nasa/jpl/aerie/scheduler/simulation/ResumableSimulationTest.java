@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ public class ResumableSimulationTest {
     final var now = Instant.now();
     //ensures that simulation results are generated until the end of the last act;
     var simResults = resumableSimulationDriver.getSimulationResults(now);
-    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
+    assert(simResults.getRealProfiles().get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     /* ensures that when current simulation results cover more than the asked period and that nothing has happened
     between two requests, the same results are returned */
     var simResults2 = resumableSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
@@ -50,7 +49,7 @@ public class ResumableSimulationTest {
   public void simulationResultsTest2(){
     /* ensures that when the passed start epoch is not equal to the one used for previously computed results, the results are re-computed */
     var simResults = resumableSimulationDriver.getSimulationResults(Instant.now());
-    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
+    assert(simResults.getRealProfiles().get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     var simResults2 = resumableSimulationDriver.getSimulationResultsUpTo(Instant.now(), Duration.of(7, SECONDS));
     assertNotEquals(simResults, simResults2);
   }
@@ -62,7 +61,7 @@ public class ResumableSimulationTest {
     final var now = Instant.now();
     var simResults2 = resumableSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
     var simResults = resumableSimulationDriver.getSimulationResults(now);
-    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
+    assert(simResults.getRealProfiles().get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     assertNotEquals(simResults, simResults2);
   }
 

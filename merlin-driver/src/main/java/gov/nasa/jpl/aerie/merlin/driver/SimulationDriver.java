@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -14,11 +13,10 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public final class SimulationDriver {
   public static <Model>
-  SimulationResults simulate(
+  SimulationResultsInterface simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant startTime,

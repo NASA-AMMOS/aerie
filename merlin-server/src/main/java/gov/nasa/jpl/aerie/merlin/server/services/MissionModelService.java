@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -63,7 +63,7 @@ public interface MissionModelService {
          LocalMissionModelService.MissionModelLoadException,
          InstantiationException;
 
-  SimulationResults runSimulation(CreateSimulationMessage message)
+  SimulationResultsInterface runSimulation(CreateSimulationMessage message)
           throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;

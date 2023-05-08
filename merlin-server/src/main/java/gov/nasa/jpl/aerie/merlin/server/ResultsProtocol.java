@@ -1,10 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.function.Consumer;
 
 public final class ResultsProtocol {
@@ -18,7 +16,7 @@ public final class ResultsProtocol {
     record Incomplete(long simulationDatasetId) implements State {}
 
     /** Simulation complete -- results now available. */
-    record Success(long simulationDatasetId, SimulationResults results) implements State {}
+    record Success(long simulationDatasetId, SimulationResultsInterface results) implements State {}
 
     /** Simulation failed -- don't try to re-run without changing some of the inputs. */
     record Failed(long simulationDatasetId, SimulationFailure reason) implements State {}
@@ -38,7 +36,7 @@ public final class ResultsProtocol {
     //   it must still complete with `failWith()`.
     //   Otherwise, the reader would not be able to reclaim unique ownership
     //   of the underlying resource in order to deallocate it.
-    void succeedWith(SimulationResults results);
+    void succeedWith(SimulationResultsInterface results);
 
     void failWith(SimulationFailure reason);
 

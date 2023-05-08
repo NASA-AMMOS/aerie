@@ -20,7 +20,7 @@ public final class SimulationUtility {
     return builder.build(model, registry);
   }
 
-  public static SimulationResults
+  public static SimulationResultsInterface
   simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);

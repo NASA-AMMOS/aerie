@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
@@ -42,7 +43,7 @@ public class ResumableSimulationDriver<Model> {
   private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
 
   //simulation results so far
-  private SimulationResults lastSimResults;
+  private SimulationResultsInterface lastSimResults;
   //cached simulation results cover the period [Duration.ZERO, lastSimResultsEnd]
   private Duration lastSimResultsEnd = Duration.ZERO;
 
@@ -212,7 +213,7 @@ public class ResumableSimulationDriver<Model> {
    * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResults(Instant startTimestamp){
+  public SimulationResultsInterface getSimulationResults(Instant startTimestamp){
     return getSimulationResultsUpTo(startTimestamp, curTime);
   }
 
@@ -227,13 +228,13 @@ public class ResumableSimulationDriver<Model> {
    * @param endTime the end timepoint. The simulation results will be computed up to this point.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
+  public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
       simulateUntil(endTime);
     }
 
-    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
+    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.getStartTime()) != 0) {
       lastSimResults = engine.computeResults(
           startTimestamp,
           endTime,

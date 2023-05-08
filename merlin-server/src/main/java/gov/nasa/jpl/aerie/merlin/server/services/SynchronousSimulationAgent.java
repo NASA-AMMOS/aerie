@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -49,7 +50,7 @@ public record SynchronousSimulationAgent (
         plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
         Duration.MICROSECONDS);
 
-    final SimulationResults results;
+    final SimulationResultsInterface results;
     try {
       // Validate plan activity construction
       {

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -40,7 +41,7 @@ public class SimulationFacade {
   private int itSimActivityId;
 
   //simulation results from the last simulation, as output directly by simulation driver
-  private SimulationResults lastSimDriverResults;
+  private SimulationResultsInterface lastSimDriverResults;
   private gov.nasa.jpl.aerie.constraints.model.SimulationResults lastSimConstraintResults;
   private final Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
       planActDirectiveIdToSimulationActivityDirectiveId = new HashMap<>();
@@ -96,8 +97,8 @@ public class SimulationFacade {
     return duration;
   }
 
-  private ActivityDirectiveId getIdOfRootParent(SimulationResults results, SimulatedActivityId instanceId){
-    final var act = results.simulatedActivities.get(instanceId);
+  private ActivityDirectiveId getIdOfRootParent(SimulationResultsInterface results, SimulatedActivityId instanceId){
+    final var act = results.getSimulatedActivities().get(instanceId);
     if(act.parentId() == null){
       // SAFETY: any activity that has no parent must have a directive id.
       return act.directiveId().get();
@@ -109,7 +110,7 @@ public class SimulationFacade {
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime){
     computeSimulationResultsUntil(endTime);
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
-    this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
+    this.lastSimDriverResults.getSimulatedActivities().forEach((activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimDriverResults, activityInstanceId);
       final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(

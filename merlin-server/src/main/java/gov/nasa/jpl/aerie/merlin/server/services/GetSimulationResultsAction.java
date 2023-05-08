@@ -80,7 +80,7 @@ public final class GetSimulationResultsAction {
 
     final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
 
-    simulationResults.realProfiles.forEach((name, p) -> {
+    simulationResults.getRealProfiles().forEach((name, p) -> {
       var elapsed = Duration.ZERO;
       var profile = p.getRight();
 
@@ -98,7 +98,7 @@ public final class GetSimulationResultsAction {
 
       samples.put(name, timeline);
     });
-    simulationResults.discreteProfiles.forEach((name, p) -> {
+    simulationResults.getDiscreteProfiles().forEach((name, p) -> {
       var elapsed = Duration.ZERO;
       var profile = p.getRight();
 
@@ -141,7 +141,7 @@ public final class GetSimulationResultsAction {
 
     final var activities = new ArrayList<ActivityInstance>();
     final var simulatedActivities = results$
-        .map(r -> r.simulatedActivities)
+        .map(r -> r.getSimulatedActivities())
         .orElseGet(Collections::emptyMap);
     for (final var entry : simulatedActivities.entrySet()) {
       final var id = entry.getKey();
@@ -158,14 +158,14 @@ public final class GetSimulationResultsAction {
           Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
     final var _discreteProfiles = results$
-        .map(r -> r.discreteProfiles)
+        .map(r -> r.getDiscreteProfiles())
         .orElseGet(Collections::emptyMap);
     final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
     for (final var entry : _discreteProfiles.entrySet()) {
       discreteProfiles.put(entry.getKey(), DiscreteProfile.fromSimulatedProfile(entry.getValue().getRight()));
     }
     final var _realProfiles = results$
-        .map(r -> r.realProfiles)
+        .map(r -> r.getRealProfiles())
         .orElseGet(Collections::emptyMap);
     final var realProfiles = new HashMap<String, LinearProfile>();
     for (final var entry : _realProfiles.entrySet()) {

@@ -30,7 +30,7 @@ public final class CellExpiryTest {
 
     final var results = SimulationDriver.simulate(model, Map.of(), Instant.now(), Duration.SECONDS.times(5), Duration.SECONDS.times(5));
 
-    final var actual = results.discreteProfiles.get("/key").getRight();
+    final var actual = results.getDiscreteProfiles().get("/key").getRight();
 
     final var expected = List.of(
         new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),

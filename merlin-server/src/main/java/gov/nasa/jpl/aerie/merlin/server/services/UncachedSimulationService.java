@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import java.util.Optional;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryRevisionData;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -37,7 +37,7 @@ public record UncachedSimulationService (
   }
 
   @Override
-  public Optional<SimulationResults> get(final PlanId planId, final RevisionData revisionData) {
+  public Optional<SimulationResultsInterface> get(final PlanId planId, final RevisionData revisionData) {
     return Optional.ofNullable(
         getSimulationResults(planId, revisionData) instanceof ResultsProtocol.State.Success s ?
             s.results() :

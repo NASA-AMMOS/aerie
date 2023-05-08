@@ -38,9 +38,6 @@ public final class Cell<State> {
     this.inner.cellType.step(this.state, delta);
   }
 
-  public void apply(final EventGraph<Event> events) {
-  }
-
   /**
    * Step up the Cell (apply Effects of Events) for one set of Events (an EventGraph) up to a specified last Event
    * @param events the Events that may affect the Cell
@@ -102,11 +99,15 @@ public final class Cell<State> {
 
     public void apply(final State state, final Event event) {
       final var effect$ = this.selector.select(this.algebra, event);
-      if (effect$.isPresent()) this.cellType.apply(state, effect$.get());
+      if (effect$.isPresent()) {
+        this.cellType.apply(state, effect$.get());
+      }
     }
 
     public void apply(final State state, final Event[] events, int from, final int to) {
-      while (from < to) apply(state, events[from++]);
+      while (from < to) {
+        apply(state, events[from++]);
+      }
     }
   }
 }

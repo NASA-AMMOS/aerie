@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.driver.CombinedSimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
@@ -7,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Cell;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
@@ -86,6 +88,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final HashMap<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
   private final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
   private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+  private SimulationResults simulationResults = null;
   public final Topic<ActivityDirectiveId> defaultActivityTopic;
 
   public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
@@ -583,7 +586,7 @@ public final class SimulationEngine implements AutoCloseable {
         // - No cells are stale
         // - If the past resource value was not based on stale information and matched the previous simulation
         //   (henceforth, the resource is not stale), and if the resource's referencedTopics in waitingResources
-        //   then the evaluation may be skipped.
+        //   are not stale, hen the evaluation may be skipped.
         // - So, should we choose a different expiry? Probably not--just make this evaluation fast.
         //   And, with staleness, we can determine that we need not invalidate a topic in some cases.
 
@@ -713,11 +716,36 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public SimulationResults computeResults(
+  public SimulationResultsInterface computeResults(
       final Instant startTime,
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic
   ) {
+    /**
+     * Discussion about how ot handle incremental sim results.
+     *
+     * Choices:
+     * 1. Ignore oldEngine results here
+     *    a. Provide a way to combine them at the level of the SimulationResults class
+     *       Pros:
+     *         - Better isolates code changes
+     *         - Leaves options open for where to process; thus likely can find fast alternative
+     *       Cons:
+     *         - Combining the results after they've been serialized is harder
+     *         - Should refactor (as suggested in TOODs above) so that serialization is done in another step
+     *       i. Have SimulationResults reference old results?  No, it doesn't give us a choice on whether to combine without adding functions
+     *       ii. Create a SimulationResults subclass (CombinedSimulationResults?)?  YES!
+     *       iii. Create a SimulationResults subclass (IncrementalSimulationResults?)?  No
+     *    b. Need to decide on how it is stored/fetched from DB
+     *       i. Only store incremental results to allow for fastest processing
+     *          - Requires smarts in UI and any other consumer of SimResults
+     *       ii. Make a copy of the previous results stored in the DB and then overwrite changes
+     *          -
+     *
+     * 2. Combine results here
+     *    a.
+     */
+
     final boolean combine = true;  // whether to combine results with those of the oldEngine
 
     // Collect per-task information from the event graph.
@@ -729,7 +757,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Extract profiles for every resource.
-    var allResources = oldEngine == null ? this.resources : new HashMap<>(oldEngine.resources).putAll(this.resources);
+    //var allResources = oldEngine == null ? this.resources : new HashMap<>(oldEngine.resources).putAll(this.resources);
     for (final var entry : this.resources.entrySet()) {
       final var id = entry.getKey();
       final var state = entry.getValue();
@@ -813,7 +841,7 @@ public final class SimulationEngine implements AutoCloseable {
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId),
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else if (state instanceof ExecutionState.InProgress<?> e){
@@ -841,14 +869,12 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    //final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
     for (final var serializableTopic : serializableTopics) {
       serializableTopicToId.put(serializableTopic, this.topics.size());
       this.topics.add(Triple.of(this.topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    //final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     var time = Duration.ZERO;
     for (var point : timeline.points) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -874,13 +900,24 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    return new SimulationResults(this.realProfiles,
+    this.simulationResults = new SimulationResults(this.realProfiles,
                                  this.discreteProfiles,
                                  this.simulatedActivities,
                                  this.unfinishedActivities,
                                  startTime,
                                  this.topics,
                                  this.serializedTimeline);
+    return getCombinedSimulationResults();
+  }
+
+  public SimulationResultsInterface getCombinedSimulationResults() {
+    if (this.simulationResults == null ) {
+      return computeResults(this.startTime, Duration.MAX_VALUE, this.defaultActivityTopic);
+    }
+    if (oldEngine == null) {
+      return this.simulationResults;
+    }
+    return new CombinedSimulationResults(this.simulationResults, oldEngine.getCombinedSimulationResults());
   }
 
   public Optional<Duration> getTaskDuration(TaskId taskId){

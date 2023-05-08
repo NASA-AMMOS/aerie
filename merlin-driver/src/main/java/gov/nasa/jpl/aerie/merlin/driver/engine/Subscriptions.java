@@ -42,7 +42,9 @@ public final class Subscriptions<TopicRef, QueryRef> {
    * @return the topics to which the specified query is subscribed as an unmodifiable Set
    */
   public Set<TopicRef> getTopics(final QueryRef query) {
-    return Collections.unmodifiableSet(topicsByQuery.get(query));
+    var topics = topicsByQuery.get(query);
+    if (topics == null) return Collections.emptySet();
+    return Collections.unmodifiableSet(topics);
   }
 
   public Set<QueryRef> invalidateTopic(final TopicRef topic) {
