@@ -9,6 +9,8 @@ import {
   TimingTypes,
   Ground_Event,
   Ground_Block,
+    LoadStep,
+    ActivateStep,
   ImmediateStem,
     FLOAT,
     INT,
@@ -40,40 +42,92 @@ describe('Command', () => {
     it('should handle absolute time tagged commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: ['string', 0, true],
+        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual("A`2020-001T00:00:00.000`.TEST('string', 0, true)");
+      expect(command.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.TEST([
+  {
+    type: 'string',
+    value: 'string',
+  },
+  {
+    type: 'number',
+    value: 0,
+  },
+  {
+    type: 'boolean',
+    value: true,
+  },
+])`);
     });
 
     it('should handle relative time tagged commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: ['string', 0, true],
+        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
         relativeTime: hmsToDuration('00:00:00.000' as HMS_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual("R`00:00:00.000`.TEST('string', 0, true)");
+      expect(command.toEDSLString()).toEqual(`R\`00:00:00.000\`.TEST([
+  {
+    type: 'string',
+    value: 'string',
+  },
+  {
+    type: 'number',
+    value: 0,
+  },
+  {
+    type: 'boolean',
+    value: true,
+  },
+])`);
     });
 
     it('should handle epoch relative time tagged commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: ['string', 0, true],
+        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
         epochTime: hmsToDuration('00:00:00.000' as HMS_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual("E`00:00:00.000`.TEST('string', 0, true)");
+      expect(command.toEDSLString()).toEqual(`E\`00:00:00.000\`.TEST([
+  {
+    type: 'string',
+    value: 'string',
+  },
+  {
+    type: 'number',
+    value: 0,
+  },
+  {
+    type: 'boolean',
+    value: true,
+  },
+])`);
     });
 
     it('should handle command complete commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: ['string', 0, true],
+        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
       });
 
-      expect(command.toEDSLString()).toEqual("C.TEST('string', 0, true)");
+      expect(command.toEDSLString()).toEqual(`C.TEST([
+  {
+    type: 'string',
+    value: 'string',
+  },
+  {
+    type: 'number',
+    value: 0,
+  },
+  {
+    type: 'boolean',
+    value: true,
+  },
+])`);
     });
 
     it('should handle commands without arguments', () => {
@@ -95,11 +149,24 @@ describe('Command', () => {
     it('should convert to EDSL string with array arguments', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: ['string', 0, true],
+        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual("A`2020-001T00:00:00.000`.TEST('string', 0, true)");
+      expect(command.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.TEST([
+  {
+    type: 'string',
+    value: 'string',
+  },
+  {
+    type: 'number',
+    value: 0,
+  },
+  {
+    type: 'boolean',
+    value: true,
+  },
+])`);
     });
 
     it('should convert to EDSL string with named arguments', () => {
@@ -127,20 +194,18 @@ describe('Command', () => {
         metadata: { author: 'Emery' },
       });
 
-      expect(groundEvent.toEDSLString()).toEqual(
-        "A`2020-001T00:00:00.000`.GROUND_EVENT('Ground Event Name')\n" +
-          '.ARGUMENTS([\n' +
-          '  {\n' +
-          "    name: 'name',\n" +
-          "    type: 'string',\n" +
-          "    value: 'hello',\n" +
-          '  }\n' +
-          '])\n' +
-          ".DESCRIPTION('ground event description')\n" +
-          '.METADATA({\n' +
-          "  author: 'Emery',\n" +
-          '})',
-      );
+      expect(groundEvent.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.GROUND_EVENT('Ground Event Name')
+  .ARGUMENTS([
+    {
+      name: 'name',
+      type: 'string',
+      value: 'hello',
+    },
+  ])
+  .DESCRIPTION('ground event description')
+  .METADATA({
+    author: 'Emery',
+  })`);
     });
 
     it('should convert to EDSL string from ground block', () => {
@@ -151,20 +216,92 @@ describe('Command', () => {
         metadata: { author: 'Jasmine' },
       });
 
-      expect(groundBlock.toEDSLString()).toEqual(
-        "C.GROUND_BLOCK('Ground Block Name')\n" +
-          '.ARGUMENTS([\n' +
-          '  {\n' +
-          "    name: 'turnOff',\n" +
-          "    type: 'boolean',\n" +
-          '    value: false,\n' +
-          '  }\n' +
-          '])\n' +
-          ".DESCRIPTION('ground block description')\n" +
-          '.METADATA({\n' +
-          "  author: 'Jasmine',\n" +
-          '})',
-      );
+      expect(groundBlock.toEDSLString()).toEqual(`C.GROUND_BLOCK('Ground Block Name')
+  .ARGUMENTS([
+    {
+      name: 'turnOff',
+      type: 'boolean',
+      value: false,
+    },
+  ])
+  .DESCRIPTION('ground block description')
+  .METADATA({
+    author: 'Jasmine',
+  })`);
+    });
+
+    it('should convert to EDSL string from Activate', () => {
+      const activateStep = ActivateStep.new({
+        sequence: 'test0001',
+        args: [{ name: 'turnOff', type: 'boolean', value: false }],
+        description: 'ground block description',
+        metadata: { author: 'Ryan' },
+        engine : 45,
+        epoch : "epoch1",
+        models : [{
+          offset: '00:00:00.000',
+          value: '1.234',
+          variable: 'model_var_float',
+        },]
+      });
+
+      expect(activateStep.toEDSLString()).toEqual(`C.ACTIVATE('test0001')
+  .ARGUMENTS([
+    {
+      name: 'turnOff',
+      type: 'boolean',
+      value: false,
+    },
+  ])
+  .DESCRIPTION('ground block description')
+  .ENGINE(45)
+  .EPOCH('epoch1')
+  .METADATA({
+    author: 'Ryan',
+  })
+  .MODELS([
+    {
+      offset: '00:00:00.000',
+      value: '1.234',
+      variable: 'model_var_float',
+    }
+  ])`);
+    });
+
+    it('should convert to EDSL string from Load', () => {
+      const loadStep = LoadStep.new({
+        sequence: 'test0001',
+        args: [{ name: 'turnOff', type: 'boolean', value: false }],
+        description: 'ground block description',
+        metadata: { author: 'Ryan' },
+        engine : 45,
+        epoch : "epoch1",
+        models : [{
+          offset: '00:00:00.000',
+          value: '1.234',
+          variable: 'model_var_float',
+        },]
+      });
+
+      expect(loadStep.toEDSLString()).toEqual(`C.LOAD('test0001')
+  .ARGUMENTS([
+    {
+      name: 'turnOff',
+      type: 'boolean',
+      value: false,
+    },
+  ])
+  .DESCRIPTION('ground block description')
+  .ENGINE(45)
+  .EPOCH('epoch1')\t  .METADATA({
+    author: 'Ryan',
+  })./  .MODELS([
+    {
+      offset: '00:00:00.000',
+      value: '1.234',
+      variable: 'model_var_float',
+    }
+  ])`);
     });
 
     it('should convert to EDSL string from Variable', () => {
@@ -360,22 +497,26 @@ describe('Sequence', () => {
       ENUM('duration', 'POSSIBLE_DURATION')
     ],
     steps: ({ locals, parameters }) => ([
-      A\`2020-001T00:00:00.000\`.TEST('string', 0, true),
+      A\`2020-001T00:00:00.000\`.TEST([
+          'string',
+          0,
+          true,
+      ]),
       A\`2020-001T00:00:00.000\`.TEST({
         string: 'string',
         number: 0,
         boolean: true,
       })
-      .METADATA({
-        author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
-      }),
+        .METADATA({
+          author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
+        }),
       A\`2021-001T00:00:00.000\`.TEST({
         temperature: locals.temp,
         duration: parameters.duration,
       })
-      .METADATA({
-        author: 'ZZZZ',
-      }),
+        .METADATA({
+          author: 'ZZZZ',
+        }),
     ]),
   });`);
     });
@@ -410,25 +551,26 @@ describe('Sequence', () => {
         seqId: 'Immediate',
         metadata: {},
         immediate_commands: [
-          ImmediateStem.new({ stem: 'SMASH_BANANA', arguments: ['AGRESSIVE'] })
+          ImmediateStem.new({ stem: 'SMASH_BANANA', arguments: { behavior : 'AGRESSIVE'} })
             .DESCRIPTION('Hulk smash banannas')
             .METADATA({ author: 'An Avenger' }),
         ],
       });
 
-      expect(sequence.toEDSLString()).toEqual(
-        'export default () =>\n' +
-          '  Sequence.new({\n' +
-          "    seqId: 'Immediate',\n" +
-          '    metadata: {},\n' +
-          '    immediate_commands: [\n' +
-          "      SMASH_BANANA('AGRESSIVE')\n" +
-          "      .DESCRIPTION('Hulk smash banannas')\n" +
-          '      .METADATA({\n' +
-          "        author: 'An Avenger',\n" +
-          '      }),\n' +
-          '    ],\n' +
-          '  });',
+      expect(sequence.toEDSLString()).toEqual(`export default () =>
+  Sequence.new({
+    seqId: 'Immediate',
+    metadata: {},
+    immediate_commands: [
+      SMASH_BANANA({
+        behavior: 'AGRESSIVE',
+      })
+        .DESCRIPTION('Hulk smash banannas')
+        .METADATA({
+          author: 'An Avenger',
+        }),
+    ],
+  });`
       );
     });
   });
