@@ -1,8 +1,8 @@
 -- Activity Type
 alter table activity_type
-  add column category text null;
-comment on column activity_type.category is e''
-  'The category this activity type belongs to.';
+  add column subsystem text null;
+comment on column activity_type.subsystem is e''
+  'The subsystem this activity type belongs to.';
 
 -- Constraints
 update "constraint"
