@@ -57,8 +57,8 @@ comment on column "constraint".summary is e''
   'A short summary suitable for use in a tooltip or compact list.';
 
 -- Activity Type
-comment on column activity_type.category is null;
+comment on column activity_type.subsystem is null;
 alter table activity_type
-  drop column category;
+  drop column subsystem;
 
 call migrations.mark_migration_rolled_back('12');
