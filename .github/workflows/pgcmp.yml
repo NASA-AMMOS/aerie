@@ -333,6 +333,7 @@ jobs:
         run: |
           cp ./.github/scripts/compareDatabasesDown.sh pgcmp/compareDatabases.sh
           cp ./.github/scripts/explanations pgcmp/explanations
+          cat ./.github/scripts/explanations ./.github/scripts/explanations_merlin_down > pgcmp/explanations_merlin
           cd pgcmp
           ./compareDatabases.sh
         shell: bash

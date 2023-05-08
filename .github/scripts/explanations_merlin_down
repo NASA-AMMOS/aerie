@@ -1,0 +1,16 @@
+function definition	hdb_catalog	hdb_catalog.hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function definition	hdb_catalog	hdb_catalog.hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function permissions	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()-role:aerie	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function permissions	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()-role:aerie	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function permissions	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()-role:PUBLIC	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function permissions	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()-role:PUBLIC	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function owner	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function owner	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function language	hdb_catalog	hdb_catalog.hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function language	hdb_catalog	hdb_catalog.hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function security type	hdb_catalog	hdb_catalog.hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function security type	hdb_catalog	hdb_catalog.hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+trigger	public	public.mission_model."notify_hasura_refreshResourceTypes_INSERT"/"INSERT"	missing in 1st DB	From_RefreshResourceTypes_Action	2
+trigger	public	public.mission_model."notify_hasura_refreshResourceTypes_UPDATE"/"UPDATE"	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function config	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_UPDATE"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
+function config	hdb_catalog	hdb_catalog."notify_hasura_refreshResourceTypes_INSERT"()	missing in 1st DB	From_RefreshResourceTypes_Action	2
