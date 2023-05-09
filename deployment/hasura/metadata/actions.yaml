@@ -2,107 +2,133 @@ actions:
   - name: addExternalDataset
     definition:
       kind: synchronous
-      handler: http://aerie_merlin:27183/addExternalDataset
+      handler: "{{AERIE_MERLIN_URL}}/addExternalDataset"
+      timeout: 300
   - name: extendExternalDataset
     definition:
       kind: synchronous
-      handler: http://aerie_merlin:27183/extendExternalDataset
+      handler: "{{AERIE_MERLIN_URL}}/extendExternalDataset"
+      timeout: 300
   - name: uploadDictionary
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/put-dictionary
+      handler: "{{AERIE_SEQUENCING_URL}}/put-dictionary"
+      timeout: 300
   - name: addCommandExpansionTypeScript
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/command-expansion/put-expansion
+      handler: "{{AERIE_SEQUENCING_URL}}/command-expansion/put-expansion"
+      timeout: 300
   - name: createExpansionSet
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/command-expansion/put-expansion-set
+      handler: "{{AERIE_SEQUENCING_URL}}/command-expansion/put-expansion-set"
+      timeout: 300
   - name: expandAllActivities
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/command-expansion/expand-all-activity-instances
+      handler: "{{AERIE_SEQUENCING_URL}}/command-expansion/expand-all-activity-instances"
+      timeout: 300
   - name: getEdslForSeqJson
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/seqjson/get-edsl-for-seqjson
+      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/get-edsl-for-seqjson"
+      timeout: 300
   - name: getEdslForSeqJsonBulk
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/seqjson/bulk-get-edsl-for-seqjson
+      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/bulk-get-edsl-for-seqjson"
+      timeout: 300
   - name: getModelEffectiveArguments
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/getModelEffectiveArguments
+      handler: "{{AERIE_MERLIN_URL}}/getModelEffectiveArguments"
+      timeout: 300
   - name: getActivityEffectiveArguments
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/getActivityEffectiveArguments
+      handler: "{{AERIE_MERLIN_URL}}/getActivityEffectiveArguments"
+      timeout: 300
   - name: getActivityTypeScript
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/get-activity-typescript
+      handler: "{{AERIE_SEQUENCING_URL}}/get-activity-typescript"
+      timeout: 300
   - name: getCommandTypeScript
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/get-command-typescript
+      handler: "{{AERIE_SEQUENCING_URL}}/get-command-typescript"
+      timeout: 300
   - name: getSequenceSeqJson
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/seqjson/get-seqjson-for-seqid-and-simulation-dataset
+      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/get-seqjson-for-seqid-and-simulation-dataset"
+      timeout: 300
   - name: getSequenceSeqJsonBulk
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset
+      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset"
+      timeout: 300
   - name: getUserSequenceSeqJson
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/seqjson/get-seqjson-for-sequence-standalone
+      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/get-seqjson-for-sequence-standalone"
+      timeout: 300
   - name: getUserSequenceSeqJsonBulk
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/seqjson/bulk-get-seqjson-for-sequence-standalone
+      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/bulk-get-seqjson-for-sequence-standalone"
+      timeout: 300
   - name: resourceTypes
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/resourceTypes
+      handler: "{{AERIE_MERLIN_URL}}/resourceTypes"
+      timeout: 300
   - name: schedule
     definition:
       kind: ""
-      handler: http://aerie_scheduler:27185/schedule
+      handler: "{{AERIE_SCHEDULER_URL}}/schedule"
+      timeout: 300
   - name: schedulingDslTypescript
     definition:
       kind: ""
-      handler: http://aerie_scheduler:27185/schedulingDslTypescript
+      handler: "{{AERIE_SCHEDULER_URL}}/schedulingDslTypescript"
+      timeout: 300
   - name: constraintsDslTypescript
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/constraintsDslTypescript
+      handler: "{{AERIE_MERLIN_URL}}/constraintsDslTypescript"
+      timeout: 300
   - name: simulate
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/getSimulationResults
+      handler: "{{AERIE_MERLIN_URL}}/getSimulationResults"
+      timeout: 300
   - name: resourceSamples
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/resourceSamples
+      handler: "{{AERIE_MERLIN_URL}}/resourceSamples"
+      timeout: 300
   - name: constraintViolations
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/constraintViolations
+      handler: "{{AERIE_MERLIN_URL}}/constraintViolations"
+      timeout: 300
   - name: validateActivityArguments
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/validateActivityArguments
+      handler: "{{AERIE_MERLIN_URL}}/validateActivityArguments"
+      timeout: 300
   - name: validateModelArguments
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/validateModelArguments
+      handler: "{{AERIE_MERLIN_URL}}/validateModelArguments"
+      timeout: 300
   - name: validatePlan
     definition:
       kind: ""
-      handler: http://aerie_merlin:27183/validatePlan
+      handler: "{{AERIE_MERLIN_URL}}/validatePlan"
+      timeout: 300
 custom_types:
   enums:
     - name: MerlinSimulationStatus
