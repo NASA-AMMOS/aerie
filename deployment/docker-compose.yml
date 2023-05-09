@@ -140,8 +140,11 @@ services:
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_merlin"
+      AERIE_MERLIN_URL: "http://aerie_merlin:27183"
       AERIE_SCHEDULER_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_scheduler"
+      AERIE_SCHEDULER_URL: "http://aerie_scheduler:27185"
       AERIE_SEQUENCING_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_sequencing"
+      AERIE_SEQUENCING_URL: "http://aerie_sequencing:27184"
       AERIE_UI_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_ui"
       HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
       HASURA_GRAPHQL_DEV_MODE: "true"

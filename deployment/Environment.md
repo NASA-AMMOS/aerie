@@ -113,13 +113,17 @@ This document provides detailed information about environment variables for each
 
 ## Hasura
 
-| Name                           | Description                                                   | Type     |
-| ------------------------------ | ------------------------------------------------------------- | -------- |
-| `AERIE_MERLIN_DATABASE_URL`    | Url of the Merlin Postgres database.                          | `string` |
-| `AERIE_SCHEDULER_DATABASE_URL` | Url of the scheduler Postgres database.                       | `string` |
-| `AERIE_UI_DATABASE_URL`        | Url of the UI Postgres database                               | `string` |
-| `HASURA_GRAPHQL_ADMIN_SECRET`  | The admin secret for Hasura which gives admin access if used. | `string` |
-| `HASURA_GRAPHQL_JWT_SECRET`    | The JWT secret for JSON web token auth. Also in Gateway.      | `string` |
+| Name                            | Description                                                   | Type     |
+| ------------------------------- | ------------------------------------------------------------- | -------- |
+| `AERIE_MERLIN_DATABASE_URL`     | Url of the Merlin Postgres database.                          | `string` |
+| `AERIE_MERLIN_URL`              | Url of the Merlin service.                                    | `string` |
+| `AERIE_SCHEDULER_DATABASE_URL`  | Url of the scheduler Postgres database.                       | `string` |
+| `AERIE_SCHEDULER_URL`           | Url of the scheduler service.                                 | `string` |
+| `AERIE_SEQUENCING_DATABASE_URL` | Url of the sequencing Postgres database.                      | `string` |
+| `AERIE_SEQUENCING_URL`          | Url of the sequencing service.                                | `string` |
+| `AERIE_UI_DATABASE_URL`         | Url of the UI Postgres database                               | `string` |
+| `HASURA_GRAPHQL_ADMIN_SECRET`   | The admin secret for Hasura which gives admin access if used. | `string` |
+| `HASURA_GRAPHQL_JWT_SECRET`     | The JWT secret for JSON web token auth. Also in Gateway.      | `string` |
 
 Additionally, Hasura provides documentation on it's own environment variables you can use to fine-tune your deployment:
 
