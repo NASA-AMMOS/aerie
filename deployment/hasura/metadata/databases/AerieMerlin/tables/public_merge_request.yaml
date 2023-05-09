@@ -30,3 +30,17 @@ array_relationships:
       remote_table:
         name: merge_request_comment
         schema: public
+- name: conflicting_activities
+  using:
+    foreign_key_constraint_on:
+      column: merge_request_id
+      table:
+        name: conflicting_activities
+        schema: public
+- name: staged_activities
+  using:
+    foreign_key_constraint_on:
+      column: merge_request_id
+      table:
+        name: merge_staging_area
+        schema: public

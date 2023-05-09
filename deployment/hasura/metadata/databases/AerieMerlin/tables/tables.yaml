@@ -7,6 +7,7 @@
 - "!include public_mission_model.yaml"
 - "!include public_mission_model_parameters.yaml"
 - "!include public_plan.yaml"
+- "!include public_plan_collaborators.yaml"
 - "!include public_plan_dataset.yaml"
 - "!include public_profile.yaml"
 - "!include public_profile_request.yaml"

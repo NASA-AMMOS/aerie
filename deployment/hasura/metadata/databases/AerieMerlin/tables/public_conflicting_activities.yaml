@@ -1,3 +1,8 @@
 table:
   name: conflicting_activities
   schema: public
+object_relationships:
+  - name: merge_request
+    using:
+      foreign_key_constraint_on: merge_request_id
+
