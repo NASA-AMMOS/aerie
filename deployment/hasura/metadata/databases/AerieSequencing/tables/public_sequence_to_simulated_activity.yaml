@@ -22,3 +22,28 @@ remote_relationships:
         name: simulated_activity
       field_mapping:
         simulated_activity_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [simulated_activity_id, simulation_dataset_id, seq_id]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [simulated_activity_id, simulation_dataset_id, seq_id]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [simulated_activity_id, simulation_dataset_id, seq_id]
+      check: {}
+update_permissions:
+  - role: user
+    permission:
+      columns: [simulated_activity_id, simulation_dataset_id, seq_id]
+      filter: {}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

@@ -11,3 +11,16 @@ array_relationships:
         insertion_order: null
         column_mapping:
           set_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [set_id, id, activity_type, expansion_logic, authoring_command_dict_id,
+                authoring_mission_model_id, created_at, updated_at, name, owner, updated_by, description]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [set_id, id, activity_type, expansion_logic, authoring_command_dict_id,
+                authoring_mission_model_id, created_at, updated_at, name, owner, updated_by, description]
+      filter: {}
+      allow_aggregations: true

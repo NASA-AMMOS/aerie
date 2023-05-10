@@ -11,3 +11,35 @@ array_relationships:
       insertion_order: null
       column_mapping:
         id: rule_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id,
+                created_at, updated_at, owner, updated_by, description]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id,
+                created_at, updated_at, owner, updated_by, description]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id, description]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, expansion_logic, description, owner]
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}
