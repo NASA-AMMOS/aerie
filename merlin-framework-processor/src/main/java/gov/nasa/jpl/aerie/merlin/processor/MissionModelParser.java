@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.processor;
 import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -472,23 +471,38 @@ import java.util.stream.Collectors;
   throws InvalidMissionModelException
   {
     Optional<String> fixedDuration = Optional.empty();
+    Optional<String> parameterizedDuration = Optional.empty();
     for (final var element: activityTypeElement.getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.FixedDuration.class) == null) continue;
-
-      if (fixedDuration.isPresent()) throw new InvalidMissionModelException(
-          "FixedDuration annotation cannot be applied multiple times in one activity type."
-      );
-
-      if (element.getKind() == ElementKind.METHOD) {
-        if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException("FixedDuration method annotation must be an executable element.");
-
-        if (!executableElement.getParameters().isEmpty()) throw new InvalidMissionModelException(
-            "FixedDuration annotation must be applied to a method with no arguments."
+      if (element.getAnnotation(ActivityType.FixedDuration.class) != null) {
+        if (fixedDuration.isPresent()) throw new InvalidMissionModelException(
+            "FixedDuration annotation cannot be applied multiple times in one activity type."
         );
 
-        fixedDuration = Optional.of(executableElement.getSimpleName().toString() + "()");
-      } else if (element.getKind() == ElementKind.FIELD) {
-        fixedDuration = Optional.of(element.getSimpleName().toString());
+        if (element.getKind() == ElementKind.METHOD) {
+          if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException(
+              "FixedDuration method annotation must be an executable element.");
+
+          if (!executableElement.getParameters().isEmpty()) throw new InvalidMissionModelException(
+              "FixedDuration annotation must be applied to a method with no arguments."
+          );
+
+          fixedDuration = Optional.of(executableElement.getSimpleName().toString() + "()");
+        } else if (element.getKind() == ElementKind.FIELD) {
+          fixedDuration = Optional.of(element.getSimpleName().toString());
+        }
+      } else if (element.getAnnotation(ActivityType.ParametricDuration.class) != null) {
+        if (parameterizedDuration.isPresent()) throw new InvalidMissionModelException(
+            "ParametricDuration annotation cannot be applied multiple times in one activity type."
+        );
+
+        if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException(
+            "ParametricDuration method annotation must be an executable element.");
+
+        if (!executableElement.getParameters().isEmpty()) throw new InvalidMissionModelException(
+            "ParametricDuration method must be applied to a method with no arguments."
+        );
+
+        parameterizedDuration = Optional.of(executableElement.getSimpleName().toString());
       }
     }
 
@@ -503,13 +517,21 @@ import java.util.stream.Collectors;
       final var durationTypeAnnotation = element.getAnnotation(ActivityType.ControllableDuration.class);
       final var durationParameter = Optional.ofNullable(durationTypeAnnotation).map(ActivityType.ControllableDuration::parameterName);
       if (durationParameter.isPresent() && fixedDuration.isPresent()) throw new InvalidMissionModelException("Activity cannot have both FixedDuration and ControllableDuration annotations");
+      if (
+          (durationParameter.isPresent() ? 1 : 0)
+          + (fixedDuration.isPresent() ? 1 : 0)
+          + (parameterizedDuration.isPresent() ? 1 : 0)
+          > 1
+      ) {
+        throw new InvalidMissionModelException("Only one duration annotation can be applied to an activity type at a time.");
+      }
 
       final var returnType = executableElement.getReturnType();
       final var nonVoidReturnType = returnType.getKind() == TypeKind.VOID
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration));
     }
 
     return Optional.empty();
