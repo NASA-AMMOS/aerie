@@ -8,12 +8,12 @@ object_relationships:
 select_permissions:
   - role: user
     permission:
-      columns: [id, revision, model_id, description, arguments]
+      columns: [id, revision, model_id, description, arguments, owner]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision, model_id, description, arguments]
+      columns: [id, revision, model_id, description, arguments, owner]
       filter: {}
       allow_aggregations: true
 insert_permissions:
@@ -21,18 +21,14 @@ insert_permissions:
     permission:
       columns: [model_id, description, arguments]
       check: {}
+      set:
+        owner: 'x-hasura-user-id'
 update_permissions:
   - role: user
     permission:
-      columns: [description, arguments]
-      filter: {"mission_model":
-                  {"plans":{"_or":[
-                    {"owner":{"_eq":"X-Hasura-User-Id"}},
-                    {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}} # Anyone who can edit a plan in the mission model
+      columns: [description, arguments, owner]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
 delete_permissions:
   - role: user
     permission:
-      filter: {"mission_model":
-                  {"plans":{"_or":[
-                    {"owner":{"_eq":"X-Hasura-User-Id"}},
-                    {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}} # Anyone who can edit a plan in the mission model
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}

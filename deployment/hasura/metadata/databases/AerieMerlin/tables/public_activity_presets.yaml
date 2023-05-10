@@ -4,12 +4,12 @@ table:
 select_permissions:
   - role: user
     permission:
-      columns: [id, model_id, name, associated_activity_type, arguments]
+      columns: [id, model_id, name, associated_activity_type, arguments, owner]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, model_id, name, associated_activity_type, arguments]
+      columns: [id, model_id, name, associated_activity_type, arguments, owner]
       filter: {}
       allow_aggregations: true
 insert_permissions:
@@ -17,12 +17,14 @@ insert_permissions:
     permission:
       columns: [model_id, name, associated_activity_type, arguments]
       check: {}
+      set:
+        owner: "x-hasura-user-id"
 update_permissions:
   - role: user
     permission:
-      columns: [name, arguments]
-      filter: {}
+      columns: [name, arguments, owner]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
 delete_permissions:
   - role: user
     permission:
-      filter: {}
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
