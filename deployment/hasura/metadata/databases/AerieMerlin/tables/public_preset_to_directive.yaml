@@ -2,7 +2,7 @@ table:
   name: preset_to_directive
   schema: public
 object_relationships:
-  - name: directives_applied_to
+  - name: directive_applied_to
     using:
       manual_configuration:
         column_mapping:
@@ -12,6 +12,6 @@ object_relationships:
         remote_table:
           name: activity_directive
           schema: public
-  - name: presets_applied
+  - name: preset_applied
     using:
       foreign_key_constraint_on: preset_id
