@@ -296,7 +296,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                                             else if ($.parametricDuration().isPresent()) return CodeBlock.of("parametric($$ -> (new $L().new InputMapper()).instantiate($$).$L())", activityTypeRecord.inputType().mapper().name, $.parametricDuration().get());
                                                             else return CodeBlock.of("uncontrollable()");
                                                           })
-                                                          .orElse(CodeBlock.of("uncontrollable()"))))
+                                                          .orElse(CodeBlock.of("fixed($T.ZERO)", ClassName.get(Duration.class)))))
                             .reduce((x, y) -> x.add("$L", y.build()))
                             .orElse(CodeBlock.builder()).build())
                     .addStatement("return result")
