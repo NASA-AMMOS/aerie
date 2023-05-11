@@ -62,7 +62,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     try {
       return this.missionModelRepository.getConstraints(missionModelId);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {

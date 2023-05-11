@@ -115,7 +115,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     return Map.of();
   }
 

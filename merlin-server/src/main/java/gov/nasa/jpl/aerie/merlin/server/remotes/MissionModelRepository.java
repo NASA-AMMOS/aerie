@@ -17,7 +17,7 @@ public interface MissionModelRepository {
     // Queries
     Map<String, MissionModelJar> getAllMissionModels();
     MissionModelJar getMissionModel(String id) throws NoSuchMissionModelException;
-    Map<String, Constraint> getConstraints(String missionModelId) throws NoSuchMissionModelException;
+    Map<Long, Constraint> getConstraints(String missionModelId) throws NoSuchMissionModelException;
     Map<String, ActivityType> getActivityTypes(String missionModelId) throws NoSuchMissionModelException;
 
     // Mutations

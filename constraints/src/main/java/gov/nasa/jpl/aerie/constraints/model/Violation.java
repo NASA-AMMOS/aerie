@@ -9,12 +9,16 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public final class Violation {
+  public final Long constraintId;
+  public final ConstraintType constraintType;
   public final List<Long> activityInstanceIds;
   public final List<String> resourceNames;
   public final List<Interval> violationWindows;
   public final List<Interval> gaps;
 
-  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
+  public Violation(final Long constraintId, final ConstraintType constraintType, final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
+    this.constraintId = constraintId;
+    this.constraintType = constraintType;
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = new ArrayList<>(resourceNames);
     this.violationWindows = new ArrayList<>(violationWindows.size());
@@ -32,10 +36,12 @@ public final class Violation {
   }
 
   public Violation(final Windows violationWindows) {
-    this(new ArrayList<>(), new ArrayList<>(), violationWindows);
+    this(null, null, new ArrayList<>(), new ArrayList<>(), violationWindows);
   }
 
-  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final List<Interval> intervals, final List<Interval> gaps) {
+  public Violation(final Long constraintId, final ConstraintType constraintType, final List<Long> activityInstanceIds, final List<String> resourceNames, final List<Interval> intervals, final List<Interval> gaps) {
+    this.constraintId = constraintId;
+    this.constraintType = constraintType;
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = List.copyOf(resourceNames);
     this.violationWindows = List.copyOf(intervals);
@@ -43,7 +49,7 @@ public final class Violation {
   }
 
   public Violation(final Violation other) {
-    this(other.activityInstanceIds, other.resourceNames, other.violationWindows, other.gaps);
+    this(other.constraintId, other.constraintType, other.activityInstanceIds, other.resourceNames, other.violationWindows, other.gaps);
   }
 
   public void addActivityId(final long activityId) {

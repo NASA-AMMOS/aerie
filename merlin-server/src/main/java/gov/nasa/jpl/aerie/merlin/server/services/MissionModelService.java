@@ -23,7 +23,7 @@ public interface MissionModelService {
   MissionModelJar getMissionModelById(String missionModelId)
   throws NoSuchMissionModelException;
 
-  Map<String, Constraint> getConstraints(String missionModelId)
+  Map<Long, Constraint> getConstraints(String missionModelId)
   throws NoSuchMissionModelException;
 
   Map<String, ValueSchema> getResourceSchemas(String missionModelId)
