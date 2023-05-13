@@ -29,7 +29,19 @@ import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> {
 
-  private Duration curTime = Duration.ZERO;
+  //private Duration curTime = Duration.ZERO;
+  public Duration curTime() {
+    if (engine == null) {
+      return Duration.ZERO;
+    }
+    return engine.curTime();
+  }
+
+  public void setCurTime(Duration time) {
+    this.engine.setCurTime(time);
+  }
+
+
   private SimulationEngine engine;
   //private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
@@ -87,14 +99,14 @@ public class ResumableSimulationDriver<Model> {
     // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
     /* The current real time. */
-    curTime = Duration.ZERO;
+    setCurTime(Duration.ZERO);
 
     // Begin tracking any resources that have not already been simulated.
     trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
     if (!rerunning) {
-      startDaemons(curTime);
+      startDaemons(curTime());
     }
   }
 
@@ -103,9 +115,9 @@ public class ResumableSimulationDriver<Model> {
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      if (!rerunning || !engine.oldEngine.hasSimulatedResource(name)) {
-        engine.trackResource(name, resource, curTime);
-      }
+//      if (!rerunning || !engine.oldEngine.hasSimulatedResource(name)) {
+        engine.trackResource(name, resource, curTime());
+//      }
     }
   }
 
@@ -118,32 +130,32 @@ public class ResumableSimulationDriver<Model> {
   }
 
   private void simulateUntil(Duration endTime){
-    assert(endTime.noShorterThan(curTime));
+    assert(endTime.noShorterThan(curTime()));
     while (true) {
       var timeOfNextJobs = engine.timeOfNextJobs();
       var nextTime = Duration.min(timeOfNextJobs, endTime.plus(Duration.EPSILON));
 
-      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
-      var staleTopicTime = earliestStaleTopics.getRight();
-      nextTime = Duration.min(nextTime, staleTopicTime);
+//      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
+//      var staleTopicTime = earliestStaleTopics.getRight();
+//      nextTime = Duration.min(nextTime, staleTopicTime);
 
-      var earliestStaleReads = engine.earliestStaleReads(curTime, nextTime);  // might want to not limit by nextTime and cache for future iterations
+      var earliestStaleReads = engine.earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
       var staleReadTime = earliestStaleReads.getLeft();
       nextTime = Duration.min(nextTime, staleReadTime);
 
       // Increment real time, if necessary.
-      final var delta = nextTime.minus(curTime);
+      final var delta = nextTime.minus(curTime());
       if(nextTime.longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){  // should this be nextTime.isEqualTo(Duration.MAX_VALUE)?
         break;
       }
-      curTime = nextTime;
+      setCurTime(nextTime);
       engine.timeline.add(delta);
 
-      if (staleTopicTime.isEqualTo(nextTime)) {
-        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
-        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
-        //       while loop.
-      }
+//      if (staleTopicTime.isEqualTo(nextTime)) {
+//        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
+//        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
+//        //       while loop.
+//      }
 
       if (staleReadTime.isEqualTo(nextTime)) {
         engine.rescheduleStaleTasks(earliestStaleReads);
@@ -152,8 +164,8 @@ public class ResumableSimulationDriver<Model> {
       if (timeOfNextJobs.isEqualTo(nextTime)) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), curTime, Duration.MAX_VALUE, queryTopic);
-        engine.timeline.add(commit, curTime);
+        final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
+        engine.timeline.add(commit, curTime());
       }
 
     }
@@ -182,9 +194,10 @@ public class ResumableSimulationDriver<Model> {
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
     activitiesInserted.put(activityId, activityToSimulate);
-    if(activityToSimulate.startOffset().noLongerThan(curTime)){
+    if(activityToSimulate.startOffset().noLongerThan(curTime())){
       initSimulation();
-      simulateSchedule(activitiesInserted);
+      simulateSchedule(Map.of(activityId, activityToSimulate));
+//      simulateSchedule(activitiesInserted);
     } else {
       simulateSchedule(Map.of(activityId, activityToSimulate));
     }
@@ -199,7 +212,7 @@ public class ResumableSimulationDriver<Model> {
     resolved.get(null).sort(Comparator.comparing(Pair::getRight));
     final var earliestStartOffset = resolved.get(null).get(0);
 
-    if(earliestStartOffset.getRight().noLongerThan(curTime)){
+    if(earliestStartOffset.getRight().noLongerThan(curTime())){
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -214,11 +227,11 @@ public class ResumableSimulationDriver<Model> {
    * @return the simulation results
    */
   public SimulationResultsInterface getSimulationResults(Instant startTimestamp){
-    return getSimulationResultsUpTo(startTimestamp, curTime);
+    return getSimulationResultsUpTo(startTimestamp, curTime());
   }
 
   public Duration getCurrentSimulationEndTime(){
-    return curTime;
+    return curTime();
   }
 
   /**
@@ -230,7 +243,7 @@ public class ResumableSimulationDriver<Model> {
    */
   public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     //if previous results cover a bigger period, we return do not regenerate
-    if(endTime.longerThan(curTime)){
+    if(endTime.longerThan(curTime())){
       simulateUntil(endTime);
     }
 
@@ -276,15 +289,15 @@ public class ResumableSimulationDriver<Model> {
       var timeOfNextJobs = engine.timeOfNextJobs();
       var nextTime = timeOfNextJobs;
 
-      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
-      var staleTopicTime = earliestStaleTopics.getRight();
-      nextTime = Duration.min(nextTime, staleTopicTime);
+//      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
+//      var staleTopicTime = earliestStaleTopics.getRight();
+//      nextTime = Duration.min(nextTime, staleTopicTime);
 
-      var earliestStaleReads = engine.earliestStaleReads(curTime, nextTime);  // might want to not limit by nextTime and cache for future iterations
+      var earliestStaleReads = engine.earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
       var staleReadTime = earliestStaleReads.getLeft();
       nextTime = Duration.min(nextTime, staleReadTime);
 
-      final var delta = nextTime.minus(curTime);
+      final var delta = nextTime.minus(curTime());
       //once all tasks are finished, we need to wait for events triggered at the same time
       if(allTaskFinished && !delta.isZero()){
         break;
@@ -292,14 +305,14 @@ public class ResumableSimulationDriver<Model> {
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
       //   even if they occur at the same real time.
 
-      curTime = nextTime;
+      setCurTime(nextTime);
       engine.timeline.add(delta);
 
-      if (staleTopicTime.isEqualTo(nextTime)) {
-        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
-        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
-        //       while loop.
-      }
+//      if (staleTopicTime.isEqualTo(nextTime)) {
+//        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
+//        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
+//        //       while loop.
+//      }
 
       if (staleReadTime.isEqualTo(nextTime)) {
         engine.rescheduleStaleTasks(earliestStaleReads);
@@ -308,8 +321,8 @@ public class ResumableSimulationDriver<Model> {
       if (timeOfNextJobs.isEqualTo(nextTime)) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), curTime, Duration.MAX_VALUE, queryTopic);
-        engine.timeline.add(commit, curTime);
+        final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
+        engine.timeline.add(commit, curTime());
       }
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time

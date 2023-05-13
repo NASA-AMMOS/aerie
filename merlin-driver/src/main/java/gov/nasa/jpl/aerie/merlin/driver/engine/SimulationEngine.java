@@ -92,6 +92,7 @@ public final class SimulationEngine implements AutoCloseable {
   public final Topic<ActivityDirectiveId> defaultActivityTopic;
 
   public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
+
     this.startTime = startTime;
     this.missionModel = missionModel;
     this.oldEngine = oldEngine;
@@ -635,6 +636,20 @@ public final class SimulationEngine implements AutoCloseable {
 
   public MissionModel<?> getMissionModel() {
     return this.missionModel;
+  }
+
+  public Duration curTime() {
+    if (timeline == null) {
+      return Duration.ZERO;
+    }
+    return timeline.curTime();
+  }
+
+  public void setCurTime(Duration time) {
+    this.timeline.setCurTime(time);
+    if (this.oldEngine != null) {
+      this.oldEngine.setCurTime(time);
+    }
   }
 
   private record TaskInfo(

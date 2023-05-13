@@ -127,7 +127,6 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
     return Stream.of(or.getDiscreteProfiles(), nr.getDiscreteProfiles()).flatMap(m -> m.entrySet().stream())
                  .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                                            (p1, p2) -> mergeProfiles(or.getStartTime(), nr.getStartTime(), p1, p2)));
-    //return nr.getDiscreteProfiles();
   }
 
   @Override
@@ -162,22 +161,5 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   @Override
   public String toString() {
     return makeString();
-  }
-
-
-  public static void main(String[] args) {
-    System.out.println("Hello, World!");
-    Long maxmax = Long.MAX_VALUE + Long.MAX_VALUE;
-    System.out.println("" + maxmax);
-    final int[] x = {0};
-    var list1 = List.of(1,3,6,8).stream().map(i -> {
-      var r = Pair.of(x[0], i);
-      x[0] += i;
-      return r;
-    }).toList();
-    System.out.println(list1);
-    //collect($ -> 0, (a, b) -> Pair.of(a + b, b), (a, b) -> Pair.of(a + b, b));
-    var list2 = List.of(2,3,5,9);
-    //var list3 = Stream.of(list1, list2).flatMap(l -> l.stream()).
   }
 }

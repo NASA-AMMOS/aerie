@@ -12,10 +12,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public LiveCells liveCells;
@@ -30,6 +33,16 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   protected HashMap<Cell<?>, Duration> cellTimes = new HashMap<>();
   protected HashMap<Cell<?>, Boolean> cellTimeStepped = new HashMap<>();
   public TemporalEventSource oldTemporalEventSource;
+  protected Duration curTime = Duration.ZERO;
+
+  public Duration curTime() {
+    return curTime;
+  }
+
+  public void setCurTime(Duration time) {
+    curTime = time;
+  }
+
 
   /**
    * cellCache keeps duplicates and old cells that can be reused to more quickly get a past cell value.
@@ -94,6 +107,21 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     topicsForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);  // Tree over Hash for less memory/space
     tasksForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(tasks.size())).addAll(tasks);
   }
+
+  public Map<? extends Topic<?>, TreeMap<Duration, EventGraph<Event>>> getCombinedEventsByTopic() {
+    if (oldTemporalEventSource == null) return eventsByTopic;
+    var mm = Stream.of(eventsByTopic, oldTemporalEventSource.getCombinedEventsByTopic()).flatMap(m -> m.entrySet().stream())
+        .collect(Collectors.toMap(t -> t.getKey(), t -> t.getValue(), (m1, m2) -> mergeMapsFirstWins(m1, m2)));
+    return mm;
+  }
+
+  private static <K, V> TreeMap<K, V> mergeMapsFirstWins(TreeMap<K, V> m1, TreeMap<K, V> m2) {
+    return Stream.of(m1, m2).flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(t -> t.getKey(),
+                                                                                          t -> t.getValue(),
+                                                                                          (v1, v2) -> v1,
+                                                                                          TreeMap::new));
+  }
+
 
   public void replaceEventGraph(EventGraph<Event> oldG, EventGraph<Event> newG) {
     var newTopics = extractTopics(newG);
@@ -190,7 +218,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    for (Map.Entry<Duration, EventGraph<Event>> e : subTimeline.entrySet()) {
+    for (Entry<Duration, EventGraph<Event>> e : subTimeline.entrySet()) {
       final EventGraph<Event> eventGraph = e.getValue();
       var delta = e.getKey().minus(cellTime);
       if (delta.isPositive()) {
@@ -238,7 +266,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       var t = cell.getTopic();
       var m = eventsByTopic.get(t);
       subTimeline = m == null ? null : m.subMap(cellTime, true, maxTime, includeMaxTime);
-      var mo = oldTemporalEventSource.eventsByTopic.get(t);
+      var mo = oldTemporalEventSource.getCombinedEventsByTopic().get(t);
       oldSubTimeline = mo == null ? null : mo.subMap(cellTime, true, maxTime, includeMaxTime);
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -404,7 +432,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   public <State> Cell<State> getOrCreateCellInCache(Topic<?> topic, Duration maxTime, boolean includeMaxTime) {
     final TreeMap<Duration, Cell<?>> inner = cellCache.computeIfAbsent(topic, $ -> new TreeMap<>());
-    final Map.Entry<Duration, Cell<?>> entry = inner.floorEntry(maxTime);
+    final Entry<Duration, Cell<?>> entry = inner.floorEntry(maxTime);
     Cell<?> cell;
     if (entry != null) {
       cell = entry.getValue();
@@ -425,7 +453,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   public Optional<Cell<?>> getOldCell(Cell<?> cell) {
     if (oldTemporalEventSource == null) return Optional.empty();
-    return oldTemporalEventSource.liveCells.getCells(cell.getTopic()).stream().findFirst().map(LiveCell::get);
+    return oldTemporalEventSource.liveCells.getCells(cell.getTopic()).stream().findFirst().map(lc -> lc.cell);
   }
 
   public Pair<Duration, Boolean> getCellTime(Cell<?> cell) {
@@ -465,7 +493,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
     @Override
     public void stepUp(final Cell<?> cell) {
-      TemporalEventSource.this.stepUp(cell, Duration.MAX_VALUE, true);
+      TemporalEventSource.this.stepUp(cell, curTime(), true);
     }
 
   }

@@ -27,7 +27,8 @@ public final class SimulationDriver {
       /* The top-level simulation timeline. */
       //var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
-      var elapsedTime = Duration.ZERO;
+      engine.setCurTime(Duration.ZERO);
+      var elapsedTime = engine.curTime();
 
       // Begin tracking all resources.
       for (final var entry : missionModel.getResources().entrySet()) {
@@ -72,7 +73,8 @@ public final class SimulationDriver {
 
         // Increment real time, if necessary.
         final var delta = batch.offsetFromStart().minus(elapsedTime);
-        elapsedTime = batch.offsetFromStart();
+        engine.setCurTime(batch.offsetFromStart());
+        elapsedTime = engine.curTime();
         // TODO: Since we moved timeline from SimulationDriver to SimulationEngine, maybe some of this should be encapsulated in the engine.
         engine.timeline.add(delta);
         // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
@@ -240,4 +242,15 @@ public final class SimulationDriver {
       return TaskStatus.completed(Unit.UNIT);
     });
   }
+//  public Duration curTime() {
+//    if (engine == null) {
+//      return Duration.ZERO;
+//    }
+//    return engine.curTime();
+//  }
+//
+//  public void setCurTime(Duration time) {
+//    this.engine.setCurTime(time);
+//  }
+
 }

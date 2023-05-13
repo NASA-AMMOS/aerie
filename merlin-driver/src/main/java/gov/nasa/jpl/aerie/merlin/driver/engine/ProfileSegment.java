@@ -8,5 +8,19 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
  * @param dynamics The behavior of the resource during this segment
  * @param <Dynamics> A choice between Real and SerializedValue
  */
-public record ProfileSegment<Dynamics>(Duration extent, Dynamics dynamics) {
+public record ProfileSegment<Dynamics>(Duration extent, Dynamics dynamics) implements Comparable<ProfileSegment<?>> {
+  @Override
+  public int compareTo(final ProfileSegment<?> o) {
+    int c = this.extent.compareTo(o.extent);
+    if (c != 0) return c;
+    final var td = this.dynamics;
+    final var od = o.dynamics;
+    if (td instanceof Comparable cd) return cd.compareTo(od);
+    if (td.equals(od)) return 0;
+    if (!td.getClass().equals(od.getClass())) {
+      c = td.getClass().toString().compareTo(od.getClass().toString());
+      if (c != 0) return c;
+    }
+    return td.toString().compareTo(od.toString());
+  }
 }
