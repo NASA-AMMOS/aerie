@@ -86,11 +86,13 @@ cd aerie
 cp .env.template .env
 ```
 
-Fill out the `.env` file with the following default environment variables (note you should not use these values in production):
+Fill out the `.env` file with the following default environment variables (note you should **not** use these values in production):
 
 ```sh
 AERIE_PASSWORD=aerie
 AERIE_USERNAME=aerie
+HASURA_GRAPHQL_ADMIN_SECRET=aerie
+HASURA_GRAPHQL_JWT_SECRET='{ "type": "HS256", "key": "oursupersecretsupersecurekey1234567890" }'
 POSTGRES_PASSWORD=postgres
 POSTGRES_USER=postgres
 ```

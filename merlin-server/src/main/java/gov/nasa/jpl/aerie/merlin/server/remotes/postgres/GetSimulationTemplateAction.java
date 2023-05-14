@@ -35,9 +35,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
       if (!results.next()) return Optional.empty();
 
-      final var modelId = results.getLong(1);
-      final var revision = results.getLong(2);
-      final var description = results.getString(3);
+      final var modelId = results.getLong("model_id");
+      final var revision = results.getLong("revision");
+      final var description = results.getString("description");
       final var arguments = getJsonColumn(results, "arguments", simulationArgumentsP)
           .getSuccessOrThrow(
               failureReason -> new Error("Corrupt simulation template arguments cannot be parsed: "

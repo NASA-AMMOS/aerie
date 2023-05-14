@@ -3,32 +3,30 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public record DiscreteValue(
     SerializedValue value,
-    AbsoluteInterval interval
+    Optional<Expression<Interval>> interval
 ) implements Expression<DiscreteProfile> {
 
   public DiscreteValue(final SerializedValue value) {
-    this(value, AbsoluteInterval.FOREVER);
+    this(value, Optional.empty());
   }
 
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final Interval relativeInterval = interval.toRelative(results.planStart);
-    return new DiscreteProfile(Segment.of(Interval.intersect(bounds, relativeInterval), this.value));
+    final Interval interval = this.interval.map(i -> i.evaluate(results, bounds, environment)).orElse(Interval.FOREVER);
+    return new DiscreteProfile(Segment.of(Interval.intersect(bounds, interval), this.value));
   }
 
   @Override
-  public void extractResources(final Set<String> names) {
-  }
+  public void extractResources(final Set<String> names) {}
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -37,18 +35,5 @@ public record DiscreteValue(
         prefix,
         this.value
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof DiscreteValue)) return false;
-    final var o = (DiscreteValue) obj;
-
-    return Objects.equals(this.value, o.value);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.value);
   }
 }

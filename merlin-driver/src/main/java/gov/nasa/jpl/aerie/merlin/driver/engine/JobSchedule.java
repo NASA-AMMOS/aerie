@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-public final class JobSchedule<JobRef, TimeRef extends DurationLike & Comparable<TimeRef>> {
+public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   /** The scheduled time for each upcoming job. */
   private final Map<JobRef, TimeRef> scheduledJobs = new HashMap<>();
 

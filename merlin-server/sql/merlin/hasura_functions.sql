@@ -320,6 +320,61 @@ begin
 end
 $$;
 
+-- Bulk versions of Anchor Deletion
+create function hasura_functions.delete_activity_by_pk_reanchor_plan_start_bulk(_activity_ids int[], _plan_id int)
+  returns setof hasura_functions.delete_anchor_return_value
+  strict
+language plpgsql as $$
+  declare activity_id int;
+  begin
+    set constraints public.validate_anchors_update_trigger immediate;
+    foreach activity_id in array _activity_ids loop
+      -- An activity ID might've been deleted in a prior step, so validate that it exists first
+      if exists(select id from public.activity_directive where (id, plan_id) = (activity_id, _plan_id)) then
+        return query
+          select * from hasura_functions.delete_activity_by_pk_reanchor_plan_start(activity_id, _plan_id);
+      end if;
+    end loop;
+    set constraints public.validate_anchors_update_trigger deferred;
+  end
+$$;
+
+create function hasura_functions.delete_activity_by_pk_reanchor_to_anchor_bulk(_activity_ids int[], _plan_id int)
+  returns setof hasura_functions.delete_anchor_return_value
+  strict
+language plpgsql as $$
+  declare activity_id int;
+  begin
+    set constraints public.validate_anchors_update_trigger immediate;
+    foreach activity_id in array _activity_ids loop
+      -- An activity ID might've been deleted in a prior step, so validate that it exists first
+      if exists(select id from public.activity_directive where (id, plan_id) = (activity_id, _plan_id)) then
+        return query
+          select * from hasura_functions.delete_activity_by_pk_reanchor_to_anchor(activity_id, _plan_id);
+      end if;
+    end loop;
+    set constraints public.validate_anchors_update_trigger deferred;
+  end
+$$;
+
+create function hasura_functions.delete_activity_by_pk_delete_subtree_bulk(_activity_ids int[], _plan_id int)
+  returns setof hasura_functions.delete_anchor_return_value
+  strict
+language plpgsql as $$
+  declare activity_id int;
+  begin
+    set constraints public.validate_anchors_update_trigger immediate;
+    foreach activity_id in array _activity_ids loop
+      if exists(select id from public.activity_directive where (id, plan_id) = (activity_id, _plan_id)) then
+        return query
+          select * from hasura_functions.delete_activity_by_pk_delete_subtree(activity_id, _plan_id);
+      end if;
+    end loop;
+    set constraints public.validate_anchors_update_trigger deferred;
+  end
+$$;
+
+-- Activity Presets
 create function hasura_functions.apply_preset_to_activity(_preset_id int, _activity_id int, _plan_id int)
 returns activity_directive
 strict
@@ -357,5 +412,35 @@ begin
     into returning_directive;
 
     return returning_directive;
+end
+$$;
+
+-- Simulation Resources
+create table hasura_functions.resource_at_start_offset_return_value(
+  dataset_id integer not null,
+  id integer not null,
+  name text not null,
+  type jsonb,
+  start_offset interval not null,
+  dynamics jsonb,
+  is_gap bool not null
+);
+
+create function hasura_functions.get_resources_at_start_offset(_dataset_id int, _start_offset interval)
+returns setof hasura_functions.resource_at_start_offset_return_value
+strict
+immutable
+security invoker
+language plpgsql as $$
+begin
+  return query
+    select distinct on (p.name)
+      p.dataset_id, p.id, p.name, p.type, ps.start_offset, ps.dynamics, ps.is_gap
+    from profile p, profile_segment ps
+	  where ps.profile_id = p.id
+	    and p.dataset_id = _dataset_id
+	    and ps.dataset_id = _dataset_id
+	    and ps.start_offset <= _start_offset
+	  order by p.name, ps.start_offset desc;
 end
 $$;

@@ -1,5 +1,6 @@
 import {
   CommandStem,
+  HardwareStem,
   doyToInstant,
   DOY_STRING,
   hmsToDuration,
@@ -8,6 +9,13 @@ import {
   TimingTypes,
   Ground_Event,
   Ground_Block,
+  ImmediateStem,
+    FLOAT,
+    INT,
+    UINT,
+    STRING,
+    ENUM,
+    Variable
 } from './CommandEDSLPreface';
 
 describe('Command', () => {
@@ -158,6 +166,78 @@ describe('Command', () => {
           '})',
       );
     });
+
+    it('should convert to EDSL string from Variable', () => {
+      const float = Variable.new(FLOAT('float_name', {allowable_ranges : [{min: 0, max : 1}], allowable_values : [1,3], sc_name : 'Mission Control'}));
+      expect(float.toSeqJson()).toEqual({
+        allowable_ranges: [
+          {
+            "max": 1,
+            "min": 0
+          }
+        ],
+        allowable_values: [
+          1,
+          3
+        ],
+        sc_name : 'Mission Control',
+        name: "float_name",
+        type: "FLOAT"
+      });
+
+      const int = Variable.new(INT('int_name', {allowable_ranges : [{min: 2, max : 10}], allowable_values : [1,3], sc_name : 'Mission Control 2'}));
+      expect(int.toSeqJson()).toEqual({
+        allowable_ranges: [
+          {
+            "max": 10,
+            "min": 2
+          }
+        ],
+        allowable_values: [
+          1,
+          3
+        ],
+        sc_name : 'Mission Control 2',
+        name: "int_name",
+        type: "INT"
+      });
+
+      const uint = Variable.new(UINT('uint_name'));
+      expect(uint.toSeqJson()).toEqual({ name: 'uint_name', type: 'UINT' });
+
+      const string = Variable.new(STRING('string_name', {allowable_values : [5,12,43], sc_name : 'Mission Control 3'}));
+      expect(string.toSeqJson()).toEqual({ name: 'string_name', type: 'STRING' , allowable_values: [
+          5,
+          12,
+          43
+        ],sc_name : 'Mission Control 3'});
+
+      const enumm = Variable.new(ENUM('enum_name','ENUM_NAME', {allowable_ranges : [{min: 20, max : 100}], allowable_values : [1,30], sc_name : 'Mission Control 20'}));
+      expect(enumm.toSeqJson()).toEqual({ name: 'enum_name', enum_name : 'ENUM_NAME', type: 'ENUM', allowable_ranges: [
+          {
+            "max": 100,
+            "min": 20
+          }
+        ],
+        allowable_values: [
+          1,
+          30
+        ], sc_name : 'Mission Control 20' });
+    });
+
+    it('should convert to EDSL string from Command with Local/Parameter arguments', () => {
+      const local = Variable.new(FLOAT('temp'));
+      const command = CommandStem.new({
+        arguments: [{ temperature: local }],
+        stem: 'PREHEAT_OVEN',
+      });
+      expect(command.toSeqJson()).toEqual({
+        args: [{ name: 'temperature', type: 'symbol', value: 'temp' }],
+        stem: 'PREHEAT_OVEN',
+        time: { type: 'COMMAND_COMPLETE' },
+        type: 'command',
+      });
+    });
   });
 });
 
@@ -229,9 +309,15 @@ describe('Sequence', () => {
     });
 
     it('should convert with commands', () => {
+      const local = Variable.new(FLOAT('temp'));
+      local.setKind('locals')
+      const parameter = Variable.new(ENUM('duration', 'POSSIBLE_DURATION'));
+      parameter.setKind('parameters')
       const sequence = Sequence.new({
         seqId: 'test',
         metadata: {},
+        locals: [local],
+        parameters: [parameter],
         steps: [
           CommandStem.new({
             stem: 'TEST',
@@ -249,6 +335,17 @@ describe('Sequence', () => {
           }).METADATA({
             author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
           }),
+          CommandStem.new({
+            stem: 'TEST',
+            arguments: {
+              temperature: local,
+              duration: parameter,
+            },
+
+            absoluteTime: doyToInstant('2021-001T00:00:00.000' as DOY_STRING),
+          }).METADATA({
+            author: 'ZZZZ',
+          }),
         ],
       });
 
@@ -256,7 +353,13 @@ describe('Sequence', () => {
   Sequence.new({
     seqId: 'test',
     metadata: {},
-    steps: [
+    locals: [
+      FLOAT('temp')
+    ],
+    parameters: [
+      ENUM('duration', 'POSSIBLE_DURATION')
+    ],
+    steps: ({ locals, parameters }) => ([
       A\`2020-001T00:00:00.000\`.TEST('string', 0, true),
       A\`2020-001T00:00:00.000\`.TEST({
         string: 'string',
@@ -266,8 +369,67 @@ describe('Sequence', () => {
       .METADATA({
         author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
       }),
-    ],
+      A\`2021-001T00:00:00.000\`.TEST({
+        temperature: locals.temp,
+        duration: parameters.duration,
+      })
+      .METADATA({
+        author: 'ZZZZ',
+      }),
+    ]),
   });`);
+    });
+
+    it('should convert with Hardware,', () => {
+      const sequence = Sequence.new({
+        seqId: 'HW',
+        metadata: {},
+        hardware_commands: [
+          HardwareStem.new({ stem: 'HW_PYRO_DUMP' }).DESCRIPTION('Fire the pyros').METADATA({ author: 'Emery' }),
+        ],
+      });
+
+      expect(sequence.toEDSLString()).toEqual(
+        'export default () =>\n' +
+          '  Sequence.new({\n' +
+          "    seqId: 'HW',\n" +
+          '    metadata: {},\n' +
+          '    hardware_commands: [\n' +
+          '      HW_PYRO_DUMP\n' +
+          "      .DESCRIPTION('Fire the pyros')\n" +
+          '      .METADATA({\n' +
+          "        author: 'Emery',\n" +
+          '      })\n' +
+          '    ],\n' +
+          '  });',
+      );
+    });
+
+    it('should convert with immediate commands,', () => {
+      const sequence = Sequence.new({
+        seqId: 'Immediate',
+        metadata: {},
+        immediate_commands: [
+          ImmediateStem.new({ stem: 'SMASH_BANANA', arguments: ['AGRESSIVE'] })
+            .DESCRIPTION('Hulk smash banannas')
+            .METADATA({ author: 'An Avenger' }),
+        ],
+      });
+
+      expect(sequence.toEDSLString()).toEqual(
+        'export default () =>\n' +
+          '  Sequence.new({\n' +
+          "    seqId: 'Immediate',\n" +
+          '    metadata: {},\n' +
+          '    immediate_commands: [\n' +
+          "      SMASH_BANANA('AGRESSIVE')\n" +
+          "      .DESCRIPTION('Hulk smash banannas')\n" +
+          '      .METADATA({\n' +
+          "        author: 'An Avenger',\n" +
+          '      }),\n' +
+          '    ],\n' +
+          '  });',
+      );
     });
   });
 });

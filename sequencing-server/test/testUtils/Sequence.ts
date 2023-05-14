@@ -54,20 +54,7 @@ export async function getSequenceSeqJson(graphqlClient: GraphQLClient, seqId: st
             message
             stack
           }
-          seqJson {
-            id
-            metadata
-            steps {
-              type
-              stem
-              time {
-                type
-                tag
-              }
-              args
-              metadata
-            }
-          }
+          seqJson
         }
       }
     `,
@@ -109,20 +96,7 @@ export async function getSequenceSeqJsonBulk(
             message
             stack
           }
-          seqJson {
-            id
-            metadata
-            steps {
-              type
-              stem
-              time {
-                type
-                tag
-              }
-              args
-              metadata
-            }
-          }
+          seqJson
         }
       }
     `,
@@ -160,20 +134,7 @@ export async function generateSequenceEDSL(
             message
             stack
           }
-          seqJson {
-            id
-            metadata
-            steps {
-              args
-              metadata
-              stem
-              time {
-                tag
-                type
-              }
-              type
-            }
-          }
+          seqJson
         }
       }
     `,
@@ -219,22 +180,7 @@ export async function generateSequenceEDSLBulk(
             message
             stack
           }
-          seqJson {
-            id
-            metadata
-            steps {
-              args
-              metadata
-              models
-              description
-              stem
-              time {
-                tag
-                type
-              }
-              type
-            }
-          }
+          seqJson
         }
       }
     `,

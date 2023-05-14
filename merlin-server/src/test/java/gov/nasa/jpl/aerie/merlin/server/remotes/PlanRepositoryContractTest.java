@@ -5,13 +5,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.CreatedPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,38 +25,18 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanStorePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
+  public void testCanStorePlan() throws NoSuchPlanException {
     // GIVEN
 
     // WHEN
-    final NewPlan newPlan = new NewPlan();
-    newPlan.name = "new-plan";
+    final Plan plan = new Plan();
+    plan.name = "new-plan";
 
-    final CreatedPlan ids = this.planRepository.createPlan(newPlan);
-
-    // THEN
-    final Plan plan = this.planRepository.getPlan(ids.planId());
-    assertThat(plan.name).isEqualTo("new-plan");
-  }
-
-  @Test
-  public void testUnsavedPlanTransactionHasNoEffect()
-  throws NoSuchPlanException
-  {
-    // GIVEN
-    final NewPlan newPlan = new NewPlan();
-    newPlan.name = "before";
-    final CreatedPlan ids = this.planRepository.createPlan(newPlan);
-
-    // WHEN
-    this.planRepository
-        .updatePlan(ids.planId())
-        .setName("after");
-        // no .commit()
+    final CreatedPlan ids = this.planRepository.storePlan(plan);
 
     // THEN
-    final Plan plan = this.planRepository.getPlan(ids.planId());
-    assertThat(plan.name).isEqualTo("before");
+    final Plan fetchedPlan = this.planRepository.getPlanForValidation(ids.planId());
+    assertThat(fetchedPlan.name).isEqualTo("new-plan");
   }
 
   @Test
@@ -68,17 +46,17 @@ public abstract class PlanRepositoryContractTest {
     // WHEN
     final ActivityDirective activity = new ActivityDirective(Duration.ZERO, "abc", Map.of("abc", SerializedValue.of(1)), null, true);
 
-    final NewPlan newPlan = new NewPlan();
-    newPlan.name = "new-plan";
-    newPlan.activityDirectives = List.of();
+    final Plan plan = new Plan();
+    plan.name = "new-plan";
+    plan.activityDirectives = Map.of();
 
-    final CreatedPlan ids = this.planRepository.createPlan(newPlan);
+    final CreatedPlan ids = this.planRepository.storePlan(plan);
     this.planRepository.createActivity(ids.planId(), activity);
 
     // THEN
-    final Plan plan = this.planRepository.getPlan(ids.planId());
-    assertThat(plan.name).isEqualTo("new-plan");
-    assertThat(plan.activityDirectives.values()).containsExactly(activity);
+    final Plan fetchedPlan = this.planRepository.getPlanForValidation(ids.planId());
+    assertThat(fetchedPlan.name).isEqualTo("new-plan");
+    assertThat(fetchedPlan.activityDirectives.values()).containsExactly(activity);
   }
 
   @Test
@@ -88,18 +66,18 @@ public abstract class PlanRepositoryContractTest {
     // GIVEN
 
     // WHEN
-    final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());
+    final CreatedPlan ids = this.planRepository.storePlan(new Plan());
 
     // THEN
-    assertThat(this.planRepository.getPlan(ids.planId()).activityDirectives).isNotNull().isEmpty();
+    assertThat(this.planRepository.getPlanForValidation(ids.planId()).activityDirectives).isNotNull().isEmpty();
   }
 
   @Test
   public void testCanDeletePlan() throws NoSuchPlanException {
     // GIVEN
-    this.planRepository.createPlan(new NewPlan());
-    final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());
-    this.planRepository.createPlan(new NewPlan());
+    this.planRepository.storePlan(new Plan());
+    final CreatedPlan ids = this.planRepository.storePlan(new Plan());
+    this.planRepository.storePlan(new Plan());
     assertThat(this.planRepository.getAllPlans()).size().isEqualTo(3);
 
     // WHEN

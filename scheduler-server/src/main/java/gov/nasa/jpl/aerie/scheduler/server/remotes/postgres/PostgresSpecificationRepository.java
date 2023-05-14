@@ -51,7 +51,8 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         .map((PostgresGoalRecord pgGoal) -> new GoalRecord(
                 new GoalId(pgGoal.id()),
                 new GoalSource(pgGoal.definition()),
-                pgGoal.enabled()
+                pgGoal.enabled(),
+                pgGoal.simulateAfter()
             ))
         .toList();
 

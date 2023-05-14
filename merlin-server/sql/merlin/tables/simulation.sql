@@ -6,6 +6,9 @@ create table simulation (
   plan_id integer not null,
   arguments merlin_argument_set not null,
 
+  simulation_start_time timestamptz not null,
+  simulation_end_time timestamptz not null,
+
   constraint simulation_synthetic_key
     primary key (id),
   constraint simulation_has_simulation_template
@@ -17,7 +20,11 @@ create table simulation (
     foreign key (plan_id)
     references plan
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint one_simulation_per_plan
+    unique(plan_id),
+  constraint simulation_end_after_simulation_start
+    check (simulation_start_time <= simulation_end_time)
 );
 
 

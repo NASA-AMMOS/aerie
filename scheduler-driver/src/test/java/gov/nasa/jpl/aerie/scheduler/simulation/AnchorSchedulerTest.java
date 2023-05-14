@@ -70,6 +70,7 @@ public class AnchorSchedulerTest {
      */
     private static void assertEqualsSimulationResults(SimulationResultsInterface expected, SimulationResultsInterface actual){
       assertEquals(expected.getStartTime(), actual.getStartTime());
+      assertEquals(expected.getDuration(), actual.getDuration());
       assertEquals(expected.getSimulatedActivities().entrySet().size(), actual.getSimulatedActivities().size());
       for(final var entry : expected.getSimulatedActivities().entrySet()){
         final var key = entry.getKey();
@@ -213,6 +214,7 @@ public class AnchorSchedulerTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
+          tenDays, // simulation duration
           modelTopicList,
           new TreeMap<>() //events
       );
@@ -324,6 +326,7 @@ public class AnchorSchedulerTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
+          Duration.of(800, Duration.MINUTES), // duration. 800 because 400 * 2 (AETA is the temporally longer chain), NOT because of number of activities
           modelTopicList,
           new TreeMap<>() //events
       );
@@ -609,6 +612,7 @@ public class AnchorSchedulerTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
+          Duration.of(6, Duration.MINUTES), // duration. wide tree, but max branch length is 6
           modelTopicList,
           new TreeMap<>() //events
       );

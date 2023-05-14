@@ -4,15 +4,11 @@ import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
-import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBindings;
-import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryMissionModelRepository;
-import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
@@ -25,8 +21,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
-import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
@@ -67,10 +61,7 @@ public final class AerieAppDriver {
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
     // Assemble the core non-web object graph.
-    final var simulationAgent = ThreadedSimulationAgent.spawn(
-        "simulation-agent",
-        new SynchronousSimulationAgent(planController, missionModelController));
-    final var simulationController = new CachedSimulationService(simulationAgent, stores.results());
+    final var simulationController = new CachedSimulationService(stores.results());
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         missionModelController,
@@ -130,13 +121,6 @@ public final class AerieAppDriver {
           new PostgresPlanRepository(hikariDataSource),
           new PostgresMissionModelRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource));
-    } else if (store instanceof InMemoryStore c) {
-      final var inMemoryPlanRepository = new InMemoryPlanRepository();
-      return new Stores(
-          inMemoryPlanRepository,
-          new InMemoryMissionModelRepository(),
-          new InMemoryResultsCellRepository(inMemoryPlanRepository));
-
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
     }

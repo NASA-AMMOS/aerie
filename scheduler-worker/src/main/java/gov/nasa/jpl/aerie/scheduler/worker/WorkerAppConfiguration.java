@@ -10,5 +10,6 @@ public record WorkerAppConfiguration(
     URI merlinGraphqlURI,
     Path merlinFileStore,
     Path missionRuleJarPath,
-    PlanOutputMode outputMode
+    PlanOutputMode outputMode,
+    String hasuraGraphQlAdminSecret
 ) { }

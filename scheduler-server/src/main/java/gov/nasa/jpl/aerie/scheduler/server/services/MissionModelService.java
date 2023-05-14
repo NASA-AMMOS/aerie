@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -26,7 +27,7 @@ public interface MissionModelService {
     }
   }
 
-  record ActivityType(String name, Map<String, ValueSchema> parameters) {}
+  record ActivityType(String name, Map<String, ValueSchema> parameters, Map<String, Map<String, SerializedValue>> presets) {}
 
   record ResourceType(String name, ValueSchema schema) {}
 

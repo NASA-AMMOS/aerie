@@ -216,6 +216,7 @@ public class PrioritySolverTest {
                             .duration(d1min)
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);

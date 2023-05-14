@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
 import org.intellij.lang.annotations.Language;
@@ -8,17 +8,20 @@ import org.intellij.lang.annotations.Language;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
 /*package local*/ final class CreateSimulationDatasetAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     insert into simulation_dataset
       (
         simulation_id,
-        offset_from_plan_start
+        simulation_start_time,
+        simulation_end_time,
+        arguments
       )
-    values(?, ?::timestamptz - ?::timestamptz)
+    values(?, ?, ?, ?)
     returning
       dataset_id,
       status,
@@ -35,14 +38,14 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
   public SimulationDatasetRecord apply(
       final long simulationId,
-      final Timestamp planStart,
-      final Timestamp simulationStart
+      final Timestamp simulationStart,
+      final Timestamp simulationEnd,
+      final Map<String, SerializedValue> arguments
   ) throws SQLException {
-    final var offsetFromPlanStart = Duration.of(planStart.microsUntil(simulationStart), MICROSECONDS);
-
     this.statement.setLong(1, simulationId);
     PreparedStatements.setTimestamp(this.statement, 2, simulationStart);
-    PreparedStatements.setTimestamp(this.statement, 3, planStart);
+    PreparedStatements.setTimestamp(this.statement, 3, simulationEnd);
+    this.statement.setObject(4, simulationArgumentsP.unparse(arguments));
 
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("simulation_dataset");
@@ -64,7 +67,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
           datasetId,
           state,
           canceled,
-          offsetFromPlanStart,
+          simulationStart,
+          simulationEnd,
           simulationDatasetId
       );
     }

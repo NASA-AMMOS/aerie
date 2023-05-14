@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
@@ -33,7 +34,7 @@ public final class StubMissionModelService implements MissionModelService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL)),
+      List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL), new Parameter("Duration", ValueSchema.DURATION)),
       List.of(),
       ValueSchema.ofStruct(Map.of()));
   public static final String EXISTENT_ACTIVITY_TYPE_2 = "activity2";
@@ -76,6 +77,7 @@ public final class StubMissionModelService implements MissionModelService {
       Map.of(),
       Map.of(),
       Instant.EPOCH,
+      Duration.ZERO,
       List.of(),
       new TreeMap<>());
 

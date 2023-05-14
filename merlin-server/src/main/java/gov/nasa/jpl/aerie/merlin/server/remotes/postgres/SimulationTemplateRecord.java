@@ -9,5 +9,6 @@ public record SimulationTemplateRecord(
     long revision,
     long modelId,
     String description,
-    Map<String, SerializedValue> arguments) {}
+    Map<String, SerializedValue> arguments
+    ) {}
 

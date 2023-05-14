@@ -18,15 +18,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class Mission {
-  public final Accumulator fruit = new Accumulator(4.0, 0.0);
-  public final AdditiveRegister peel = AdditiveRegister.create(4.0);
-  public final Register<Flag> flag = Register.forImmutable(Flag.A);
+  public final Accumulator fruit;
+  public final AdditiveRegister peel;
+  public final Register<Flag> flag;
   public final Register<Integer> lineCount = Register.forImmutable(0);
   public final Counter<Integer> plant;
   public final Register<String> producer;
   public final Register<Integer> dataLineCount;
 
   public Mission(final Registrar registrar, final Configuration config) {
+    this.fruit = new Accumulator(config.initialConditions().fruit(), 0.0);
+    this.peel = AdditiveRegister.create(config.initialConditions().peel());
+    this.flag = Register.forImmutable(config.initialConditions().flag());
     this.plant = Counter.ofInteger(config.initialPlantCount());
     this.producer = Register.forImmutable(config.initialProducer());
     this.dataLineCount = Register.forImmutable(countLines(config.initialDataPath()));

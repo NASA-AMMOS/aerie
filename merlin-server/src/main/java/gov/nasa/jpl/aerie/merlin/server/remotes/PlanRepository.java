@@ -2,12 +2,9 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
@@ -31,10 +28,10 @@ import java.util.Map;
 public interface PlanRepository {
   // Queries
   Map<PlanId, Plan> getAllPlans();
-  Plan getPlan(PlanId planId) throws NoSuchPlanException;
+  Plan getPlanForValidation(PlanId planId) throws NoSuchPlanException;
+  Plan getPlanForSimulation(PlanId planId) throws NoSuchPlanException;
   long getPlanRevision(PlanId planId) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
-  Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(PlanId planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
@@ -44,21 +41,4 @@ public interface PlanRepository {
   Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId) throws NoSuchPlanException;
 
   record CreatedPlan(PlanId planId, List<ActivityDirectiveId> activityIds) {}
-
-  interface PlanTransaction {
-    void commit() throws NoSuchPlanException;
-
-    PlanTransaction setName(String name);
-    PlanTransaction setStartTimestamp(Timestamp timestamp);
-    PlanTransaction setEndTimestamp(Timestamp timestamp);
-    PlanTransaction setConfiguration(Map<String, SerializedValue> configuration);
-  }
-
-  interface ActivityTransaction {
-    void commit() throws NoSuchPlanException, NoSuchActivityInstanceException;
-
-    ActivityTransaction setType(String type);
-    ActivityTransaction setStartOffset(Duration offset);
-    ActivityTransaction setParameters(Map<String, SerializedValue> parameters);
-  }
 }

@@ -47,6 +47,19 @@ interface AstNode {
   __astNode: object
 }
 
+function toJson(unwrappedErr: any){
+  var completeStackValue = "";
+  if ('error' in unwrappedErr && 'stack' in unwrappedErr.error){
+    completeStackValue = JSON.stringify(unwrappedErr.error.stack)
+  }
+    return {
+        message: unwrappedErr.message,
+        stack: unwrappedErr.stack,
+        location: unwrappedErr.location,
+        completeStack:  completeStackValue,
+  }
+}
+
 async function handleRequest(data: Buffer) {
   try {
     // Test the health of the service by responding to "ping" with "pong".
@@ -85,8 +98,9 @@ async function handleRequest(data: Buffer) {
     );
 
     if (result.isErr()) {
+      const errorCause = JSON.stringify(result.unwrapErr().map(err => toJson(err))) + '\n';
       process.stdout.write('error\n');
-      process.stdout.write(JSON.stringify(result.unwrapErr().map(err => err.toJSON())) + '\n');
+      process.stdout.write(errorCause);
       lineReader.once('line', handleRequest);
       return;
     }

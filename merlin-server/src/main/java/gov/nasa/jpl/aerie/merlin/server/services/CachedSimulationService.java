@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 
 public record CachedSimulationService (
-    SimulationAgent agent,
     ResultsCellRepository store
 ) implements SimulationService {
 

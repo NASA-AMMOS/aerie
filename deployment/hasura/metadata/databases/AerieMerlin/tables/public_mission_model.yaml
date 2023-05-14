@@ -52,8 +52,8 @@ event_triggers:
   retry_conf:
     interval_sec: 10
     num_retries: 0
-    timeout_sec: 60
-  webhook: http://aerie_merlin:27183/refreshActivityTypes
+    timeout_sec: 300
+  webhook: "{{AERIE_MERLIN_URL}}/refreshActivityTypes"
 - definition:
     enable_manual: false
     insert:
@@ -71,5 +71,5 @@ event_triggers:
   retry_conf:
     interval_sec: 10
     num_retries: 0
-    timeout_sec: 60
-  webhook: http://aerie_merlin:27183/refreshModelParameters
+    timeout_sec: 300
+  webhook: "{{AERIE_MERLIN_URL}}/refreshModelParameters"

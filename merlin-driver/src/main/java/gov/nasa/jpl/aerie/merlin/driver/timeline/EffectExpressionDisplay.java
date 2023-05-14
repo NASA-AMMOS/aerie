@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**

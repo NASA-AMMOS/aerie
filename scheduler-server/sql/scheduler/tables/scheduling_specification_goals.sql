@@ -8,6 +8,8 @@ create table scheduling_specification_goals (
     constraint non_negative_specification_goal_priority check (priority >= 0),
   enabled boolean default true,
 
+  simulate_after boolean not null default true,
+
   constraint scheduling_specification_goals_primary_key
     primary key (specification_id, goal_id),
   constraint scheduling_specification_goals_unique_priorities
@@ -21,7 +23,9 @@ create table scheduling_specification_goals (
     foreign key (goal_id)
       references scheduling_goal
       on update cascade
-      on delete cascade
+      on delete cascade,
+  constraint scheduling_specification_unique_goal_id
+    unique (goal_id)
 );
 
 comment on table scheduling_specification_goals is e''
@@ -33,6 +37,8 @@ comment on column scheduling_specification_goals.goal_id is e''
 comment on column scheduling_specification_goals.priority is e''
   'The relative priority of a scheduling goal in relation to other '
   'scheduling goals within the same specification.';
+comment on column scheduling_specification_goals.simulate_after is e''
+  'Whether to re-simulate after evaluating this goal and before the next goal.';
 
 create or replace function insert_scheduling_specification_goal_func()
   returns trigger as $$begin

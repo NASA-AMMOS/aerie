@@ -15,8 +15,8 @@ class TypescriptCodeGenerationServiceTest {
   @Test
   void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
     final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
-
-    assertEquals(
+    final var expected = codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)));
+    assertEquals(expected,
         """
             /** Start Codegen */
             import * as AST from './constraints-ast.js';
@@ -31,8 +31,8 @@ class TypescriptCodeGenerationServiceTest {
               "an integer": number,
               "external resource": boolean,
             };
-            export type ResourceName = "mode" | "state of charge" | "an integer" | "external resource";
-            export type RealResourceName = "state of charge" | "an integer";
+            export type ResourceName = "mode" | "state of charge" | "an integer" | "external resource" | never;
+            export type RealResourceName = "state of charge" | "an integer" | never;
             export const ActivityTypeParameterInstantiationMap = {
               [ActivityType.activity2]: (alias: string) => ({
                 "Param": new Discrete<( | "hello" | "there")>({
@@ -52,18 +52,36 @@ class TypescriptCodeGenerationServiceTest {
                   alias,
                   name: "AnotherParam"
                 }),
+                "Duration": new Discrete<Temporal.Duration>({
+                  kind: AST.NodeKind.DiscreteProfileParameter,
+                  alias,
+                  name: "Duration"
+                }),
               }),
             };
-            export type ParameterTypeactivity2 = {
+            type ParameterTypeactivity2 = {
               Param: (( | "hello" | "there") | Discrete<( | "hello" | "there")>),
             }
-            export type ParameterTypeactivity = {
+            type ParameterTypeactivity = {
               Param: (string | Discrete<string>),
               AnotherParam: (number | Real),
+              Duration: (AST.Duration | Discrete<Temporal.Duration>),
             }
             export type ActivityTypeParameterMap = {
               [ActivityType.activity2]:ParameterTypeactivity2,
               [ActivityType.activity]:ParameterTypeactivity,
+            };
+            export type ParameterTypeWithUndefinedactivity2 = {
+              Param?: (( | "hello" | "there") | Discrete<( | "hello" | "there")> | undefined),
+            }
+            export type ParameterTypeWithUndefinedactivity = {
+              Param?: (string | Discrete<string> | undefined),
+              AnotherParam?: (number | Real | undefined),
+              Duration?: (Temporal.Duration | Discrete<Temporal.Duration> | undefined),
+            }
+            export type ActivityTypeParameterMapWithUndefined = {
+              [ActivityType.activity2]:ParameterTypeWithUndefinedactivity2,
+              [ActivityType.activity]:ParameterTypeWithUndefinedactivity,
             };
             declare global {
               enum ActivityType {
@@ -74,8 +92,7 @@ class TypescriptCodeGenerationServiceTest {
             Object.assign(globalThis, {
               ActivityType
             });
-            /** End Codegen */""",
-        codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)))
+            /** End Codegen */"""
     );
   }
 }

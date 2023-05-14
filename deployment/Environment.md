@@ -12,19 +12,20 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Gateway
 
-| Name                       | Description                                              | Type     | Default                          |
-| -------------------------- | -------------------------------------------------------- | -------- | -------------------------------- |
-| `GQL_API_URL`              | URL of GraphQL API for the GraphQL Playground.           | `string` | http://localhost:8080/v1/graphql |
-| `LOG_FILE`                 | Either an output filepath to log to, or 'console'.       | `string` | console                          |
-| `LOG_LEVEL`                | Logging level for filtering logs.                        | `string` | warn                             |
-| `PORT`                     | Port the Gateway server listens on.                      | `number` | 9000                             |
-| `POSTGRES_AERIE_MERLIN_DB` | Name of Merlin Postgres database.                        | `string` | aerie_merlin                     |
-| `POSTGRES_HOST`            | Hostname of Postgres instance.                           | `string` | localhost                        |
-| `POSTGRES_PASSWORD`        | Password of Postgres instance.                           | `string` |                                  |
-| `POSTGRES_PORT`            | Port of Postgres instance.                               | `number` | 5432                             |
-| `POSTGRES_USER`            | User of Postgres instance.                               | `string` |                                  |
-| `RATE_LIMITER_FILES_MAX`   | Max requests allowed every 15 minutes to file endpoints  | `number` | 1000                             |
-| `RATE_LIMITER_LOGIN_MAX`   | Max requests allowed every 15 minutes to login endpoints | `number` | 1000                             |
+| Name                        | Description                                              | Type     | Default                          |
+| --------------------------- | -------------------------------------------------------- | -------- | -------------------------------- |
+| `GQL_API_URL`               | URL of GraphQL API for the GraphQL Playground.           | `string` | http://localhost:8080/v1/graphql |
+| `HASURA_GRAPHQL_JWT_SECRET` | The JWT secret for JSON web token auth. Also in Hasura.  | `string` |                                  |
+| `LOG_FILE`                  | Either an output filepath to log to, or 'console'.       | `string` | console                          |
+| `LOG_LEVEL`                 | Logging level for filtering logs.                        | `string` | warn                             |
+| `PORT`                      | Port the Gateway server listens on.                      | `number` | 9000                             |
+| `POSTGRES_AERIE_MERLIN_DB`  | Name of Merlin Postgres database.                        | `string` | aerie_merlin                     |
+| `POSTGRES_HOST`             | Hostname of Postgres instance.                           | `string` | localhost                        |
+| `POSTGRES_PASSWORD`         | Password of Postgres instance.                           | `string` |                                  |
+| `POSTGRES_PORT`             | Port of Postgres instance.                               | `number` | 5432                             |
+| `POSTGRES_USER`             | User of Postgres instance.                               | `string` |                                  |
+| `RATE_LIMITER_FILES_MAX`    | Max requests allowed every 15 minutes to file endpoints  | `number` | 1000                             |
+| `RATE_LIMITER_LOGIN_MAX`    | Max requests allowed every 15 minutes to login endpoints | `number` | 1000                             |
 
 ## Aerie Merlin
 
@@ -55,46 +56,49 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Scheduler
 
-| Name                    | Description                                                     | Type     | Default                         |
-| ----------------------- | --------------------------------------------------------------- | -------- | ------------------------------- |
-| `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file | `string` | log level: warn. output: stderr |
-| `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                     | `string` | http://hasura:8080/v1/graphql   |
-| `SCHEDULER_DB`          | The DB for scheduler                                            | `string` | aerie_scheduler                 |
-| `SCHEDULER_DB_PASSWORD` | Password of the DB instance                                     | `string` |                                 |
-| `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with    | `number` | 5432                            |
-| `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                | `string` |                                 |
-| `SCHEDULER_DB_USER`     | Username of the DB instance                                     | `string` |                                 |
-| `SCHEDULER_PORT`        | Port number for the scheduler server                            | `number` | 27185                           |
+| Name                          | Description                                                     | Type     | Default                         |
+| ----------------------------- | --------------------------------------------------------------- | -------- | ------------------------------- |
+| `HASURA_GRAPHQL_ADMIN_SECRET` | The admin secret for Hasura which gives admin access if used.   | `string` |                                 |
+| `JAVA_OPTS`                   | Configuration for the scheduler's logging level and output file | `string` | log level: warn. output: stderr |
+| `MERLIN_GRAPHQL_URL`          | URI of the Merlin graphql interface to call                     | `string` | http://hasura:8080/v1/graphql   |
+| `SCHEDULER_DB`                | The DB for scheduler                                            | `string` | aerie_scheduler                 |
+| `SCHEDULER_DB_PASSWORD`       | Password of the DB instance                                     | `string` |                                 |
+| `SCHEDULER_DB_PORT`           | The DB instance port number that scheduler will connect with    | `number` | 5432                            |
+| `SCHEDULER_DB_SERVER`         | The DB instance that scheduler will connect with                | `string` |                                 |
+| `SCHEDULER_DB_USER`           | Username of the DB instance                                     | `string` |                                 |
+| `SCHEDULER_PORT`              | Port number for the scheduler server                            | `number` | 27185                           |
 
 ## Aerie Scheduler Worker
 
-| Name                    | Description                                                           | Type     | Default                                            |
-| ----------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
-| `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
-| `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
-| `MERLIN_LOCAL_STORE`    | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
-| `SCHEDULER_DB`          | The DB for scheduler                                                  | `string` | aerie_scheduler                                    |
-| `SCHEDULER_DB_PASSWORD` | Password of the DB instance                                           | `string` |                                                    |
-| `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with          | `number` | 5432                                               |
-| `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                      | `string` |                                                    |
-| `SCHEDULER_DB_USER`     | Username of the DB instance                                           | `string` |                                                    |
-| `SCHEDULER_OUTPUT_MODE` | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
-| `SCHEDULER_RULES_JAR`   | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
+| Name                          | Description                                                           | Type     | Default                                            |
+| ----------------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| `HASURA_GRAPHQL_ADMIN_SECRET` | The admin secret for Hasura which gives admin access if used.         | `string` |                                                    |
+| `JAVA_OPTS`                   | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
+| `MERLIN_GRAPHQL_URL`          | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
+| `MERLIN_LOCAL_STORE`          | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
+| `SCHEDULER_DB`                | The DB for scheduler                                                  | `string` | aerie_scheduler                                    |
+| `SCHEDULER_DB_PASSWORD`       | Password of the DB instance                                           | `string` |                                                    |
+| `SCHEDULER_DB_PORT`           | The DB instance port number that scheduler will connect with          | `number` | 5432                                               |
+| `SCHEDULER_DB_SERVER`         | The DB instance that scheduler will connect with                      | `string` |                                                    |
+| `SCHEDULER_DB_USER`           | Username of the DB instance                                           | `string` |                                                    |
+| `SCHEDULER_OUTPUT_MODE`       | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
+| `SCHEDULER_RULES_JAR`         | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
 
 ## Aerie Sequencing
 
-| Name                     | Description                                       | Type     | Default                            |
-| ------------------------ | ------------------------------------------------- | -------- | ---------------------------------- |
-| `LOG_FILE`               | Either an output filepath to log to, or 'console' | `string` | console                            |
-| `LOG_LEVEL`              | Logging level for filtering logs                  | `string` | warn                               |
-| `MERLIN_GRAPHQL_URL`     | URI of the Aerie GraphQL API                      | `string` | http://hasura:8080/v1/graphql      |
-| `SEQUENCING_DB`          | Name of sequencing Postgres database              | `string` | aerie_sequencing                   |
-| `SEQUENCING_DB_SERVER`   | Hostname of Postgres instance                     | `string` |                                    |
-| `SEQUENCING_DB_PASSWORD` | Password of Postgres instance                     | `string` |                                    |
-| `SEQUENCING_DB_PORT`     | Port of Postgres instance                         | `number` | 5432                               |
-| `SEQUENCING_DB_USER`     | User of Postgres instance                         | `string` |                                    |
-| `SEQUENCING_LOCAL_STORE` | Local storage file storage in the container       | `string` | /usr/src/app/sequencing_file_store |
-| `SEQUENCING_SERVER_PORT` | Port the server listens on                        | `number` | 27184                              |
+| Name                          | Description                                                   | Type     | Default                            |
+| ----------------------------- | ------------------------------------------------------------- | -------- | ---------------------------------- |
+| `HASURA_GRAPHQL_ADMIN_SECRET` | The admin secret for Hasura which gives admin access if used. | `string` |                                    |
+| `LOG_FILE`                    | Either an output filepath to log to, or 'console'             | `string` | console                            |
+| `LOG_LEVEL`                   | Logging level for filtering logs                              | `string` | warn                               |
+| `MERLIN_GRAPHQL_URL`          | URI of the Aerie GraphQL API                                  | `string` | http://hasura:8080/v1/graphql      |
+| `SEQUENCING_DB`               | Name of sequencing Postgres database                          | `string` | aerie_sequencing                   |
+| `SEQUENCING_DB_SERVER`        | Hostname of Postgres instance                                 | `string` |                                    |
+| `SEQUENCING_DB_PASSWORD`      | Password of Postgres instance                                 | `string` |                                    |
+| `SEQUENCING_DB_PORT`          | Port of Postgres instance                                     | `number` | 5432                               |
+| `SEQUENCING_DB_USER`          | User of Postgres instance                                     | `string` |                                    |
+| `SEQUENCING_LOCAL_STORE`      | Local storage file storage in the container                   | `string` | /usr/src/app/sequencing_file_store |
+| `SEQUENCING_SERVER_PORT`      | Port the server listens on                                    | `number` | 27184                              |
 
 ## Aerie UI
 
@@ -109,11 +113,17 @@ This document provides detailed information about environment variables for each
 
 ## Hasura
 
-| Name                           | Description                             | Type     |
-| ------------------------------ | --------------------------------------- | -------- |
-| `AERIE_MERLIN_DATABASE_URL`    | Url of the Merlin Postgres database.    | `string` |
-| `AERIE_SCHEDULER_DATABASE_URL` | Url of the scheduler Postgres database. | `string` |
-| `AERIE_UI_DATABASE_URL`        | Url of the UI Postgres database         | `string` |
+| Name                            | Description                                                   | Type     |
+| ------------------------------- | ------------------------------------------------------------- | -------- |
+| `AERIE_MERLIN_DATABASE_URL`     | Url of the Merlin Postgres database.                          | `string` |
+| `AERIE_MERLIN_URL`              | Url of the Merlin service.                                    | `string` |
+| `AERIE_SCHEDULER_DATABASE_URL`  | Url of the scheduler Postgres database.                       | `string` |
+| `AERIE_SCHEDULER_URL`           | Url of the scheduler service.                                 | `string` |
+| `AERIE_SEQUENCING_DATABASE_URL` | Url of the sequencing Postgres database.                      | `string` |
+| `AERIE_SEQUENCING_URL`          | Url of the sequencing service.                                | `string` |
+| `AERIE_UI_DATABASE_URL`         | Url of the UI Postgres database                               | `string` |
+| `HASURA_GRAPHQL_ADMIN_SECRET`   | The admin secret for Hasura which gives admin access if used. | `string` |
+| `HASURA_GRAPHQL_JWT_SECRET`     | The JWT secret for JSON web token auth. Also in Gateway.      | `string` |
 
 Additionally, Hasura provides documentation on it's own environment variables you can use to fine-tune your deployment:
 

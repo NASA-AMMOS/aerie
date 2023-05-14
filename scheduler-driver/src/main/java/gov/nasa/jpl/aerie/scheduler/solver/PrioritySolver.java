@@ -45,6 +45,7 @@ public class PrioritySolver implements Solver {
   private static final Logger logger = LoggerFactory.getLogger(PrioritySolver.class);
 
   boolean checkSimBeforeInsertingActivities;
+  boolean checkSimBeforeEvaluatingGoal;
 
   /**
    * boolean stating whether only conflict analysis should be performed or not
@@ -88,6 +89,7 @@ public class PrioritySolver implements Solver {
   public PrioritySolver(final Problem problem, final boolean analysisOnly) {
     checkNotNull(problem, "creating solver with null input problem descriptor");
     this.checkSimBeforeInsertingActivities = true;
+    this.checkSimBeforeEvaluatingGoal = true;
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
     this.analysisOnly = analysisOnly;
@@ -95,11 +97,6 @@ public class PrioritySolver implements Solver {
 
   public PrioritySolver(final Problem problem) {
     this(problem, false);
-  }
-
-  //TODO: should probably be part of sched configuration; maybe even per rule
-  public void doNotcheckSimBeforeInsertingActInPlan(){
-    this.checkSimBeforeInsertingActivities = false;
   }
 
   /**
@@ -150,7 +147,7 @@ public class PrioritySolver implements Solver {
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
       var duration = act.duration();
-      if(duration != null && duration.longerThan(this.problem.getPlanningHorizon().getEndAerie())){
+      if(duration != null && act.startOffset().plus(duration).longerThan(this.problem.getPlanningHorizon().getEndAerie())) {
         logger.warn("Activity " + act
                            + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
         allGood = false;
@@ -165,7 +162,7 @@ public class PrioritySolver implements Solver {
           break;
         }
         var simDur = simulationFacade.getActivityDuration(act);
-        if (!simDur.isPresent()) {
+        if (simDur.isEmpty()) {
           logger.error("Activity " + act + " could not be simulated");
           allGood = false;
           break;
@@ -352,6 +349,8 @@ public class PrioritySolver implements Solver {
   }
 
   private void satisfyGoal(Goal goal) {
+    final boolean checkSimConfig = this.checkSimBeforeInsertingActivities;
+    this.checkSimBeforeInsertingActivities = goal.simulateAfter;
     if (goal instanceof CompositeAndGoal) {
       satisfyCompositeGoal((CompositeAndGoal) goal);
     } else if (goal instanceof OptionGoal) {
@@ -359,6 +358,8 @@ public class PrioritySolver implements Solver {
     } else {
       satisfyGoalGeneral(goal);
     }
+    this.checkSimBeforeEvaluatingGoal = goal.simulateAfter;
+    this.checkSimBeforeInsertingActivities = checkSimConfig;
   }
 
 
@@ -505,6 +506,8 @@ public class PrioritySolver implements Solver {
     evaluation.forGoal(goal).setNbConflictsDetected(missingConflicts.size());
     assert missingConflicts != null;
     boolean madeProgress = true;
+
+
     while (!missingConflicts.isEmpty() && madeProgress) {
       madeProgress = false;
 
@@ -576,8 +579,12 @@ public class PrioritySolver implements Solver {
     assert goal != null;
     assert plan != null;
     //REVIEW: maybe should have way to request only certain kinds of conflicts
-    this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
-    final var rawConflicts = goal.getConflicts(plan, this.simulationFacade.getLatestConstraintSimulationResults());
+    var lastSimResults = this.simulationFacade.getLatestConstraintSimulationResults();
+    if (lastSimResults == null || this.checkSimBeforeEvaluatingGoal) {
+      this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
+      lastSimResults = this.simulationFacade.getLatestConstraintSimulationResults();
+    }
+    final var rawConflicts = goal.getConflicts(plan, lastSimResults);
     assert rawConflicts != null;
     return rawConflicts;
   }

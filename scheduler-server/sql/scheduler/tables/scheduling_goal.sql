@@ -3,6 +3,7 @@ create table scheduling_goal (
   revision integer not null default 0,
   name text not null,
   definition text not null,
+  tags text[] not null default '{}',
 
   model_id integer not null,
   description text null,
@@ -37,6 +38,8 @@ comment on column scheduling_goal.created_date is e''
   'The date this scheduling goal was created.';
 comment on column scheduling_goal.modified_date is e''
   'The date this scheduling goal was last modified.';
+comment on column scheduling_goal.tags is e''
+  'The tags associated with this scheduling goal.';
 
 create function update_logging_on_update_scheduling_goal()
   returns trigger

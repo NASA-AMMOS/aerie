@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
+import java.util.Optional;
 import java.util.function.Consumer;
+import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 
@@ -38,7 +40,7 @@ public final class ResultsProtocol {
      *
      * @param results the results of the scheduling run
      */
-    record Success(ScheduleResults results, long analysisId) implements State {}
+    record Success(ScheduleResults results, long analysisId, Optional<Long> datasetId) implements State {}
 
     /**
      * scheduling failed; likely need to change inputs before re-running
@@ -91,7 +93,7 @@ public final class ResultsProtocol {
      *
      * @param results the summary results of the scheduling run, including satisfaction metrics etc
      */
-    void succeedWith(ScheduleResults results);
+    void succeedWith(ScheduleResults results, Optional<DatasetId> datasetId);
 
     /**
      * mark the scheduling run as having failed with the given reason

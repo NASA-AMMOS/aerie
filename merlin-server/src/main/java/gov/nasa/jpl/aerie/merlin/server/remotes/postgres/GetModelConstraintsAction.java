@@ -4,7 +4,6 @@ import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.Optional;
   //   a mission model without any constraints from a non-existent mission model.
   // A mission model without constraints will produce a placeholder row with nulls.
   private static final @Language("SQL") String sql = """
-    select c.id, c.name, c.summary, c.description, c.definition
+    select c.id, c.name, c.description, c.definition
     from mission_model AS m
     left join "constraint" AS c
       on m.id = c.model_id
@@ -36,14 +35,13 @@ import java.util.Optional;
 
       final var constraints = new ArrayList<ConstraintRecord>();
       do {
-        if (isColumnNull(results, 1)) continue;
+        if (results.getObject(1) == null) continue;
 
         final var constraint = new ConstraintRecord(
             results.getLong(1),
             results.getString(2),
             results.getString(3),
-            results.getString(4),
-            results.getString(5));
+            results.getString(4));
 
         constraints.add(constraint);
       } while (results.next());
@@ -55,11 +53,5 @@ import java.util.Optional;
   @Override
   public void close() throws SQLException {
     this.statement.close();
-  }
-
-  private static boolean isColumnNull(final ResultSet results, final int index) throws SQLException {
-    // You're kidding, right? This is how you detect NULL with JDBC?
-    results.getObject(index);
-    return results.wasNull();
   }
 }

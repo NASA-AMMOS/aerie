@@ -5,9 +5,9 @@ create table scheduling_goal_analysis_created_activities (
 
   constraint created_activities_primary_key
     primary key (analysis_id, goal_id, activity_id),
-  constraint created_activities_references_scheduling_analysis
+  constraint created_activities_references_scheduling_request
     foreign key (analysis_id)
-      references scheduling_analysis
+      references scheduling_request (analysis_id)
       on update cascade
       on delete cascade,
   constraint created_activities_references_scheduling_goal

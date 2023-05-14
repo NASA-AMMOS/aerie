@@ -29,7 +29,7 @@ public final class SchedulerWorkerAppDriver {
   public static void main(String[] args) throws Exception {
     final var config = loadConfiguration();
 
-    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
+    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
 
     final SchedulingDSLCompilationService schedulingDSLCompilationService;
     try {
@@ -114,7 +114,8 @@ public final class SchedulerWorkerAppDriver {
         URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
-        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan")))
+        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
+        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
     );
   }
 }

@@ -89,8 +89,31 @@
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree
 - function:
+    name: delete_activity_by_pk_reanchor_plan_start_bulk
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: delete_activity_by_pk_reanchor_plan_start_bulk
+- function:
+    name: delete_activity_by_pk_reanchor_to_anchor_bulk
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: delete_activity_by_pk_reanchor_to_anchor_bulk
+- function:
+    name: delete_activity_by_pk_delete_subtree_bulk
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: delete_activity_by_pk_delete_subtree_bulk
+- function:
     name: apply_preset_to_activity
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: apply_preset_to_activity
+- function:
+    name: get_resources_at_start_offset
+    schema: hasura_functions
+  configuration:
+    custom_name: getResourcesAtStartOffset

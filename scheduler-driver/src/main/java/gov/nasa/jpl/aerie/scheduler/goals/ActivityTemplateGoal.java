@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 
 import java.util.Optional;
@@ -36,7 +36,13 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
       return getThis();
     }
 
+    public T match(ActivityExpression expression){
+      matchingActTemplate = expression;
+      return getThis();
+    }
+
     protected ActivityCreationTemplate thereExists;
+    protected ActivityExpression matchingActTemplate;
 
     /**
      * {@inheritDoc}
@@ -64,6 +70,12 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
       }
       goal.desiredActTemplate = thereExists;
 
+      if(matchingActTemplate == null){
+        goal.matchActTemplate = thereExists;
+      } else {
+        goal.matchActTemplate = matchingActTemplate;
+      }
+
       goal.initiallyEvaluatedTemporalContext = null;
 
       return goal;
@@ -86,16 +98,6 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    */
   public Expression<Windows> getActivityStateConstraints() {
     return desiredActTemplate.getType().getStateConstraints();
-  }
-
-  /**
-   * returns the range of possible durations for the created activities
-   *
-   * @return the range of possible durations for the activity instances
-   *     that may be created by this goal
-   */
-  public Interval getActivityDurationRange() {
-    return desiredActTemplate.getDurationRange();
   }
 
   /**
@@ -122,10 +124,15 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
   protected ActivityTemplateGoal() { }
 
   /**
-   * the pattern used to match with satisfying activity instances, or to
-   * create new instances if none already exist
+   * the pattern used to create new instances if none already exist
    */
   protected ActivityCreationTemplate desiredActTemplate;
+
+  /**
+   * the pattern used to match with satisfying activity instances
+   */
+  protected ActivityExpression matchActTemplate;
+
 
   /**
    * checked by getConflicts every time it is invoked to see if the Window(s)

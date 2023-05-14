@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { gql, GraphQLClient } from 'graphql-request';
+import { randomUUID } from 'node:crypto';
 
 const commandDictionaryString = fs.readFileSync(
   new URL('../../cdict/command_banananation.xml', import.meta.url).pathname,
@@ -18,9 +19,11 @@ export async function insertCommandDictionary(graphqlClient: GraphQLClient): Pro
       }
     `,
     {
-      dictionary: commandDictionaryString,
+      // Generate a UUID for the command dictionary name and version to avoid conflicts when testing.
+      dictionary: commandDictionaryString.replace(/(Banana Nation|1.0.0.0)/g, randomUUID()),
     },
   );
+
   return res.uploadDictionary.id;
 }
 

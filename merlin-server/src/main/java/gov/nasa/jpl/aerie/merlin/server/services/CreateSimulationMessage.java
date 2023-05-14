@@ -11,18 +11,20 @@ import java.util.Objects;
 
 public record CreateSimulationMessage(
   String missionModelId,
-  Instant startTime,
-  Duration planDuration,
+  Instant simulationStartTime,
   Duration simulationDuration,
+  Instant planStartTime,
+  Duration planDuration,
   Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
   Map<String, SerializedValue> configuration
 )
 {
   public CreateSimulationMessage {
     Objects.requireNonNull(missionModelId);
-    Objects.requireNonNull(startTime);
-    Objects.requireNonNull(planDuration);
+    Objects.requireNonNull(simulationStartTime);
     Objects.requireNonNull(simulationDuration);
+    Objects.requireNonNull(planStartTime);
+    Objects.requireNonNull(planDuration);
     Objects.requireNonNull(activityDirectives);
     Objects.requireNonNull(configuration);
   }

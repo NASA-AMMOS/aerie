@@ -1,20 +1,20 @@
-name: "Database Migrations Check PR"
+name: Database Migrations Check PR
 
 on:
   pull_request:
     paths:
-      - 'deployment/hasura/migrations/**'
-      - 'merlin-server/sql/**'
-      - 'sequencing-server/sql/**'
-      - 'scheduler-server/sql/**'
-      - 'deployment/postgres-init-db/sql/**'
+      - "deployment/hasura/migrations/**"
+      - "merlin-server/sql/**"
+      - "sequencing-server/sql/**"
+      - "scheduler-server/sql/**"
+      - "deployment/postgres-init-db/sql/**"
   push:
     paths:
-      - 'deployment/hasura/migrations/**'
-      - 'merlin-server/sql/**'
-      - 'sequencing-server/sql/**'
-      - 'scheduler-server/sql/**'
-      - 'deployment/postgres-init-db/sql/**'
+      - "deployment/hasura/migrations/**"
+      - "merlin-server/sql/**"
+      - "sequencing-server/sql/**"
+      - "scheduler-server/sql/**"
+      - "deployment/postgres-init-db/sql/**"
     branches:
       - develop
     tags:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout v1.0.1
         uses: actions/checkout@v3
         with:
-          ref: 'v1.0.1'
+          ref: "v1.0.1"
       - name: Clone PGCMP
         uses: actions/checkout@v3
         with:
@@ -38,7 +38,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - name: Setup Postgres Client (psql)
         run: |
           sudo apt-get update
@@ -61,6 +61,8 @@ jobs:
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+          HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
+          HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 1 Minute
         run: sleep 60s
         shell: bash
@@ -94,14 +96,24 @@ jobs:
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+          HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
+          HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 30 seconds
         run: sleep 30s
         shell: bash
       - name: Migrate Base to Latest
         run: |
           cd deployment
-          python aerie_db_migration --apply --all
+          cat << EOF > .env
+          AERIE_USERNAME=${AERIE_USERNAME}
+          AERIE_PASSWORD=${AERIE_PASSWORD}
+          EOF
+          python -m pip install -r requirements.txt
+          python aerie_db_migration.py --apply --all
           cd ..
+        env:
+          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
+          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
       - name: Clone PGCMP
         uses: actions/checkout@v3
         with:
@@ -154,7 +166,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - name: Setup Hasura CLI
         run: sudo curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
       - name: Start Postgres and Hasura
@@ -167,6 +179,8 @@ jobs:
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+          HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
+          HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 1 Minute
         run: sleep 60s
         shell: bash
@@ -194,11 +208,17 @@ jobs:
           retention-days: 1
       - name: Migrate Latest to Base
         run: |
-          cd deployment/hasura
-          hasura migrate apply --skip-execution --up all --all-databases
+          cd deployment
+          cat << EOF > .env
+          AERIE_USERNAME=${AERIE_USERNAME}
+          AERIE_PASSWORD=${AERIE_PASSWORD}
+          EOF
+          python -m pip install -r requirements.txt
+          python aerie_db_migration.py --revert --all
           cd ..
-          python aerie_db_migration --revert --all
-          cd ..
+        env:
+          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
+          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
       - name: Dump Databases
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
@@ -280,7 +300,7 @@ jobs:
         run: docker volume prune --force
 
   pgcmp-down:
-    needs: [ dump-db-base, dump-current ]
+    needs: [dump-db-base, dump-current]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo

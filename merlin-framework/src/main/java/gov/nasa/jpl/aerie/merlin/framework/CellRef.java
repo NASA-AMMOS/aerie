@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 public final class CellRef<Event, State> {

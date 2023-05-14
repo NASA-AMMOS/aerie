@@ -33,6 +33,8 @@ public final class PostgresPlanRepository implements PlanRepository {
     this.dataSource = dataSource;
   }
 
+  // GetAllPlans is exclusively used in tests currently and none of its usages are for simulation
+  // Therefore, this is implicitly GetAllPlans(ForValidation)
   @Override
   public Map<PlanId, Plan> getAllPlans() {
     try (final var connection = this.dataSource.getConnection()) {
@@ -44,15 +46,13 @@ public final class PostgresPlanRepository implements PlanRepository {
           try {
             final var planId = new PlanId(record.id());
             final var activities = getPlanActivities(connection, planId);
-            final var arguments = getPlanArguments(connection, planId);
 
             plans.put(planId, new Plan(
                 record.name(),
                 Long.toString(record.missionModelId()),
                 record.startTime(),
                 record.endTime(),
-                activities,
-                arguments
+                activities
             ));
           } catch (final NoSuchPlanException ex) {
             // If a plan was removed between getting its record and getting its activities, then the plan
@@ -69,53 +69,90 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
+  public Plan getPlanForSimulation(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-        final var planRecord = getPlanRecord(connection, planId);
-        final var activities = getPlanActivities(connection, planId);
-        final var arguments = getPlanArguments(connection, planId);
+      final var planRecord = getPlanRecord(connection, planId);
+      final var simulationRecord = getSimRecord(connection, planId.id());
+      final Optional<SimulationTemplateRecord> templateRecord;
+      if (simulationRecord.simulationTemplateId().isPresent()) {
+        templateRecord = getTemplate(connection, simulationRecord.simulationTemplateId().get());
+      } else {
+        templateRecord = Optional.empty();
+      }
 
-        return new Plan(
-            planRecord.name(),
-            Long.toString(planRecord.missionModelId()),
-            planRecord.startTime(),
-            planRecord.endTime(),
-            activities,
-            arguments
-        );
+      final var activities = getPlanActivities(connection, planId);
+      final var arguments = getSimulationArguments(simulationRecord, templateRecord);
+      final var simStartTime = simulationRecord.simulationStartTime();
+      final var simEndTime = simulationRecord.simulationEndTime();
+
+      return new Plan(
+          planRecord.name(),
+          Long.toString(planRecord.missionModelId()),
+          planRecord.startTime(),
+          planRecord.endTime(),
+          activities,
+          arguments,
+          simStartTime,
+          simEndTime
+      );
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);
     }
   }
 
-  private Map<String, SerializedValue> getPlanArguments(
-      final Connection connection,
-      final PlanId planId
-  ) throws SQLException {
-    try (
-        final var getSimulationAction = new GetSimulationAction(connection);
-        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
-    ) {
-      final var arguments = new HashMap<String, SerializedValue> ();
-      final var simRecord$ = getSimulationAction.get(planId.id());
+  @Override
+  public Plan getPlanForValidation(final PlanId planId) throws NoSuchPlanException {
+    try (final var connection = this.dataSource.getConnection()) {
+      final var planRecord = getPlanRecord(connection, planId);
+      final var activities = getPlanActivities(connection, planId);
 
-      if (simRecord$.isPresent()) {
-        final var simRecord = simRecord$.get();
-        final var templateId$ = simRecord.simulationTemplateId();
-
-        // Apply template arguments followed by simulation arguments.
-        // Overwriting of template arguments with sim. arguments is intentional here,
-        // and the resulting set of arguments is assumed to be complete
-        if (templateId$.isPresent()) {
-          getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
-            arguments.putAll(simTemplateRecord.arguments());
-          });
-        }
-        arguments.putAll(simRecord.arguments());
-      }
-
-      return arguments;
+      return new Plan(
+          planRecord.name(),
+          Long.toString(planRecord.missionModelId()),
+          planRecord.startTime(),
+          planRecord.endTime(),
+          activities
+      );
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to get plan", ex);
     }
+  }
+
+
+  private SimulationRecord getSimRecord(final Connection connection, final long planId) throws SQLException {
+    try (final var getSimulationAction = new GetSimulationAction(connection)) {
+      return getSimulationAction.get(planId);
+    } catch (SQLException ex) {
+      throw new DatabaseException("Failed to get simulation configuration", ex);
+    }
+  }
+
+  private Optional<SimulationTemplateRecord> getTemplate(final Connection connection, final long templateID) {
+    try (final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)) {
+      return getSimulationTemplateAction.get(templateID);
+    } catch (SQLException ex) {
+      throw new DatabaseException("Failed to get template", ex);
+    }
+  }
+
+  private Map<String, SerializedValue> getSimulationArguments(final SimulationRecord simulationRecord, final Optional<SimulationTemplateRecord> templateRecord)
+  {
+    final var arguments = new HashMap<String, SerializedValue>();
+    final var templateId$ = simulationRecord.simulationTemplateId();
+
+    // Apply template arguments followed by simulation arguments.
+    // Overwriting of template arguments with sim. arguments is intentional here,
+    // and the resulting set of arguments is assumed to be complete
+    if (templateId$.isPresent()) {
+      templateRecord.ifPresentOrElse(
+          simTemplateRecord -> arguments.putAll(simTemplateRecord.arguments()),
+          () -> {
+            throw new RuntimeException("TemplateRecord should not be empty");
+          });
+    }
+
+    arguments.putAll(simulationRecord.arguments());
+    return arguments;
   }
 
   @Override
@@ -141,16 +178,6 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId)
-  throws NoSuchPlanException {
-    try (final var connection = this.dataSource.getConnection()) {
-      return getPlanActivities(connection, planId);
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to get all activities from plan", ex);
-    }
-  }
-
-  @Override
   public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {
@@ -162,7 +189,6 @@ public final class PostgresPlanRepository implements PlanRepository {
                 ConstraintRecord::name,
                 r -> new Constraint(
                     r.name(),
-                    r.summary(),
                     r.description(),
                     r.definition())));
       }
@@ -295,65 +321,8 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp planStart,
       final Timestamp datasetStart
   ) throws SQLException {
-    try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection);
-         final var createDatasetPartitionsAction = new CreateDatasetPartitionsAction(connection)) {
-      final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
-      createDatasetPartitionsAction.apply(pdr.datasetId());
-      return pdr;
-    }
-  }
-
-  private static final class PostgresPlanTransaction implements PlanTransaction {
-    private final DataSource dataSource;
-    private final PlanId planId;
-
-    private Optional<String> name = Optional.empty();
-    private Optional<Timestamp> startTime = Optional.empty();
-    private Optional<Timestamp> endTime = Optional.empty();
-
-    public PostgresPlanTransaction(final DataSource dataSource, final PlanId planId) {
-      this.dataSource = dataSource;
-      this.planId = planId;
-    }
-
-    @Override
-    public void commit() throws NoSuchPlanException {
-      try (final var connection = this.dataSource.getConnection()) {
-        try (final var updatePlanAction = new UpdatePlanAction(connection)) {
-          updatePlanAction.apply(
-              this.planId.id(),
-              this.name.orElse(null),
-              this.startTime.orElse(null),
-              this.endTime.orElse(null));
-        }
-      } catch (final FailedUpdateException ex) {
-        throw new NoSuchPlanException(this.planId);
-      } catch (final SQLException ex) {
-        throw new DatabaseException("Failed to update a plan", ex);
-      }
-    }
-
-    @Override
-    public PlanTransaction setName(final String name) {
-      this.name = Optional.of(name);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setStartTimestamp(final Timestamp timestamp) {
-      this.startTime = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
-      this.endTime = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration) {
-      return this;
+    try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
+      return createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
     }
   }
 }

@@ -228,11 +228,12 @@ public final class LocalMissionModelService implements MissionModelService {
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
+        loadAndInstantiateMissionModel(message.missionModelId(), message.simulationStartTime(), SerializedValue.of(config)),
         message.activityDirectives(),
-        message.startTime(),
-        message.planDuration(),
-        message.simulationDuration());
+        message.simulationStartTime(),
+        message.simulationDuration(),
+        message.planStartTime(),
+        message.planDuration());
   }
 
   @Override

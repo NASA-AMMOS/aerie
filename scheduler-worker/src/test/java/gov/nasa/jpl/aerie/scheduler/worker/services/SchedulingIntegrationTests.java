@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -57,13 +59,23 @@ public class SchedulingIntegrationTests {
 
   private record MissionModelDescription(String name, Map<String, SerializedValue> config, Path libPath) {}
 
-  private record SchedulingGoal(GoalId goalId, String definition, boolean enabled) {}
+  private record SchedulingGoal(GoalId goalId, String definition, boolean enabled, boolean simulateAfter) {
+    public SchedulingGoal(GoalId goalId, String definition, boolean enabled) {
+      this(goalId, definition, enabled, true);
+    }
+  }
 
   private static final MissionModelDescription BANANANATION = new MissionModelDescription(
       "bananantion",
       Map.of("initialDataPath", SerializedValue.of("/etc/hosts")),
       Path.of(System.getenv("AERIE_ROOT"), "examples", "banananation", "build", "libs")
   );
+  private static final MissionModelDescription MINIMAL_MISSION_MODEL = new MissionModelDescription(
+      "minimal-mission-model",
+      Map.of(),
+      Path.of(System.getenv("AERIE_ROOT"), "examples", "minimal-mission-model", "build", "libs")
+  );
+
   private SchedulingDSLCompilationService schedulingDSLCompiler;
 
   @BeforeAll
@@ -300,8 +312,235 @@ public class SchedulingIntegrationTests {
     assertEquals(growBanana.startOffset().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startOffset());
   }
 
+  @Test
+  void testCoexistencePartialAct() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                null,
+                true
+            ),
+            new ActivityDirective(
+                Duration.MINUTE.times(5),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(Duration.MINUTE.in(MICROSECOND))
+                ),
+                null,
+                true
+            )
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.BiteBanana),
+            activityFinder: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: (interval) => ActivityTemplates.GrowBanana({quantity: 10, growingDuration: Temporal.Duration.from({minutes:1}) }),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(0, goalResult.createdActivities().size());
+    assertEquals(1, goalResult.satisfyingActivities().size());
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+  }
 
   @Test
+  void testCoexistencePartialActWithParameter() {
+    final var expectedSatisfactionAct = new ActivityDirective(
+        Duration.MINUTE.times(5),
+        "GrowBanana",
+        Map.of(
+            "quantity", SerializedValue.of(1),
+            "growingDuration", SerializedValue.of(Duration.MINUTE.times(2).in(MICROSECOND))
+        ),
+        null,
+        true
+    );
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                null,
+                true
+            ),
+            new ActivityDirective(
+                Duration.MINUTE.times(5),
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                null,
+                true
+            ),
+            expectedSatisfactionAct,
+            new ActivityDirective(
+                Duration.MINUTE.times(10),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(2),
+                    "growingDuration", SerializedValue.of(Duration.MINUTE.times(2).in(MICROSECOND))
+                ),
+                null,
+                true
+            )
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.BiteBanana),
+            activityFinder: ActivityExpression.build(ActivityTypes.GrowBanana, {quantity: 1}),
+            activityTemplate: (interval) => ActivityTemplates.GrowBanana({quantity: 1, growingDuration: Temporal.Duration.from({minutes:1}) }),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    assertEquals(2, goalResult.satisfyingActivities().size());
+    var foundSatisfactionAct = false;
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+      final var element = results.idToAct.get(new ActivityDirectiveId(-activity.id()));
+      if(element != null && element.equals(expectedSatisfactionAct)){
+        foundSatisfactionAct = true;
+      }
+    }
+    assertTrue(foundSatisfactionAct);
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var growBananas = planByActivityType.get("GrowBanana");
+    assertEquals(3, growBananas.size());
+    final var planByTime = partitionByStartTime(results.updatedPlan());
+    assertEquals(2, planByTime.get(MINUTE.times(10)).size());
+    var lookingFor = false;
+    final var expectedCreation = new SerializedActivity("GrowBanana",
+                                            Map.of("quantity", SerializedValue.of(1),
+                                                   "growingDuration", SerializedValue.of(MINUTES.in(MICROSECOND))));
+    for(final var actAtTime10: planByTime.get(MINUTE.times(10))){
+      if(actAtTime10.serializedActivity().equals(expectedCreation)){
+        lookingFor = true;
+      }
+    }
+    assertTrue(lookingFor);
+  }
+
+  @Test
+  void testRecurrenceWithActivityFinder() {
+    final var expectedMatch1 =  new ActivityDirective(
+        Duration.of(0, Duration.SECONDS),
+        "GrowBanana",
+        Map.of(
+            "quantity", SerializedValue.of(2),
+            "growingDuration", SerializedValue.of(Duration.of(1, Duration.SECONDS).in(Duration.MICROSECONDS))),
+        null,
+        true);
+    final var expectedMatch2 = new ActivityDirective(
+        Duration.of(1, Duration.HOUR.times(24)),
+        "GrowBanana",
+        Map.of(
+            "quantity", SerializedValue.of(2),
+            "growingDuration", SerializedValue.of(Duration.of(2, Duration.SECONDS).in(Duration.MICROSECONDS))),
+        null,
+        true);
+
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+           expectedMatch1,
+            expectedMatch2,
+            new ActivityDirective(
+                Duration.of(3, Duration.HOUR.times(24)),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(3),
+                    "growingDuration", SerializedValue.of(Duration.of(3, Duration.SECONDS).in(Duration.MICROSECONDS))),
+                null,
+                true)
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+            export default () => Goal.ActivityRecurrenceGoal({
+                activityTemplate: ActivityTemplates.GrowBanana({quantity: 2, growingDuration: Temporal.Duration.from({seconds:1})}),
+                activityFinder: ActivityExpression.build(ActivityTypes.GrowBanana, {quantity: 2}),
+                interval: Temporal.Duration.from({ hours : 24 })
+              })""", true)
+        ),
+        PLANNING_HORIZON
+    );
+
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+    var foundFirst = false;
+    var foundSecond = false;
+    for(final var satisfyingActivity: goalResult.satisfyingActivities()){
+      final var element = results.idToAct.get(new ActivityDirectiveId(-satisfyingActivity.id()));
+      if(element != null && element.equals(expectedMatch1)){
+        foundFirst = true;
+      }
+      if(element != null && element.equals(expectedMatch2)){
+        foundSecond = true;
+      }
+    }
+    assertTrue(foundFirst && foundSecond);
+    assertEquals(2, goalResult.createdActivities().size());
+    assertEquals(PLANNING_HORIZON.getEndAerie().dividedBy(24,HOURS), goalResult.satisfyingActivities().size());
+    assertTrue(goalResult.satisfied());
+  }
+
+  @Test
+  void testCardinalityGoalWithActivityFinder() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new ActivityDirective(
+            Duration.of(0, Duration.SECONDS),
+            "GrowBanana",
+            Map.of(
+                "quantity", SerializedValue.of(2),
+                "growingDuration", SerializedValue.of(Duration.of(5, Duration.SECONDS).in(Duration.MICROSECONDS))),
+            null,
+            true)),
+        List.of(new SchedulingGoal(new GoalId(0L),
+                                   """
+        export default function myGoal() {
+                          return Goal.CardinalityGoal({
+                            activityFinder: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+                            activityTemplate: ActivityTemplates.GrowBanana({
+                              quantity: 1,
+                              growingDuration: Temporal.Duration.from({seconds: 1}),
+                            }),
+                            specification : {duration: Temporal.Duration.from({seconds: 10})}
+                          })
+        }
+          """, true)),List.of(createAutoMutex("GrowBanana")), PLANNING_HORIZON);
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(5, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    //5 activities with duration 1 and 1 activity already present with duration 5
+    assertEquals(6, goalResult.satisfyingActivities().size());
+  }
+
+    @Test
   void testSingleActivityPlanSimpleCoexistenceGoalWithFunctionalParameters() {
     final var growBananaDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(
@@ -346,6 +585,64 @@ public class SchedulingIntegrationTests {
     assertEquals(SerializedValue.of(3), peelBanana.serializedActivity().getArguments().get("quantity"));
 
     assertEquals(growBanana.startOffset().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startOffset());
+  }
+
+  @Test
+  void testSingleActivityPlanSimpleCoexistenceGoalWithWindowReference() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                null,
+                true
+            ),
+            new ActivityDirective(
+                Duration.MINUTE,
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(Duration.MINUTE.in(MICROSECOND))
+                ),
+                null,
+                true
+            )
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: Real.Resource("/fruit").lessThan(4),
+            activityTemplate: (interval) => ActivityTemplates.GrowBanana({quantity: 10, growingDuration: interval.duration() }),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var biteBananas = planByActivityType.get("BiteBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    assertEquals(1, biteBananas.size());
+    assertEquals(2, growBananas.size());
+    final var iterator = growBananas.stream().sorted(Comparator.comparing(ActivityDirective::startOffset)).iterator();
+    iterator.next();
+    final var created = iterator.next();
+
+    assertEquals(SerializedValue.of(10), created.serializedActivity().getArguments().get("quantity"));
+    assertEquals(SerializedValue.of(Duration.of(2, Duration.MINUTES).in(MICROSECOND)), created.serializedActivity().getArguments().get("growingDuration"));
+    assertEquals(Duration.of(7, Duration.MINUTES), created.startOffset());
   }
 
   @Test
@@ -1043,6 +1340,17 @@ public class SchedulingIntegrationTests {
     return result;
   }
 
+  private static Map<Duration, Collection<ActivityDirective>>
+  partitionByStartTime(final Iterable<ActivityDirective> activities) {
+    final var result = new HashMap<Duration, Collection<ActivityDirective>>();
+    for (final var activity : activities) {
+      result
+          .computeIfAbsent(activity.startOffset(), key -> new ArrayList<>())
+          .add(activity);
+    }
+    return result;
+  }
+
   private static MockMerlinService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
     final var jarFile = getLatestJarFile(desc.libPath());
     try {
@@ -1083,7 +1391,7 @@ public class SchedulingIntegrationTests {
   )
   {
     final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
-    long id = 0L;
+    long id = 1;
     for (final var activityDirective : plannedActivities) {
       activities.put(new ActivityDirectiveId(id++), activityDirective);
     }
@@ -1109,7 +1417,7 @@ public class SchedulingIntegrationTests {
       final PlanningHorizon planningHorizon
   ){
     final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
-    long id = 0L;
+    long id = 1;
     for (final var activityDirective : plannedActivities) {
       activities.put(new ActivityDirectiveId(id++), activityDirective);
     }
@@ -1131,7 +1439,7 @@ public class SchedulingIntegrationTests {
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
     for (final var goal : goals) {
-      goalsByPriority.add(new GoalRecord(goal.goalId(), new GoalSource(goal.definition()), goal.enabled()));
+      goalsByPriority.add(new GoalRecord(goal.goalId(), new GoalSource(goal.definition()), goal.enabled(), goal.simulateAfter()));
     }
     final var specificationService = new MockSpecificationService(Map.of(new SpecificationId(1L), new Specification(
         planId,
@@ -1160,10 +1468,10 @@ public class SchedulingIntegrationTests {
       System.err.println(serializedReason);
       fail(serializedReason);
     }
-    return new SchedulingRunResults(((MockResultsProtocolWriter.Result.Success) result).results(), mockMerlinService.updatedPlan);
+    return new SchedulingRunResults(((MockResultsProtocolWriter.Result.Success) result).results(), mockMerlinService.updatedPlan, plannedActivities);
   }
 
-  record SchedulingRunResults(ScheduleResults scheduleResults, Collection<ActivityDirective> updatedPlan) {}
+  record SchedulingRunResults(ScheduleResults scheduleResults, Collection<ActivityDirective> updatedPlan, Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
 
   static MissionModelService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
@@ -1187,7 +1495,9 @@ public class SchedulingIntegrationTests {
               .getInputType()
               .getParameters()
               .stream()
-              .collect(Collectors.toMap(Parameter::name, Parameter::schema))));
+              .collect(Collectors.toMap(Parameter::name, Parameter::schema)),
+          Map.of()
+      ));
     }
 
     final var resourceTypes = new ArrayList<MissionModelService.ResourceType>();
@@ -1682,6 +1992,132 @@ public class SchedulingIntegrationTests {
     assertEquals(Duration.of(65, Duration.MINUTES), peelBanana.startOffset());
   }
 
+  /**
+   * Test the option to turn off simulation in between goals.
+   *
+   * Goal 0 places `PeelBanana`s. Goal 1 looks for `PeelBanana`s and places `BananaNap`s.
+   * If it doesn't resimulate in between, Goal 1 should place no activities.
+   * If it does resimulate, it should place one activity.
+   *
+   * Both options are tested here.
+   */
+  @Test
+  void testOptionalSimulationAfterGoal_unsimulatedActivities() {
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var configs = Map.of(
+        false, 0, // don't simulate, expect 0 activities
+        true, 1 // do simulate, expect 1 activity
+    );
+    for (final var config: configs.entrySet()) {
+      final var results = runScheduler(
+          BANANANATION,
+          Map.of(
+              new ActivityDirectiveId(1L),
+              new ActivityDirective(
+                  Duration.ZERO,
+                  "GrowBanana",
+                  Map.of(
+                      "quantity", SerializedValue.of(1),
+                      "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                  null,
+                  true)
+          ),
+          List.of(
+              new SchedulingGoal(new GoalId(0L), """
+                  export default () => Goal.CoexistenceGoal({
+                    forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
+                  })
+                  """, true, config.getKey()
+              ),
+              new SchedulingGoal(new GoalId(1L), """
+                  export default () => Goal.CoexistenceGoal({
+                    forEach: ActivityExpression.ofType(ActivityTypes.PeelBanana),
+                    activityTemplate: ActivityTemplates.BananaNap(),
+                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
+                  })
+                    """, true, true)
+          ),
+          PLANNING_HORIZON);
+
+      assertEquals(2, results.scheduleResults.goalResults().size());
+      final var goalResult1 = results.scheduleResults.goalResults().get(new GoalId(0L));
+      final var goalResult2 = results.scheduleResults.goalResults().get(new GoalId(1L));
+
+      assertTrue(goalResult1.satisfied());
+      assertTrue(goalResult2.satisfied());
+      assertEquals(1, goalResult1.createdActivities().size());
+      assertEquals(config.getValue(), goalResult2.createdActivities().size());
+      for (final var activity : goalResult1.createdActivities()) {
+        assertNotNull(activity);
+      }
+    }
+  }
+
+  /**
+   * Test the option to turn off simulation in between goals.
+   *
+   * Goal 0 places `PeelBanana`s. `PeelBanana`s effect the `/peel` resource.
+   * If the `/peel` resource is unchanged because it didn't resimulate, Goal 1 will not place any activities.
+   * If the resource is resimulated, it will be different and Goal 1 will place one activity.
+   *
+   * Both options are tested here.
+   */
+  @Test
+  void testOptionalSimulationAfterGoal_staleResources() {
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var configs = Map.of(
+        false, 0, // don't simulate, expect 0 activities
+        true, 1 // do simulate, expect 1 activity
+    );
+    for (final var config: configs.entrySet()) {
+      final var results = runScheduler(
+          BANANANATION,
+          Map.of(
+              new ActivityDirectiveId(1L),
+              new ActivityDirective(
+                  Duration.ZERO,
+                  "GrowBanana",
+                  Map.of(
+                      "quantity", SerializedValue.of(1),
+                      "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                  null,
+                  true)
+          ),
+          List.of(
+              new SchedulingGoal(new GoalId(0L), """
+                  export default () => Goal.CoexistenceGoal({
+                    forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
+                  })
+                  """, true, config.getKey()
+              ),
+              new SchedulingGoal(new GoalId(1L), """
+                  export default () => Goal.CoexistenceGoal({
+                    forEach: Real.Resource("/peel").lessThan(4),
+                    activityTemplate: ActivityTemplates.BananaNap(),
+                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
+                  })
+                    """, true, true)
+          ),
+          PLANNING_HORIZON);
+
+      assertEquals(2, results.scheduleResults.goalResults().size());
+      final var goalResult1 = results.scheduleResults.goalResults().get(new GoalId(0L));
+      final var goalResult2 = results.scheduleResults.goalResults().get(new GoalId(1L));
+
+      assertTrue(goalResult1.satisfied());
+      assertTrue(goalResult2.satisfied());
+      assertEquals(1, goalResult1.createdActivities().size());
+      assertEquals(config.getValue(), goalResult2.createdActivities().size());
+      for (final var activity : goalResult1.createdActivities()) {
+        assertNotNull(activity);
+      }
+    }
+  }
+
   private static final MissionModelDescription FOO = new MissionModelDescription(
       "foo",
       Map.of(),
@@ -1735,5 +2171,45 @@ public class SchedulingIntegrationTests {
 
     assertEquals(Duration.of(5, MINUTES), zeroDuration.startOffset());
     assertEquals(Duration.of(10, MINUTES).plus(Duration.of(1, SECOND)), daemonChecker.startOffset());
+  }
+
+  /**
+   * This regression test makes sure that even models that declare no numeric resources generate valid typescript
+   */
+  @Test
+  void testEmptyPlanMinimalMissionModelSimpleRecurrenceGoal() {
+    runScheduler(MINIMAL_MISSION_MODEL, List.of(), List.of(new SchedulingGoal(new GoalId(0L), """
+        export default () => Goal.ActivityRecurrenceGoal({
+          activityTemplate: ActivityTemplates.SingleActivity(),
+          interval: Temporal.Duration.from({ milliseconds: 24 * 60 * 60 * 1000 })
+        })
+        """, true)), PLANNING_HORIZON);
+
+    // If invalid typescript is generated, an exception will be thrown.
+  }
+
+  // Tests that the scheduler can handle an initial plan with various duration annotated activities.
+  @Test
+  void testSchedulerAgentDurationTypeHandling() {
+    runScheduler(
+        BANANANATION,
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BananaNap",
+                Map.of(),
+                null,
+                true
+            ),
+            new ActivityDirective(
+                Duration.SECOND,
+                "DownloadBanana",
+                Map.of("connection", SerializedValue.of("DietaryFiberOptic")),
+                null,
+                true
+            )
+        ),
+        List.of(),
+        PLANNING_HORIZON);
   }
 }

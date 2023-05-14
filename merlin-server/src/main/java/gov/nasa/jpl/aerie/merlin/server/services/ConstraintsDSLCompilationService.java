@@ -23,9 +23,9 @@ import java.util.Optional;
 public class ConstraintsDSLCompilationService {
 
   private final Process nodeProcess;
-  private final ConstraintsCodeGenService typescriptCodeGenerationService;
+  private final TypescriptCodeGenerationServiceAdapter typescriptCodeGenerationService;
 
-  public ConstraintsDSLCompilationService(final ConstraintsCodeGenService typescriptCodeGenerationService)
+  public ConstraintsDSLCompilationService(final TypescriptCodeGenerationServiceAdapter typescriptCodeGenerationService)
   throws IOException
   {
     this.typescriptCodeGenerationService = typescriptCodeGenerationService;

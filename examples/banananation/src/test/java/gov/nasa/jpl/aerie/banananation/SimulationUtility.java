@@ -23,7 +23,7 @@ public final class SimulationUtility {
   public static SimulationResultsInterface
   simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
-    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
+    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath, Configuration.DEFAULT_INITIAL_CONDITIONS);
     final var startTime = Instant.now();
     final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
@@ -32,6 +32,7 @@ public final class SimulationUtility {
         schedule,
         startTime,
         simulationDuration,
+        startTime,
         simulationDuration);
   }
 

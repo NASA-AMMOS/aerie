@@ -9,6 +9,8 @@ public record EffectModelRecord(
     String methodName,
     ActivityType.Executor executor,
     Optional<TypeMirror> returnType,
-    Optional<String> durationParameter
+    Optional<String> durationParameter,
+    Optional<String> fixedDurationExpr,
+    Optional<String> parametricDuration
 ) {
 }

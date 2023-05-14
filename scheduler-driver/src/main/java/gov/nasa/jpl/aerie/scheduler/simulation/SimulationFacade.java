@@ -28,7 +28,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 /**
  * A facade for simulating plans and processing simulation results.
  */
-public class SimulationFacade {
+public class SimulationFacade implements AutoCloseable{
 
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
 
@@ -52,6 +52,10 @@ public class SimulationFacade {
     return lastSimConstraintResults;
   }
 
+  public SimulationResults getLatestDriverSimulationResults(){
+    return lastSimDriverResults;
+  }
+
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
@@ -59,6 +63,11 @@ public class SimulationFacade {
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
+  }
+
+  @Override
+  public void close(){
+    driver.close();
   }
 
   public MissionModel<?> getMissionModel() {
@@ -76,6 +85,10 @@ public class SimulationFacade {
   public void setActivityTypes(final Collection<ActivityType> activityTypes){
     this.activityTypes = new HashMap<>();
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
+  }
+
+  public Map<SchedulingActivityDirectiveId, ActivityDirectiveId> getActivityIdCorrespondence(){
+    return planActDirectiveIdToSimulationActivityDirectiveId;
   }
 
   /**
@@ -142,6 +155,7 @@ public class SimulationFacade {
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
+      if (driver != null) driver.close();
       driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
       simulateActivities(oldInsertedActivities.keySet());
     }
@@ -231,7 +245,11 @@ public class SimulationFacade {
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
         arguments.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
-      } else if (durationType instanceof DurationType.Uncontrollable) {
+      } else if (
+          durationType instanceof DurationType.Uncontrollable
+          || durationType instanceof DurationType.Fixed
+          || durationType instanceof DurationType.Parametric
+      ) {
         // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
       } else {
         throw new Error("Unhandled variant of DurationType: " + durationType);

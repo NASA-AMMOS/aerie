@@ -920,6 +920,7 @@ public final class SimulationEngine implements AutoCloseable {
                                  this.simulatedActivities,
                                  this.unfinishedActivities,
                                  startTime,
+                                 elapsedTime,
                                  this.topics,
                                  this.serializedTimeline);
     return getCombinedSimulationResults();

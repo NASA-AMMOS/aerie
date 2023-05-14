@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface PlanService {
-  Plan getPlan(PlanId planId) throws NoSuchPlanException;
+  Plan getPlanForSimulation(PlanId planId) throws NoSuchPlanException;
+  Plan getPlanForValidation(PlanId planId) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getConstraintsForPlan(PlanId planId) throws NoSuchPlanException;

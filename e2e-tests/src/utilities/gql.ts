@@ -18,12 +18,43 @@ const gql = {
     }
   `,
 
+
+  GET_TOPIC_EVENTS:`#graphql
+  query GetTopicsEvents($datasetId: Int!) {
+    topic(where: {dataset_id: {_eq: $datasetId}}) {
+      name
+      value_schema
+      events {
+        causal_time
+        real_time
+        topic_index
+        transaction_index
+        value
+      }
+    }
+  }
+  `,
+
+  GET_PROFILES:`#graphql
+    query GetProfiles($datasetId: Int!){
+      profile(where: {dataset_id: {_eq: $datasetId}}) {
+        name
+        profile_segments {
+          dynamics
+          is_gap
+          start_offset
+        }
+    }
+  }
+  `,
+
   SCHEDULE: `#graphql
     query Schedule($specificationId: Int!) {
       schedule(specificationId: $specificationId){
         reason
         status
         analysisId
+        datasetId
       }
     }
   `,
@@ -33,6 +64,7 @@ const gql = {
     simulate(planId: $plan_id){
       status
       reason
+      simulationDatasetId
     }
   }`,
 
@@ -41,14 +73,6 @@ const gql = {
       insert_plan_one(object: $plan) {
         id
         revision
-      }
-    }
-  `,
-
-  CREATE_SIMULATION: `#graphql
-    mutation CreateSimulation($simulation: simulation_insert_input!) {
-      insert_simulation_one(object: $simulation) {
-        id
       }
     }
   `,
@@ -89,6 +113,38 @@ const gql = {
     query GetPlanRevision($id: Int!) {
       plan: plan_by_pk(id: $id) {
         revision
+      }
+    }
+  `,
+
+  GET_SIMULATION_DATASET: `#graphql
+  query GetSimulationDataset($id: Int!) {
+    simulationDataset: simulation_dataset_by_pk(id: $id) {
+      canceled
+      simulation_start_time
+      simulation_end_time
+      simulated_activities {
+        activity_directive { id }
+        duration
+        start_time
+        start_offset
+      }
+    }
+  }
+  `,
+
+  GET_SIMULATION_DATASET_BY_DATASET_ID: `#graphql
+    query GetSimulationDataset($id: Int!) {
+      simulation_dataset(where: {dataset_id: {_eq: $id}}) {
+        canceled
+        simulation_start_time
+        simulation_end_time
+        simulated_activities {
+          activity_directive { id }
+          duration
+          start_time
+          start_offset
+        }
       }
     }
   `,
@@ -150,7 +206,6 @@ const gql = {
           model_id
           name
           plan_id
-          summary
         }
         duration
         id
@@ -166,7 +221,6 @@ const gql = {
             model_id
             name
             plan_id
-            summary
           }
           id
           parameters {
@@ -181,6 +235,8 @@ const gql = {
         simulations {
           arguments
           id
+          simulation_start_time
+          simulation_end_time
           template: simulation_template {
             arguments
             description
@@ -189,6 +245,41 @@ const gql = {
         }
         startTime: start_time
       }
+    }
+  `,
+
+  INSERT_SIMULATION_TEMPLATE: `#graphql
+    mutation CreateSimulationTemplate($simulationTemplateInsertInput: simulation_template_insert_input!) {
+      insert_simulation_template_one(object: $simulationTemplateInsertInput) {
+        id
+      }
+    }
+  `,
+
+  ASSIGN_TEMPLATE_TO_SIMULATION: `#graphql
+    mutation AssignTemplateToSimulation($simulation_id: Int!, $simulation_template_id: Int!) {
+      update_simulation_by_pk(pk_columns: {id: $simulation_id}, _set: {simulation_template_id: $simulation_template_id}) {
+        simulation_template_id
+      }
+    }
+  `,
+
+  GET_SIMULATION_ID: `#graphql
+    query getSimulationId($plan_id: Int!) {
+      simulation: simulation(where: {plan_id: {_eq: $plan_id}}) {
+        id
+      }
+    }
+  `,
+
+  UPDATE_SIMULATION_BOUNDS: `#graphql
+    mutation updateSimulationBounds($plan_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
+      update_simulation(where: {plan_id: {_eq: $plan_id}},
+      _set: {
+        simulation_start_time: $simulation_start_time,
+        simulation_end_time: $simulation_end_time}) {
+        affected_rows
+       }
     }
   `,
 

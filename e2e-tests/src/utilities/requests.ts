@@ -30,7 +30,8 @@ const req = {
     query: string,
     variables: Record<string, unknown> = {},
   ): Promise<T> {
-    const options = { data: { query, variables } };
+    const hasuraAdminSecret = (process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string) ?? '';
+    const options = { headers: { 'x-hasura-admin-secret': hasuraAdminSecret }, data: { query, variables } };
     const response = await request.post(`${urls.HASURA_URL}/v1/graphql`, options);
 
     if (response.ok()) {
@@ -127,11 +128,39 @@ const req = {
     return plan_id;
   },
 
-  async createSimulation(request: APIRequestContext, simulationInput: SimulationCreation): Promise<number> {
-    const data = await req.hasura(request, gql.CREATE_SIMULATION, { simulation: simulationInput });
-    const { insert_simulation_one } = data;
-    const { id: simulation_id } = insert_simulation_one;
-    return simulation_id;
+  async getSimulationId(request: APIRequestContext, planId: number) {
+    const data = await req.hasura(request, gql.GET_SIMULATION_ID, {plan_id: planId});
+    const {simulation} = data;
+    const {id: simulationId} = simulation.pop();
+    return simulationId as number;
+  },
+
+  async getSimulationDataset(request: APIRequestContext, simulationDatasetId: number) {
+    const data = await req.hasura(request, gql.GET_SIMULATION_DATASET, {id: simulationDatasetId});
+    const {simulationDataset} = data;
+    return simulationDataset as SimulationDataset;
+  },
+
+  async getSimulationDatasetByDatasetId(request: APIRequestContext, simulationDatasetId: number) {
+    const data = await req.hasura(request, gql.GET_SIMULATION_DATASET_BY_DATASET_ID, {id: simulationDatasetId});
+    const {simulation_dataset} = data;
+    return simulation_dataset[0] as SimulationDataset;
+  },
+
+  async insertAndAssociateSimulationTemplate(request: APIRequestContext, template: InsertSimulationTemplateInput, simulationId: number){
+    const data = await req.hasura(request, gql.INSERT_SIMULATION_TEMPLATE, {simulationTemplateInsertInput: template} );
+    const {insert_simulation_template_one} = data;
+    const {id: template_id} = insert_simulation_template_one;
+    await req.hasura(request, gql.ASSIGN_TEMPLATE_TO_SIMULATION, {simulation_id: simulationId, simulation_template_id: template_id});
+    return template_id;
+  },
+
+  async updateSimulationBounds(request: APIRequestContext, bounds: UpdateSimulationBoundsInput) {
+    const {plan_id, simulation_start_time, simulation_end_time} = bounds;
+    const data = await req.hasura(request, gql.UPDATE_SIMULATION_BOUNDS, {plan_id: plan_id, simulation_start_time: simulation_start_time, simulation_end_time: simulation_end_time});
+    const {update_simulation} = data;
+    const {id} = update_simulation
+    return id;
   },
 
   async insertSchedulingGoal(request: APIRequestContext, schedulingInput: SchedulingGoalInsertInput) {
@@ -237,6 +266,18 @@ const req = {
     const { delete_plan_dataset_by_pk } = data;
     const { dataset_id } = delete_plan_dataset_by_pk;
     return dataset_id;
+  },
+
+  async getProfiles(request: APIRequestContext, datasetId:number){
+    const data = await req.hasura(request, gql.GET_PROFILES, {datasetId:datasetId});
+    const { profile } = data;
+    return profile
+  },
+
+  async getTopicsEvents(request: APIRequestContext, datasetId:number){
+    const data = await req.hasura(request, gql.GET_TOPIC_EVENTS, {datasetId:datasetId});
+    const { topic } = data;
+    return topic
   }
 };
 /**

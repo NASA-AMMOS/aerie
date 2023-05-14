@@ -12,11 +12,12 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.structExpressionF;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -58,12 +59,14 @@ public class SchedulingDSL {
   {
     return productP
         .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+        .optionalField("activityFinder", activityExpressionP)
         .field("interval", durationP)
         .field("shouldRollbackIfUnsatisfied", boolP)
         .map(
             untuple(GoalSpecifier.RecurrenceGoalDefinition::new),
             goalDefinition -> tuple(
                 goalDefinition.activityTemplate(),
+                goalDefinition.activityFinder(),
                 goalDefinition.interval(),
                 goalDefinition.shouldRollbackIfUnsatisfied()));
   }
@@ -71,9 +74,10 @@ public class SchedulingDSL {
       productP
           .field("kind", literalP("ActivityExpression"))
           .field("type", stringP)
+          .optionalField("matchingArguments", structExpressionF(profileExpressionP))
           .map(
-              $ -> new ConstraintExpression.ActivityExpression($.getRight()),
-              t -> Pair.of(Unit.UNIT, t.type()));
+              $ -> new ConstraintExpression.ActivityExpression($.getLeft().getRight(), $.getRight()),
+              t -> tuple(Unit.UNIT, t.type(), t.arguments));
 
   private static final JsonParser<LinearResource> linearResourceP =
       stringP
@@ -102,6 +106,7 @@ public class SchedulingDSL {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+            .optionalField("activityFinder", activityExpressionP)
             .field("alias", stringP)
             .field("forEach", constraintExpressionP)
             .optionalField("startConstraint", activityTimingConstraintP)
@@ -111,6 +116,7 @@ public class SchedulingDSL {
                 untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
                 goalDefinition -> tuple(
                     goalDefinition.activityTemplate(),
+                    goalDefinition.activityFinder(),
                     goalDefinition.alias(),
                     goalDefinition.forEach(),
                     goalDefinition.startConstraint(),
@@ -122,12 +128,14 @@ public class SchedulingDSL {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+            .optionalField("activityFinder", activityExpressionP)
             .field("specification", cardinalitySpecificationJsonParser)
             .field("shouldRollbackIfUnsatisfied", boolP)
             .map(
                 untuple(GoalSpecifier.CardinalityGoalDefinition::new),
                 goalDefinition -> tuple(
                     goalDefinition.activityTemplate(),
+                    goalDefinition.activityFinder(),
                     goalDefinition.specification(),
                     goalDefinition.shouldRollbackIfUnsatisfied()));
   }
@@ -231,11 +239,13 @@ public class SchedulingDSL {
   public sealed interface GoalSpecifier {
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
+        Optional<ConstraintExpression.ActivityExpression> activityFinder,
         Duration interval,
         boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
+        Optional<ConstraintExpression.ActivityExpression> activityFinder,
         String alias,
         ConstraintExpression forEach,
         Optional<ActivityTimingConstraint> startConstraint,
@@ -244,6 +254,7 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CardinalityGoalDefinition(
         ActivityTemplate activityTemplate,
+        Optional<ConstraintExpression.ActivityExpression> activityFinder,
         CardinalitySpecification specification,
         boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
@@ -263,7 +274,7 @@ public class SchedulingDSL {
 
   public record ActivityTemplate(String activityType, StructExpressionAt arguments) {}
   public sealed interface ConstraintExpression {
-    record ActivityExpression(String type) implements ConstraintExpression {}
+    record ActivityExpression(String type, Optional<StructExpressionAt> arguments) implements ConstraintExpression {}
     record WindowsExpression(Expression<Windows> expression) implements ConstraintExpression {}
   }
   public record ActivityTimingConstraint(TimeAnchor windowProperty, TimeUtility.Operator operator, Duration operand, boolean singleton) {}

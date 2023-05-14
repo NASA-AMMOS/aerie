@@ -24,11 +24,6 @@ test.describe('Simulation microsecond resolution', () => {
       duration : time.getIntervalFromDoyRange(plan_start_timestamp, plan_end_timestamp)
     };
     const plan_id = await req.createPlan(request, plan_input);
-    const simulation : SimulationCreation = {
-      plan_id: plan_id,
-      arguments : {},
-    };
-    await req.createSimulation(request, simulation);
     const activityToInsert : ActivityInsertInput =
         {
           arguments : {
@@ -38,10 +33,16 @@ test.describe('Simulation microsecond resolution', () => {
           type : "ControllableDurationActivity",
           start_offset : "1h"
         };
+    const simulationBounds : UpdateSimulationBoundsInput = {
+      plan_id : plan_id,
+      simulation_start_time: plan_start_timestamp,
+      simulation_end_time: plan_end_timestamp
+    };
 
     const max_it = 10;
     let it = 0;
     await req.insertActivity(request, activityToInsert);
+    await req.updateSimulationBounds(request, simulationBounds);
     while (it++ < max_it) {
       const { reason, status, simulationDatasetId } = await req.simulate(request, plan_id);
       if (!(status == "pending" || status == "incomplete")) {

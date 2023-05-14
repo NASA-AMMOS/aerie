@@ -18,7 +18,8 @@ import java.util.Optional;
       r.analysis_id,
       r.status,
       r.reason,
-      r.canceled
+      r.canceled,
+      r.dataset_id
     from scheduling_request as r
     where
       r.specification_id = ? and
@@ -56,14 +57,15 @@ import java.util.Optional;
     final var analysisId = resultSet.getLong("analysis_id");
     final var failureReason$ = PreparedStatements.getFailureReason(resultSet, "reason");
     final var canceled = resultSet.getBoolean("canceled");
-
+    final var datasetId = PreparedStatements.getDatasetId(resultSet, "dataset_id");
     return Optional.of(new RequestRecord(
         specificationId,
         analysisId,
         specificationRevision,
         status,
         failureReason$,
-        canceled));
+        canceled,
+        datasetId));
   }
 
   @Override

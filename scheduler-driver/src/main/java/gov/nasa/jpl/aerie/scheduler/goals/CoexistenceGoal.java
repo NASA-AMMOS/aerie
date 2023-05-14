@@ -12,13 +12,11 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplateDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -147,6 +145,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         throw new IllegalArgumentException(
             "creating coexistence goal requires non-null \"forEach\" anchor template");
       }
+      if (alias == null) {
+        throw new IllegalArgumentException(
+            "creating coexistence goal requires non-null \"alias\" name");
+      }
       goal.expr = forEach;
 
       goal.startExpr = startExpr;
@@ -208,39 +210,39 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     final var conflicts = new java.util.LinkedList<Conflict>();
     for (var window : anchors) {
       boolean disj = false;
-      ActivityExpression.AbstractBuilder actTB = null;
+      ActivityExpression.AbstractBuilder activityFinder = null;
+      ActivityExpression.AbstractBuilder activityCreationTemplate = null;
       if (this.desiredActTemplate instanceof ActivityCreationTemplateDisjunction) {
         disj = true;
-        actTB = new ActivityCreationTemplateDisjunction.OrBuilder();
+        activityFinder = new ActivityCreationTemplateDisjunction.OrBuilder();
+        activityCreationTemplate = new ActivityCreationTemplateDisjunction.OrBuilder();
       } else if (this.desiredActTemplate != null) {
-        actTB = new ActivityCreationTemplate.Builder();
+        activityFinder = new ActivityExpression.Builder();
+        activityCreationTemplate = new ActivityCreationTemplate.Builder();
       }
-      assert actTB != null;
-      actTB.basedOn(this.desiredActTemplate);
-
+      assert activityFinder != null;
+      activityFinder.basedOn(this.matchActTemplate);
+      activityCreationTemplate.basedOn(this.desiredActTemplate);
       if(this.startExpr != null) {
         Interval startTimeRange = null;
         startTimeRange = this.startExpr.computeTime(simulationResults, plan, window.interval());
-        actTB.startsIn(startTimeRange);
+        activityFinder.startsIn(startTimeRange);
+        activityCreationTemplate.startsIn(startTimeRange);
       }
       if(this.endExpr != null) {
         Interval endTimeRange = null;
         endTimeRange = this.endExpr.computeTime(simulationResults, plan, window.interval());
-        actTB.endsIn(endTimeRange);
+        activityFinder.endsIn(endTimeRange);
+        activityCreationTemplate.endsIn(endTimeRange);
       }
       /* this will override whatever might be already present in the template */
       if(durExpr!=null){
         var durRange = this.durExpr.compute(window.interval(), simulationResults);
-        actTB.durationIn(Interval.between(durRange, durRange));
+        activityFinder.durationIn(durRange);
+        activityCreationTemplate.durationIn(durRange);
       }
 
-      ActivityCreationTemplate temp;
-      if (disj) {
-        temp = (ActivityCreationTemplateDisjunction) actTB.build();
-      } else {
-        temp = (ActivityCreationTemplate) actTB.build();
-      }
-      final var existingActs = plan.find(temp, simulationResults, createEvaluationEnvironmentFromAnchor(window));
+      final var existingActs = plan.find(activityFinder.build(), simulationResults, createEvaluationEnvironmentFromAnchor(window));
 
       var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
       var planEvaluation = plan.getEvaluation();
@@ -261,6 +263,12 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         }
       }
 
+      ActivityCreationTemplate temp;
+      if (disj) {
+        temp = (ActivityCreationTemplateDisjunction) activityCreationTemplate.build();
+      } else {
+        temp = (ActivityCreationTemplate) activityCreationTemplate.build();
+      }
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
@@ -278,12 +286,22 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   private EvaluationEnvironment createEvaluationEnvironmentFromAnchor(Segment<Optional<Spans.Metadata>> span){
     if(span.value().isPresent()){
       final var metadata = span.value().get();
-      return new EvaluationEnvironment(Map.of(this.alias, metadata.activityInstance()),
-                                       Map.of(),
-                                       Map.of(),
-                                       Map.of());
+      return new EvaluationEnvironment(
+          Map.of(this.alias, metadata.activityInstance()),
+          Map.of(),
+          Map.of(),
+          Map.of(),
+          Map.of()
+      );
     } else{
-      return new EvaluationEnvironment();
+      assert this.alias != null;
+      return new EvaluationEnvironment(
+          Map.of(),
+          Map.of(),
+          Map.of(this.alias, span.interval()),
+          Map.of(),
+          Map.of()
+      );
     }
   }
 

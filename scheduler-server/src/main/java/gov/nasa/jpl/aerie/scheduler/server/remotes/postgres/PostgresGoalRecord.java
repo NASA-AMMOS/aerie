@@ -5,5 +5,6 @@ public record PostgresGoalRecord(
     long revision,
     String name,
     String definition,
-    boolean enabled
+    boolean enabled,
+    boolean simulateAfter
 ) {}

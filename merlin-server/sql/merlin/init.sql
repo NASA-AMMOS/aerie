@@ -20,6 +20,7 @@ begin;
   \ir tables/mission_model.sql
   \ir tables/activity_type.sql
   \ir tables/plan.sql
+  \ir tables/plan_collaborators.sql
   \ir tables/activity_directive.sql
   \ir tables/activity_directive_validations.sql
   \ir tables/anchor_validation_status.sql
@@ -42,10 +43,6 @@ begin;
   \ir tables/simulation_dataset.sql
   \ir tables/plan_dataset.sql
 
-  -- Views
-  \ir views/simulated_activity.sql
-  \ir views/resource_profile.sql
-
   -- Plan Collaboration
   \ir plan_collaboration.sql
   \ir merge_request.sql
@@ -55,4 +52,9 @@ begin;
 
   -- Presets
   \ir tables/activity_presets.sql
+
+  -- Views
+  \ir views/simulated_activity.sql
+  \ir views/resource_profile.sql
+  \ir views/activity_directive_extended.sql
 end;

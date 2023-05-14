@@ -17,23 +17,47 @@ function generateTypescriptCode(dictionary: ampcs.CommandDictionary): {
     typescriptFswCommands.push(generateFswCommandCode(fswCommand, dictionary.enumMap));
   }
 
+  const typescriptHwCommands: { value: string; interfaces: string }[] = [];
+  for (const hwCommand of dictionary.hwCommands) {
+    typescriptHwCommands.push(generateHwCommandCode(hwCommand));
+  }
+
   // language=TypeScript
   const declarations = `
 declare global {
-${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}
+${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${typescriptHwCommands
+    .map(hwCommand => hwCommand.interfaces)
+    .join('\n')}\n
 \tconst Commands: {\n${dictionary.fswCommands
-    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem},\n`)
+    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem}_STEP,\n`)
     .join('')}\t};
+
+\tconst Hardwares : {\n${dictionary.hwCommands
+    .map(hwCommand => `\t\t${hwCommand.stem}: typeof ${hwCommand.stem},\n`)
+    .join('')} \t};
 }`;
 
   // language=TypeScript
   const values = `
+\nconst argumentOrders = {\n${dictionary.fswCommands
+    .map(fswCommand => `\t'${fswCommand.stem}': [${generateArgOrder(fswCommand)}],\n`)
+    .join('')}};
+
 ${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
-export const Commands = {${dictionary.fswCommands
+${typescriptHwCommands.map(hwCommands => hwCommands.value).join('\n')}\n
+export const Commands = {\n${dictionary.fswCommands
+    .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem}_STEP,\n`)
+    .join('')}};
+
+export const Immediates = {\n${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence});
+export const Hardwares = {\n${dictionary.hwCommands
+    .map(hwCommands => `\t\t${hwCommands.stem}: ${hwCommands.stem},\n`)
+    .join('')}};
+
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence, FLOAT, UINT,INT, STRING, ENUM}, Hardwares, Immediates);
 `;
 
   return {
@@ -60,14 +84,20 @@ function generateFswCommandCode(
     // language=TypeScript
     const value = `
 ${doc}
-const ${fswCommandName}: ${fswCommandName} = CommandStem.new({
+const ${fswCommandName}: ${fswCommandName}_IMMEDIATE = ImmediateStem.new({
 \tstem: '${fswCommand.stem}',
 \targuments: [],
-})`;
+});
+const ${fswCommandName}_STEP: ${fswCommandName}_STEP = CommandStem.new({
+\tstem: '${fswCommand.stem}',
+\targuments: [],
+});`;
 
     const interfaces = `
 ${doc}
-\tinterface ${fswCommandName} extends CommandStem<[]> {}
+\tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[]> {}
+\tinterface ${fswCommandName}_STEP extends CommandStem<[]> {}
+\tconst ${fswCommandName}: ${fswCommandName}_IMMEDIATE;
 `;
     return {
       value,
@@ -104,16 +134,30 @@ ${doc}
   const value = `
 ${doc}
 function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
-  return CommandStem.new({
+  return ImmediateStem.new({
     stem: '${fswCommandName}',
     arguments: args
-  }) as ${fswCommandName};
+  }) as ${fswCommandName}_IMMEDIATE;
+}
+function ${fswCommandName}_STEP(...args: [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type + `${argumentTypeToVariable(arg.type)}`)
+    .join(',')} }]) {
+  return CommandStem.new({
+    stem: '${fswCommandName}',
+    arguments: sortCommandArguments(args, argumentOrders['${fswCommandName}'])
+  }) as ${fswCommandName}_STEP;
 }`;
 
   const interfaces = `
-\tinterface ${fswCommandName} extends CommandStem<[ [{ ${argsWithType
+\tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[ [{ ${argsWithType
     .map(arg => arg.name + ': ' + arg.type)
-    .join(',')} }] ]> {}`;
+    .join(',')} }] ]> {}
+\tinterface ${fswCommandName}_STEP extends CommandStem<[ [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type + `${argumentTypeToVariable(arg.type)}`)
+    .join(',')} }] ]> {}
+\tfunction ${fswCommandName}(...args: [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type)
+    .join(',')} }]) : ${fswCommandName}_IMMEDIATE`;
 
   return {
     value,
@@ -122,22 +166,82 @@ function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': '
 }
 
 /**
+ * Match the argument types in the command dictionary with the corresponding variable types
+ * for both local and parameter in the seqjson specification.
+ */
+function argumentTypeToVariable(argumentType : string) : string{
+  if (argumentType.startsWith('F')) {
+    return "| 'FLOAT'";
+  } else if (argumentType.startsWith('I')) {
+    return "| 'INT'";
+  } else if (argumentType.startsWith('U')) {
+    return "| 'UINT'";
+  } else if (argumentType.startsWith('VarString')) {
+    return "| 'STRING'";
+  } else if (argumentType.startsWith('(')) {
+    return "| 'ENUM'";
+  } else {
+    return ''
+  }
+}
+function generateHwCommandCode(hwCommand: ampcs.HwCommand): { value: string; interfaces: string } {
+  const needsUnderscore =
+    /^\d/.test(hwCommand.stem) ||
+    reservedWords.check(hwCommand.stem) ||
+    typescriptReservedWords.includes(hwCommand.stem);
+
+  const hwCommandName = (needsUnderscore ? '_' : '') + hwCommand.stem;
+
+  const doc = generateDoc(hwCommand);
+  const value =
+    `${doc}` +
+    `\nconst ${hwCommandName}: ${hwCommandName} = HardwareStem.new({` +
+    `\n\tstem: '${hwCommand.stem}'` +
+    `\n})`;
+
+  const interfaces =
+    `\t\t${doc}` + `\n\tinterface ${hwCommandName} extends HardwareStem {}\n\tconst ${hwCommandName}: ${hwCommandName}`;
+  return {
+    value,
+    interfaces,
+  };
+}
+
+function generateArgOrder(fswCommand: ampcs.FswCommand): string[] {
+  let argOrder = [];
+
+  for (const argument of fswCommand.arguments) {
+    argOrder.push("'" + argument.name + "'");
+
+    if (argument.arg_type === 'repeat' && argument.repeat?.arguments) {
+      for (const repeatArg of argument.repeat?.arguments) {
+        argOrder.push("'" + repeatArg.name + "'");
+      }
+    }
+  }
+
+  return argOrder;
+}
+
+/**
  * Creates a jsdoc style doc for the given command. Right now it just includes the args as
  * parameters.
  *
- * @param fswCommand The command we're generating documentation for.
+ * @param command The command we're generating documentation for.
  * @returns The generated documentation.
  */
-function generateDoc(fswCommand: ampcs.FswCommand): string {
+function generateDoc(command: ampcs.FswCommand | ampcs.HwCommand): string {
   let parameters: string[] = [];
 
-  fswCommand.arguments.forEach(arg => {
-    parameters.push(`* @param ${arg.name} ${arg.description}`);
-  });
+  if ('arguments' in command) {
+    command.arguments.forEach(arg => {
+      parameters.push(`* @param ${arg.name} ${arg.description}`);
+    });
+  }
 
   return `
 /**
-* ${fswCommand.description}
+* ${command.description}
 ${parameters.length > 0 ? parameters.join('\n') : '*'}
 */`;
 }
@@ -145,16 +249,7 @@ ${parameters.length > 0 ? parameters.join('\n') : '*'}
 function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.EnumMap): string {
   switch (argument.arg_type) {
     case 'enum':
-      // boolean enum shouldn't be 'TRUE | FALSE' but of `boolean` type
-      if (
-        enumMap[argument.enum_name]?.values.length === 2 &&
-        enumMap[argument.enum_name]?.values.some(({ symbol }) => symbol.toLocaleLowerCase() === 'true') &&
-        enumMap[argument.enum_name]?.values.some(({ symbol }) => symbol.toLocaleLowerCase() === 'false')
-      ) {
-        return 'boolean';
-      } else {
-        return `(${enumMap[argument.enum_name]?.values.map(value => `'${value.symbol}'`).join(' | ')})`;
-      }
+      return `(${enumMap[argument.enum_name]?.values.map(value => `'${value.symbol}'`).join(' | ')})`;
     case 'boolean':
       return 'boolean';
     case 'float':

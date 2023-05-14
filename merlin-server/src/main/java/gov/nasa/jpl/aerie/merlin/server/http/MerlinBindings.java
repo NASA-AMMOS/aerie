@@ -71,54 +71,22 @@ public final class MerlinBindings implements Plugin {
     javalin.routes(() -> {
       before(ctx -> ctx.contentType("application/json"));
 
-      path("resourceTypes", () -> {
-        post(this::getResourceTypes);
-      });
-      path("getSimulationResults", () -> {
-        post(this::getSimulationResults);
-      });
-      path("resourceSamples", () -> {
-        post(this::getResourceSamples);
-      });
-      path("constraintViolations", () -> {
-        post(this::getConstraintViolations);
-      });
-      path("refreshModelParameters", () -> {
-        post(this::postRefreshModelParameters);
-      });
-      path("refreshActivityTypes", () -> {
-        post(this::postRefreshActivityTypes);
-      });
-      path("refreshActivityValidations", () -> {
-        post(this::postRefreshActivityValidations);
-      });
-      path("validateActivityArguments", () -> {
-        post(this::validateActivityArguments);
-      });
-      path("validateModelArguments", () -> {
-        post(this::validateModelArguments);
-      });
-      path("validatePlan", () -> {
-        post(this::validatePlan);
-      });
-      path("getModelEffectiveArguments", () -> {
-        post(this::getModelEffectiveArguments);
-      });
-      path("getActivityEffectiveArguments", () -> {
-        post(this::getActivityEffectiveArguments);
-      });
-      path("addExternalDataset", () -> {
-        post(this::addExternalDataset);
-      });
-      path("extendExternalDataset", () -> {
-        post(this::extendExternalDataset);
-      });
-      path("constraintsDslTypescript", () -> {
-        post(this::getConstraintsDslTypescript);
-      });
-      path("health", () -> {
-        get(ctx -> ctx.status(200));
-      });
+      path("resourceTypes", () -> post(this::getResourceTypes));
+      path("getSimulationResults", () -> post(this::getSimulationResults));
+      path("resourceSamples", () -> post(this::getResourceSamples));
+      path("constraintViolations", () -> post(this::getConstraintViolations));
+      path("refreshModelParameters", () -> post(this::postRefreshModelParameters));
+      path("refreshActivityTypes", () -> post(this::postRefreshActivityTypes));
+      path("refreshActivityValidations", () -> post(this::postRefreshActivityValidations));
+      path("validateActivityArguments", () -> post(this::validateActivityArguments));
+      path("validateModelArguments", () -> post(this::validateModelArguments));
+      path("validatePlan", () -> post(this::validatePlan));
+      path("getModelEffectiveArguments", () -> post(this::getModelEffectiveArguments));
+      path("getActivityEffectiveArguments", () -> post(this::getActivityEffectiveArguments));
+      path("addExternalDataset", () -> post(this::addExternalDataset));
+      path("extendExternalDataset", () -> post(this::extendExternalDataset));
+      path("constraintsDslTypescript", () -> post(this::getConstraintsDslTypescript));
+      path("health", () -> get(ctx -> ctx.status(200)));
     });
 
     // This exception is expected when the request body entity is not a legal JsonValue.
@@ -163,7 +131,7 @@ public final class MerlinBindings implements Plugin {
       final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
       final var activityDirective = new ActivityDirectiveForValidation(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
 
-      final var plan = this.planService.getPlan(planId);
+      final var plan = this.planService.getPlanForValidation(planId);
       this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);
       ctx.status(200);
     } catch (final InvalidJsonException ex) {
@@ -298,7 +266,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
 
-      final var plan = this.planService.getPlan(planId);
+      final var plan = this.planService.getPlanForValidation(planId);
       final var activities = plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey,
           e -> e.getValue().serializedActivity()));

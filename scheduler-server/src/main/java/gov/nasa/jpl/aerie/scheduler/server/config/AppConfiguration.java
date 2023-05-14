@@ -14,7 +14,8 @@ public record AppConfiguration(
     int httpPort,
     boolean enableJavalinDevLogging,
     Store store,
-    URI merlinGraphqlURI
+    URI merlinGraphqlURI,
+    String hasuraGraphQlAdminSecret
 )
 {
   public AppConfiguration {

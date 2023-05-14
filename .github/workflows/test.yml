@@ -1,4 +1,4 @@
-name: test
+name: Test
 
 on:
   pull_request:
@@ -10,8 +10,47 @@ on:
     tags:
       - v*
 
+env:
+  AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
+  AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
+  HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
+  HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
+  POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
+  POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+
 jobs:
-  test:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "19"
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Assemble
+        run: ./gradlew assemble
+      - name: Run Unit Tests
+        run: ./gradlew test
+      - name: Upload Test Results as XML
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results
+          path: "**/build/test-results/test"
+      - name: Upload Test Results as HTML
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results
+          path: "**/build/reports/tests/test"
+
+  e2e-test:
     runs-on: ubuntu-latest
     environment: e2e-test
     steps:
@@ -45,30 +84,11 @@ jobs:
           docker compose -f ./e2e-tests/docker-compose-test.yml up -d --build
           docker images
           docker ps -a
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-          POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
-          POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
       - name: Sleep for 15 Seconds
         run: sleep 15s
         shell: bash
-      - name: Run Unit Tests
-        run: ./gradlew test
       - name: Run E2E Tests
         run: ./gradlew e2eTest
-      - name: Upload Test Results as XML
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results
-          path: "**/build/test-results/test"
-      - name: Upload Test Results as HTML
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results
-          path: "**/build/reports/tests/test"
       - name: Upload E2E Test Results
         if: always()
         uses: actions/upload-artifact@v3
@@ -82,11 +102,14 @@ jobs:
           name: Test Results
           path: "**/sequencing-server/test-report.html"
       - name: Print Logs for Services
+        if: always()
         run: docker compose -f ./e2e-tests/docker-compose-test.yml logs -t
       - name: Stop Services
+        if: always()
         run: |
           docker ps -a
           docker compose -f ./e2e-tests/docker-compose-test.yml down
           docker ps -a
       - name: Prune Volumes
+        if: always()
         run: docker volume prune --force

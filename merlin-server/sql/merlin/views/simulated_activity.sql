@@ -8,15 +8,12 @@ create view simulated_activity as
          span.attributes as attributes,
          span.type as activity_type_name,
          (span.attributes#>>'{directiveId}')::integer as directive_id,
-         plan.start_time + span.start_offset as start_time,
-         plan.start_time + span.start_offset + span.duration as end_time
-
-
+         simulation_dataset.simulation_start_time + span.start_offset as start_time,
+         simulation_dataset.simulation_start_time + span.start_offset + span.duration as end_time
    from span
      join dataset on span.dataset_id = dataset.id
      join simulation_dataset on dataset.id = simulation_dataset.dataset_id
      join simulation on simulation.id = simulation_dataset.simulation_id
-     join plan on plan.id = simulation.plan_id
 );
 
 comment on view simulated_activity is e''

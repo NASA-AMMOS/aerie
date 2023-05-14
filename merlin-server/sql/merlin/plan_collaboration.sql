@@ -145,10 +145,19 @@ begin
       id, new_plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
       last_modified_arguments_at, metadata, anchor_id, anchored_to_start
     from activity_directive where activity_directive.plan_id = duplicate_plan.plan_id;
-  insert into simulation (revision, simulation_template_id, plan_id, arguments)
-    select 0, simulation_template_id, new_plan_id, arguments
+
+  with source_plan as (
+    select simulation_template_id, arguments, simulation_start_time, simulation_end_time
     from simulation
-    where simulation.plan_id = duplicate_plan.plan_id;
+    where simulation.plan_id = duplicate_plan.plan_id
+  )
+  update simulation s
+  set simulation_template_id = source_plan.simulation_template_id,
+      arguments = source_plan.arguments,
+      simulation_start_time = source_plan.simulation_start_time,
+      simulation_end_time = source_plan.simulation_end_time
+  from source_plan
+  where s.plan_id = new_plan_id;
 
   insert into preset_to_directive(preset_id, activity_id, plan_id)
   select preset_id, activity_id, new_plan_id

@@ -2,11 +2,14 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -16,9 +19,12 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -216,19 +222,22 @@ public class ActivityExpression implements Expression<Spans> {
      *
      * activities without a concrete simulated duration will not match
      *
-     * @param range IN STORED the range of allowed values for duration, or
+     * @param duration IN STORED the allowed duration, or
      *     null if no specific duration is required. should not change
      *     while the template exists. the range itself determines if
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B durationIn(@Nullable Interval range) {
-      this.durationIn = range;
+    B durationIn(@Nullable Duration duration) {
+      if (duration == null) {
+        this.durationIn = Expression.of(() -> new DiscreteProfile());
+      }
+      this.durationIn = new DiscreteProfileFromDuration(new DurationLiteral(duration));
       return getThis();
     }
 
-    protected @Nullable Interval durationIn;
+    protected @Nullable Expression<? extends Profile<?>> durationIn;
 
     /**
      * bootstraps a new query builder based on existing template
@@ -263,13 +272,11 @@ public class ActivityExpression implements Expression<Spans> {
         startsIn = Interval.at(existingAct.startOffset());
       }
 
-      if (existingAct.duration() != null) {
-        durationIn = Interval.at(existingAct.duration());
-      }
-
-      //FINISH: extract all param values as == criteria
+      durationIn(existingAct.duration());
 
       return getThis();
+
+      //FINISH: extract all param values as == criteria
     }
 
     /**
@@ -332,7 +339,7 @@ public class ActivityExpression implements Expression<Spans> {
       type = template.type;
       startsIn = template.startRange;
       endsIn = template.endRange;
-      durationIn = template.durationRange;
+      durationIn = template.duration;
       startsOrEndsIn = template.startOrEndRange;
       startsOrEndsInW = template.startOrEndRangeW;
       arguments = template.arguments;
@@ -344,7 +351,7 @@ public class ActivityExpression implements Expression<Spans> {
       template.type = type;
       template.startRange = startsIn;
       template.endRange = endsIn;
-      template.durationRange = durationIn;
+      template.duration = durationIn;
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
       template.arguments = arguments;
@@ -405,7 +412,7 @@ public class ActivityExpression implements Expression<Spans> {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Interval durationRange;
+  protected @Nullable Expression<? extends Profile<?>> duration;
 
   /**
    * the bounding super-type for matching activities
@@ -434,15 +441,6 @@ public class ActivityExpression implements Expression<Spans> {
    */
   public @Nullable
   Interval getStartRange() { return startRange; }
-
-  /**
-   * fetch the range of allowed simulation durations matched by this template
-   *
-   * @return the allowed range of durations for matching activities, or null
-   *     if no limit on duration
-   */
-  public @Nullable
-  Interval getDurationRange() { return durationRange; }
 
   /**
    * fetch the bounding super type of activities matched by this template
@@ -515,9 +513,13 @@ public class ActivityExpression implements Expression<Spans> {
       match = (endT != null) && endRange.contains(endT);
     }
 
-    if (match && durationRange != null) {
+    if (match && duration != null) {
       final var dur = act.duration();
-      match = (dur != null) && durationRange.contains(dur);
+      final Optional<Duration> durRequirement = this.duration
+          .evaluate(simulationResults, evaluationEnvironment)
+          .valueAt(Duration.ZERO)
+          .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      match = durRequirement.isEmpty() || (dur != null && durRequirement.get().isEqualTo(dur));
     }
 
     //activity must have all instantiated arguments of template to be compatible
@@ -566,9 +568,13 @@ public class ActivityExpression implements Expression<Spans> {
       match = (endT != null) && endRange.contains(endT);
     }
 
-    if (match && durationRange != null) {
-      final var dur = act.interval.end.minus(act.interval.start);
-      match = durationRange.contains(dur);
+    if (match && duration != null) {
+      final var dur = act.interval.duration();
+      final Optional<Duration> durRequirement = this.duration
+          .evaluate(simulationResults, evaluationEnvironment)
+          .valueAt(Duration.ZERO)
+          .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      match = durRequirement.isEmpty() || (dur != null && durRequirement.get() == dur);
     }
 
     //activity must have all instantiated arguments of template to be compatible
@@ -576,14 +582,7 @@ public class ActivityExpression implements Expression<Spans> {
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
       final var instantiatedArguments = SchedulingActivityDirective
                 .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
-      for (var param : instantiatedArguments.entrySet()) {
-        if (actInstanceArguments.containsKey(param.getKey())) {
-          match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
-        }
-        if (!match) {
-          break;
-        }
-      }
+      match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
     }
     return match;
   }
@@ -609,5 +608,87 @@ public class ActivityExpression implements Expression<Spans> {
 
   @Override
   public void extractResources(final Set<String> names) { }
+
+
+  /**
+   * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not
+    * @param superset the proposed superset
+   * @param subset the proposed subset
+   * @return true if subset is a subset of superset
+   */
+  public static boolean subsetOrEqual(SerializedValue superset, SerializedValue subset){
+    Objects.requireNonNull(superset);
+    Objects.requireNonNull(subset);
+    final var visitor = new SerializedValue.Visitor<Boolean>(){
+      @Override
+      public Boolean onNull() {
+        return true;
+      }
+
+      @Override
+      public Boolean onNumeric(final BigDecimal value) {
+        final var argumentsAsNumeric = superset.asNumeric();
+        if(argumentsAsNumeric.isEmpty()){
+          return false;
+        }
+        return argumentsAsNumeric.get().equals(value);
+      }
+
+      @Override
+      public Boolean onBoolean(final boolean value) {
+        final var argumentsAsBoolean = superset.asBoolean();
+        if(argumentsAsBoolean.isEmpty()){
+          return false;
+        }
+        return argumentsAsBoolean.get().equals(value);
+      }
+
+      @Override
+      public Boolean onString(final String value) {
+        final var argumentsAsString = superset.asString();
+        if(argumentsAsString.isEmpty()){
+          return false;
+        }
+        return argumentsAsString.get().equals(value);
+      }
+
+      @Override
+      public Boolean onMap(final Map<String, SerializedValue> value) {
+        final var argumentsAsMap = superset.asMap();
+        if(argumentsAsMap.isEmpty()){
+          return false;
+        }
+        for(final var elementInPattern: value.entrySet()){
+          final var elementInArguments = argumentsAsMap.get().get(elementInPattern.getKey());
+          if(elementInArguments != null){
+            if(!subsetOrEqual(elementInArguments, elementInPattern.getValue())){
+              return false;
+            }
+          } else {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @Override
+      public Boolean onList(final List<SerializedValue> value) {
+        final var argumentsAsListOptional = superset.asList();
+        if(argumentsAsListOptional.isEmpty()){
+          return false;
+        }
+        if(argumentsAsListOptional.get().size() < value.size()){
+          return false;
+        }
+        for(int i = 0; i < value.size(); i++){
+          if(!subsetOrEqual(argumentsAsListOptional.get().get(i), value.get(i))){
+            return false;
+          }
+        }
+        return true;
+      }
+    };
+    return subset.match(visitor);
+  }
 
 }

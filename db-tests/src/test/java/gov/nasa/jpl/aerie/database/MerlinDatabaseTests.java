@@ -14,15 +14,18 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 record SimulationDatasetRecord(int simulation_id, int dataset_id){}
 record PlanDatasetRecord(int plan_id, int dataset_id) {}
+record ProfileSegmentAtATimeRecord(int datasetId, int profileId, String name, String type, String startOffset, String dynamics, boolean isGap) {}
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -130,47 +133,42 @@ class MerlinDatabaseTests {
     }
   }
 
-  int insertSimulationWithTemplateId(final int simulationTemplateId, final int planId) throws SQLException {
+  int getSimulationId(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO simulation (simulation_template_id, plan_id, arguments)
-                  VALUES ('%s', '%s', '{}')
-                  RETURNING id;"""
-                  .formatted(simulationTemplateId, planId)
-          );
+      final var res = statement.executeQuery(
+          """
+                  SELECT id
+                  FROM simulation
+                  WHERE simulation.plan_id = '%s';
+              """.formatted(planId)
+      );
       res.next();
       return res.getInt("id");
     }
   }
 
-  int insertSimulationWithoutTemplateId(final int planId) throws SQLException {
+  void addTemplateIdToSimulation(final int simulationTemplateId, final int simulationId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO simulation (plan_id, arguments)
-                  VALUES ('%s', '{}')
-                  RETURNING id;"""
-                  .formatted(planId)
-          );
-      res.next();
-      return res.getInt("id");
+      statement.executeUpdate(
+          """
+                  UPDATE simulation
+                  SET simulation_template_id = '%s',
+                      arguments = '{}'
+                  WHERE id = '%s';
+              """.formatted(simulationTemplateId, simulationId));
     }
   }
 
-  int insertDataset() throws SQLException {
+  int getDatasetId(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
               """
-                  INSERT INTO dataset
-                  DEFAULT VALUES
-                  RETURNING id;"""
+                  SELECT dataset_id from plan_dataset
+                  WHERE plan_id = '%s'""".formatted(planId)
           );
       res.next();
-      return res.getInt("id");
+      return res.getInt("dataset_id");
     }
   }
 
@@ -194,8 +192,8 @@ class MerlinDatabaseTests {
       final var res = statement
           .executeQuery(
               """
-                  INSERT INTO simulation_dataset (simulation_id, dataset_id, offset_from_plan_start)
-                  VALUES ('%s', '%s', '0')
+                  INSERT INTO simulation_dataset (simulation_id, dataset_id, arguments, simulation_start_time, simulation_end_time)
+                  VALUES ('%s', '%s', '{}', '2020-1-1 00:00:00', '2020-1-2 00:00:00')
                   RETURNING simulation_id, dataset_id;"""
                   .formatted(simulationId, datasetId)
           );
@@ -209,8 +207,7 @@ class MerlinDatabaseTests {
   int planId;
   int activityId;
   int simulationTemplateId;
-  int simulationWithTemplateId;
-  int simulationWithoutTemplateId;
+  int simulationId;
   int datasetId;
   SimulationDatasetRecord simulationDatasetRecord;
   PlanDatasetRecord planDatasetRecord;
@@ -222,11 +219,11 @@ class MerlinDatabaseTests {
     planId = insertPlan(missionModelId);
     activityId = insertActivity(planId);
     simulationTemplateId = insertSimulationTemplate(missionModelId);
-    simulationWithTemplateId = insertSimulationWithTemplateId(simulationTemplateId, planId);
-    simulationWithoutTemplateId = insertSimulationWithoutTemplateId(planId);
+    simulationId = getSimulationId(planId);
+    addTemplateIdToSimulation(simulationTemplateId, simulationId);
     planDatasetRecord = insertPlanDataset(planId);
-    datasetId = insertDataset();
-    simulationDatasetRecord = insertSimulationDataset(simulationWithTemplateId, datasetId);
+    datasetId = getDatasetId(planId);
+    simulationDatasetRecord = insertSimulationDataset(simulationId, datasetId);
   }
 
   @AfterEach
@@ -513,7 +510,7 @@ class MerlinDatabaseTests {
                                            """
                                                SELECT revision FROM simulation
                                                WHERE id = %s;"""
-                                               .formatted(simulationWithTemplateId)
+                                               .formatted(simulationId)
                                        );
       initialRes.next();
       final var initialRevision = initialRes.getInt("revision");
@@ -524,7 +521,7 @@ class MerlinDatabaseTests {
                     """
                         UPDATE simulation SET arguments = '{}'
                         WHERE id = %s;"""
-                        .formatted(simulationWithTemplateId)
+                        .formatted(simulationId)
                 );
 
       final var updatedRes = connection.createStatement()
@@ -532,7 +529,7 @@ class MerlinDatabaseTests {
                                            """
                                                SELECT revision FROM simulation
                                                WHERE id = %s;"""
-                                               .formatted(simulationWithTemplateId)
+                                               .formatted(simulationId)
                                        );
       updatedRes.next();
       final var updatedRevision = updatedRes.getInt("revision");
@@ -547,13 +544,13 @@ class MerlinDatabaseTests {
     @Test
     void shouldCreateDefaultDatasetOnPlanDatasetInsertWithNullDatasetId() throws SQLException {
       final var res = connection.createStatement()
-          .executeQuery(
-              """
-                  INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
-                  VALUES (%s, '0')
-                  RETURNING dataset_id;"""
-                  .formatted(planId)
-          );
+                                .executeQuery(
+                                    """
+                                        INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
+                                        VALUES (%s, '0')
+                                        RETURNING dataset_id;"""
+                                        .formatted(planId)
+                                );
       res.next();
       final var newDatasetId = res.getInt("dataset_id");
       assertFalse(res.wasNull());
@@ -561,12 +558,12 @@ class MerlinDatabaseTests {
 
 
       final var datasetRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * FROM dataset
-                  WHERE id = %s;"""
-                  .formatted(newDatasetId)
-          );
+                                       .executeQuery(
+                                           """
+                                               SELECT * FROM dataset
+                                               WHERE id = %s;"""
+                                               .formatted(newDatasetId)
+                                       );
 
       datasetRes.next();
       assertEquals(newDatasetId, datasetRes.getInt("id"));
@@ -578,23 +575,25 @@ class MerlinDatabaseTests {
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
 
       final var planRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * from plan
-                  WHERE id = %s;"""
-                  .formatted(planDatasetRecord.plan_id())
-          );
+                                    .executeQuery(
+                                        """
+                                            SELECT * from plan
+                                            WHERE id = %s;"""
+                                            .formatted(planDatasetRecord.plan_id())
+                                    );
       planRes.next();
       final var planStartTime = planRes.getTimestamp("start_time");
       planRes.close();
 
       final var planDatasetSelectRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * FROM plan_dataset
-                  WHERE plan_id = %s and dataset_id = %s;"""
-                  .formatted(planDatasetRecord.plan_id(), planDatasetRecord.dataset_id())
-          );
+                                                 .executeQuery(
+                                                     """
+                                                         SELECT * FROM plan_dataset
+                                                         WHERE plan_id = %s and dataset_id = %s;"""
+                                                         .formatted(
+                                                             planDatasetRecord.plan_id(),
+                                                             planDatasetRecord.dataset_id())
+                                                 );
       planDatasetSelectRes.next();
       final var offsetFromPlanStart = Duration.parse(planDatasetSelectRes.getString("offset_from_plan_start"));
       planDatasetSelectRes.close();
@@ -602,29 +601,30 @@ class MerlinDatabaseTests {
       final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
 
       final var newPlanRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * from plan
-                  WHERE id = %s;"""
-                  .formatted(newPlanId)
-          );
+                                       .executeQuery(
+                                           """
+                                               SELECT * from plan
+                                               WHERE id = %s;"""
+                                               .formatted(newPlanId)
+                                       );
       newPlanRes.next();
       final var newPlanStartTime = newPlanRes.getTimestamp("start_time");
       newPlanRes.close();
 
       final var planDatasetInsertRes = connection.createStatement()
-          .executeQuery(
-              """
-                  INSERT INTO plan_dataset (plan_id, dataset_id)
-                  VALUES (%s, %s)
-                  RETURNING *;"""
-                  .formatted(newPlanId, planDatasetRecord.dataset_id())
-          );
+                                                 .executeQuery(
+                                                     """
+                                                         INSERT INTO plan_dataset (plan_id, dataset_id)
+                                                         VALUES (%s, %s)
+                                                         RETURNING *;"""
+                                                         .formatted(newPlanId, planDatasetRecord.dataset_id())
+                                                 );
       planDatasetInsertRes.next();
       final var newOffsetFromPlanStart = Duration.parse(planDatasetInsertRes.getString("offset_from_plan_start"));
       planDatasetInsertRes.close();
 
-      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime() - planStartTime.getTime()));
+      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime()
+                                                                               - planStartTime.getTime()));
 
       assertEquals(calculatedOffset, newOffsetFromPlanStart);
     }
@@ -665,7 +665,7 @@ class MerlinDatabaseTests {
   @Nested
   class SimulationDatasetTriggers {
     @Test
-    void shouldInitializeDatasetOnInsertWithTemplate() throws SQLException {
+    void shouldInitializeDatasetOnInsert() throws SQLException {
       try (final var statement = connection.createStatement()) {
         try (final var res = statement.executeQuery(
             """
@@ -673,33 +673,13 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s AND dataset_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id(), simulationDatasetRecord.dataset_id())
-        )) {
+        )
+        ) {
           res.next();
           assertEquals(1, res.getInt("plan_revision"));
           assertEquals(0, res.getInt("model_revision"));
-          assertEquals(0, res.getInt("simulation_revision"));
+          assertEquals(1, res.getInt("simulation_revision")); //1, as we add a template in the BeforeEach
           assertEquals(0, res.getInt("simulation_template_revision"));
-        }
-      }
-    }
-
-    @Test
-    void shouldInitializeDatasetOnInsertWithoutTemplate() throws SQLException {
-      try (final var statement = connection.createStatement()) {
-        final var simulationDatasetWithoutTemplateId = insertSimulationDataset(simulationWithoutTemplateId, datasetId);
-        try (final var res = statement.executeQuery(
-            """
-                SELECT plan_revision, model_revision, simulation_revision, simulation_template_revision
-                FROM simulation_dataset
-                WHERE simulation_id = %s AND dataset_id = %s;"""
-                .formatted(simulationDatasetWithoutTemplateId.simulation_id(), simulationDatasetWithoutTemplateId.dataset_id())
-        )) {
-          res.next();
-          assertEquals(1, res.getInt("plan_revision"));
-          assertEquals(0, res.getInt("model_revision"));
-          assertEquals(0, res.getInt("simulation_revision"));
-          res.getInt("simulation_template_revision");
-          assertTrue(res.wasNull());
         }
       }
     }
@@ -719,7 +699,8 @@ class MerlinDatabaseTests {
                 FROM dataset
                 WHERE id = %s;"""
                 .formatted(simulationDatasetRecord.dataset_id())
-        )) {
+        )
+        ) {
           res.next();
           assertEquals(0, res.getInt("count"));
         }
@@ -735,7 +716,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -755,7 +737,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -771,7 +754,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -791,7 +775,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -807,7 +792,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -818,7 +804,7 @@ class MerlinDatabaseTests {
                     UPDATE simulation
                     SET arguments = '{}'
                     WHERE id = %s;"""
-                    .formatted(simulationWithTemplateId)
+                    .formatted(simulationId)
             );
 
         try (final var res = statement.executeQuery(
@@ -827,7 +813,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -843,7 +830,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -863,7 +851,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -873,202 +862,137 @@ class MerlinDatabaseTests {
 
   @Test
   void shouldRejectInsertProfileSegmentWithNonExistentProfile() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      try {
-        statement
-            .executeUpdate(
-              """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, 1256, '0 seconds', '{}', false);
-              """.formatted(datasetId)
-          );
-      } catch (SQLException e) {
-        if (!e.getMessage().contains("foreign key violation: there is no profile with id 1256 in dataset %d".formatted(datasetId))) {
-          throw e;
-        }
+    final var datasetId = allocateDataset();
+    try {
+      insertProfileSegment(datasetId, 1256);
+      fail();
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("foreign key violation: there is no profile with id 1256 in dataset %d".formatted(
+          datasetId))) {
+        throw e;
       }
     }
   }
 
   @Test
   void shouldRejectInsertEventWithNonExistentTopic() throws SQLException {
+    final var datasetId = allocateDataset();
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      try {
-        statement
-            .executeUpdate(
-                """
-                INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-                VALUES (%d, '0 seconds', 0, '.1', '{}', 1234);
-                """.formatted(datasetId)
-            );
-      } catch (SQLException e) {
-        if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
-          throw e;
-        }
+      statement
+          .executeUpdate(
+              """
+                  INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+                  VALUES (%d, '0 seconds', 0, '.1', '{}', 1234);
+                  """.formatted(datasetId)
+          );
+      fail();
+    } catch (SQLException e) {
+      if (!e
+          .getMessage()
+          .contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
+        throw e;
       }
     }
   }
 
   @Test
   void shouldRejectUpdateProfileSegmentToNonExistentProfile() throws SQLException {
+    final var datasetId = allocateDataset();
+    final int profileId = insertProfile(datasetId);
+
+    insertProfileSegment(datasetId, profileId);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-
-      final int profileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              INSERT INTO profile (dataset_id, name, type, duration)
-              VALUES (%d, 'fred', '{}', '0 seconds')
-              RETURNING id
-              """.formatted(datasetId)
-          )
-      ) {
-        res.next();
-        profileId = res.getInt("id");
-      }
-
       statement
           .executeUpdate(
               """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, %d, '0 seconds', '{}', false);
-              """.formatted(datasetId, profileId)
+                  UPDATE profile_segment
+                   set profile_id=%d
+                   where dataset_id=%d and profile_id=%d;
+                  """.formatted(profileId + 1, datasetId, profileId)
           );
-
-      try {
-        statement
-            .executeUpdate(
-                """
-                UPDATE profile_segment
-                 set profile_id=%d
-                 where dataset_id=%d and profile_id=%d;
-                """.formatted(profileId + 1, datasetId, profileId)
-            );
-      } catch (SQLException e) {
-        assertTrue(e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(profileId + 1, datasetId)), e.getMessage());
+      fail();
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(
+          profileId + 1,
+          datasetId))) {
+        throw e;
       }
     }
+
   }
 
   @Test
   void shouldRejectUpdateEventToNonExistentTopic() throws SQLException {
+    final var datasetId = allocateDataset();
+    final var topicIndex = 42;
+
+    insertTopic(datasetId, topicIndex);
+    insertEvent(datasetId, topicIndex);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      final var topicIndex = 42;
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
-              VALUES (%d, %d, 'fred', '{}');
-              """.formatted(datasetId, topicIndex));
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
-              """.formatted(datasetId, topicIndex)
-          );
-
-      try {
-        statement
-            .executeUpdate(
-                """
-                UPDATE event
-                 set topic_index=%d
-                 where dataset_id=%d and topic_index=%d;
-                """.formatted(topicIndex + 1, datasetId, topicIndex)
-            );
-      } catch (SQLException e) {
-        assertTrue(e.getMessage().contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(topicIndex + 1, datasetId)), e.getMessage());
+      statement.executeUpdate(
+          """
+              UPDATE event
+              set topic_index=%d
+              where dataset_id=%d and topic_index=%d;
+              """.formatted(topicIndex + 1, datasetId, topicIndex)
+      );
+      fail();
+    } catch (SQLException e) {
+      if (!e
+          .getMessage()
+          .contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(
+              topicIndex
+              + 1,
+              datasetId))) {
+        throw e;
       }
     }
   }
 
   @Test
   void shouldCascadeWhenDeletingProfile() throws SQLException {
+    final var datasetId = allocateDataset();
+    final int profileId = insertProfile(datasetId);
+    insertProfileSegment(datasetId, profileId);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-
-      final int profileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              INSERT INTO profile (dataset_id, name, type, duration)
-              VALUES (%d, 'fred', '{}', '0 seconds')
-              RETURNING id
-              """.formatted(datasetId)
-          )
-      ) {
-        res.next();
-        profileId = res.getInt("id");
-      }
-
       statement
           .executeUpdate(
               """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, %d, '0 seconds', '{}', false);
-              """.formatted(datasetId, profileId)
+                  DELETE FROM profile
+                  WHERE dataset_id=%d and id=%d
+                  """.formatted(datasetId, profileId)
           );
-
-      statement
-          .executeUpdate(
-              """
-              DELETE FROM profile
-              WHERE dataset_id=%d and id=%d
-              """.formatted(datasetId, profileId)
-          );
-
-      try (final var res = statement.executeQuery(
-          """
-          SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
-          """.formatted(datasetId, profileId)
-      )) {
-        res.next();
-        assertEquals(0, res.getInt("count"));
-      }
     }
+
+    assertEquals(0, getProfileSegmentCount(datasetId, profileId));
   }
 
   @Test
   void shouldCascadeWhenDeletingTopic() throws SQLException {
+    final var datasetId = allocateDataset();
+    final var topicIndex = 42;
+
+    insertTopic(datasetId, topicIndex);
+    insertEvent(datasetId, topicIndex);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      final var topicIndex = 42;
-
       statement
           .executeUpdate(
               """
-              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
-              VALUES (%d, %d, 'fred', '{}');
-              """.formatted(datasetId, topicIndex));
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
-              """.formatted(datasetId, topicIndex)
-          );
-
-      statement
-          .executeUpdate(
-              """
-              DELETE FROM topic
-              WHERE dataset_id=%d and topic_index=%d
-              """.formatted(datasetId, topicIndex)
+                  DELETE FROM topic
+                  WHERE dataset_id=%d and topic_index=%d
+                  """.formatted(datasetId, topicIndex)
           );
 
       try (final var res = statement.executeQuery(
           """
-          SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
-          """.formatted(datasetId, topicIndex)
-      )) {
+              SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
+              """.formatted(datasetId, topicIndex)
+      )
+      ) {
         res.next();
         assertEquals(0, res.getInt("count"));
       }
@@ -1077,52 +1001,53 @@ class MerlinDatabaseTests {
 
   @Test
   void shouldCascadeWhenUpdatingProfile() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      final int profileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              INSERT INTO profile (dataset_id, name, type, duration)
-              VALUES (%d, 'fred', '{}', '0 seconds')
-              RETURNING id
-              """.formatted(datasetId)
-          )
-      ) {
-        res.next();
-        profileId = res.getInt("id");
-      }
+    final var datasetId = allocateDataset();
+    final int profileId = insertProfile(datasetId);
+    insertProfileSegment(datasetId, profileId);
 
+    final int newProfileId;
+    try (final var statement = connection.createStatement();
+         final var res = statement.executeQuery(
+             """
+                 UPDATE profile
+                 SET id=default
+                 WHERE dataset_id=%d and id=%d
+                 RETURNING id;
+                 """.formatted(datasetId, profileId)
+         )
+    ) {
+      res.next();
+      newProfileId = res.getInt("id");
+    }
+
+    assertNotEquals(profileId, newProfileId);
+    assertEquals(1, getProfileSegmentCount(datasetId, newProfileId));
+  }
+
+  @Test
+  void shouldCascadeWhenUpdatingTopicIndex() throws SQLException {
+    final var datasetId = allocateDataset();
+    final var topicIndex = 42;
+
+    insertTopic(datasetId, topicIndex);
+    insertEvent(datasetId, topicIndex);
+
+    try (final var statement = connection.createStatement()) {
       statement
           .executeUpdate(
               """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, %d, '0 seconds', '{}', false);
-              """.formatted(datasetId, profileId)
+                  UPDATE topic
+                  SET topic_index=%d
+                  WHERE dataset_id=%d and topic_index=%d
+                  """.formatted(topicIndex + 1, datasetId, topicIndex)
           );
-
-      final int newProfileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              UPDATE profile
-              SET id=default
-              WHERE dataset_id=%d and id=%d
-              RETURNING id;
-              """.formatted(datasetId, profileId)
-          )
-      ) {
-        res.next();
-        newProfileId = res.getInt("id");
-      }
-
-      assertNotEquals(profileId, newProfileId);
 
       try (final var res = statement.executeQuery(
           """
-          SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
-          """.formatted(datasetId, newProfileId)
-      )) {
+              SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
+              """.formatted(datasetId, topicIndex + 1)
+      )
+      ) {
         res.next();
         assertEquals(1, res.getInt("count"));
       }
@@ -1130,65 +1055,197 @@ class MerlinDatabaseTests {
   }
 
   @Test
-  void shouldCascadeWhenUpdatingTopicIndex() throws SQLException {
+  void getResourcesAtTimeFetchesLatestData() throws SQLException {
+    final var datasetId = allocateDataset();
+
+    final var contestantName = "contestantCount";
+    final var contestantType = "{\"type\": \"discrete\", \"schema\": {\"type\": \"int\"}}";
+
+    final var winnerName = "winner";
+    final var winnerType = "{\"type\": \"discrete\", \"schema\": {\"type\": \"string\"}}";
+
+    final var contestantCountId = insertProfile(datasetId, contestantName, contestantType, "12 hours");
+    final var winnerId = insertProfile(datasetId, winnerName, winnerType, "12 hours");
+
+    // Contestant Count Segments:
+    insertProfileSegment(datasetId, contestantCountId, "0 seconds", "20", false);
+    insertProfileSegment(datasetId, contestantCountId, "2 hours", "12", false);
+    insertProfileSegment(datasetId, contestantCountId, "12 hours", "1", false);
+
+    // Winner Segments:
+    insertProfileSegment(datasetId, winnerId, "6 hours", "\"Bob or Alice\"", false);
+    insertProfileSegment(datasetId, winnerId, "10 hours", "\"Alice\"", false);
+
+    final var segmentsAtStart = getResourcesAtStartOffset(datasetId, "00:00:00");
+    final var segmentsAtOneHour = getResourcesAtStartOffset(datasetId, "06:00:00");
+    final var segmentsAtTwelveHours = getResourcesAtStartOffset(datasetId, "12:00:00");
+
+    assertEquals(1, segmentsAtStart.size());
+    assertEquals(2, segmentsAtOneHour.size());
+    assertEquals(2, segmentsAtTwelveHours.size());
+
+    final var atStartSegment0 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        contestantCountId,
+        contestantName,
+        contestantType,
+        "PT0S",
+        "20",
+        false);
+    assertEquals(atStartSegment0, segmentsAtStart.get(0));
+
+    final var atOneSegment0 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        contestantCountId,
+        contestantName,
+        contestantType,
+        "PT2H",
+        "12",
+        false);
+    final var atOneSegment1 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        winnerId,
+        winnerName,
+        winnerType,
+        "PT6H",
+        "\"Bob or Alice\"",
+        false);
+
+    assertEquals(atOneSegment0, segmentsAtOneHour.get(0));
+    assertEquals(atOneSegment1, segmentsAtOneHour.get(1));
+
+    final var atTwelveSegment0 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        contestantCountId,
+        contestantName,
+        contestantType,
+        "PT12H",
+        "1",
+        false);
+    final var atTwelveSegment1 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        winnerId,
+        winnerName,
+        winnerType,
+        "PT10H",
+        "\"Alice\"",
+        false);
+
+    assertEquals(atTwelveSegment0, segmentsAtTwelveHours.get(0));
+    assertEquals(atTwelveSegment1, segmentsAtTwelveHours.get(1));
+  }
+
+  private int insertProfile(final int datasetId) throws SQLException {
+    return insertProfile(datasetId, "fred", "{}", "0 seconds");
+  }
+
+  private int insertProfile(final int datasetId, final String name, final String type, final String duration)
+  throws SQLException
+  {
     try (final var statement = connection.createStatement()) {
-
-      final var datasetId = allocateDataset(statement);
-      final var topicIndex = 42;
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
-              VALUES (%d, %d, 'fred', '{}');
-              """.formatted(datasetId, topicIndex));
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
-              """.formatted(datasetId, topicIndex)
-          );
-
-      statement
-          .executeUpdate(
-              """
-              UPDATE topic
-              SET topic_index=%d
-              WHERE dataset_id=%d and topic_index=%d
-              """.formatted(topicIndex + 1, datasetId, topicIndex)
-          );
-
-      try (final var res = statement.executeQuery(
+      final var results = statement.executeQuery(
           """
-          SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
-          """.formatted(datasetId, topicIndex + 1)
-      )) {
-        res.next();
-        assertEquals(1, res.getInt("count"));
-      }
+              INSERT INTO profile(dataset_id, name, type, duration)
+              VALUES (%d, '%s', '%s', '%s')
+              RETURNING id;
+              """.formatted(datasetId, name, type, duration));
+      assertTrue(results.first());
+      return results.getInt("id");
     }
   }
 
-  private static int allocateDataset(final Statement statement) throws SQLException {
+  private void insertProfileSegment(final int datasetId, final int profileId) throws SQLException {
+    insertProfileSegment(datasetId, profileId, "0 seconds", "{}", false);
+  }
+
+  private void insertProfileSegment(
+      final int datasetId,
+      final int profileId,
+      final String startOffset,
+      final String dynamics,
+      final boolean isGap) throws SQLException
+  {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          """
+              INSERT INTO profile_segment(dataset_id, profile_id, start_offset, dynamics, is_gap)
+              VALUES (%d, %d, '%s'::interval, '%s'::jsonb, %b);
+              """.formatted(datasetId, profileId, startOffset, dynamics, isGap));
+    }
+  }
+
+  private int getProfileSegmentCount(final int datasetId, final int profileId) throws SQLException {
+    try (final Statement statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          """
+              SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
+              """.formatted(datasetId, profileId));
+      assertTrue(res.first());
+      return res.getInt("count");
+    }
+  }
+
+  private void insertTopic(final int datasetId, final int topicIndex) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement
+          .executeUpdate(
+              """
+                  INSERT INTO topic (dataset_id, topic_index, name, value_schema)
+                  VALUES (%d, %d, 'fred', '{}');
+                  """.formatted(datasetId, topicIndex));
+    }
+  }
+
+  private void insertEvent(final int datasetId, final int topicIndex) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement
+          .executeUpdate(
+              """
+                  INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+                  VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
+                  """.formatted(datasetId, topicIndex)
+          );
+    }
+  }
+
+  private ArrayList<ProfileSegmentAtATimeRecord> getResourcesAtStartOffset(
+      final int datasetId,
+      final String startOffset) throws SQLException
+  {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+                                                 select * from hasura_functions.get_resources_at_start_offset(%d, '%s');
+                                                 """.formatted(datasetId, startOffset));
+
+      final var segments = new ArrayList<ProfileSegmentAtATimeRecord>();
+      while (res.next()) {
+        segments.add(new ProfileSegmentAtATimeRecord(
+            res.getInt("dataset_id"),
+            res.getInt("id"),
+            res.getString("name"),
+            res.getString("type"),
+            res.getString("start_offset"),
+            res.getString("dynamics"),
+            res.getBoolean("is_gap")
+        ));
+      }
+      return segments;
+    }
+  }
+
+  private int allocateDataset() throws SQLException {
     final int datasetId;
-    try (final var res = statement.executeQuery(
-        """
+    try (final Statement statement = connection.createStatement()) {
+      try (final var res = statement.executeQuery(
+          """
             INSERT INTO dataset
             DEFAULT VALUES
             RETURNING id;
-            """
-    )) {
+            """)) {
       res.next();
       datasetId = res.getInt("id");
     }
-
-    statement
-        .executeUpdate(
-            """
-            SELECT FROM allocate_dataset_partitions(%d)
-            """.formatted(datasetId)
-        );
     return datasetId;
   }
+}
 }

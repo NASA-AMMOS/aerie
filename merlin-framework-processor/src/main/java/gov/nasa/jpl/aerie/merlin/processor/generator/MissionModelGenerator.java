@@ -12,7 +12,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.EmptyInputType;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
@@ -24,7 +23,6 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
@@ -40,24 +38,18 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.RecordComponentElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -298,9 +290,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                                       DurationType.class,
                                                       activityTypeRecord
                                                           .effectModel()
-                                                          .flatMap(EffectModelRecord::durationParameter)
-                                                          .map(durationParameter -> CodeBlock.of("controllable(\"$L\")", durationParameter))
-                                                          .orElse(CodeBlock.of("uncontrollable()"))))
+                                                          .map($ -> {
+                                                            if ($.durationParameter().isPresent()) return CodeBlock.of("controllable(\"$L\")", $.durationParameter().get());
+                                                            else if ($.fixedDurationExpr().isPresent()) return CodeBlock.of("fixed($L.$L)", activityTypeRecord.fullyQualifiedClass(), $.fixedDurationExpr().get());
+                                                            else if ($.parametricDuration().isPresent()) return CodeBlock.of("parametric($$ -> (new $L().new InputMapper()).instantiate($$).$L())", activityTypeRecord.inputType().mapper().name, $.parametricDuration().get());
+                                                            else return CodeBlock.of("uncontrollable()");
+                                                          })
+                                                          .orElse(CodeBlock.of("fixed($T.ZERO)", ClassName.get(Duration.class)))))
                             .reduce((x, y) -> x.add("$L", y.build()))
                             .orElse(CodeBlock.builder()).build())
                     .addStatement("return result")
@@ -550,98 +546,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .builder(typeName.packageName(), typeSpec)
         .skipJavaLangImports(true)
         .build();
-  }
-
-  public Pair<JavaFile, List<TypeRule>> generateAutoValueMappers(
-      final MissionModelRecord missionModel,
-      final Iterable<TypeElement> recordTypes) {
-    final var typeRules = new ArrayList<TypeRule>();
-
-    final var typeName = missionModel.getAutoValueMappersName();
-
-    final var builder =
-        TypeSpec
-            .classBuilder(typeName)
-            .addAnnotation(
-                AnnotationSpec
-                    .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
-                    .build())
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
-
-    record ComponentMapperNamePair(String componentName, String mapperName) {}
-    for (final var record : recordTypes) {
-      final var methodName = ClassName.get(record).canonicalName().replace(".", "_");
-      final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
-      final var necessaryMappers = new HashMap<TypeMirror, String>();
-      for (final var element : record.getEnclosedElements()) {
-        if (!(element instanceof RecordComponentElement el)) continue;
-        final var typeMirror = el.getAccessor().getReturnType();
-        final var elementName = element.toString();
-        final var valueMapperIdentifier = typeMirror.toString().replace(".", "_") + "ValueMapper";
-        componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
-        necessaryMappers.put(typeMirror, valueMapperIdentifier);
-      }
-
-      final var typeRule = new TypeRule(
-          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(TypePattern.from(record.asType()))),
-          Set.of(),
-          necessaryMappers
-              .keySet()
-              .stream()
-              .map(component -> (TypePattern) new TypePattern.ClassPattern(
-                  ClassName.get(ValueMapper.class),
-                  List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component).box(), List.of()))))
-              .toList(),
-          typeName,
-          methodName);
-      typeRules.add(typeRule);
-
-      final var methodBuilder = MethodSpec
-          .methodBuilder(methodName)
-          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-          .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
-          .addParameters(
-              necessaryMappers
-                  .entrySet()
-                  .stream()
-                  .map(mapperRequest -> ParameterSpec
-                      .builder(
-                          ParameterizedTypeName.get(
-                              ClassName.get(ValueMapper.class),
-                              ClassName.get(mapperRequest.getKey()).box()),
-                          mapperRequest.getValue(),
-                          Modifier.FINAL)
-                      .build())
-                  .toList());
-
-      final var codeBlockBuilder = CodeBlock.builder();
-      codeBlockBuilder.add("return new $T<>(\n", RecordValueMapper.class);
-      codeBlockBuilder.add("  $T.class,\n", ClassName.get(record));
-      codeBlockBuilder.add("  $T.of(\n", List.class);
-
-      codeBlockBuilder.add(
-          CodeBlock.join(componentToMapperName
-            .stream()
-            .map(recordComponent ->
-                     CodeBlock
-                         .builder()
-                         .add("    new $T<>(\n", RecordValueMapper.Component.class)
-                         .add("      $S,\n", recordComponent.componentName())
-                         .add("      $T::$L,\n", ClassName.get(record), recordComponent.componentName())
-                         .add("    $L)", recordComponent.mapperName())
-                        .build())
-            .toList(), ",\n"));
-      codeBlockBuilder.add("));");
-
-      methodBuilder.addCode(codeBlockBuilder.build());
-      builder.addMethod(methodBuilder.build());
-    }
-
-    return Pair.of(JavaFile
-        .builder(typeName.packageName(), builder.build())
-        .skipJavaLangImports(true)
-        .build(), typeRules);
   }
 
   private record ComputedAttributesCodeBlocks(TypeName typeName, FieldSpec fieldDef) {}
