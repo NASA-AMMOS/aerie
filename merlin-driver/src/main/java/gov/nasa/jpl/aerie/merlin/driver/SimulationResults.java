@@ -16,6 +16,8 @@ import java.util.SortedMap;
 
 public class SimulationResults implements SimulationResultsInterface {
   protected final Instant startTime;
+  protected final Duration duration;
+
   protected final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles;
   protected final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles;
   protected final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
@@ -51,6 +53,11 @@ public class SimulationResults implements SimulationResultsInterface {
   @Override
   public Instant getStartTime() {
     return startTime;
+  }
+
+  @Override
+  public Duration getDuration() {
+    return duration;
   }
 
   @Override

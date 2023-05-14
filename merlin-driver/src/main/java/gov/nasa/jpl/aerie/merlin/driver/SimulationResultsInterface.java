@@ -28,6 +28,8 @@ public interface SimulationResultsInterface {
 
   Instant getStartTime();
 
+  Duration getDuration();
+
   Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> getRealProfiles();
 
   Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> getDiscreteProfiles();

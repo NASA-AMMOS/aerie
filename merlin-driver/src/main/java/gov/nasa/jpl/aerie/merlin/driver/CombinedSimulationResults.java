@@ -41,6 +41,13 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   }
 
   @Override
+  public Duration getDuration() {
+    return Duration.minus(ObjectUtils.max(Duration.addToInstant(nr.getStartTime(), nr.getDuration()),
+                                          Duration.addToInstant(or.getStartTime(), or.getDuration())),
+                          getStartTime());
+  }
+
+  @Override
   public Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> getRealProfiles() {
     return Stream.of(or.getRealProfiles(), nr.getRealProfiles()).flatMap(m -> m.entrySet().stream())
                  .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (p1, p2) -> mergeProfiles(or.getStartTime(), nr.getStartTime(), p1, p2)));

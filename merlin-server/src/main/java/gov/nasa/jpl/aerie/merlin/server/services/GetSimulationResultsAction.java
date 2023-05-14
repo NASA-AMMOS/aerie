@@ -138,9 +138,9 @@ public final class GetSimulationResultsAction {
     }
 
     final var results$ = this.simulationService.get(planId, revisionData);
-    final var simStartTime = results$.isPresent() ? results$.get().startTime : plan.startTimestamp.toInstant();
+    final var simStartTime = results$.isPresent() ? results$.get().getStartTime() : plan.startTimestamp.toInstant();
     final var simDuration = results$.isPresent() ?
-        results$.get().duration :
+        results$.get().getDuration() :
         Duration.of(
           plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
           Duration.MICROSECONDS);

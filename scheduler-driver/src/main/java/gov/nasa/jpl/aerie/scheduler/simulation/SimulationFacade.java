@@ -52,7 +52,7 @@ public class SimulationFacade implements AutoCloseable{
     return lastSimConstraintResults;
   }
 
-  public SimulationResults getLatestDriverSimulationResults(){
+  public SimulationResultsInterface getLatestDriverSimulationResults(){
     return lastSimDriverResults;
   }
 

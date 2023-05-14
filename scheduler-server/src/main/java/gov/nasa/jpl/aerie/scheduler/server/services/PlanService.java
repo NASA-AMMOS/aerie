@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -159,7 +160,7 @@ public interface PlanService {
      * @throws PlanServiceException
      * @throws IOException
      */
-   DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResults results,
+   DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResultsInterface results,
                                     final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws PlanServiceException, IOException;
   }
 

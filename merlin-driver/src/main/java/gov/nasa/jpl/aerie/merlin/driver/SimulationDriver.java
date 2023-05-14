@@ -25,7 +25,7 @@ public final class SimulationDriver {
       final Instant planStartTime,
       final Duration planDuration
   ) {
-    try (final var engine = new SimulationEngine(startTime, missionModel, null)) {
+    try (final var engine = new SimulationEngine(planStartTime, missionModel, null)) {
       /* The top-level simulation timeline. */
       //var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
@@ -90,7 +90,7 @@ public final class SimulationDriver {
           engine.setCurTime(batch.offsetFromStart());
           elapsedTime = engine.curTime();
           // TODO: Since we moved timeline from SimulationDriver to SimulationEngine, maybe some of this should be encapsulated in the engine.
-          timeline.add(delta);
+          engine.timeline.add(delta);
           // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
           //   even if they occur at the same real time.
 
@@ -118,7 +118,7 @@ public final class SimulationDriver {
       // - Transitively: if A flows to C and C flows to B, A flows to B
       // tstill not enough...?
 
-      return engine.computeResults(startTime, elapsedTime, engine.defaultActivityTopic);
+      return engine.computeResults(simulationStartTime, elapsedTime, engine.defaultActivityTopic);
     }
   }
 
