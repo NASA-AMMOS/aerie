@@ -7,5 +7,3 @@
 - "!include public_scheduling_specification.yaml"
 - "!include public_scheduling_specification_goals.yaml"
 - "!include public_scheduling_specification_conditions.yaml"
-- "!include public_scheduling_template.yaml"
-- "!include public_scheduling_template_goals.yaml"
