@@ -6,7 +6,6 @@ create table command_dictionary (
   version text not null,
 
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
 
   constraint command_dictionary_synthetic_key
       primary key (id),
@@ -26,17 +25,3 @@ comment on column command_dictionary.version is e''
   'A human-meaningful version qualifier.';
 comment on constraint command_dictionary_natural_key on command_dictionary is e''
   'There an only be one command dictionary of a given version for a given mission.';
-
-create function command_dictionary_set_updated_at()
-returns trigger
-security definer
-language plpgsql as $$begin
-  new.updated_at = now();
-  return new;
-end$$;
-
-create trigger trigger_command_dictionary_set_updated_at
-  before
-    update on command_dictionary
-  for each row
-  execute function command_dictionary_set_updated_at();

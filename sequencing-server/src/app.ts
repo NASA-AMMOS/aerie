@@ -127,7 +127,7 @@ app.post('/put-dictionary', async (req, res, next) => {
     values ($1, $2, $3)
     on conflict (mission, version) do update
       set command_types_typescript_path = $1
-    returning id, command_types_typescript_path, mission, version, created_at, updated_at;
+    returning id, command_types_typescript_path, mission, version, created_at;
   `;
 
   const { rows } = await db.query(sqlExpression, [
