@@ -22,7 +22,6 @@
 - "!include public_plan_snapshot.yaml"
 - "!include public_preset_to_directive.yaml"
 - "!include public_profile.yaml"
-- "!include public_profile_request.yaml"
 - "!include public_profile_segment.yaml"
 - "!include public_resource_profile_view.yaml"
 - "!include public_resource_type.yaml"

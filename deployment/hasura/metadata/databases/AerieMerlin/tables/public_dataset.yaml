@@ -2,13 +2,6 @@ table:
   name: dataset
   schema: public
 array_relationships:
-- name: profile_requests
-  using:
-    foreign_key_constraint_on:
-      column: dataset_id
-      table:
-        name: profile_request
-        schema: public
 - name: profiles
   using:
     foreign_key_constraint_on:
