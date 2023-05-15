@@ -1,5 +1,3 @@
-- "!include hasura_functions_duplicate_plan_return_value.yaml"
-- "!include hasura_functions_get_plan_history_return_value.yaml"
 - "!include public_activity_directive.yaml"
 - "!include public_activity_directive_extended.yaml"
 - "!include public_activity_directive_metadata_schema.yaml"
@@ -33,33 +31,15 @@
 - "!include public_topic.yaml"
 - "!include public_uploaded_file.yaml"
 # Function return values:
-- table:
-    name: create_merge_request_return_value
-    schema: hasura_functions
-- table:
-    name: begin_merge_return_value
-    schema: hasura_functions
-- table:
-    name: commit_merge_return_value
-    schema: hasura_functions
-- table:
-    name: deny_merge_return_value
-    schema: hasura_functions
-- table:
-    name: withdraw_merge_request_return_value
-    schema: hasura_functions
-- table:
-    name: cancel_merge_return_value
-    schema: hasura_functions
-- table:
-    name: get_non_conflicting_activities_return_value
-    schema: hasura_functions
-- table:
-    name: get_conflicting_activities_return_value
-    schema: hasura_functions
-- table:
-    name: delete_anchor_return_value
-    schema: hasura_functions
-- table:
-    name: resource_at_start_offset_return_value
-    schema: hasura_functions
+- "!include hasura_functions/begin_merge_return_value.yaml"
+- "!include hasura_functions/cancel_merge_return_value.yaml"
+- "!include hasura_functions/commit_merge_return_value.yaml"
+- "!include hasura_functions/create_merge_return_value.yaml"
+- "!include hasura_functions/delete_anchor_return_value.yaml"
+- "!include hasura_functions/deny_merge_return_value.yaml"
+- "!include hasura_functions/duplicate_plan_return_value.yaml"
+- "!include hasura_functions/get_conflicting_activities_return_value.yaml"
+- "!include hasura_functions/get_non_conflicting_activities_return_value.yaml"
+- "!include hasura_functions/get_plan_history_return_value.yaml"
+- "!include hasura_functions/resource_at_start_offset_return_value.yaml"
+- "!include hasura_functions/withdraw_merge_request_return_value.yaml"

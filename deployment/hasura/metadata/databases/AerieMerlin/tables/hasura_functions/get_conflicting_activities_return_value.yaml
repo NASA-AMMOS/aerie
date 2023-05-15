@@ -1,0 +1,8 @@
+table:
+  name: get_conflicting_activities_return_value
+  schema: hasura_functions
+select_permissions:
+  - role: user
+    permission:
+      columns: [activity_id, change_type_source, change_type_target, resolution, source, target, merge_base]
+      filter: {}

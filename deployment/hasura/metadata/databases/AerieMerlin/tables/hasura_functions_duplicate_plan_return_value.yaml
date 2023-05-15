@@ -1,3 +1,0 @@
-table:
-  name: duplicate_plan_return_value
-  schema: hasura_functions

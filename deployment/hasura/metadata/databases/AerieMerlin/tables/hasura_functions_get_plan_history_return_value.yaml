@@ -1,3 +1,0 @@
-table:
-  name: get_plan_history_return_value
-  schema: hasura_functions
