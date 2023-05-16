@@ -6,3 +6,4 @@ call migrations.mark_migration_applied('0');
 call migrations.mark_migration_applied('1');
 call migrations.mark_migration_applied('2');
 call migrations.mark_migration_applied('3');
+call migrations.mark_migration_applied('4');
