@@ -271,6 +271,16 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
+  public void refreshResourceTypes(final String missionModelId){
+    try {
+      final var model = this.loadAndInstantiateMissionModel(missionModelId);
+      this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources());
+    } catch (NoSuchMissionModelException | MissionModelRepository.NoSuchMissionModelException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
   public void refreshActivityValidations(final String missionModelId, final ActivityDirectiveForValidation directive)
   throws NoSuchMissionModelException, InstantiationException
   {

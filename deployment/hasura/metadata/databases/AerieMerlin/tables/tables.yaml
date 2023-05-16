@@ -11,6 +11,7 @@
 - "!include public_profile.yaml"
 - "!include public_profile_request.yaml"
 - "!include public_profile_segment.yaml"
+- "!include public_resource_type.yaml"
 - "!include public_simulation.yaml"
 - "!include public_simulation_dataset.yaml"
 - "!include public_simulation_template.yaml"
