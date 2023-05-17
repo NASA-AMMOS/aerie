@@ -71,7 +71,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
                     r.name(),
                     r.description(),
                     r.definition(),
-                    ConstraintType.MODEL)));
+                    ConstraintType.model)));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

@@ -192,7 +192,7 @@ public final class PostgresPlanRepository implements PlanRepository {
                     r.name(),
                     r.description(),
                     r.definition(),
-                    ConstraintType.PLAN)));
+                    ConstraintType.plan)));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

@@ -662,7 +662,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var violation = new Violation(1L, ConstraintType.MODEL, List.of(), List.of(), new Windows(interval(4, 6, SECONDS), true));
+    final var violation = new Violation("Constraint Test", 1L, ConstraintType.model, List.of(), List.of(), new Windows(interval(4, 6, SECONDS), true));
     final var result = new ForEachActivityViolations(
         "TypeA",
         "act",
@@ -676,8 +676,8 @@ public class ASTTests {
     // We expect two violations because there are two activities of TypeA
     // The details of the violation will be the same, since we are using a supplier
     final var expected = List.of(
-        new Violation(1L, ConstraintType.MODEL, List.of(1L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)),
-        new Violation(1L, ConstraintType.MODEL, List.of(3L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)));
+        new Violation("Constraint Test", 1L, ConstraintType.model, List.of(1L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)),
+        new Violation("Constraint Test", 1L, ConstraintType.model, List.of(3L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)));
 
     assertEquivalent(expected, result);
   }
@@ -728,8 +728,9 @@ public class ASTTests {
     final var result = new ViolationsOfWindows(new Supplier<>(windows)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = List.of(new Violation(
+        "Constraint Test",
         1L,
-        ConstraintType.MODEL,
+        ConstraintType.model,
         List.of(),
         List.of(),
         List.of(Interval.between(5, 6, SECONDS)),

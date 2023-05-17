@@ -128,7 +128,8 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
-        .add("id", violation.constraintId)
+        .add("constraintId", violation.constraintId)
+        .add("constraintName", violation.constraintName)
         .add("associations", Json
             .createObjectBuilder()
             .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))

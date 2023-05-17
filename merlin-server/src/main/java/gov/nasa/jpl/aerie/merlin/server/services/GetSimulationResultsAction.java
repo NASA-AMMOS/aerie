@@ -245,6 +245,7 @@ public final class GetSimulationResultsAction {
       final var resourceNames = new ArrayList<>(names);
 
       violationEvents.forEach(violation -> violations.add(new Violation(
+          entry.getValue().name(),
           entry.getKey(),
           entry.getValue().type(),
           violation.activityInstanceIds,
