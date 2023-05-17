@@ -3,7 +3,7 @@ import { gql, GraphQLClient } from 'graphql-request';
 import { randomUUID } from 'node:crypto';
 import type { CommandDictionary } from '@nasa-jpl/aerie-ampcs';
 
-const commandDictionaryString = fs.readFileSync(
+export const commandDictionaryString = fs.readFileSync(
   new URL('../../cdict/command_banananation.xml', import.meta.url).pathname,
   'utf-8',
 );
