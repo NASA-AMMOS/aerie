@@ -53,6 +53,9 @@ begin;
   -- Presets
   \ir tables/activity_presets.sql
 
+    -- Metadata
+  \ir tables/metadata/tags.sql
+
   -- Views
   \ir views/simulated_activity.sql
   \ir views/resource_profile.sql
