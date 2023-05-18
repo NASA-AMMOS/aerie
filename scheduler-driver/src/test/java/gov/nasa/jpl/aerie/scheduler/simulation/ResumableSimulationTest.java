@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -24,6 +25,7 @@ public class ResumableSimulationTest {
   Duration endOfLastAct;
 
   private final Duration tenHours = Duration.of(10, Duration.HOURS);
+  private final Duration fiveHours = Duration.of(5, Duration.HOURS);
 
   @BeforeEach
   public void init() {
@@ -74,6 +76,21 @@ public class ResumableSimulationTest {
     assertTrue(act1Dur.isPresent() && act2Dur.isPresent());
     assertTrue(act1Dur.get().isEqualTo(Duration.of(2, SECONDS)));
     assertTrue(act2Dur.get().isEqualTo(Duration.of(2, SECONDS)));
+  }
+
+  @Test
+  public void testStopsAtEndOfPlanningHorizon(){
+    final var activity = new TestSimulatedActivity(
+        Duration.of(0, SECONDS),
+        new SerializedActivity("ControllableDurationActivity", Map.of("duration", SerializedValue.of(tenHours.in(MICROSECOND)))),
+        new ActivityDirectiveId(1));
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours);
+    resumableSimulationDriver.initSimulation();
+    resumableSimulationDriver.clearActivitiesInserted();
+    resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
+    assertEquals(fiveHours, resumableSimulationDriver.getCurrentSimulationEndTime());
+    assert(resumableSimulationDriver.getSimulationResults(Instant.now()).unfinishedActivities.size() == 1);
   }
 
   @Test

@@ -251,6 +251,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       // Update batch and increment real time, if necessary.
       batch = engine.extractNextJobs(Duration.MAX_VALUE);
       delta = batch.offsetFromStart().minus(curTime);
+      if(batch.offsetFromStart().longerThan(planDuration)){
+        break;
+      }
     }
     lastSimResults = null;
   }
