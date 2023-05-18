@@ -259,7 +259,7 @@ type ResourceSamplesResponse {
 }
 
 type ConstraintViolationsResponse {
-  constraintViolations: ConstraintViolations!
+  violations: ConstraintViolations!
 }
 
 scalar ResourceSchema

@@ -238,7 +238,7 @@ public final class ResponseSerializers {
 
     return Json
         .createObjectBuilder()
-        .add("constraintViolations", builder.build())
+        .add("violations", builder.build())
         .build();
   }
 
