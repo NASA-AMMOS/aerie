@@ -8,3 +8,29 @@ object_relationships:
 - name: specification
   using:
     foreign_key_constraint_on: specification_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      filter: {}
+      allow_aggregations: true
+# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
+insert_permissions:
+  - role: user
+    permission:
+      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      check: {}
+update_permissions:
+  - role: user
+    permission:
+      columns: [priority, enabled, simulate_after]
+      filter: {}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

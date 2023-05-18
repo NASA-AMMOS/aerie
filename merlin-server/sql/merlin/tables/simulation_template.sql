@@ -5,6 +5,7 @@ create table simulation_template (
   model_id integer not null,
   description text not null,
   arguments merlin_argument_set not null,
+  owner text not null default '',
 
   constraint simulation_template_synthetic_key
     primary key (id),
@@ -28,7 +29,8 @@ comment on column simulation_template.description is e''
   'A brief description to offer the planner information about the name or intent of this simulation template.';
 comment on column simulation_template.arguments is e''
   'A subset of simulation arguments corresponding to the parameters of the associated mission model.';
-
+comment on column simulation_template.owner is e''
+  'The user responsible for this simulation template';
 
 create function increment_revision_for_update_simulation_template()
 returns trigger

@@ -1,0 +1,8 @@
+table:
+  name: begin_merge_return_value
+  schema: hasura_functions
+select_permissions:
+  - role: user
+    permission:
+      columns: [merge_request_id, non_conflicting_activities, conflicting_activities]
+      filter: {}

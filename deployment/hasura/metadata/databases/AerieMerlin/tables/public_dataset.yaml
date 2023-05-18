@@ -2,13 +2,6 @@ table:
   name: dataset
   schema: public
 array_relationships:
-- name: profile_requests
-  using:
-    foreign_key_constraint_on:
-      column: dataset_id
-      table:
-        name: profile_request
-        schema: public
 - name: profiles
   using:
     foreign_key_constraint_on:
@@ -32,3 +25,14 @@ array_relationships:
       table:
         name: topic
         schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision]
+      filter: {}
+      allow_aggregations: true

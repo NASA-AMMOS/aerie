@@ -1,3 +1,14 @@
 table:
   name: uploaded_file
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, path, name, created_date, modified_date, deleted_date]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, path, name, created_date, modified_date, deleted_date]
+      filter: {}
+      allow_aggregations: true

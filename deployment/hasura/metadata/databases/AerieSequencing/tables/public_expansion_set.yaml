@@ -33,4 +33,25 @@ remote_relationships:
         name: mission_model
       field_mapping:
         mission_model_id: id
-
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, name, description, command_dict_id, mission_model_id, created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, name, description, command_dict_id, mission_model_id, created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, description, owner]
+      filter: {} # Restrict to owner when sequencing fills that column
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: user
+    permission:
+      filter: {} # Restrict to owner when sequencing fills that column

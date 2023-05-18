@@ -1,0 +1,8 @@
+table:
+  name: withdraw_merge_request_return_value
+  schema: hasura_functions
+select_permissions:
+  - role: user
+    permission:
+      columns: [merge_request_id]
+      filter: {}

@@ -24,8 +24,3 @@ comment on constraint sequence_to_simulated_activity_primary_key on sequence_to_
   'Primary key constrains one simulated activity id per simulation dataset.';
 comment on constraint sequence_to_simulated_activity_activity_instance_id_fkey on sequence_to_simulated_activity is e''
   'Foreign key constrains that this join table relates to a sequence id that exists for the simulation dataset.';
-
-create trigger sequence_set_updated_at_external_trigger
-  after insert or update or delete on sequence_to_simulated_activity
-  for each row
-execute function sequence_set_updated_at_external();

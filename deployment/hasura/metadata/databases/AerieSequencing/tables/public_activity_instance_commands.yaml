@@ -16,3 +16,14 @@ remote_relationships:
           name: span
         field_mapping:
           activity_instance_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, activity_instance_id, commands, errors, expansion_run_id]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, activity_instance_id, commands, errors, expansion_run_id]
+      filter: {}
+      allow_aggregations: true

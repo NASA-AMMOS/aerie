@@ -162,7 +162,7 @@ public class PlanCollaborationTests {
   int duplicatePlan(final int planId, final String newPlanName) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
-        select duplicate_plan(%s, '%s') as id;
+        select duplicate_plan(%s, '%s', 'DBTests') as id;
       """.formatted(planId, newPlanName));
       res.next();
       return res.getInt("id");

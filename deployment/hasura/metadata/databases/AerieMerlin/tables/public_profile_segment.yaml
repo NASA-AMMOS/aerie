@@ -1,3 +1,14 @@
 table:
   name: profile_segment
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [dataset_id, profile_id, start_offset, dynamics, is_gap]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [dataset_id, profile_id, start_offset, dynamics, is_gap]
+      filter: {}
+      allow_aggregations: true

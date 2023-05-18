@@ -1,3 +1,23 @@
 table:
   name: conflicting_activities
   schema: public
+object_relationships:
+  - name: merge_request
+    using:
+      foreign_key_constraint_on: merge_request_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [merge_request_id, activity_id, change_type_supplying, change_type_receiving, resolution]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [merge_request_id, activity_id, change_type_supplying, change_type_receiving, resolution]
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: user
+    permission:
+      columns: [resolution]
+      filter: {"merge_request":{"plan_receiving_changes":{"owner":{"_eq":"X-Hasura-User-Id"}}}}

@@ -1,3 +1,14 @@
 table:
   name: anchor_validation_status
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [activity_id, plan_id, reason_invalid]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [activity_id, plan_id, reason_invalid]
+      filter: {}
+      allow_aggregations: true

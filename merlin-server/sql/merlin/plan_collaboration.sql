@@ -116,7 +116,7 @@ $$;
   When duplicating a plan, a snapshot is created of the original plan.
   Additionally, that snapshot becomes the latest snapshot of the new plan.
 */
-create function duplicate_plan(plan_id integer, new_plan_name text)
+create function duplicate_plan(plan_id integer, new_plan_name text, new_owner text)
   returns integer -- plan_id of the new plan
   security definer
   language plpgsql as $$
@@ -132,9 +132,9 @@ begin
 
   select create_snapshot(plan_id) into created_snapshot_id;
 
-  insert into plan(revision, name, model_id, duration, start_time, parent_id)
+  insert into plan(revision, name, model_id, duration, start_time, parent_id, owner)
     select
-        0, new_plan_name, model_id, duration, start_time, plan_id
+        0, new_plan_name, model_id, duration, start_time, plan_id, new_owner
     from plan where id = plan_id
     returning id into new_plan_id;
   insert into activity_directive(
@@ -165,10 +165,10 @@ begin
 
   insert into plan_latest_snapshot(plan_id, snapshot_id) values(new_plan_id, created_snapshot_id);
   return new_plan_id;
-end;
+end
 $$;
 
-comment on function duplicate_plan(plan_id integer, new_plan_name text) is e''
+comment on function duplicate_plan(plan_id integer, new_plan_name text, new_owner text) is e''
   'Copies all of a given plan''s properties and activities into a new plan with the specified name.
   When duplicating a plan, a snapshot is created of the original plan.
   Additionally, that snapshot becomes the latest snapshot of the new plan.';

@@ -41,6 +41,17 @@ array_relationships:
       table:
         name: resource_type
         schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision, mission, name, version, description, owner, jar_id, created_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision, mission, name, version, description, owner, jar_id, created_at]
+      filter: {}
+      allow_aggregations: true
 event_triggers:
 - definition:
     enable_manual: false

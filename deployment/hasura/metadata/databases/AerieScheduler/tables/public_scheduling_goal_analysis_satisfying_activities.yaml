@@ -1,3 +1,14 @@
 table:
   name: scheduling_goal_analysis_satisfying_activities
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [analysis_id, goal_id, activity_id]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [ analysis_id, goal_id, activity_id ]
+      filter: {}
+      allow_aggregations: true

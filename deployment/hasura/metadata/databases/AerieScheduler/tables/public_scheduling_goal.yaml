@@ -9,3 +9,34 @@ array_relationships:
       table:
         name: scheduling_goal_analysis
         schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision, name, definition, tags, model_id, description, author, last_modified_by, created_date, modified_date]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision, name, definition, tags, model_id, description, author, last_modified_by, created_date, modified_date]
+      filter: {}
+      allow_aggregations: true
+# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
+insert_permissions:
+  - role: user
+    permission:
+      columns: [name, definition, tags, model_id, description]
+      check: {}
+      set:
+        author: "x-hasura-user-id"
+        last_modified_by: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, definition, tags, description]
+      filter: {}
+      set:
+        last_modified_by: "x-hasura-user-id"
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

@@ -1,13 +1,15 @@
 create schema hasura_functions;
 
 create table hasura_functions.duplicate_plan_return_value(new_plan_id integer);
-create function hasura_functions.duplicate_plan(plan_id integer, new_plan_name text)
+create function hasura_functions.duplicate_plan(plan_id integer, new_plan_name text, hasura_session json)
   returns hasura_functions.duplicate_plan_return_value -- plan_id of the new plan
   language plpgsql as $$
 declare
   res integer;
+  new_owner text;
 begin
-  select duplicate_plan(plan_id, new_plan_name) into res;
+  new_owner := (hasura_session ->> 'x-hasura-user-id');
+  select duplicate_plan(plan_id, new_plan_name, new_owner) into res;
   return row(res)::hasura_functions.duplicate_plan_return_value;
 end;
 $$;
@@ -23,12 +25,14 @@ end;
 $$;
 
 create table hasura_functions.create_merge_request_return_value(merge_request_id integer);
-create function hasura_functions.create_merge_request(source_plan_id integer, target_plan_id integer, requester_username text)
+create function hasura_functions.create_merge_request(source_plan_id integer, target_plan_id integer, hasura_session json)
   returns hasura_functions.create_merge_request_return_value -- plan_id of the new plan
   language plpgsql as $$
 declare
   res integer;
+  requester_username text;
 begin
+  requester_username := (hasura_session ->> 'x-hasura-user-id');
   select create_merge_request(source_plan_id, target_plan_id, requester_username) into res;
   return row(res)::hasura_functions.create_merge_request_return_value;
 end;
@@ -126,15 +130,17 @@ create table hasura_functions.begin_merge_return_value(
   non_conflicting_activities hasura_functions.get_non_conflicting_activities_return_value[],
   conflicting_activities hasura_functions.get_conflicting_activities_return_value[]
 );
-create function hasura_functions.begin_merge(merge_request_id integer, reviewer_username text)
+create function hasura_functions.begin_merge(merge_request_id integer, hasura_session json)
   returns hasura_functions.begin_merge_return_value -- plan_id of the new plan
   strict
   language plpgsql as $$
   declare
     non_conflicting_activities hasura_functions.get_non_conflicting_activities_return_value[];
     conflicting_activities hasura_functions.get_conflicting_activities_return_value[];
+    reviewer_username text;
 begin
-  call public.begin_merge($1, $2);
+  reviewer_username := (hasura_session ->> 'x-hasura-user-id');
+  call public.begin_merge($1, reviewer_username);
 
   non_conflicting_activities := array(select hasura_functions.get_non_conflicting_activities($1));
   conflicting_activities := array(select hasura_functions.get_conflicting_activities($1));

@@ -1,3 +1,14 @@
 table:
   name: resource_type
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [model_id, name, schema]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [model_id, name, schema]
+      filter: {}
+      allow_aggregations: true

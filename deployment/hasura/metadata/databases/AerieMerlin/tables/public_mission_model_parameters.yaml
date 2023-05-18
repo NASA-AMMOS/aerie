@@ -1,3 +1,14 @@
 table:
   name: mission_model_parameters
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [model_id, revision, parameters]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [model_id, revision, parameters]
+      filter: {}
+      allow_aggregations: true

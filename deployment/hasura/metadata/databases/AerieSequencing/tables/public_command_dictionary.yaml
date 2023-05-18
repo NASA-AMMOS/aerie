@@ -9,3 +9,14 @@ array_relationships:
       table:
         name: expansion_set
         schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, command_types_typescript_path, mission, version, created_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, command_types_typescript_path, mission, version, created_at]
+      filter: {}
+      allow_aggregations: true

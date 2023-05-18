@@ -29,6 +29,13 @@ array_relationships:
       table:
         name: constraint
         schema: public
+- name: collaborators
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: plan_collaborators
+        schema: public
 - name: datasets
   using:
     foreign_key_constraint_on:
@@ -63,3 +70,35 @@ remote_relationships:
         name: scheduling_specification
       field_mapping:
         id: plan_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
+                 created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
+                 created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [name, duration, model_id, parent_id, start_time]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, owner]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}

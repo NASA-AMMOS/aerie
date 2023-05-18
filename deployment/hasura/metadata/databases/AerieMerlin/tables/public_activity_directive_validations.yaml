@@ -1,3 +1,14 @@
 table:
   name: activity_directive_validations
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [directive_id, plan_id, last_modified_at, validations]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [directive_id, plan_id, last_modified_at, validations]
+      filter: {}
+      allow_aggregations: true
