@@ -8,21 +8,29 @@ object_relationships:
   - name: mission_model
     using:
       foreign_key_constraint_on: model_id
+array_relationships:
+  - name: tags
+    using:
+      foreign_key_constraint_on:
+        column: constraint_id
+        table:
+          name: constraint_tags
+          schema: metadata
 select_permissions:
   - role: user
     permission:
-      columns: [id, name, description, definition, tags, plan_id, model_id, created_at, updated_at, owner, updated_by]
+      columns: [id, name, description, definition, plan_id, model_id, created_at, updated_at, owner, updated_by]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, name, description, definition, tags, plan_id, model_id, created_at, updated_at, owner, updated_by]
+      columns: [id, name, description, definition, plan_id, model_id, created_at, updated_at, owner, updated_by]
       filter: {}
       allow_aggregations: true
 insert_permissions:
   - role: user
     permission:
-      columns: [name, description, definition, tags, plan_id, model_id]
+      columns: [name, description, definition, plan_id, model_id]
       check: {"_or": [
         {"plan":{"owner":{"_eq":"X-Hasura-User-Id"}}},
         {"plan":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}},
@@ -34,7 +42,7 @@ insert_permissions:
 update_permissions:
   - role: user
     permission:
-      columns: [name, description, definition, tags, owner]
+      columns: [name, description, definition, owner]
       filter: {"_or": [
         {"plan":{"owner":{"_eq":"X-Hasura-User-Id"}}},
         {"plan":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}},

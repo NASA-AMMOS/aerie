@@ -11,6 +11,15 @@ array_relationships:
       insertion_order: null
       column_mapping:
         id: rule_id
+- name: tags
+  using:
+    manual_configuration:
+      remote_table:
+        name: expansion_rule_tags
+        schema: metadata
+      insertion_order: null
+      column_mapping:
+        id: rule_id
 select_permissions:
   - role: user
     permission:

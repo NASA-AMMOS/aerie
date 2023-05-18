@@ -50,6 +50,13 @@ array_relationships:
       table:
         name: simulation
         schema: public
+- name: tags
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: plan_tags
+        schema: metadata
 - name: child_plans
   using:
     manual_configuration:

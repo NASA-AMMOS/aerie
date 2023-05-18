@@ -1,3 +1,18 @@
 table:
   name: plan_snapshot_activities
   schema: public
+object_relationships:
+  - name: snapshot
+    using:
+      foreign_key_constraint_on: snapshot_id
+array_relationships:
+  - name: tags
+    using:
+      manual_configuration:
+        insertion_order: null
+        remote_table:
+          name: snapshot_activity_tags
+          schema: metadata
+        column_mapping:
+          id: directive_id
+          snapshot_id: snapshot_id

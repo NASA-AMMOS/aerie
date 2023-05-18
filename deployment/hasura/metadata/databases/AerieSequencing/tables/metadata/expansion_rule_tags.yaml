@@ -1,0 +1,40 @@
+table:
+  name: expansion_rule_tags
+  schema: metadata
+configuration:
+  custom_name: "expansion_rule_tags"
+object_relationships:
+  - name: expansion_rule
+    using:
+      foreign_key_constraint_on: rule_id
+remote_relationships:
+  - name: tag
+    definition:
+      to_source:
+        relationship_type: object
+        source: AerieMerlin
+        table:
+          schema: metadata
+          name: tags
+        field_mapping:
+          tag_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [rule_id, tag_id]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [rule_id, tag_id]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [rule_id, tag_id]
+      check: {}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

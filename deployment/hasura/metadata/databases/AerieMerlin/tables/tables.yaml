@@ -43,3 +43,8 @@
 - "!include hasura_functions/get_plan_history_return_value.yaml"
 - "!include hasura_functions/resource_at_start_offset_return_value.yaml"
 - "!include hasura_functions/withdraw_merge_request_return_value.yaml"
+# Metadata
+- "!include metadata/tags.yaml"
+- "!include metadata/activity_directive_tags.yaml"
+- "!include metadata/constraint_tags.yaml"
+- "!include metadata/plan_tags.yaml"

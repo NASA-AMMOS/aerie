@@ -1,0 +1,12 @@
+table:
+  name: snapshot_activity_tags
+  schema: metadata
+configuration:
+  custom_name: "snapshot_activity_tags"
+object_relationships:
+  - name: snapshot_activity_directive
+    using:
+      foreign_key_constraint_on: [snapshot_id, directive_id]
+  - name: tag
+    using:
+      foreign_key_constraint_on: tag_id

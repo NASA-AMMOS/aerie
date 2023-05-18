@@ -10,3 +10,5 @@
 - "!include public_sequence.yaml"
 - "!include public_sequence_to_simulated_activity.yaml"
 - "!include public_user_sequence.yaml"
+# Metadata
+- "!include metadata/expansion_rule_tags.yaml"
