@@ -132,7 +132,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
     var list3 = mergeSegmentLists(t, t, list2, list1);
     System.out.println("merged list3");
     System.out.println(list3);
-    list3 = mergeSegmentLists2(t, t, list2, list1);
+    list3 = mergeSegmentLists(t, t, list2, list1);
     System.out.println("merged list3");
     System.out.println(list3);
   }
