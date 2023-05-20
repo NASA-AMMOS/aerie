@@ -9,6 +9,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
  * @param <Dynamics> A choice between Real and SerializedValue
  */
 public record ProfileSegment<Dynamics>(Duration extent, Dynamics dynamics) implements Comparable<ProfileSegment<?>> {
+  /**
+   * Orders by extent and then dynamics, using string comparison as last resort if dynamics isn't Comparable.
+   * @param o the object to be compared.
+   * @return a negative integer if this < o, 0 if this == o, else a positive integer
+   */
   @Override
   public int compareTo(final ProfileSegment<?> o) {
     int c = this.extent.compareTo(o.extent);

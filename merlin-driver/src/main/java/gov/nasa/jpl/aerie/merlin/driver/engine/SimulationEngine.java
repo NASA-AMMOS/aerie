@@ -81,15 +81,15 @@ public final class SimulationEngine implements AutoCloseable {
   /** The start time of the simulation, from which other times are offsets */
   private final Instant startTime;
 
-  private final TaskInfo taskInfo = new TaskInfo();
-  private final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
-  private final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
+  private TaskInfo taskInfo = null;
+//  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
+//  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
   private final HashMap<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
   private final HashMap<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
   private final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
   private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   private SimulationResults simulationResults = null;
-  public final Topic<ActivityDirectiveId> defaultActivityTopic;
+  public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
 
   public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
 
@@ -101,10 +101,10 @@ public final class SimulationEngine implements AutoCloseable {
     if (oldEngine != null) {
       oldEngine.cells = new LiveCells(oldEngine.timeline, oldEngine.missionModel.getInitialCells());
       this.cells = new LiveCells(timeline, oldEngine.missionModel.getInitialCells());  // HACK: good for in-memory but with DB or difft mission model configuration,...
-      this.defaultActivityTopic = oldEngine.defaultActivityTopic;
+      //this.defaultActivityTopic = oldEngine.defaultActivityTopic;
     } else {
       this.cells = new LiveCells(timeline, missionModel.getInitialCells());
-      this.defaultActivityTopic = new Topic<>();
+      //this.defaultActivityTopic = new Topic<>();
     }
     this.timeline.liveCells = this.cells;
   }
@@ -764,14 +764,19 @@ public final class SimulationEngine implements AutoCloseable {
     final boolean combine = true;  // whether to combine results with those of the oldEngine
 
     // Collect per-task information from the event graph.
+    taskInfo = new TaskInfo();
+
     var serializableTopics = this.missionModel.getTopics();
-    final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
     for (final var point : timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+      final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
       p.events().evaluate(trait, trait::atom).accept(taskInfo);
     }
 
     // Extract profiles for every resource.
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+
     //var allResources = oldEngine == null ? this.resources : new HashMap<>(oldEngine.resources).putAll(this.resources);
     for (final var entry : this.resources.entrySet()) {
       final var id = entry.getKey();
@@ -781,13 +786,13 @@ public final class SimulationEngine implements AutoCloseable {
       final var resource = state.resource();
 
       switch (resource.getType()) {
-        case "real" -> this.realProfiles.put(
+        case "real" -> realProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
                 serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
 
-        case "discrete" -> this.discreteProfiles.put(
+        case "discrete" -> discreteProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
@@ -801,7 +806,6 @@ public final class SimulationEngine implements AutoCloseable {
 
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-
     final var taskToSimulatedActivityId = new HashMap<String, SimulatedActivityId>(taskInfo.taskToPlannedDirective.size());
     final var usedSimulatedActivityIds = new HashSet<>();
     for (final var entry : taskInfo.taskToPlannedDirective.entrySet()) {
@@ -915,8 +919,8 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    this.simulationResults = new SimulationResults(this.realProfiles,
-                                 this.discreteProfiles,
+    this.simulationResults = new SimulationResults(realProfiles,
+                                 discreteProfiles,
                                  this.simulatedActivities,
                                  this.unfinishedActivities,
                                  startTime,
@@ -928,7 +932,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   public SimulationResultsInterface getCombinedSimulationResults() {
     if (this.simulationResults == null ) {
-      return computeResults(this.startTime, Duration.MAX_VALUE, this.defaultActivityTopic);
+      return computeResults(this.startTime, Duration.MAX_VALUE, defaultActivityTopic);
     }
     if (oldEngine == null) {
       return this.simulationResults;

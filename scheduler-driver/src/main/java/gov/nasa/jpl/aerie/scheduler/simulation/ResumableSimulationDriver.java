@@ -49,7 +49,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private final Duration planDuration;
   private JobSchedule.Batch<SimulationEngine.JobId> batch;
 
-  private final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
+  private static final Topic<ActivityDirectiveId> activityTopic = SimulationEngine.defaultActivityTopic;
 
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
@@ -105,9 +105,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
-    if (!rerunning) {
+    //if (!rerunning) {
       startDaemons(curTime());
-    }
+    //}
   }
 
   private void trackResources() {

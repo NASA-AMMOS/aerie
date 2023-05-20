@@ -63,8 +63,8 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   }
 
   private static <D> List<ProfileSegment<D>> mergeSegmentLists(Instant t1, Instant t2,
-                                                                      List<ProfileSegment<D>> list1,
-                                                                      List<ProfileSegment<D>> list2) {
+                                                               List<ProfileSegment<D>> list1,
+                                                               List<ProfileSegment<D>> list2) {
     Duration offset = Duration.minus(t2, t1);
     var s1 = list1.stream();
     var s2 = list2.stream();
@@ -85,22 +85,59 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
       final Triple<Duration, Integer, ProfileSegment<D>> r1 = r;
       return r1;
     });
-    var sorted = Stream.of(ss1, ss2).flatMap(s -> s).sorted();
-    final Triple<Duration, Integer, ProfileSegment<D>>[] last;
-    last = new Triple[] {null};
+    final Triple<Duration, Integer, ProfileSegment<D>> tripleNull = Triple.of(null, null, null);
+    var sorted = Stream.concat(Stream.of(ss1, ss2).flatMap(s -> s).sorted(), Stream.of(tripleNull));
+    final Triple<Duration, Integer, ProfileSegment<D>>[] last = new Triple[] {null};
+    //final Duration[] lastExtent = new Duration[] {null};
     var sss = sorted.map(t -> {
-      Duration extent = last[0] == null ? t.getLeft() : t.getLeft().minus(last[0].getLeft());
       final var oldLast = last[0];
-      if (extent.isEqualTo(Duration.ZERO) && oldLast != null && !oldLast.getMiddle().equals(t.getMiddle())) {
+      last[0] = t;
+      if (oldLast == null) {
         return null;
       }
-      last[0] = t;
-      var p = new ProfileSegment<D>(extent, t.getRight().dynamics());
+      if (t == null || t.getLeft() == null) {
+        return oldLast.getRight();
+      }
+      Duration extent = t.getLeft().minus(oldLast.getLeft());
+
+      if (extent.isEqualTo(Duration.ZERO) && !oldLast.getMiddle().equals(t.getMiddle())) {
+//        System.out.println("skipping " + t);
+        last[0] = oldLast;
+        return null;
+      }
+//      System.out.println("keeping " + t);
+//      last[0] = t;
+      //lastExtent[0] = t.getRight().extent();
+      var p = new ProfileSegment<D>(extent, oldLast.getRight().dynamics());
       return p;
     });
+//    System.out.println("last[0] " + last[0]);
+//    var rsss = Stream.concat(sss, Stream.of(last[0] == null ? null : last[0].getRight())).filter(Objects::nonNull);
     var rsss = sss.filter(Objects::nonNull);
 
     return rsss.toList();
+  }
+
+  private static void testMergeSegmentLists() {
+    ProfileSegment<Integer> p1 = new ProfileSegment<>(Duration.of(2, Duration.MINUTES), 0);
+    ProfileSegment<Integer> p2 = new ProfileSegment<>(Duration.of(5, Duration.MINUTES), 1);
+    ProfileSegment<Integer> p3 = new ProfileSegment<>(Duration.of(5, Duration.MINUTES), 2);
+
+    ProfileSegment<Integer> p0 = new ProfileSegment<>(Duration.of(15, Duration.MINUTES), 0);
+    Instant t = Instant.ofEpochSecond(366L * 24 * 3600 * 60);
+    var list1 = List.of(p1, p2, p3);
+    System.out.println(list1);
+    var list2 = List.of(p0);
+    System.out.println(list2);
+    var list3 = mergeSegmentLists(t, t, list2, list1);
+    System.out.println("merged list3");
+    System.out.println(list3);
+    list3 = mergeSegmentLists2(t, t, list2, list1);
+    System.out.println("merged list3");
+    System.out.println(list3);
+  }
+  public static void main(final String[] args) {
+    testMergeSegmentLists();
   }
 
   // TODO: Looking to modify interleave into a mergeSorted() to merge ProfileSegment Lists, but also need to combine elements.

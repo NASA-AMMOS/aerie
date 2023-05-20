@@ -143,12 +143,18 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
       final List<ProfileSegment<T>> profile,
       final Function<T, Optional<SerializedValue>> transform
   ) {
+//    System.out.println("profile = " + profile);
     final var result = new IntervalMap.Builder<SerializedValue>();
     var cursor = offsetFromPlanStart;
     for (final var pair: profile) {
       final var nextCursor = cursor.plus(pair.extent());
+//      System.out.println("cursor = " + cursor);
+//      System.out.println("nextCursor = " + nextCursor);
+//      System.out.println("pair = " + pair);
 
       final var value = transform.apply(pair.dynamics());
+//      System.out.println("value = " + value);
+
       final Duration finalCursor = cursor;
       value.ifPresent(
           $ -> result.set(
@@ -156,6 +162,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
               $
           )
       );
+//      System.out.println("result = " + result);
 
       cursor = nextCursor;
     }

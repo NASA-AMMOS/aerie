@@ -118,7 +118,7 @@ public final class SimulationDriver {
       // - Transitively: if A flows to C and C flows to B, A flows to B
       // tstill not enough...?
 
-      return engine.computeResults(simulationStartTime, elapsedTime, engine.defaultActivityTopic);
+      return engine.computeResults(simulationStartTime, elapsedTime, SimulationEngine.defaultActivityTopic);
     }
   }
 
