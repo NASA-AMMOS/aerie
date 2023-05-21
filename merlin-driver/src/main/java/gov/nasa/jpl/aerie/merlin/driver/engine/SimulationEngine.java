@@ -243,16 +243,17 @@ public final class SimulationEngine implements AutoCloseable {
         // for stepping further.
         var steppedCell = timeline.getCell(topic, timeOfStaleReads, false);
         final Cell<?> tempCell = steppedCell.duplicate();
-        TemporalEventSource.TimePoint.Commit events = this.timeline.commitsByTime.get(timeOfStaleReads);
-        if (events == null) throw new RuntimeException("No EventGraph for potentially stale read.");
-        this.timeline.stepUp(tempCell, events.events(), noop, false);
+        List<TemporalEventSource.TimePoint.Commit> events = this.timeline.commitsByTime.get(timeOfStaleReads);
+        if (events == null || events.isEmpty()) throw new RuntimeException("No EventGraph for potentially stale read.");
+        this.timeline.stepUp(tempCell, events.get(events.size()-1).events(), noop, false);
         // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
         var oldEvents = this.timeline.oldTemporalEventSource.commitsByTime.get(timeOfStaleReads);
-        if (oldEvents == null) throw new RuntimeException("No old EventGraph for potentially stale read.");
+        if (oldEvents == null || oldEvents.isEmpty()) throw new RuntimeException("No old EventGraph for potentially stale read.");
         if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
           // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
           var tempOldCell = timeline.getOldCell(steppedCell).map(Cell::duplicate);
-          this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(), oldEvents.events(), noop, false);
+          this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(),
+                                                      oldEvents.get(oldEvents.size()-1).events(), noop, false);
           if (!tempCell.getState().equals(tempOldCell.get().getState())) {
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads);
@@ -264,17 +265,20 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public void removeTaskHistory(TaskId taskId) {
+    // TODO:  cellReadHistory
     // Look for the task's Events in the old and new timelines.
-    final TreeMap<Duration, EventGraph<Event>> graphsForTask = this.timeline.eventsByTask.get(taskId);
-    final TreeMap<Duration, EventGraph<Event>> oldGraphsForTask = this.oldEngine.timeline.eventsByTask.get(taskId);
+    final TreeMap<Duration, List<EventGraph<Event>>> graphsForTask = this.timeline.eventsByTask.get(taskId);
+    final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.timeline.eventsByTask.get(taskId);
     var allKeys = new TreeSet<>(graphsForTask.keySet());
     allKeys.addAll(oldGraphsForTask.keySet());
     for (Duration time : allKeys) {
-      EventGraph<Event> g = graphsForTask.get(time); // If old graph is already replaced used the replacement
-      if (g == null) g = oldGraphsForTask.get(time);  // else we can replace the old graph
-      var newG = g.filter(e -> !taskId.equals(e.provenance()));
-      if (newG != g) {
-        timeline.replaceEventGraph(g, newG);
+      List<EventGraph<Event>> gl = graphsForTask.get(time); // If old graph is already replaced used the replacement
+      if (gl == null || gl.isEmpty()) gl = oldGraphsForTask.get(time);  // else we can replace the old graph
+      for (var g : gl) {
+        var newG = g.filter(e -> !taskId.equals(e.provenance()));
+        if (newG != g) {
+          timeline.replaceEventGraph(g, newG);
+        }
       }
     }
   }

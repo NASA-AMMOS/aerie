@@ -162,6 +162,7 @@ public final class SimulationDriver {
         // Increment real time, if necessary.
         final var delta = batch.offsetFromStart().minus(elapsedTime);
         elapsedTime = batch.offsetFromStart();
+        engine.setCurTime(elapsedTime);
         engine.timeline.add(delta);
         // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
         //   even if they occur at the same real time.

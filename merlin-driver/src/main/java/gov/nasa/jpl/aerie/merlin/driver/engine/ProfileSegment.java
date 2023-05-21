@@ -12,7 +12,7 @@ public record ProfileSegment<Dynamics>(Duration extent, Dynamics dynamics) imple
   /**
    * Orders by extent and then dynamics, using string comparison as last resort if dynamics isn't Comparable.
    * @param o the object to be compared.
-   * @return a negative integer if this < o, 0 if this == o, else a positive integer
+   * @return a negative integer if this &lt; o, 0 if this == o, else a positive integer
    */
   @Override
   public int compareTo(final ProfileSegment<?> o) {
