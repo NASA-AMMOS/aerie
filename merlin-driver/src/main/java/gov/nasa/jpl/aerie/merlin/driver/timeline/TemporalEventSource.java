@@ -96,6 +96,8 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   /**
    * Index the commit and graph by time, topic, and task.
+   * For multiple commits at the same time, we assume addIndices() is called for each commit in the sequential order
+   * that they are to be applied.
    * @param commit the commit of Events to add
    * @param time the time as a Duration when the events occur
    */
@@ -103,10 +105,12 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     commitsByTime.computeIfAbsent(time, $ -> new ArrayList<>()).add(commit);
     final var finalTopics = topics == null ? extractTopics(commit.events) : topics;
     final var tasks = extractTasks(commit.events);
-    topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).computeIfAbsent(time, $ -> new ArrayList<>()).add(commit.events));
-    tasks.forEach(t -> this.eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).computeIfAbsent(time, $ -> new ArrayList<>()).add(commit.events));
+    timeForEventGraph.put(commit.events, time);
+    var eventList = commitsByTime.get(time).stream().map(c -> c.events).toList();
+    topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList));
+    tasks.forEach(t -> this.eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList));
     // TODO: REVIEW -- do we really need all these maps?
-    topicsForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);  // Tree over Hash for less memory/space
+    topicsForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);
     tasksForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(tasks.size())).addAll(tasks);
   }
 
@@ -124,63 +128,101 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
                                                                                           TreeMap::new));
   }
 
-
+  /**
+   * Replace an {@link EventGraph} with another in the various lookup data structures.  {@link EventGraph}s are
+   * unique per instance; i.e., {@code equals()} is {@code ==}.  Thus, a graph only occurs at one point in time.
+   * This simplifies the implementation.  If the graph to be replaced only exists in the old timeline,
+   * {@link TemporalEventSource#oldTemporalEventSource}, then the new graph must be inserted in {@code this}
+   * {@link TemporalEventSource} along with any other graphs at the same time in the old timeline.
+   *
+   * @param oldG the {@link EventGraph} to be replaced
+   * @param newG the {@link EventGraph} replacing {@code oldG}
+   */
   public void replaceEventGraph(EventGraph<Event> oldG, EventGraph<Event> newG) {
-    var newTopics = extractTopics(newG);
+    // Need to replace in this.{timeForEventGraph, commitsByTime, tasksForEventGraph, eventsByTask, topicsForEventGraph,
+    // eventsByTopic, points}
+    // TODO: points can't be updated, so we should try to remove this.points
+    final var newTopics = extractTopics(newG);
 
-    // time
-    Duration time = timeForEventGraph.remove(oldG);
+    // time - timeForEventGraph
+    Duration timeNew = timeForEventGraph.remove(oldG);
+    Duration timeOld = oldTemporalEventSource.timeForEventGraph.get(oldG);
+    Duration time = timeNew == null ? timeOld : timeNew;
+    if (time == null) {
+      throw new RuntimeException("Can't find EventGraph to replace!");
+    }
     timeForEventGraph.put(newG, time);
+    // time - commitsByTime
     var newCommit = new TimePoint.Commit(newG, newTopics);
     var commitList = commitsByTime.get(time);
+    if (commitList == null) {
+      // copy from old timeline
+      commitList = oldTemporalEventSource.commitsByTime.get(time);
+      if (commitList != null) {
+        commitList = new ArrayList<>(commitList);
+      }
+    }
     commitList.replaceAll(c -> c.events.equals(oldG) ? newCommit : c);
+    commitsByTime.put(time, commitList);
 
-    // task
+    var eventList = commitsByTime.get(time).stream().map(c -> c.events).toList();
+
+    // task - tasksForEventGraph
     var oldTasks = tasksForEventGraph.remove(oldG);
-    var newTasks = extractTasks(newG);
+    final var newTasks = extractTasks(newG);
     tasksForEventGraph.put(newG, newTasks);
-    var allTasks = new HashSet<>(oldTasks);
+    // task - eventsByTask
+
+    // eventsByTask is a Map<TaskId, TreeMap<Duration, List<EventGraph<Event>>>>
+    // The list of EventGraphs per Duration includes the list of all EventGraphs in commitsByTime (eventList)
+    // whether or not each have the task.
+    //
+    // There could be a task t in oldG in the old timeline that is not in newG.  this.eventsByTask.get(t).get(time)
+    // should be empty if no other EventGraphs at this time include task t, but it's not a problem if the graphs remain,
+    // as long as the graphs were replaced.
+    if (oldTasks == null) {
+      oldTasks = oldTemporalEventSource.tasksForEventGraph.get(oldG);
+    }
+    var allTasks = new HashSet<TaskId>();
+    if (oldTasks != null) allTasks.addAll(oldTasks);
     allTasks.addAll(newTasks);
+    final var finalOldTasks = oldTasks;
     allTasks.forEach(t -> {
-      if (oldTasks.contains(t)) {
-        var eventGraphList = eventsByTask.get(t).get(time);
-        if (newTasks.contains(t)) {
-          eventGraphList.set(eventGraphList.indexOf(oldG), newG);
-        } else {
-          eventGraphList.remove(oldG);
+      if (finalOldTasks != null && finalOldTasks.contains(t) && !newTasks.contains(t)) {
+        var map = eventsByTask.get(t);
+        if (map != null) {
+          var oldList = map.get(time);
+          if (oldList != null && !oldList.isEmpty()) {
+            map.put(time, eventList);
+          }
         }
       } else {
-        // TODO: This case does not currently occur because we're just replacing graphs with subgraphs
-        //       This case is also problematic in that if there are multiple graphs for this task at the
-        //       same timepoint, it's not clear where in the list to insert the new graph.  Here we are
-        //        //       just appending.
-        var map = eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>());
-        map.computeIfAbsent(time, $ -> new ArrayList<>()).add(newG);
+        eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList);
       }
     });
 
-    // topic
+    // topic - topicsForEventGraph
     var oldTopics = topicsForEventGraph.remove(oldG);
+    if (oldTopics == null) {
+      oldTopics = oldTemporalEventSource.topicsForEventGraph.get(oldG);
+    }
+    final var finalOldTopics = oldTopics;
     topicsForEventGraph.put(newG, newTopics);
-    var allTopics = new HashSet<>(oldTopics);
+    var allTopics = new HashSet<Topic<?>>();
+    if (oldTopics != null) allTopics.addAll(oldTopics);
     allTopics.addAll(newTopics);
     allTopics.forEach(t -> {
-      if (oldTopics.contains(t)) {
-        var graphsByTime = eventsByTopic.get(t);
-        if (newTopics.contains(t)) {
-          graphsByTime.forEach((gtime, graphList) -> graphList.set(graphList.indexOf(oldG), newG));
-        } else {
-          graphsByTime.forEach((gtime, graphList) -> graphList.remove(oldG));
+      if (finalOldTopics != null && finalOldTopics.contains(t) && !newTopics.contains(t)) {
+        var map = eventsByTopic.get(t);
+        if (map != null) {
+          var oldList = map.get(time);
+          if (oldList != null && !oldList.isEmpty()) {
+            map.put(time, eventList);
+          }
         }
       } else {
-        // TODO: This case does not currently occur because we're just replacing graphs with subgraphs
-        //       This case is also problematic in that if there are multiple graphs for this task at the
-        //       same timepoint, it's not clear where in the list to insert the new graph.  Here we are
-        //       just appending.
-        var map = eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>());
-        map.computeIfAbsent(time, $ -> new ArrayList<>()).add(newG);
+        eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList);
       }
-
     });
   }
 
@@ -529,9 +571,6 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   public void putCellTime(Cell<?> cell, Duration cellTime, boolean cellStepped) {
     this.cellTimes.put(cell, cellTime);
-    if (!cellStepped) {
-      System.out.println("cell stepped set false at time " + cellTime + ": " + cell);
-    }
     this.cellTimeStepped.put(cell, cellStepped);
   }
 

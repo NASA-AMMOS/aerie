@@ -127,6 +127,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
     final var commit = engine.performJobs(batch.jobs(), time, Duration.MAX_VALUE, queryTopic);
     engine.timeline.add(commit, time);
+    engine.updateTaskInfo(commit);
   }
 
   @Override
@@ -171,6 +172,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, curTime());
+        engine.updateTaskInfo(commit);
       }
 
     }
@@ -328,6 +330,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, curTime());
+        engine.updateTaskInfo(commit);
       }
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time

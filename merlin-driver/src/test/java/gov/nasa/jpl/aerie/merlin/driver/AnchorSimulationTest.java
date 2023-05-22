@@ -1190,7 +1190,7 @@ public final class AnchorSimulationTest {
                 "ActivityType.Output.DecomposingActivityDirective",
                 decomposingActivityDirectiveOutputTopic,
                 testModelOutputType)),
-        List.of(),
+        Map.of(),
         DirectiveTypeRegistry.extract(
             new ModelType<>() {
 

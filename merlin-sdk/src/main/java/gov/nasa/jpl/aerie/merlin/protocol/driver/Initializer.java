@@ -92,10 +92,10 @@ public interface Initializer {
    *
    * <p> The return value from a daemon task is discarded and ignored. </p>
    *
-   * @param factory
-   *   A factory for constructing instances of the daemon task.
+   * @param taskName A name to associate with the task so that it can be rerun
+   * @param factory A factory for constructing instances of the daemon task.
    */
-  void daemon(TaskFactory<?> factory);
+  void daemon(final String taskName, TaskFactory<?> factory);
 
   /**
    * Registers a model resource whose value over time is observable by the environment.

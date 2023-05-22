@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -50,6 +51,7 @@ public final class SimulationDriver {
           final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
           final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
           engine.timeline.add(commit, elapsedTime);
+          engine.updateTaskInfo(commit);
         }
 
         // Specify a topic on which tasks can log the activity they're associated with.
@@ -101,6 +103,7 @@ public final class SimulationDriver {
           // Run the jobs in this batch.
           final var commit = engine.performJobs(batch.jobs(), elapsedTime, simulationDuration, queryTopic);
           engine.timeline.add(commit, elapsedTime);
+          engine.updateTaskInfo(commit);
         }
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
@@ -149,6 +152,7 @@ public final class SimulationDriver {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, elapsedTime);
+        engine.updateTaskInfo(commit);
       }
 
       // Schedule all activities.

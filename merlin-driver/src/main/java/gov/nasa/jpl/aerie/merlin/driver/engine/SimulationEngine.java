@@ -81,7 +81,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The start time of the simulation, from which other times are offsets */
   private final Instant startTime;
 
-  private TaskInfo taskInfo = null;
+  private final TaskInfo taskInfo = new TaskInfo();
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
   private final HashMap<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
@@ -114,6 +114,11 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The execution state for every task. */
   private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
+  /** Remember the TaskFactory for each task so that we can re-run it */
+  private final Map<TaskId, TaskFactory<?>> taskFactories = new HashMap<>();
+  private final Map<TaskFactory<?>, TaskId> taskIdsForFactories = new HashMap<>();
+  /** Remember which tasks were daemon-spawned */
+  private final Set<TaskId> daemonTasks = new HashSet<>();
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
@@ -130,6 +135,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /**  */
   public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Event noop, Duration time) {
+    // TODO: Can't we just get this from eventsByTopic instead of having a separate data structure?
     var inner = cellReadHistory.computeIfAbsent(topic, $ -> new TreeMap<>());
     inner.computeIfAbsent(time, $ -> new HashMap<>()).put(taskId, noop);
   }
@@ -215,7 +221,14 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     staleTasks.put(taskId, time);
-    rescheduleTask(taskId, null);
+    var execState = oldEngine.tasks.get(taskId);
+    final Duration taskStart;
+    if (execState != null) taskStart = execState.startOffset();
+    else {
+      taskStart = Duration.ZERO;
+      throw new RuntimeException("Can't find task start!");
+    }
+    rescheduleTask(taskId, taskStart);
     removeTaskHistory(taskId);
   }
 
@@ -269,15 +282,22 @@ public final class SimulationEngine implements AutoCloseable {
     // Look for the task's Events in the old and new timelines.
     final TreeMap<Duration, List<EventGraph<Event>>> graphsForTask = this.timeline.eventsByTask.get(taskId);
     final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.timeline.eventsByTask.get(taskId);
-    var allKeys = new TreeSet<>(graphsForTask.keySet());
-    allKeys.addAll(oldGraphsForTask.keySet());
+    var allKeys = new TreeSet<Duration>();
+    if (graphsForTask != null) {
+      allKeys.addAll(graphsForTask.keySet());
+    }
+    if (oldGraphsForTask != null) {
+      allKeys.addAll(oldGraphsForTask.keySet());
+    }
     for (Duration time : allKeys) {
-      List<EventGraph<Event>> gl = graphsForTask.get(time); // If old graph is already replaced used the replacement
-      if (gl == null || gl.isEmpty()) gl = oldGraphsForTask.get(time);  // else we can replace the old graph
+      List<EventGraph<Event>> gl = graphsForTask == null ? null : graphsForTask.get(time); // If old graph is already replaced used the replacement
+      if (gl == null || gl.isEmpty()) gl = oldGraphsForTask == null ? null : oldGraphsForTask.get(time);  // else we can replace the old graph
       for (var g : gl) {
         var newG = g.filter(e -> !taskId.equals(e.provenance()));
         if (newG != g) {
           timeline.replaceEventGraph(g, newG);
+          taskInfo.removeTask(taskId);
+          updateTaskInfo(newG);
         }
       }
     }
@@ -669,6 +689,12 @@ public final class SimulationEngine implements AutoCloseable {
       return this.input.containsKey(id.id());
     }
 
+    public void removeTask(final TaskId id) {
+      taskToPlannedDirective.remove(id.id());
+      input.remove(id.id());
+      output.remove(id.id());
+    }
+
     public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
       @Override
       public Consumer<TaskInfo> empty() {
@@ -728,6 +754,12 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+  private TaskInfo.Trait taskInfoTrait = null;
+  public void updateTaskInfo(EventGraph<Event> g) {
+    if (taskInfoTrait == null) taskInfoTrait = new TaskInfo.Trait(getMissionModel().getTopics(), defaultActivityTopic);
+    g.evaluate(taskInfoTrait, taskInfoTrait::atom).accept(taskInfo);
+  }
+
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
   //   The Engine should only need to stream events of interest to a downstream consumer.
@@ -740,42 +772,15 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic
   ) {
-    /**
-     * Discussion about how ot handle incremental sim results.
-     *
-     * Choices:
-     * 1. Ignore oldEngine results here
-     *    a. Provide a way to combine them at the level of the SimulationResults class
-     *       Pros:
-     *         - Better isolates code changes
-     *         - Leaves options open for where to process; thus likely can find fast alternative
-     *       Cons:
-     *         - Combining the results after they've been serialized is harder
-     *         - Should refactor (as suggested in TOODs above) so that serialization is done in another step
-     *       i. Have SimulationResults reference old results?  No, it doesn't give us a choice on whether to combine without adding functions
-     *       ii. Create a SimulationResults subclass (CombinedSimulationResults?)?  YES!
-     *       iii. Create a SimulationResults subclass (IncrementalSimulationResults?)?  No
-     *    b. Need to decide on how it is stored/fetched from DB
-     *       i. Only store incremental results to allow for fastest processing
-     *          - Requires smarts in UI and any other consumer of SimResults
-     *       ii. Make a copy of the previous results stored in the DB and then overwrite changes
-     *          -
-     *
-     * 2. Combine results here
-     *    a.
-     */
 
-    final boolean combine = true;  // whether to combine results with those of the oldEngine
-
-    // Collect per-task information from the event graph.
-    taskInfo = new TaskInfo();
+//    // Collect per-task information from the event graph.
+//    taskInfo = new TaskInfo();
 
     var serializableTopics = this.missionModel.getTopics();
-    for (final var point : timeline) {
-      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
-      final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
-      p.events().evaluate(trait, trait::atom).accept(taskInfo);
-    }
+//    for (final var point : timeline) {
+//      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+//      updateTaskInfo(p.events());
+//    }
 
     // Extract profiles for every resource.
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
@@ -1112,13 +1117,59 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
 
+    /**
+     * Return the taskId from the old simulation for the new (or old) TaskFactory.
+     * @param taskFactory the TaskFactory used to create the task
+     * @return the TaskId generated for the task created by taskFactory
+     */
+    public TaskId getOldTaskIdForDaemon(TaskFactory<?> taskFactory) {
+      var taskId = oldEngine.taskIdsForFactories.get(taskFactory);
+      if (taskId != null) return taskId;
+      String daemonId = getMissionModel().getDaemonId(taskFactory);
+      if (daemonId == null) return null;
+      var oldTaskFactory = oldEngine.getMissionModel().getDaemon(daemonId);
+      if (oldTaskFactory == null) return null;
+      taskId = oldEngine.taskIdsForFactories.get(oldTaskFactory);
+      return taskId;
+    }
+
     @Override
     public void spawn(final TaskFactory<?> state) {
-      if (isTaskStale(this.activeTask, this.currentTime)) {
-        final var task = TaskId.generate();
+      final boolean rerunDaemonTask = oldEngine != null && getMissionModel().rerunDaemons();
+      final boolean daemonTaskOrSpawn = daemonTasks.contains(this.activeTask) || getMissionModel().isDaemon(state);
+      boolean settingTaskStale = rerunDaemonTask;
+      // Don't spawn children of stale task unless it's a daemon task that is requested to be rerun.
+      if (isTaskStale(this.activeTask, this.currentTime) || (rerunDaemonTask && daemonTaskOrSpawn)) {
+        final TaskId task;
+        if (rerunDaemonTask && getMissionModel().isDaemon(state)) {
+          var tmpId = getOldTaskIdForDaemon(state); // Get TaskID from old simulation so that we can set it stale.
+          if (tmpId != null) {
+            task = tmpId;
+          } else {
+            // If we can't correlate the state (TaskFactory) to the daemon task run in the old simulation,
+            // and the mission model says we need to re-run them (getMissionModel().rerunDaemons()), then
+            // we rerun without removing the effects of the daemon on the past simulation, potentially
+            // leading to bad behavior.
+            task = TaskId.generate();
+            settingTaskStale = false;
+            System.err.println("WARNING: re-running daemon task as if never run before: " + task);
+          }
+        } else {
+          task = TaskId.generate();
+        }
+        if (daemonTaskOrSpawn) {
+          daemonTasks.add(task);
+          if (settingTaskStale) {
+            // Indicate that this task is not stale by setting its stale time to Duration.MAX_VALUE.
+            setTaskStale(task, Duration.MAX_VALUE);
+          }
+        }
+        // Record task information
         SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
         SimulationEngine.this.taskParent.put(task, this.activeTask);
         SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
+        SimulationEngine.this.taskFactories.put(task, state);
+        SimulationEngine.this.taskIdsForFactories.put(state, task);
         this.frame.signal(JobId.forTask(task));
       }
     }
@@ -1155,7 +1206,16 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     if (isDaemon) {
-      // TODO: Can we restart daemon tasks?
+      if (!daemonTasks.contains(taskId)) {
+        throw new RuntimeException("WARNING: Expected TaskId to be a daemon task: " + taskId);
+      }
+      TaskFactory<?> factory = oldEngine.taskFactories.get(taskId);
+      if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
+        scheduleTask(startOffset, factory, taskId);  // TODO: Emit something like with emitAndThen() in the isAct case below?
+      } else {
+        throw new RuntimeException("Can't reschedule task " + taskId + " at time offset " + startOffset +
+                                   (factory == null ? " because there is no TaskFactory." : "."));
+      }
     } else if (isAct) {
       // Get the SerializedActivity for the taskId.
       // If an activity is found, see if it is associated with a directive and, if so, use the directive instead.
@@ -1216,6 +1276,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
+    Duration startOffset();
+
     /** The task is in its primary operational phase. */
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
