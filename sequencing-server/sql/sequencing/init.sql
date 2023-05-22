@@ -17,4 +17,6 @@ begin;
   \ir tables/user_sequence.sql
   \ir tables/expanded_sequences.sql
 
+  -- Table-specific Metadata
+  \ir tables/metadata/expansion_rule_tags.sql
 end;
