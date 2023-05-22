@@ -15,7 +15,7 @@ beforeAll(async () => {
     headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
   });
   missionModelId = await uploadMissionModel(graphqlClient);
-  commandDictionaryId = await insertCommandDictionary(graphqlClient);
+  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
   expansionId = await insertExpansion(
     graphqlClient,
     'ParameterTest',

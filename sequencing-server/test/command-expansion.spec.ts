@@ -37,7 +37,7 @@ beforeEach(async () => {
     simulation_start_time: '2020-001T00:00:00Z',
     simulation_end_time: '2020-002T00:00:00Z',
   });
-  commandDictionaryId = await insertCommandDictionary(graphqlClient);
+  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
 });
 
 afterEach(async () => {
