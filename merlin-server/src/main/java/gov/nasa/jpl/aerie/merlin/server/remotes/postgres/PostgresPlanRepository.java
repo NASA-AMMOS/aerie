@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -178,7 +179,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<Long, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {
         return getPlanConstraintsAction
@@ -186,11 +187,12 @@ public final class PostgresPlanRepository implements PlanRepository {
             .orElseThrow(() -> new NoSuchPlanException(planId))
             .stream()
             .collect(Collectors.toMap(
-                ConstraintRecord::name,
+                ConstraintRecord::id,
                 r -> new Constraint(
                     r.name(),
                     r.description(),
-                    r.definition())));
+                    r.definition(),
+                    ConstraintType.plan)));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

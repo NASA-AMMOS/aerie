@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
@@ -57,7 +58,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getModelConstraintsAction = new GetModelConstraintsAction(connection)) {
         return getModelConstraintsAction
@@ -65,11 +66,12 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
             .orElseThrow(NoSuchMissionModelException::new)
             .stream()
             .collect(Collectors.toMap(
-                ConstraintRecord::name,
+                ConstraintRecord::id,
                 r -> new Constraint(
                     r.name(),
                     r.description(),
-                    r.definition())));
+                    r.definition(),
+                    ConstraintType.model)));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

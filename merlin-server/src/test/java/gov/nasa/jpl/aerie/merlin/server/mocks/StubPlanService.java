@@ -77,7 +77,7 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraintsForPlan(final PlanId planId)
+  public Map<Long, Constraint> getConstraintsForPlan(final PlanId planId)
   throws NoSuchPlanException {
     return Map.of();
   }

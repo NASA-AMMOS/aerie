@@ -128,6 +128,8 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
+        .add("constraintId", violation.constraintId)
+        .add("constraintName", violation.constraintName)
         .add("associations", Json
             .createObjectBuilder()
             .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))
@@ -135,6 +137,7 @@ public final class ResponseSerializers {
             .build())
         .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.violationWindows))
         .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, violation.gaps))
+        .add("type", violation.constraintType.name())
         .build();
   }
 
@@ -228,12 +231,14 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeConstraintViolations(final Map<String, List<Violation>> violations) {
+  public static JsonValue serializeConstraintViolations(final List<Violation> violations) {
+    final var builder = Json.createArrayBuilder();
+
+    for (final var violation : violations) builder.add(serializeConstraintViolation(violation));
+
     return Json
         .createObjectBuilder()
-        .add("constraintViolations", serializeMap(
-            v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v),
-            violations))
+        .add("violations", builder.build())
         .build();
   }
 
