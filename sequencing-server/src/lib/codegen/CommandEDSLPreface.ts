@@ -1,5 +1,9 @@
 /** START Preface */
 
+/**-----------------------------
+ *            ENUMS
+ * -----------------------------
+ */
 export enum TimingTypes {
   ABSOLUTE = 'ABSOLUTE',
   COMMAND_RELATIVE = 'COMMAND_RELATIVE',
@@ -15,15 +19,18 @@ export enum VariableType {
   ENUM = 'ENUM'
 }
 
-export type VariableOptions = {
-  name: string;
-  type: VariableType;
-  enum_name?: string | undefined;
-  allowable_values?: unknown[] | undefined;
-  // @ts-ignore : 'VariableRange' found in JSON Spec
-  allowable_ranges?: VariableRange[] | undefined;
-  sc_name?: string | undefined;
-};
+enum StepType {
+  Command = 'command',
+  GroundBlock = 'ground_block',
+  GroundEvent = 'ground_event',
+  Activate = 'activate',
+  Load = 'load'
+}
+
+/**-----------------------------
+ *      eDSL Interfaces
+ * -----------------------------
+ */
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface INT<N extends string> extends VariableDeclaration {
   name: N;
@@ -72,6 +79,21 @@ export interface ENUM<N extends string, E extends string> extends VariableDeclar
   allowable_values?: unknown[] | undefined;
   sc_name?: string | undefined;
 }
+
+/**-----------------------------
+ *      eDSL Options types
+ * -----------------------------
+ */
+
+export type VariableOptions = {
+  name: string;
+  type: VariableType;
+  enum_name?: string | undefined;
+  allowable_values?: unknown[] | undefined;
+  // @ts-ignore : 'VariableRange' found in JSON Spec
+  allowable_ranges?: VariableRange[] | undefined;
+  sc_name?: string | undefined;
+};
 
 export type SequenceOptions = {
   seqId: string;
@@ -158,7 +180,37 @@ export type GroundOptions = {
   | {}
 );
 
+export type ActivateLoadOptions = {
+  sequence: string;
+  // @ts-ignore : 'Args' found in JSON Spec
+  args?: Args | undefined;
+  description?: string | undefined;
+  engine?: number | undefined;
+  epoch?: string | undefined;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata | undefined;
+  // @ts-ignore : 'Model' found in JSON Spec
+  models?: Model[] | undefined;
+} & (
+    | {
+  absoluteTime: Temporal.Instant;
+}
+    | {
+  epochTime: Temporal.Duration;
+}
+    | {
+  relativeTime: Temporal.Duration;
+}
+    // CommandComplete
+    | {}
+    );
+
 export type Arrayable<T> = T | Arrayable<T>[];
+
+/**-----------------------------
+ *      GLOBAL eDSL Declarations
+ * -----------------------------
+ */
 
 declare global {
   // @ts-ignore : 'SeqJson' found in JSON Spec
@@ -545,7 +597,13 @@ export class Sequence implements SeqJson {
       ...(this.steps
         ? {
             steps: this.steps.map(step => {
-              if (step instanceof CommandStem || step instanceof Ground_Block || step instanceof Ground_Event)
+              if (
+                  step instanceof CommandStem ||
+                  step instanceof Ground_Block ||
+                  step instanceof Ground_Event ||
+                  step instanceof ActivateStep ||
+                  step instanceof LoadStep
+              )
                 return step.toSeqJson();
               return step;
             }),
@@ -584,7 +642,7 @@ export class Sequence implements SeqJson {
                   request.steps[0] instanceof CommandStem ||
                   request.steps[0] instanceof Ground_Block ||
                   request.steps[0] instanceof Ground_Event
-                    ? request.steps[0].toSeqJson()
+                      ? request.steps[0].toSeqJson()
                     : request.steps[0],
                   // @ts-ignore : 'step' found in JSON Spec
                   ...request.steps.slice(1).map(step => {
@@ -633,24 +691,30 @@ export class Sequence implements SeqJson {
 
   public toEDSLString(): string {
     const commandsString =
-      this.steps && this.steps.length > 0
-        ? '[\n' +
-          indent(
-            this.steps
-              .map(step => {
-                if (step instanceof CommandStem || step instanceof Ground_Block || step instanceof Ground_Event) {
-                  return step.toEDSLString() + ',';
-                }
-                return objectToString(step) + ',';
-              })
-              .join('\n'),
-            1,
-          ) +
-          '\n]'
-        : '';
+        this.steps && this.steps.length > 0
+            ? '[\n' +
+            indent(
+                this.steps
+                    .map(step => {
+                      if (
+                          step instanceof CommandStem ||
+                          step instanceof Ground_Block ||
+                          step instanceof Ground_Event ||
+                          step instanceof ActivateStep ||
+                          step instanceof LoadStep
+                      ) {
+                        return step.toEDSLString() + ',';
+                      }
+                      return argumentsToString(step) + ',';
+                    })
+                    .join('\n'),
+                1,
+            ) +
+            '\n]'
+            : '';
     //ex.
     // [C.ADD_WATER]
-    const metadataString = Object.keys(this.metadata).length == 0 ? `{}` : `${objectToString(this.metadata)}`;
+    const metadataString = Object.keys(this.metadata).length == 0 ? `{}` : `${argumentsToString(this.metadata)}`;
 
     const localsString = this.locals
         ? '[\n' +
@@ -662,9 +726,9 @@ export class Sequence implements SeqJson {
                   } else if (Variable.isVariable(local)) {
                     return Variable.new(local).toEDSLString();
                   }
-                  return objectToString(local);
+                  return argumentsToString(local);
                 })
-                .join('\n'),
+                .join(',\n'),
             1,
         ) +
         '\n]'
@@ -684,9 +748,9 @@ export class Sequence implements SeqJson {
                   } else if (Variable.isVariable(parameter)) {
                     return Variable.new(parameter).toEDSLString();
                   }
-                  return objectToString(parameter);
+                  return argumentsToString(parameter);
                 })
-                .join('\n'),
+                .join(',\n'),
             1,
         ) +
         '\n]'
@@ -705,56 +769,56 @@ export class Sequence implements SeqJson {
     // ],
 
     const immediateString =
-      this.immediate_commands && this.immediate_commands.length > 0
-        ? '[\n' +
-          indent(
-            this.immediate_commands
-              .map(command => {
-                if (command instanceof ImmediateStem) {
-                  return command.toEDSLString() + ',';
-                }
-                return objectToString(command) + ',';
-              })
-              .join('\n'),
-            1,
-          ) +
-          '\n]'
-        : '';
+        this.immediate_commands && this.immediate_commands.length > 0
+            ? '[\n' +
+            indent(
+                this.immediate_commands
+                    .map(command => {
+                      if (command instanceof ImmediateStem) {
+                        return command.toEDSLString() + ',';
+                      }
+                      return argumentsToString(command) + ',';
+                    })
+                    .join('\n'),
+                1,
+            ) +
+            '\n]'
+            : '';
     //ex.
     // immediate_commands: [ADD_WATER]
 
     const requestString = this.requests
-      ? `[\n${indent(
-          this.requests
-            .map(r => {
-              return (
-                `{\n` +
-                indent(
-                  `name: '${r.name}',\n` +
-                    `steps: [\n${indent(
-                      r.steps
-                        // @ts-ignore : 's: Step' found in JSON Spec
-                        .map(s => {
-                          if (s instanceof CommandStem || s instanceof Ground_Block || s instanceof Ground_Event) {
-                            return s.toEDSLString() + ',';
-                          }
-                          return objectToString(s) + ',';
-                        })
-                        .join('\n'),
-                      1,
-                    )}\n],` +
-                    `\ntype: '${r.type}',` +
-                    `${r.description ? `\ndescription: '${r.description}',` : ''}` +
-                    `${r.ground_epoch ? `\nground_epoch: ${objectToString(r.ground_epoch)},` : ''}` +
-                    `${r.time ? `\ntime: ${objectToString(r.time)},` : ''}` +
-                    `${r.metadata ? `\nmetadata: ${objectToString(r.metadata)},` : ''}`,
-                  1,
-                ) +
-                `\n}`
-              );
-            })
-            .join(',\n'),
-          1,
+        ? `[\n${indent(
+            this.requests
+                .map(r => {
+                  return (
+                      `{\n` +
+                      indent(
+                          `name: '${r.name}',\n` +
+                          `steps: [\n${indent(
+                              r.steps
+                                  // @ts-ignore : 's: Step' found in JSON Spec
+                                  .map(s => {
+                                    if (s instanceof CommandStem || s instanceof Ground_Block || s instanceof Ground_Event || s instanceof ActivateStep || s instanceof  LoadStep) {
+                                      return s.toEDSLString() + ',';
+                                    }
+                                    return argumentsToString(s) + ',';
+                                  })
+                                  .join('\n'),
+                              1,
+                          )}\n],` +
+                          `\ntype: '${r.type}',` +
+                          `${r.description ? `\ndescription: '${r.description}',` : ''}` +
+                          `${r.ground_epoch ? `\nground_epoch: ${argumentsToString(r.ground_epoch)},` : ''}` +
+                          `${r.time ? `\ntime: ${argumentsToString(r.time)},` : ''}` +
+                          `${r.metadata ? `\nmetadata: ${argumentsToString(r.metadata)},` : ''}`,
+                          1,
+                      ) +
+                      `\n}`
+                  );
+                })
+                .join(',\n'),
+            1,
         )}\n]`
       : '';
     //ex.
@@ -811,11 +875,21 @@ export class Sequence implements SeqJson {
       ...(json.steps
         ? {
             // @ts-ignore : 'Step' found in JSON Spec
-            steps: json.steps.map((c: Step) => {
-              if (c.type === 'command') return CommandStem.fromSeqJson(c as CommandStem, localNames, parameterNames);
-              else if (c.type === 'ground_block') return Ground_Block.fromSeqJson(c as Ground_Block);
-              else if (c.type === 'ground_event') return Ground_Event.fromSeqJson(c as Ground_Event);
-              return c;
+            steps: json.steps.map((step: Step) => {
+              switch (step.type){
+                case StepType.Command:
+                  return CommandStem.fromSeqJson(step as CommandStem, localNames, parameterNames);
+                case StepType.GroundBlock:
+                  return Ground_Block.fromSeqJson(step as Ground_Block)
+                case StepType.GroundEvent:
+                  return Ground_Event.fromSeqJson(step as Ground_Event)
+                case StepType.Activate:
+                  return ActivateStep.fromSeqJson(step as ActivateStep)
+                case StepType.Load:
+                  return LoadStep.fromSeqJson(step as LoadStep)
+                default:
+                  return step;
+              }
             }),
           }
           : {}),
@@ -853,21 +927,37 @@ export class Sequence implements SeqJson {
                 ...(r.time ? { time: r.time } : {}),
                 ...(r.metadata ? { metadata: r.metadata } : {}),
                 steps: [
-                  r.steps[0].type === 'command'
-                    ? CommandStem.fromSeqJson(r.steps[0] as CommandStem,localNames, parameterNames)
-                    : r.steps[0].type === 'ground_block'
-                    ? // @ts-ignore : 'GroundBlock' found in JSON Spec
-                      Ground_Block.fromSeqJson(r.steps[0] as GroundBlock)
-                    : r.steps[0].type === 'ground_event'
-                    ? // @ts-ignore : 'GroundEvent' found in JSON Spec
-                      Ground_Event.fromSeqJson(r.steps[0] as GroundEvent)
-                    : r.steps[0],
+                  r.steps[0].type === StepType.Command
+                      ? CommandStem.fromSeqJson(r.steps[0] as CommandStem,localNames, parameterNames)
+                  : r.steps[0].type === StepType.GroundBlock
+                      // @ts-ignore : 'GroundBlock' found in JSON Spec
+                      ? Ground_Block.fromSeqJson(r.steps[0] as GroundBlock)
+                  : r.steps[0].type === StepType.GroundEvent
+                      // @ts-ignore : 'GroundEvent' found in JSON Spec
+                      ? Ground_Event.fromSeqJson(r.steps[0] as GroundEvent)
+                  : r.steps[0].type === StepType.Activate
+                      // @ts-ignore : 'GroundBlock' found in JSON Spec
+                      ? ActivateStep.fromSeqJson(r.steps[0] as ActivateStep)
+                  : r.steps[0].type === StepType.Load
+                      // @ts-ignore : 'GroundBlock' found in JSON Spec
+                      ? LoadStep.fromSeqJson(r.steps[0] as LoadStep)
+                  : r.steps[0],
                   // @ts-ignore : 'step : Step' found in JSON Spec
                   ...r.steps.slice(1).map(step => {
-                    if (step.type === 'command') return CommandStem.fromSeqJson(step as CommandStem, localNames, parameterNames);
-                    else if (step.type === 'ground_block') return Ground_Block.fromSeqJson(step as Ground_Block);
-                    else if (step.type === 'ground_event') return Ground_Event.fromSeqJson(step as Ground_Event);
-                    return step;
+                    switch (step.type){
+                      case StepType.Command:
+                        return CommandStem.fromSeqJson(step as CommandStem, localNames, parameterNames);
+                      case StepType.GroundBlock:
+                        return Ground_Block.fromSeqJson(step as Ground_Block)
+                      case StepType.GroundEvent:
+                        return Ground_Event.fromSeqJson(step as Ground_Event)
+                      case StepType.Activate:
+                        return ActivateStep.fromSeqJson(step as ActivateStep)
+                      case StepType.Load:
+                        return LoadStep.fromSeqJson(step as LoadStep)
+                      default:
+                        return step;
+                    }
                   }),
                 ],
               };
@@ -991,7 +1081,7 @@ export class Variable implements VariableDeclaration {
         return `${type}('${this.name}'${
             this._allowable_ranges || this._allowable_values || this._sc_name
                 ? ', ' +
-                objectToString({
+                argumentsToString({
                   ...(this._allowable_ranges ? { allowable_ranges: this._allowable_ranges } : {}),
                   ...(this._allowable_values ? { allowable_values: this._allowable_values } : {}),
                   ...(this._sc_name ? { sc_name: this._sc_name } : {}),
@@ -1003,7 +1093,7 @@ export class Variable implements VariableDeclaration {
         return `${type}('${this.name}'${
             this._allowable_ranges || this._allowable_values || this._sc_name
                 ? ', ' +
-                objectToString({
+                argumentsToString({
                   ...(this._allowable_values ? { allowable_values: this._allowable_values } : {}),
                   ...(this._sc_name ? { sc_name: this._sc_name } : {}),
                 }) +
@@ -1014,7 +1104,7 @@ export class Variable implements VariableDeclaration {
         return `${type}('${this.name}', '${this._enum_name}'${
             this._allowable_ranges || this._allowable_values || this._sc_name
                 ? ', ' +
-                objectToString({
+                argumentsToString({
                   ...(this._allowable_ranges ? { allowable_ranges: this._allowable_ranges } : {}),
                   ...(this._allowable_values ? { allowable_values: this._allowable_values } : {}),
                   ...(this._sc_name ? { sc_name: this._sc_name } : {}),
@@ -1026,7 +1116,7 @@ export class Variable implements VariableDeclaration {
         return `${type}(${this.name}${this._enum_name ? ', ' + this._enum_name : ''}${
             this._allowable_ranges || this._allowable_values || this._sc_name
                 ? ', ' +
-                objectToString({
+                argumentsToString({
                   ...(this._allowable_ranges ? { allowable_ranges: this._allowable_ranges } : {}),
                   ...(this._allowable_values ? { allowable_values: this._allowable_values } : {}),
                   ...(this._sc_name ? { sc_name: this._sc_name } : {}),
@@ -1156,7 +1246,7 @@ export function ENUM<const N extends string, const E extends string>(
  * ---------------------------------
  */
 
-// @ts-ignore : 'Args' found in JSON Spec
+  // @ts-ignore : 'Args' found in JSON Spec
 export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
   public readonly arguments: A;
   public readonly absoluteTime: Temporal.Instant | null = null;
@@ -1174,7 +1264,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
   private readonly _metadata?: Metadata | undefined;
   // @ts-ignore : 'Description' found in JSON Spec
   private readonly _description?: Description | undefined;
-  public readonly type: 'command' = 'command';
+  public readonly type: 'command' = StepType.Command;
 
   private constructor(opts: CommandOptions<A>) {
     this.stem = opts.stem;
@@ -1274,13 +1364,14 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
     return {
       args: convertArgsToInterfaces(this.arguments),
       stem: this.stem,
+      // prettier-ignore
       time:
-        this.absoluteTime !== null
-          ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this.absoluteTime) }
+          this.absoluteTime !== null
+              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this.absoluteTime) }
           : this.epochTime !== null
-          ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this.epochTime) }
+              ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this.epochTime) }
           : this.relativeTime !== null
-          ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this.relativeTime) }
+              ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this.relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       type: this.type,
       ...(this._metadata ? { metadata: this._metadata } : {}),
@@ -1295,13 +1386,14 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       localNames?: string[],
       parameterNames?: string[],
   ): CommandStem {
+    // prettier-ignore
     const timeValue =
-      json.time.type === TimingTypes.ABSOLUTE
-        ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+        json.time.type === TimingTypes.ABSOLUTE
+            ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
         : json.time.type === TimingTypes.COMMAND_RELATIVE
-        ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-        ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : {};
 
     return CommandStem.new({
@@ -1343,25 +1435,25 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
   public toEDSLString(): string {
     const timeString = this.absoluteTime
-      ? `A\`${instantToDoy(this.absoluteTime)}\``
-      : this.epochTime
-      ? `E\`${durationToHms(this.epochTime)}\``
-      : this.relativeTime
-      ? `R\`${durationToHms(this.relativeTime)}\``
-      : 'C';
+        ? `A\`${instantToDoy(this.absoluteTime)}\``
+        : this.epochTime
+            ? `E\`${durationToHms(this.epochTime)}\``
+            : this.relativeTime
+                ? `R\`${durationToHms(this.relativeTime)}\``
+                : 'C';
 
     const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${argumentsToString(this.arguments)})`;
 
     const metadata =
-      this._metadata && Object.keys(this._metadata).length !== 0
-        ? `\n.METADATA(${objectToString(this._metadata)})`
-        : '';
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? "\n"+indent(`.METADATA(${argumentsToString(this._metadata)})`,1)
+            : '';
     const description =
-      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+        this._description && this._description.length !== 0 ? "\n"+indent(`.DESCRIPTION('${this._description}')`,1) : '';
     const models =
-      this._models && Object.keys(this._models).length !== 0
-        ? `\n.MODELS([\n${this._models.map(m => indent(objectToString(m))).join(',\n')}\n])`
-        : '';
+        this._models && Object.keys(this._models).length !== 0
+            ? "\n"+indent(`.MODELS([\n${this._models.map(m => indent(argumentsToString(m))).join(',\n')}\n])`,1)
+            : '';
     return `${timeString}.${this.stem}${argsString}${description}${metadata}${models}`;
   }
 }
@@ -1441,48 +1533,14 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
     const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${argumentsToString(this.arguments)})`;
 
     const metadata =
-      this._metadata && Object.keys(this._metadata).length !== 0
-        ? `\n.METADATA(${objectToString(this._metadata)})`
-        : '';
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? "\n"+indent(`.METADATA(${argumentsToString(this._metadata)})`,1)
+            : '';
     const description =
-      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+        this._description && this._description.length !== 0 ? "\n"+indent(`.DESCRIPTION('${this._description}')`,1) : '';
 
     return `${this.stem}${argsString}${description}${metadata}`;
   }
-}
-
-//The function takes an object of arguments and converts them into the Args type. It does this by looping through the
-// values and pushing a new argument type to the result array depending on the type of the value.
-// If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
-// the function returns the result array of argument types -
-// StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
-// @ts-ignore : 'Args' found in JSON Spec
-function convertArgsToInterfaces(args: { [argName: string]: any }): Args {
-  // @ts-ignore : 'Args' found in JSON Spec
-  let result: Args = [];
-  if (args['length'] === 0) {
-    return result;
-  }
-
-  const values = Array.isArray(args) ? args[0] : args;
-
-  for (let key in values) {
-    let value = values[key];
-    if (Array.isArray(value)) {
-      // @ts-ignore : 'RepeatArgument' found in JSON Spec
-      let repeatArg: RepeatArgument = {
-        value: value.map(arg => {
-          return convertRepeatArgs(arg);
-        }),
-        type: 'repeat',
-        name: key,
-      };
-      result.push(repeatArg);
-    } else {
-      result = result.concat(convertValueToObject(value, key));
-    }
-  }
-  return result;
 }
 
 // @ts-ignore : 'GroundBlock' found in JSON Spec
@@ -1490,7 +1548,7 @@ export class Ground_Block implements GroundBlock {
   name: string;
   // @ts-ignore : 'Time' found in JSON Spec
   time!: Time;
-  type: 'ground_block' = 'ground_block';
+  type: 'ground_block' = StepType.GroundBlock;
 
   private readonly _absoluteTime: Temporal.Instant | null = null;
   private readonly _epochTime: Temporal.Duration | null = null;
@@ -1638,13 +1696,14 @@ export class Ground_Block implements GroundBlock {
   public toSeqJson(): GroundBlock {
     return {
       name: this.name,
+      // prettier-ignore
       time:
-        this._absoluteTime !== null
-          ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
+          this._absoluteTime !== null
+              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
           : this._epochTime !== null
-          ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
+              ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
           : this._relativeTime !== null
-          ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
+              ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       ...(this._args ? { args: this._args } : {}),
       ...(this._description ? { description: this._description } : {}),
@@ -1656,13 +1715,14 @@ export class Ground_Block implements GroundBlock {
 
   // @ts-ignore : 'GroundBlock' found in JSON Spec
   public static fromSeqJson(json: GroundBlock): Ground_Block {
+    // prettier-ignore
     const timeValue =
-      json.time.type === TimingTypes.ABSOLUTE
-        ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+        json.time.type === TimingTypes.ABSOLUTE
+            ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
         : json.time.type === TimingTypes.COMMAND_RELATIVE
-        ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-        ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : {};
 
     return Ground_Block.new({
@@ -1677,31 +1737,28 @@ export class Ground_Block implements GroundBlock {
 
   public toEDSLString(): string {
     const timeString = this._absoluteTime
-      ? `A\`${instantToDoy(this._absoluteTime)}\``
-      : this._epochTime
-      ? `E\`${durationToHms(this._epochTime)}\``
-      : this._relativeTime
-      ? `R\`${durationToHms(this._relativeTime)}\``
-      : 'C';
+        ? `A\`${instantToDoy(this._absoluteTime)}\``
+        : this._epochTime
+            ? `E\`${durationToHms(this._epochTime)}\``
+            : this._relativeTime
+                ? `R\`${durationToHms(this._relativeTime)}\``
+                : 'C';
 
     const args =
-      this._args && Object.keys(this._args).length !== 0
-        ? // @ts-ignore : 'A : Args' found in JSON Spec
-          `\n.ARGUMENTS([\n${this._args.map(a => indent(objectToString(a))).join(',\n')}\n])`
-        : '';
+        this._args && Object.keys(this._args).length !== 0 ? "\n"+indent(`.ARGUMENTS(${argumentsToString(this._args)})`,1) : '';
 
     const metadata =
-      this._metadata && Object.keys(this._metadata).length !== 0
-        ? `\n.METADATA(${objectToString(this._metadata)})`
-        : '';
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? "\n"+indent(`.METADATA(${argumentsToString(this._metadata)})`,1)
+            : '';
 
     const description =
-      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+        this._description && this._description.length !== 0 ? "\n"+indent(`.DESCRIPTION('${this._description}')`,1) : '';
 
     const models =
-      this._models && Object.keys(this._models).length !== 0
-        ? `\n.MODELS([\n${this._models.map(m => indent(objectToString(m))).join(',\n')}\n])`
-        : '';
+        this._models && Object.keys(this._models).length !== 0
+            ? "\n"+indent(`.MODELS([\n${this._models.map(m => indent(argumentsToString(m))).join(',\n')}\n])`,1)
+            : '';
 
     return `${timeString}.GROUND_BLOCK('${this.name}')${args}${description}${metadata}${models}`;
   }
@@ -1720,7 +1777,7 @@ export class Ground_Event implements GroundEvent {
   name: string;
   // @ts-ignore : 'Time' found in JSON Spec
   time!: Time;
-  type: 'ground_event' = 'ground_event';
+  type: 'ground_event' = StepType.GroundEvent;
 
   private readonly _absoluteTime: Temporal.Instant | null = null;
   private readonly _epochTime: Temporal.Duration | null = null;
@@ -1869,13 +1926,13 @@ export class Ground_Event implements GroundEvent {
     return {
       name: this.name,
       time:
-        this._absoluteTime !== null
-          ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
-          : this._epochTime !== null
-          ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
-          : this._relativeTime !== null
-          ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
-          : { type: TimingTypes.COMMAND_COMPLETE },
+          this._absoluteTime !== null
+              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
+              : this._epochTime !== null
+                  ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
+                  : this._relativeTime !== null
+                      ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
+                      : { type: TimingTypes.COMMAND_COMPLETE },
       ...(this._args ? { args: this._args } : {}),
       ...(this._description ? { description: this._description } : {}),
       ...(this._metadata ? { metadata: this._metadata } : {}),
@@ -1886,13 +1943,14 @@ export class Ground_Event implements GroundEvent {
 
   // @ts-ignore : 'GroundEvent' found in JSON Spec
   public static fromSeqJson(json: GroundEvent): Ground_Event {
+    // prettier-ignore
     const timeValue =
-      json.time.type === TimingTypes.ABSOLUTE
-        ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+        json.time.type === TimingTypes.ABSOLUTE
+            ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
         : json.time.type === TimingTypes.COMMAND_RELATIVE
-        ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-        ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : {};
 
     return Ground_Event.new({
@@ -1907,31 +1965,28 @@ export class Ground_Event implements GroundEvent {
 
   public toEDSLString(): string {
     const timeString = this._absoluteTime
-      ? `A\`${instantToDoy(this._absoluteTime)}\``
-      : this._epochTime
-      ? `E\`${durationToHms(this._epochTime)}\``
-      : this._relativeTime
-      ? `R\`${durationToHms(this._relativeTime)}\``
-      : 'C';
+        ? `A\`${instantToDoy(this._absoluteTime)}\``
+        : this._epochTime
+            ? `E\`${durationToHms(this._epochTime)}\``
+            : this._relativeTime
+                ? `R\`${durationToHms(this._relativeTime)}\``
+                : 'C';
 
     const args =
-      this._args && Object.keys(this._args).length !== 0
-        ? // @ts-ignore : 'A : Args' found in JSON Spec
-          `\n.ARGUMENTS([\n${this._args.map(a => indent(objectToString(a))).join(',\n')}\n])`
-        : '';
+        this._args && Object.keys(this._args).length !== 0 ? `\n`+indent(`.ARGUMENTS(${argumentsToString(this._args)})`,1) : '';
 
     const metadata =
-      this._metadata && Object.keys(this._metadata).length !== 0
-        ? `\n.METADATA(${objectToString(this._metadata)})`
-        : '';
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? '\n'+indent(`.METADATA(${argumentsToString(this._metadata)})`,1)
+            : '';
 
     const description =
-      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+        this._description && this._description.length !== 0 ? "\n"+indent(`.DESCRIPTION('${this._description}')`,1) : '';
 
     const models =
-      this._models && Object.keys(this._models).length !== 0
-        ? `\n.MODELS([\n${this._models.map(m => indent(objectToString(m))).join(',\n')}\n])`
-        : '';
+        this._models && Object.keys(this._models).length !== 0
+            ? "\n"+indent(`.MODELS([\n${this._models.map(m => indent(argumentsToString(m))).join(',\n')}\n])`,1)
+            : '';
 
     return `${timeString}.GROUND_EVENT('${this.name}')${args}${description}${metadata}${models}`;
   }
@@ -1945,9 +2000,597 @@ function GROUND_EVENT(name: string) {
   return new Ground_Event({ name: name });
 }
 
+// @ts-ignore : 'Activate' found in JSON Spec
+export class ActivateStep implements Activate {
+  sequence: string;
+  // @ts-ignore : 'Time' found in JSON Spec
+  time!: Time;
+  type: 'activate' = StepType.Activate;
+
+  private readonly _absoluteTime: Temporal.Instant | null = null;
+  private readonly _epochTime: Temporal.Duration | null = null;
+  private readonly _relativeTime: Temporal.Duration | null = null;
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  private readonly _args?: Args | undefined;
+  private readonly _description?: string | undefined;
+  private readonly _engine?: number | undefined;
+  private readonly _epoch?: string | undefined;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Model' found in JSON Spec
+  private readonly _models?: Model[] | undefined;
+
+  constructor(opts: ActivateLoadOptions) {
+    this.sequence = opts.sequence;
+
+    this._args = opts.args ?? undefined;
+    this._description = opts.description ?? undefined;
+    this._engine = opts.engine ?? undefined;
+    this._epoch = opts.epoch ?? undefined;
+    this._metadata = opts.metadata ?? undefined;
+    this._models = opts.models ?? undefined;
+
+    if ('absoluteTime' in opts) {
+      this._absoluteTime = opts.absoluteTime;
+    } else if ('epochTime' in opts) {
+      this._epochTime = opts.epochTime;
+    } else if ('relativeTime' in opts) {
+      this._relativeTime = opts.relativeTime;
+    }
+  }
+
+  public static new(opts: ActivateLoadOptions): ActivateStep {
+    return new ActivateStep(opts);
+  }
+
+  public absoluteTiming(absoluteTime: Temporal.Instant): ActivateStep {
+    return new ActivateStep({
+      sequence: this.sequence,
+      absoluteTime: absoluteTime,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+    });
+  }
+
+  public epochTiming(epochTime: Temporal.Duration): ActivateStep {
+    return new ActivateStep({
+      sequence: this.sequence,
+      epochTime: epochTime,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+    });
+  }
+
+  public relativeTiming(relativeTime: Temporal.Duration): ActivateStep {
+    return new ActivateStep({
+      sequence: this.sequence,
+      relativeTime: relativeTime,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+    });
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  public ARGUMENTS(args: Args): ActivateStep {
+    return ActivateStep.new({
+      sequence: this.sequence,
+      args: args,
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  public GET_ARGUMENTS(): Args | undefined {
+    return this._args;
+  }
+
+  public DESCRIPTION(description: string): ActivateStep {
+    return ActivateStep.new({
+      sequence: this.sequence,
+      description: description,
+      ...(this._args && { args: this._args }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  public GET_DESCRIPTION(): string | undefined {
+    return this._description;
+  }
+
+  public ENGINE(engine: number): ActivateStep {
+    return ActivateStep.new({
+      sequence: this.sequence,
+      engine: engine,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  public GET_ENGINE(): number | undefined {
+    return this._engine;
+  }
+
+  public EPOCH(epoch: string): ActivateStep {
+    return ActivateStep.new({
+      sequence: this.sequence,
+      epoch: epoch,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  public GET_EPOCH(): string | undefined {
+    return this._epoch;
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): ActivateStep {
+    return ActivateStep.new({
+      sequence: this.sequence,
+      metadata: metadata,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+
+  // @ts-ignore : 'Model' found in JSON Spec
+  public MODELS(models: Model[]): ActivateStep {
+    return ActivateStep.new({
+      sequence: this.sequence,
+      models: models,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Model' found in JSON Spec
+  public GET_MODELS(): Model[] | undefined {
+    return this._models;
+  }
+
+  // @ts-ignore : 'Activate' found in JSON Spec
+  public toSeqJson(): Activate {
+    return {
+      sequence: this.sequence,
+      time:
+          this._absoluteTime !== null
+              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
+              : this._epochTime !== null
+                  ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
+                  : this._relativeTime !== null
+                      ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
+                      : { type: TimingTypes.COMMAND_COMPLETE },
+      type: this.type,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+      ...(this._absoluteTime ? { absoluteTime: this._absoluteTime } : {}),
+      ...(this._epochTime ? { epochTime: this._epochTime } : {}),
+      ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
+    };
+  }
+
+  // @ts-ignore : 'Activate' found in JSON Spec
+  public static fromSeqJson(json: Activate): ActivateStep {
+    // prettier-ignore
+    const timeValue =
+        json.time.type === TimingTypes.ABSOLUTE
+            ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+        : json.time.type === TimingTypes.COMMAND_RELATIVE
+            ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+        : json.time.type === TimingTypes.EPOCH_RELATIVE
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+        : {};
+
+    return ActivateStep.new({
+      sequence: json.sequence,
+      ...timeValue,
+      ...(json.args ? { args: json.args } : {}),
+      ...(json.description ? { description: json.description } : {}),
+      ...(json.engine ? { engine: json.engine } : {}),
+      ...(json.epoch ? { epoch: json.epoch } : {}),
+      ...(json.metadata ? { metadata: json.metadata } : {}),
+      ...(json.models ? { model: json.models } : {}),
+    });
+  }
+
+  public toEDSLString(): string {
+    const timeString = this._absoluteTime
+        ? `A\`${instantToDoy(this._absoluteTime)}\``
+        : this._epochTime
+            ? `E\`${durationToHms(this._epochTime)}\``
+            : this._relativeTime
+                ? `R\`${durationToHms(this._relativeTime)}\``
+                : 'C';
+
+    const args =
+        this._args && Object.keys(this._args).length !== 0 ? "\n"+indent(`.ARGUMENTS(${argumentsToString(this._args)})`,1) : '';
+
+    const description =
+        this._description && this._description.length !== 0 ? "\n"+indent(`.DESCRIPTION('${this._description}')`,1) : '';
+
+    const epoch = this._epoch ? "\n"+indent(`.EPOCH('${this._epoch}')`,1) : '';
+
+    const engine = this._engine ? "\n"+indent(`.ENGINE(${this._engine})`,1) : '';
+
+    const metadata =
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? "\n"+indent(`.METADATA(${argumentsToString(this._metadata)})`)
+            : '';
+
+    const models =
+        this._models && Object.keys(this._models).length !== 0
+            ? "\n"+indent(`.MODELS([\n${this._models.map(m => indent(argumentsToString(m))).join(',\n')}\n])`,1)
+            : '';
+
+    return `${timeString}.ACTIVATE('${this.sequence}')${args}${description}${engine}${epoch}${metadata}${models}`;
+  }
+}
+
+/**
+ * This is a ACTIVATE step
+ *
+ */
+function ACTIVATE(sequence: string): ActivateStep {
+  return new ActivateStep({ sequence: sequence });
+}
+
+// @ts-ignore : 'Load' found in JSON Spec
+export class LoadStep implements Load {
+  sequence: string;
+  // @ts-ignore : 'Time' found in JSON Spec
+  time!: Time;
+  type: 'load' = StepType.Load;
+
+  private readonly _absoluteTime: Temporal.Instant | null = null;
+  private readonly _epochTime: Temporal.Duration | null = null;
+  private readonly _relativeTime: Temporal.Duration | null = null;
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  private readonly _args?: Args | undefined;
+  private readonly _description?: string | undefined;
+  private readonly _engine?: number | undefined;
+  private readonly _epoch?: string | undefined;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Model' found in JSON Spec
+  private readonly _models?: Model[] | undefined;
+
+  constructor(opts: ActivateLoadOptions) {
+    this.sequence = opts.sequence;
+
+    this._args = opts.args ?? undefined;
+    this._description = opts.description ?? undefined;
+    this._engine = opts.engine ?? undefined;
+    this._epoch = opts.epoch ?? undefined;
+    this._metadata = opts.metadata ?? undefined;
+    this._models = opts.models ?? undefined;
+
+    if ('absoluteTime' in opts) {
+      this._absoluteTime = opts.absoluteTime;
+    } else if ('epochTime' in opts) {
+      this._epochTime = opts.epochTime;
+    } else if ('relativeTime' in opts) {
+      this._relativeTime = opts.relativeTime;
+    }
+  }
+
+  public static new(opts: ActivateLoadOptions): LoadStep {
+    return new LoadStep(opts);
+  }
+
+  public absoluteTiming(absoluteTime: Temporal.Instant): LoadStep {
+    return new LoadStep({
+      sequence: this.sequence,
+      absoluteTime: absoluteTime,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+    });
+  }
+
+  public epochTiming(epochTime: Temporal.Duration): LoadStep {
+    return new LoadStep({
+      sequence: this.sequence,
+      epochTime: epochTime,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+    });
+  }
+
+  public relativeTiming(relativeTime: Temporal.Duration): LoadStep {
+    return new LoadStep({
+      sequence: this.sequence,
+      relativeTime: relativeTime,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+    });
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  public ARGUMENTS(args: Args): LoadStep {
+    return LoadStep.new({
+      sequence: this.sequence,
+      args: args,
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  public GET_ARGUMENTS(): Args | undefined {
+    return this._args;
+  }
+
+  public DESCRIPTION(description: string): LoadStep {
+    return LoadStep.new({
+      sequence: this.sequence,
+      description: description,
+      ...(this._args && { args: this._args }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  public GET_DESCRIPTION(): string | undefined {
+    return this._description;
+  }
+
+  public ENGINE(engine: number): LoadStep {
+    return LoadStep.new({
+      sequence: this.sequence,
+      engine: engine,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  public GET_ENGINE(): number | undefined {
+    return this._engine;
+  }
+
+  public EPOCH(epoch: string): LoadStep {
+    return LoadStep.new({
+      sequence: this.sequence,
+      epoch: epoch,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  public GET_EPOCH(): string | undefined {
+    return this._epoch;
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): LoadStep {
+    return LoadStep.new({
+      sequence: this.sequence,
+      metadata: metadata,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._models && { models: this._models }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+
+  // @ts-ignore : 'Model' found in JSON Spec
+  public MODELS(models: Model[]): LoadStep {
+    return LoadStep.new({
+      sequence: this.sequence,
+      models: models,
+      ...(this._args && { args: this._args }),
+      ...(this._description && { description: this._description }),
+      ...(this._engine && { engine: this._engine }),
+      ...(this._epoch && { epoch: this._epoch }),
+      ...(this._metadata && { metadata: this._metadata }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Model' found in JSON Spec
+  public GET_MODELS(): Model[] | undefined {
+    return this._models;
+  }
+
+  // @ts-ignore : 'Load' found in JSON Spec
+  public toSeqJson(): Load {
+    return {
+      sequence: this.sequence,
+      time:
+          this._absoluteTime !== null
+              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
+              : this._epochTime !== null
+                  ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
+                  : this._relativeTime !== null
+                      ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
+                      : { type: TimingTypes.COMMAND_COMPLETE },
+      type: this.type,
+      ...(this._args ? { args: this._args } : {}),
+      ...(this._description ? { description: this._description } : {}),
+      ...(this._engine ? { engine: this._engine } : {}),
+      ...(this._epoch ? { epoch: this._epoch } : {}),
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { model: this._models } : {}),
+      ...(this._absoluteTime ? { absoluteTime: this._absoluteTime } : {}),
+      ...(this._epochTime ? { epochTime: this._epochTime } : {}),
+      ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
+    };
+  }
+
+  // @ts-ignore : 'Activate' found in JSON Spec
+  public static fromSeqJson(json: Load): LoadStep {
+    // prettier-ignore
+    const timeValue =
+        json.time.type === TimingTypes.ABSOLUTE
+            ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+        : json.time.type === TimingTypes.COMMAND_RELATIVE
+            ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+        : json.time.type === TimingTypes.EPOCH_RELATIVE
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+        : {};
+
+    return LoadStep.new({
+      sequence: json.sequence,
+      ...timeValue,
+      ...(json.args ? { args: json.args } : {}),
+      ...(json.description ? { description: json.description } : {}),
+      ...(json.engine ? { engine: json.engine } : {}),
+      ...(json.epoch ? { epoch: json.epoch } : {}),
+      ...(json.metadata ? { metadata: json.metadata } : {}),
+      ...(json.models ? { model: json.models } : {}),
+    });
+  }
+
+  public toEDSLString(): string {
+    const timeString = this._absoluteTime
+        ? `A\`${instantToDoy(this._absoluteTime)}\``
+        : this._epochTime
+            ? `E\`${durationToHms(this._epochTime)}\``
+            : this._relativeTime
+                ? `R\`${durationToHms(this._relativeTime)}\``
+                : 'C';
+
+    const args =
+        this._args && Object.keys(this._args).length !== 0 ? "\n"+indent(`.ARGUMENTS(${argumentsToString(this._args)})`,1) : '';
+
+    const description =
+        this._description && this._description.length !== 0 ? "\n"+indent(`.DESCRIPTION('${this._description}')`,1) : '';
+
+    const epoch = this._epoch ? "\n"+indent(`.EPOCH('${this._epoch}')`,1) : '';
+
+    const engine = this._engine ? "\n"+indent(`.ENGINE(${this._engine})`,1) : '';
+
+    const metadata =
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? "\t"+indent(`.METADATA(${argumentsToString(this._metadata)})`,1)
+            : '';
+
+    const models =
+        this._models && Object.keys(this._models).length !== 0
+            ? "./"+indent(`.MODELS([\n${this._models.map(m => indent(argumentsToString(m))).join(',\n')}\n])`,1)
+            : '';
+
+    return `${timeString}.LOAD('${this.sequence}')${args}${description}${engine}${epoch}${metadata}${models}`;
+  }
+}
+
+/**
+ * This is a LOAD step
+ *
+ */
+function LOAD(sequence: string): LoadStep {
+  return new LoadStep({ sequence: sequence });
+}
+
 export const STEPS = {
   GROUND_BLOCK: GROUND_BLOCK,
   GROUND_EVENT: GROUND_EVENT,
+  ACTIVATE: ACTIVATE,
+  LOAD: LOAD,
 };
 
 /**
@@ -2020,11 +2663,11 @@ export class HardwareStem implements HardwareCommand {
 
   public toEDSLString(): string {
     const metadata =
-      this._metadata && Object.keys(this._metadata).length !== 0
-        ? `\n.METADATA(${objectToString(this._metadata)})`
-        : '';
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? `\n.METADATA(${argumentsToString(this._metadata)})`
+            : '';
     const description =
-      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+        this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
 
     return `${this.stem}${description}${metadata}`;
   }
@@ -2272,20 +2915,40 @@ function indent(text: string, numTimes: number = 1, char: string = '  '): string
     .join('\n');
 }
 
-// @ts-ignore : 'Args' found in JSON Spec
-function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
-  if (Array.isArray(args)) {
-    const argStrings = args.map(arg => {
-      if (typeof arg === 'string') {
-        return `'${arg}'`;
-      }
-      return arg.toString();
-    });
-
-    return argStrings.join(', ');
-  } else {
-    return objectToString(args);
+/** The function takes an object of arguments and converts them into the Args type. It does this by looping through the
+ * values and pushing a new argument type to the result array depending on the type of the value.
+ * If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
+ * the function returns the result array of argument types -
+ * StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
+ * @param args
+ */
+//@ts-ignore : 'Args' found in JSON Spec
+function convertArgsToInterfaces(args: { [argName: string]: any }): Args {
+  // @ts-ignore : 'Args' found in JSON Spec
+  let result: Args = [];
+  if (args['length'] === 0) {
+    return result;
   }
+
+  const values = Array.isArray(args) ? args[0] : args;
+
+  for (let key in values) {
+    let value = values[key];
+    if (Array.isArray(value)) {
+      // @ts-ignore : 'RepeatArgument' found in JSON Spec
+      let repeatArg: RepeatArgument = {
+        value: value.map(arg => {
+          return convertRepeatArgs(arg);
+        }),
+        type: 'repeat',
+        name: key,
+      };
+      result.push(repeatArg);
+    } else {
+      result = result.concat(convertValueToObject(value, key));
+    }
+  }
+  return result;
 }
 
 /**
@@ -2311,21 +2974,24 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
   const convertedArgs = interfaces.map(
       (
           // @ts-ignore : found in JSON Spec
-          arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
+          arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,index
       ) => {
+
+        const argName = arg.name !== undefined ? arg.name : `arg${index}`
         // @ts-ignore : 'RepeatArgument' found in JSON Spec
         if (arg.type === 'repeat') {
-          if (validate(arg.name)) {
+          if (validate(argName)) {
             // @ts-ignore : 'RepeatArgument' found in JSON Spec
             return {
-              [arg.name]: arg.value.map(
+              [argName]: arg.value.map(
                   (
                       // @ts-ignore : found in JSON Spec
                       repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
                   ) =>
-                      repeatArgBundle.reduce((obj, item) => {
-                        if (validate(item.name)) {
-                          obj[item.name] = item.value;
+                      repeatArgBundle.reduce((obj, item,index) => {
+                        const argName = item.name !== undefined ? item.name : `repeat${index}`
+                        if (validate(argName)) {
+                          obj[argName] = item.value;
                         }
                         return obj;
                       }, {}),
@@ -2334,7 +3000,7 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
           }
           return { repeat_error: 'Remote property injection detected...' };
         } else if (arg.type === 'symbol') {
-          if (validate(arg.name)) {
+          if (validate(argName)) {
             /**
              * We don't have access to the actual type of the variable, as it's not included in
              * the sequential JSON. However, we don't need the type at this point in the code. Instead,
@@ -2351,19 +3017,19 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
               variable = Variable.new({ name: `${arg.value} //ERROR: ${errorMsg}`, type: VariableType.INT });
               variable.setKind('unknown');
             }
-            return { [arg.name]: variable };
+            return { [argName]: variable };
           }
           return { symbol_error: 'Remote property injection detected...' };
           // @ts-ignore : 'HexArgument' found in JSON Spec
         } else if (arg.type === 'hex') {
-          if (validate(arg.name)) {
+          if (validate(argName)) {
             // @ts-ignore : 'HexArgument' found in JSON Spec
-            return { [arg.name]: { hex: arg.value } };
+            return { [argName]: { hex: arg.value } };
           }
           return { hex_error: 'Remote property injection detected...' };
         } else {
-          if (validate(arg.name)) {
-            return { [arg.name]: arg.value };
+          if (validate(argName)) {
+            return { [argName]: arg.value };
           }
           return { error: 'Remote property injection detected...' };
         }
@@ -2454,24 +3120,16 @@ function convertValueToObject(value: any, key: string): any {
  * @param obj
  * @param indentLevel
  */
-function objectToString(obj: any, indentLevel: number = 1): string {
+// @ts-ignore : 'Args' found in JSON Spec
+function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
   let output = '';
-
-  const print = (obj: any) => {
+  function printObject(obj : any, indentLevel : number){
     Object.keys(obj).forEach(key => {
       const value = obj[key];
 
       if (Array.isArray(value)) {
         output += indent(`${key}: [`, indentLevel) + '\n';
-        indentLevel++;
-        value.forEach((item: any) => {
-          output += indent(`{`, indentLevel) + '\n';
-          indentLevel++;
-          print(item);
-          indentLevel--;
-          output += indent(`},`, indentLevel) + '\n';
-        });
-        indentLevel--;
+        printArray(value,indentLevel+1);
         output += indent(`],`, indentLevel) + '\n';
       } else if (typeof value === 'object') {
         //value is a Local or Parameter
@@ -2479,22 +3137,53 @@ function objectToString(obj: any, indentLevel: number = 1): string {
           output += indent(`${key}: ${value.toReferenceString()}`, indentLevel) + ',\n';
         } else {
           output += indent(`${key}:{`, indentLevel) + '\n';
-          indentLevel++;
-          print(value);
-          indentLevel--;
+          printValue(value,indentLevel+1);
           output += indent(`},`, indentLevel) + '\n';
         }
       } else {
         output += indent(`${key}: ${typeof value === 'string' ? `'${value}'` : value},`, indentLevel) + '\n';
       }
     });
+  }
+
+  function printArray(array : any[], indentLevel : number){
+    array.forEach((item: any) => {
+      if (Array.isArray(item)) {
+        output += indent(`[`, indentLevel) + '\n';
+      } else if (typeof item === 'object') {
+        output += indent(`{`, indentLevel) + '\n';
+      }
+      printValue(item,indentLevel+1);
+      if (Array.isArray(item)) {
+        output += indent(`],`, indentLevel) + '\n';
+      } else if (typeof item === 'object') {
+        output += indent(`},`, indentLevel) + '\n';
+      }
+    });
+  }
+  function printValue(value: any, indentLevel : number) {
+    if (Array.isArray(value)) {
+      printArray(value,indentLevel)
+    } else if (typeof value === 'object') {
+      printObject(value,indentLevel)
+    } else {
+      output += indent(`${typeof value === 'string' ? `'${value}'` : value},`, indentLevel) + '\n';
+    }
   };
 
-  output += '{\n';
-  print(obj);
-  output += `}`;
+  if (Array.isArray(args)) {
+    output += '[\n';
+  } else {
+    output += '{\n';
+  }
+  printValue(args,1);
+  if (Array.isArray(args)) {
+    output += ']';
+  } else {
+    output += '}';
+  }
 
-  return output;
+  return output
 }
 
 /** END Preface */
