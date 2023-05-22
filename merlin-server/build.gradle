@@ -49,19 +49,14 @@ assemble {
 }
 
 test {
-  dependsOn(assembleConstraintsDSLCompiler)
+  dependsOn nodeSetup
+  dependsOn assembleConstraintsDSLCompiler
   useJUnitPlatform {
     includeEngines 'jqwik', 'junit-jupiter'
   }
 
   // Add node bin directory to PATH, helps CI/CD services without node installed
-  projectDir.toPath().resolve('.gradle/nodejs').toFile().listFiles().each {
-    environment 'NODE_PATH', "$it/bin/node"
-  }
-
-  if (System.getenv("NODE_PATH") == null) {
-    environment 'NODE_PATH', "node"
-  }
+  environment 'NODE_PATH', nodeSetup.nodeDir.get().toString().concat("/bin/node")
 
   environment "CONSTRAINTS_DSL_COMPILER_ROOT", projectDir.toPath().resolve('constraints-dsl-compiler')
   environment "CONSTRAINTS_DSL_COMPILER_COMMAND", './build/main.js'
