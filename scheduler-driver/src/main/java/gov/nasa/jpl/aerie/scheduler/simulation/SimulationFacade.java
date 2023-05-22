@@ -16,9 +16,11 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -129,23 +131,34 @@ public class SimulationFacade implements AutoCloseable{
     return childActivities;
   }
 
-  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
+  public void removeAndInsertActivitiesFromSimulation(
+      final Collection<SchedulingActivityDirective> activitiesToRemove,
+      final Collection<SchedulingActivityDirective> activitiesToAdd){
     var atLeastOne = false;
-    for(final var act: activities){
+    for(final var act: activitiesToRemove){
       if(insertedActivities.containsKey(act)){
         atLeastOne = true;
         insertedActivities.remove(act);
       }
     }
+    Duration earliestActStartTime = Duration.MAX_VALUE;
+    for(final var act: activitiesToAdd){
+      earliestActStartTime = Duration.min(earliestActStartTime, act.startOffset());
+    }
     //reset resumable simulation
-    if(atLeastOne){
-      final var oldInsertedActivities = new HashMap<>(insertedActivities);
+    if(atLeastOne || earliestActStartTime.shorterThan(this.driver.getCurrentSimulationEndTime())){
+      final var allActivitiesToSimulate = new ArrayList<>(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
       if (driver != null) driver.close();
       driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
-      simulateActivities(oldInsertedActivities.keySet());
+      allActivitiesToSimulate.addAll(activitiesToAdd);
+      simulateActivities(allActivitiesToSimulate);
     }
+  }
+
+  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities) {
+    removeAndInsertActivitiesFromSimulation(activities, List.of());
   }
 
   /**
