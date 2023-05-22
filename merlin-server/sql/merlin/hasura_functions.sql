@@ -1,5 +1,3 @@
-create schema hasura_functions;
-
 create table hasura_functions.duplicate_plan_return_value(new_plan_id integer);
 create function hasura_functions.duplicate_plan(plan_id integer, new_plan_name text, hasura_session json)
   returns hasura_functions.duplicate_plan_return_value -- plan_id of the new plan

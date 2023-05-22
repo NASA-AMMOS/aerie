@@ -1,4 +1,3 @@
-create schema migrations;
 create table migrations.schema_migrations (
   migration_id varchar primary key
 );

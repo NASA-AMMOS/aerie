@@ -1,4 +1,3 @@
-create schema metadata;
 create table metadata.tags(
   id integer generated always as identity
     primary key,

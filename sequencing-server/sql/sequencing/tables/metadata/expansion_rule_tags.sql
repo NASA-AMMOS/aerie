@@ -1,4 +1,3 @@
-create schema metadata;
 create table metadata.expansion_rule_tags (
   rule_id integer references public.expansion_rule
     on update cascade

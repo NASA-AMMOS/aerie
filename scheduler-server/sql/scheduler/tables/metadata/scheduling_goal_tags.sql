@@ -1,4 +1,3 @@
-create schema metadata;
 create table metadata.scheduling_goal_tags (
   goal_id integer references public.scheduling_goal
     on update cascade
