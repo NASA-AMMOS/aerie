@@ -15,4 +15,7 @@ begin;
   \ir tables/scheduling_goal_analysis_satisfying_activities.sql
   \ir tables/scheduling_condition.sql
   \ir tables/scheduling_specification_conditions.sql
+
+  -- Table-specific Metadata
+  \ir tables/metadata/scheduling_goal_tags.sql
 end;
