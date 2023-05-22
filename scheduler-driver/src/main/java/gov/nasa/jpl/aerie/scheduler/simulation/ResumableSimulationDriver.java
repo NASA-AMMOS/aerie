@@ -139,13 +139,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    */
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
-    activitiesInserted.put(activityId, activityToSimulate);
-    if(activityToSimulate.startOffset().noLongerThan(curTime)){
-      initSimulation();
-      simulateSchedule(activitiesInserted);
-    } else {
-      simulateSchedule(Map.of(activityId, activityToSimulate));
-    }
+    simulateActivities(Map.of(activityId, activityToSimulate));
   }
 
   public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate) {
