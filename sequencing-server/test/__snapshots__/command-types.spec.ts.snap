@@ -208,6 +208,42 @@ export type ActivateLoadOptions = {
     | {}
     );
 
+export type RequestOptions =
+    | ({
+  name: string;
+  // @ts-ignore : 'Step' found in JSON Spec
+  steps: [Step, ...Step[]];
+  // @ts-ignore : 'Description' found in JSON Spec
+  description?: Description;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata;
+  // @ts-ignore : 'Time' found in JSON Spec
+  time?: Time;
+} & (
+    | {
+  absoluteTime: Temporal.Instant;
+}
+    | {
+  epochTime: Temporal.Duration;
+}
+    | {
+  relativeTime: Temporal.Duration;
+}
+    // CommandComplete
+    | {}
+    ))
+    | {
+  name: string;
+  // @ts-ignore : 'Step' found in JSON Spec
+  steps: [Step, ...Step[]];
+  // @ts-ignore : 'Description' found in JSON Spec
+  description?: Description;
+  // @ts-ignore : 'GroundEpoch' found in JSON Spec
+  ground_epoch: GroundEpoch;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata;
+};
+
 export type Arrayable<T> = T | Arrayable<T>[];
 
 /**-----------------------------
@@ -249,7 +285,7 @@ declare global {
           metadata: Metadata;
           locals?: Locals;
           parameters?: Parameters;
-          steps: // @ts-ignore : 'Step' found in JSON Spec
+          steps?: // @ts-ignore : 'Step' found in JSON Spec
               | Step[]
               | ((opts: {
             /*Fancy way to map our array of objects to an object with name as key and type as value
@@ -264,11 +300,7 @@ declare global {
           // @ts-ignore : 'HardwareCommand' found in JSON Spec
           hardware_commands?: HardwareCommand[];
           // @ts-ignore : 'Request' found in JSON Spec
-          requests?: Request[] | ((opts : {
-            locals: { [Index in Locals[number] as Index['name']]: Index['type'] };
-            parameters: { [Index in Parameters[number] as Index['name']]: Index['type'] };
-            // @ts-ignore : 'Step' found in JSON Spec
-          }) => Request[]);
+          requests?: Request[];
         }
             // @ts-ignore : 'SeqJson' found in JSON Spec
             | SeqJson,
@@ -432,29 +464,32 @@ declare global {
       optionals?: { allowable_ranges?: VariableRange[]; allowable_values?: unknown[]; sc_name?: string },
   ): ENUM<N, E>;
 
-  // @ts-ignore : 'Commands' found in generated code
-  function A(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS;
-  // @ts-ignore : 'Commands' found in generated code
-  function A(absoluteTime: Temporal.Instant): typeof Commands & typeof STEPS;
-  // @ts-ignore : 'Commands' found in generated code
-  function A(timeDOYString: string): typeof Commands & typeof STEPS;
+  // @ts-ignore : 'GroundEpoch' and 'Step' found in JSON Spec
+  function REQUEST(name: string, epoch: GroundEpoch, ...steps: [Step, ...Step[]]): RequestEpoch;
 
   // @ts-ignore : 'Commands' found in generated code
-  function R(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS;
+  function A(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS & typeof REQUESTS;
   // @ts-ignore : 'Commands' found in generated code
-  function R(duration: Temporal.Duration): typeof Commands & typeof STEPS;
+  function A(absoluteTime: Temporal.Instant): typeof Commands & typeof STEPS & typeof REQUESTS;
   // @ts-ignore : 'Commands' found in generated code
-  function R(timeHMSString: string): typeof Commands & typeof STEPS;
+  function A(timeDOYString: string): typeof Commands & typeof STEPS & typeof REQUESTS;
 
   // @ts-ignore : 'Commands' found in generated code
-  function E(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS;
+  function R(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS & typeof REQUESTS;
   // @ts-ignore : 'Commands' found in generated code
-  function E(duration: Temporal.Duration): typeof Commands & typeof STEPS;
+  function R(duration: Temporal.Duration): typeof Commands & typeof STEPS & typeof REQUESTS;
   // @ts-ignore : 'Commands' found in generated code
-  function E(timeHMSString: string): typeof Commands & typeof STEPS;
+  function R(timeHMSString: string): typeof Commands & typeof STEPS & typeof REQUESTS;
 
   // @ts-ignore : 'Commands' found in generated code
-  const C: typeof Commands & typeof STEPS;
+  function E(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS & typeof REQUESTS;
+  // @ts-ignore : 'Commands' found in generated code
+  function E(duration: Temporal.Duration): typeof Commands & typeof STEPS & typeof REQUESTS;
+  // @ts-ignore : 'Commands' found in generated code
+  function E(timeHMSString: string): typeof Commands & typeof STEPS & typeof REQUESTS;
+
+  // @ts-ignore : 'Commands' found in generated code
+  const C: typeof Commands & typeof STEPS & typeof REQUESTS;
 }
 
 /**
@@ -513,7 +548,7 @@ export class Sequence implements SeqJson {
         metadata: Metadata;
         locals?: Locals;
         parameters?: Parameters;
-        steps: // @ts-ignore : 'Step' found in JSON Spec
+        steps?: // @ts-ignore : 'Step' found in JSON Spec
             | Step[]
             | ((opts: {
           /*Fancy way to map our array of objects to an object with name as key and type as value
@@ -528,11 +563,7 @@ export class Sequence implements SeqJson {
         // @ts-ignore : 'HardwareCommand' found in JSON Spec
         hardware_commands?: HardwareCommand[];
         // @ts-ignore : 'Request' found in JSON Spec
-        requests?: Request[] | ((opts : {
-          locals: { [Index in Locals[number] as Index['name']]: Index['type'] };
-          parameters: { [Index in Parameters[number] as Index['name']]: Index['type'] };
-          // @ts-ignore : 'Step' found in JSON Spec
-        }) => Request[]);
+        requests?: Request[];
       }
           // @ts-ignore : 'SeqJson' found in JSON Spec
           | SeqJson,
@@ -576,8 +607,7 @@ export class Sequence implements SeqJson {
       const steps =
           typeof opts.steps === 'function' ? opts.steps({ locals: localsMap, parameters: parametersMap }) : opts.steps;
 
-      const requests =
-          typeof opts.requests === 'function' ? opts.requests({ locals: localsMap, parameters: parametersMap }) : opts.requests;
+      const requests = opts.requests;
 
       return new Sequence({
         seqId,
@@ -587,7 +617,7 @@ export class Sequence implements SeqJson {
         steps,
         immediate_commands,
         hardware_commands,
-        requests
+        requests,
       } as SequenceOptions);
     }
   }
@@ -639,27 +669,10 @@ export class Sequence implements SeqJson {
       ...(this.requests
         ? {
             requests: this.requests.map(request => {
-              return {
-                name: request.name,
-                steps: [
-                  request.steps[0] instanceof CommandStem ||
-                  request.steps[0] instanceof Ground_Block ||
-                  request.steps[0] instanceof Ground_Event
-                      ? request.steps[0].toSeqJson()
-                    : request.steps[0],
-                  // @ts-ignore : 'step' found in JSON Spec
-                  ...request.steps.slice(1).map(step => {
-                    if (step instanceof CommandStem || step instanceof Ground_Block || step instanceof Ground_Event)
-                      return step.toSeqJson();
-                    return step;
-                  }),
-                ],
-                type: request.type,
-                ...(request.description ? { description: request.description } : {}),
-                ...(request.ground_epoch ? { ground_epoch: request.ground_epoch } : {}),
-                ...(request.time ? { time: request.time } : {}),
-                ...(request.metadata ? { metadata: request.metadata } : {}),
-              };
+              if (request instanceof RequestTime || request instanceof RequestEpoch) {
+                return request.toSeqJson();
+              }
+              return request;
             }),
           }
         : {}),
@@ -794,6 +807,9 @@ export class Sequence implements SeqJson {
         ? \`[\\n\${indent(
             this.requests
                 .map(r => {
+                  if (r instanceof RequestTime || r instanceof RequestEpoch) {
+                    return r.toEDSLString();
+                  }
                   return (
                       \`{\\n\` +
                       indent(
@@ -802,7 +818,11 @@ export class Sequence implements SeqJson {
                               r.steps
                                   // @ts-ignore : 's: Step' found in JSON Spec
                                   .map(s => {
-                                    if (s instanceof CommandStem || s instanceof Ground_Block || s instanceof Ground_Event || s instanceof ActivateStep || s instanceof  LoadStep) {
+                                    if (s instanceof CommandStem ||
+                                        s instanceof Ground_Block ||
+                                        s instanceof Ground_Event ||
+                                        s instanceof ActivateStep ||
+                                        s instanceof  LoadStep) {
                                       return s.toEDSLString() + ',';
                                     }
                                     return argumentsToString(s) + ',';
@@ -826,24 +846,17 @@ export class Sequence implements SeqJson {
       : '';
     //ex.
     /*requests: [
-    {
-      name: 'power',
-      steps: [
-      R\`04:39:22.000\`.PREHEAT_OVEN({
-      temperature: 360,
-      }),
-      C.ADD_WATER,
-      ],
-      type: 'request',
-      description: ' Activate the oven',
-      ground_epoch: {
-      delta: 'now',
-      name: 'activate',
-      },
-      metadata: {
-      author: 'rrgoet',
-      },
-    }
+      REQUEST('power', {
+          delta: 'now',
+          name: 'activate',
+        },
+   R\`04:39:22.000\`.PREHEAT_OVEN({
+          temperature: 360,
+        })
+                            .description('Activate the oven')
+                      .metadata({
+            author: 'rrgoet',
+          },
     ]
     }*/
 
@@ -859,7 +872,7 @@ export class Sequence implements SeqJson {
         }\` +
         \`\${hardwareString.length !== 0 ? \`\${indent(\`hardware_commands: \${hardwareString}\`, 2)},\\n\` : ''}\` +
         \`\${immediateString.length !== 0 ? \`\${indent(\`immediate_commands: \${immediateString}\`, 2)},\\n\` : ''}\` +
-        \`\${requestString.length !== 0 ? \`\${indent(\`requests: ({ locals, parameters }) => (\${requestString}\`, 2)}),\\n\` : ''}\` +
+        \`\${requestString.length !== 0 ? \`\${indent(\`requests: \${requestString}\`, 2)},\\n\` : ''}\` +
         \`\${indent(\`});\`, 1)}\`
     );
   }
@@ -867,9 +880,9 @@ export class Sequence implements SeqJson {
   // @ts-ignore : 'Args' found in JSON Spec
   public static fromSeqJson(json: SeqJson): Sequence {
     // @ts-ignore : 'VariableDeclaration' found in JSON Spec
-    const localNames = json.locals !== undefined ? json.locals.map( (local : VariableDeclaration) => local.name) : []
+    const localNames = json.locals !== undefined ? json.locals.map((local: VariableDeclaration) => local.name) : [];
     // @ts-ignore : 'VariableDeclaration' found in JSON Spec
-    const parameterNames = json.locals !== undefined ? json.parameters.map( (parameter : VariableDeclaration) => parameter.name) : []
+    const parameterNames = json.parameters !== undefined ? json.parameters.map((parameter: VariableDeclaration) => parameter.name) : [];
 
     return Sequence.new({
       id: json.id,
@@ -921,50 +934,7 @@ export class Sequence implements SeqJson {
       ...(json.requests
         ? {
             // @ts-ignore : 'r: Request' found in JSON Spec
-            requests: json.requests.map(r => {
-              return {
-                name: r.name,
-                type: r.type,
-                ...(r.description ? { description: r.description } : {}),
-                ...(r.ground_epoch ? { ground_epoch: r.ground_epoch } : {}),
-                ...(r.time ? { time: r.time } : {}),
-                ...(r.metadata ? { metadata: r.metadata } : {}),
-                steps: [
-                  r.steps[0].type === StepType.Command
-                      ? CommandStem.fromSeqJson(r.steps[0] as CommandStem,localNames, parameterNames)
-                  : r.steps[0].type === StepType.GroundBlock
-                      // @ts-ignore : 'GroundBlock' found in JSON Spec
-                      ? Ground_Block.fromSeqJson(r.steps[0] as GroundBlock)
-                  : r.steps[0].type === StepType.GroundEvent
-                      // @ts-ignore : 'GroundEvent' found in JSON Spec
-                      ? Ground_Event.fromSeqJson(r.steps[0] as GroundEvent)
-                  : r.steps[0].type === StepType.Activate
-                      // @ts-ignore : 'GroundBlock' found in JSON Spec
-                      ? ActivateStep.fromSeqJson(r.steps[0] as ActivateStep)
-                  : r.steps[0].type === StepType.Load
-                      // @ts-ignore : 'GroundBlock' found in JSON Spec
-                      ? LoadStep.fromSeqJson(r.steps[0] as LoadStep)
-                  : r.steps[0],
-                  // @ts-ignore : 'step : Step' found in JSON Spec
-                  ...r.steps.slice(1).map(step => {
-                    switch (step.type){
-                      case StepType.Command:
-                        return CommandStem.fromSeqJson(step as CommandStem, localNames, parameterNames);
-                      case StepType.GroundBlock:
-                        return Ground_Block.fromSeqJson(step as Ground_Block)
-                      case StepType.GroundEvent:
-                        return Ground_Event.fromSeqJson(step as Ground_Event)
-                      case StepType.Activate:
-                        return ActivateStep.fromSeqJson(step as ActivateStep)
-                      case StepType.Load:
-                        return LoadStep.fromSeqJson(step as LoadStep)
-                      default:
-                        return step;
-                    }
-                  }),
-                ],
-              };
-            }),
+            requests: json.requests.map(r => RequestCommon.fromSeqJson(r)),
           }
         : {}),
       ...(json.immediate_commands
@@ -1052,7 +1022,7 @@ export class Variable implements VariableDeclaration {
         }),
       }),
       ...(this._allowable_values && { allowable_values: this._allowable_values }),
-      ...(this._sc_name && { sc_name: this._sc_name })
+      ...(this._sc_name && { sc_name: this._sc_name }),
     };
   }
 
@@ -1249,7 +1219,7 @@ export function ENUM<const N extends string, const E extends string>(
  * ---------------------------------
  */
 
-  // @ts-ignore : 'Args' found in JSON Spec
+// @ts-ignore : 'Args' found in JSON Spec
 export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
   public readonly arguments: A;
   public readonly absoluteTime: Temporal.Instant | null = null;
@@ -1449,13 +1419,15 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
-            ? "\\n"+indent(\`.METADATA(\${argumentsToString(this._metadata)})\`,1)
+            ? '\\n' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`, 1)
             : '';
     const description =
-        this._description && this._description.length !== 0 ? "\\n"+indent(\`.DESCRIPTION('\${this._description}')\`,1) : '';
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
     const models =
         this._models && Object.keys(this._models).length !== 0
-            ? "\\n"+indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`,1)
+            ? '\\n' + indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`, 1)
             : '';
     return \`\${timeString}.\${this.stem}\${argsString}\${description}\${metadata}\${models}\`;
   }
@@ -1537,10 +1509,12 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
-            ? "\\n"+indent(\`.METADATA(\${argumentsToString(this._metadata)})\`,1)
+            ? '\\n' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`, 1)
             : '';
     const description =
-        this._description && this._description.length !== 0 ? "\\n"+indent(\`.DESCRIPTION('\${this._description}')\`,1) : '';
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
 
     return \`\${this.stem}\${argsString}\${description}\${metadata}\`;
   }
@@ -1748,19 +1722,23 @@ export class Ground_Block implements GroundBlock {
                 : 'C';
 
     const args =
-        this._args && Object.keys(this._args).length !== 0 ? "\\n"+indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`,1) : '';
+        this._args && Object.keys(this._args).length !== 0
+            ? '\\n' + indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`, 1)
+            : '';
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
-            ? "\\n"+indent(\`.METADATA(\${argumentsToString(this._metadata)})\`,1)
+            ? '\\n' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`, 1)
             : '';
 
     const description =
-        this._description && this._description.length !== 0 ? "\\n"+indent(\`.DESCRIPTION('\${this._description}')\`,1) : '';
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
 
     const models =
         this._models && Object.keys(this._models).length !== 0
-            ? "\\n"+indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`,1)
+            ? '\\n' + indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`, 1)
             : '';
 
     return \`\${timeString}.GROUND_BLOCK('\${this.name}')\${args}\${description}\${metadata}\${models}\`;
@@ -1976,19 +1954,23 @@ export class Ground_Event implements GroundEvent {
                 : 'C';
 
     const args =
-        this._args && Object.keys(this._args).length !== 0 ? \`\\n\`+indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`,1) : '';
+        this._args && Object.keys(this._args).length !== 0
+            ? \`\\n\` + indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`, 1)
+            : '';
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
-            ? '\\n'+indent(\`.METADATA(\${argumentsToString(this._metadata)})\`,1)
+            ? '\\n' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`, 1)
             : '';
 
     const description =
-        this._description && this._description.length !== 0 ? "\\n"+indent(\`.DESCRIPTION('\${this._description}')\`,1) : '';
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
 
     const models =
         this._models && Object.keys(this._models).length !== 0
-            ? "\\n"+indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`,1)
+            ? '\\n' + indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`, 1)
             : '';
 
     return \`\${timeString}.GROUND_EVENT('\${this.name}')\${args}\${description}\${metadata}\${models}\`;
@@ -2265,23 +2247,27 @@ export class ActivateStep implements Activate {
                 : 'C';
 
     const args =
-        this._args && Object.keys(this._args).length !== 0 ? "\\n"+indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`,1) : '';
+        this._args && Object.keys(this._args).length !== 0
+            ? '\\n' + indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`, 1)
+            : '';
 
     const description =
-        this._description && this._description.length !== 0 ? "\\n"+indent(\`.DESCRIPTION('\${this._description}')\`,1) : '';
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
 
-    const epoch = this._epoch ? "\\n"+indent(\`.EPOCH('\${this._epoch}')\`,1) : '';
+    const epoch = this._epoch ? '\\n' + indent(\`.EPOCH('\${this._epoch}')\`, 1) : '';
 
-    const engine = this._engine ? "\\n"+indent(\`.ENGINE(\${this._engine})\`,1) : '';
+    const engine = this._engine ? '\\n' + indent(\`.ENGINE(\${this._engine})\`, 1) : '';
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
-            ? "\\n"+indent(\`.METADATA(\${argumentsToString(this._metadata)})\`)
+            ? '\\n' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`)
             : '';
 
     const models =
         this._models && Object.keys(this._models).length !== 0
-            ? "\\n"+indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`,1)
+            ? '\\n' + indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`, 1)
             : '';
 
     return \`\${timeString}.ACTIVATE('\${this.sequence}')\${args}\${description}\${engine}\${epoch}\${metadata}\${models}\`;
@@ -2558,23 +2544,27 @@ export class LoadStep implements Load {
                 : 'C';
 
     const args =
-        this._args && Object.keys(this._args).length !== 0 ? "\\n"+indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`,1) : '';
+        this._args && Object.keys(this._args).length !== 0
+            ? '\\n' + indent(\`.ARGUMENTS(\${argumentsToString(this._args)})\`, 1)
+            : '';
 
     const description =
-        this._description && this._description.length !== 0 ? "\\n"+indent(\`.DESCRIPTION('\${this._description}')\`,1) : '';
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
 
-    const epoch = this._epoch ? "\\n"+indent(\`.EPOCH('\${this._epoch}')\`,1) : '';
+    const epoch = this._epoch ? '\\n' + indent(\`.EPOCH('\${this._epoch}')\`, 1) : '';
 
-    const engine = this._engine ? "\\n"+indent(\`.ENGINE(\${this._engine})\`,1) : '';
+    const engine = this._engine ? '\\n' + indent(\`.ENGINE(\${this._engine})\`, 1) : '';
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
-            ? "\\t"+indent(\`.METADATA(\${argumentsToString(this._metadata)})\`,1)
+            ? '\\t' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`, 1)
             : '';
 
     const models =
         this._models && Object.keys(this._models).length !== 0
-            ? "./"+indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`,1)
+            ? './' + indent(\`.MODELS([\\n\${this._models.map(m => indent(argumentsToString(m))).join(',\\n')}\\n])\`, 1)
             : '';
 
     return \`\${timeString}.LOAD('\${this.sequence}')\${args}\${description}\${engine}\${epoch}\${metadata}\${models}\`;
@@ -2677,6 +2667,400 @@ export class HardwareStem implements HardwareCommand {
 }
 
 /**
+ *----------------------------------
+ *		Request
+ * ---------------------------------
+ */
+// @ts-ignore : 'Request' found in JSON Spec
+type RequestWithTime = Omit<Request, 'ground_epoch'>;
+// @ts-ignore : 'Request' found in JSON Spec
+type RequestWithEpoch = Omit<Request, 'time'>;
+
+class RequestCommon {
+  name: string;
+  // @ts-ignore : 'Step' found in JSON Spec
+  steps: [Step, ...Step[]];
+  type: 'request';
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  private readonly _description?: Description | undefined;
+
+  constructor(opts: RequestOptions) {
+    this.name = opts.name;
+    this.steps = opts.steps;
+    this.type = 'request';
+    this._metadata = opts.metadata;
+    this._description = opts.description;
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+  // @ts-ignore : 'Description' found in JSON Spec
+  public GET_DESCRIPTION(): Description | undefined {
+    return this._description;
+  }
+
+
+  public static fromSeqJson(
+      // @ts-ignore : 'Request' found in JSON Spec
+      json: Request,
+  ): RequestTime | RequestWithEpoch {
+    if (!json.ground_epoch) {
+      return RequestTime.fromSeqJson(json);
+    }
+    return RequestEpoch.fromSeqJson(json);
+  }
+
+  public toEDSLString(): String {
+    const steps =
+        '\\n' +
+        indent(
+            this.steps
+                .map(step => {
+                  if (
+                      step instanceof CommandStem ||
+                      step instanceof Ground_Block ||
+                      step instanceof Ground_Event ||
+                      step instanceof ActivateStep ||
+                      step instanceof LoadStep
+                  ) {
+                    return step.toEDSLString();
+                  }
+                  return argumentsToString(step);
+                })
+                .join(',\\n'),
+            1,
+        ) +
+        '\\n)';
+
+    const metadata =
+        this._metadata && Object.keys(this._metadata).length !== 0
+            ? '\\n' + indent(\`.METADATA(\${argumentsToString(this._metadata)})\`, 1)
+            : '';
+
+    const description =
+        this._description && this._description.length !== 0
+            ? '\\n' + indent(\`.DESCRIPTION('\${this._description}')\`, 1)
+            : '';
+
+    return \`\${steps}\${description}\${metadata}\`;
+  }
+
+  // @ts-ignore : 'Request' found in JSON Spec
+  public toSeqJson(): Request {
+    return {
+      name: this.name,
+      steps: [
+        this.steps[0] instanceof CommandStem ||
+        this.steps[0] instanceof Ground_Block ||
+        this.steps[0] instanceof Ground_Event ||
+        this.steps[0] instanceof ActivateStep ||
+        this.steps[0] instanceof LoadStep
+            ? this.steps[0].toSeqJson()
+            : this.steps[0],
+        // @ts-ignore : 'step' found in JSON Spec
+        ...this.steps.slice(1).map(step => {
+          if (
+              step instanceof CommandStem ||
+              step instanceof Ground_Block ||
+              step instanceof Ground_Event ||
+              step instanceof ActivateStep ||
+              step instanceof LoadStep
+          )
+            return step.toSeqJson();
+          return step;
+        }),
+      ],
+      type: 'request',
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._description ? { description: this._description } : {}),
+    };
+  }
+}
+class RequestTime extends RequestCommon implements RequestWithTime {
+  private readonly _absoluteTime: Temporal.Instant | null = null;
+  private readonly _epochTime: Temporal.Duration | null = null;
+  private readonly _relativeTime: Temporal.Duration | null = null;
+
+  private constructor(opts: RequestOptions) {
+    super(opts);
+    if ('absoluteTime' in opts) {
+      this._absoluteTime = opts.absoluteTime;
+    } else if ('epochTime' in opts) {
+      this._epochTime = opts.epochTime;
+    } else if ('relativeTime' in opts) {
+      this._relativeTime = opts.relativeTime;
+    }
+  }
+
+  public static new(opts: RequestOptions): RequestTime {
+    return new RequestTime(opts);
+  }
+
+  // @ts-ignore : used in \`commandsWithTimeValue\`
+  private absoluteTiming(absoluteTime: Temporal.Instant): RequestTime {
+    return RequestTime.new({
+      name: this.name,
+      steps: this.steps,
+      absoluteTime: absoluteTime,
+      ...(this.GET_DESCRIPTION() ? { description: this.GET_DESCRIPTION() } : {}),
+      ...(this.GET_METADATA() ? { metadata: this.GET_METADATA() } : {}),
+    });
+  }
+
+  // @ts-ignore : used in \`commandsWithTimeValue\`
+  private epochTiming(epochTime: Temporal.Duration): RequestTime {
+    return RequestTime.new({
+      name: this.name,
+      steps: this.steps,
+      epochTime: epochTime,
+      ...(this.GET_DESCRIPTION() ? { description: this.GET_DESCRIPTION() } : {}),
+      ...(this.GET_METADATA() ? { metadata: this.GET_METADATA() } : {}),
+    });
+  }
+
+  // @ts-ignore : used in \`commandsWithTimeValue\`
+  private relativeTiming(relativeTime: Temporal.Duration): RequestTime {
+    return RequestTime.new({
+      name: this.name,
+      steps: this.steps,
+      relativeTime: relativeTime,
+      ...(this.GET_DESCRIPTION() ? { description: this.GET_DESCRIPTION() } : {}),
+      ...(this.GET_METADATA() ? { metadata: this.GET_METADATA() } : {}),
+    });
+  }
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): RequestTime {
+    return RequestTime.new({
+      name: this.name,
+      steps: this.steps,
+      metadata: metadata,
+      ...(this.GET_DESCRIPTION() ? { description: this.GET_DESCRIPTION() } : {}),
+      ...(this._absoluteTime ? { absoluteTime: this._absoluteTime } : {}),
+      ...(this._epochTime ? { epochTime: this._epochTime } : {}),
+      ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
+    });
+  }
+
+  // @ts-ignore : 'Description' found in JSON Spec
+  public DESCRIPTION(description: Description): RequestTime {
+    return RequestTime.new({
+      name: this.name,
+      steps: this.steps,
+      description: description,
+      ...(this.GET_METADATA() ? { metadata: this.GET_METADATA() } : {}),
+      ...(this._absoluteTime ? { absoluteTime: this._absoluteTime } : {}),
+      ...(this._epochTime ? { epochTime: this._epochTime } : {}),
+      ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
+    });
+  }
+  // @ts-ignore : 'Request' found in JSON Spec
+
+  public static override fromSeqJson(json: Request): RequestTime {
+    // prettier-ignore
+    const timeValue = json.time
+          ? json.time.type === TimingTypes.ABSOLUTE
+              ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+          : json.time.type === TimingTypes.COMMAND_RELATIVE
+              ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+          : json.time.type === TimingTypes.EPOCH_RELATIVE
+              ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+          : {}
+        : {};
+
+    return RequestTime.new({
+      name: json.name,
+      // prettier-ignore
+      steps: [
+        json.steps[0].type === StepType.Command
+            ? CommandStem.fromSeqJson(json.steps[0] as CommandStem)
+        : json.steps[0].type === StepType.GroundBlock
+            // @ts-ignore : 'GroundBlock' found in JSON Spec
+            ? Ground_Block.fromSeqJson(json.steps[0] as GroundBlock)
+        : json.steps[0].type === StepType.GroundEvent
+            // @ts-ignore : 'GroundEvent' found in JSON Spec
+            ? Ground_Event.fromSeqJson(json.steps[0] as GroundEvent)
+        : json.steps[0].type === StepType.Activate
+            // @ts-ignore : 'GroundBlock' found in JSON Spec
+            ? ActivateStep.fromSeqJson(json.steps[0] as ActivateStep)
+        : json.steps[0].type === StepType.Load
+            // @ts-ignore : 'GroundBlock' found in JSON Spec
+            ? LoadStep.fromSeqJson(json.steps[0] as LoadStep)
+        : json.steps[0],
+        // @ts-ignore : 'step : Step' found in JSON Spec
+        ...json.steps.slice(1).map(step => {
+          // prettier-ignore
+          switch (step.type) {
+            case StepType.Command:
+              return CommandStem.fromSeqJson(step as CommandStem);
+            case StepType.GroundBlock:
+              return Ground_Block.fromSeqJson(step as Ground_Block);
+            case StepType.GroundEvent:
+              return Ground_Event.fromSeqJson(step as Ground_Event);
+            case StepType.Activate:
+              return ActivateStep.fromSeqJson(step as ActivateStep);
+            case StepType.Load:
+              return LoadStep.fromSeqJson(step as LoadStep);
+            default:
+              return step;
+          }
+        }),
+      ],
+      description: json.description,
+      metadata: json.metadata,
+      ...timeValue,
+    });
+  }
+  // @ts-ignore : 'Request' found in JSON Spec
+  public override toSeqJson(): Request {
+    return {
+      ...super.toSeqJson(),
+      ...{
+        // prettier-ignore
+        time:
+            this._absoluteTime !== null
+                ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
+            : this._epochTime !== null
+                ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
+            : this._relativeTime !== null
+                ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
+            : { type: TimingTypes.COMMAND_COMPLETE },
+      },
+    };
+  }
+
+  public override toEDSLString(): String {
+    // prettier-ignore
+    const timeString = this._absoluteTime
+        ? \`A\\\`\${instantToDoy(this._absoluteTime)}\\\`\`
+      : this._epochTime
+        ? \`E\\\`\${durationToHms(this._epochTime)}\\\`\`
+      : this._relativeTime
+        ? \`R\\\`\${durationToHms(this._relativeTime)}\\\`\`
+      : 'C';
+
+    const name = '\\n' + indent(\`'\${this.name}'\`, 1);
+
+    return \`\${timeString}.REQUEST(\${name},\${super.toEDSLString()}\`;
+  }
+}
+
+class RequestEpoch extends RequestCommon implements RequestWithEpoch {
+  // @ts-ignore : 'GroundEpoch' found in JSON Spec
+  private readonly _ground_epoch: GroundEpoch;
+
+  private constructor(opts: RequestOptions) {
+    super(opts);
+    if ('ground_epoch' in opts) this._ground_epoch = opts.ground_epoch;
+  }
+
+  public static new(opts: RequestOptions): RequestEpoch {
+    return new RequestEpoch(opts);
+  }
+
+  // @ts-ignore : 'GroundEpoch' found in JSON Spec
+  public GET_GROUND_EPOCH(): GroundEpoch {
+    return this._ground_epoch;
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): RequestEpoch {
+    return RequestEpoch.new({
+      name: this.name,
+      steps: this.steps,
+      ground_epoch: this._ground_epoch,
+      metadata: metadata,
+      ...(this.GET_DESCRIPTION() ? { description: this.GET_DESCRIPTION() } : {}),
+    });
+  }
+
+  // @ts-ignore : 'Description' found in JSON Spec
+  public DESCRIPTION(description: Description): RequestEpoch {
+    return RequestEpoch.new({
+      name: this.name,
+      steps: this.steps,
+      ground_epoch: this._ground_epoch,
+      description: description,
+      ...(this.GET_METADATA() ? { metadata: this.GET_METADATA() } : {}),
+    });
+  }
+
+  // @ts-ignore : 'Request' found in JSON Spec
+  public static override fromSeqJson(json: Request): RequestEpoch {
+    return RequestEpoch.new({
+      name: json.name,
+      // prettier-ignore
+      steps: [
+        json.steps[0].type === StepType.Command
+            ? CommandStem.fromSeqJson(json.steps[0] as CommandStem)
+        : json.steps[0].type === StepType.GroundBlock
+            // @ts-ignore : 'GroundBlock' found in JSON Spec
+            ? Ground_Block.fromSeqJson(json.steps[0] as GroundBlock)
+        : json.steps[0].type === StepType.GroundEvent
+            // @ts-ignore : 'GroundEvent' found in JSON Spec
+            ? Ground_Event.fromSeqJson(json.steps[0] as GroundEvent)
+        : json.steps[0].type === StepType.Activate
+            // @ts-ignore : 'GroundBlock' found in JSON Spec
+            ? ActivateStep.fromSeqJson(json.steps[0] as ActivateStep)
+        : json.steps[0].type === StepType.Load
+            // @ts-ignore : 'GroundBlock' found in JSON Spec
+            ? LoadStep.fromSeqJson(json.steps[0] as LoadStep)
+        : json.steps[0],
+        // @ts-ignore : 'step : Step' found in JSON Spec
+        ...json.steps.slice(1).map(step => {
+          switch (step.type) {
+            case StepType.Command:
+              return CommandStem.fromSeqJson(step as CommandStem);
+            case StepType.GroundBlock:
+              return Ground_Block.fromSeqJson(step as Ground_Block);
+            case StepType.GroundEvent:
+              return Ground_Event.fromSeqJson(step as Ground_Event);
+            case StepType.Activate:
+              return ActivateStep.fromSeqJson(step as ActivateStep);
+            case StepType.Load:
+              return LoadStep.fromSeqJson(step as LoadStep);
+            default:
+              return step;
+          }
+        }),
+      ],
+      description: json.description,
+      metadata: json.metadata,
+      ground_epoch: json.ground_epoch,
+    });
+  }
+
+  // @ts-ignore : 'Request' found in JSON Spec
+  public override toSeqJson(): Request {
+    return { ...super.toSeqJson(), ...{ ground_epoch: this._ground_epoch } };
+  }
+
+  public override toEDSLString(): String {
+    const name = '\\n' + indent(\`'\${this.name}'\`, 1);
+
+    const epoch = '\\n' + indent(argumentsToString(this._ground_epoch), 1);
+
+    return \`REQUEST(\${name},\${epoch},\${super.toEDSLString()}\`;
+  }
+}
+
+// @ts-ignore : 'GroundEpoch' and 'Step' found in JSON Spec
+export function REQUEST(name: string, epoch: GroundEpoch, ...steps: [Step, ...Step[]]): RequestEpoch {
+  return RequestEpoch.new({ name: name, steps: steps, ground_epoch: epoch });
+}
+
+const REQUESTS = {
+  // @ts-ignore : 'Step' found in JSON Spec
+  REQUEST: (name: string, ...steps: [Step, ...Step[]]): RequestTime => {
+    return RequestTime.new({ name: name, steps: steps });
+  },
+};
+
+/**
  *---------------------------------
  *      Time Utilities
  *---------------------------------
@@ -2774,7 +3158,7 @@ function formatNumber(number: number, size: number): string {
 function A(
   ...args: [TemplateStringsArray, ...string[]] | [Temporal.Instant] | [string]
 ): // @ts-ignore : Commands Used in generated code
-typeof Commands & typeof STEPS {
+    typeof Commands & typeof STEPS & typeof REQUESTS {
   let time: Temporal.Instant;
   if (Array.isArray(args[0])) {
     time = doyToInstant(String.raw(...(args as [TemplateStringsArray, ...string[]])) as DOY_STRING);
@@ -2791,7 +3175,7 @@ typeof Commands & typeof STEPS {
 function R(
   ...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]
 ): // @ts-ignore : Commands Used in generated code
-typeof Commands & typeof STEPS {
+    typeof Commands & typeof STEPS & typeof REQUESTS {
   let duration: Temporal.Duration;
   if (Array.isArray(args[0])) {
     duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
@@ -2808,7 +3192,7 @@ typeof Commands & typeof STEPS {
 function E(
   ...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]
 ): // @ts-ignore : Commands Used in generated code
-typeof Commands & typeof STEPS {
+    typeof Commands & typeof STEPS & typeof REQUESTS {
   let duration: Temporal.Duration;
   if (Array.isArray(args[0])) {
     duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
@@ -2821,10 +3205,10 @@ typeof Commands & typeof STEPS {
 }
 
 function commandsWithTimeValue<T extends TimingTypes>(
-  timeValue: Temporal.Instant | Temporal.Duration,
-  timeType: T,
-  // @ts-ignore : Commands Used in generated code
-): typeof Commands & typeof STEPS {
+    timeValue: Temporal.Instant | Temporal.Duration,
+    timeType: T,
+    // @ts-ignore : Commands Used in generated code
+): typeof Commands & typeof STEPS & typeof REQUESTS {
   return {
     // @ts-ignore : Commands Used in generated code
     ...Object.keys(Commands).reduce((accum, key) => {
@@ -2874,9 +3258,24 @@ function commandsWithTimeValue<T extends TimingTypes>(
             return step(...args).epochTiming(timeValue);
         }
       };
-
       return accum;
     }, {} as typeof STEPS),
+    ...Object.keys(REQUESTS).reduce((accum, key) => {
+      // @ts-ignore : Used in generated code
+      const request = REQUESTS[key as keyof REQUESTS];
+      // @ts-ignore : Used in generated code
+      accum[key] = (...args: Parameters<typeof request>): typeof request => {
+        switch (timeType) {
+          case TimingTypes.ABSOLUTE:
+            return request(...args).absoluteTiming(timeValue);
+          case TimingTypes.COMMAND_RELATIVE:
+            return request(...args).relativeTiming(timeValue);
+          case TimingTypes.EPOCH_RELATIVE:
+            return request(...args).epochTiming(timeValue);
+        }
+      };
+      return accum;
+    }, {} as typeof REQUESTS),
   };
 }
 
@@ -2977,10 +3376,9 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
   const convertedArgs = interfaces.map(
       (
           // @ts-ignore : found in JSON Spec
-          arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,index
+          arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument, index,
       ) => {
-
-        const argName = arg.name !== undefined ? arg.name : \`arg\${index}\`
+        const argName = arg.name !== undefined ? arg.name : \`arg\${index}\`;
         // @ts-ignore : 'RepeatArgument' found in JSON Spec
         if (arg.type === 'repeat') {
           if (validate(argName)) {
@@ -2991,8 +3389,8 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
                       // @ts-ignore : found in JSON Spec
                       repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
                   ) =>
-                      repeatArgBundle.reduce((obj, item,index) => {
-                        const argName = item.name !== undefined ? item.name : \`repeat\${index}\`
+                      repeatArgBundle.reduce((obj, item, index) => {
+                        const argName = item.name !== undefined ? item.name : \`repeat\${index}\`;
                         if (validate(argName)) {
                           obj[argName] = item.value;
                         }
@@ -3126,13 +3524,13 @@ function convertValueToObject(value: any, key: string): any {
 // @ts-ignore : 'Args' found in JSON Spec
 function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
   let output = '';
-  function printObject(obj : any, indentLevel : number){
+  function printObject(obj: any, indentLevel: number) {
     Object.keys(obj).forEach(key => {
       const value = obj[key];
 
       if (Array.isArray(value)) {
         output += indent(\`\${key}: [\`, indentLevel) + '\\n';
-        printArray(value,indentLevel+1);
+        printArray(value, indentLevel + 1);
         output += indent(\`],\`, indentLevel) + '\\n';
       } else if (typeof value === 'object') {
         //value is a Local or Parameter
@@ -3140,7 +3538,7 @@ function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | 
           output += indent(\`\${key}: \${value.toReferenceString()}\`, indentLevel) + ',\\n';
         } else {
           output += indent(\`\${key}:{\`, indentLevel) + '\\n';
-          printValue(value,indentLevel+1);
+          printValue(value, indentLevel + 1);
           output += indent(\`},\`, indentLevel) + '\\n';
         }
       } else {
@@ -3149,14 +3547,14 @@ function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | 
     });
   }
 
-  function printArray(array : any[], indentLevel : number){
+  function printArray(array: any[], indentLevel: number) {
     array.forEach((item: any) => {
       if (Array.isArray(item)) {
         output += indent(\`[\`, indentLevel) + '\\n';
       } else if (typeof item === 'object') {
         output += indent(\`{\`, indentLevel) + '\\n';
       }
-      printValue(item,indentLevel+1);
+      printValue(item, indentLevel + 1);
       if (Array.isArray(item)) {
         output += indent(\`],\`, indentLevel) + '\\n';
       } else if (typeof item === 'object') {
@@ -3164,29 +3562,29 @@ function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | 
       }
     });
   }
-  function printValue(value: any, indentLevel : number) {
+  function printValue(value: any, indentLevel: number) {
     if (Array.isArray(value)) {
-      printArray(value,indentLevel)
+      printArray(value, indentLevel);
     } else if (typeof value === 'object') {
-      printObject(value,indentLevel)
+      printObject(value, indentLevel);
     } else {
       output += indent(\`\${typeof value === 'string' ? \`'\${value}'\` : value},\`, indentLevel) + '\\n';
     }
-  };
+  }
 
   if (Array.isArray(args)) {
     output += '[\\n';
   } else {
     output += '{\\n';
   }
-  printValue(args,1);
+  printValue(args, 1);
   if (Array.isArray(args)) {
     output += ']';
   } else {
     output += '}';
   }
 
-  return output
+  return output;
 }
 
 /** END Preface */
@@ -3249,7 +3647,7 @@ export type Request = {
   steps: [Step, ...Step[]];
   time?: Time;
   type: 'request';
-} & Request1;
+};
 /**
  * Description. Can be attached to any sequence step.
  */
@@ -3266,13 +3664,6 @@ export type Args = (
   | HexArgument
   | RepeatArgument
 )[];
-export type Request1 =
-  | {
-      [k: string]: unknown;
-    }
-  | {
-      [k: string]: unknown;
-    };
 
 export interface SeqJson {
   /**
@@ -3308,7 +3699,6 @@ export interface SeqJson {
    * Hardware commands which are not interpreted by FSW and not part of any sequence.
    */
   hardware_commands?: HardwareCommand[];
-  [k: string]: unknown;
 }
 /**
  * A range of allowable variable values between a defined min and max, inclusive. min and max must be numbers
@@ -3958,6 +4348,6 @@ export const Hardwares = {
 		HDW_BLENDER_DUMP: HDW_BLENDER_DUMP,
 };
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence, FLOAT, UINT,INT, STRING, ENUM}, Hardwares, Immediates);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS, REQUESTS), Sequence, FLOAT, UINT,INT, STRING, ENUM, REQUEST}, Hardwares, Immediates);
 "
 `;
