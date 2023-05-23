@@ -11,6 +11,7 @@ begin;
   -- Domain types.
   \ir domain-types/merlin-arguments.sql
   \ir domain-types/merlin-activity-directive-metadata.sql
+  \ir domain-types/plan-merge-types.sql
 
   -- Deployment-level Metadata
   \ir tables/metadata/tags.sql
@@ -50,11 +51,21 @@ begin;
   \ir tables/plan_dataset.sql
 
   -- Plan Collaboration
-  \ir plan_collaboration.sql
-  \ir merge_request.sql
-  \ir merge_comments.sql
-  \ir plan_merge.sql
-  \ir hasura_functions.sql
+  \ir tables/plan_snapshot.sql
+  \ir tables/plan_latest_snapshot.sql
+  \ir tables/plan_snapshot_parent.sql
+  \ir tables/plan_snapshot_activities.sql
+  \ir tables/merge_request.sql
+  \ir tables/merge_comments.sql
+  \ir tables/merge_staging_area.sql
+  \ir tables/conflicting_activities.sql
+  \ir functions/public/duplicate_plan.sql
+  \ir functions/public/plan_history_functions.sql
+  \ir functions/public/get_merge_base.sql
+  \ir functions/public/merge_request_state_functions.sql
+  \ir functions/public/begin_merge.sql
+  \ir functions/public/commit_merge.sql
+  \ir functions/public/create_snapshot.sql
 
   -- Presets
   \ir tables/activity_presets.sql
@@ -69,4 +80,12 @@ begin;
   \ir views/simulated_activity.sql
   \ir views/resource_profile.sql
   \ir views/activity_directive_extended.sql
+
+  -- Hasura Functions
+  \ir functions/hasura/activity_preset_functions.sql
+  \ir functions/hasura/delete_anchor_functions.sql
+  \ir functions/hasura/hasura_functions.sql
+  \ir functions/hasura/plan_branching_functions.sql
+  \ir functions/hasura/plan_merge_functions.sql
+
 end;
