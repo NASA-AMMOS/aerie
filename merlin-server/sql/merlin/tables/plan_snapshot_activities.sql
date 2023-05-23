@@ -19,3 +19,6 @@ create table plan_snapshot_activities(
 
     primary key (id, snapshot_id)
 );
+
+comment on table plan_snapshot_activities is e''
+  'A record of the state of an activity at the time a snapshot was taken.';

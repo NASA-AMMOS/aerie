@@ -63,6 +63,7 @@ begin;
   \ir functions/public/plan_history_functions.sql
   \ir functions/public/get_merge_base.sql
   \ir functions/public/merge_request_state_functions.sql
+  \ir functions/metadata/get_tag_ids.sql
   \ir functions/public/begin_merge.sql
   \ir functions/public/commit_merge.sql
   \ir functions/public/create_snapshot.sql

@@ -12,3 +12,6 @@ create table plan_latest_snapshot(
     on update cascade
     on delete cascade
 );
+
+comment on table plan_latest_snapshot is e''
+  'An association table between a plan and the most recent snapshot taken of the plan.';

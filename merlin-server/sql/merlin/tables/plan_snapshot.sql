@@ -14,3 +14,6 @@ create table plan_snapshot(
   duration interval not null,
   start_time timestamptz not null
 );
+
+comment on table plan_snapshot is e''
+  'A record of the metadata associated with a plan, excluding tags.';

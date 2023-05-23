@@ -107,15 +107,17 @@ begin
   insert into supplying_diff (activity_id, change_type)
     select activity_id, 'none'
       from(
-        select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
-            start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
-        from plan_snapshot_activities
-        where snapshot_id = merge_base_id
+        select psa.id as activity_id, name, metadata.tag_ids_activity_snapshot(psa.id, merge_base_id),
+               source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
+               last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+        from plan_snapshot_activities psa
+        where psa.snapshot_id = merge_base_id
     intersect
-      select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
-            start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
-        from plan_snapshot_activities
-        where snapshot_id = snapshot_id_supplying) a;
+      select id as activity_id, name, metadata.tag_ids_activity_snapshot(psa.id, snapshot_id_supplying),
+             source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
+             last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+        from plan_snapshot_activities psa
+        where psa.snapshot_id = snapshot_id_supplying) a;
 
   insert into supplying_diff (activity_id, change_type)
     select activity_id, 'modify'
@@ -156,15 +158,17 @@ begin
   insert into receiving_diff (activity_id, change_type)
   select activity_id, 'none'
   from(
-        select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
-               start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
-        from plan_snapshot_activities
-        where snapshot_id = merge_base_id
+        select id as activity_id, name, metadata.tag_ids_activity_snapshot(id, merge_base_id),
+               source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
+               last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+        from plan_snapshot_activities psa
+        where psa.snapshot_id = merge_base_id
         intersect
-        select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
-               start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
-        from activity_directive
-        where plan_id = plan_id_receiving) a;
+        select id as activity_id, name, metadata.tag_ids_activity_directive(id, plan_id_receiving),
+               source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
+               last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+        from activity_directive ad
+        where ad.plan_id = plan_id_receiving) a;
 
   insert into receiving_diff (activity_id, change_type)
   select activity_id, 'modify'
@@ -201,7 +205,7 @@ begin
     start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
          )
   -- 'adds' can go directly into the merge staging area table
-  select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
+  select _merge_request_id, activity_id, name, metadata.tag_ids_activity_snapshot(s_diff.activity_id, psa.snapshot_id),  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
     from supplying_diff as  s_diff
     join plan_snapshot_activities psa
@@ -209,7 +213,7 @@ begin
     where snapshot_id = snapshot_id_supplying and change_type = 'add'
   union
   -- an 'add' between the receiving plan and merge base is actually a 'none'
-  select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
+  select _merge_request_id, activity_id, name, metadata.tag_ids_activity_directive(r_diff.activity_id, ad.plan_id),  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'::activity_change_type
     from receiving_diff as r_diff
     join activity_directive ad
@@ -233,7 +237,7 @@ begin
     start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
   )
   -- receiving 'none' and 'modify' against 'none' in the supplying side go into the merge staging area as 'none'
-  select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
+  select _merge_request_id, activity_id, name, metadata.tag_ids_activity_directive(diff_diff.activity_id, plan_id),  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
     from diff_diff
     join activity_directive
@@ -243,7 +247,7 @@ begin
       and (change_type_receiving = 'modify' or change_type_receiving = 'none')
   union
   -- supplying 'modify' against receiving 'none' go into the merge staging area as 'modify'
-  select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
+  select _merge_request_id, activity_id, name, metadata.tag_ids_activity_snapshot(diff_diff.activity_id, snapshot_id),  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
     from diff_diff
     join plan_snapshot_activities p
@@ -252,7 +256,7 @@ begin
       and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'modify')
   union
   -- supplying 'delete' against receiving 'none' go into the merge staging area as 'delete'
-    select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
+    select _merge_request_id, activity_id, name, metadata.tag_ids_activity_directive(diff_diff.activity_id, plan_id),  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
     from diff_diff
     join activity_directive p
@@ -264,16 +268,16 @@ begin
   select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
   from (
-    select activity_id, name, tags,  source_scheduling_goal_id, created_at,
-           start_offset, type, arguments, metadata, anchor_id, anchored_to_start
+    select activity_id, name, metadata.tag_ids_activity_directive(dd.activity_id, psa.snapshot_id) as tags,
+           source_scheduling_goal_id, created_at, start_offset, type, arguments, metadata, anchor_id, anchored_to_start
       from plan_snapshot_activities psa
       join diff_diff dd
         on dd.activity_id = psa.id
       where psa.snapshot_id = snapshot_id_supplying
         and (dd.change_type_receiving = 'modify' and dd.change_type_supplying = 'modify')
     intersect
-    select activity_id, name, tags,  source_scheduling_goal_id, created_at,
-           start_offset, type, arguments, metadata, anchor_id, anchored_to_start
+    select activity_id, name, metadata.tag_ids_activity_directive(dd.activity_id, ad.plan_id) as tags,
+           source_scheduling_goal_id, created_at, start_offset, type, arguments, metadata, anchor_id, anchored_to_start
       from diff_diff dd
       join activity_directive ad
         on dd.activity_id = ad.id
