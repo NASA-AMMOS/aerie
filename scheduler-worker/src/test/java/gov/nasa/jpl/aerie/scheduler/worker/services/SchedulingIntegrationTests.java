@@ -1722,7 +1722,7 @@ public class SchedulingIntegrationTests {
                           return Goal.CoexistenceGoal({
                             forEach: ActivityExpression.ofType(ActivityType.parent),
                             activityTemplate: ActivityTemplates.child({
-                              counter: 0,
+                              counter: 1,
                             }),
                             startsAt:TimingConstraint.singleton(WindowProperty.START)
                           })
@@ -1739,15 +1739,17 @@ public class SchedulingIntegrationTests {
                                              null,
                                              true)),
                                      List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
-                                     List.of(createAutoMutex("child")),
+                                     List.of(),
                                      planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var parentActs = planByActivityType.get("parent");
     final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startOffset()).toList();
+    //goal should be satisfied
+    assertTrue(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
     //ensure no new child activity has been inserted
-    assertEquals(childActs.size(), 2);
+    assertEquals(2, childActs.size());
     //ensure no new parent activity has been inserted
-    assertEquals(parentActs.size(), 1);
+    assertEquals(1, parentActs.size());
     for(final var parentAct: parentActs){
       assertTrue(childActs.contains(parentAct.startOffset()));
     }
