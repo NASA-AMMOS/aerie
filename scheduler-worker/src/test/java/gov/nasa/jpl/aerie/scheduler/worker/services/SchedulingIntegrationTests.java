@@ -2028,15 +2028,15 @@ public class SchedulingIntegrationTests {
               new SchedulingGoal(new GoalId(0L), """
                   export default () => Goal.CoexistenceGoal({
                     forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                    activityTemplate: ActivityTemplates.BananaNap(),
                     startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
                   })
                   """, true, config.getKey()
               ),
               new SchedulingGoal(new GoalId(1L), """
                   export default () => Goal.CoexistenceGoal({
-                    forEach: ActivityExpression.ofType(ActivityTypes.PeelBanana),
-                    activityTemplate: ActivityTemplates.BananaNap(),
+                    forEach: ActivityExpression.ofType(ActivityTypes.BananaNap),
+                    activityTemplate: ActivityTemplates.DownloadBanana({connection: "DSL"}),
                     startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
                   })
                     """, true, true)
@@ -2091,14 +2091,14 @@ public class SchedulingIntegrationTests {
               new SchedulingGoal(new GoalId(0L), """
                   export default () => Goal.CoexistenceGoal({
                     forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                    activityTemplate: ActivityTemplates.DownloadBanana({connection: "DSL"}),
                     startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
                   })
                   """, true, config.getKey()
               ),
               new SchedulingGoal(new GoalId(1L), """
                   export default () => Goal.CoexistenceGoal({
-                    forEach: Real.Resource("/peel").lessThan(4),
+                    forEach: Real.Resource("/fruit").greaterThan(5),
                     activityTemplate: ActivityTemplates.BananaNap(),
                     startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
                   })
