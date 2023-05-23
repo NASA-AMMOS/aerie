@@ -88,7 +88,6 @@ public class SimulationFacade implements AutoCloseable{
    */
   public Optional<Duration> getActivityDuration(final SchedulingActivityDirective schedulingActivityDirective) {
     if(!planActDirectiveIdToSimulationActivityDirectiveId.containsKey(schedulingActivityDirective.getId())){
-      logger.error("You need to simulate before requesting activity duration");
       return Optional.empty();
     }
     final var duration = driver.getActivityDuration(planActDirectiveIdToSimulationActivityDirectiveId.get(
@@ -254,8 +253,6 @@ public class SimulationFacade implements AutoCloseable{
       } else {
         throw new Error("Unhandled variant of DurationType: " + durationType);
       }
-    } else {
-      logger.warn("Activity has unconstrained duration {}", activity);
     }
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
     return new ActivityDirective(
