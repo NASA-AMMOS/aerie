@@ -132,7 +132,8 @@ public class SimulationFacade implements AutoCloseable{
 
   public void removeAndInsertActivitiesFromSimulation(
       final Collection<SchedulingActivityDirective> activitiesToRemove,
-      final Collection<SchedulingActivityDirective> activitiesToAdd){
+      final Collection<SchedulingActivityDirective> activitiesToAdd) throws SimulationException
+  {
     var atLeastOne = false;
     for(final var act: activitiesToRemove){
       if(insertedActivities.containsKey(act)){
@@ -156,7 +157,9 @@ public class SimulationFacade implements AutoCloseable{
     }
   }
 
-  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities) {
+  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities)
+  throws SimulationException
+  {
     removeAndInsertActivitiesFromSimulation(activities, List.of());
   }
 
@@ -182,7 +185,7 @@ public class SimulationFacade implements AutoCloseable{
     this.planActDirectiveIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
   }
 
-  public void simulateActivities(final Collection<SchedulingActivityDirective> activities) {
+  public void simulateActivities(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
     final var activitiesSortedByStartTime =
         activities.stream().sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
     final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
@@ -199,7 +202,11 @@ public class SimulationFacade implements AutoCloseable{
           activityDirective);
       insertedActivities.put(activity, activityDirective);
     }
+    try {
     driver.simulateActivities(directivesToSimulate);
+    } catch(Exception e){
+      throw new SimulationException("An exception happened during simulation", e);
+    }
   }
 
   public static class SimulationException extends Exception {
@@ -209,12 +216,8 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public void simulateActivity(final SchedulingActivityDirective activity) throws SimulationException {
-    final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
-    final var activityDirective = schedulingActToActivityDir(activity);
-
-    planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
-    driver.simulateActivity(activityDirective, activityIdSim);
-    insertedActivities.put(activity, activityDirective);
+    if(insertedActivities.containsKey(activity)) return;
+    simulateActivities(List.of(activity));
   }
 
   public void computeSimulationResultsUntil(final Duration endTime) {
@@ -222,6 +225,7 @@ public class SimulationFacade implements AutoCloseable{
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
+    //Simulation might throw an exception but we do not catch it because there is no countermeasure
     final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
     //compare references
     if(results != lastSimDriverResults) {
