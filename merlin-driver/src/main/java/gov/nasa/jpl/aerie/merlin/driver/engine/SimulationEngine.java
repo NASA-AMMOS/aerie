@@ -942,6 +942,7 @@ public final class SimulationEngine implements AutoCloseable {
   public SimulationResultsInterface getCombinedSimulationResults() {
     if (this.simulationResults == null ) {
       return computeResults(this.startTime, Duration.MAX_VALUE, defaultActivityTopic);
+      //      return computeResults(this.startTime, curTime(), defaultActivityTopic);
     }
     if (oldEngine == null) {
       return this.simulationResults;
