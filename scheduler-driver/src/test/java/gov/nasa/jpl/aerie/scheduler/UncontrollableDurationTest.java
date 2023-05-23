@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -182,4 +183,40 @@ public class UncontrollableDurationTest {
                                             planningHorizon.fromStart("PT0.000004S"),
                                             problem.getActivityType("ZeroDurationUncontrollableActivity")));
   }
+
+  @Test
+  public void testScheduleExceptionThrowingTask(){
+    final var zeroDurationUncontrollableActivity = new ActivityCreationTemplate.Builder()
+        .ofType(problem.getActivityType("LateRiser"))
+        .withTimingPrecision(Duration.of(1, Duration.MICROSECONDS))
+        .build();
+
+    //this time expression produces an interval [TimeAnchor.END, TimeAnchor.END + 2 Ms]
+    final var intervalStartTimeExpression = new TimeExpressionRelativeFixed(TimeAnchor.START, false);
+    intervalStartTimeExpression.addOperation(TimeUtility.Operator.PLUS, Duration.of(2, Duration.MINUTE));
+
+    final var horizonExpression =  new SpansFromWindows(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)));
+
+    final var coexistenceControllable = new CoexistenceGoal.Builder()
+        .thereExistsOne(zeroDurationUncontrollableActivity)
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
+        .forEach(horizonExpression)
+        .startsAt(intervalStartTimeExpression)
+        .aliasForAnchors("its a me")
+        .build();
+
+    problem.setGoals(List.of(coexistenceControllable));
+    final var initialPlan = new PlanInMemory();
+    problem.setInitialPlan(initialPlan);
+
+    final var solver = new PrioritySolver(problem);
+    final var plan = solver.getNextSolution().get();
+    solver.printEvaluation();
+    //Activity can be started in [0, 2m] but this activity will throw an exception if ran in [0, 1m] so it is scheduled at 2m (as being the second bounds the rootfinding tries before search).
+    assertTrue(TestUtility.containsActivity(plan,
+                                            planningHorizon.fromStart("PT120S"),
+                                            planningHorizon.fromStart("PT120S"),
+                                            problem.getActivityType("LateRiser")));
+  }
+
 }
