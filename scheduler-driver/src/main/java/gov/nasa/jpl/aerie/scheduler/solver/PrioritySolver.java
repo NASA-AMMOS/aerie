@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,9 @@ public class PrioritySolver implements Solver {
     }
   }
 
-  private boolean checkAndInsertAct(SchedulingActivityDirective act){
+  public record InsertActivityResult(boolean success, List<SchedulingActivityDirective> activitiesInserted){}
+
+  private InsertActivityResult checkAndInsertAct(SchedulingActivityDirective act){
     return checkAndInsertActs(List.of(act));
   }
 
@@ -140,7 +143,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private boolean checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
+  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
 
@@ -167,7 +170,7 @@ public class PrioritySolver implements Solver {
           allGood = false;
           break;
         }
-        if (act.duration() == null || simDur.get().compareTo(act.duration()) != 0) {
+        if (act.duration() != null && simDur.get().compareTo(act.duration()) != 0) {
           allGood = false;
           logger.error("When simulated, activity " + act
                              + " has a different duration than expected (exp=" + act.duration() + ", real=" + simDur + ")");
@@ -175,25 +178,32 @@ public class PrioritySolver implements Solver {
         }
       }
     }
+    final var finalSetOfActsInserted = new ArrayList<SchedulingActivityDirective>();
 
     if(allGood) {
       //update plan with regard to simulation
       for(var act: acts) {
         plan.add(act);
+        finalSetOfActsInserted.add(act);
       }
       final var allGeneratedActivities = simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
       processNewGeneratedActivities(allGeneratedActivities);
-      pullActivityDurationsIfNecessary();
+      final var replaced = pullActivityDurationsIfNecessary();
+      for(final var actReplaced : replaced.entrySet()){
+        if(finalSetOfActsInserted.contains(actReplaced.getKey())){
+          finalSetOfActsInserted.remove(actReplaced.getKey());
+          finalSetOfActsInserted.add(actReplaced.getValue());
+        }
+      }
     } else{
       //update simulation with regard to plan
       try {
         simulationFacade.removeActivitiesFromSimulation(acts);
-      } catch (SimulationFacade.SimulationException e) {
-        // We do not expect to get SimulationExceptions from re-simulating activities that have been simulated before
-        throw new Error("Simulation failed after removing activities");
+      } catch(SimulationFacade.SimulationException e){
+        throw new RuntimeException("Removing activities from the simulation should not result in exception being thrown but one was thrown", e);
       }
     }
-    return allGood;
+    return new InsertActivityResult(allGood, finalSetOfActsInserted);
   }
 
   /**
@@ -227,9 +237,10 @@ public class PrioritySolver implements Solver {
    * For activities that have a null duration (in an initial plan for example) and that have been simulated, we pull the duration and
    * replace the original instance with a new instance that includes the duration, both in the plan and the simulation facade
    */
-  public void pullActivityDurationsIfNecessary() {
+  public Map<SchedulingActivityDirective, SchedulingActivityDirective> pullActivityDurationsIfNecessary() {
     final var toRemoveFromPlan = new ArrayList<SchedulingActivityDirective>();
     final var toAddToPlan = new ArrayList<SchedulingActivityDirective>();
+    final var replaced = new HashMap<SchedulingActivityDirective, SchedulingActivityDirective>();
     for (final var activity : plan.getActivities()) {
       if (activity.duration() == null) {
         final var duration = simulationFacade.getActivityDuration(activity);
@@ -243,12 +254,13 @@ public class PrioritySolver implements Solver {
           toRemoveFromPlan.add(activity);
           generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getLeft().equals(activity) ? Pair.of(replacementAct, pair.getRight()): pair).collect(Collectors.toList());
           generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getRight().equals(activity) ? Pair.of(pair.getLeft(), replacementAct): pair).collect(Collectors.toList());
+          replaced.put(activity, replacementAct);
         }
       }
     }
-
     plan.remove(toRemoveFromPlan);
     plan.add(toAddToPlan);
+    return replaced;
   }
 
   /**
@@ -393,8 +405,9 @@ public class PrioritySolver implements Solver {
             //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
             evaluation.forGoal(goal).associate(act, false);
           }
-          if(checkAndInsertActs(actsToInsert)) {
-            for(var act: actsToInsert){
+          final var insertionResult = checkAndInsertActs(actsToInsert);
+          if(insertionResult.success()) {
+            for(var act: insertionResult.activitiesInserted()){
               evaluation.forGoal(goal).associate(act, false);
             }
             evaluation.forGoal(goal).setScore(0);
@@ -521,10 +534,11 @@ public class PrioritySolver implements Solver {
           assert acts != null;
           //add the activities to the output plan
           if (!acts.isEmpty()) {
-            if(checkAndInsertActs(acts)){
+            final var insertionResult = checkAndInsertActs(acts);
+            if(insertionResult.success){
               madeProgress = true;
 
-              evaluation.forGoal(goal).associate(acts, true);
+              evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
               //REVIEW: really association should be via the goal's own query...
 
               //NB: repropagation of new activity effects occurs on demand
