@@ -212,11 +212,11 @@ return (<T>makeAllDiscreteProfile(args))
         .entrySet()
         .stream()
         .sorted(Map.Entry.comparingByKey())
-        .map($ -> new ActivityParameter($.getKey(), valueSchemaToTypescriptTypeOrProfile($.getValue())))
+        .map($ -> new ActivityParameter($.getKey(), valueSchemaToTypescriptType($.getValue())))
         .toList();
   }
 
-  private static TypescriptType valueSchemaToTypescriptTypeOrProfile(final ValueSchema valueSchema) {
+  private static TypescriptType valueSchemaToTypescriptType(final ValueSchema valueSchema) {
     return valueSchema.match(new ValueSchema.Visitor<>() {
       @Override
       public TypescriptType onReal() {
@@ -250,7 +250,7 @@ return (<T>makeAllDiscreteProfile(args))
 
       @Override
       public TypescriptType onSeries(final ValueSchema value) {
-        return new TypescriptType.TSArray(valueSchemaToTypescriptTypeOrProfile(value));
+        return new TypescriptType.TSArray(valueSchemaToTypescriptType(value));
       }
 
       @Override
@@ -263,7 +263,7 @@ return (<T>makeAllDiscreteProfile(args))
                 .map($ ->
                          Pair.of(
                              $.getKey(),
-                             valueSchemaToTypescriptTypeOrProfile($.getValue())))
+                             valueSchemaToTypescriptType($.getValue())))
                 .toList());
       }
 
