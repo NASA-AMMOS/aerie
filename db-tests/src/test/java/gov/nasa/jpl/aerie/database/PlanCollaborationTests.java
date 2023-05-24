@@ -14,7 +14,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class PlanCollaborationTests {
   private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
+  private MerlinDatabaseTestHelper merlinHelper;
 
   private Connection connection;
   int fileId;
@@ -34,8 +34,8 @@ public class PlanCollaborationTests {
 
   @BeforeEach
   void beforeEach() throws SQLException {
-    fileId = insertFileUpload();
-    missionModelId = insertMissionModel(fileId);
+    fileId = merlinHelper.insertFileUpload();
+    missionModelId = merlinHelper.insertMissionModel(fileId);
   }
 
   @AfterEach
@@ -71,6 +71,7 @@ public class PlanCollaborationTests {
     );
     helper.startDatabase();
     connection = helper.connection();
+    merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
@@ -79,73 +80,6 @@ public class PlanCollaborationTests {
     connection = null;
     helper = null;
   }
-
-  //region Helper Methods from MerlinDatabaseTests
-  int insertFileUpload() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO uploaded_file (path, name)
-                  VALUES ('test-path', 'test-name-%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString())
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertMissionModel(final int fileId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), fileId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertPlan(final int missionModelId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO plan (name, model_id, duration, start_time)
-                  VALUES ('test-plan-%s', '%s', '0', '%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertActivity(final int planId) throws SQLException {
-    return insertActivity(planId, "00:00:00");
-  }
-
-  int insertActivity(final int planId, final String startOffset) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
-                  VALUES ('test-activity', '%s', '%s', '{}')
-                  RETURNING id;"""
-                  .formatted(planId, startOffset)
-          );
-
-      res.next();
-      return res.getInt("id");
-    }
-  }
-  //endregion
 
   //region Helper Methods
   private void updateActivityName(String newName, int activityId, int planId) throws SQLException {
@@ -541,11 +475,11 @@ public class PlanCollaborationTests {
   class PlanSnapshotTests{
     @Test
     void snapshotCapturesAllActivities() throws SQLException {
-      final var planId = insertPlan(missionModelId);
+      final var planId = merlinHelper.insertPlan(missionModelId);
       final int activityCount = 200;
       final var activityIds = new HashSet<>();
       for (var i = 0; i < activityCount; i++) {
-        activityIds.add(insertActivity(planId));
+        activityIds.add(merlinHelper.insertActivity(planId));
       }
       final var planActivities = getActivities(planId);
 
@@ -590,7 +524,7 @@ public class PlanCollaborationTests {
 
     @Test
     void snapshotInheritsAllLatestAsParents() throws SQLException{
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
 
       //take n snapshots, then insert them all into the latest table
       final int numberOfSnapshots = 4;
@@ -680,11 +614,11 @@ public class PlanCollaborationTests {
           (scheduling spec, constraints, command expansions...?),
           check that affiliated data has been copied as well
       */
-      final var planId = insertPlan(missionModelId);
+      final var planId = merlinHelper.insertPlan(missionModelId);
       final int activityCount = 200;
       final var activityIds = new HashSet<>();
       for (var i = 0; i < activityCount; i++) {
-        activityIds.add(insertActivity(planId));
+        activityIds.add(merlinHelper.insertActivity(planId));
       }
 
       final var planActivities = getActivities(planId);
@@ -730,7 +664,7 @@ public class PlanCollaborationTests {
 
     @Test
     void duplicateSetsLatestSnapshot() throws SQLException{
-      final int parentPlanId = insertPlan(missionModelId);
+      final int parentPlanId = merlinHelper.insertPlan(missionModelId);
       final int parentOldSnapshot = createSnapshot(parentPlanId);
       final int childPlanId = duplicatePlan(parentPlanId, "Child Plan");
 
@@ -756,7 +690,7 @@ public class PlanCollaborationTests {
 
     @Test
     void duplicateAttachesParentHistoryToChild() throws SQLException{
-      final int parentPlanId = insertPlan(missionModelId);
+      final int parentPlanId = merlinHelper.insertPlan(missionModelId);
       final int numberOfSnapshots = 4;
       for(int i = 0; i < numberOfSnapshots; ++i){
         createSnapshot(parentPlanId);
@@ -810,7 +744,7 @@ public class PlanCollaborationTests {
     @Test
     void getPlanHistoryCapturesAllAncestors() throws SQLException {
       final int[] plans = new int[10];
-      plans[0] = insertPlan(missionModelId);
+      plans[0] = merlinHelper.insertPlan(missionModelId);
       for(int i = 1; i < plans.length; ++i){
         plans[i] = duplicatePlan(plans[i-1], "Child of "+(i-1));
       }
@@ -832,7 +766,7 @@ public class PlanCollaborationTests {
 
     @Test
     void getPlanHistoryNoAncestors() throws SQLException {
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
 
       //The history of a plan with no ancestors is itself.
       try (final var statement = connection.createStatement()) {
@@ -863,12 +797,12 @@ public class PlanCollaborationTests {
 
     @Test
     void grandparentAdoptsChildrenOnDelete() throws SQLException{
-      final int grandparentPlan = insertPlan(missionModelId);
+      final int grandparentPlan = merlinHelper.insertPlan(missionModelId);
       final int parentPlan = duplicatePlan(grandparentPlan, "Parent Plan");
       final int sibling1 = duplicatePlan(parentPlan, "Older Sibling");
       final int sibling2 = duplicatePlan(parentPlan, "Younger Sibling");
       final int childOfSibling1 = duplicatePlan(sibling1, "Child of Older Sibling");
-      final int unrelatedPlan = insertPlan(missionModelId);
+      final int unrelatedPlan = merlinHelper.insertPlan(missionModelId);
       final int childOfUnrelatedPlan = duplicatePlan(unrelatedPlan, "Child of Related Plan");
 
       // Assert that parentage starts as expected
@@ -902,8 +836,8 @@ public class PlanCollaborationTests {
   class LockedPlanTests {
     @Test
     void updateActivityShouldFailOnLockedPlan() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
       final String newName = "Test :-)";
       final String oldName = "oldName";
 
@@ -934,8 +868,8 @@ public class PlanCollaborationTests {
 
     @Test
     void deleteActivityShouldFailOnLockedPlan() throws SQLException {
-      final var planId = insertPlan(missionModelId);
-      final var activityId = insertActivity(planId);
+      final var planId = merlinHelper.insertPlan(missionModelId);
+      final var activityId = merlinHelper.insertActivity(planId);
 
       try {
         lockPlan(planId);
@@ -959,11 +893,11 @@ public class PlanCollaborationTests {
 
     @Test
     void insertActivityShouldFailOnLockedPlan() throws SQLException {
-      final var planId = insertPlan(missionModelId);
+      final var planId = merlinHelper.insertPlan(missionModelId);
 
       try {
         lockPlan(planId);
-        insertActivity(planId);
+        merlinHelper.insertActivity(planId);
       } catch (SQLException sqlEx) {
         if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
           throw sqlEx;
@@ -975,7 +909,7 @@ public class PlanCollaborationTests {
       final var activitiesBefore = getActivities(planId);
       assertTrue(activitiesBefore.isEmpty());
 
-      final int insertedId = insertActivity(planId);
+      final int insertedId = merlinHelper.insertActivity(planId);
 
       final var activitiesAfter = getActivities(planId);
       assertEquals(1, activitiesAfter.size());
@@ -984,8 +918,8 @@ public class PlanCollaborationTests {
 
     @Test
     void beginReviewFailsOnLockedPlan() throws SQLException {
-      final var planId = insertPlan(missionModelId);
-      insertActivity(planId);
+      final var planId = merlinHelper.insertPlan(missionModelId);
+      merlinHelper.insertActivity(planId);
       final var childPlanId = duplicatePlan(planId, "Child Plan");
 
       final int mergeRequest = createMergeRequest(planId, childPlanId);
@@ -1003,7 +937,7 @@ public class PlanCollaborationTests {
 
     @Test
     void deletePlanFailsWhileLocked() throws SQLException {
-      final var planId = insertPlan(missionModelId);
+      final var planId = merlinHelper.insertPlan(missionModelId);
 
       try (final var statement = connection.createStatement()) {
         lockPlan(planId);
@@ -1025,12 +959,12 @@ public class PlanCollaborationTests {
      */
     @Test
     void lockingPlanDoesNotAffectOtherPlans() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
       final int relatedPlanId = duplicatePlan(planId, "Child");
 
-      final int unrelatedPlanId = insertPlan(missionModelId);
-      final int unrelatedActivityId = insertActivity(unrelatedPlanId);
+      final int unrelatedPlanId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActivityId = merlinHelper.insertActivity(unrelatedPlanId);
 
       try {
         lockPlan(planId);
@@ -1053,8 +987,8 @@ public class PlanCollaborationTests {
 
 
         //Insert a new activity into the unlocked plans
-        final int newActivityRelated = insertActivity(relatedPlanId);
-        final int newActivityUnrelated = insertActivity(unrelatedPlanId);
+        final int newActivityRelated = merlinHelper.insertActivity(relatedPlanId);
+        final int newActivityUnrelated = merlinHelper.insertActivity(unrelatedPlanId);
 
         relatedActivities = getActivities(relatedPlanId);
         unrelatedActivities = getActivities(unrelatedPlanId);
@@ -1092,7 +1026,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBaseBetweenSelf() throws SQLException {
-      final int parentPlanId = insertPlan(missionModelId);
+      final int parentPlanId = merlinHelper.insertPlan(missionModelId);
       final int planId = duplicatePlan(parentPlanId, "New Plan");
 
       createSnapshot(planId);
@@ -1118,7 +1052,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBaseParentChild() throws SQLException {
-      final int parentPlanId = insertPlan(missionModelId);
+      final int parentPlanId = merlinHelper.insertPlan(missionModelId);
       final int childPlanId = duplicatePlan(parentPlanId, "New Plan");
       final int childCreationSnapshotId;
 
@@ -1149,7 +1083,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBaseSiblings() throws SQLException {
-      final int parentPlan = insertPlan(missionModelId);
+      final int parentPlan = merlinHelper.insertPlan(missionModelId);
       final int olderSibling = duplicatePlan(parentPlan, "Older");
       final int olderSibCreationId;
 
@@ -1180,7 +1114,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBase10thGrandchild() throws SQLException {
-      final int ancestor = insertPlan(missionModelId);
+      final int ancestor = merlinHelper.insertPlan(missionModelId);
       int priorAncestor = duplicatePlan(ancestor, "Child of " + ancestor);
 
       final int ninthGrandparentCreation;
@@ -1214,7 +1148,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBase10thCousin() throws SQLException{
-      final int commonAncestor = insertPlan(missionModelId);
+      final int commonAncestor = merlinHelper.insertPlan(missionModelId);
       final int olderSibling = duplicatePlan(commonAncestor, "Older Sibling");
 
       final int olderSiblingCreation;
@@ -1254,7 +1188,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBasePreviouslyMerged() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int newPlan = duplicatePlan(basePlan, "New Plan");
       final int creationSnapshot;
       final int postMergeSnapshot;
@@ -1271,7 +1205,7 @@ public class PlanCollaborationTests {
         creationSnapshot = results.getInt(1);
       }
 
-      insertActivity(newPlan);
+      merlinHelper.insertActivity(newPlan);
 
       final int mergeRequest = createMergeRequest(basePlan, newPlan);
       beginMerge(mergeRequest);
@@ -1301,7 +1235,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void mergeBaseFailsForInvalidPlanIds() throws SQLException {
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
       final int snapshotId = createSnapshot(planId);
 
       try(final var statement = connection.createStatement()) {
@@ -1334,8 +1268,8 @@ public class PlanCollaborationTests {
      */
     @Test
     void multipleValidMergeBases() throws SQLException {
-      final int plan1 = insertPlan(missionModelId);
-      final int plan2 = insertPlan(missionModelId);
+      final int plan1 = merlinHelper.insertPlan(missionModelId);
+      final int plan2 = merlinHelper.insertPlan(missionModelId);
 
       final int plan1Snapshot = createSnapshot(plan1);
       final int plan2Snapshot = createSnapshot(plan2);
@@ -1372,8 +1306,8 @@ public class PlanCollaborationTests {
      */
     @Test
     void noValidMergeBases() throws SQLException{
-      final int plan1 = insertPlan(missionModelId);
-      final int plan2 = insertPlan(missionModelId);
+      final int plan1 = merlinHelper.insertPlan(missionModelId);
+      final int plan2 = merlinHelper.insertPlan(missionModelId);
 
       createSnapshot(plan1);
       final int plan2Snapshot = createSnapshot(plan2);
@@ -1398,7 +1332,7 @@ public class PlanCollaborationTests {
      */
     @Test
     void createRequestFailsForNonexistentPlans() throws SQLException {
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
 
       try{
         createMergeRequest(planId, -1);
@@ -1421,8 +1355,8 @@ public class PlanCollaborationTests {
 
     @Test
     void createRequestFailsForUnrelatedPlans() throws SQLException {
-      final int plan1 = insertPlan(missionModelId);
-      final int plan2 = insertPlan(missionModelId);
+      final int plan1 = merlinHelper.insertPlan(missionModelId);
+      final int plan2 = merlinHelper.insertPlan(missionModelId);
 
       //Creating a snapshot so that the error comes from create_merge_request, not get_merge_base
       createSnapshot(plan1);
@@ -1439,7 +1373,7 @@ public class PlanCollaborationTests {
 
     @Test
     void createRequestFailsBetweenPlanAndSelf() throws SQLException {
-      final int plan = insertPlan(missionModelId);
+      final int plan = merlinHelper.insertPlan(missionModelId);
       try{
         createMergeRequest(plan, plan);
         fail();
@@ -1482,9 +1416,9 @@ public class PlanCollaborationTests {
 
     @Test
     void beginMergeUpdatesMergeBase() throws SQLException {
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
       final int childId = duplicatePlan(planId, "Child Plan");
-      insertActivity(childId); // Insert to avoid the NO-OP case in begin_merge
+      merlinHelper.insertActivity(childId); // Insert to avoid the NO-OP case in begin_merge
       final MergeRequest mergeRQ = getMergeRequest(createMergeRequest(planId, childId));
       assertEquals(getMergeBaseFromPlanIds(planId, childId), mergeRQ.mergeBaseSnapshot);
 
@@ -1509,8 +1443,8 @@ public class PlanCollaborationTests {
 
     @Test
     void beginMergeNoChangesThrowsError() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      merlinHelper.insertActivity(planId);
       final int childPlan = duplicatePlan(planId, "Child");
 
       try {
@@ -1537,11 +1471,11 @@ public class PlanCollaborationTests {
 
     @Test
     void addReceivingResolvesAsNone() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
-      final int activityId = insertActivity(basePlan);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       // Insert to avoid NO-OP case in begin_merge
-      final int noopDodger = insertActivity(childPlan);
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
       final var stagedActs = getStagingAreaActivities(mergeRQ);
@@ -1560,9 +1494,9 @@ public class PlanCollaborationTests {
 
     @Test
     void addSupplyingResolvesAsAdd() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
-      final int activityId = insertActivity(childPlan);
+      final int activityId = merlinHelper.insertActivity(childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1580,11 +1514,11 @@ public class PlanCollaborationTests {
 
     @Test
     void noneNoneResolvesAsNone() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       // Insert to avoid NO-OP case in begin_merge
-      final int noopDodger = insertActivity(childPlan);
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
       final var stagedActs = getStagingAreaActivities(mergeRQ);
@@ -1603,8 +1537,8 @@ public class PlanCollaborationTests {
 
     @Test
     void noneModifyResolvesAsModify() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       final String newName = "Test";
 
@@ -1626,8 +1560,8 @@ public class PlanCollaborationTests {
 
     @Test
     void noneDeleteResolvesAsDelete() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
 
       deleteActivityDirective(childPlan, activityId);
@@ -1648,15 +1582,15 @@ public class PlanCollaborationTests {
 
     @Test
     void modifyNoneResolvesAsNone() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       final String newName = "Test";
 
       updateActivityName(newName, activityId, basePlan);
 
       // Insert to avoid NO-OP case in begin_merge
-      final int noopDodger = insertActivity(childPlan);
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1676,8 +1610,8 @@ public class PlanCollaborationTests {
 
     @Test
     void identicalModifyModifyResolvesAsNone() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       final String newName = "Test";
 
@@ -1686,7 +1620,7 @@ public class PlanCollaborationTests {
       updateActivityName(newName, activityId, childPlan);
 
       // Insert to avoid NO-OP case in begin_merge
-      final int noopDodger = insertActivity(childPlan);
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1706,8 +1640,8 @@ public class PlanCollaborationTests {
 
     @Test
     void differentModifyModifyResolvesAsConflict() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       final String newName = "Test";
 
@@ -1731,8 +1665,8 @@ public class PlanCollaborationTests {
 
     @Test
     void modifyDeleteResolvesAsConflict() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       final String newName = "Test";
 
@@ -1756,14 +1690,14 @@ public class PlanCollaborationTests {
 
     @Test
     void deleteNoneIsExcludedFromStageAndConflict() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
 
       deleteActivityDirective(basePlan, activityId);
 
       // Insert to avoid NO-OP case in begin_merge
-      final int noopDodger = insertActivity(childPlan);
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1780,8 +1714,8 @@ public class PlanCollaborationTests {
 
     @Test
     void deleteModifyIsAConflict() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
       final String newName = "Test";
 
@@ -1805,15 +1739,15 @@ public class PlanCollaborationTests {
 
     @Test
     void deleteDeleteIsExcludedFromStageAndConflict() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child Plan");
 
       deleteActivityDirective(basePlan, activityId);
       deleteActivityDirective(childPlan, activityId);
 
       // Insert to avoid NO-OP case in begin_merge
-      final int noopDodger = insertActivity(childPlan);
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1845,8 +1779,8 @@ public class PlanCollaborationTests {
 
     @Test
     void commitMergeFailsIfConflictsExist() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
-      final int activityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
 
       updateActivityName("BasePlan", activityId, basePlan);
@@ -1865,10 +1799,10 @@ public class PlanCollaborationTests {
 
     @Test
     void commitMergeSucceedsIfAllConflictsAreResolved() throws SQLException{
-      final int basePlan = insertPlan(missionModelId);
-      final int modifyModifyActivityId = insertActivity(basePlan);
-      final int modifyDeleteActivityId = insertActivity(basePlan);
-      final int deleteModifyActivityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int modifyModifyActivityId = merlinHelper.insertActivity(basePlan);
+      final int modifyDeleteActivityId = merlinHelper.insertActivity(basePlan);
+      final int deleteModifyActivityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
 
       updateActivityName("BaseActivity1", modifyModifyActivityId, basePlan);
@@ -1902,15 +1836,15 @@ public class PlanCollaborationTests {
      */
     @Test
     void commitMergeSucceedsIfNoConflictsExist() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int[] baseActivities = new int[200];
       for(int i = 0; i < baseActivities.length; ++i){
-        baseActivities[i] = insertActivity(basePlan, "00:00:"+(i%60));
+        baseActivities[i] = merlinHelper.insertActivity(basePlan, "00:00:"+(i%60));
       }
 
       final int childPlan = duplicatePlan(basePlan, "Child");
       for(int i = 0; i < 200; ++i){
-        insertActivity(childPlan, "00:00:"+(i%60));
+        merlinHelper.insertActivity(childPlan, "00:00:"+(i%60));
       }
 
       /*
@@ -1926,7 +1860,7 @@ public class PlanCollaborationTests {
       for(int i = 75;  i < 100; ++i) { deleteActivityDirective(childPlan, baseActivities[i]); }
       for(int i = 100; i < 150; ++i) { updateActivityName("Renamed Activity " + i, baseActivities[i], basePlan); }
       for(int i = 150; i < 200; ++i) { updateActivityName("Renamed Activity " + i, baseActivities[i], childPlan); }
-      for(int i = 0;   i < 25;  ++i) { insertActivity(basePlan); }
+      for(int i = 0;   i < 25;  ++i) { merlinHelper.insertActivity(basePlan); }
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -1947,15 +1881,15 @@ public class PlanCollaborationTests {
       -- delete contested receiving applies
        */
 
-      final int basePlan = insertPlan(missionModelId);
-      final int modifyUncontestedActId = insertActivity(basePlan);
-      final int deleteUncontestedActId = insertActivity(basePlan);
-      final int modifyContestedSupplyingActId = insertActivity(basePlan);
-      final int modifyContestedReceivingActId = insertActivity(basePlan);
-      final int deleteContestedSupplyingResolveSupplyingActId = insertActivity(basePlan);
-      final int deleteContestedSupplyingResolveReceivingActId = insertActivity(basePlan);
-      final int deleteContestedReceivingResolveReceivingActId = insertActivity(basePlan);
-      final int deleteContestedReceivingResolveSupplyingActId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int modifyUncontestedActId = merlinHelper.insertActivity(basePlan);
+      final int deleteUncontestedActId = merlinHelper.insertActivity(basePlan);
+      final int modifyContestedSupplyingActId = merlinHelper.insertActivity(basePlan);
+      final int modifyContestedReceivingActId = merlinHelper.insertActivity(basePlan);
+      final int deleteContestedSupplyingResolveSupplyingActId = merlinHelper.insertActivity(basePlan);
+      final int deleteContestedSupplyingResolveReceivingActId = merlinHelper.insertActivity(basePlan);
+      final int deleteContestedReceivingResolveReceivingActId = merlinHelper.insertActivity(basePlan);
+      final int deleteContestedReceivingResolveSupplyingActId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
 
       assertEquals(8, getActivities(basePlan).size());
@@ -2030,11 +1964,11 @@ public class PlanCollaborationTests {
 
     @Test
     void commitMergeCleansUpSuccessfully() throws SQLException{
-      final int basePlan = insertPlan(missionModelId);
-      final int conflictActivityId = insertActivity(basePlan);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int conflictActivityId = merlinHelper.insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      for(int i = 0; i < 5; ++i){ insertActivity(basePlan, "00:00:"+(i%60)); }
-      for(int i = 0; i < 5; ++i){ insertActivity(basePlan, "00:00:"+(i%60)); }
+      for(int i = 0; i < 5; ++i){ merlinHelper.insertActivity(basePlan, "00:00:"+(i%60)); }
+      for(int i = 0; i < 5; ++i){ merlinHelper.insertActivity(basePlan, "00:00:"+(i%60)); }
 
       updateActivityName("Conflict!", conflictActivityId, basePlan);
       updateActivityName("Conflict >:-)", conflictActivityId, childPlan);
@@ -2108,7 +2042,7 @@ public class PlanCollaborationTests {
 
     @Test
     void defaultStateOfMergeRequestIsPendingStatus() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child");
       final MergeRequest mergeRequest = getMergeRequest(createMergeRequest(basePlan, childPlan));
       assertEquals("pending", mergeRequest.status);
@@ -2116,9 +2050,9 @@ public class PlanCollaborationTests {
 
     @Test
     void beginMergeOnlySucceedsOnPendingStatus() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      insertActivity(childPlan);
+      merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
 
       setMergeRequestStatus(mergeRQ, "withdrawn");
@@ -2162,9 +2096,9 @@ public class PlanCollaborationTests {
 
     @Test
     void withdrawOnlySucceedsOnPendingOrWithdrawnStatus() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      insertActivity(childPlan);
+      merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
 
       setMergeRequestStatus(mergeRQ, "pending");
@@ -2203,9 +2137,9 @@ public class PlanCollaborationTests {
 
     @Test
     void cancelOnlySucceedsOnInProgressOrPendingStatus() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      insertActivity(childPlan);
+      merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
 
@@ -2245,9 +2179,9 @@ public class PlanCollaborationTests {
 
     @Test
     void denyOnlySucceedsOnInProgressStatus() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      insertActivity(childPlan);
+      merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
 
@@ -2293,9 +2227,9 @@ public class PlanCollaborationTests {
 
     @Test
     void commitOnlySucceedsOnInProgressStatus() throws SQLException {
-      final int basePlan = insertPlan(missionModelId);
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
       final int childPlan = duplicatePlan(basePlan, "Child");
-      insertActivity(childPlan);
+      merlinHelper.insertActivity(childPlan);
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
 
@@ -2344,8 +2278,8 @@ public class PlanCollaborationTests {
      */
     @Test
     void withdrawCleansUpSuccessfully() throws SQLException {
-      final int basePlan1 = insertPlan(missionModelId);
-      final int basePlan2 = insertPlan(missionModelId);
+      final int basePlan1 = merlinHelper.insertPlan(missionModelId);
+      final int basePlan2 = merlinHelper.insertPlan(missionModelId);
       final int childPlan1 = duplicatePlan(basePlan1, "Child of Base Plan 1");
       final int childPlan2 = duplicatePlan(basePlan2, "Child of Base Plan 2");
       final int mergeRQ1 = createMergeRequest(basePlan1, childPlan1);
@@ -2367,15 +2301,15 @@ public class PlanCollaborationTests {
      */
     @Test
     void denyCleansUpSuccessfully() throws SQLException {
-      final int basePlan1 = insertPlan(missionModelId);
-      final int basePlan2 = insertPlan(missionModelId);
-      final int baseActivity1 = insertActivity(basePlan1);
-      final int baseActivity2 = insertActivity(basePlan2);
+      final int basePlan1 = merlinHelper.insertPlan(missionModelId);
+      final int basePlan2 = merlinHelper.insertPlan(missionModelId);
+      final int baseActivity1 = merlinHelper.insertActivity(basePlan1);
+      final int baseActivity2 = merlinHelper.insertActivity(basePlan2);
 
       final int childPlan1 = duplicatePlan(basePlan1, "Child of Base Plan 1");
       final int childPlan2 = duplicatePlan(basePlan2, "Child of Base Plan 2");
-      final int childActivity1 = insertActivity(childPlan1);
-      final int childActivity2 = insertActivity(childPlan2);
+      final int childActivity1 = merlinHelper.insertActivity(childPlan1);
+      final int childActivity2 = merlinHelper.insertActivity(childPlan2);
 
       updateActivityName("Conflict 1 Base", baseActivity1, basePlan1);
       updateActivityName("Conflict 2 Base", baseActivity2, basePlan2);
@@ -2475,15 +2409,15 @@ public class PlanCollaborationTests {
      */
     @Test
     void cancelCleansUpSuccessfully() throws SQLException {
-      final int basePlan1 = insertPlan(missionModelId);
-      final int basePlan2 = insertPlan(missionModelId);
-      final int baseActivity1 = insertActivity(basePlan1);
-      final int baseActivity2 = insertActivity(basePlan2);
+      final int basePlan1 = merlinHelper.insertPlan(missionModelId);
+      final int basePlan2 = merlinHelper.insertPlan(missionModelId);
+      final int baseActivity1 = merlinHelper.insertActivity(basePlan1);
+      final int baseActivity2 = merlinHelper.insertActivity(basePlan2);
 
       final int childPlan1 = duplicatePlan(basePlan1, "Child of Base Plan 1");
       final int childPlan2 = duplicatePlan(basePlan2, "Child of Base Plan 2");
-      final int childActivity1 = insertActivity(childPlan1);
-      final int childActivity2 = insertActivity(childPlan2);
+      final int childActivity1 = merlinHelper.insertActivity(childPlan1);
+      final int childActivity2 = merlinHelper.insertActivity(childPlan2);
 
       updateActivityName("Conflict 1 Base", baseActivity1, basePlan1);
       updateActivityName("Conflict 2 Base", baseActivity2, basePlan2);
@@ -2579,42 +2513,18 @@ public class PlanCollaborationTests {
 
   @Nested
   class AnchorMergeTests{
-
-    // Method is taken from AnchorTests
-    private void setAnchor(int anchorId, boolean anchoredToStart, int activityId, int planId) throws SQLException {
-      try(final var statement = connection.createStatement()) {
-        if (anchorId == -1) {
-          statement.execute(
-              """
-                  update activity_directive
-                  set anchor_id = null,
-                      anchored_to_start = %b
-                  where id = %d and plan_id = %d;
-                  """.formatted(anchoredToStart, activityId, planId));
-        } else {
-          statement.execute(
-              """
-                  update activity_directive
-                  set anchor_id = %d,
-                      anchored_to_start = %b
-                  where id = %d and plan_id = %d;
-                  """.formatted(anchorId, anchoredToStart, activityId, planId));
-        }
-      }
-    }
-
     @Test
     void cantMergeCycle() throws SQLException{
-      final int planId = insertPlan(missionModelId);
-      final int activityA = insertActivity(planId);
-      final int activityB = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityA = merlinHelper.insertActivity(planId);
+      final int activityB = merlinHelper.insertActivity(planId);
 
       final int childPlan = duplicatePlan(planId, "Cycle Test Plan");
 
       // Plan chain: B -> A
-      setAnchor(activityA, true, activityB, planId);
+      merlinHelper.setAnchor(activityA, true, activityB, planId);
       // ChildPlan chain: A -> B
-      setAnchor(activityB, true, activityA, childPlan);
+      merlinHelper.setAnchor(activityB, true, activityA, childPlan);
 
       // Merge fails as it would establish B -> A -> B cycle
       final int mergeRQ = createMergeRequest(planId, childPlan);
@@ -2632,12 +2542,12 @@ public class PlanCollaborationTests {
     @Test
     void anchorMustBeInTargetPlanAtEndOfMerge() throws SQLException{
       // Can't merge in a version of an activity that is anchored to an activity that is deleted from the target plan.
-      final int planId = insertPlan(missionModelId);
-      final int activityA = insertActivity(planId);
-      final int activityB = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityA = merlinHelper.insertActivity(planId);
+      final int activityB = merlinHelper.insertActivity(planId);
 
       final int childPlan = duplicatePlan(planId, "Anchor Delete Test");
-      setAnchor(activityA, true, activityB, childPlan);
+      merlinHelper.setAnchor(activityA, true, activityB, childPlan);
 
       deleteActivityDirective(planId, activityA);
 
@@ -2652,15 +2562,14 @@ public class PlanCollaborationTests {
           throw ex;
         }
       }
-
     }
 
     @Test
     void deleteSubtreeDoesNotImpactRelatedPlans() throws SQLException{
-      final int planId = insertPlan(missionModelId);
-      final int activityAId = insertActivity(planId);
-      final int activityBId = insertActivity(planId);
-      setAnchor(activityAId, true, activityBId, planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityAId = merlinHelper.insertActivity(planId);
+      final int activityBId = merlinHelper.insertActivity(planId);
+      merlinHelper.setAnchor(activityAId, true, activityBId, planId);
       final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
 
       final Activity activityABefore = getActivity(childPlanId, activityAId);
@@ -2680,10 +2589,10 @@ public class PlanCollaborationTests {
 
     @Test
     void deletePlanReanchorDoesNotImpactRelatedPlans() throws SQLException{
-      final int planId = insertPlan(missionModelId);
-      final int activityAId = insertActivity(planId);
-      final int activityBId = insertActivity(planId);
-      setAnchor(activityAId, true, activityBId, planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityAId = merlinHelper.insertActivity(planId);
+      final int activityBId = merlinHelper.insertActivity(planId);
+      merlinHelper.setAnchor(activityAId, true, activityBId, planId);
       final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
 
       final Activity activityABefore = getActivity(childPlanId, activityAId);
@@ -2702,12 +2611,12 @@ public class PlanCollaborationTests {
     }
     @Test
     void deleteActivityReanchorDoesNotImpactRelatedPlans() throws SQLException{
-      final int planId = insertPlan(missionModelId);
-      final int activityAId = insertActivity(planId);
-      final int activityBId = insertActivity(planId);
-      final int activityCId = insertActivity(planId);
-      setAnchor(activityAId, true, activityBId, planId);
-      setAnchor(activityCId, true, activityAId, planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityAId = merlinHelper.insertActivity(planId);
+      final int activityBId = merlinHelper.insertActivity(planId);
+      final int activityCId = merlinHelper.insertActivity(planId);
+      merlinHelper.setAnchor(activityAId, true, activityBId, planId);
+      merlinHelper.setAnchor(activityCId, true, activityAId, planId);
       final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
 
       final Activity activityABefore = getActivity(childPlanId, activityAId);
@@ -2736,11 +2645,11 @@ public class PlanCollaborationTests {
     @Test
     void presetPersistsWithAdd() throws SQLException{
       presetTests.setConnection(helper);
-      presetTests.insertActivityType(missionModelId, "test-activity");
-      final int planId = insertPlan(missionModelId);
+      merlinHelper.insertActivityType(missionModelId, "test-activity");
+      final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Add Preset Branch");
       final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
-      final int activityId = insertActivity(branchId);
+      final int activityId = merlinHelper.insertActivity(branchId);
       presetTests.assignPreset(presetId, activityId, branchId);
 
       // Merge
@@ -2759,9 +2668,9 @@ public class PlanCollaborationTests {
     @Test
     void presetPersistsWithModify() throws SQLException{
       presetTests.setConnection(helper);
-      presetTests.insertActivityType(missionModelId, "test-activity");
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId);
+      merlinHelper.insertActivityType(missionModelId, "test-activity");
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
       final int branchId = duplicatePlan(planId, "Modify Preset Branch");
       final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity", "{\"destination\": \"Mars\"}");
       presetTests.assignPreset(presetId, activityId, branchId);
@@ -2782,11 +2691,11 @@ public class PlanCollaborationTests {
     @Test
     void postMergeNoPresetIfPresetDeleted() throws SQLException{
       presetTests.setConnection(helper);
-      presetTests.insertActivityType(missionModelId, "test-activity");
-      final int planId = insertPlan(missionModelId);
+      merlinHelper.insertActivityType(missionModelId, "test-activity");
+      final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Delete Preset Branch");
       final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
-      final int activityId = insertActivity(branchId);
+      final int activityId = merlinHelper.insertActivity(branchId);
       presetTests.assignPreset(presetId, activityId, branchId);
 
       // Merge

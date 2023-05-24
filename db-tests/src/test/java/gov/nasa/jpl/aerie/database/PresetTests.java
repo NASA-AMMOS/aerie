@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -23,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class PresetTests {
   private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
+  private MerlinDatabaseTestHelper merlinHelper;
 
   private Connection connection;
   int fileId;
@@ -34,10 +34,10 @@ public class PresetTests {
 
   @BeforeEach
   void beforeEach() throws SQLException {
-    fileId = insertFileUpload();
-    missionModelId = insertMissionModel(fileId);
+    fileId = merlinHelper.insertFileUpload();
+    missionModelId = merlinHelper.insertMissionModel(fileId);
     // Insert the "test-activity" activity types to avoid a foreign key conflict
-    insertActivityType(missionModelId, "test-activity");
+    merlinHelper.insertActivityType(missionModelId, "test-activity");
   }
 
   @AfterEach
@@ -70,6 +70,7 @@ public class PresetTests {
     );
     helper.startDatabase();
     setConnection(helper);
+    merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
@@ -78,84 +79,6 @@ public class PresetTests {
     connection = null;
     helper = null;
   }
-
-  //region Helper Methods from MerlinDatabaseTests
-  int insertFileUpload() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO uploaded_file (path, name)
-                  VALUES ('test-path', 'test-name-%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString())
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertMissionModel(final int fileId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), fileId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertPlan(final int missionModelId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO plan (name, model_id, duration, start_time)
-                  VALUES ('test-plan-%s', '%s', '0', '%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertActivity(final int planId) throws SQLException {
-    return insertActivity(planId, "{}");
-  }
-
-  int insertActivity(final int planId, final String arguments) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
-                  VALUES ('test-activity', '%s', '00:00:00', '%s')
-                  RETURNING id;"""
-                  .formatted(planId, arguments)
-          );
-
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  void insertActivityType(final int modelId, final String name) throws SQLException {
-    try(final var statement = connection.createStatement()) {
-      statement.execute(
-          """
-          INSERT INTO activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema)
-          VALUES (%d, '%s', '{}', '[]', '{}');
-          """.formatted(modelId, name)
-      );
-    }
-  }
-  //endregion
 
   //region Helper Methods
   Activity assignPreset(int presetId, int activityId, int planId) throws SQLException {
@@ -299,9 +222,9 @@ public class PresetTests {
 
   @Test
   void presetAppliesCorrectly() throws SQLException {
-    final int planId = insertPlan(missionModelId);
+    final int planId = merlinHelper.insertPlan(missionModelId);
     final String activityArgs = "{\"fruitCount\": 40}";
-    final int activityId = insertActivity(planId, activityArgs);
+    final int activityId = merlinHelper.insertActivity(planId, "00:00:00", activityArgs);
     final String simplePresetArgs = "{\"fruitCount\": 80}";
     final int simplePresetId = insertPreset(missionModelId, "simple preset", "test-activity", simplePresetArgs);
     final String extendedPresetArgs = "{\"coreCount\": 120, \"destination\": \"Mars\"}";
@@ -344,9 +267,9 @@ public class PresetTests {
   @Test
   void cannotApplyPresetOfIncorrectType() throws SQLException {
     // Insert 'fake-type' to avoid an FK conflict
-    insertActivityType(missionModelId, "fake-type");
-    final int planId = insertPlan(missionModelId);
-    final int activityId = insertActivity(planId);
+    merlinHelper.insertActivityType(missionModelId, "fake-type");
+    final int planId = merlinHelper.insertPlan(missionModelId);
+    final int activityId = merlinHelper.insertActivity(planId);
     final int presetId = insertPreset(missionModelId, "test preset", "fake-type");
 
     final Activity activity = getActivity(planId, activityId);
@@ -364,8 +287,8 @@ public class PresetTests {
 
   @Test
   void cannotApplyNonexistentPreset() throws SQLException {
-    final int planId = insertPlan(missionModelId);
-    final int activityId = insertActivity(planId);
+    final int planId = merlinHelper.insertPlan(missionModelId);
+    final int activityId = merlinHelper.insertActivity(planId);
 
     try{
       assignPreset(-1, activityId, planId);
@@ -379,7 +302,7 @@ public class PresetTests {
 
   @Test
   void cannotApplyPresetToNonexistentActivity() throws SQLException {
-    final int planId = insertPlan(missionModelId);
+    final int planId = merlinHelper.insertPlan(missionModelId);
     final int presetId = insertPreset(missionModelId, "test preset", "test-activity");
 
     try{
@@ -397,12 +320,12 @@ public class PresetTests {
   // but that two presets with the same name, model, and associated activity type cannot be uploaded
   @Test
   void presetUniquenessConstraint() throws SQLException {
-    final int otherModelId = insertMissionModel(fileId);
+    final int otherModelId = merlinHelper.insertMissionModel(fileId);
     // Insert the used activity types to avoid an FK conflict
-    insertActivityType(missionModelId, "Shared Type");
-    insertActivityType(missionModelId, "Different Type");
-    insertActivityType(otherModelId, "Shared Type");
-    insertActivityType(otherModelId, "Unique Type");
+    merlinHelper.insertActivityType(missionModelId, "Shared Type");
+    merlinHelper.insertActivityType(missionModelId, "Different Type");
+    merlinHelper.insertActivityType(otherModelId, "Shared Type");
+    merlinHelper.insertActivityType(otherModelId, "Unique Type");
 
     insertPreset(missionModelId, "Shared Name", "Shared Type");
     insertPreset(missionModelId, "Shared Name", "Different Type");

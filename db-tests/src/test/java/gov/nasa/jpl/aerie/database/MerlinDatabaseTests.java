@@ -32,6 +32,7 @@ record ProfileSegmentAtATimeRecord(int datasetId, int profileId, String name, St
 class MerlinDatabaseTests {
   private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
+  private MerlinDatabaseTestHelper merlinHelper;
 
   private Connection connection;
 
@@ -44,6 +45,7 @@ class MerlinDatabaseTests {
     );
     helper.startDatabase();
     connection = helper.connection();
+    merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
@@ -51,71 +53,6 @@ class MerlinDatabaseTests {
     helper.stopDatabase();
     connection = null;
     helper = null;
-  }
-
-  int insertFileUpload() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO uploaded_file (path, name)
-                  VALUES ('test-path', 'test-name-%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString())
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertMissionModel(final int fileId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), fileId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertPlan(final int missionModelId) throws SQLException {
-    return insertPlan(missionModelId, "2020-1-1 00:00:00+00");
-  }
-
-  int insertPlan(final int missionModelId, final String start_time) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO plan (name, model_id, duration, start_time)
-                  VALUES ('test-plan-%s', '%s', '0', '%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, start_time)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertActivity(final int planId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
-                  VALUES ('test-activity', '%s', '00:00:00', '{}')
-                  RETURNING id;"""
-                  .formatted(planId)
-          );
-
-      res.next();
-      return res.getInt("id");
-    }
   }
 
   int insertSimulationTemplate(final int modelId) throws SQLException {
@@ -214,10 +151,10 @@ class MerlinDatabaseTests {
 
   @BeforeEach
   void beforeEach() throws SQLException {
-    fileId = insertFileUpload();
-    missionModelId = insertMissionModel(fileId);
-    planId = insertPlan(missionModelId);
-    activityId = insertActivity(planId);
+    fileId = merlinHelper.insertFileUpload();
+    missionModelId = merlinHelper.insertMissionModel(fileId);
+    planId = merlinHelper.insertPlan(missionModelId);
+    activityId = merlinHelper.insertActivity(planId);
     simulationTemplateId = insertSimulationTemplate(missionModelId);
     simulationId = getSimulationId(planId);
     addTemplateIdToSimulation(simulationTemplateId, simulationId);
@@ -368,7 +305,7 @@ class MerlinDatabaseTests {
       final var initialRevision = initialRes.getInt("revision");
       initialRes.close();
 
-      insertActivity(planId);
+      merlinHelper.insertActivity(planId);
 
       final var updatedRes = connection.createStatement()
                                        .executeQuery(
@@ -387,7 +324,7 @@ class MerlinDatabaseTests {
     @Test
     void shouldIncrementPlanRevisionOnActivityUpdate() throws SQLException {
 
-      final var activityId = insertActivity(planId);
+      final var activityId = merlinHelper.insertActivity(planId);
 
       final var initialRes = connection.createStatement()
                                        .executeQuery(
@@ -424,7 +361,7 @@ class MerlinDatabaseTests {
     @Test
     void shouldIncrementPlanRevisionOnActivityDelete() throws SQLException {
 
-      final var activityId = insertActivity(planId);
+      final var activityId = merlinHelper.insertActivity(planId);
 
       final var initialRes = connection.createStatement()
                                        .executeQuery(
@@ -575,7 +512,7 @@ class MerlinDatabaseTests {
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
       // ASSUMPTION: The plan to which `planDatasetRecord` is associated must start at 2020-1-1 00:00:00+00, so that
       // this new plan starts exactly 1 hour later.
-      final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00+00");
+      final var newPlanId = merlinHelper.insertPlan(missionModelId, "2020-1-1 01:00:00+00");
 
       final var planDatasetInsertRes = connection.createStatement()
                                                  .executeQuery(

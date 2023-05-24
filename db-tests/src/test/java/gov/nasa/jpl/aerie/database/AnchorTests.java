@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class AnchorTests {
   private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
+  private MerlinDatabaseTestHelper merlinHelper;
 
   private Connection connection;
   int fileId;
@@ -34,8 +34,8 @@ public class AnchorTests {
 
   @BeforeEach
   void beforeEach() throws SQLException {
-    fileId = insertFileUpload();
-    missionModelId = insertMissionModel(fileId);
+    fileId = merlinHelper.insertFileUpload();
+    missionModelId = merlinHelper.insertMissionModel(fileId);
   }
 
   @AfterEach
@@ -68,6 +68,7 @@ public class AnchorTests {
     );
     helper.startDatabase();
     connection = helper.connection();
+    merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
@@ -77,99 +78,7 @@ public class AnchorTests {
     helper = null;
   }
 
-  //region Helper Methods from MerlinDatabaseTests
-  int insertFileUpload() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO uploaded_file (path, name)
-                  VALUES ('test-path', 'test-name-%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString())
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertMissionModel(final int fileId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), fileId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertPlan(final int missionModelId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO plan (name, model_id, duration, start_time)
-                  VALUES ('test-plan-%s', '%s', '0', '%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertActivity(final int planId) throws SQLException {
-    return insertActivity(planId, "00:00:00");
-  }
-
-  int insertActivity(final int planId, final String startOffset) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
-                  VALUES ('test-activity', '%s', '%s', '{}')
-                  RETURNING id;"""
-                  .formatted(planId, startOffset)
-          );
-
-      res.next();
-      return res.getInt("id");
-    }
-  }
-  //endregion
-
   //region Helper Methods
-
-  /**
-   * To anchor an activity to the plan, set "anchorId" equal to -1.
-   */
-  private void setAnchor(int anchorId, boolean anchoredToStart, int activityId, int planId) throws SQLException {
-    try(final var statement = connection.createStatement()) {
-      if (anchorId == -1) {
-        statement.execute(
-            """
-                update activity_directive
-                set anchor_id = null,
-                    anchored_to_start = %b
-                where id = %d and plan_id = %d;
-                """.formatted(anchoredToStart, activityId, planId));
-      } else {
-        statement.execute(
-            """
-                update activity_directive
-                set anchor_id = %d,
-                    anchored_to_start = %b
-                where id = %d and plan_id = %d;
-                """.formatted(anchorId, anchoredToStart, activityId, planId));
-      }
-    }
-  }
 
   private void updateOffsetFromAnchor(PGInterval newOffset, int activityId, int planId) throws SQLException {
     try(final var statement = connection.createStatement()) {
@@ -300,9 +209,9 @@ public class AnchorTests {
       final PGInterval oneDay = new PGInterval("1 day");
       final PGInterval tenMinutes = new PGInterval("10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int anchorActId = insertActivity(planId);
-      final int otherActId = insertActivity(planId, oneDay.toString());
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int anchorActId = merlinHelper.insertActivity(planId);
+      final int otherActId = merlinHelper.insertActivity(planId, oneDay.toString());
 
       // Assert that otherActId has an anchor of null but an offset equal to the input
       Activity otherActivity = getActivity(planId, otherActId);
@@ -312,7 +221,7 @@ public class AnchorTests {
       assertEquals("2020-01-02 00:00:00+00", otherActivity.approximateStartTime);
 
       // Set the anchor and assert that otherActivity was updated as expected.
-      setAnchor(anchorActId, false, otherActId, planId);
+      merlinHelper.setAnchor(anchorActId, false, otherActId, planId);
       updateOffsetFromAnchor(tenMinutes, otherActId, planId);
 
       otherActivity = getActivity(planId, otherActId);
@@ -329,11 +238,11 @@ public class AnchorTests {
 
     @Test
     void cantAnchorToSelf() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
 
       try {
-        setAnchor(activityId, true, activityId, planId);
+        merlinHelper.setAnchor(activityId, true, activityId, planId);
         fail();
       } catch (SQLException ex) {
         if (!ex.getMessage().contains("Cannot anchor activity " + activityId + " to itself.")) {
@@ -344,14 +253,14 @@ public class AnchorTests {
 
     @Test
     void noCyclesInAnchors() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int actAId = insertActivity(planId);
-      final int actBId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int actAId = merlinHelper.insertActivity(planId);
+      final int actBId = merlinHelper.insertActivity(planId);
 
-      setAnchor(actAId, true, actBId, planId);
+      merlinHelper.setAnchor(actAId, true, actBId, planId);
 
       try {
-        setAnchor(actBId, true, actAId, planId);
+        merlinHelper.setAnchor(actBId, true, actAId, planId);
         fail();
       } catch (SQLException ex) {
         if (!ex.getMessage().contains("Cycle detected. Cannot apply changes.")) {
@@ -363,11 +272,11 @@ public class AnchorTests {
     // This additionally tests that invalid anchor ids fail
     @Test
     void cannotAnchorToActivityNotInPlan() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
 
       try {
-        setAnchor(-10, true, activityId, planId);
+        merlinHelper.setAnchor(-10, true, activityId, planId);
         fail();
       } catch (SQLException ex) {
         if (!ex.getMessage().contains(
@@ -384,12 +293,12 @@ public class AnchorTests {
     void negativeEndTimeOffsetWritesToStatus() throws SQLException {
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int grandparentActId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int grandparentActId = merlinHelper.insertActivity(planId);
       final int parentActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), grandparentActId, false);
-      final int negOffsetActId = insertActivity(planId, minusTenMinutes.toString());
+      final int negOffsetActId = merlinHelper.insertActivity(planId, minusTenMinutes.toString());
       final int childActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), negOffsetActId, true);
-      final int unrelatedActId = insertActivity(planId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId);
 
       // Invalid regarding Plan Start
       final AnchorValidationStatus negOffsetStatus = getValidationStatus(planId, negOffsetActId);
@@ -404,7 +313,7 @@ public class AnchorTests {
       assertTrue(unrelatedStatus.reasonInvalid.isEmpty());
 
       // Invalid relative to parent
-      setAnchor(parentActId, false, negOffsetActId, planId);
+      merlinHelper.setAnchor(parentActId, false, negOffsetActId, planId);
       assertEquals("Activity Directive " +negOffsetActId +" has a net negative offset relative to an end-time"
                    + " anchor on Activity Directive " +parentActId +".", refresh(negOffsetStatus).reasonInvalid);
       assertEquals("Activity Directive " +childActId +" has a net negative offset relative to an end-time"
@@ -414,7 +323,7 @@ public class AnchorTests {
       assertTrue(refresh(unrelatedStatus).reasonInvalid.isEmpty());
 
       // Valid relative to parent, invalid relative to grandparent
-      setAnchor(parentActId, true, negOffsetActId, planId);
+      merlinHelper.setAnchor(parentActId, true, negOffsetActId, planId);
       assertEquals("Activity Directive " +negOffsetActId +" has a net negative offset relative to an end-time"
                    + " anchor on Activity Directive " +grandparentActId +".", refresh(negOffsetStatus).reasonInvalid);
       assertEquals("Activity Directive " +childActId +" has a net negative offset relative to an end-time"
@@ -425,7 +334,7 @@ public class AnchorTests {
 
       // Valid regrading Plan End
       // This also validates that the validation status is cleared when updated to a valid value
-      setAnchor(-1, false, negOffsetActId, planId );
+      merlinHelper.setAnchor(-1, false, negOffsetActId, planId );
       assertTrue(refresh(negOffsetStatus).reasonInvalid.isEmpty());
       assertTrue(refresh(childStatus).reasonInvalid.isEmpty());
       assertTrue(refresh(parentStatus).reasonInvalid.isEmpty());
@@ -439,11 +348,11 @@ public class AnchorTests {
       final PGInterval fifteenMinutes = new PGInterval("15 minutes");
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId); // Should always be valid.
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId); // Should always be valid.
 
-      final int parentActId = insertActivity(planId);
-      final int baseActId = insertActivity(planId, fifteenMinutes.toString());
+      final int parentActId = merlinHelper.insertActivity(planId);
+      final int baseActId = merlinHelper.insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
       final int childActId = insertActivityWithAnchor(planId, minusTenMinutes, baseActId, true);
@@ -456,7 +365,7 @@ public class AnchorTests {
       assertTrue(childValidation.reasonInvalid.isEmpty());
 
       // Anchoring base to the end of parent does not invalidate anything.
-      setAnchor(parentActId, false, baseActId, planId);
+      merlinHelper.setAnchor(parentActId, false, baseActId, planId);
       assertTrue(refresh(unrelatedValidation).reasonInvalid.isEmpty());
       assertTrue(refresh(baseValidation).reasonInvalid.isEmpty());
       assertTrue(refresh(childValidation).reasonInvalid.isEmpty());
@@ -481,11 +390,11 @@ public class AnchorTests {
       final PGInterval fifteenMinutes = new PGInterval("15 minutes");
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId); // Should always be valid.
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId); // Should always be valid.
 
-      final int parentActId = insertActivity(planId);
-      final int baseActId = insertActivity(planId, fifteenMinutes.toString());
+      final int parentActId = merlinHelper.insertActivity(planId);
+      final int baseActId = merlinHelper.insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
       final int childActId = insertActivityWithAnchor(planId, minusTenMinutes, baseActId, true);
@@ -501,7 +410,7 @@ public class AnchorTests {
       assertTrue(grandchildValidation.reasonInvalid.isEmpty());
 
       // Anchoring base to the end of parent does not invalidate anything due to size of base's offset.
-      setAnchor(parentActId, false, baseActId, planId);
+      merlinHelper.setAnchor(parentActId, false, baseActId, planId);
       assertTrue(refresh(unrelatedValidation).reasonInvalid.isEmpty());
       assertEquals("", refresh(baseValidation).reasonInvalid);
       assertTrue(refresh(baseValidation).reasonInvalid.isEmpty());
@@ -535,11 +444,11 @@ public class AnchorTests {
       final PGInterval fifteenMinutes = new PGInterval("15 minutes");
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId); // Should always be valid.
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId); // Should always be valid.
 
-      final int parentActId = insertActivity(planId);
-      final int baseActId = insertActivity(planId, fifteenMinutes.toString());
+      final int parentActId = merlinHelper.insertActivity(planId);
+      final int baseActId = merlinHelper.insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
       final int childActId = insertActivityWithAnchor(planId, minusTenMinutes, baseActId, true);
@@ -555,7 +464,7 @@ public class AnchorTests {
       assertTrue(grandchildValidation.reasonInvalid.isEmpty());
 
       // Anchoring base to the end of parent does not invalidate anything due to size of base's offset.
-      setAnchor(parentActId, false, baseActId, planId);
+      merlinHelper.setAnchor(parentActId, false, baseActId, planId);
       assertTrue(refresh(unrelatedValidation).reasonInvalid.isEmpty());
       assertTrue(refresh(baseValidation).reasonInvalid.isEmpty());
       assertTrue(refresh(childValidation).reasonInvalid.isEmpty());
@@ -583,11 +492,11 @@ public class AnchorTests {
       final PGInterval fifteenMinutes = new PGInterval("15 minutes");
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId); // Should always be empty.
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId); // Should always be empty.
 
-      final int parentActId = insertActivity(planId);
-      final int baseActId = insertActivity(planId, fifteenMinutes.toString());
+      final int parentActId = merlinHelper.insertActivity(planId);
+      final int baseActId = merlinHelper.insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
       final int childActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), baseActId, true);
@@ -603,7 +512,7 @@ public class AnchorTests {
       assertTrue(grandchildValidation.reasonInvalid.isEmpty());
 
       // Anchoring base to the end of parent does not invalidate anything due to size of base's offset.
-      setAnchor(parentActId, false, baseActId, planId);
+      merlinHelper.setAnchor(parentActId, false, baseActId, planId);
       assertTrue(refresh(unrelatedValidation).reasonInvalid.isEmpty());
       assertTrue(refresh(baseValidation).reasonInvalid.isEmpty());
       assertTrue(refresh(childValidation).reasonInvalid.isEmpty());
@@ -631,10 +540,10 @@ public class AnchorTests {
       final PGInterval fifteenMinutes = new PGInterval("15 minutes");
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId); // Should always be empty.
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId); // Should always be empty.
 
-      final int parentActId = insertActivity(planId, fifteenMinutes.toString());
+      final int parentActId = merlinHelper.insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
       final int baseActId = insertActivityWithAnchor(planId, minusTenMinutes, parentActId, false);
@@ -660,10 +569,10 @@ public class AnchorTests {
       final PGInterval fifteenMinutes = new PGInterval("15 minutes");
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId); // Should always be valid.
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId); // Should always be valid.
 
-      final int parentActId = insertActivity(planId, fifteenMinutes.toString());
+      final int parentActId = merlinHelper.insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
       final int baseActId = insertActivityWithAnchor(planId, minusTenMinutes, parentActId, false);
@@ -703,9 +612,9 @@ public class AnchorTests {
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
       final PGInterval tenMinutes = new PGInterval("10 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId, tenMinutes.toString());
-      final int unrelatedId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId, tenMinutes.toString());
+      final int unrelatedId = merlinHelper.insertActivity(planId);
 
       // Valid regarding Plan Start
       final AnchorValidationStatus activityStatus = getValidationStatus(planId, activityId);
@@ -729,9 +638,9 @@ public class AnchorTests {
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
       final PGInterval elevenMinutes = new PGInterval("11 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId);
-      final int grandparentActId = insertActivity(planId, elevenMinutes.toString());
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId);
+      final int grandparentActId = merlinHelper.insertActivity(planId, elevenMinutes.toString());
       final int parentActId = insertActivityWithAnchor(planId, minusTenMinutes, grandparentActId, true);
       final int baseId = insertActivityWithAnchor(planId, elevenMinutes, parentActId, true);
       final int childId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), baseId, true);
@@ -772,10 +681,10 @@ public class AnchorTests {
       final PGInterval minusFifteenMinutes = new PGInterval("-15 minutes");
       final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId);
 
-      final int parentId = insertActivity(planId, twentyMinutes.toString());
+      final int parentId = merlinHelper.insertActivity(planId, twentyMinutes.toString());
       final int baseId = insertActivityWithAnchor(planId, twentyMinutes, parentId, true);
       final int childId = insertActivityWithAnchor(planId, minusTenMinutes, baseId, true);
 
@@ -810,10 +719,10 @@ public class AnchorTests {
       final PGInterval minusFifteenMinutes = new PGInterval("-15 minutes");
       final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId);
 
-      final int parentId = insertActivity(planId, twentyMinutes.toString());
+      final int parentId = merlinHelper.insertActivity(planId, twentyMinutes.toString());
       final int baseId = insertActivityWithAnchor(planId, twentyMinutes, parentId, true);
       final int childId = insertActivityWithAnchor(planId, minusTenMinutes, baseId, true);
       final int grandchildId = insertActivityWithAnchor(planId, minusTenMinutes, childId, true);
@@ -853,10 +762,10 @@ public class AnchorTests {
       final PGInterval minusFifteenMinutes = new PGInterval("-15 minutes");
       final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId);
 
-      final int parentId = insertActivity(planId, twentyMinutes.toString());
+      final int parentId = merlinHelper.insertActivity(planId, twentyMinutes.toString());
       final int baseId = insertActivityWithAnchor(planId, twentyMinutes, parentId, true);
       final int childId = insertActivityWithAnchor(planId, minusTenMinutes, baseId, true);
       final int grandchildId = insertActivityWithAnchor(planId, minusTenMinutes, childId, false);
@@ -900,10 +809,10 @@ public class AnchorTests {
       final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
       final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
-      final int planId = insertPlan(missionModelId);
-      final int unrelatedActId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActId = merlinHelper.insertActivity(planId);
 
-      final int parentId = insertActivity(planId, twentyMinutes.toString());
+      final int parentId = merlinHelper.insertActivity(planId, twentyMinutes.toString());
       final int baseId = insertActivityWithAnchor(planId, twentyMinutes, parentId, true);
       final int childId = insertActivityWithAnchor(planId, minusTenMinutes, baseId, true);
       final int grandchildId = insertActivityWithAnchor(planId, minusTenMinutes, childId, true);
@@ -943,8 +852,8 @@ public class AnchorTests {
 
     @Test
     void cantDeleteActivityWithAnchors() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int anchorId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int anchorId = merlinHelper.insertActivity(planId);
       insertActivityWithAnchor(planId, new PGInterval("0 seconds"), anchorId, true);
 
       try {
@@ -961,8 +870,8 @@ public class AnchorTests {
     // The Hasura functions are defined as 'STRICT', meaning they immediately return NULL if a parameter is NULL rather than raising an exception
     @Test
     void rebasesDoNotRunOnNullParameters() throws SQLException {
-      final int planId = insertPlan(missionModelId);
-      final int activityId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
 
       try (final var statement = connection.createStatement()) {
         // Reanchor to Plan Start
@@ -1020,7 +929,7 @@ public class AnchorTests {
 
     @Test
     void cannotRebaseActivityThatDoesNotExist() throws SQLException{
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
@@ -1061,12 +970,12 @@ public class AnchorTests {
 
     @Test
     void rebaseToAscendantAnchor() throws SQLException{
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
       final PGInterval oneDay = new PGInterval("1 day");
       final PGInterval minusTwoDays = new PGInterval("-2 days");
       final PGInterval minusFourDays = new PGInterval("-4 days");
 
-      int lastInsertedId = insertActivity(planId);
+      int lastInsertedId = merlinHelper.insertActivity(planId);
       for(int i = 0; i<10; i++){
         lastInsertedId = insertActivityWithAnchor(planId, oneDay, lastInsertedId, true);
       }
@@ -1119,12 +1028,12 @@ public class AnchorTests {
 
     @Test
     void rebaseChainsToPlanStart() throws SQLException{
-      final int planId = insertPlan(missionModelId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
       final PGInterval oneDay = new PGInterval("1 day");
       final PGInterval minusTwoDays = new PGInterval("-2 days");
       final PGInterval sixDays = new PGInterval("6 days");
 
-      int lastInsertedId = insertActivity(planId);
+      int lastInsertedId = merlinHelper.insertActivity(planId);
       for(int i = 0; i<10; i++){
         lastInsertedId = insertActivityWithAnchor(planId, oneDay, lastInsertedId, true);
       }
@@ -1177,8 +1086,8 @@ public class AnchorTests {
 
     @Test
     void deleteChain() throws SQLException{
-      final int planId = insertPlan(missionModelId);
-      final int grandparentId = insertActivity(planId);
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int grandparentId = merlinHelper.insertActivity(planId);
       final int parentId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), grandparentId, true);
       final int baseId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), parentId, true);
 
