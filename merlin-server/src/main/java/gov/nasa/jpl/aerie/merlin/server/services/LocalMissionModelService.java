@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -13,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,11 @@ public final class LocalMissionModelService implements MissionModelService {
   private final Path missionModelDataPath;
   private final MissionModelRepository missionModelRepository;
   private final Instant untruePlanStart;
+
+  private boolean doingIncrementalSim = true;
+
+  private final Map<Triple<String, Instant, Duration>, SimulationDriver>
+      simulationDrivers = new HashMap<Triple<String, Instant, Duration>, SimulationDriver>();
 
   public LocalMissionModelService(
       final Path missionModelDataPath,
@@ -226,14 +233,34 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
-    // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(message.missionModelId(), message.simulationStartTime(), SerializedValue.of(config)),
-        message.activityDirectives(),
-        message.simulationStartTime(),
-        message.simulationDuration(),
-        message.planStartTime(),
-        message.planDuration());
+    final MissionModel<?> missionModel = loadAndInstantiateMissionModel(message.missionModelId(),
+                                                                        message.simulationStartTime(),
+                                                                        SerializedValue.of(config));
+
+    var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
+    SimulationDriver driver = simulationDrivers.get(planInfo);
+
+    if (driver == null || !doingIncrementalSim) {
+      driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration());
+      simulationDrivers.put(planInfo, driver);
+      // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
+      return driver.simulate(
+          missionModel,
+          message.activityDirectives(),
+          message.simulationStartTime(),
+          message.simulationDuration(),
+          message.planStartTime(),
+          message.planDuration());
+    } else {
+      // Try to reuse past simulation.
+      return driver.diffAndSimulate(missionModel,
+                                    message.activityDirectives(),
+                                    message.simulationStartTime(),
+                                    message.simulationDuration(),
+                                    message.planStartTime(),
+                                    message.planDuration());
+    }
+
   }
 
   @Override

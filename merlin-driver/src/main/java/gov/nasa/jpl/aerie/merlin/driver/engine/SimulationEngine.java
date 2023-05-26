@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.CombinedSimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
@@ -53,6 +54,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -81,7 +83,9 @@ public final class SimulationEngine implements AutoCloseable {
   /** The start time of the simulation, from which other times are offsets */
   private final Instant startTime;
 
-  private final TaskInfo taskInfo = new TaskInfo();
+  public final Map<ActivityDirectiveId, ActivityDirective> scheduledDirectives = new HashMap<>();
+
+  public final TaskInfo taskInfo = new TaskInfo();
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
   private final HashMap<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
@@ -301,6 +305,9 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
     }
+    // Remove children, too!
+    var children = this.taskChildren.get(taskId);
+    if (children != null) children.forEach(c -> removeTaskHistory(c));
   }
 
   private static ExecutorService getLoomOrFallback() {
@@ -676,21 +683,53 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  private record TaskInfo(
+  public Map<ActivityDirectiveId, ActivityDirective> getCombinedScheduledDirectives() {
+    return Collections.unmodifiableMap(getDangerouslyModifiableCombinedScheduledDirectives());
+  }
+
+  private Map<ActivityDirectiveId, ActivityDirective> getDangerouslyModifiableCombinedScheduledDirectives() {
+    if (oldEngine == null) return scheduledDirectives;
+    var oldMap = oldEngine.getCombinedScheduledDirectives();
+    if (oldMap.isEmpty()) return scheduledDirectives;
+    if (scheduledDirectives.isEmpty()) return oldMap;
+    var map = new HashMap<>(oldMap);
+    map.putAll(scheduledDirectives);
+    return map;
+  }
+
+  public Map<String, Map<ActivityDirectiveId, ActivityDirective>> diffDirectives(Map<ActivityDirectiveId, ActivityDirective> newDirectives) {
+    Map<String, Map<ActivityDirectiveId, ActivityDirective>> diff = new HashMap<>();
+    final var oldDirectives = getCombinedScheduledDirectives();
+    diff.put("added", newDirectives.entrySet().stream().filter(e -> !oldDirectives.containsKey(e.getKey())).collect(
+        Collectors.toMap(e -> e.getKey(), e -> e.getValue())));
+    diff.put("removed", oldDirectives.entrySet().stream().filter(e -> !newDirectives.containsKey(e.getKey())).collect(
+        Collectors.toMap(e -> e.getKey(), e -> e.getValue())));
+    diff.put("modified", newDirectives.entrySet().stream().filter(e -> oldDirectives.containsKey(e.getKey()) && !e.getValue().equals(oldDirectives.get(e.getKey()))).collect(
+        Collectors.toMap(e -> e.getKey(), e -> e.getValue())));
+    return diff;
+  }
+
+  public record TaskInfo(
       Map<String, ActivityDirectiveId> taskToPlannedDirective,
+      Map<ActivityDirectiveId, TaskId> directiveIdToTaskId,
       Map<String, SerializedActivity> input,
       Map<String, SerializedValue> output
   ) {
     public TaskInfo() {
-      this(new HashMap<>(), new HashMap<>(), new HashMap<>());
+      this(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
 
     public boolean isActivity(final TaskId id) {
       return this.input.containsKey(id.id());
     }
 
+    public TaskId getTaskIdForDirectiveId(ActivityDirectiveId id) {
+      return directiveIdToTaskId.get(id);
+    }
+
     public void removeTask(final TaskId id) {
-      taskToPlannedDirective.remove(id.id());
+      var directiveId = taskToPlannedDirective.remove(id.id());
+      if (directiveId != null) directiveIdToTaskId.remove(directiveId);
       input.remove(id.id());
       output.remove(id.id());
     }
@@ -716,7 +755,10 @@ public final class SimulationEngine implements AutoCloseable {
         return taskInfo -> {
           // Identify activities.
           ev.extract(this.activityTopic)
-            .ifPresent(directiveId -> taskInfo.taskToPlannedDirective.put(ev.provenance().id(), directiveId));
+            .ifPresent(directiveId -> {
+              taskInfo.taskToPlannedDirective.put(ev.provenance().id(), directiveId);
+              taskInfo.directiveIdToTaskId.put(directiveId, ev.provenance());
+            });
 
           for (final var topic : this.topics) {
             // Identify activity inputs.

@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public final class SimulationDriver<Model> {
 
@@ -41,7 +42,7 @@ public final class SimulationDriver<Model> {
 
   private Topic<Topic<?>> queryTopic = new Topic<>();
 
-  // Whether we're rerunning the simulation, in which case we can be lazy about starting up stuff, like daemons
+  /** Whether we're rerunning the simulation, in which case we reuse past results and have an old SimulationEngine */
   private boolean rerunning = false;
 
   public SimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
@@ -88,7 +89,6 @@ public final class SimulationDriver<Model> {
   }
 
   public SimulationResultsInterface simulate(
-      //final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
       final Duration simulationDuration,
@@ -96,6 +96,8 @@ public final class SimulationDriver<Model> {
       final Duration planDuration
   ) {
       try {
+        engine.scheduledDirectives.putAll(schedule);
+
         // Get all activities as close as possible to absolute time
         // Schedule all activities.
         // Using HashMap explicitly because it allows `null` as a key.
@@ -194,10 +196,26 @@ public final class SimulationDriver<Model> {
     }
   }
 
+  public SimulationResultsInterface diffAndSimulate(
+      MissionModel<?> missionModel,
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
+      Instant simulationStartTime,
+      Duration simulationDuration,
+      Instant planStartTime,
+      Duration planDuration) {
+    Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
+    if (engine.oldEngine != null) {
+      Map<String, Map<ActivityDirectiveId, ActivityDirective>> diff = engine.oldEngine.diffDirectives(activityDirectives);
+      directives = new HashMap<>(diff.get("added"));
+      directives.putAll(diff.get("modified"));
+      diff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.taskInfo.getTaskIdForDirectiveId(k)));
+      diff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.taskInfo.getTaskIdForDirectiveId(k)));
+    }
+    return simulate(missionModel, directives, simulationStartTime, simulationDuration, planStartTime, planDuration);
+  }
 
   public <Return> //static <Model, Return>
-  void simulateTask(final Instant startTime, //final MissionModel<Model> missionModel,
-                    final TaskFactory<Return> task) {
+  void simulateTask(final TaskFactory<Return> task) {
     // Schedule all activities.
     final var taskId = engine.scheduleTask(curTime(), task, null);
 
