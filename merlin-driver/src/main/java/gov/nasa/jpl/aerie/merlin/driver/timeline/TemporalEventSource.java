@@ -19,13 +19,14 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
+public class TemporalEventSource implements EventSource {//}, Iterable<TemporalEventSource.TimePoint> {
   public LiveCells liveCells;
   private final MissionModel<?> missionModel;
-  public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
+  //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
   public TreeMap<Duration, List<TimePoint.Commit>> commitsByTime = new TreeMap<>();
   public Map<Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> eventsByTopic = new HashMap<>();
   public Map<TaskId, TreeMap<Duration, List<EventGraph<Event>>>> eventsByTask = new HashMap<>();
@@ -82,15 +83,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     this(liveCells, null, null);
   }
 
-  public void add(final Duration delta) {
-    if (delta.isZero()) return;
-    this.points.append(new TimePoint.Delta(delta));
-  }
+//  public void add(final Duration delta) {
+//    if (delta.isZero()) return;
+//    this.points.append(new TimePoint.Delta(delta));
+//  }
 
   public void add(final EventGraph<Event> graph, Duration time) {
     var topics = extractTopics(graph);
     var commit = new TimePoint.Commit(graph, topics);
-    this.points.append(commit);
+//    this.points.append(commit);
     addIndices(commit, time, topics);
   }
 
@@ -227,10 +228,10 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   }
 
 
-  @Override
-  public Iterator<TimePoint> iterator() {
-      return TemporalEventSource.this.points.iterator();
-  }
+//  @Override
+//  public Iterator<TimePoint> iterator() {
+//      return TemporalEventSource.this.points.iterator();
+//  }
 
 
   public void setTopicStale(Topic<?> topic, Duration offsetTime) {
@@ -581,14 +582,14 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   }
 
   public final class TemporalCursor implements Cursor {
-    private final Iterator<TimePoint> iterator;
+//    private final Iterator<TimePoint> iterator;
 
-    TemporalCursor(Iterator<TimePoint> iterator) {
-      this.iterator = iterator;
-    }
+//    TemporalCursor(Iterator<TimePoint> iterator) {
+//      this.iterator = iterator;
+//    }
 
     private TemporalCursor() {
-      this(TemporalEventSource.this.iterator());
+//      this(TemporalEventSource.this.iterator());
     }
 
     @Override
@@ -613,13 +614,18 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     return set;
   }
 
-  private static void extractTopics(final Set<Topic<?>> accumulator, EventGraph<Event> graph) {
+  public static void extractTopics(final Set<Topic<?>> accumulator, EventGraph<Event> graph) {
+    extractTopics(accumulator, graph, null);
+  }
+  public static void extractTopics(final Set<Topic<?>> accumulator, EventGraph<Event> graph, Predicate<Event> p) {
     while (true) {
       if (graph instanceof EventGraph.Empty) {
         // There are no events here!
         return;
       } else if (graph instanceof EventGraph.Atom<Event> g) {
-        accumulator.add(g.atom().topic());
+        if(p == null || p.test(g.atom())) {
+          accumulator.add(g.atom().topic());
+        }
         return;
       } else if (graph instanceof EventGraph.Sequentially<Event> g) {
         extractTopics(accumulator, g.prefix());

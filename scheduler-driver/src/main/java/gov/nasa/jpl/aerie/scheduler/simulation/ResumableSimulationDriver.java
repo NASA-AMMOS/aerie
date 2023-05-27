@@ -91,7 +91,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
-    this.rerunning = this.engine != null && this.engine.timeline.points.size() > 1;
+    this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
@@ -155,7 +155,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         break;
       }
       setCurTime(nextTime);
-      engine.timeline.add(delta);
+//      engine.timeline.add(delta);
 
 //      if (staleTopicTime.isEqualTo(nextTime)) {
 //        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
@@ -313,7 +313,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       //   even if they occur at the same real time.
 
       setCurTime(nextTime);
-      engine.timeline.add(delta);
+//      engine.timeline.add(delta);
 
 //      if (staleTopicTime.isEqualTo(nextTime)) {
 //        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.

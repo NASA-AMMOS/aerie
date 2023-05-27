@@ -60,7 +60,7 @@ public final class SimulationDriver<Model> {
 
   public void initSimulation(){
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
-    this.rerunning = this.engine != null && this.engine.timeline.points.size() > 1;
+    this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
@@ -140,9 +140,9 @@ public final class SimulationDriver<Model> {
           var timeForDelta = Duration.min(nextTime, simulationDuration);
           final var delta = timeForDelta.minus(curTime());
           setCurTime(timeForDelta);
-          if (!delta.isNegative()) {
-            engine.timeline.add(delta);
-          }
+//          if (!delta.isNegative()) {
+//            engine.timeline.add(delta);
+//          }
           // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
           //   even if they occur at the same real time.
 
@@ -237,9 +237,9 @@ public final class SimulationDriver<Model> {
       final var delta = nextTime.minus(curTime());
       setCurTime(nextTime);
       // TODO: Since we moved timeline from SimulationDriver to SimulationEngine, maybe some of this should be encapsulated in the engine.
-      if (!delta.isNegative()) {
-        engine.timeline.add(delta);
-      }
+//      if (!delta.isNegative()) {
+//        engine.timeline.add(delta);
+//      }
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
       //   even if they occur at the same real time.
 

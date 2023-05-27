@@ -940,11 +940,10 @@ public final class SimulationEngine implements AutoCloseable {
       this.topics.add(Triple.of(this.topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    var time = Duration.ZERO;
-    for (var point : timeline.points) {
-      if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
-        time = time.plus(delta.delta());
-      } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
+    // Serialize the timeline of EventGraphs
+    for (Duration time: timeline.commitsByTime.keySet()) {
+      var commitList = timeline.commitsByTime.get(time);
+      for (var commit : commitList) {
         final var serializedEventGraph = commit.events().substitute(
             event -> {
               EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
