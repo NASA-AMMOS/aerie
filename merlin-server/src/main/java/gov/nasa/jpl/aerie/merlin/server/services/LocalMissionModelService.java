@@ -244,17 +244,15 @@ public final class LocalMissionModelService implements MissionModelService {
       driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration());
       simulationDrivers.put(planInfo, driver);
       // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-      return driver.simulate(
-          missionModel,
-          message.activityDirectives(),
-          message.simulationStartTime(),
-          message.simulationDuration(),
-          message.planStartTime(),
-          message.planDuration());
+      return driver.simulate(message.activityDirectives(),
+                             message.simulationStartTime(),
+                             message.simulationDuration(),
+                             message.planStartTime(),
+                             message.planDuration());
     } else {
       // Try to reuse past simulation.
-      return driver.diffAndSimulate(missionModel,
-                                    message.activityDirectives(),
+      driver.initSimulation();
+      return driver.diffAndSimulate(message.activityDirectives(),
                                     message.simulationStartTime(),
                                     message.simulationDuration(),
                                     message.planStartTime(),

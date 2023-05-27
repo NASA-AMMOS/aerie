@@ -83,7 +83,8 @@ public final class SimulationEngine implements AutoCloseable {
   /** The start time of the simulation, from which other times are offsets */
   private final Instant startTime;
 
-  public final Map<ActivityDirectiveId, ActivityDirective> scheduledDirectives = new HashMap<>();
+  public Map<ActivityDirectiveId, ActivityDirective> scheduledDirectives = null;
+  public Map<String, Map<ActivityDirectiveId, ActivityDirective>> directivesDiff = null;
 
   public final TaskInfo taskInfo = new TaskInfo();
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
@@ -297,14 +298,22 @@ public final class SimulationEngine implements AutoCloseable {
       List<EventGraph<Event>> gl = graphsForTask == null ? null : graphsForTask.get(time); // If old graph is already replaced used the replacement
       if (gl == null || gl.isEmpty()) gl = oldGraphsForTask == null ? null : oldGraphsForTask.get(time);  // else we can replace the old graph
       for (var g : gl) {
+//        // invalidate topics for cells affected by the task in the old graph so that resource values are checked at
+//        // this time to erase effects on resources  -- TODO: this doesn't work!  only one scheduled job per resource
+//        var s = new HashSet<Topic<?>>();
+//        TemporalEventSource.extractTopics(s, g, e -> taskId.equals(e.provenance()));
+//        s.forEach(topic -> invalidateTopic(topic, time));
+        // replace the old graph with one without the task's events, updating data structures
         var newG = g.filter(e -> !taskId.equals(e.provenance()));
         if (newG != g) {
           timeline.replaceEventGraph(g, newG);
-          taskInfo.removeTask(taskId);
           updateTaskInfo(newG);
         }
       }
     }
+    // remove task from taskInfo data structures
+    taskInfo.removeTask(taskId);
+
     // Remove children, too!
     var children = this.taskChildren.get(taskId);
     if (children != null) children.forEach(c -> removeTaskHistory(c));
@@ -683,23 +692,9 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  public Map<ActivityDirectiveId, ActivityDirective> getCombinedScheduledDirectives() {
-    return Collections.unmodifiableMap(getDangerouslyModifiableCombinedScheduledDirectives());
-  }
-
-  private Map<ActivityDirectiveId, ActivityDirective> getDangerouslyModifiableCombinedScheduledDirectives() {
-    if (oldEngine == null) return scheduledDirectives;
-    var oldMap = oldEngine.getCombinedScheduledDirectives();
-    if (oldMap.isEmpty()) return scheduledDirectives;
-    if (scheduledDirectives.isEmpty()) return oldMap;
-    var map = new HashMap<>(oldMap);
-    map.putAll(scheduledDirectives);
-    return map;
-  }
-
   public Map<String, Map<ActivityDirectiveId, ActivityDirective>> diffDirectives(Map<ActivityDirectiveId, ActivityDirective> newDirectives) {
     Map<String, Map<ActivityDirectiveId, ActivityDirective>> diff = new HashMap<>();
-    final var oldDirectives = getCombinedScheduledDirectives();
+    final var oldDirectives = scheduledDirectives;
     diff.put("added", newDirectives.entrySet().stream().filter(e -> !oldDirectives.containsKey(e.getKey())).collect(
         Collectors.toMap(e -> e.getKey(), e -> e.getValue())));
     diff.put("removed", oldDirectives.entrySet().stream().filter(e -> !newDirectives.containsKey(e.getKey())).collect(

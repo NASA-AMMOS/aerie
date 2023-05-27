@@ -58,7 +58,7 @@ public final class SimulationDriver<Model> {
   }
 
 
-  /*package-private*/ void initSimulation(){
+  public void initSimulation(){
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.points.size() > 1;
     if (this.engine != null) this.engine.close();
@@ -96,7 +96,10 @@ public final class SimulationDriver<Model> {
       final Duration planDuration
   ) {
       try {
-        engine.scheduledDirectives.putAll(schedule);
+
+        if (engine.scheduledDirectives == null) {
+          engine.scheduledDirectives = new HashMap<>(schedule);
+        }
 
         // Get all activities as close as possible to absolute time
         // Schedule all activities.
@@ -197,21 +200,22 @@ public final class SimulationDriver<Model> {
   }
 
   public SimulationResultsInterface diffAndSimulate(
-      MissionModel<?> missionModel,
       Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
       Instant simulationStartTime,
       Duration simulationDuration,
       Instant planStartTime,
       Duration planDuration) {
     Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
+    engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
     if (engine.oldEngine != null) {
-      Map<String, Map<ActivityDirectiveId, ActivityDirective>> diff = engine.oldEngine.diffDirectives(activityDirectives);
-      directives = new HashMap<>(diff.get("added"));
-      directives.putAll(diff.get("modified"));
-      diff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.taskInfo.getTaskIdForDirectiveId(k)));
-      diff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.taskInfo.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff = engine.oldEngine.diffDirectives(activityDirectives);
+      engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
+      directives = new HashMap<>(engine.directivesDiff.get("added"));
+      directives.putAll(engine.directivesDiff.get("modified"));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.taskInfo.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.taskInfo.getTaskIdForDirectiveId(k)));
     }
-    return simulate(missionModel, directives, simulationStartTime, simulationDuration, planStartTime, planDuration);
+    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration);
   }
 
   public <Return> //static <Model, Return>
