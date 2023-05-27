@@ -37,7 +37,7 @@ beforeEach(async () => {
     simulation_start_time: '2020-001T00:00:00Z',
     simulation_end_time: '2020-002T00:00:00Z',
   });
-  commandDictionaryId = await insertCommandDictionary(graphqlClient);
+  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
 });
 
 afterEach(async () => {
@@ -349,16 +349,16 @@ describe('expansion', () => {
     },
     steps: ({ locals, parameters }) => ([
       A\`2023-091T10:00:00.000\`.ADD_WATER
-      .METADATA({
-        simulatedActivityId: ${simulatedActivityId},
-      }),
+        .METADATA({
+          simulatedActivityId: ${simulatedActivityId},
+        }),
       R\`04:00:00.000\`.GROW_BANANA({
         quantity: 10,
         durationSecs: 7200,
       })
-      .METADATA({
-        simulatedActivityId: ${simulatedActivityId},
-      }),
+        .METADATA({
+          simulatedActivityId: ${simulatedActivityId},
+        }),
     ]),
   });`);
 

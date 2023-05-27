@@ -13,18 +13,11 @@ interface Fallible {
 }
 
 type Mutation {
-  addExternalDataset(
-    planId: Int!
-    datasetStart: String!
-    profileSet: ProfileSet!
-  ): AddExternalDatasetResponse
+  addExternalDataset(planId: Int!, datasetStart: String!, profileSet: ProfileSet!): AddExternalDatasetResponse
 }
 
 type Mutation {
-  extendExternalDataset(
-    datasetId: Int!
-    profileSet: ProfileSet!
-  ): AddExternalDatasetResponse
+  extendExternalDataset(datasetId: Int!, profileSet: ProfileSet!): AddExternalDatasetResponse
 }
 
 type Mutation {
@@ -40,26 +33,16 @@ type Mutation {
   ): AddCommandExpansionResponse
 }
 
-type Mutation{
-  createExpansionSet(
-    commandDictionaryId: Int!
-    missionModelId: Int!
-    expansionIds: [Int!]!
-  ): ExpansionSetResponse
+type Mutation {
+  createExpansionSet(commandDictionaryId: Int!, missionModelId: Int!, expansionIds: [Int!]!): ExpansionSetResponse
 }
 
-type Mutation{
-  expandAllActivities(
-    expansionSetId: Int!
-    simulationDatasetId: Int!
-  ): ExpandAllActivitiesResponse
+type Mutation {
+  expandAllActivities(expansionSetId: Int!, simulationDatasetId: Int!): ExpandAllActivitiesResponse
 }
 
 type Query {
-  getModelEffectiveArguments(
-    missionModelId: ID!
-    modelArguments: ModelArguments!
-  ): EffectiveArgumentsResponse
+  getModelEffectiveArguments(missionModelId: ID!, modelArguments: ModelArguments!): EffectiveArgumentsResponse
 }
 
 type Query {
@@ -71,59 +54,39 @@ type Query {
 }
 
 type Query {
-  getActivityTypeScript(
-    missionModelId: Int!
-    activityTypeName: String!
-  ): DslTypescriptResponse
+  getActivityTypeScript(missionModelId: Int!, activityTypeName: String!): DslTypescriptResponse
 }
 
 type Query {
-  getCommandTypeScript(
-    commandDictionaryId: Int!
-  ): DslTypescriptResponse
+  getCommandTypeScript(commandDictionaryId: Int!): DslTypescriptResponse
 }
 
 type Query {
-  resourceTypes(
-    missionModelId: ID!
-  ): [ResourceType!]!
+  resourceTypes(missionModelId: ID!): [ResourceType!]!
 }
 
 type Query {
-  schedule(
-    specificationId: Int!
-  ): SchedulingResponse
+  schedule(specificationId: Int!): SchedulingResponse
 }
 
 type Query {
-  schedulingDslTypescript(
-    missionModelId: Int!
-  ): DslTypescriptResponse
+  schedulingDslTypescript(missionModelId: Int!): DslTypescriptResponse
 }
 
 type Query {
-  constraintsDslTypescript(
-    missionModelId: ID!,
-    planId: Int
-  ): DslTypescriptResponse
+  constraintsDslTypescript(missionModelId: ID!, planId: Int): DslTypescriptResponse
 }
 
 type Query {
-  simulate(
-    planId: Int!
-  ): MerlinSimulationResponse
+  simulate(planId: Int!): MerlinSimulationResponse
 }
 
 type Query {
-  resourceSamples(
-    planId: Int!
-  ): ResourceSamplesResponse
+  resourceSamples(planId: Int!): ResourceSamplesResponse
 }
 
 type Query {
-  constraintViolations(
-    planId: Int!
-  ): ConstraintViolationsResponse
+  constraintViolations(planId: Int!): ConstraintViolationsResponse
 }
 
 type Query {
@@ -135,23 +98,16 @@ type Query {
 }
 
 type Query {
-  validateModelArguments(
-    missionModelId: ID!
-    modelArguments: ModelArguments!
-  ): ValidationResponse
+  validateModelArguments(missionModelId: ID!, modelArguments: ModelArguments!): ValidationResponse
 }
 
 type Query {
-  validatePlan(
-    planId: Int!
-  ): ValidationResponse
+  validatePlan(planId: Int!): ValidationResponse
 }
 
 type Query {
-  getSequenceSeqJson(
-    seqId: String!
-    simulationDatasetId: Int!
-  ): GetSeqJsonResponse! @deprecated(reason: "Use bulk query getSequenceSeqJsonBulk instead")
+  getSequenceSeqJson(seqId: String!, simulationDatasetId: Int!): GetSeqJsonResponse!
+    @deprecated(reason: "Use bulk query getSequenceSeqJsonBulk instead")
 }
 
 input GetSequenceSeqJsonsInput {
@@ -160,16 +116,12 @@ input GetSequenceSeqJsonsInput {
 }
 
 type Query {
-  getSequenceSeqJsonBulk(
-    inputs: [GetSequenceSeqJsonsInput!]!
-  ): [GetSeqJsonResponse!]!
+  getSequenceSeqJsonBulk(inputs: [GetSequenceSeqJsonsInput!]!): [GetSeqJsonResponse!]!
 }
 
 type Query {
-  getUserSequenceSeqJson(
-    commandDictionaryID: Int!
-    edslBody: String!
-  ): GetSeqJsonResponse! @deprecated(reason: "Use bulk query getUserSequenceSeqJsonBulk instead")
+  getUserSequenceSeqJson(commandDictionaryID: Int!, edslBody: String!): GetSeqJsonResponse!
+    @deprecated(reason: "Use bulk query getUserSequenceSeqJsonBulk instead")
 }
 
 input GetUserSequenceSeqJsonBulkInput {
@@ -178,9 +130,7 @@ input GetUserSequenceSeqJsonBulkInput {
 }
 
 type Query {
-  getUserSequenceSeqJsonBulk(
-    inputs: [GetUserSequenceSeqJsonBulkInput!]!
-  ): [GetSeqJsonResponse!]!
+  getUserSequenceSeqJsonBulk(inputs: [GetUserSequenceSeqJsonBulkInput!]!): [GetSeqJsonResponse!]!
 }
 
 type GetSeqJsonResponse implements Fallible {
@@ -190,15 +140,12 @@ type GetSeqJsonResponse implements Fallible {
 }
 
 type Query {
-  getEdslForSeqJson(
-    seqJson: SequenceSeqJson!
-  ): String! @deprecated(reason: "Use bulk query getEdslForSeqJsonBulk instead")
+  getEdslForSeqJson(seqJson: SequenceSeqJson!): String!
+    @deprecated(reason: "Use bulk query getEdslForSeqJsonBulk instead")
 }
 
 type Query {
-  getEdslForSeqJsonBulk(
-    seqJsons: [SequenceSeqJson!]!
-  ): [String!]!
+  getEdslForSeqJsonBulk(seqJsons: [SequenceSeqJson!]!): [String!]!
 }
 
 enum MerlinSimulationStatus {
@@ -263,7 +210,7 @@ enum DslTypescriptResponseStatus {
 }
 
 type TypescriptFile {
-  filePath: String,
+  filePath: String
   content: String
 }
 
@@ -272,8 +219,8 @@ type CommandDictionaryResponse {
   command_types_typescript_path: String!
   mission: String!
   version: String!
+  parsed_json: CommandDictionary!
   created_at: String!
-  updated_at: String!
 }
 
 type ExpansionSetResponse {
@@ -296,8 +243,6 @@ type ExpandedActivityInstance {
   errors: [UserCodeError!]!
 }
 
-
-
 type UserCodeError implements Error {
   message: String!
   stack: String!
@@ -314,7 +259,7 @@ type ResourceSamplesResponse {
 }
 
 type ConstraintViolationsResponse {
-  constraintViolations: ConstraintViolations!
+  violations: ConstraintViolations!
 }
 
 scalar ResourceSchema
@@ -338,5 +283,7 @@ scalar CommandArgumentsSeqJson
 scalar CommandSeqJson
 
 scalar SequenceSeqJson
+
+scalar CommandDictionary
 
 scalar Any

@@ -4,6 +4,7 @@
   configuration:
     custom_root_fields:
       function: duplicate_plan
+    session_argument: hasura_session
 - function:
     name: get_plan_history
     schema: hasura_functions
@@ -16,12 +17,14 @@
   configuration:
     custom_root_fields:
       function: create_merge_request
+    session_argument: hasura_session
 - function:
     name: begin_merge
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: begin_merge
+    session_argument: hasura_session
 - function:
     name: commit_merge
     schema: hasura_functions

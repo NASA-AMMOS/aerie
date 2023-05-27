@@ -5,3 +5,14 @@ object_relationships:
   - name: expansion_run
     using:
       foreign_key_constraint_on: expansion_run_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string, created_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string, created_at]
+      filter: {}
+      allow_aggregations: true

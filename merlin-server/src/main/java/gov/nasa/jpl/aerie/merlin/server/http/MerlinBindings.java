@@ -78,6 +78,7 @@ public final class MerlinBindings implements Plugin {
       path("refreshModelParameters", () -> post(this::postRefreshModelParameters));
       path("refreshActivityTypes", () -> post(this::postRefreshActivityTypes));
       path("refreshActivityValidations", () -> post(this::postRefreshActivityValidations));
+      path("refreshResourceTypes", () -> post(this::postRefreshResourceTypes));
       path("validateActivityArguments", () -> post(this::validateActivityArguments));
       path("validateModelArguments", () -> post(this::validateModelArguments));
       path("validatePlan", () -> post(this::validatePlan));
@@ -148,6 +149,21 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
+  private void postRefreshResourceTypes(Context ctx) {
+    try {
+      final var missionModelId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).missionModelId();
+      this.missionModelService.refreshResourceTypes(missionModelId);
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    }
+  }
+
+  @Deprecated
   private void getResourceTypes(final Context ctx) {
     try {
       final var missionModelId = parseJson(ctx.body(), hasuraMissionModelActionP).input().missionModelId();

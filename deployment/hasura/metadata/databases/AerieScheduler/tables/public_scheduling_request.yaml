@@ -1,3 +1,15 @@
 table:
   name: scheduling_request
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [specification_id, analysis_id, requested_by, requested_at, status, reason, canceled, dataset_id, specification_revision]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [specification_id, analysis_id, requested_by, requested_at, status, reason, canceled, dataset_id, specification_revision]
+      filter: {}
+      allow_aggregations: true
+# Inserting/Updating is handled via the AerieScheduler

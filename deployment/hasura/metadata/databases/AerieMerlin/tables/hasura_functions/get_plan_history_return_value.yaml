@@ -1,0 +1,8 @@
+table:
+  name: get_plan_history_return_value
+  schema: hasura_functions
+select_permissions:
+  - role: user
+    permission:
+      columns: [plan_id]
+      filter: {}

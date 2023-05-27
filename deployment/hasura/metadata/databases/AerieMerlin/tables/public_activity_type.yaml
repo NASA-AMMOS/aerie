@@ -23,3 +23,14 @@ remote_relationships:
         name: expansion_rule
       field_mapping:
         name: activity_type
+select_permissions:
+  - role: user
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      filter: {}
+      allow_aggregations: true

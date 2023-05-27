@@ -2,7 +2,7 @@ table:
   name: preset_to_directive
   schema: public
 object_relationships:
-  - name: directives_applied_to
+  - name: directive_applied_to
     using:
       manual_configuration:
         column_mapping:
@@ -12,6 +12,22 @@ object_relationships:
         remote_table:
           name: activity_directive
           schema: public
-  - name: presets_applied
+  - name: preset_applied
     using:
       foreign_key_constraint_on: preset_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [preset_id, activity_id, plan_id]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [preset_id, activity_id, plan_id]
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"directive_applied_to":{"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}
+# Insert/Update are controlled via a SQL function

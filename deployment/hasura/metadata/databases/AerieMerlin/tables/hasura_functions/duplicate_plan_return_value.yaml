@@ -1,0 +1,8 @@
+table:
+  name: duplicate_plan_return_value
+  schema: hasura_functions
+select_permissions:
+  - role: user
+    permission:
+      columns: [new_plan_id]
+      filter: {}

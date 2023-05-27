@@ -1,3 +1,30 @@
 table:
   name: view
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [created_at, definition, id, name, owner, updated_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [created_at, definition, id, name, owner, updated_at]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [definition, name]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [definition, name]
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}

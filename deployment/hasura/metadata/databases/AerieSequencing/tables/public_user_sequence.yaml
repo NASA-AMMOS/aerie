@@ -11,3 +11,30 @@ object_relationships:
       insertion_order: null
       column_mapping:
         authoring_command_dict_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [definition, name, authoring_command_dict_id]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [definition, name, authoring_command_dict_id, owner]
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}

@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -56,7 +58,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getModelConstraintsAction = new GetModelConstraintsAction(connection)) {
         return getModelConstraintsAction
@@ -64,11 +66,12 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
             .orElseThrow(NoSuchMissionModelException::new)
             .stream()
             .collect(Collectors.toMap(
-                ConstraintRecord::name,
+                ConstraintRecord::id,
                 r -> new Constraint(
                     r.name(),
                     r.description(),
-                    r.definition())));
+                    r.definition(),
+                    ConstraintType.model)));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
@@ -111,16 +114,29 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
+      try (final var insertActivityTypesAction = new InsertActivityTypesAction(connection)) {
         final var id = toMissionModelId(missionModelId);
-        for (final var activityType : activityTypes.values()) {
-          createActivityTypeAction.apply(
-              id,
-              activityType.name(),
-              activityType.parameters(),
-              activityType.requiredParameters(),
-              activityType.computedAttributesValueSchema());
-        }
+        insertActivityTypesAction.apply((int) id, activityTypes.values());
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
+    }
+  }
+
+  @Override
+  public void updateResourceTypes(final String missionModelId, final Map<String, Resource<?>> resources)
+  throws NoSuchMissionModelException {
+    final var resourceTypes = resources.entrySet()
+                                       .stream()
+                                       .collect(Collectors.toMap(
+                                           Map.Entry::getKey,
+                                           entry -> entry.getValue().getOutputType().getSchema()));
+
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var insertResourceTypesAction = new InsertResourceTypesAction(connection)) {
+        final long id = toMissionModelId(missionModelId);
+        insertResourceTypesAction.apply((int) id, resourceTypes);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

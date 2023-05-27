@@ -18,3 +18,23 @@ array_relationships:
       insertion_order: null
       column_mapping:
         id: simulation_dataset_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
+                simulation_template_revision, simulation_revision, dataset_revision, arguments, simulation_start_time,
+                simulation_end_time, status, reason, canceled, requested_by, requested_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
+                simulation_template_revision, simulation_revision, dataset_revision, arguments, simulation_start_time,
+                simulation_end_time, status, reason, canceled, requested_by, requested_at]
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"simulation":{"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}
+# Insert is handled via Aerie Merlin

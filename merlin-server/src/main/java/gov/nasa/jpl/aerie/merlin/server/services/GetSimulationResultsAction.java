@@ -118,21 +118,17 @@ public final class GetSimulationResultsAction {
     return samples;
   }
 
-  public Map<String, List<Violation>> getViolations(final PlanId planId)
+  public List<Violation> getViolations(final PlanId planId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlanForValidation(planId);
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
-    final var constraintCode = new HashMap<String, Constraint>();
+    final var constraintCode = new HashMap<Long, Constraint>();
 
     try {
-      this.missionModelService.getConstraints(plan.missionModelId).forEach(
-          (name, constraint) -> constraintCode.put("model/" + name, constraint)
-      );
-      this.planService.getConstraintsForPlan(planId).forEach(
-          (name, constraint) -> constraintCode.put("plan/" + name, constraint)
-      );
+      constraintCode.putAll(this.missionModelService.getConstraints(plan.missionModelId));
+      constraintCode.putAll(this.planService.getConstraintsForPlan(planId));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
@@ -204,7 +200,7 @@ public final class GetSimulationResultsAction {
         realProfiles,
         discreteProfiles);
 
-    final var violations = new HashMap<String, List<Violation>>();
+    final var violations = new ArrayList<Violation>();
     for (final var entry : constraintCode.entrySet()) {
 
       // Pipeline switch
@@ -247,14 +243,15 @@ public final class GetSimulationResultsAction {
       final var names = new HashSet<String>();
       expression.extractResources(names);
       final var resourceNames = new ArrayList<>(names);
-      final var violationEventsWithNames = new ArrayList<Violation>();
-      violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
+
+      violationEvents.forEach(violation -> violations.add(new Violation(
+          entry.getValue().name(),
+          entry.getKey(),
+          entry.getValue().type(),
           violation.activityInstanceIds,
           resourceNames,
           violation.violationWindows,
           violation.gaps)));
-
-      violations.put(entry.getKey(), violationEventsWithNames);
     }
 
     return violations;

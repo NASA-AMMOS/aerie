@@ -116,7 +116,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     return Map.of();
   }
 
@@ -208,17 +208,14 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshModelParameters(final String missionModelId) throws NoSuchMissionModelException
-  {
-  }
+  public void refreshModelParameters(final String missionModelId) throws NoSuchMissionModelException {}
 
   @Override
-  public void refreshActivityTypes(final String missionModelId) throws NoSuchMissionModelException
-  {
-  }
+  public void refreshActivityTypes(final String missionModelId) throws NoSuchMissionModelException {}
 
   @Override
-  public void refreshActivityValidations(final String missionModelId, final ActivityDirectiveForValidation directive)
-  {
-  }
+  public void refreshActivityValidations(final String missionModelId, final ActivityDirectiveForValidation directive) {}
+
+  @Override
+  public void refreshResourceTypes(final String missionModelId) throws NoSuchMissionModelException {}
 }

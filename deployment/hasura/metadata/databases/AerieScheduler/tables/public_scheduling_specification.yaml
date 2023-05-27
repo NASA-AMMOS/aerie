@@ -1,3 +1,29 @@
 table:
   name: scheduling_specification
   schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      filter: {}
+      allow_aggregations: true
+# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
+insert_permissions:
+  - role: user
+    permission:
+      columns: [plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      check: {}
+update_permissions:
+  - role: user
+    permission:
+      columns: [horizon_start, horizon_end, simulation_arguments, analysis_only]
+      filter: {}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

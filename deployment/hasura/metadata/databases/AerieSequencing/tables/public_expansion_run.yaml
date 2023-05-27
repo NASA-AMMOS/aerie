@@ -24,3 +24,18 @@ remote_relationships:
           name: simulation_dataset
         field_mapping:
           simulation_dataset_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, simulation_dataset_id, expansion_set_id, created_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, simulation_dataset_id, expansion_set_id, created_at]
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: user
+    permission:
+      filter: {}

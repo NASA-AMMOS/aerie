@@ -3,7 +3,7 @@
 mkdir results
 mkdir comparison
 
-PGCMPINPUT1=./pgdumpv1_0_1/AerieMerlinV1_0_1 PGCMPINPUT2=./pgdumpmigrateddown/AerieMerlinMigratedDown PGCLABEL1=AerieMerlinV1_0_1 PGCLABEL2=AerieMerlinMigratedDown PGCFULLOUTPUT=./comparison/fulloutputMerlin.txt PGCUNEXPLAINED=./comparison/unexplainedMerlin.txt PGCBADEXPLAIN=./comparison/badexplanationsMerlin.txt PGDB=postgres PGBINDIR=/usr/bin PGCEXPLANATIONS=./explanations ./pgcmp
+PGCMPINPUT1=./pgdumpv1_0_1/AerieMerlinV1_0_1 PGCMPINPUT2=./pgdumpmigrateddown/AerieMerlinMigratedDown PGCLABEL1=AerieMerlinV1_0_1 PGCLABEL2=AerieMerlinMigratedDown PGCFULLOUTPUT=./comparison/fulloutputMerlin.txt PGCUNEXPLAINED=./comparison/unexplainedMerlin.txt PGCBADEXPLAIN=./comparison/badexplanationsMerlin.txt PGDB=postgres PGBINDIR=/usr/bin PGCEXPLANATIONS=./explanations_merlin ./pgcmp
 return_code=$?
 if [ $return_code -ne 0 ]; then
     echo "AerieMerlin comparison failed - return code=$return_code"

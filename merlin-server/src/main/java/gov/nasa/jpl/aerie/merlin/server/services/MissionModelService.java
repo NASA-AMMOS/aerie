@@ -23,7 +23,7 @@ public interface MissionModelService {
   MissionModelJar getMissionModelById(String missionModelId)
   throws NoSuchMissionModelException;
 
-  Map<String, Constraint> getConstraints(String missionModelId)
+  Map<Long, Constraint> getConstraints(String missionModelId)
   throws NoSuchMissionModelException;
 
   Map<String, ValueSchema> getResourceSchemas(String missionModelId)
@@ -70,6 +70,7 @@ public interface MissionModelService {
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityValidations(String missionModelId, ActivityDirectiveForValidation directive)
   throws NoSuchMissionModelException, InstantiationException;
+  void refreshResourceTypes(String missionModelId) throws NoSuchMissionModelException;
 
   sealed interface ActivityInstantiationFailure {
     record NoSuchActivityType(NoSuchActivityTypeException ex) implements ActivityInstantiationFailure { }

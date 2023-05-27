@@ -20,3 +20,14 @@ array_relationships:
       insertion_order: null
       column_mapping:
         rule_id: id
+select_permissions:
+  - role: user
+    permission:
+      columns: [set_id, rule_id, activity_type]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [set_id, rule_id, activity_type]
+      filter: {}
+      allow_aggregations: true

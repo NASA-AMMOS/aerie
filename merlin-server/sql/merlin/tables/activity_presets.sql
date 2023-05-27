@@ -4,6 +4,7 @@ create table activity_presets(
   name text not null,
   associated_activity_type text not null,
   arguments merlin_argument_set not null,
+  owner text not null default '',
 
   foreign key (model_id, associated_activity_type)
     references activity_type
@@ -24,6 +25,8 @@ comment on column activity_presets.associated_activity_type is e''
   'The activity type with which this activity preset is associated.';
 comment on column activity_presets.arguments is e''
   'The set of arguments to be applied when this preset is applied.';
+comment on column activity_presets.owner is e''
+  'The owner of this activity preset';
 
 create table preset_to_directive(
   preset_id integer

@@ -69,7 +69,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     try {
       return this.missionModelRepository.getConstraints(missionModelId);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
@@ -294,6 +294,16 @@ public final class LocalMissionModelService implements MissionModelService {
       this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
+    }
+  }
+
+  @Override
+  public void refreshResourceTypes(final String missionModelId){
+    try {
+      final var model = this.loadAndInstantiateMissionModel(missionModelId);
+      this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources());
+    } catch (NoSuchMissionModelException | MissionModelRepository.NoSuchMissionModelException e) {
+      throw new RuntimeException(e);
     }
   }
 
