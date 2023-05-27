@@ -44,7 +44,7 @@ public final class MerlinBindingsTest {
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         missionModelApp,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)),
+        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp, false)),
         constraintsDSLCompilationService
     );
 

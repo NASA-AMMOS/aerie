@@ -85,15 +85,21 @@ public record SynchronousSchedulerAgent(
     Path goalsJarPath,
     PlanOutputMode outputMode,
     SchedulingDSLCompilationService schedulingDSLCompilationService,
-    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades
+//<<<<<<< HEAD
+    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades,
+//=======
+    boolean useResourceTracker
+//>>>>>>> prototype/excise-resources-from-sim-engine
 )
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
+    Objects.requireNonNull(specificationService);
     Objects.requireNonNull(planService);
     Objects.requireNonNull(missionModelService);
     Objects.requireNonNull(modelJarsDir);
     Objects.requireNonNull(goalsJarPath);
+    Objects.requireNonNull(outputMode);
     Objects.requireNonNull(schedulingDSLCompilationService);
     Objects.requireNonNull(simulationFacades);
   }
@@ -105,9 +111,10 @@ public record SynchronousSchedulerAgent(
       Path modelJarsDir,
       Path goalsJarPath,
       PlanOutputMode outputMode,
-      SchedulingDSLCompilationService schedulingDSLCompilationService) {
+      SchedulingDSLCompilationService schedulingDSLCompilationService,
+      boolean useResourceTracker) {
     this(specificationService, planService, missionModelService, modelJarsDir, goalsJarPath, outputMode,
-         schedulingDSLCompilationService, new HashMap<>());
+         schedulingDSLCompilationService, new HashMap<>(), useResourceTracker);
   }
 
   /**
@@ -136,9 +143,10 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
+//<<<<<<< HEAD
       //TODO: planningHorizon may be different from planMetadata.horizon(); could we reuse a facade with a different horizon?
       try(final var simulationFacade = getSimulationFacade(specification.planId(), planningHorizon,
-                                                           schedulerMissionModel.missionModel())) {
+                                                           schedulerMissionModel.missionModel(), useResourceTracker)) {
         final var problem = new Problem(
             schedulerMissionModel.missionModel(),
             planningHorizon,
@@ -177,6 +185,33 @@ public record SynchronousSchedulerAgent(
                                                                             : ""))
               .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
           return;
+//=======
+//      final var problem = new Problem(
+//          schedulerMissionModel.missionModel(),
+//          planningHorizon,
+//          new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel(), useResourceTracker),
+//          schedulerMissionModel.schedulerModel()
+//      );
+//      //seed the problem with the initial plan contents
+//      final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);
+//      problem.setInitialPlan(loadedPlanComponents.schedulerPlan());
+//
+//      //apply constraints/goals to the problem
+//      final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
+//      final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
+//      specification.globalSchedulingConditions().forEach($ -> {
+//        if (!$.enabled()) return;
+//        final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+//            missionModelService,
+//            planMetadata.planId(),
+//            $.source().source());
+//        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
+//          compiledGlobalSchedulingConditions.addAll(conditionBuilder(r.value(), problem));
+//        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
+//          failedGlobalSchedulingConditions.add(r.errors());
+//        } else {
+//          throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
+//>>>>>>> prototype/excise-resources-from-sim-engine
         }
 
         compiledGlobalSchedulingConditions.forEach(problem::add);
@@ -285,11 +320,11 @@ public record SynchronousSchedulerAgent(
   }
 
   private SimulationFacade getSimulationFacade(PlanId planId, PlanningHorizon planningHorizon,
-                                               final MissionModel<?> missionModel) {
+                                               final MissionModel<?> missionModel, boolean useResourceTracker) {
     var key = Pair.of(planId, planningHorizon);
     SimulationFacade f = this.simulationFacades.get(key);
     if (f == null) {
-      f = new SimulationFacade(planningHorizon, missionModel);
+      f = new SimulationFacade(planningHorizon, missionModel, useResourceTracker);
       this.simulationFacades.put(key, f);
     }
     return f;

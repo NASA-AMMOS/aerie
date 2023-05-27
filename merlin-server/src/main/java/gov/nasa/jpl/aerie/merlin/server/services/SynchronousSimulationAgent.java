@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 
 public record SynchronousSimulationAgent (
     PlanService planService,
-    MissionModelService missionModelService
+    MissionModelService missionModelService,
+    boolean useResourceTracker
 ) implements SimulationAgent {
   public sealed interface Response {
     record Failed(String reason) implements Response {}
@@ -81,7 +82,10 @@ public record SynchronousSimulationAgent (
           plan.startTimestamp.toInstant(),
           planDuration,
           plan.activityDirectives,
-          plan.configuration));
+//<<<<<<< HEAD
+//          plan.configuration));
+          plan.configuration,
+          this.useResourceTracker));
     } catch (SimulationException ex) {
       writer.failWith(b -> b
           .type("SIMULATION_EXCEPTION")
@@ -91,6 +95,10 @@ public record SynchronousSimulationAgent (
                     .build())
           .trace(ex.cause));
       return;
+//=======
+//          plan.configuration,
+//          this.useResourceTracker));
+//>>>>>>> prototype/excise-resources-from-sim-engine
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")

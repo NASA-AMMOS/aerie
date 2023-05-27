@@ -68,7 +68,8 @@ public final class SchedulerWorkerAppDriver {
         config.merlinFileStore(),
         config.missionRuleJarPath(),
         config.outputMode(),
-        schedulingDSLCompilationService);
+        schedulingDSLCompilationService,
+        config.useResourceTracker());
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSchedulingRequestNotificationPayload>();
     final var listenAction = new ListenSchedulerCapability(hikariDataSource, notificationQueue);
@@ -115,7 +116,9 @@ public final class SchedulerWorkerAppDriver {
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
-        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
+        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
+        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", "false"))
+//>>>>>>> prototype/excise-resources-from-sim-engine
     );
   }
 }

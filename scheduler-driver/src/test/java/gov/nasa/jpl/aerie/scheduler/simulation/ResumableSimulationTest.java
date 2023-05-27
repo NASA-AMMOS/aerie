@@ -28,7 +28,7 @@ public class ResumableSimulationTest {
   public void init() {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours, false);
     for (var act : acts) {
       resumableSimulationDriver.simulateActivity(act.start, act.activity, null, true, act.id);
     }
@@ -82,7 +82,7 @@ public class ResumableSimulationTest {
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, false);
     try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
       for (var i = 0; i < 20000; i++) {
         resumableSimulationDriver.initSimulation();

@@ -233,6 +233,7 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
+//<<<<<<< HEAD
     final MissionModel<?> missionModel = loadAndInstantiateMissionModel(message.missionModelId(),
                                                                         message.simulationStartTime(),
                                                                         SerializedValue.of(config));
@@ -241,22 +242,22 @@ public final class LocalMissionModelService implements MissionModelService {
     SimulationDriver driver = simulationDrivers.get(planInfo);
 
     if (driver == null || !doingIncrementalSim) {
-      driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration());
+      driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration(), false);
       simulationDrivers.put(planInfo, driver);
       // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
       return driver.simulate(message.activityDirectives(),
                              message.simulationStartTime(),
                              message.simulationDuration(),
                              message.planStartTime(),
-                             message.planDuration());
+                             message.planDuration(), false);
     } else {
       // Try to reuse past simulation.
-      driver.initSimulation();
+      driver.initSimulation(false);
       return driver.diffAndSimulate(message.activityDirectives(),
                                     message.simulationStartTime(),
                                     message.simulationDuration(),
                                     message.planStartTime(),
-                                    message.planDuration());
+                                    message.planDuration(), false);
     }
 
   }

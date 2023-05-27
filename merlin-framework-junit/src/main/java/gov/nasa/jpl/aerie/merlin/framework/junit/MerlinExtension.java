@@ -157,7 +157,7 @@ public final class MerlinExtension
           });
 
       try {
-        var driver = new SimulationDriver<Unit>(this.missionModel, Instant.now(), Duration.MAX_VALUE);
+        var driver = new SimulationDriver<Unit>(this.missionModel, Instant.now(), Duration.MAX_VALUE, false);
         driver.simulateTask(task);
       } catch (final WrappedException ex) {
         throw ex.wrapped;

@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -61,6 +62,11 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
     }
 
     return new Batch<>(time.project(), readyJobs);
+  }
+
+  public Optional<TimeRef> min() {
+    if (this.queue.isEmpty()) return Optional.empty();
+    return Optional.of(queue.peek().getKey());
   }
 
   public void clear() {

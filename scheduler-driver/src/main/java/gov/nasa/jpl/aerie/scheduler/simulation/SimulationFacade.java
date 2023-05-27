@@ -36,6 +36,7 @@ public class SimulationFacade implements AutoCloseable{
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
+  private final boolean useResourceTracker;
   private Map<String, ActivityType> activityTypes;
   private ResumableSimulationDriver<?> driver;
   private int itSimActivityId;
@@ -57,9 +58,19 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
+    this(planningHorizon, missionModel, false);
+  }
+
+  public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel, final boolean useResourceTracker) {
+    this.useResourceTracker = useResourceTracker;
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
+//<<<<<<< HEAD
+//    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
+    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon, useResourceTracker);
+//=======
+//    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), useResourceTracker);
+//>>>>>>> prototype/excise-resources-from-sim-engine
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
@@ -155,8 +166,13 @@ public class SimulationFacade implements AutoCloseable{
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
+//<<<<<<< HEAD
       if (driver != null) driver.close();
-      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
+//      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
+      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon, useResourceTracker);
+//=======
+//      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), useResourceTracker);
+//>>>>>>> prototype/excise-resources-from-sim-engine
       simulateActivities(oldInsertedActivities.keySet());
     }
   }

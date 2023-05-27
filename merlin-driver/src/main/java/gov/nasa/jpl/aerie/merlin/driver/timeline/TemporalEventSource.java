@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TemporalEventSource implements EventSource {//}, Iterable<TemporalEventSource.TimePoint> {
+public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public LiveCells liveCells;
   private final MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
@@ -228,10 +228,20 @@ public class TemporalEventSource implements EventSource {//}, Iterable<TemporalE
   }
 
 
-//  @Override
-//  public Iterator<TimePoint> iterator() {
-//      return TemporalEventSource.this.points.iterator();
-//  }
+  @Override
+  public Iterator<TimePoint> iterator() {
+      return new Iterator<>() {
+        @Override
+        public boolean hasNext() {
+          return false;
+        }
+
+        @Override
+        public TimePoint next() {
+          return null;
+        }
+      };
+  }
 
 
   public void setTopicStale(Topic<?> topic, Duration offsetTime) {

@@ -1,9 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.worker;
 
-import java.net.URI;
-import java.nio.file.Path;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
+
+import java.net.URI;
+import java.nio.file.Path;
 
 public record WorkerAppConfiguration(
     Store store,
@@ -11,5 +12,9 @@ public record WorkerAppConfiguration(
     Path merlinFileStore,
     Path missionRuleJarPath,
     PlanOutputMode outputMode,
-    String hasuraGraphQlAdminSecret
+//<<<<<<< HEAD
+    String hasuraGraphQlAdminSecret,
+//=======
+    boolean useResourceTracker
+//>>>>>>> prototype/excise-resources-from-sim-engine
 ) { }
