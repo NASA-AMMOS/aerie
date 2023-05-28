@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 //=======
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 //>>>>>>> prototype/excise-resources-from-sim-engine
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -37,6 +36,8 @@ public final class SimulationDriver<Model> {
 
   private SimulationEngine engine;
   //private TemporalEventSource timeline = new TemporalEventSource();
+  private ResourceTracker resourceTracker = null;
+  private final boolean useResourceTracker;
   private final MissionModel<Model> missionModel;
   private Instant startTime;
   private final Duration planDuration;
@@ -58,12 +59,13 @@ public final class SimulationDriver<Model> {
     this.missionModel = missionModel;
     this.startTime = startTime;
     this.planDuration = planDuration;
-    initSimulation(useResourceTracker);
+    this.useResourceTracker = useResourceTracker;
+    initSimulation(planDuration);
     batch = null;
   }
 
 
-  public void initSimulation(boolean useResourceTracker){
+  public void initSimulation(final Duration simDuration){
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
@@ -74,12 +76,15 @@ public final class SimulationDriver<Model> {
     setCurTime(Duration.ZERO);
 
     // Begin tracking any resources that have not already been simulated.
-    if (!useResourceTracker) {
+    //if (!useResourceTracker) {
       trackResources();
-    }
+    //}
 
     // Start daemon task(s) immediately, before anything else happens.
     startDaemons(curTime());
+
+    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
+    engine.scheduleTask(simDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
   }
 
 
@@ -136,9 +141,6 @@ public final class SimulationDriver<Model> {
             engine.defaultActivityTopic
         );
 
-        // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-        engine.scheduleTask(Duration.ZERO, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
-
         // Drive the engine until we're out of time.
         // TERMINATION: Actually, we might never break if real time never progresses forward.
         while (engine.hasJobsScheduledThrough(simulationDuration)) {
@@ -163,12 +165,6 @@ public final class SimulationDriver<Model> {
 //      return engine.computeResults(simulationStartTime, curTime(), SimulationEngine.defaultActivityTopic);
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      final var resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-        resourceTracker.track(name, resource);
-      }
       while (!resourceTracker.isEmpty()) {
         resourceTracker.updateResources();
       }
@@ -197,11 +193,19 @@ public final class SimulationDriver<Model> {
   }
 
   private void trackResources() {
+    if (useResourceTracker) {
+      this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
+    }
     // Begin tracking any resources that have not already been simulated.
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      engine.trackResource(name, resource, curTime());
+      if (useResourceTracker) {
+        resourceTracker.track(name, resource);
+      } else {
+//      engine.trackResource(name, resource, curTime());
+        engine.trackResource(name, resource, Duration.ZERO);
+      }
     }
   }
 
@@ -234,6 +238,12 @@ public final class SimulationDriver<Model> {
     // TERMINATION: Actually, we might never break if real time never progresses forward.
     while (!engine.isTaskComplete(taskId)) {
       engine.step(Duration.MAX_VALUE, queryTopic);
+    }
+    if (useResourceTracker) {
+      // Replay the timeline to collect resource profiles
+      while (!resourceTracker.isEmpty()) {
+        resourceTracker.updateResources();
+      }
     }
   }
 //      var timeOfNextJobs = engine.timeOfNextJobs();

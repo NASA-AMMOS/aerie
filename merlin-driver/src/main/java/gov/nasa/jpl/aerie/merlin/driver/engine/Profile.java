@@ -13,6 +13,7 @@ implements Iterable<Profile.Segment<Dynamics>> {
   }
 
   public void append(final Duration currentTime, final Dynamics dynamics) {
+    //System.out.println("Profile append at " + currentTime + ": " + dynamics);
     this.segments.append(new Segment<>(currentTime, dynamics));
   }
 

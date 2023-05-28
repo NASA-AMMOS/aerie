@@ -252,7 +252,7 @@ public final class LocalMissionModelService implements MissionModelService {
                              message.planDuration(), false);
     } else {
       // Try to reuse past simulation.
-      driver.initSimulation(false);
+      driver.initSimulation(message.simulationDuration());
       return driver.diffAndSimulate(message.activityDirectives(),
                                     message.simulationStartTime(),
                                     message.simulationDuration(),

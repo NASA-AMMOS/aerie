@@ -85,7 +85,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
 //  public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration){
 //=======
-  private ResourceTracker resourceTracker;
+  private ResourceTracker resourceTracker = null;
   private TemporalEventSource timeline;
 
   public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration, boolean useResourceTracker){
@@ -233,6 +233,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       // Run the jobs in this batch.
       engine.step(Duration.MAX_VALUE, queryTopic);
 //>>>>>>> prototype/excise-resources-from-sim-engine
+    }
+    if (useResourceTracker) {
+      // Replay the timeline to collect resource profiles
+      while (!resourceTracker.isEmpty()) {
+        resourceTracker.updateResources();
+      }
     }
     lastSimResults = null;
   }
@@ -450,7 +456,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 //>>>>>>> prototype/excise-resources-from-sim-engine
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask
+      if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime()) &&
+          plannedDirectiveToTask
           .values()
           .stream()
           .allMatch(engine::isTaskComplete)) {
@@ -460,6 +467,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 //
 //=======
 //>>>>>>> prototype/excise-resources-from-sim-engine
+    }
+    if (useResourceTracker) {
+      // Replay the timeline to collect resource profiles
+      while (!resourceTracker.isEmpty()) {
+        resourceTracker.updateResources();
+      }
     }
     lastSimResults = null;
   }

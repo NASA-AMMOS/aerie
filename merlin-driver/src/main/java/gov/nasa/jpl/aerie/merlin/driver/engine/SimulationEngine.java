@@ -397,6 +397,9 @@ public final class SimulationEngine implements AutoCloseable {
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
   public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
     final var resources = this.waitingResources.invalidateTopic(topic);
+//    if (!resources.isEmpty()) {
+//      System.out.println("invalidate topic: " + topic + " at " + invalidationTime + " and schedule jobs for " + resources.stream().map(r -> r.id()).toList());
+//    }
     for (final var resource : resources) {
       this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(invalidationTime));
     }
@@ -699,6 +702,7 @@ public final class SimulationEngine implements AutoCloseable {
         var topics = this.waitingResources.getTopics(resource);
         var resourceIsStale = topics.stream().anyMatch(t -> timeline.isTopicStale(t, currentTime));
         if (resourceIsStale) {
+//          System.out.println("skipping evaluation of resource " + resource.id() + " at " + currentTime);
           skipResourceEvaluation = true;
         }
       }
@@ -712,6 +716,7 @@ public final class SimulationEngine implements AutoCloseable {
       {
         profiles.append(currentTime, querier);
         this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
+//        System.out.println("querier, " + querier + " subscribing " + resource.id() + " to referenced topics: " + querier.referencedTopics);
       }
     }
 
@@ -937,11 +942,11 @@ public final class SimulationEngine implements AutoCloseable {
 
 //<<<<<<< HEAD
 //    //var allResources = oldEngine == null ? this.resources : new HashMap<>(oldEngine.resources).putAll(this.resources);
-    for (final var entry : this.resources.entrySet()) {
+    for (final var entry : resources.entrySet()) {
 //      final var id = entry.getKey();
 //=======
 //    for (final var entry : resources.entrySet()) {
-      final var name = entry.getKey().id();
+      final var name = entry.getKey();
 //>>>>>>> prototype/excise-resources-from-sim-engine
       final var state = entry.getValue();
 

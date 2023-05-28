@@ -71,7 +71,9 @@ public class ResourceTracker {
 
   private void expireInvalidatedResources(final Set<Topic<?>> invalidatedTopics) {
     for (final var topic : invalidatedTopics) {
-      for (final var resourceName : this.waitingResources.invalidateTopic(topic)) {
+      var resources = this.waitingResources.invalidateTopic(topic);
+      //System.out.println("RT invalidate topic: " + topic + " and schedule expiries at " + this.elapsedTime + " for resources " + resources);
+      for (final var resourceName : resources) {
         this.resourceExpiries.put(resourceName, this.elapsedTime);
       }
     }
@@ -100,6 +102,7 @@ public class ResourceTracker {
         final var querier = engine.new EngineQuerier(this.elapsedTime, frame);
         this.resourceProfiles.get(resourceName).append(resourceQueryTime, querier);
         this.waitingResources.subscribeQuery(resourceName, querier.referencedTopics);
+//        System.out.println("RT querier, " + querier + " subscribing " + resourceName + " to referenced topics: " + querier.referencedTopics);
 
         final Optional<Duration> expiry = querier.expiry.map(d -> resourceQueryTime.plus((Duration)d));
         // This resource's no-later-than query time needs to be updated
@@ -125,6 +128,7 @@ public class ResourceTracker {
     private final TemporalEventSource timeline;
     private final Iterator<TemporalEventSource.TimePoint> timelineIterator;
     private DenseTime limit;
+    private boolean brad = true;
 
     public ResourceTrackerEventSource(final TemporalEventSource timeline) {
       this.timeline = timeline;
@@ -147,6 +151,10 @@ public class ResourceTracker {
 
         @Override
         public void stepUp(final Cell<?> cell) {
+          if (brad) {
+            timeline.stepUp(cell, Duration.MAX_VALUE, true);
+            return;
+          }
           // Extend timeline iterator to the current limit
           for (var i = this.offset.pointCount; i < ResourceTrackerEventSource.this.limit.pointCount(); i++) {
             final var point = this.timelineIterator.next();
