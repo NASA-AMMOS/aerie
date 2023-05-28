@@ -423,7 +423,6 @@ public final class SimulationEngine implements AutoCloseable {
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
 //  public void step() {
   public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic) {
-    final var batch = this.scheduledJobs.extractNextJobs(Duration.MAX_VALUE);
 //>>>>>>> prototype/excise-resources-from-sim-engine
 
     var timeOfNextJobs = timeOfNextJobs();
@@ -453,6 +452,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     if (timeOfNextJobs.isEqualTo(nextTime)) {
 
+      final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
       // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
       // Otherwise, we could see a race if one of the tasks running at this time invalidates state
       // that the condition depends on, in which case we might accidentally schedule an update for a condition

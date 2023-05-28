@@ -29,7 +29,7 @@ public final class CellExpiryTest {
     final var model = makeModel("/key", "value", MILLISECONDS.times(500));
 
     final var now = Instant.now();
-    final var results = SimulationDriver.simulate(model, Map.of(), now, Duration.SECONDS.times(5), now, Duration.SECONDS.times(5));
+    final var results = SimulationDriver.simulate(model, Map.of(), now, Duration.SECONDS.times(5), now, Duration.SECONDS.times(5), false);
 
     final var actual = results.getDiscreteProfiles().get("/key").getRight();
 
