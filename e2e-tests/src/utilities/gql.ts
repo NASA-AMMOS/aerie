@@ -102,6 +102,14 @@ const gql = {
     }
   `,
 
+  DELETE_ACTIVITY_DIRECTIVE: `#graphql
+    mutation DeleteActivityDirective($id: Int!, $plan_id: Int!) {
+      delete_activity_directive_by_pk(id: $id, plan_id: $plan_id) {
+        id
+      }
+    }
+  `,
+
   CREATE_SCHEDULING_GOAL: `#graphql
     mutation CreateSchedulingGoal($goal: scheduling_goal_insert_input!) {
       insert_scheduling_goal_one(object: $goal) {
@@ -345,7 +353,32 @@ const gql = {
       dataset_id
     }
   }
-  `
+  `,
+
+  INSERT_CONSTRAINT: `#graphql
+    mutation insertConstraint($constraint: constraint_insert_input!) {
+      insert_constraint_one(object: $constraint) {
+        id
+      }
+    }
+  `,
+
+  CHECK_CONSTRAINTS: `#graphql
+    query checkConstraints($planId: Int!) {
+      constraintViolations(planId: $planId) {
+        violations
+      }
+    }
+  `,
+
+  DELETE_CONSTRAINT: `#graphql
+    mutation DeleteConstraint($id: Int!) {
+      delete_constraint_by_pk(id: $id) {
+        id
+      }
+    }
+  `,
+
 };
 
 export default gql;

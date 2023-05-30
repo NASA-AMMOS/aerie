@@ -78,7 +78,8 @@ const time = {
       endDate.setUTCMilliseconds(endDate.getUTCMilliseconds() + milliseconds);
       return time.getDoyTime(endDate, includeMsecs);
   },
-};
 
+  delay: (ms: number) => new Promise( resolve => setTimeout(resolve, ms) ),
+};
 
 export default time;

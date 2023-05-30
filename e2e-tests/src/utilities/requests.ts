@@ -241,6 +241,13 @@ const req = {
     return idCreatedActivity;
   },
 
+  async deleteActivity(request: APIRequestContext, plan_id: number, activity_id: number): Promise<number> {
+    const data = await req.hasura(request, gql.DELETE_ACTIVITY_DIRECTIVE, { plan_id, id: activity_id });
+    const { delete_activity_directive_by_pk } = data;
+    const { id } = delete_activity_directive_by_pk;
+    return id;
+  },
+
   async insertExternalDataset(request: APIRequestContext, input: ExternalDatasetInsertInput): Promise<number> {
     const data = await req.hasura(request, gql.ADD_EXTERNAL_DATASET, input);
     const { addExternalDataset } = data;
@@ -290,7 +297,29 @@ const req = {
     const data = await req.hasura(request, gql.GET_ACTIVITY_TYPES, {missionModelId:missionModelId});
     const { activity_type } = data;
     return <ActivityType[]> activity_type;
+  },
+
+  async insertConstraint(request: APIRequestContext, constraint: ConstraintInsertInput): Promise<number> {
+    const data = await req.hasura(request, gql.INSERT_CONSTRAINT, {constraint});
+    const { insert_constraint_one } = data;
+    const { id } = insert_constraint_one;
+    return id;
+  },
+
+  async checkConstraints(request: APIRequestContext, planId: number): Promise<ConstraintViolation[]> {
+    const data = await req.hasura(request, gql.CHECK_CONSTRAINTS, {planId});
+    const { constraintViolations } = data;
+    const { violations } = constraintViolations;
+    return <ConstraintViolation[]> violations;
+  },
+
+  async deleteConstraint(request: APIRequestContext, constraintId: number): Promise<number> {
+    const data = await req.hasura(request, gql.DELETE_CONSTRAINT, {id:constraintId});
+    const { delete_constraint_by_pk } = data;
+    const { id } = delete_constraint_by_pk;
+    return id;
   }
+
 };
 /**
  * Converts any activity to an Activity.
@@ -305,6 +334,27 @@ export function toActivity(activity: any, startTime: Date): ActivityDirective {
     startTime: time.getDoyTimeFromDuration(startTime, activity.startOffset),
     type: activity.type,
   };
+}
+
+export async function awaitSimulation(request: APIRequestContext, plan_id: number): Promise<SimulationResponse> {
+  const max_iter = 10;
+  for (let i = 0; i < max_iter; i++) {
+    const resp = await req.simulate(request, plan_id);
+    const { reason, status } = resp;
+
+    switch (status) {
+      case "pending":
+      case "incomplete":
+        await time.delay(1000);
+        break;
+      case "complete":
+        return resp;
+      default:
+        throw Error(`Simulation returned bad status: ${status} with reason ${reason}`);
+    }
+  }
+
+  throw Error(`Simulation timed out after ${max_iter} iterations`);
 }
 
 export default req;

@@ -15,3 +15,17 @@ type ConstraintViolationAssociations = {
   activityIds?: number[];
   resourceIds?: string[];
 };
+
+type TimeRange = {
+  start: number;
+  end: number;
+}
+
+type ConstraintViolation = {
+  associations: ConstraintViolationAssociations;
+  constraintId: Constraint['id'];
+  constraintName: Constraint['name'];
+  type: ConstraintType;
+  gaps: TimeRange[],
+  windows: TimeRange[],
+};
