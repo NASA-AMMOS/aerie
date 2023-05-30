@@ -58,7 +58,7 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
-    this(planningHorizon, missionModel, false);
+    this(planningHorizon, missionModel, true);
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel, final boolean useResourceTracker) {
@@ -235,6 +235,8 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public void computeSimulationResultsUntil(final Duration endTime) {
+    //System.out.println("computeSimulationResultsUntil(" + endTime + ")");
+
     var endTimeWithMargin = endTime;
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);

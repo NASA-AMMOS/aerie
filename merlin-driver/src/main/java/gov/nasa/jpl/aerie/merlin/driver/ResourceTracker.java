@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class ResourceTracker {
+  public static final boolean debug = false;
   private final Map<String, Resource<?>> resources = new HashMap<>();
   private final Map<String, ProfilingState<?>> resourceProfiles = new HashMap<>();
 
@@ -50,14 +51,45 @@ public class ResourceTracker {
   public boolean isEmpty() {
     return !this.timeline.hasNext();
   }
+  public boolean isEmpty(Duration endTime, boolean includeEndTime) {
+    if (!this.timeline.hasNext()) return true;
+    if (elapsedTime.longerThan(endTime)) return true;
+    if (!includeEndTime && elapsedTime.isEqualTo(endTime)) return true;
+    if (includeEndTime && elapsedTime.isEqualTo(endTime) && timepointPastEnd != null) return true;
+    return false;
+  }
+
+  /**
+   *  Because we can't simulate past a certain time point, and we use iterators that don't let us peek ahead,
+   *  we need to remember the last TimePoint when we've stepped too far and process it later when we move
+   *  ahead more.
+   */
+  private TemporalEventSource.TimePoint timepointPastEnd = null;
 
   /**
    * Post condition: timeline will be stepped up to the endpoint
    */
-  public void updateResources() {
-    if (this.isEmpty()) return;
-    final var timePoint = this.timeline.next();
+  public void updateResources(Duration endTime, boolean includeEndTime) {
+    if (this.isEmpty(endTime, includeEndTime)) return;
+
+    TemporalEventSource.TimePoint timePoint = timepointPastEnd;
+    timepointPastEnd = null;
+    if (timePoint == null) {
+      timePoint = this.timeline.next();
+    }
+    if (debug) System.out.println("updateResources(): " + elapsedTime + " -- timeline.next() -> " + timePoint);
     if (timePoint instanceof TemporalEventSource.TimePoint.Delta p) {
+      var timeAfterDelta = elapsedTime.plus(p.delta());
+      // If this delta overshoots the endTime, split it into a delta up to the endTime, and one after
+      // the end time to save for later.
+      if (timeAfterDelta.longerThan(endTime) ||
+          (!includeEndTime && timeAfterDelta.isEqualTo(endTime))) {
+        var overshot = timeAfterDelta.minus(endTime);
+        if (!overshot.isZero()) {
+          timepointPastEnd = new TemporalEventSource.TimePoint.Delta(overshot);
+          p = new TemporalEventSource.TimePoint.Delta(endTime);
+        }
+      }
       updateExpiredResources(p.delta()); // this call updates ourOwnTimeline and elapsedTime
     } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit p) {
       expireInvalidatedResources(p.topics());
@@ -72,9 +104,10 @@ public class ResourceTracker {
   private void expireInvalidatedResources(final Set<Topic<?>> invalidatedTopics) {
     for (final var topic : invalidatedTopics) {
       var resources = this.waitingResources.invalidateTopic(topic);
-      //System.out.println("RT invalidate topic: " + topic + " and schedule expiries at " + this.elapsedTime + " for resources " + resources);
+      if (debug) System.out.println("RT invalidate topic: " + topic + " and schedule expiries at " + this.elapsedTime + " for resources " + resources);
       for (final var resourceName : resources) {
         this.resourceExpiries.put(resourceName, this.elapsedTime);
+        if (debug) System.out.println("RT resourceExpiries.put(resourceName=" + resourceName+", elapsedTime=" + elapsedTime + ")");
       }
     }
   }
@@ -101,12 +134,16 @@ public class ResourceTracker {
       TaskFrame.run(this.resources.get(resourceName), this.cells, (job, frame) -> {
         final var querier = engine.new EngineQuerier(this.elapsedTime, frame);
         this.resourceProfiles.get(resourceName).append(resourceQueryTime, querier);
+        if (debug) System.out.println("RT profile updated for " + resourceName + ": " + resourceProfiles.get(resourceName));
         this.waitingResources.subscribeQuery(resourceName, querier.referencedTopics);
-//        System.out.println("RT querier, " + querier + " subscribing " + resourceName + " to referenced topics: " + querier.referencedTopics);
+        if (debug) System.out.println("RT querier, " + querier + " subscribing " + resourceName + " to referenced topics: " + querier.referencedTopics);
 
         final Optional<Duration> expiry = querier.expiry.map(d -> resourceQueryTime.plus((Duration)d));
         // This resource's no-later-than query time needs to be updated
-        expiry.ifPresent(duration -> this.resourceExpiries.put(resourceName, duration));
+        expiry.ifPresent(duration -> {
+          this.resourceExpiries.put(resourceName, duration);
+          if (debug) System.out.println("RT resourceExpiries.put(resourceName=" + resourceName+", duration=" + duration + ") at " + elapsedTime);
+        });
       });
     }
 
@@ -151,13 +188,15 @@ public class ResourceTracker {
 
         @Override
         public void stepUp(final Cell<?> cell) {
-          if (brad) {
-            timeline.stepUp(cell, Duration.MAX_VALUE, true);
-            return;
-          }
+          if (debug) System.out.println("stepUp(): BEGIN");
+//          if (brad) {
+//            timeline.stepUp(cell, Duration.MAX_VALUE, true);
+//            return;
+//          }
           // Extend timeline iterator to the current limit
           for (var i = this.offset.pointCount; i < ResourceTrackerEventSource.this.limit.pointCount(); i++) {
             final var point = this.timelineIterator.next();
+            if (debug) System.out.println("stepUp(): timelineIterator.next() -> " + point);
 
             if (point instanceof TemporalEventSource.TimePoint.Delta p) {
               cell.step(p.delta().minus(this.offset.timeAfterPoint()));

@@ -1486,7 +1486,7 @@ public class SchedulingIntegrationTests {
         Path.of(""),
         PlanOutputMode.UpdateInputPlanWithNewActivities,
         schedulingDSLCompiler,
-        false);
+        true);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
     agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer);

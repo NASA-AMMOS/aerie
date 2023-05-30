@@ -66,11 +66,14 @@ public final class SimulationDriver<Model> {
 
 
   public void initSimulation(final Duration simDuration){
+    System.out.println("SimulationDriver.initSimulation()");
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
+
+    assert useResourceTracker;
 
     /* The current real time. */
     setCurTime(Duration.ZERO);
@@ -165,8 +168,8 @@ public final class SimulationDriver<Model> {
 //      return engine.computeResults(simulationStartTime, curTime(), SimulationEngine.defaultActivityTopic);
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      while (!resourceTracker.isEmpty()) {
-        resourceTracker.updateResources();
+      while (!resourceTracker.isEmpty(simulationDuration, true)) {
+        resourceTracker.updateResources(simulationDuration, true);
       }
 
       return engine.computeResults(
@@ -241,8 +244,8 @@ public final class SimulationDriver<Model> {
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      while (!resourceTracker.isEmpty()) {
-        resourceTracker.updateResources();
+      while (!resourceTracker.isEmpty(curTime(), true)) {
+        resourceTracker.updateResources(curTime(), true);
       }
     }
   }

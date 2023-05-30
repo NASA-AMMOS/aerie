@@ -16,16 +16,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
+  public static final boolean debug = false;
   public LiveCells liveCells;
-  private final MissionModel<?> missionModel;
+  private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
   public TreeMap<Duration, List<TimePoint.Commit>> commitsByTime = new TreeMap<>();
   public Map<Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> eventsByTopic = new HashMap<>();
@@ -243,10 +246,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     /** The size of the map when we last checked. If this has changed, then the iterator must be reset based on lastKey */
     private long size;
 
+    private static int ctr = 0;
+    private final int i = ctr++;
+
+
     public TreeMapIterator(TreeMap<K, V> treeMap) {
       this.treeMap = treeMap;
       size = treeMap.size();
       iterator = treeMap.entrySet().iterator();
+      if (debug) System.out.println("" + i + " TreeMapIterator(): " + treeMap);
     }
 
     /**
@@ -259,13 +267,20 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     @Override
     public boolean hasNext() {
       if (size != treeMap.size()) {  // treeMap has grown, reset iterator
+        if (debug) System.out.println("" + i + " TreeMapIterator.hasNext(): size " + size + " <- " + treeMap.size());
+        if (debug) System.out.println("" + i + " TreeMapIterator.hasNext(): treeMap = " + treeMap);
         size = treeMap.size();
         if (lastKey == null) {
           iterator = treeMap.entrySet().iterator();
+          if (debug) System.out.println("" + i + " TreeMapIterator.hasNext(): iterator <- " + treeMap);
         } else {
           var submap = treeMap.tailMap(lastKey, false);
+          if (debug) System.out.println("" + i + " TreeMapIterator.hasNext(): tailMap(lastKey=" + lastKey + ") = " + submap);
           if (submap != null) {
             iterator = submap.entrySet().iterator();
+            if (debug) System.out.println("" + i + " TreeMapIterator.hasNext(): iterator <- " + submap);
+          } else {
+            throw new RuntimeException("no submap!");
           }
         }
       }
@@ -284,135 +299,171 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       if (!hasNext()) throw new NoSuchElementException();
       if (iterator == null) throw new NoSuchElementException();
       var e = iterator.next();
+      if (debug) System.out.println("" + i + " TreeMapIterator.next(): lastKey changed from " + lastKey + " to " + e.getKey());
       lastKey = e.getKey();
+      if (debug) System.out.println("" + i + " TreeMapIterator.next(): returning " + e);
       return e;
+    }
+  }
+
+  public class CombinedTreeMapIterator<V, K extends Comparable<K>> implements Iterator<Map.Entry<K, V>> {
+
+    Iterator<Map.Entry<K, V>> i1, i2;
+    BiFunction<Entry<K, V>, Entry<K, V>, Entry<K, V>> combiner;
+    Map.Entry<K, V> last1 = null;
+    Map.Entry<K, V> last2 = null;
+
+    public CombinedTreeMapIterator(final Iterator<Entry<K, V>> i1, final Iterator<Entry<K, V>> i2,
+                                   BiFunction<Entry<K, V>, Entry<K, V>, Entry<K, V>> combiner) {
+      this.i1 = i1;
+      this.i2 = i2;
+      this.combiner = combiner;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return last1 != null || last2 != null || i1.hasNext() || i2.hasNext();
+    }
+
+    @Override
+    public Entry<K, V> next() {
+      if (last1 == null && i1.hasNext()) {
+        last1 = i1.next();
+      }
+      if (last2 == null && i2.hasNext()) {
+        last2 = i2.next();
+      }
+      if (last1 == null && last2 == null) {
+        throw new NoSuchElementException();
+      }
+      if (last1 == null) {
+        var tmp = last2;
+        last2 = null;
+        return tmp;
+      }
+      if (last2 == null) {
+        var tmp = last1;
+        last1 = null;
+        return tmp;
+      }
+      int c = last1.getKey().compareTo(last2.getKey());
+      if (c < 0) {
+        var tmp = last1;
+        last1 = null;
+        return tmp;
+      }
+      if (c > 0) {
+        var tmp = last2;
+        last2 = null;
+        return tmp;
+      }
+      var result = combiner.apply(last1, last2);
+      last1 = null;
+      last2 = null;
+      return result;
+    }
+  }
+
+  /**
+   * @return a {@link TreeMap} of {@link TimePoint.Commit}s by time ({@link Duration}) combining
+   * the {@link TemporalEventSource#commitsByTime} those of the {@link TemporalEventSource#oldTemporalEventSource}
+   * and nested {@link TemporalEventSource#oldTemporalEventSource}s.
+   * <p>
+   *   The caller should be careful not to modify the returned TreeMap since it might be an actual
+   *   {@link TemporalEventSource#commitsByTime}.
+   * </p>
+   */
+  public TreeMap<Duration, List<TimePoint.Commit>> getCombinedCommitsByTime() {
+    final var mNew = commitsByTime;
+    if (oldTemporalEventSource == null) return mNew;
+    final var mOld = oldTemporalEventSource.getCombinedCommitsByTime();
+    if (mOld.isEmpty()) return mNew;
+    if (mNew.isEmpty()) return mOld;
+    return mergeMapsFirstWins(mNew, mOld);
+  }
+
+  private class TimePointIteratorFromCommitMap implements Iterator<TimePoint> {
+
+    private Iterator<Map.Entry<Duration, List<TimePoint.Commit>>> i;
+    private Duration time = Duration.ZERO;
+    private Map.Entry<Duration, List<TimePoint.Commit>> lastEntry = null;
+    private Iterator<TimePoint.Commit> commitIter = null;
+
+    public TimePointIteratorFromCommitMap(Iterator<Map.Entry<Duration, List<TimePoint.Commit>>> i) {
+      this.i = i;
+    }
+
+    @Override
+    public boolean hasNext() {
+      if (commitIter != null && commitIter.hasNext()) return true;
+      if (i.hasNext()) return true;
+      if (lastEntry != null) {
+        if (lastEntry.getKey().longerThan(time)) return true;
+        if (!lastEntry.getValue().isEmpty()) return true;
+      }
+      return false;
+    }
+
+    @Override
+    public TimePoint next() {
+      if (commitIter != null) {
+        if (commitIter.hasNext()) {
+          return commitIter.next();
+        } else {
+          commitIter = null;
+        }
+      }
+      if (lastEntry == null) lastEntry = i.next();
+      if (lastEntry.getKey().longerThan(time)) {
+        var delta = new TimePoint.Delta(lastEntry.getKey().minus(time));
+        time = lastEntry.getKey();
+        commitIter = lastEntry.getValue().iterator();
+        lastEntry = null;
+        return delta;
+      }
+      commitIter = lastEntry.getValue().iterator();
+      while (!commitIter.hasNext()) {
+        if (!i.hasNext()) {
+          throw new NoSuchElementException();
+        }
+        lastEntry = i.next();
+        commitIter = lastEntry.getValue().iterator();
+      }
+      if (commitIter.hasNext()) {
+        lastEntry = null;
+        return commitIter.next();
+      }
+      throw new NoSuchElementException();
     }
   }
 
   @Override
   public Iterator<TimePoint> iterator() {
-//    if (oldTemporalEventSource == null) {
-//      return TemporalEventSource.this.points.iterator();
-//    }
     // Create an iterator that combines the old and new EventGraph timelines
     // This TemporalEventSource only keeps modifications of EventGraphs from the oldTemporalEventSource.
-    return new Iterator<>() {
-      private Iterator<TemporalEventSource.TimePoint> oldIter = oldTemporalEventSource == null ? null : oldTemporalEventSource.iterator();
-      private Duration accumulatedDuration = Duration.ZERO;
-      private Duration lastTime = Duration.ZERO;
-      private TemporalEventSource.TimePoint peek = null;
-      private Iterator<Map.Entry<Duration, List<TimePoint.Commit>>> riter = new TreeMapIterator<>(commitsByTime);
-      private Iterator<TimePoint.Commit> commitIter = null;
-      private Entry<Duration, List<TimePoint.Commit>> rpeek = null;
 
-      @Override
-      public boolean hasNext() {
-        if (peek != null) return true;
-        if (rpeek != null) return true;
-        if (commitIter != null && commitIter.hasNext()) return true;
-        if (oldIter != null && oldIter.hasNext()) return true;
-        if (riter.hasNext()) return true;
-        return false;
-      }
-
-      @Override
-      public TemporalEventSource.TimePoint next() {
-        // TODO: This essentially builds a new list of TimePoints like this.points.
-        //       If we're going to use this iterator a lot, then should save and reuse it?
-        //       May need to check for staleness.
-
-        // Check if we're in the middle of a list of commits
-        if (commitIter != null) {
-          if (commitIter.hasNext()) {
-            var commit = commitIter.next();
-            return commit;
-          } else {
-            commitIter = null;
-          }
-        }
-
-        // Get next peek and rpeek values if null, calling iter.next() and riter.next()
-        if (peek == null && oldIter != null && oldIter.hasNext()) {
-          peek = oldIter.next();
-          if (peek instanceof TimePoint.Delta d) {
-            accumulatedDuration = d.delta().plus(accumulatedDuration);
-          }
-        }
-        if (rpeek == null && riter.hasNext()) {
-          rpeek = riter.next();
-          //commitIter = rpeek.getValue().iterator();
-        }
-        // If we didn't get anything, then we have no elements and throw an exception
-        if (peek == null && rpeek == null) {
-          if ((oldIter != null && oldIter.hasNext()) || riter.hasNext()) throw new AssertionError();
-          throw new NoSuchElementException();
-        }
-
-        // Determine if the replacement or original TimePoint is next,
-        // construct TimePoint to return if necessary,
-        // and update peek, rpeek, accumulatedTime, and lastTime.
-        //
-        // First check if replacement is next
-        if (rpeek != null && (peek == null || rpeek.getKey().noLongerThan(accumulatedDuration))) {
-          // We may need to create a TimePoint.Delta before the Commit
-          Duration delta = rpeek.getKey().minus(lastTime);
-          // If this delta happens to be the same as the Delta in this.points, use the existing Delta
-          if (peek != null && peek instanceof TimePoint.Delta tpd && tpd.delta().isEqualTo(delta)) {
-            peek = null;  // means we used it and need the next one
-            lastTime = rpeek.getKey();
-            return tpd;
-          }
-          // Construct and return a TimePoint.Delta if non-zero
-          if (delta.isPositive()) {
-            TimePoint tp = new TimePoint.Delta(delta);
-            lastTime = rpeek.getKey();
-            return tp;
-          }
-          // Sanity check - delta must be zero here
-          if (!delta.isZero()) throw new AssertionError();
-
-          // If this is the same time as the next Commit (or Delta) on this.points, replace and eat the TimePoint
-          if (lastTime.isEqualTo(accumulatedDuration)) {
-            peek = null;  // means we used it and need the next one
-          }
-
-          // Now, finally construct a Commit from the replacement EventGraph
-          commitIter = rpeek.getValue().iterator();
-          rpeek = null; // means we used it and need the next one
-          if (commitIter.hasNext()) {
-            TimePoint tp = commitIter.next();//new TimePoint.Commit(rpeek.getValue(), topicsForEventGraph.get(rpeek.getValue()));
-            return tp;
-          }
-          commitIter = null;
-          // Shouldn't get here.  Below, an AssertionError will be thrown.
-          // If we wanted to not die here, we could return an empty graph.
-        }
-        // Check if the original TimePoint is next
-        if (peek != null && (rpeek == null || rpeek.getKey().longerThan(accumulatedDuration))) {
-          // If this TimePoint is a Delta, make sure we get the change in time (aka delta) since lastTime
-          if (peek instanceof TimePoint.Delta d) {
-            final TimePoint tp;
-            // Reuse the existing Delta if we can
-            if (lastTime.plus(d.delta()).isEqualTo(accumulatedDuration)) {
-              tp = d;
-            } else {
-              tp = new TimePoint.Delta(accumulatedDuration.minus(lastTime));
-            }
-            lastTime = accumulatedDuration;
-            peek = null;  // means we used it and need the next one
-            return tp;
-          }
-          // peek is an unreplaced Commit; return it
-          var commit = peek;
-          peek = null;  // means we used it and need the next one
-          return commit;
-        }
-        // Shouldn't get here
-        throw new AssertionError("Impossible case in TemporalEventSourceDelta.next()");
-      }
-    };
+    // The idea is to get a combined commitsByTime map rolling up the nested commitsByTime members of
+    // TemporalEventSource.  Then, convert that into sequence of TimePoints.  However, this iterator
+    // may be constructed (and possibly used) before commitsByTime has been filled by the simulation.
+    // This allows us to use this iterator to stream information during simulation to pipeline computation.
+    // Thus, we provide an iterator (TreeMapIterator) that works for a growing map of commitsByTime.
+    // So, instead of combining maps, we need to combine iterators.  But, we can simplify this by
+    // assuming that the simulation is complete in the oldTemporalEventSource, and can combine those
+    // old nested commitsByTime with oldTemporalEventSource.getCombinedCommitsByTime().  Then we
+    // can combine the iterators of the old and new commitsByTime, and convert that iterator into one
+    // that generates TimePoints instead of map entries.
+    Iterator<Map.Entry<Duration, List <TimePoint.Commit>>> treeMapIter;
+    var i1 = new TreeMapIterator<>(commitsByTime);
+    if (oldTemporalEventSource == null) {
+      treeMapIter = i1;
+    } else {
+      var m = oldTemporalEventSource.getCombinedCommitsByTime();
+      var i2 = m.entrySet().iterator();
+      treeMapIter = new CombinedTreeMapIterator<>(i1, i2, (list1, list2) -> list1);
+    }
+    var i3 = new TimePointIteratorFromCommitMap(treeMapIter);
+    return i3;
   }
-
 
   public void setTopicStale(Topic<?> topic, Duration offsetTime) {
     staleTopics.computeIfAbsent(topic, $ -> new TreeMap<>()).put(offsetTime, true);
@@ -434,8 +485,6 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     final Duration staleTime = map.floorKey(timeOffset);
     return staleTime != null && map.get(staleTime);
   }
-
-
 
   /**
    * Step up the Cell for one set of Events (an EventGraph) up to a specified last Event.  Stepping up means to

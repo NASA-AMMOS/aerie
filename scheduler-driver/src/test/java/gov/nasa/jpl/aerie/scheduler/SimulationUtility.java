@@ -38,7 +38,8 @@ public final class SimulationUtility {
     return makeMissionModel(new MissionModelBuilder(), config);
   }
 
-  public static SchedulerModel getBananaSchedulerModel(){
+  public static SchedulerModel
+  getBananaSchedulerModel(){
     return new gov.nasa.jpl.aerie.banananation.generated.GeneratedSchedulerModel();
   }
 }

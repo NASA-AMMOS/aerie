@@ -33,7 +33,9 @@ import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
-//<<<<<<< HEAD
+  private static boolean debug = false;
+
+  //<<<<<<< HEAD
   //private Duration curTime = Duration.ZERO;
   public Duration curTime() {
     if (engine == null) {
@@ -86,7 +88,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 //  public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration){
 //=======
   private ResourceTracker resourceTracker = null;
-  private TemporalEventSource timeline;
+//  private TemporalEventSource timeline;
 
   public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration, boolean useResourceTracker){
     this.useResourceTracker = useResourceTracker;
@@ -102,6 +104,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   /*package-private*/ void clearActivitiesInserted() {activitiesInserted.clear();}
 
   /*package-private*/ void initSimulation(){
+    if (debug) System.out.println("ResumableSimulationDriver.initSimulation()");
     plannedDirectiveToTask.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
@@ -111,6 +114,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 //<<<<<<< HEAD
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
+    assert useResourceTracker;
     //activitiesInserted.clear();
     // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
@@ -225,6 +229,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 //  }
 
   private void simulateUntil(Duration endTime){
+    if (debug) System.out.println("simulateUntil(" + endTime + ")");
     assert(endTime.noShorterThan(curTime()));
     if (endTime.isEqualTo(Duration.MAX_VALUE)) return;
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the endTime.
@@ -236,8 +241,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      while (!resourceTracker.isEmpty()) {
-        resourceTracker.updateResources();
+      while (!resourceTracker.isEmpty(endTime, true)) {
+        resourceTracker.updateResources(endTime, true);
       }
     }
     lastSimResults = null;
@@ -330,6 +335,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @return the simulation results
    */
   public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
+    if (debug) System.out.println("getSimulationResultsUpTo(startTimestamp=" + startTimestamp + ", endTime=" + endTime + ")");
     //if previous results cover a bigger period, we return do not regenerate
 //<<<<<<< HEAD
     if(endTime.longerThan(curTime())){
@@ -348,8 +354,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 //
 //    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
       if (useResourceTracker) {
-        while (!resourceTracker.isEmpty()) {
-          resourceTracker.updateResources();
+        while (!resourceTracker.isEmpty(endTime, true)) {
+          resourceTracker.updateResources(endTime, true);
         }
         lastSimResults = engine.computeResults(
 //            engine,
@@ -470,8 +476,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      while (!resourceTracker.isEmpty()) {
-        resourceTracker.updateResources();
+      while (!resourceTracker.isEmpty(curTime(), true)) {
+        resourceTracker.updateResources(curTime(), true);
       }
     }
     lastSimResults = null;

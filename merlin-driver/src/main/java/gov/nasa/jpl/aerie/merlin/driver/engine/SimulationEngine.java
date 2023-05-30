@@ -427,7 +427,7 @@ public final class SimulationEngine implements AutoCloseable {
 //  public void step() {
   public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic) {
 //>>>>>>> prototype/excise-resources-from-sim-engine
-
+    //System.out.println("step(): begin -- time = " + curTime());
     var timeOfNextJobs = timeOfNextJobs();
     var nextTime = timeOfNextJobs;
 
@@ -446,6 +446,7 @@ public final class SimulationEngine implements AutoCloseable {
     //   even if they occur at the same real time.
 
     if (nextTime.longerThan(maximumTime) || nextTime.isEqualTo(Duration.MAX_VALUE)) {
+      //System.out.println("step(): end -- time elapsed (" + curTime() + ") past maximum (" + maximumTime + ")");
       return;
     }
 
@@ -495,6 +496,8 @@ public final class SimulationEngine implements AutoCloseable {
 //    this.timeline.add(tip);
       this.timeline.add(tip, curTime());
       updateTaskInfo(tip);
+
+      //System.out.println("step(): end -- time = " + curTime());
     }
   }
 
@@ -926,6 +929,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Map<String, ProfilingState<?>> resources
 //>>>>>>> prototype/excise-resources-from-sim-engine
   ) {
+    //System.out.println("computeResults(startTime=" + startTime + ", elapsedTime=" + elapsedTime + "...) at time " + curTime());
 
 //    // Collect per-task information from the event graph.
 //    taskInfo = new TaskInfo();
@@ -1205,7 +1209,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var query = ((EngineCellId<?, State>) token);
 
       // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      var cell = timeline.getCell(query.query(), currentTime, false);
+      var cell = timeline.getCell(query.query(), currentTime, true);
 
       this.queryTrackingInfo.ifPresent(info -> {
         if (isTaskStale(info.getRight(), currentTime)) {
