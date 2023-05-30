@@ -12,6 +12,7 @@ import { InheritedError } from '../utils/InheritedError.js';
 import { unwrapPromiseSettledResults } from '../lib/batchLoaders/index.js';
 import { defaultSeqBuilder } from '../defaultSeqBuilder.js';
 import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
+import { getUsername } from '../utils/helpers.js';
 
 const logger = getLogger('app');
 
@@ -71,6 +72,7 @@ commandExpansionRouter.post('/put-expansion', async (req, res, next) => {
 
 commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const context: Context = res.locals['context'];
+  const username = getUsername(req.body.session_variables, req.headers.authorization);
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const missionModelId = req.body.input.missionModelId as number;
@@ -132,10 +134,10 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const { rows } = await db.query(
     `
         with expansion_set_id as (
-          insert into expansion_set (command_dict_id, mission_model_id, description)
-            values ($1, $2, $3)
+          insert into expansion_set (command_dict_id, mission_model_id, description, owner)
+            values ($1, $2, $3, $4)
             returning id),
-             rules as (select id, activity_type from expansion_rule where id = any ($4::int[]) order by id)
+             rules as (select id, activity_type from expansion_rule where id = any ($5::int[]) order by id)
         insert
         into expansion_set_to_rule (set_id, rule_id, activity_type)
         select a.id, b.id, b.activity_type
@@ -143,7 +145,7 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
              (select id, activity_type from rules) b
         returning (select id from expansion_set_id);
       `,
-    [commandDictionaryId, missionModelId, description ?? '', expansionIds],
+    [commandDictionaryId, missionModelId, description ?? '', username, expansionIds],
   );
 
   if (rows.length < 1) {
