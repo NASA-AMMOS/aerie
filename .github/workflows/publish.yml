@@ -9,252 +9,171 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  OWNER: nasa-ammos
   IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
 jobs:
-  publish:
+  init:
     runs-on: ubuntu-latest
     permissions:
-      checks: write
       contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v3
+
+      - uses: gradle/wrapper-validation-action@v1
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          generate-job-summary: false
+
+      - name: Gradle Version
+        run: ./gradlew --version
+
+  containers:
+    runs-on: ubuntu-latest
+    needs: init
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        components:
+          - image: aerie-merlin
+            context: merlin-server
+            file: merlin-server/Dockerfile
+          - image: aerie-merlin-worker
+            context: merlin-worker
+            file: merlin-worker/Dockerfile
+          - image: aerie-scheduler
+            context: scheduler-server
+            file: scheduler-server/Dockerfile
+          - image: aerie-scheduler-worker
+            context: scheduler-worker
+            file: scheduler-worker/Dockerfile
+          - image: aerie-sequencing
+            context: sequencing-server
+            file: sequencing-server/Dockerfile
+          - image: aerie-hasura
+            context: .
+            file: docker/Dockerfile.hasura
+          - image: aerie-postgres
+            context: .
+            file: docker/Dockerfile.postgres
+    name: ${{ matrix.components.image }}
+    steps:
+      - uses: actions/checkout@v3
+
       - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "19"
-      - uses: gradle/wrapper-validation-action@v1
-      - uses: gradle/gradle-build-action@v2
-      - name: Assemble
-        run: ./gradlew assemble
-      - name: Login to the Container Registry
+
+      - name: Init Gradle cache
+        uses: gradle/gradle-build-action@v2
+        with:
+          generate-job-summary: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to ${{ env.REGISTRY }}
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: linux/amd64,linux/arm64
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      # Build, scan, and push aerie-hasura Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-hasura Docker image
-        id: aerieHasura
+
+      - name: Extract metadata (tags, labels) for ${{ matrix.components.image }}
+        id: metadata-step
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura
-      - name: Build aerie-hasura Docker image
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.components.image }}
+
+      - name: Assemble ${{ matrix.components.context }}
+        env:
+          component: ${{ matrix.components.context }}
+        run: |
+          set -x
+          if [[ "$component" == "." ]]; then
+            # aerie-hasura and aerie-postgres don't need compiled java
+            ./gradlew distributeSql --no-daemon
+          else
+            ./gradlew ":$component:assemble" --no-daemon --parallel
+          fi
+
+      - name: Build and push ${{ matrix.components.image }}
         uses: docker/build-push-action@v3
         with:
-          context: .
-          file: ./docker/Dockerfile.hasura
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura:${{ github.sha }}
-      - name: Scan aerie-hasura Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-hasura Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ./docker/Dockerfile.hasura
+          context: ${{ matrix.components.context }}
+          file: ${{ matrix.components.file }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.aerieHasura.outputs.tags }}
-          labels: ${{ steps.aerieHasura.outputs.labels }}
-      # Build, scan, and push aerie-merlin Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-merlin Docker image
-        id: aerieMerlin
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin
-      - name: Build aerie-merlin Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./merlin-server
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin:${{ github.sha }}
-      - name: Scan aerie-merlin Docker image
+          tags: ${{ steps.metadata-step.outputs.tags }}
+          labels: ${{ steps.metadata-step.outputs.labels }}
+
+  scan:
+    runs-on: ubuntu-latest
+    needs: containers
+    strategy:
+      matrix:
+        image:
+          - aerie-merlin
+          - aerie-merlin-worker
+          - aerie-scheduler
+          - aerie-scheduler-worker
+          - aerie-sequencing
+          - aerie-hasura
+          - aerie-postgres
+      fail-fast: false
+    name: scan ${{ matrix.image }}
+    steps:
+      - name: Scan ${{ matrix.image }} for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
+          image-ref: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:develop
           ignore-unfixed: true
+          exit-code: '1'
           severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-merlin Docker image
-        uses: docker/build-push-action@v3
+          format: 'template'
+          template: "@/contrib/html.tpl"
+          scanners: "vuln"
+          output: '${{ matrix.image }}-results.html'
+
+      - name: Upload ${{ matrix.image }} scan results
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
-          context: ./merlin-server
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.aerieMerlin.outputs.tags }}
-          labels: ${{ steps.aerieMerlin.outputs.labels }}
-      # Build, scan, and push aerie-merlin-worker Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-merlin-worker Docker image
-        id: aerieMerlinWorker
-        uses: docker/metadata-action@v4
+          name: Vuln Scan Results
+          path: '${{ matrix.image }}-results.html'
+
+  publish:
+    name: gradle publish
+    runs-on: ubuntu-latest
+    needs: init
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Gradle Cache
+        uses: gradle/gradle-build-action@v2
         with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker
-      - name: Build aerie-merlin-worker Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./merlin-worker
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker:${{ github.sha }}
-      - name: Scan aerie-merlin-worker Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-merlin-worker Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./merlin-worker
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
-          labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
-      # Build, scan, and push aerie-postgres Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-postgres Docker image
-        id: aeriePostgres
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres
-      - name: Build aerie-postgres Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ./docker/Dockerfile.postgres
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres:${{ github.sha }}
-      - name: Scan aerie-postgres Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-postgres Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ./docker/Dockerfile.postgres
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.aeriePostgres.outputs.tags }}
-          labels: ${{ steps.aeriePostgres.outputs.labels }}
-      # Build, scan, and push aerie-scheduler-worker Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-scheduler-worker Docker image
-        id: aerieSchedulerWorker
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker
-      - name: Build aerie-scheduler-worker Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./scheduler-worker
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker:${{ github.sha }}
-      - name: Scan aerie-scheduler-worker Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-scheduler-worker Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./scheduler-worker
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.aerieSchedulerWorker.outputs.tags }}
-          labels: ${{ steps.aerieSchedulerWorker.outputs.labels }}
-      # Build, scan, and push aerie-scheduler Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-scheduler Docker image
-        id: aerieScheduler
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler
-      - name: Build aerie-scheduler Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./scheduler-server
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler:${{ github.sha }}
-      - name: Scan aerie-scheduler Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-scheduler Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./scheduler-server
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.aerieScheduler.outputs.tags }}
-          labels: ${{ steps.aerieScheduler.outputs.labels }}
-      # Build, scan, and push aerie-sequencing Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-sequencing Docker image
-        id: aerieSequencing
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing
-      - name: Build aerie-sequencing Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./sequencing-server
-          load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing:${{ github.sha }}
-      - name: Scan aerie-sequencing Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-          timeout: 10m0s
-      - name: Push aerie-sequencing Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./sequencing-server
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.aerieSequencing.outputs.tags }}
-          labels: ${{ steps.aerieSequencing.outputs.labels }}
-      # Publish via Gradle.
+          generate-job-summary: false
+
       - name: Publish Package
-        run: ./gradlew publish -Pversion.isRelease=$IS_RELEASE
+        run: ./gradlew publish -Pversion.isRelease=$IS_RELEASE --parallel
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      # Publish deployment via action artifact uploader.
+
       - name: Create deployment archive
         run: ./gradlew archiveDeployment
+
       - name: Publish deployment
         uses: actions/upload-artifact@v3
         with:
