@@ -4,11 +4,13 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,5 +45,15 @@ public class InMemorySimulationResultsHandle implements SimulationResultsHandle 
   @Override
   public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
     return this.simulationResults.simulatedActivities;
+  }
+
+  @Override
+  public Instant startTime() {
+    return this.simulationResults.startTime;
+  }
+
+  @Override
+  public Duration duration() {
+    return this.simulationResults.duration;
   }
 }

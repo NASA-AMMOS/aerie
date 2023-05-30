@@ -76,9 +76,9 @@ public final class GetSimulationResultsAction {
   throws NoSuchPlanException
   {
     final var revisionData = this.planService.getPlanRevisionData(planId);
-    final var simulationResults$ = this.simulationService.get(planId, revisionData);
-    if (simulationResults$.isEmpty()) return Collections.emptyMap();
-    final var simulationResults = simulationResults$.get().getSimulationResults();
+    final var simulationResultsHandle$ = this.simulationService.get(planId, revisionData);
+    if (simulationResultsHandle$.isEmpty()) return Collections.emptyMap();
+    final var simulationResults = simulationResultsHandle$.get().getSimulationResults();
 
     final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
 
@@ -135,17 +135,19 @@ public final class GetSimulationResultsAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var results$ = this.simulationService.get(planId, revisionData);
-    final var simStartTime = results$.isPresent() ? results$.get().startTime : plan.startTimestamp.toInstant();
-    final var simDuration = results$.isPresent() ?
-        results$.get().duration :
-        Duration.of(
+    final var resultsHandle$ = this.simulationService.get(planId, revisionData);
+    final var simStartTime = resultsHandle$
+      .map(SimulationResultsHandle::startTime)
+      .orElse(plan.startTimestamp.toInstant());
+    final var simDuration = resultsHandle$
+      .map(SimulationResultsHandle::duration)
+      .orElse(Duration.of(
           plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
-          Duration.MICROSECONDS);
+          Duration.MICROSECONDS));
     final var simOffset = Duration.of(plan.startTimestamp.toInstant().until(simStartTime, ChronoUnit.MICROS), Duration.MICROSECONDS);
 
     final var activities = new ArrayList<ActivityInstance>();
-    final var simulatedActivities = results$
+    final var simulatedActivities = resultsHandle$
         .map(SimulationResultsHandle::getSimulatedActivities)
         .orElseGet(Collections::emptyMap);
     for (final var entry : simulatedActivities.entrySet()) {
@@ -219,7 +221,7 @@ public final class GetSimulationResultsAction {
       }
 
       if (!newNames.isEmpty()) {
-        final var newProfiles = results$.map($ -> $.getProfiles(newNames)).orElse(ProfileSet.of(Map.of(), Map.of()));
+        final var newProfiles = resultsHandle$.map($ -> $.getProfiles(newNames)).orElse(ProfileSet.of(Map.of(), Map.of()));
 
         for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
           if (!realProfiles.containsKey(_entry.getKey())) {

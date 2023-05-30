@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -411,8 +412,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         Optional<State> result;
         final var record$ = getSimulationDatasetRecord(
             connection,
-            datasetId,
-            planStart);
+            datasetId);
         if (record$.isEmpty()) {
           result = Optional.empty();
         } else {
@@ -429,9 +429,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
                       @Override
                       public SimulationResults getSimulationResults() {
                         try {
-                          final var simulationWindow = getSimulationWindow(connection, record, planId);
-                          final var startTimestamp = simulationWindow.start();
+                          final var startTimestamp = record.simulationStartTime();
                           final var simulationStart = startTimestamp.toInstant();
+                          final var simulationDuration = Duration.of(
+                              startTimestamp.microsUntil(record.simulationEndTime()),
+                              Duration.MICROSECONDS);
 
                           final var profiles = ProfileRepository.getProfiles(connection, record.datasetId());
                           final var activities = getActivities(connection, record.datasetId(), startTimestamp);
@@ -444,6 +446,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
                               activities.getLeft(),
                               activities.getRight(),
                               simulationStart,
+                              simulationDuration,
                               topics,
                               events
                           );
@@ -464,13 +467,26 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
                       @Override
                       public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
                         try(final var connection = PostgresResultsCell.this.dataSource.getConnection()) {
-                          final var simulationWindow = getSimulationWindow(connection, record, planId);
-                          final var startTimestamp = simulationWindow.start();
-                          final var activities = getActivities(connection, record.datasetId(), startTimestamp);
+                          final var activities = getActivities(
+                              connection,
+                              record.datasetId(),
+                              record.simulationStartTime());
                           return activities.getLeft();
                         } catch (SQLException e) {
                           throw new RuntimeException(e);
                         }
+                      }
+
+                      @Override
+                      public Instant startTime() {
+                        return record.simulationStartTime().toInstant();
+                      }
+
+                      @Override
+                      public Duration duration() {
+                        return Duration.of(
+                            record.simulationStartTime().microsUntil(record.simulationEndTime()),
+                            Duration.MICROSECONDS);
                       }
                     });
               });
