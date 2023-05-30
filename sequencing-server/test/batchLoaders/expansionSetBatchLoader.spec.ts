@@ -1,8 +1,9 @@
-import { GraphQLClient } from 'graphql-request';
+import type { GraphQLClient } from 'graphql-request';
 import { expansionSetBatchLoader } from '../../src/lib/batchLoaders/expansionSetBatchLoader.js';
 import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionModel.js';
 import { insertExpansion, insertExpansionSet, removeExpansion, removeExpansionSet } from '../testUtils/Expansion';
 import { insertCommandDictionary, removeCommandDictionary } from '../testUtils/CommandDictionary';
+import { getGraphQLClient } from '../testUtils/testUtils.js';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
@@ -11,11 +12,12 @@ let expansionSetId: number;
 let commandDictionaryId: number;
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
-  missionModelId = await uploadMissionModel(graphqlClient);
+  graphqlClient = await getGraphQLClient();
   commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+});
+
+beforeAll(async () => {
+  missionModelId = await uploadMissionModel(graphqlClient);
   expansionId = await insertExpansion(
     graphqlClient,
     'ParameterTest',
@@ -35,6 +37,7 @@ afterAll(async () => {
   await removeMissionModel(graphqlClient, missionModelId);
   await removeMissionModel(graphqlClient, missionModelId);
 });
+
 // We expect this to fail right now because the expansion set batch loader needs to pull the dictionary commands from
 // the filesystem, which isn't available locally, but in the docker container.
 it.skip('[XFAIL] should load expansion set data', async () => {

@@ -1,19 +1,22 @@
 import * as ampcs from '@nasa-jpl/aerie-ampcs';
-import { GraphQLClient } from 'graphql-request';
-import { commandDictionaryString, insertCommandDictionary } from './testUtils/CommandDictionary.js';
+import type { GraphQLClient } from 'graphql-request';
+import {
+  commandDictionaryString,
+  insertCommandDictionary,
+  removeCommandDictionary,
+} from './testUtils/CommandDictionary.js';
+import { getGraphQLClient } from './testUtils/testUtils.js';
 
 let graphqlClient: GraphQLClient;
 
-beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
+beforeAll(async () => {
+  graphqlClient = await getGraphQLClient();
 });
 
 describe('upload command dictionary', () => {
   it('should upload a command dictionary and all of the fields should be populated correctly', async () => {
     // During the test we use a uuid for the mission so there's no conflicting command dictionaries.
-    const { command_types_typescript_path, mission, parsed_json } = await insertCommandDictionary(graphqlClient);
+    const { id, command_types_typescript_path, mission, parsed_json } = await insertCommandDictionary(graphqlClient);
 
     expect(command_types_typescript_path).toBe(
       `/usr/src/app/sequencing_file_store/${mission}/command_lib.${mission}.ts`,
@@ -22,5 +25,7 @@ describe('upload command dictionary', () => {
     expect(parsed_json).toStrictEqual(
       ampcs.parse(commandDictionaryString.replace(/(Banana Nation|1.0.0.0)/g, mission)),
     );
+
+    await removeCommandDictionary(graphqlClient, id);
   }, 30000);
 });

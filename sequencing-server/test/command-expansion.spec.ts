@@ -18,7 +18,7 @@ import {
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
 import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from './testUtils/Simulation.js';
-import { waitMs } from './testUtils/testUtils';
+import { getGraphQLClient, waitMs } from './testUtils/testUtils';
 import { insertSequence, linkActivityInstance } from './testUtils/Sequence.js';
 
 let planId: number;
@@ -26,10 +26,12 @@ let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let commandDictionaryId: number;
 
+beforeAll(async () => {
+  graphqlClient = await getGraphQLClient();
+  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+});
+
 beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
   await updateSimulationBounds(graphqlClient, {
@@ -37,13 +39,15 @@ beforeEach(async () => {
     simulation_start_time: '2020-001T00:00:00Z',
     simulation_end_time: '2020-002T00:00:00Z',
   });
-  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+});
+
+afterAll(async () => {
+  removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
 afterEach(async () => {
   await removePlan(graphqlClient, planId);
   await removeMissionModel(graphqlClient, missionModelId);
-  await removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
 describe('expansion', () => {

@@ -1,14 +1,13 @@
-import { GraphQLClient } from 'graphql-request';
+import type { GraphQLClient } from 'graphql-request';
 import { insertExpansion, removeExpansion } from '../testUtils/Expansion';
 import { expansionBatchLoader } from '../../src/lib/batchLoaders/expansionBatchLoader';
+import { getGraphQLClient } from '../testUtils/testUtils';
 
 let graphqlClient: GraphQLClient;
 let expansionId: number;
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
+  graphqlClient = await getGraphQLClient();
   expansionId = await insertExpansion(
     graphqlClient,
     'PeelBanana',

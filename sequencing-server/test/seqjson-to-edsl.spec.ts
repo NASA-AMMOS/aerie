@@ -1,12 +1,11 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface';
+import { getGraphQLClient } from './testUtils/testUtils';
 
 let graphqlClient: GraphQLClient;
 
-beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
+beforeAll(async () => {
+  graphqlClient = await getGraphQLClient();
 });
 
 describe('getEdslForSeqJson', () => {
@@ -107,282 +106,285 @@ describe('getEdslForSeqJson', () => {
       `,
       {
         seqJson: {
-          "id": "all_possible_fields",
-          "metadata": {
-            "onboard_path": "/eng",
-            "onboard_name": "test.mod",
-            "lgo": { "boolean": false },
-            "other_arbitrary_metadata": "test_metadata"
+          id: 'all_possible_fields',
+          metadata: {
+            onboard_path: '/eng',
+            onboard_name: 'test.mod',
+            lgo: { boolean: false },
+            other_arbitrary_metadata: 'test_metadata',
           },
-          "locals": [
+          locals: [
             {
-              "name": "local_float_1",
-              "type": "FLOAT"
+              name: 'local_float_1',
+              type: 'FLOAT',
             },
             {
-              "name": "local_int_2",
-              "type": "INT"
+              name: 'local_int_2',
+              type: 'INT',
             },
             {
-              "name": "local_string_3",
-              "type": "STRING"
+              name: 'local_string_3',
+              type: 'STRING',
             },
             {
-              "name": "local_uint_4",
-              "type": "UINT"
-            }
+              name: 'local_uint_4',
+              type: 'UINT',
+            },
           ],
-          "parameters": [
+          parameters: [
             {
-              "name": "param_float_1",
-              "type": "FLOAT"
+              name: 'param_float_1',
+              type: 'FLOAT',
             },
             {
-              "name": "param_int_2",
-              "type": "INT"
+              name: 'param_int_2',
+              type: 'INT',
             },
             {
-              "name": "param_string_3",
-              "type": "STRING"
+              name: 'param_string_3',
+              type: 'STRING',
             },
             {
-              "name": "param_uint_4",
-              "type": "UINT"
-            }
+              name: 'param_uint_4',
+              type: 'UINT',
+            },
           ],
-          "steps": [
+          steps: [
             {
-              "args": [
-                { "type": "number", "value": 30 },
-                { "type": "number", "value": 4.3 },
-                { "type": "boolean", "value": true },
-                { "type": "string", "value": "test_string" },
+              args: [
+                { type: 'number', value: 30 },
+                { type: 'number', value: 4.3 },
+                { type: 'boolean', value: true },
+                { type: 'string', value: 'test_string' },
                 {
-                  "type": "repeat",
-                  "value": [
+                  type: 'repeat',
+                  value: [
                     [
-                      { "type": "number", "value": 10 },
-                      { "type": "string", "value": "another_test" },
-                      { "type": "boolean", "value": false }
+                      { type: 'number', value: 10 },
+                      { type: 'string', value: 'another_test' },
+                      { type: 'boolean', value: false },
                     ],
                     [
-                      { "type": "number", "value": 5 },
-                      { "type": "string", "value": "repeat_test" },
-                      { "type": "boolean", "value": true }
-                    ]
-                  ]
-                }
+                      { type: 'number', value: 5 },
+                      { type: 'string', value: 'repeat_test' },
+                      { type: 'boolean', value: true },
+                    ],
+                  ],
+                },
               ],
-              "description": "Epoch-relative activate step for test.mod into engine 2 with all possible fields.",
-              "engine": 2,
-              "epoch": "TEST_EPOCH",
-              "models": [
+              description: 'Epoch-relative activate step for test.mod into engine 2 with all possible fields.',
+              engine: 2,
+              epoch: 'TEST_EPOCH',
+              models: [
                 {
-                  "offset": "00:00:00.000",
-                  "variable": "model_var_float",
-                  "value": "1.234"
+                  offset: '00:00:00.000',
+                  variable: 'model_var_float',
+                  value: '1.234',
                 },
                 {
-                  "offset": "00:00:00.001",
-                  "variable": "model_var_int",
-                  "value": "-1234"
+                  offset: '00:00:00.001',
+                  variable: 'model_var_int',
+                  value: '-1234',
                 },
                 {
-                  "offset": "01:02:03.000",
-                  "variable": "model_var_string",
-                  "value": "Model test string"
+                  offset: '01:02:03.000',
+                  variable: 'model_var_string',
+                  value: 'Model test string',
                 },
                 {
-                  "offset": "10:00:00.000",
-                  "variable": "model_var_uint",
-                  "value": "1234"
-                }
+                  offset: '10:00:00.000',
+                  variable: 'model_var_uint',
+                  value: '1234',
+                },
               ],
-              "sequence": "d:/eng/test.mod",
-              "time": { "tag": "00:00:01.000", "type": "EPOCH_RELATIVE" },
-              "type": "activate"
+              sequence: 'd:/eng/test.mod',
+              time: { tag: '00:00:01.000', type: 'EPOCH_RELATIVE' },
+              type: 'activate',
             },
             {
-              "args": [
-                { "type": "number", "value": 30 },
-                { "type": "number", "value": 4.3 },
-                { "type": "boolean", "value": true },
-                { "type": "string", "value": "test_string" },
+              args: [
+                { type: 'number', value: 30 },
+                { type: 'number', value: 4.3 },
+                { type: 'boolean', value: true },
+                { type: 'string', value: 'test_string' },
                 {
-                  "type": "repeat",
-                  "value": [
+                  type: 'repeat',
+                  value: [
                     [
-                      { "type": "number", "value": 10 },
-                      { "type": "string", "value": "another_test" }
-                    ]
-                  ]
-                }
+                      { type: 'number', value: 10 },
+                      { type: 'string', value: 'another_test' },
+                    ],
+                  ],
+                },
               ],
-              "description": "Absolute-timed standard command step with all possible fields.",
-              "models": [
+              description: 'Absolute-timed standard command step with all possible fields.',
+              models: [
                 {
-                  "offset": "00:00:00.000",
-                  "variable": "model_var_float",
-                  "value": "1.234"
+                  offset: '00:00:00.000',
+                  variable: 'model_var_float',
+                  value: '1.234',
                 },
                 {
-                  "offset": "00:00:00.001",
-                  "variable": "model_var_int",
-                  "value": "-1234"
+                  offset: '00:00:00.001',
+                  variable: 'model_var_int',
+                  value: '-1234',
                 },
                 {
-                  "offset": "01:02:03.000",
-                  "variable": "model_var_string",
-                  "value": "Model test string"
+                  offset: '01:02:03.000',
+                  variable: 'model_var_string',
+                  value: 'Model test string',
                 },
                 {
-                  "offset": "10:00:00.000",
-                  "variable": "model_var_uint",
-                  "value": "1234"
-                }
+                  offset: '10:00:00.000',
+                  variable: 'model_var_uint',
+                  value: '1234',
+                },
               ],
-              "stem": "FAKE_COMMAND1",
-              "time": { "tag": "2020-173T20:00:00.000", "type": "ABSOLUTE" },
-              "type": "command",
-              "metadata": {}
+              stem: 'FAKE_COMMAND1',
+              time: { tag: '2020-173T20:00:00.000', type: 'ABSOLUTE' },
+              type: 'command',
+              metadata: {},
             },
             {
-              "args": [
-                { "type": "string", "value": "SEQSTR" },
-                { "type": "string", "value": "2019-365T00:00:00" },
-                { "type": "string", "value": "2020-025T00:00:00" },
-                { "type": "string", "value": "BOTH" },
-                { "type": "string", "value": "" },
-                { "type": "string", "value": "" },
-                { "type": "string", "value": "real_time_cmds" }
+              args: [
+                { type: 'string', value: 'SEQSTR' },
+                { type: 'string', value: '2019-365T00:00:00' },
+                { type: 'string', value: '2020-025T00:00:00' },
+                { type: 'string', value: 'BOTH' },
+                { type: 'string', value: '' },
+                { type: 'string', value: '' },
+                { type: 'string', value: 'real_time_cmds' },
               ],
-              "description": "Ground activity step with required fields.",
-              "models": [
+              description: 'Ground activity step with required fields.',
+              models: [
                 {
-                  "offset": "00:00:00.000",
-                  "variable": "model_var_float",
-                  "value": "1.234"
+                  offset: '00:00:00.000',
+                  variable: 'model_var_float',
+                  value: '1.234',
                 },
                 {
-                  "offset": "00:00:00.001",
-                  "variable": "model_var_int",
-                  "value": "-1234"
+                  offset: '00:00:00.001',
+                  variable: 'model_var_int',
+                  value: '-1234',
                 },
                 {
-                  "offset": "01:02:03.000",
-                  "variable": "model_var_string",
-                  "value": "Model test string"
+                  offset: '01:02:03.000',
+                  variable: 'model_var_string',
+                  value: 'Model test string',
                 },
                 {
-                  "offset": "10:00:00.000",
-                  "variable": "model_var_uint",
-                  "value": "1234"
-                }
+                  offset: '10:00:00.000',
+                  variable: 'model_var_uint',
+                  value: '1234',
+                },
               ],
-              "name": "SEQTRAN_directive",
-              "time": { "tag": "00:00:01.000", "type": "COMMAND_RELATIVE" },
-              "type": "ground_block",
-              "metadata": { "stringfield": "stringval" }
+              name: 'SEQTRAN_directive',
+              time: { tag: '00:00:01.000', type: 'COMMAND_RELATIVE' },
+              type: 'ground_block',
+              metadata: { stringfield: 'stringval' },
             },
             {
-              "args": [
-                { "type": "string", "value": "/domops/data/nsyt/189/seq/satf_sct/nsy.orf.f2_seq_eng_nom_htr_off_mod.r1.satf" },
-                { "type": "string", "value": "d:/tmp/eng_nom_htr_off.mod" }
+              args: [
+                {
+                  type: 'string',
+                  value: '/domops/data/nsyt/189/seq/satf_sct/nsy.orf.f2_seq_eng_nom_htr_off_mod.r1.satf',
+                },
+                { type: 'string', value: 'd:/tmp/eng_nom_htr_off.mod' },
               ],
-              "description": "Ground event step with all possible fields.",
-              "models": [
+              description: 'Ground event step with all possible fields.',
+              models: [
                 {
-                  "offset": "00:00:00.000",
-                  "variable": "model_var_float",
-                  "value": "1.234"
+                  offset: '00:00:00.000',
+                  variable: 'model_var_float',
+                  value: '1.234',
                 },
                 {
-                  "offset": "00:00:00.001",
-                  "variable": "model_var_int",
-                  "value": "-1234"
+                  offset: '00:00:00.001',
+                  variable: 'model_var_int',
+                  value: '-1234',
                 },
                 {
-                  "offset": "01:02:03.000",
-                  "variable": "model_var_string",
-                  "value": "Model test string"
+                  offset: '01:02:03.000',
+                  variable: 'model_var_string',
+                  value: 'Model test string',
                 },
                 {
-                  "offset": "10:00:00.000",
-                  "variable": "model_var_uint",
-                  "value": "1234"
-                }
+                  offset: '10:00:00.000',
+                  variable: 'model_var_uint',
+                  value: '1234',
+                },
               ],
-              "name": "UPLINK_SEQUENCE_FILE",
-              "time": { "type": "COMMAND_COMPLETE" },
-              "type": "ground_event",
-              "metadata": { "listfield": ["1", 2] }
+              name: 'UPLINK_SEQUENCE_FILE',
+              time: { type: 'COMMAND_COMPLETE' },
+              type: 'ground_event',
+              metadata: { listfield: ['1', 2] },
             },
             {
-              "args": [
-                { "type": "symbol", "value": "Local_Var_A" },
-                { "type": "symbol", "value": "Global_Var_B" }
+              args: [
+                { type: 'symbol', value: 'Local_Var_A' },
+                { type: 'symbol', value: 'Global_Var_B' },
               ],
-              "description": "Epoch-relative activate step for test.mod into engine 2 with all possible fields.",
-              "engine": 2,
-              "epoch": "TEST_EPOCH",
-              "models": [
+              description: 'Epoch-relative activate step for test.mod into engine 2 with all possible fields.',
+              engine: 2,
+              epoch: 'TEST_EPOCH',
+              models: [
                 {
-                  "offset": "00:00:00.000",
-                  "variable": "model_var_float",
-                  "value": "1.234"
+                  offset: '00:00:00.000',
+                  variable: 'model_var_float',
+                  value: '1.234',
                 },
                 {
-                  "offset": "00:00:00.001",
-                  "variable": "model_var_int",
-                  "value": "-1234"
+                  offset: '00:00:00.001',
+                  variable: 'model_var_int',
+                  value: '-1234',
                 },
                 {
-                  "offset": "01:02:03.000",
-                  "variable": "model_var_string",
-                  "value": "Model test string"
+                  offset: '01:02:03.000',
+                  variable: 'model_var_string',
+                  value: 'Model test string',
                 },
                 {
-                  "offset": "10:00:00.000",
-                  "variable": "model_var_uint",
-                  "value": "1234"
-                }
+                  offset: '10:00:00.000',
+                  variable: 'model_var_uint',
+                  value: '1234',
+                },
               ],
-              "sequence": "d:/eng/test.mod",
-              "time": { "tag": "00:00:01.000", "type": "EPOCH_RELATIVE" },
-              "type": "load"
-            }
+              sequence: 'd:/eng/test.mod',
+              time: { tag: '00:00:01.000', type: 'EPOCH_RELATIVE' },
+              type: 'load',
+            },
           ],
-          "requests": [
+          requests: [
             {
-              "description": "Absolute-timed request object with all possible fields",
-              "name": "test_request1",
-              "steps": [
+              description: 'Absolute-timed request object with all possible fields',
+              name: 'test_request1',
+              steps: [
                 {
-                  "stem": "FAKE_COMMAND1",
-                  "time": { "tag": "00:00:01.000", "type": "COMMAND_RELATIVE" },
-                  "type": "command",
-                  "args": []
-                }
+                  stem: 'FAKE_COMMAND1',
+                  time: { tag: '00:00:01.000', type: 'COMMAND_RELATIVE' },
+                  type: 'command',
+                  args: [],
+                },
               ],
-              "time": { "tag": "2020-173T20:00:00.000", "type": "ABSOLUTE" },
-              "type": "request"
+              time: { tag: '2020-173T20:00:00.000', type: 'ABSOLUTE' },
+              type: 'request',
             },
             {
-              "description": "Ground-epoch timed request object with all possible fields",
-              "ground_epoch": { "delta": "+00:30:00", "name": "test_ground_epoch" },
-              "name": "test_request1",
-              "steps": [
+              description: 'Ground-epoch timed request object with all possible fields',
+              ground_epoch: { delta: '+00:30:00', name: 'test_ground_epoch' },
+              name: 'test_request1',
+              steps: [
                 {
-                  "stem": "FAKE_COMMAND1",
-                  "time": { "tag": "00:00:01.000", "type": "COMMAND_RELATIVE" },
-                  "type": "command",
-                  "args": []
-                }
+                  stem: 'FAKE_COMMAND1',
+                  time: { tag: '00:00:01.000', type: 'COMMAND_RELATIVE' },
+                  type: 'command',
+                  args: [],
+                },
               ],
-              "type": "request"
-            }
-          ]
-        }
+              type: 'request',
+            },
+          ],
+        },
       },
     );
 
@@ -778,7 +780,7 @@ describe('getEdslForSeqJsonBulk', () => {
 
     expect(res.getEdslForSeqJsonBulk).toEqual([
       "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });",
-      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });"
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });",
     ]);
   });
 });
