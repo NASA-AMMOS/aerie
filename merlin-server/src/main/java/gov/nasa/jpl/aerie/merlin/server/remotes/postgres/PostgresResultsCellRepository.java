@@ -13,8 +13,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.PostgresSimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
-import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -223,7 +221,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
+  public static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
   throws SQLException
   {
     try (final var getSimulationTopicsAction = new GetSimulationTopicsAction(connection)) {
@@ -231,7 +229,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  public static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
   getSimulationEvents(
       final Connection connection,
       final long datasetId,
@@ -243,7 +241,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Pair<Map<SimulatedActivityId, SimulatedActivity>, Map<SimulatedActivityId, UnfinishedActivity>> getActivities(
+  public static Pair<Map<SimulatedActivityId, SimulatedActivity>, Map<SimulatedActivityId, UnfinishedActivity>> getActivities(
       final Connection connection,
       final long datasetId,
       final Timestamp startTime
@@ -425,70 +423,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
                     .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
                 case SUCCESS -> new State.Success(
                     record.simulationDatasetId(),
-                    new SimulationResultsHandle() {
-                      @Override
-                      public SimulationResults getSimulationResults() {
-                        try {
-                          final var startTimestamp = record.simulationStartTime();
-                          final var simulationStart = startTimestamp.toInstant();
-                          final var simulationDuration = Duration.of(
-                              startTimestamp.microsUntil(record.simulationEndTime()),
-                              Duration.MICROSECONDS);
-
-                          final var profiles = ProfileRepository.getProfiles(connection, record.datasetId());
-                          final var activities = getActivities(connection, record.datasetId(), startTimestamp);
-                          final var topics = getSimulationTopics(connection, record.datasetId());
-                          final var events = getSimulationEvents(connection, record.datasetId(), startTimestamp);
-
-                          return new SimulationResults(
-                              ProfileSet.unwrapOptional(profiles.realProfiles()),
-                              ProfileSet.unwrapOptional(profiles.discreteProfiles()),
-                              activities.getLeft(),
-                              activities.getRight(),
-                              simulationStart,
-                              simulationDuration,
-                              topics,
-                              events
-                          );
-                        } catch (SQLException e) {
-                          throw new RuntimeException(e);
-                        }
-                      }
-
-                      @Override
-                      public ProfileSet getProfiles(final Iterable<String> profileNames) {
-                        try(final var connection = PostgresResultsCell.this.dataSource.getConnection()) {
-                          return ProfileRepository.getProfiles(connection, record.datasetId(), profileNames);
-                        } catch (SQLException e) {
-                          throw new RuntimeException(e);
-                        }
-                      }
-
-                      @Override
-                      public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
-                        try(final var connection = PostgresResultsCell.this.dataSource.getConnection()) {
-                          final var activities = getActivities(
-                              connection,
-                              record.datasetId(),
-                              record.simulationStartTime());
-                          return activities.getLeft();
-                        } catch (SQLException e) {
-                          throw new RuntimeException(e);
-                        }
-                      }
-
-                      @Override
-                      public Instant startTime() {
-                        return record.simulationStartTime().toInstant();
-                      }
-
-                      @Override
-                      public Duration duration() {
-                        return Duration.of(
-                            record.simulationStartTime().microsUntil(record.simulationEndTime()),
-                            Duration.MICROSECONDS);
-                      }
-                    });
+                    new PostgresSimulationResultsHandle(dataSource, record));
               });
         }
 
