@@ -61,14 +61,7 @@ public final class AerieAppDriver {
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
     // Assemble the core non-web object graph.
-//<<<<<<< HEAD
     final var simulationController = new CachedSimulationService(stores.results());
-//=======
-//    final var simulationAgent = ThreadedSimulationAgent.spawn(
-//        "simulation-agent",
-//        new SynchronousSimulationAgent(planController, missionModelController, false));
-//    final var simulationController = new CachedSimulationService(simulationAgent, stores.results());
-//>>>>>>> prototype/excise-resources-from-sim-engine
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         missionModelController,

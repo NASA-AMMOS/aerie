@@ -118,7 +118,6 @@ public final class SchedulerWorkerAppDriver {
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
         Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", "true"))
-//>>>>>>> prototype/excise-resources-from-sim-engine
     );
   }
 }

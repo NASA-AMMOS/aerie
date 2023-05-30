@@ -137,7 +137,6 @@ public final class SimulationEngine implements AutoCloseable {
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = getLoomOrFallback();
 
-//<<<<<<< HEAD
   /**  */
   public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Event noop, Duration time) {
     // TODO: Can't we just get this from eventsByTopic instead of having a separate data structure?
@@ -413,20 +412,13 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-//<<<<<<< HEAD
   /** Returns the offset time of the next batch of scheduled jobs. */
   public Duration timeOfNextJobs() {
     return this.scheduledJobs.timeOfNextJobs();
   }
 
-//  /** Removes and returns the next set of jobs to be performed concurrently. */
-//  public JobSchedule.Batch<JobId> extractNextJobs(final Duration maximumTime) {
-//    final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
-//=======
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-//  public void step() {
   public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic) {
-//>>>>>>> prototype/excise-resources-from-sim-engine
     //System.out.println("step(): begin -- time = " + curTime());
     var timeOfNextJobs = timeOfNextJobs();
     var nextTime = timeOfNextJobs;
@@ -439,9 +431,6 @@ public final class SimulationEngine implements AutoCloseable {
     var timeForDelta = Duration.min(nextTime, maximumTime);
     final var delta = timeForDelta.minus(curTime());
     setCurTime(timeForDelta);
-//          if (!delta.isNegative()) {
-//            engine.timeline.add(delta);
-//          }
     // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
     //   even if they occur at the same real time.
 
@@ -469,31 +458,14 @@ public final class SimulationEngine implements AutoCloseable {
         this.waitingConditions.unsubscribeQuery(s.id());
       }
 
-//    this.timeline.add(batch.offsetFromStart().minus(curTime()));
-//    this.elapsedTime = batch.offsetFromStart();
       setCurTime(batch.offsetFromStart());
-//<<<<<<< HEAD
-//  /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-//  public EventGraph<Event> performJobs(
-//      final Collection<JobId> jobs,
-//      final Duration currentTime,
-//      final Duration maximumTime,
-//      final Topic<Topic<?>> queryTopic) {
-//    var tip = EventGraph.<Event>empty();
-//    for (final var job$ : jobs) {
-//      tip = EventGraph.concurrently(tip, TaskFrame.run(job$, this.cells, (job, frame) -> {
-//        this.performJob(job, frame, currentTime, maximumTime, queryTopic);
-//=======
       var tip = EventGraph.<Event>empty();
       for (final var job$ : batch.jobs()) {
         tip = EventGraph.concurrently(tip, TaskFrame.run(job$, this.cells, (job, frame) -> {
           this.performJob(job, frame, curTime(), maximumTime, queryTopic);
-//        this.performJob(job, frame, batch.offsetFromStart());
-//>>>>>>> prototype/excise-resources-from-sim-engine
         }));
       }
 
-//    this.timeline.add(tip);
       this.timeline.add(tip, curTime());
       updateTaskInfo(tip);
 
@@ -501,32 +473,19 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-//  public Duration getElapsedTime() {
-//    return this.elapsedTime;
-//  }
-
   /** Performs a single job. */
   private void performJob(
       final JobId job,
       final TaskFrame<JobId> frame,
-//<<<<<<< HEAD
       final Duration currentTime,
       final Duration maximumTime,
       final Topic<Topic<?>> queryTopic) {
-//=======
-//      final Duration currentTime
-//  ) {
-//>>>>>>> prototype/excise-resources-from-sim-engine
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime, queryTopic);
     } else if (job instanceof JobId.SignalJobId j) {
       this.stepSignalledTasks(j.id(), frame);
     } else if (job instanceof JobId.ConditionJobId j) {
-//<<<<<<< HEAD
       this.updateCondition(j.id(), frame, currentTime, maximumTime, queryTopic);
-//=======
-//      this.updateCondition(j.id(), frame, currentTime);
-//>>>>>>> prototype/excise-resources-from-sim-engine
     } else if (job instanceof JobId.ResourceJobId j) {
       // TODO: Would like to check if the cells on which this resource depends is stale.
       //       Where is this info?  EngineQuerier.referencedTopics?
@@ -648,16 +607,10 @@ public final class SimulationEngine implements AutoCloseable {
   public void updateCondition(
       final ConditionId condition,
       final TaskFrame<JobId> frame,
-//<<<<<<< HEAD
       final Duration currentTime,
       final Duration horizonTime,
       final Topic<Topic<?>> queryTopic) {
     final var querier = new EngineQuerier(currentTime, frame, queryTopic, condition.sourceTask());
-//=======
-//      final Duration currentTime
-//  ) {
-//    final var querier = new EngineQuerier(frame);
-//>>>>>>> prototype/excise-resources-from-sim-engine
     final var prediction = this.conditions
         .get(condition)
         .nextSatisfied(querier, Duration.MAX_VALUE)
@@ -746,7 +699,6 @@ public final class SimulationEngine implements AutoCloseable {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
   }
 
-//<<<<<<< HEAD
   public MissionModel<?> getMissionModel() {
     return this.missionModel;
   }
@@ -777,8 +729,6 @@ public final class SimulationEngine implements AutoCloseable {
     return diff;
   }
 
-//  public record TaskInfo(
-//=======
   public boolean hasJobsScheduledThrough(final Duration givenTime) {
     return this.scheduledJobs
         .min()
@@ -787,8 +737,6 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public record TaskInfo(
-//  private record TaskInfo(
-//>>>>>>> prototype/excise-resources-from-sim-engine
       Map<String, ActivityDirectiveId> taskToPlannedDirective,
       Map<ActivityDirectiveId, TaskId> directiveIdToTaskId,
       Map<String, SerializedActivity> input,
@@ -875,31 +823,21 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-//<<<<<<< HEAD
   private TaskInfo.Trait taskInfoTrait = null;
   public void updateTaskInfo(EventGraph<Event> g) {
     if (taskInfoTrait == null) taskInfoTrait = new TaskInfo.Trait(getMissionModel().getTopics(), defaultActivityTopic);
     g.evaluate(taskInfoTrait, taskInfoTrait::atom).accept(taskInfo);
   }
-//=======
-//  public static SimulationResults computeResults(
   public SimulationResultsInterface computeResults(
-//      final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic
-//      final TemporalEventSource timeline,
-//      final Iterable<SerializableTopic<?>> serializableTopics
   )
   {
     return computeResults(
-//        engine,
         startTime,
         elapsedTime,
         activityTopic,
-//        timeline,
-//        serializableTopics,
-//        engine
         this
             .resources
             .entrySet()
@@ -907,7 +845,6 @@ public final class SimulationEngine implements AutoCloseable {
             .collect(Collectors.toMap(
                         $ -> $.getKey().id(),
                         Map.Entry::getValue)));
-//>>>>>>> prototype/excise-resources-from-sim-engine
   }
 
   /** Compute a set of results from the current state of simulation. */
@@ -920,38 +857,19 @@ public final class SimulationEngine implements AutoCloseable {
   public SimulationResultsInterface computeResults(
       final Instant startTime,
       final Duration elapsedTime,
-//<<<<<<< HEAD
-//      final Topic<ActivityDirectiveId> activityTopic
-//=======
       final Topic<ActivityDirectiveId> activityTopic,
-//      final TemporalEventSource timeline,
-//      final Iterable<SerializableTopic<?>> serializableTopics,
       final Map<String, ProfilingState<?>> resources
-//>>>>>>> prototype/excise-resources-from-sim-engine
   ) {
     //System.out.println("computeResults(startTime=" + startTime + ", elapsedTime=" + elapsedTime + "...) at time " + curTime());
 
-//    // Collect per-task information from the event graph.
-//    taskInfo = new TaskInfo();
-
     var serializableTopics = this.missionModel.getTopics();
-//    for (final var point : timeline) {
-//      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
-//      updateTaskInfo(p.events());
-//    }
 
     // Extract profiles for every resource.
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
 
-//<<<<<<< HEAD
-//    //var allResources = oldEngine == null ? this.resources : new HashMap<>(oldEngine.resources).putAll(this.resources);
     for (final var entry : resources.entrySet()) {
-//      final var id = entry.getKey();
-//=======
-//    for (final var entry : resources.entrySet()) {
       final var name = entry.getKey();
-//>>>>>>> prototype/excise-resources-from-sim-engine
       final var state = entry.getValue();
 
       final var resource = state.resource();
@@ -1012,8 +930,6 @@ public final class SimulationEngine implements AutoCloseable {
       activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(task);
     });
 
-//    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
-//    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
     this.tasks.forEach((task, state) -> {
       if (!taskInfo.isActivity(task)) return;
 
@@ -1170,13 +1086,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
-//<<<<<<< HEAD
-//  private final class EngineQuerier implements Querier {
   public final class EngineQuerier<Job> implements Querier {
     private final Duration currentTime;
-//    private final TaskFrame<JobId> frame;
     public final TaskFrame<Job> frame;
-//    private final Set<Topic<?>> referencedTopics = new HashSet<>();
     public final Set<Topic<?>> referencedTopics = new HashSet<>();
     private final Optional<Pair<Topic<Topic<?>>, TaskId>> queryTrackingInfo;
     public Optional<Duration> expiry = Optional.empty();
@@ -1184,14 +1096,6 @@ public final class SimulationEngine implements AutoCloseable {
     public EngineQuerier(final Duration currentTime, final TaskFrame<Job> frame, final Topic<Topic<?>> queryTopic,
                          final TaskId associatedTask) {
       this.currentTime = currentTime;
-//=======
-//  public static final class EngineQuerier implements Querier {
-//    private final TaskFrame<?> frame;
-//    public final Set<Topic<?>> referencedTopics = new HashSet<>();
-//    public Optional<Duration> expiry = Optional.empty();
-//
-//    public EngineQuerier(final TaskFrame<?> frame) {
-//>>>>>>> prototype/excise-resources-from-sim-engine
       this.frame = Objects.requireNonNull(frame);
       this.queryTrackingInfo = Optional.of(Pair.of(Objects.requireNonNull(queryTopic), associatedTask));
     }

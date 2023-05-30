@@ -233,7 +233,6 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
-//<<<<<<< HEAD
     final MissionModel<?> missionModel = loadAndInstantiateMissionModel(message.missionModelId(),
                                                                         message.simulationStartTime(),
                                                                         SerializedValue.of(config));

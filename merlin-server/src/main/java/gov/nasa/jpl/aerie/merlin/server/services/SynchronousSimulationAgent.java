@@ -82,8 +82,6 @@ public record SynchronousSimulationAgent (
           plan.startTimestamp.toInstant(),
           planDuration,
           plan.activityDirectives,
-//<<<<<<< HEAD
-//          plan.configuration));
           plan.configuration,
           this.useResourceTracker));
     } catch (SimulationException ex) {
@@ -95,10 +93,6 @@ public record SynchronousSimulationAgent (
                     .build())
           .trace(ex.cause));
       return;
-//=======
-//          plan.configuration,
-//          this.useResourceTracker));
-//>>>>>>> prototype/excise-resources-from-sim-engine
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")

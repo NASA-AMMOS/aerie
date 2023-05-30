@@ -1,29 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
-//<<<<<<< HEAD
-//import java.io.File;
-//import java.io.IOException;
-//import java.nio.file.Path;
-//import java.time.Instant;
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.Collection;
-//import java.util.Comparator;
-//import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.stream.Collectors;
-//import java.util.stream.Stream;
-//import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
-//import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
-//import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
-//import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
-//import static org.junit.jupiter.api.Assertions.*;
-//
-//=======
-//>>>>>>> prototype/excise-resources-from-sim-engine
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;

@@ -12,9 +12,6 @@ public record WorkerAppConfiguration(
     Path merlinFileStore,
     Path missionRuleJarPath,
     PlanOutputMode outputMode,
-//<<<<<<< HEAD
     String hasuraGraphQlAdminSecret,
-//=======
     boolean useResourceTracker
-//>>>>>>> prototype/excise-resources-from-sim-engine
 ) { }

@@ -1,12 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-//<<<<<<< HEAD
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
-//import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-//=======
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-//>>>>>>> prototype/excise-resources-from-sim-engine
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -35,7 +31,6 @@ public final class SimulationDriver<Model> {
 
 
   private SimulationEngine engine;
-  //private TemporalEventSource timeline = new TemporalEventSource();
   private ResourceTracker resourceTracker = null;
   private final boolean useResourceTracker;
   private final MissionModel<Model> missionModel;
@@ -79,9 +74,7 @@ public final class SimulationDriver<Model> {
     setCurTime(Duration.ZERO);
 
     // Begin tracking any resources that have not already been simulated.
-    //if (!useResourceTracker) {
-      trackResources();
-    //}
+    trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
     startDaemons(curTime());
@@ -100,7 +93,6 @@ public final class SimulationDriver<Model> {
       final Duration planDuration,
       final boolean useResourceTracker
   ) {
-//<<<<<<< HEAD
     var driver = new SimulationDriver<>(missionModel, simulationStartTime, simulationDuration, useResourceTracker);
     return driver.simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, useResourceTracker);
   }
@@ -187,11 +179,6 @@ public final class SimulationDriver<Model> {
 
   private void startDaemons(Duration time) {
     engine.scheduleTask(time, missionModel.getDaemon(), null);
-
-//    final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-//    final var commit = engine.performJobs(batch.jobs(), time, Duration.MAX_VALUE, queryTopic);
-//    engine.timeline.add(commit, time);
-//    engine.updateTaskInfo(commit);
     engine.step(Duration.MAX_VALUE, queryTopic);
   }
 
@@ -206,7 +193,6 @@ public final class SimulationDriver<Model> {
       if (useResourceTracker) {
         resourceTracker.track(name, resource);
       } else {
-//      engine.trackResource(name, resource, curTime());
         engine.trackResource(name, resource, Duration.ZERO);
       }
     }
@@ -249,147 +235,6 @@ public final class SimulationDriver<Model> {
       }
     }
   }
-//      var timeOfNextJobs = engine.timeOfNextJobs();
-//      var nextTime = timeOfNextJobs;
-//
-//      var earliestStaleReads = engine.earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-//      var staleReadTime = earliestStaleReads.getLeft();
-//      nextTime = Duration.min(nextTime, staleReadTime);
-//
-//      // Increment real time, if necessary.
-//      final var delta = nextTime.minus(curTime());
-//      setCurTime(nextTime);
-//      // TODO: Since we moved timeline from SimulationDriver to SimulationEngine, maybe some of this should be encapsulated in the engine.
-////      if (!delta.isNegative()) {
-////        engine.timeline.add(delta);
-////      }
-//      // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-//      //   even if they occur at the same real time.
-//
-//      if (staleReadTime.isEqualTo(nextTime)) {
-//        engine.rescheduleStaleTasks(earliestStaleReads);
-//      }
-//
-//      if (timeOfNextJobs.isEqualTo(nextTime)) {
-//        batch = engine.extractNextJobs(Duration.MAX_VALUE);
-//        // Run the jobs in this batch.
-//        final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
-//        engine.timeline.add(commit, curTime());
-//        engine.updateTaskInfo(commit);
-//=======
-//    return simulate(
-//      missionModel,
-//      schedule,
-//      startTime,
-//      planDuration,
-//      simulationDuration,
-//      false
-//    );
-//  }
-//
-//  public static <Model>
-//  SimulationResults simulate(
-//      final MissionModel<Model> missionModel,
-//      final Map<ActivityDirectiveId, ActivityDirective> schedule,
-//      final Instant startTime,
-//      final Duration planDuration,
-//      final Duration simulationDuration,
-//      final boolean useResourceTracker
-//  ) {
-//    /* The top-level simulation timeline. */
-//    final var timeline = new TemporalEventSource();
-//    try (final var engine = new SimulationEngine(timeline, missionModel.getInitialCells())) {
-//      if (!useResourceTracker) {
-//        // Begin tracking all resources.
-//        for (final var entry : missionModel.getResources().entrySet()) {
-//          final var name = entry.getKey();
-//          final var resource = entry.getValue();
-//
-//          engine.trackResource(name, resource, Duration.ZERO);
-//        }
-//      }
-//
-//      // Start daemon task(s) immediately, before anything else happens.
-//      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-//      engine.step();
-//
-//      // Specify a topic on which tasks can log the activity they're associated with.
-//      final var activityTopic = new Topic<ActivityDirectiveId>();
-//
-//      // Get all activities as close as possible to absolute time
-//      // Schedule all activities.
-//      // Using HashMap explicitly because it allows `null` as a key.
-//      // `null` key means that an activity is not waiting on another activity to finish to know its start time
-//      final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-//
-//      scheduleActivities(
-//          schedule,
-//          resolved,
-//          missionModel,
-//          engine,
-//          activityTopic
-//      );
-//
-//      // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-//      engine.scheduleTask(Duration.ZERO, executor -> $ -> TaskStatus.completed(Unit.UNIT));
-//
-//      // Drive the engine until we're out of time.
-//      // TERMINATION: Actually, we might never break if real time never progresses forward.
-//      while (engine.hasJobsScheduledThrough(simulationDuration)) {
-//        engine.step();
-//      }
-//
-//      if (useResourceTracker) {
-//        // Replay the timeline to collect resource profiles
-//        final var resourceTracker = new ResourceTracker(timeline, missionModel.getInitialCells());
-//        for (final var entry : missionModel.getResources().entrySet()) {
-//          final var name = entry.getKey();
-//          final var resource = entry.getValue();
-//          resourceTracker.track(name, resource);
-//        }
-//        while (!resourceTracker.isEmpty()) {
-//          resourceTracker.updateResources();
-//        }
-//
-//        return SimulationEngine.computeResults(
-//            engine,
-//            startTime,
-//            simulationDuration,
-//            activityTopic,
-//            timeline,
-//            missionModel.getTopics(),
-//            resourceTracker.resourceProfiles());
-//      } else {
-//        return SimulationEngine.computeResults(
-//            engine,
-//            startTime,
-//            simulationDuration,
-//            activityTopic,
-//            timeline,
-//            missionModel.getTopics());
-//      }
-//    }
-//  }
-//
-//  public static <Model, Return>
-//  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-//    /* The top-level simulation timeline. */
-//    final var timeline = new TemporalEventSource();
-//    try (final var engine = new SimulationEngine(timeline, missionModel.getInitialCells())) {
-//      // Start daemon task(s) immediately, before anything else happens.
-//      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-//      engine.step();
-//
-//      // Drive the engine until we're out of time.
-//      // TERMINATION: Actually, we might never break if real time never progresses forward.
-//      final var taskId = engine.scheduleTask(Duration.ZERO, task);
-//      while (!engine.isTaskComplete(taskId)) {
-//        engine.step();
-//>>>>>>> prototype/excise-resources-from-sim-engine
-//      }
-//    }
-//  }
-
 
   private static <Model> void scheduleActivities(
       final Map<ActivityDirectiveId, ActivityDirective> schedule,

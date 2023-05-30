@@ -5,15 +5,10 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.ResourceTracker;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
-//<<<<<<< HEAD
-//=======
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-//>>>>>>> prototype/excise-resources-from-sim-engine
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -35,8 +30,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   private static boolean debug = false;
 
-  //<<<<<<< HEAD
-  //private Duration curTime = Duration.ZERO;
   public Duration curTime() {
     if (engine == null) {
       return Duration.ZERO;
@@ -50,11 +43,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
 
   private SimulationEngine engine;
-  //private TemporalEventSource timeline = new TemporalEventSource();
-//=======
   private final boolean useResourceTracker;
-//  private SimulationEngine engine = null;
-//>>>>>>> prototype/excise-resources-from-sim-engine
   private final MissionModel<Model> missionModel;
   private Instant startTime;
   private final Duration planDuration;
@@ -71,7 +60,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   //List of activities simulated since the last reset
   private final Map<ActivityDirectiveId, ActivityDirective> activitiesInserted = new HashMap<>();
-//<<<<<<< HEAD
   private Topic<Topic<?>> queryTopic = new Topic<>();
 
   // Whether we're rerunning the simulation, in which case we can be lazy about starting up stuff, like daemons
@@ -85,14 +73,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     this(missionModel, Instant.now(), planDuration, useResourceTracker);
   }
 
-//  public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration){
-//=======
   private ResourceTracker resourceTracker = null;
-//  private TemporalEventSource timeline;
 
   public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration, boolean useResourceTracker){
     this.useResourceTracker = useResourceTracker;
-//>>>>>>> prototype/excise-resources-from-sim-engine
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     this.startTime = startTime;
@@ -111,11 +95,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
-//<<<<<<< HEAD
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
     assert useResourceTracker;
-    //activitiesInserted.clear();
     // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
     /* The current real time. */
@@ -125,30 +107,14 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
-    //if (!rerunning) {
-      startDaemons(curTime());
-    //}
+    startDaemons(curTime());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
     engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
   }
 
   private void trackResources() {
-//    // Begin tracking any resources that have not already been simulated.
-//    for (final var entry : missionModel.getResources().entrySet()) {
-//      final var name = entry.getKey();
-//      final var resource = entry.getValue();
-////      if (!rerunning || !engine.oldEngine.hasSimulatedResource(name)) {
-//        engine.trackResource(name, resource, curTime());
-////      }
-//=======
-//
-//    /* The top-level simulation timeline. */
-//    timeline = new TemporalEventSource();
-//
-//    this.engine = new SimulationEngine(timeline, missionModel.getInitialCells());
-//
-//    // Begin tracking all resources.
+    // Begin tracking all resources.
     if (useResourceTracker) {
       this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
     }
@@ -160,73 +126,18 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       } else {
         engine.trackResource(name, resource, Duration.ZERO);
       }
-//>>>>>>> prototype/excise-resources-from-sim-engine
     }
   }
 
   private void startDaemons(Duration time) {
     engine.scheduleTask(time, missionModel.getDaemon(), null);
     engine.step(Duration.MAX_VALUE, queryTopic);
-//
-//<<<<<<< HEAD
-//    final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-//    final var commit = engine.performJobs(batch.jobs(), time, Duration.MAX_VALUE, queryTopic);
-//    engine.timeline.add(commit, time);
-//    engine.updateTaskInfo(commit);
   }
 
   @Override
   public void close() {
     this.engine.close();
   }
-
-//  private void simulateUntil(Duration endTime){
-//    assert(endTime.noShorterThan(curTime()));
-//    while (true) {
-//      var timeOfNextJobs = engine.timeOfNextJobs();
-//      var nextTime = Duration.min(timeOfNextJobs, endTime.plus(Duration.EPSILON));
-//
-////      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
-////      var staleTopicTime = earliestStaleTopics.getRight();
-////      nextTime = Duration.min(nextTime, staleTopicTime);
-//
-//      var earliestStaleReads = engine.earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-//      var staleReadTime = earliestStaleReads.getLeft();
-//      nextTime = Duration.min(nextTime, staleReadTime);
-//
-//      // Increment real time, if necessary.
-//      final var delta = nextTime.minus(curTime());
-//      if(nextTime.longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){  // should this be nextTime.isEqualTo(Duration.MAX_VALUE)?
-//        break;
-//      }
-//      setCurTime(nextTime);
-////      engine.timeline.add(delta);
-//
-////      if (staleTopicTime.isEqualTo(nextTime)) {
-////        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
-////        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
-////        //       while loop.
-////      }
-//
-//      if (staleReadTime.isEqualTo(nextTime)) {
-//        engine.rescheduleStaleTasks(earliestStaleReads);
-//      }
-//
-//      if (timeOfNextJobs.isEqualTo(nextTime)) {
-//        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-//        // Run the jobs in this batch.
-//        final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
-//        engine.timeline.add(commit, curTime());
-//        engine.updateTaskInfo(commit);
-//      }
-//
-//=======
-//      engine.step();
-//    }
-//
-//    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-//    engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT));
-//  }
 
   private void simulateUntil(Duration endTime){
     if (debug) System.out.println("simulateUntil(" + endTime + ")");
@@ -237,7 +148,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     while(engine.hasJobsScheduledThrough(endTime)) {
       // Run the jobs in this batch.
       engine.step(Duration.MAX_VALUE, queryTopic);
-//>>>>>>> prototype/excise-resources-from-sim-engine
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
@@ -270,14 +180,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
     activitiesInserted.put(activityId, activityToSimulate);
-//<<<<<<< HEAD
     if(activityToSimulate.startOffset().noLongerThan(curTime())){
-//=======
-//    if(activityToSimulate.startOffset().noLongerThan(engine.getElapsedTime())){
-//>>>>>>> prototype/excise-resources-from-sim-engine
       initSimulation();
       simulateSchedule(Map.of(activityId, activityToSimulate));
-//      simulateSchedule(activitiesInserted);
     } else {
       simulateSchedule(Map.of(activityId, activityToSimulate));
     }
@@ -292,11 +197,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     resolved.get(null).sort(Comparator.comparing(Pair::getRight));
     final var earliestStartOffset = resolved.get(null).get(0);
 
-//<<<<<<< HEAD
     if(earliestStartOffset.getRight().noLongerThan(curTime())){
-//=======
-//    if(earliestStartOffset.getRight().noLongerThan(engine.getElapsedTime())){
-//>>>>>>> prototype/excise-resources-from-sim-engine
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -310,21 +211,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
    * @return the simulation results
    */
-//<<<<<<< HEAD
   public SimulationResultsInterface getSimulationResults(Instant startTimestamp){
     return getSimulationResultsUpTo(startTimestamp, curTime());
   }
 
   public Duration getCurrentSimulationEndTime(){
     return curTime();
-//=======
-//  public SimulationResults getSimulationResults(Instant startTimestamp){
-//    return getSimulationResultsUpTo(startTimestamp, engine.getElapsedTime());
-//  }
-//
-//  public Duration getCurrentSimulationEndTime(){
-//    return engine.getElapsedTime();
-//>>>>>>> prototype/excise-resources-from-sim-engine
   }
 
   /**
@@ -337,44 +229,26 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     if (debug) System.out.println("getSimulationResultsUpTo(startTimestamp=" + startTimestamp + ", endTime=" + endTime + ")");
     //if previous results cover a bigger period, we return do not regenerate
-//<<<<<<< HEAD
     if(endTime.longerThan(curTime())){
       simulateUntil(endTime);
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.getStartTime()) != 0) {
-//      lastSimResults = engine.computeResults(
-//          startTimestamp,
-//          endTime,
-//          activityTopic);
-//=======
-//    if(endTime.longerThan(engine.getElapsedTime())){
-//      simulateUntil(endTime);
-//    }
-//
-//    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
       if (useResourceTracker) {
         while (!resourceTracker.isEmpty(endTime, true)) {
           resourceTracker.updateResources(endTime, true);
         }
         lastSimResults = engine.computeResults(
-//            engine,
             startTimestamp,
             endTime,
             activityTopic,
-//            timeline,
-//            missionModel.getTopics(),
             resourceTracker.resourceProfiles());
       } else {
         lastSimResults = engine.computeResults(
-//            engine,
             startTimestamp,
             endTime,
             activityTopic);
-//            timeline,
-//            missionModel.getTopics());
       }
-//>>>>>>> prototype/excise-resources-from-sim-engine
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
@@ -408,48 +282,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     );
 
     var allTaskFinished = false;
-//<<<<<<< HEAD
-//    while (true) {
-//      var timeOfNextJobs = engine.timeOfNextJobs();
-//      var nextTime = timeOfNextJobs;
-//
-////      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
-////      var staleTopicTime = earliestStaleTopics.getRight();
-////      nextTime = Duration.min(nextTime, staleTopicTime);
-//
-//      var earliestStaleReads = engine.earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-//      var staleReadTime = earliestStaleReads.getLeft();
-//      nextTime = Duration.min(nextTime, staleReadTime);
-//
-//      final var delta = nextTime.minus(curTime());
-//      //once all tasks are finished, we need to wait for events triggered at the same time
-//      if(allTaskFinished && !delta.isZero()){
-//        break;
-//      }
-//      // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-//      //   even if they occur at the same real time.
-//
-//      setCurTime(nextTime);
-////      engine.timeline.add(delta);
-//
-////      if (staleTopicTime.isEqualTo(nextTime)) {
-////        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
-////        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
-////        //       while loop.
-////      }
-//
-//      if (staleReadTime.isEqualTo(nextTime)) {
-//        engine.rescheduleStaleTasks(earliestStaleReads);
-//      }
-//
-//      if (timeOfNextJobs.isEqualTo(nextTime)) {
-//        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-//        // Run the jobs in this batch.
-//        final var commit = engine.performJobs(batch.jobs(), curTime(), Duration.MAX_VALUE, queryTopic);
-//        engine.timeline.add(commit, curTime());
-//        engine.updateTaskInfo(commit);
-//      }
-//=======
+
     // Increment real time, if necessary.
 
     //once all tasks are finished, we need to wait for events triggered at the same time
@@ -459,7 +292,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
       // Run the jobs in this batch.
       engine.step(Duration.MAX_VALUE, queryTopic);
-//>>>>>>> prototype/excise-resources-from-sim-engine
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime()) &&
@@ -469,10 +301,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
           .allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
-//<<<<<<< HEAD
-//
-//=======
-//>>>>>>> prototype/excise-resources-from-sim-engine
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
