@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP;
 
-public final class ProfileRepository {
-  public static ProfileSet getProfiles(
+/*package-local*/ final class ProfileRepository {
+  static ProfileSet getProfiles(
       final Connection connection,
       final long datasetId
   ) throws SQLException {
@@ -53,7 +53,7 @@ public final class ProfileRepository {
     return new ProfileSet(realProfiles, discreteProfiles);
   }
 
-  public static ProfileSet getProfiles(
+  static ProfileSet getProfiles(
       final Connection connection,
       final long datasetId,
       final Iterable<String> names
