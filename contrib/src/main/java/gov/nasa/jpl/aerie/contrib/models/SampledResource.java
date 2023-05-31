@@ -10,37 +10,36 @@ import java.util.function.UnaryOperator;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 
 /**
- * Simple resource that samples arbitrarily many existing resources/values at a specified rate (default rate is once per
+ * Simple resource that samples arbitrarily many existing resources/values at a specified period (default period is once per
  * second).
  */
 public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
-  private double rate;
+  private Register<Double> period = Register.forImmutable(1.0);
 
   /**
-   * Constructor that does not require caller to specify a rate and therefore assumes a sample
-   * rate of 1 sample per second.
+   * Constructor that does not require caller to specify a period and therefore assumes a sample
+   * period of 1 sample per second.
    */
   public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator) {
     this.result = Register.create(sampler.get(), duplicator);
     this.sampler = Objects.requireNonNull(sampler);
-    this.rate = 1.0;
     spawn(this::takeSamples);
   }
 
   /**
-   * Constructor that requires caller to specify an initial sample rate
+   * Constructor that requires caller to specify an initial sample period
    */
-  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator, final double rate) {
+  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator, final double period) {
     this.result = Register.create(sampler.get(), duplicator);
     this.sampler = Objects.requireNonNull(sampler);
-    this.rate = rate;
+    this.period.set(period);
     spawn(this::takeSamples);
   }
 
   /**
-   * Method that samples the supplied resource at the current specified rate
+   * Method that samples the supplied resource at the current specified period
    */
   private void takeSamples() {
     while (true) {
@@ -48,20 +47,20 @@ public class SampledResource<T> implements DiscreteResource<T> {
       if (!result.get().equals(sample)) {
         result.set(sample);
       }
-      delay( Duration.roundNearest(rate, Duration.SECONDS) );
+      delay( Duration.roundNearest(period.get(), Duration.SECONDS) );
     }
   }
 
   /**
-   * Get current sample rate
+   * Get current sample period
    */
-  public double getRate() { return rate; }
+  public double getPeriod() { return period.get(); }
 
   /**
-   * Method to adjust the specified rate of sampling. Note if takeSamples() is currently waiting, the
-   * new rate will not take effect until after the current wait cycle.
+   * Method to adjust the specified period of sampling. Note if takeSamples() is currently waiting, the
+   * new period will not take effect until after the current wait cycle.
    */
-  public void setRate(final double newRate ) { rate = newRate; }
+  public void setPeriod(final double newPeriod ) { period.set( newPeriod ); }
 
   @Override
   public T getDynamics() {
