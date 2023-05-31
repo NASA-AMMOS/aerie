@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.database;
 
-import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.Assumptions;
@@ -67,17 +66,15 @@ public class DatabaseTestHelper {
       proc.destroy();
     }
 
-    final var pgDataSource = new PGDataSource();
-
-    pgDataSource.setServerName("localhost");
-    pgDataSource.setPortNumber(5432);
-    pgDataSource.setDatabaseName(dbName);
-    pgDataSource.setApplicationName(appName);
-
     final var hikariConfig = new HikariConfig();
+
+    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+    hikariConfig.addDataSourceProperty("serverName", "localhost");
+    hikariConfig.addDataSourceProperty("portNumber", "5432");
+    hikariConfig.addDataSourceProperty("databaseName", dbName);
+    hikariConfig.addDataSourceProperty("applicationName", appName);
     hikariConfig.setUsername("aerie");
     hikariConfig.setPassword("aerie");
-    hikariConfig.setDataSource(pgDataSource);
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 

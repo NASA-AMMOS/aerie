@@ -7,13 +7,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.postgresql.util.PGInterval;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -595,7 +595,7 @@ class MerlinDatabaseTests {
                                                              planDatasetRecord.dataset_id())
                                                  );
       planDatasetSelectRes.next();
-      final var offsetFromPlanStart = Duration.parse(planDatasetSelectRes.getString("offset_from_plan_start"));
+      final var offsetFromPlanStart = new PGInterval(planDatasetSelectRes.getString("offset_from_plan_start"));
       planDatasetSelectRes.close();
 
       final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
@@ -620,13 +620,23 @@ class MerlinDatabaseTests {
                                                          .formatted(newPlanId, planDatasetRecord.dataset_id())
                                                  );
       planDatasetInsertRes.next();
-      final var newOffsetFromPlanStart = Duration.parse(planDatasetInsertRes.getString("offset_from_plan_start"));
+      final var newOffsetFromPlanStart = new PGInterval(planDatasetInsertRes.getString("offset_from_plan_start"));
       planDatasetInsertRes.close();
 
-      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime()
-                                                                               - planStartTime.getTime()));
+      final var calculatedOffset = new PGInterval(offsetFromPlanStart.getValue());
+      calculatedOffset.setSeconds(calculatedOffset.getSeconds() - (newPlanStartTime.getTime() - planStartTime.getTime()) / 1000.0);
 
-      assertEquals(calculatedOffset, newOffsetFromPlanStart);
+      assertEquals(microsOfPGInterval(calculatedOffset), microsOfPGInterval(newOffsetFromPlanStart));
+    }
+
+    static long microsOfPGInterval(final PGInterval interval) {
+      assertEquals(0, interval.getYears());
+      assertEquals(0, interval.getMonths());
+      return (long)interval.getMicroSeconds() +
+             (1_000_000L * interval.getWholeSeconds()) +
+             (1_000_000L * 60 * interval.getMinutes()) +
+             (1_000_000L * 3600 * interval.getHours()) +
+             (1_000_000L * 3600 * 24 * interval.getDays());
     }
 
     @Test
@@ -1076,6 +1086,8 @@ class MerlinDatabaseTests {
     insertProfileSegment(datasetId, winnerId, "6 hours", "\"Bob or Alice\"", false);
     insertProfileSegment(datasetId, winnerId, "10 hours", "\"Alice\"", false);
 
+    connection.prepareStatement("set intervalstyle = 'iso_8601';").execute();
+
     final var segmentsAtStart = getResourcesAtStartOffset(datasetId, "00:00:00");
     final var segmentsAtOneHour = getResourcesAtStartOffset(datasetId, "06:00:00");
     final var segmentsAtTwelveHours = getResourcesAtStartOffset(datasetId, "12:00:00");
@@ -1149,7 +1161,7 @@ class MerlinDatabaseTests {
               VALUES (%d, '%s', '%s', '%s')
               RETURNING id;
               """.formatted(datasetId, name, type, duration));
-      assertTrue(results.first());
+      assertTrue(results.next());
       return results.getInt("id");
     }
   }
@@ -1180,7 +1192,7 @@ class MerlinDatabaseTests {
           """
               SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
               """.formatted(datasetId, profileId));
-      assertTrue(res.first());
+      assertTrue(res.next());
       return res.getInt("count");
     }
   }
