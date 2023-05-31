@@ -10,6 +10,7 @@ create table scheduling_request (
   reason jsonb null,
   canceled boolean not null default false,
   dataset_id integer default null,
+  for_aerie_scheduler boolean not null default true,
 
   specification_revision integer not null,
 
@@ -34,6 +35,8 @@ comment on column scheduling_request.status is e''
   'The state of the the scheduling request.';
 comment on column scheduling_request.reason is e''
   'The reason for failure when a scheduling request fails.';
+comment on column scheduling_request.for_aerie_scheduler is e''
+  'Whether the request is destined to the aerie scheduler or to an external scheduler;';
 comment on column scheduling_request.specification_revision is e''
   'The revision of the scheduling_specification associated with this request.';
 comment on column scheduling_request.requested_by is e''
@@ -68,5 +71,6 @@ do $$ begin
 create trigger notify_scheduler_workers
   after insert on scheduling_request
   for each row
+  when (NEW.for_aerie_scheduler)
   execute function notify_scheduler_workers();
 end $$;
