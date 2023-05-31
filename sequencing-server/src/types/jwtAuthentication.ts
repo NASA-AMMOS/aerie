@@ -1,4 +1,7 @@
-import type { AuthSessionVariables } from './authSessionVariables';
+export type AuthSessionVariables = {
+  'x-hasura-role': string;
+  'x-hasura-user-id': string;
+};
 
 export type Jwt = {
   camToken: string;

@@ -1,7 +1,6 @@
 import jwtDecode from 'jwt-decode';
 
-import type { AuthSessionVariables } from '../types/authSessionVariables';
-import type { Jwt } from '../types/jwt';
+import type { AuthSessionVariables, Jwt } from '../types/jwtAuthentication';
 
 /**
  * A helper function to get the username of the user who sent the request.
