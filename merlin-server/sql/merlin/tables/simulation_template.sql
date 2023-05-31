@@ -3,7 +3,7 @@ create table simulation_template (
   revision integer not null default 0,
 
   model_id integer not null,
-  description text not null,
+  description text not null default '',
   arguments merlin_argument_set not null,
   owner text not null default '',
 

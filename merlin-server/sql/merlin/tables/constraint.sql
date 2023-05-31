@@ -2,7 +2,7 @@ create table "constraint" (
   id integer generated always as identity,
 
   name text not null,
-  description text not null,
+  description text not null default '',
   definition text not null,
   tags text[] default '{}',
 
