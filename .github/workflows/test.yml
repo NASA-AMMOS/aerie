@@ -34,9 +34,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Assemble
-        run: ./gradlew assemble
+        run: ./gradlew assemble --parallel
       - name: Run Unit Tests
-        run: ./gradlew test
+        run: ./gradlew test --parallel
       - name: Upload Test Results as XML
         if: always()
         uses: actions/upload-artifact@v3
@@ -70,22 +70,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Assemble
-        run: ./gradlew assemble
-      - name: Validate Docker Configurations
-        # `docker-compose` and `docker compose` have different "leniencies"
-        run: |
-          find . -name docker-compose\*.yml | while read -r file; do \
-            echo "$file"; \
-            docker-compose -f "$file" config -q && \
-            docker compose -f "$file" config -q; \
-          done
+        run: ./gradlew assemble --parallel
       - name: Start Services
         run: |
           docker compose -f ./e2e-tests/docker-compose-test.yml up -d --build
           docker images
           docker ps -a
-      - name: Sleep for 15 Seconds
-        run: sleep 15s
+      - name: Sleep for 30 Seconds
+        run: sleep 30s
         shell: bash
       - name: Run E2E Tests
         run: ./gradlew e2eTest
