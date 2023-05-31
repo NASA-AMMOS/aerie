@@ -23,7 +23,7 @@ language plpgsql as $$
       with deleted as (
         delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
       )
-      select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.source_scheduling_goal_id,
               deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
               deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
   end
@@ -48,7 +48,7 @@ begin
       with deleted as (
         delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
       )
-      select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.source_scheduling_goal_id,
               deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
               deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
 end
@@ -80,7 +80,7 @@ begin
             where (ad.plan_id, ad.id) = (_plan_id, descendents.activity_id)
             returning *
       )
-      select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.source_scheduling_goal_id,
               deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
               deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
 end

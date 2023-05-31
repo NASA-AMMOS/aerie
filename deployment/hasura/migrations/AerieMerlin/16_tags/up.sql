@@ -887,4 +887,88 @@ begin
 end
 $$;
 
+-- Anchor Delete Functions
+create or replace function hasura_functions.delete_activity_by_pk_reanchor_plan_start(_activity_id int, _plan_id int)
+  returns setof hasura_functions.delete_anchor_return_value
+  strict
+language plpgsql as $$
+  begin
+    if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+      raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+    end if;
+
+    return query
+      with updated as (
+        select public.anchor_direct_descendents_to_plan(_activity_id := _activity_id, _plan_id := _plan_id)
+      )
+      select updated.*, 'updated'
+        from updated;
+
+    return query
+      with deleted as (
+        delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
+      )
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.source_scheduling_goal_id,
+              deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
+              deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
+  end
+$$;
+
+create or replace function hasura_functions.delete_activity_by_pk_reanchor_to_anchor(_activity_id int, _plan_id int)
+  returns setof hasura_functions.delete_anchor_return_value
+  strict
+  language plpgsql as $$
+begin
+  if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+    raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+  end if;
+
+    return query
+      with updated as (
+        select public.anchor_direct_descendents_to_ancestor(_activity_id := _activity_id, _plan_id := _plan_id)
+      )
+      select updated.*, 'updated'
+        from updated;
+    return query
+      with deleted as (
+        delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
+      )
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.source_scheduling_goal_id,
+              deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
+              deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
+end
+$$;
+
+create or replace function hasura_functions.delete_activity_by_pk_delete_subtree(_activity_id int, _plan_id int)
+  returns setof hasura_functions.delete_anchor_return_value
+  strict
+  language plpgsql as $$
+begin
+  if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+    raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+  end if;
+
+  return query
+    with recursive
+      descendents(activity_id, p_id) as (
+          select _activity_id, _plan_id
+          from activity_directive ad
+          where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
+        union
+          select ad.id, ad.plan_id
+          from activity_directive ad, descendents d
+          where (ad.anchor_id, ad.plan_id) = (d.activity_id, d.p_id)
+      ),
+      deleted as (
+          delete from activity_directive ad
+            using descendents
+            where (ad.plan_id, ad.id) = (_plan_id, descendents.activity_id)
+            returning *
+      )
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.source_scheduling_goal_id,
+              deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
+              deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
+end
+$$;
+
 call migrations.mark_migration_applied('16');
