@@ -528,7 +528,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public ProfileSet getProfiles(final Iterable<String> profileNames) {
+    public ProfileSet getProfiles(final List<String> profileNames) {
       try (final var connection = this.dataSource.getConnection()) {
         return ProfileRepository.getProfiles(connection, record.datasetId(), profileNames);
       } catch (SQLException e) {

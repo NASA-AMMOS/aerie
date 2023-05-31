@@ -56,7 +56,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
   static ProfileSet getProfiles(
       final Connection connection,
       final long datasetId,
-      final Iterable<String> names
+      final List<String> names
   ) throws SQLException {
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>>();
@@ -117,7 +117,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
   static List<ProfileRecord> getProfileRecords(
       final Connection connection,
       final long datasetId,
-      final Iterable<String> names
+      final List<String> names
   ) throws SQLException {
     try (final var getProfilesAction = new GetProfilesByNameAction(connection)) {
       return getProfilesAction.get(datasetId, names);

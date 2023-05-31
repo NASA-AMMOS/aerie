@@ -160,7 +160,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public ProfileSet getProfiles(final Iterable<String> profileNames) {
+    public ProfileSet getProfiles(final List<String> profileNames) {
       final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
       final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
       for (final var profileName : profileNames) {

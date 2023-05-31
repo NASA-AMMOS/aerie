@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 public interface SimulationResultsHandle {
@@ -15,7 +16,7 @@ public interface SimulationResultsHandle {
 
   SimulationResults getSimulationResults();
 
-  ProfileSet getProfiles(final Iterable<String> profileNames);
+  ProfileSet getProfiles(final List<String> profileNames);
 
   Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities();
 }

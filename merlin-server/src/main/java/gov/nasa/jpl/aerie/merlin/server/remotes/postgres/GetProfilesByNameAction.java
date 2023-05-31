@@ -30,14 +30,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<ProfileRecord> get(final long datasetId, final Iterable<String> names) throws SQLException {
-    final var namesList = new ArrayList<>();
-    for (final var name : names) {
-      namesList.add(name);
-    }
+  public List<ProfileRecord> get(final long datasetId, final List<String> names) throws SQLException {
 
     this.statement.setLong(1, datasetId);
-    this.statement.setArray(2, this.statement.getConnection().createArrayOf("VARCHAR", namesList.toArray()));
+    this.statement.setArray(2, this.statement.getConnection().createArrayOf("varchar", names.toArray()));
 
     final var records = new ArrayList<ProfileRecord>();
     PreparedStatements.setIntervalStyle(statement.getConnection(), PreparedStatements.PGIntervalStyle.ISO8601);

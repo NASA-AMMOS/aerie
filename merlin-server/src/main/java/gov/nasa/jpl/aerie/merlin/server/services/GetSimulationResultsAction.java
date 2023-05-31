@@ -221,7 +221,9 @@ public final class GetSimulationResultsAction {
       }
 
       if (!newNames.isEmpty()) {
-        final var newProfiles = resultsHandle$.map($ -> $.getProfiles(newNames)).orElse(ProfileSet.of(Map.of(), Map.of()));
+        final var newProfiles = resultsHandle$
+            .map($ -> $.getProfiles(new ArrayList<>(newNames)))
+            .orElse(ProfileSet.of(Map.of(), Map.of()));
 
         for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
           if (!realProfiles.containsKey(_entry.getKey())) {
