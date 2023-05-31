@@ -9,6 +9,9 @@ begin;
   \ir domain-types/merlin-arguments.sql
   \ir domain-types/merlin-activity-directive-metadata.sql
 
+  -- Deployment-level Metadata
+  \ir tables/metadata/tags.sql
+
   -- Activity Directive Metadata schema
   \ir tables/activity_directive_metadata_schema.sql
 
@@ -53,8 +56,11 @@ begin;
   -- Presets
   \ir tables/activity_presets.sql
 
-    -- Metadata
-  \ir tables/metadata/tags.sql
+  -- Table-specific Metadata
+  \ir tables/metadata/activity_directive_tags.sql
+  \ir tables/metadata/constraint_tags.sql
+  \ir tables/metadata/plan_tags.sql
+  \ir tables/metadata/snapshot_activity_tags.sql
 
   -- Views
   \ir views/simulated_activity.sql

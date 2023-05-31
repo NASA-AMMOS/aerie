@@ -43,6 +43,28 @@ begin
 end
 $$;
 
+create function get_tags(_activity_id int, _plan_id int)
+  returns jsonb
+  security definer
+  language plpgsql as $$
+  declare
+    tags jsonb;
+begin
+    select  jsonb_agg(json_build_object(
+      'id', id,
+      'name', name,
+      'color', color,
+      'owner', owner,
+      'created_at', created_at
+      ))
+    from metadata.tags tags, metadata.activity_directive_tags adt
+    where tags.id = adt.tag_id
+      and (adt.directive_id, adt.plan_id) = (_activity_id, _plan_id)
+    into tags;
+    return tags;
+end
+$$;
+
 create view activity_directive_extended as
 (
   select
@@ -51,7 +73,7 @@ create view activity_directive_extended as
     ad.plan_id as plan_id,
     -- Additional Properties
     ad.name as name,
-    ad.tags as tags,
+    get_tags(ad.id, ad.plan_id) as tags,
     ad.source_scheduling_goal_id as source_scheduling_goal_id,
     ad.created_at as created_at,
     ad.last_modified_at as last_modified_at,

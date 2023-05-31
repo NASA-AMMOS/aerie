@@ -25,7 +25,6 @@ create table plan_snapshot_activities(
     id integer,
 
     name text,
-    tags text[],
     source_scheduling_goal_id integer,
     created_at timestamptz not null,
     last_modified_at timestamptz not null,
