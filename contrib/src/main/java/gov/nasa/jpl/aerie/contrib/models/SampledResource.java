@@ -10,8 +10,8 @@ import java.util.function.UnaryOperator;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 
 /**
- * Simple resource that samples arbitrarily many existing resources/values at a specified period (default period is once per
- * second).
+ * Simple resource that samples arbitrarily many existing resources/values at a specified period (default period is once
+ * per second).
  */
 public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
@@ -52,7 +52,7 @@ public class SampledResource<T> implements DiscreteResource<T> {
   }
 
   /**
-   * Get current sample period
+   * Get current sample period (seconds per sample)
    */
   public double getPeriod() { return period.get(); }
 
