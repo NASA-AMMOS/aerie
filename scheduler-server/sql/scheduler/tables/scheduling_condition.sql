@@ -5,7 +5,7 @@ create table scheduling_condition (
   definition text not null,
 
   model_id integer not null,
-  description text null,
+  description text not null default '',
   author text null,
   last_modified_by text null,
   created_date timestamptz not null default now(),
