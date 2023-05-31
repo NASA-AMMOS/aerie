@@ -183,7 +183,7 @@ public final class Duration implements Comparable<Duration> {
   public static Duration roundUpward(final double quantity, final Duration unit) {
     return add(
         unit.times((long) Math.floor(quantity)),
-        EPSILON.times((long) Math.ceil((quantity % 1) * unit.dividedBy(EPSILON))));
+        EPSILON.times((long) Math.ceil(positiveModulo(quantity, 1) * unit.dividedBy(EPSILON))));
   }
 
   /**
@@ -193,7 +193,7 @@ public final class Duration implements Comparable<Duration> {
   public static Duration roundDownward(final double quantity, final Duration unit) {
     return add(
         unit.times((long) Math.floor(quantity)),
-        EPSILON.times((long) Math.floor((quantity % 1) * unit.dividedBy(EPSILON))));
+        EPSILON.times((long) Math.floor(positiveModulo(quantity, 1) * unit.dividedBy(EPSILON))));
   }
 
   /**
@@ -203,7 +203,7 @@ public final class Duration implements Comparable<Duration> {
   public static Duration roundNearest(final double quantity, final Duration unit) {
     return add(
         unit.times((long) Math.floor(quantity)),
-        EPSILON.times((long) Math.rint((quantity % 1) * unit.dividedBy(EPSILON))));
+        EPSILON.times((long) Math.rint(positiveModulo(quantity, 1) * unit.dividedBy(EPSILON))));
   }
 
   /**
@@ -535,5 +535,10 @@ public final class Duration implements Comparable<Duration> {
   @Override
   public int compareTo(final Duration other) {
     return Long.compare(this.durationInMicroseconds, other.durationInMicroseconds);
+  }
+
+  /** Returns the remainder of dividend / divisor as a value between 0 and divisor. */
+  private static double positiveModulo(final double dividend, final double divisor) {
+    return ((dividend % divisor) + divisor) % divisor;
   }
 }
