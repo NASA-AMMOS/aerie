@@ -17,20 +17,25 @@ public final class DurationTest {
     assertEquals(duration(2756, MILLISECONDS), roundNearest(2.756, SECONDS));
     assertEquals(duration(2756, MILLISECONDS), roundNearest(Math.nextUp(2.756), SECONDS));
     assertEquals(duration(2756, MILLISECONDS), roundNearest(Math.nextDown(2.756), SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS), roundNearest(-2.756, SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS), roundNearest(Math.nextUp(-2.756), SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS), roundNearest(Math.nextDown(-2.756), SECONDS));
   }
 
   @Test
   public void testRoundDown() {
-    assertEquals(duration(2756, MILLISECONDS), roundNearest(2.756, SECONDS));
     assertEquals(duration(2756, MILLISECONDS), roundDownward(Math.nextUp(2.756), SECONDS));
     assertEquals(duration(2756, MILLISECONDS).minus(EPSILON), roundDownward(Math.nextDown(2.756), SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS), roundDownward(Math.nextUp(-2.756), SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS).minus(EPSILON), roundDownward(Math.nextDown(-2.756), SECONDS));
   }
 
   @Test
   public void testRoundUp() {
-    assertEquals(duration(2756, MILLISECONDS), roundNearest(2.756, SECONDS));
     assertEquals(duration(2756, MILLISECONDS), roundUpward(Math.nextDown(2.756), SECONDS));
     assertEquals(duration(2756, MILLISECONDS).plus(EPSILON), roundUpward(Math.nextUp(2.756), SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS), roundUpward(Math.nextDown(-2.756), SECONDS));
+    assertEquals(duration(-2756, MILLISECONDS).plus(EPSILON), roundUpward(Math.nextUp(-2.756), SECONDS));
   }
 
   @Test
