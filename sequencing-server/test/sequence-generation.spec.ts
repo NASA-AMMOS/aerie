@@ -3532,41 +3532,28 @@ describe('user sequence to seqjson', () => {
               immediate_commands: [
                 PEEL_BANANA({peelDirection: 'fromStem'})
               ],
-              requests: ({ locals, parameters }) => ([
-                {
-                  name: 'power',
-                  steps: [
-                    R\`04:39:22.000\`.PREHEAT_OVEN({
-                      temperature: 360,
+              requests: [
+                A\`2020-173T20:00:00.000\`.REQUEST(
+                  'test_request1',
+                  R\`04:39:22.000\`.PREHEAT_OVEN({
+                    temperature: 360,
                     }),
                     C.ADD_WATER,
-                  ],
-                  type: 'request',
-                  description: ' Activate the oven',
-                  ground_epoch: {
-                    delta: 'now',
-                    name: 'activate',
+                )
+                  .DESCRIPTION('Absolute-timed request object with all possible fields'),
+                REQUEST(
+                  'test_request1',
+                  {
+                    delta: '+00:30:00',
+                    name: 'test_ground_epoch',
                   },
-                  metadata: {
-                    author: 'rrgoet',
-                  },
-                },
-                {
-                  name: 'power2',
-                  steps: [
-                    C.ADD_WATER,
-                  ],
-                  type: 'request',
-                  description: ' Activate the oven',
-                  ground_epoch: {
-                    delta: 'now',
-                    name: 'activate',
-                  },
-                  metadata: {
-                    author: 'rrgoet',
-                  },
-                }
-              ]),
+                  C.ADD_WATER
+                )
+                  .DESCRIPTION('Ground-epoch timed request object with all possible fields')
+                  .METADATA({
+                    "author": "rrgoet"
+                   })
+              ],
             });
           `,
       },
@@ -3784,15 +3771,8 @@ describe('user sequence to seqjson', () => {
     ]);
     expect(results[1]!.requests).toEqual([
       {
-        description: ' Activate the oven',
-        ground_epoch: {
-          delta: 'now',
-          name: 'activate',
-        },
-        metadata: {
-          author: 'rrgoet',
-        },
-        name: 'power',
+        description: "Absolute-timed request object with all possible fields",
+        name: 'test_request1',
         steps: [
           {
             args: [
@@ -3818,18 +3798,22 @@ describe('user sequence to seqjson', () => {
             type: 'command',
           },
         ],
+        time: {
+          "tag": "2020-173T20:00:00.000",
+          "type": "ABSOLUTE"
+        },
         type: 'request',
       },
       {
-        description: ' Activate the oven',
+        description: 'Ground-epoch timed request object with all possible fields',
         ground_epoch: {
-          delta: 'now',
-          name: 'activate',
+          "delta": "+00:30:00",
+          "name": "test_ground_epoch"
         },
         metadata: {
           author: 'rrgoet',
         },
-        name: 'power2',
+        name: 'test_request1',
         steps: [
           {
             args: [],

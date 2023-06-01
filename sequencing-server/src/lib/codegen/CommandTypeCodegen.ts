@@ -57,7 +57,7 @@ export const Hardwares = {\n${dictionary.hwCommands
     .map(hwCommands => `\t\t${hwCommands.stem}: ${hwCommands.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence, FLOAT, UINT,INT, STRING, ENUM}, Hardwares, Immediates);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS, REQUESTS), Sequence, FLOAT, UINT,INT, STRING, ENUM, REQUEST}, Hardwares, Immediates);
 `;
 
   return {
