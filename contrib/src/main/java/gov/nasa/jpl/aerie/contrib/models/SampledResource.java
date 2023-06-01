@@ -16,16 +16,14 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
-  private final Register<Double> period = Register.forImmutable(1.0);
+  private final Register<Double> period;
 
   /**
    * Constructor that does not require caller to specify a period and therefore assumes a sample
    * period of 1 sample per second.
    */
   public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator) {
-    this.result = Register.create(sampler.get(), duplicator);
-    this.sampler = Objects.requireNonNull(sampler);
-    spawn(this::takeSamples);
+    this(sampler, duplicator, 1.0);
   }
 
   /**
@@ -34,7 +32,7 @@ public class SampledResource<T> implements DiscreteResource<T> {
   public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator, final double period) {
     this.result = Register.create(sampler.get(), duplicator);
     this.sampler = Objects.requireNonNull(sampler);
-    this.period.set(period);
+    this.period =  Register.forImmutable(period);
     spawn(this::takeSamples);
   }
 
