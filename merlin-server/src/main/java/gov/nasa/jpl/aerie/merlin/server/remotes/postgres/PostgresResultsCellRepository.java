@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.temporal.ChronoUnit;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -221,47 +222,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Optional<State> getSimulationState (final Connection connection, final long datasetId) throws SQLException {
-    final var record$ = getSimulationDatasetRecord(connection, datasetId);
-    if (record$.isEmpty()) return Optional.empty();
-    final var record = record$.get();
-
-    return Optional.of(
-        switch (record.state().status()) {
-          case PENDING -> new ResultsProtocol.State.Pending(record.simulationDatasetId());
-          case INCOMPLETE -> new ResultsProtocol.State.Incomplete(record.simulationDatasetId());
-          case FAILED -> new ResultsProtocol.State.Failed(record.simulationDatasetId(), record.state().reason()
-              .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
-          case SUCCESS -> new ResultsProtocol.State.Success(record.simulationDatasetId(), getSimulationResults(connection, record));
-        });
-  }
-
-  private static SimulationResults getSimulationResults(
-      final Connection connection,
-      final SimulationDatasetRecord simulationDatasetRecord
-  ) throws SQLException {
-    final var startTimestamp = simulationDatasetRecord.simulationStartTime();
-    final var endTimestamp = simulationDatasetRecord.simulationEndTime();
-
-    final var simulationStart = startTimestamp.toInstant();
-    final var duration = Duration.of(simulationStart.until(endTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS);
-    final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId());
-    final var activities = getActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
-    final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
-    final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
-
-    return new SimulationResults(
-        ProfileSet.unwrapOptional(profiles.realProfiles()),
-        ProfileSet.unwrapOptional(profiles.discreteProfiles()),
-        activities.getLeft(),
-        activities.getRight(),
-        simulationStart,
-        duration,
-        topics,
-        events
-    );
-  }
-
   private static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
   throws SQLException
   {
@@ -448,8 +408,27 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public State get() {
       try (final var connection = dataSource.getConnection()) {
-        return getSimulationState(connection, datasetId)
-            .orElseThrow(() -> new Error("Dataset corrupted"));
+        Optional<State> result;
+        final var record$ = getSimulationDatasetRecord(
+            connection,
+            datasetId);
+        if (record$.isEmpty()) {
+          result = Optional.empty();
+        } else {
+          final var record = record$.get();
+          result = Optional.of(
+              switch (record.state().status()) {
+                case PENDING -> new State.Pending(record.simulationDatasetId());
+                case INCOMPLETE -> new State.Incomplete(record.simulationDatasetId());
+                case FAILED -> new State.Failed(record.simulationDatasetId(), record.state().reason()
+                    .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
+                case SUCCESS -> new State.Success(
+                    record.simulationDatasetId(),
+                    new PostgresSimulationResultsHandle(dataSource, record));
+              });
+        }
+
+        return result.orElseThrow(() -> new Error("Dataset corrupted"));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to get dataset", ex);
       }
@@ -507,6 +486,79 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         // A dataset should only be deleted by its cell
         throw new Error("Cell references nonexistent simulation dataset");
       }
+    }
+  }
+
+  public static class PostgresSimulationResultsHandle implements SimulationResultsHandle {
+
+    SimulationDatasetRecord record;
+    DataSource dataSource;
+
+    public PostgresSimulationResultsHandle(DataSource dataSource, SimulationDatasetRecord record) {
+      this.dataSource = dataSource;
+      this.record = record;
+    }
+
+    public SimulationResults getSimulationResults() {
+      try (final var connection = this.dataSource.getConnection()) {
+        final var startTimestamp = record.simulationStartTime();
+        final var simulationStart = startTimestamp.toInstant();
+        final var simulationDuration = Duration.of(
+            startTimestamp.microsUntil(record.simulationEndTime()),
+            Duration.MICROSECONDS);
+
+        final var profiles = ProfileRepository.getProfiles(connection, record.datasetId());
+        final var activities = getActivities(connection, record.datasetId(), startTimestamp);
+        final var topics = getSimulationTopics(connection, record.datasetId());
+        final var events = getSimulationEvents(connection, record.datasetId(), startTimestamp);
+
+        return new SimulationResults(
+            ProfileSet.unwrapOptional(profiles.realProfiles()),
+            ProfileSet.unwrapOptional(profiles.discreteProfiles()),
+            activities.getLeft(),
+            activities.getRight(),
+            simulationStart,
+            simulationDuration,
+            topics,
+            events
+        );
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public ProfileSet getProfiles(final List<String> profileNames) {
+      try (final var connection = this.dataSource.getConnection()) {
+        return ProfileRepository.getProfiles(connection, record.datasetId(), profileNames);
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+      try (final var connection = this.dataSource.getConnection()) {
+        final var activities = getActivities(
+            connection,
+            record.datasetId(),
+            record.simulationStartTime());
+        return activities.getLeft();
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public Instant startTime() {
+      return record.simulationStartTime().toInstant();
+    }
+
+    @Override
+    public Duration duration() {
+      return Duration.of(
+          record.simulationStartTime().microsUntil(record.simulationEndTime()),
+          Duration.MICROSECONDS);
     }
   }
 }

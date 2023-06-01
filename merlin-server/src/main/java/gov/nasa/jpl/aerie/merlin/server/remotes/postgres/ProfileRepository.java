@@ -53,6 +53,38 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
     return new ProfileSet(realProfiles, discreteProfiles);
   }
 
+  static ProfileSet getProfiles(
+      final Connection connection,
+      final long datasetId,
+      final List<String> names
+  ) throws SQLException {
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>>();
+
+    final var profileRecords = getProfileRecords(connection, datasetId, names);
+    for (final var record : profileRecords) {
+      switch (record.type().getLeft()) {
+        case "real" -> realProfiles.put(
+            record.name(),
+            Pair.of(
+                record.type().getRight(),
+                getRealProfileSegments(connection, record.datasetId(), record.id(), record.duration())
+            )
+        );
+        case "discrete" -> discreteProfiles.put(
+            record.name(),
+            Pair.of(
+                record.type().getRight(),
+                getDiscreteProfileSegments(connection, record.datasetId(), record.id(), record.duration())
+            )
+        );
+        default -> throw new Error("Unrecognized profile type");
+      }
+    }
+
+    return new ProfileSet(realProfiles, discreteProfiles);
+  }
+
   static Map<String, ValueSchema> getProfileSchemas(
       final Connection connection,
       final long datasetId
@@ -79,6 +111,16 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
   ) throws SQLException {
     try (final var getProfilesAction = new GetProfilesAction(connection)) {
       return getProfilesAction.get(datasetId);
+    }
+  }
+
+  static List<ProfileRecord> getProfileRecords(
+      final Connection connection,
+      final long datasetId,
+      final List<String> names
+  ) throws SQLException {
+    try (final var getProfilesAction = new GetProfilesByNameAction(connection)) {
+      return getProfilesAction.get(datasetId, names);
     }
   }
 
