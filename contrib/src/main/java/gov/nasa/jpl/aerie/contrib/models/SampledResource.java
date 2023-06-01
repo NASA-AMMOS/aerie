@@ -16,7 +16,7 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
-  private Register<Double> period = Register.forImmutable(1.0);
+  private final Register<Double> period = Register.forImmutable(1.0);
 
   /**
    * Constructor that does not require caller to specify a period and therefore assumes a sample
