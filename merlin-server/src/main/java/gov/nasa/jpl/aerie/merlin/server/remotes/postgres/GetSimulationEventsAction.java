@@ -42,14 +42,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(this.sql);
   }
 
-  public SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(
-      final long datasetId,
-      final Timestamp simulationStart) throws SQLException
+  public SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(final long datasetId) throws SQLException
   {
     this.statement.setLong(1, datasetId);
     final var resultSet = this.statement.executeQuery();
 
-    final var transactionsByTimePoint = readResultSet(resultSet, simulationStart);
+    final var transactionsByTimePoint = readResultSet(resultSet);
 
     final var eventPoints = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     transactionsByTimePoint.forEach((time, transactions) -> {
@@ -67,11 +65,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   private static Map<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>
-  readResultSet(final ResultSet resultSet, final Timestamp simulationStart)
+  readResultSet(final ResultSet resultSet)
   throws SQLException {
     final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>();
     while (resultSet.next()) {
-      final var timePoint = parseOffset(resultSet, 1, simulationStart);
+      final var timePoint = parseOffset(resultSet, 1);
       final var transactionIndex = resultSet.getInt(2);
       final var causalTime = resultSet.getString(3);
       final var topicIndex = resultSet.getInt(4);

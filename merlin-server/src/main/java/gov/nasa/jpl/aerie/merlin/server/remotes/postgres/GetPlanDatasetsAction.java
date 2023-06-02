@@ -28,13 +28,13 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<PlanDatasetRecord> get(final PlanId planId, final Timestamp planStart) throws SQLException {
+  public List<PlanDatasetRecord> get(final PlanId planId) throws SQLException {
     final var records = new ArrayList<PlanDatasetRecord>();
     this.statement.setLong(1, planId.id());
     final var resultSet = statement.executeQuery();
     while (resultSet.next()) {
       final var datasetId = resultSet.getLong(1);
-      final var offsetFromPlanStart = parseOffset(resultSet, 2, planStart);
+      final var offsetFromPlanStart = parseOffset(resultSet, 2);
       records.add(new PlanDatasetRecord(planId.id(), datasetId, offsetFromPlanStart));
     }
 

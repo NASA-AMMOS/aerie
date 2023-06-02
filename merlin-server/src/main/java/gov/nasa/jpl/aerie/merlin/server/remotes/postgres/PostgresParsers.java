@@ -93,7 +93,7 @@ public final class PostgresParsers {
           discreteProfileTypeP,
           realProfileTypeP);
 
-  public static Duration parseOffset(final ResultSet resultSet, final int index, final Timestamp epoch) throws SQLException {
+  public static Duration parseOffset(final ResultSet resultSet, final int index) throws SQLException {
     return Duration.of(microsOfPGInterval(new PGInterval(resultSet.getString(index))), Duration.MICROSECONDS);
   }
 
@@ -109,10 +109,6 @@ public final class PostgresParsers {
            (1_000_000L * 60 * interval.getMinutes()) +
            (1_000_000L * 3600 * interval.getHours()) +
            (1_000_000L * 3600 * 24 * interval.getDays());
-  }
-
-  public static Duration parseOffset(final ResultSet resultSet, final int index, final Instant epoch) throws SQLException {
-    return parseOffset(resultSet, index, new Timestamp(epoch));
   }
 
   public static Duration parseDurationISO8601(final String iso8601String){

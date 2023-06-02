@@ -47,12 +47,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         final var id = resultSet.getLong(1);
         final var type = resultSet.getString(2);
         final Optional<Long> parentId = resultSet.getObject(3) == null ? Optional.empty() : Optional.of(resultSet.getLong(3));
-        final var startOffset = parseOffset(resultSet, 4, simulationStart);
+        final var startOffset = parseOffset(resultSet, 4);
         final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
         final var duration = resultSet.getObject(5) == null ? Optional.<Duration>empty() : Optional.of(parseOffset(
             resultSet,
-            5,
-            start));
+            5));
         final var attributes = getJsonColumn(resultSet, "attributes", activityAttributesP)
             .getSuccessOrThrow(
               failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason()));

@@ -251,8 +251,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-      final var plan = getPlanRecord(connection, planId);
-      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
+      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId);
       final var result = new ArrayList<Pair<Duration, ProfileSet>>();
       for (final var planDataset: planDatasets) {
         result.add(Pair.of(
@@ -270,8 +269,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-      final var plan = getPlanRecord(connection, planId);
-      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
+      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId);
       final var result = new HashMap<String, ValueSchema>();
       for (final var planDataset: planDatasets) {
         final var schemas = ProfileRepository.getProfileSchemas(connection, planDataset.datasetId());
