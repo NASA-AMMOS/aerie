@@ -498,6 +498,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       this.record = record;
     }
 
+    @Override
     public SimulationResults getSimulationResults() {
       try (final var connection = this.dataSource.getConnection()) {
         final var startTimestamp = record.simulationStartTime();
