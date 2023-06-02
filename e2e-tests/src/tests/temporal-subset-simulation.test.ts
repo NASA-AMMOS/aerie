@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import req from '../utilities/requests.js';
 import time from "../utilities/time.js";
 
-test.describe('Temporal Subset Simulation', () => {
+test.describe.serial('Temporal Subset Simulation', () => {
   const plan_start_timestamp = "2023-01-01T00:00:00+00:00";
   const midway_plan_timestamp = "2023-01-01T12:00:00+00:00";
   const plan_end_timestamp = "2023-01-02T00:00:00+00:00";

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import req from '../utilities/requests.js';
 import time from '../utilities/time.js';
 
-test.describe('External Datasets', () => {
+test.describe.serial('External Datasets', () => {
   const rd = Math.random() * 100;
   const plan_start_timestamp = "2021-001T00:00:00.000";
   const plan_end_timestamp = "2021-001T12:00:00.000";

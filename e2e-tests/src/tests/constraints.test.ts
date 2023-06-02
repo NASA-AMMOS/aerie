@@ -16,7 +16,7 @@ const activity_offset_hours = 1;
 
 // Tests in Initialize don't involve constraints (and therefore shouldn't fail),
 // they simply set up Aerie with a model, plan, and activities for further testing
-test.describe("Initialize", async () => {
+test.describe.serial("Initialize", async () => {
   test("Upload jar and create mission model", async ({ request }) => {
     jar_id = await req.uploadJarFile(request);
 
