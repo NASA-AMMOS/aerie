@@ -573,43 +573,9 @@ class MerlinDatabaseTests {
 
     @Test
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
-
-      final var planRes = connection.createStatement()
-                                    .executeQuery(
-                                        """
-                                            SELECT * from plan
-                                            WHERE id = %s;"""
-                                            .formatted(planDatasetRecord.plan_id())
-                                    );
-      planRes.next();
-      final var planStartTime = planRes.getTimestamp("start_time");
-      planRes.close();
-
-      final var planDatasetSelectRes = connection.createStatement()
-                                                 .executeQuery(
-                                                     """
-                                                         SELECT * FROM plan_dataset
-                                                         WHERE plan_id = %s and dataset_id = %s;"""
-                                                         .formatted(
-                                                             planDatasetRecord.plan_id(),
-                                                             planDatasetRecord.dataset_id())
-                                                 );
-      planDatasetSelectRes.next();
-      final var offsetFromPlanStart = new PGInterval(planDatasetSelectRes.getString("offset_from_plan_start"));
-      planDatasetSelectRes.close();
-
+      // ASSUMPTION: The plan to which `planDatasetRecord` is associated must start at 2020-1-1 00:00:00, so that
+      // this new plan starts exactly 1 hour later.
       final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
-
-      final var newPlanRes = connection.createStatement()
-                                       .executeQuery(
-                                           """
-                                               SELECT * from plan
-                                               WHERE id = %s;"""
-                                               .formatted(newPlanId)
-                                       );
-      newPlanRes.next();
-      final var newPlanStartTime = newPlanRes.getTimestamp("start_time");
-      newPlanRes.close();
 
       final var planDatasetInsertRes = connection.createStatement()
                                                  .executeQuery(
@@ -623,20 +589,7 @@ class MerlinDatabaseTests {
       final var newOffsetFromPlanStart = new PGInterval(planDatasetInsertRes.getString("offset_from_plan_start"));
       planDatasetInsertRes.close();
 
-      final var calculatedOffset = new PGInterval(offsetFromPlanStart.getValue());
-      calculatedOffset.setSeconds(calculatedOffset.getSeconds() - (newPlanStartTime.getTime() - planStartTime.getTime()) / 1000.0);
-
-      assertEquals(microsOfPGInterval(calculatedOffset), microsOfPGInterval(newOffsetFromPlanStart));
-    }
-
-    static long microsOfPGInterval(final PGInterval interval) {
-      assertEquals(0, interval.getYears());
-      assertEquals(0, interval.getMonths());
-      return (long)interval.getMicroSeconds() +
-             (1_000_000L * interval.getWholeSeconds()) +
-             (1_000_000L * 60 * interval.getMinutes()) +
-             (1_000_000L * 3600 * interval.getHours()) +
-             (1_000_000L * 3600 * 24 * interval.getDays());
+      assertEquals(new PGInterval("-1 hours"), newOffsetFromPlanStart);
     }
 
     @Test
