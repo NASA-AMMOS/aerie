@@ -113,6 +113,8 @@ public final class AerieAppDriver {
       hikariConfig.setUsername(c.user());
       hikariConfig.setPassword(c.password());
 
+      hikariConfig.setConnectionInitSql("set time zone 'UTC'");
+
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(

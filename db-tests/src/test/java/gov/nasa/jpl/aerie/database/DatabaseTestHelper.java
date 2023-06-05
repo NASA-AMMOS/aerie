@@ -76,6 +76,8 @@ public class DatabaseTestHelper {
     hikariConfig.setUsername("aerie");
     hikariConfig.setPassword("aerie");
 
+    hikariConfig.setConnectionInitSql("set time zone 'UTC'");
+
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 
     connection = hikariDataSource.getConnection();

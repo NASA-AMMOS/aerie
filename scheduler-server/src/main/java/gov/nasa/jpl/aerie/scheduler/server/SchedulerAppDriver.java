@@ -101,6 +101,8 @@ public final class SchedulerAppDriver {
       hikariConfig.setUsername(pgStore.user());
       hikariConfig.setPassword(pgStore.password());
 
+      hikariConfig.setConnectionInitSql("set time zone 'UTC'");
+
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(
