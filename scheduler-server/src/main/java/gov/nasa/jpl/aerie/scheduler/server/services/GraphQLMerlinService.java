@@ -988,13 +988,13 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
       final var duration = pair.extent();
       final var dynamics = pair.dynamics();
 
-      final String stringDynamics;
+      final JsonValue serializedDynamics;
       final boolean stringIsGap;
-      if(dynamics.isPresent()){
-        stringDynamics = serializeDynamics(dynamics.get(), dynamicsP);
+      if (dynamics.isPresent()) {
+        serializedDynamics = dynamicsP.unparse(dynamics.get());
         stringIsGap = false;
-      } else{
-        stringDynamics = null;
+      } else {
+        serializedDynamics = null;
         stringIsGap = true;
       }
       profiles.add(Json.createObjectBuilder()
@@ -1002,7 +1002,7 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
           .add("profile_id", profileRecord.id())
           .add("start_offset", graphQLIntervalFromDuration(accumulatedOffset).toString())
           .add("is_gap", stringIsGap)
-          .add("dynamics", stringDynamics)
+          .add("dynamics", serializedDynamics)
           .build());
       accumulatedOffset = Duration.add(accumulatedOffset, duration);
     }
@@ -1021,10 +1021,8 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
     if(affected_rows!=segments.size()) {
       throw new PlanServiceException("not the same size");
     }
-}
-  private <Dynamics> String serializeDynamics(final Dynamics dynamics, final JsonParser<Dynamics> dynamicsP) {
-    return dynamicsP.unparse(dynamics).toString();
   }
+
   private void postRealProfileSegments(final DatasetId datasetId,
                                               final ProfileRecord profileRecord,
                                               final List<ProfileSegment<Optional<RealDynamics>>> segments)
