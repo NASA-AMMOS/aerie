@@ -118,7 +118,7 @@ public class PresetTests {
                   INSERT INTO plan (name, model_id, duration, start_time)
                   VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00")
+                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
           );
       res.next();
       return res.getInt("id");

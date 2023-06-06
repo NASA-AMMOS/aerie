@@ -84,7 +84,7 @@ class MerlinDatabaseTests {
   }
 
   int insertPlan(final int missionModelId) throws SQLException {
-    return insertPlan(missionModelId, "2020-1-1 00:00:00");
+    return insertPlan(missionModelId, "2020-1-1 00:00:00+00");
   }
 
   int insertPlan(final int missionModelId, final String start_time) throws SQLException {
@@ -573,9 +573,9 @@ class MerlinDatabaseTests {
 
     @Test
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
-      // ASSUMPTION: The plan to which `planDatasetRecord` is associated must start at 2020-1-1 00:00:00, so that
+      // ASSUMPTION: The plan to which `planDatasetRecord` is associated must start at 2020-1-1 00:00:00+00, so that
       // this new plan starts exactly 1 hour later.
-      final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
+      final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00+00");
 
       final var planDatasetInsertRes = connection.createStatement()
                                                  .executeQuery(
