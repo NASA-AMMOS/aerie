@@ -14,6 +14,9 @@ begin;
   \ir domain-types/plan-merge-types.sql
 
   -- Deployment-level Metadata
+  \ir tables/metadata/user_roles.sql
+  \ir tables/metadata/users.sql
+  \ir tables/metadata/users_allowed_roles.sql
   \ir tables/metadata/tags.sql
 
   -- Activity Directive Metadata schema
@@ -78,6 +81,7 @@ begin;
   \ir tables/metadata/snapshot_activity_tags.sql
 
   -- Views
+  \ir views/users_and_roles.sql
   \ir views/simulated_activity.sql
   \ir views/resource_profile.sql
   \ir views/activity_directive_extended.sql
