@@ -119,7 +119,7 @@ public class PlanCollaborationTests {
                   INSERT INTO plan (name, model_id, duration, start_time)
                   VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00")
+                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
           );
       res.next();
       return res.getInt("id");
@@ -222,7 +222,7 @@ public class PlanCollaborationTests {
               order by snapshot_id desc
               limit 1;
               """.formatted(planIdSupplyingChanges));
-      snapshotRes.first();
+      snapshotRes.next();
       final int snapshotIdSupplyingChanges = snapshotRes.getInt(1);
 
       final var res = statement.executeQuery(
@@ -230,7 +230,7 @@ public class PlanCollaborationTests {
               select get_merge_base(%d, %d);
               """.formatted(planIdReceivingChanges, snapshotIdSupplyingChanges));
 
-      res.first();
+      res.next();
 
       return res.getInt(1);
     }
@@ -244,7 +244,7 @@ public class PlanCollaborationTests {
               select create_merge_request(%d, %d, 'PlanCollaborationTests Requester');
               """.formatted(planId_supplying, planId_receiving)
       );
-      res.first();
+      res.next();
       return res.getInt(1);
     }
   }
@@ -366,7 +366,7 @@ public class PlanCollaborationTests {
         WHERE id = %d
         AND plan_id = %d;
       """.formatted(activityId, planId));
-      res.first();
+      res.next();
       return new Activity(
           res.getInt("id"),
           res.getInt("plan_id"),
@@ -457,7 +457,7 @@ public class PlanCollaborationTests {
         FROM merge_request
         WHERE id = %d;
       """.formatted(requestId));
-      res.first();
+      res.next();
       return new MergeRequest(
           res.getInt("id"),
           res.getInt("plan_id_receiving_changes"),
@@ -600,13 +600,15 @@ public class PlanCollaborationTests {
       }
 
       try(final var statement = connection.createStatement()) {
-        //assert that there is exactly one entry for this plan in plan_latest_snapshot
-        var res = statement.executeQuery(
-            """
-            select snapshot_id from plan_latest_snapshot where plan_id = %d;
-            """.formatted(planId));
-        assertTrue(res.first());
-        assertTrue(res.isLast());
+        {
+          //assert that there is exactly one entry for this plan in plan_latest_snapshot
+          final var res = statement.executeQuery(
+              """
+              select snapshot_id from plan_latest_snapshot where plan_id = %d;
+              """.formatted(planId));
+          assertTrue(res.next());
+          assertFalse(res.next());
+        }
 
         //delete the current entry of plan_latest_snapshot for this plan to avoid any confusion when it is readded below
         statement.execute("""
@@ -621,28 +623,36 @@ public class PlanCollaborationTests {
 
         final int finalSnapshotId = createSnapshot(planId);
 
-        //assert that there is now only one entry for this plan in plan_latest_snapshot
-        res = statement.executeQuery(
+        {
+          //assert that there is now only one entry for this plan in plan_latest_snapshot
+          final var res = statement.executeQuery(
             """
             select snapshot_id from plan_latest_snapshot where plan_id = %d;
             """.formatted(planId));
-        assertTrue(res.first());
-        assertTrue(res.isLast());
+          assertTrue(res.next());
+          assertFalse(res.next());
+        }
+
+        final var snapshotHistory = new ArrayList<Integer>();
+        {
+          final var res = statement.executeQuery(
+              """
+                  select get_snapshot_history(%d);
+                  """.formatted(finalSnapshotId));
+
+          while (res.next()) {
+            snapshotHistory.add(res.getInt(1));
+          }
+        }
 
         //assert that the snapshot history is n+1 long
-        res = statement.executeQuery(
-            """
-            select get_snapshot_history(%d);
-            """.formatted(finalSnapshotId));
-        assertTrue(res.last());
-        assertEquals(res.getRow(), numberOfSnapshots+1);
+        assertEquals(snapshotHistory.size(), numberOfSnapshots + 1);
 
         //assert that res contains, in order: finalSnapshotId, snapshotId[0,1,...,n]
-        res.first();
-        assertEquals(res.getInt(1), finalSnapshotId);
-        for (final int snapshotId : snapshotIds) {
-          res.next();
-          assertEquals(res.getInt(1), snapshotId);
+        assertEquals(finalSnapshotId, snapshotHistory.get(0));
+
+        for (var i = 1; i < snapshotHistory.size(); i++) {
+          assertEquals(snapshotIds[i - 1], snapshotHistory.get(i));
         }
       }
     }
@@ -764,19 +774,19 @@ public class PlanCollaborationTests {
                 select get_snapshot_history_from_plan(%d);
             """.formatted(childPlanId));
 
-        parentRes.last();
-        childRes.last();
-        assertEquals(parentRes.getRow(), childRes.getRow()); //assert the history length is the same
-        assertEquals(numberOfSnapshots+1, parentRes.getRow()); //assert the history is the length expected
+        final var parentHistory = new ArrayList<Integer>();
+        while (parentRes.next()) {
+          parentHistory.add(parentRes.getInt(1));
+        }
 
-        //assert the history is the same
-        parentRes.first();
-        childRes.first();
-        do{
-          assertEquals(parentRes.getInt(1), childRes.getInt(1));
-          childRes.next();
-          parentRes.next();
-        }while(!parentRes.isAfterLast());
+        assertEquals(parentHistory.size(), numberOfSnapshots + 1);
+
+        final var childHistory = new ArrayList<Integer>();
+        while (childRes.next()) {
+          childHistory.add(childRes.getInt(1));
+        }
+
+        assertEquals(parentHistory, childHistory);
       }
     }
 
@@ -810,7 +820,7 @@ public class PlanCollaborationTests {
           SELECT get_plan_history(%d);
           """.formatted(plans[9])
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertEquals(plans[9], res.getInt(1));
 
         for(int i = plans.length-2; i >= 0; --i){
@@ -830,7 +840,7 @@ public class PlanCollaborationTests {
           SELECT get_plan_history(%d);
           """.formatted(planId)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.isLast());
         assertEquals(planId, res.getInt(1));
       }
@@ -1097,7 +1107,7 @@ public class PlanCollaborationTests {
             WHERE plan_id = %d;
             """.formatted(planId)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         assertEquals(mostRecentSnapshotId, results.getInt(1));
       }
     }
@@ -1120,7 +1130,7 @@ public class PlanCollaborationTests {
             WHERE plan_id = %d;
             """.formatted(childPlanId)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         childCreationSnapshotId = results.getInt(1);
       }
 
@@ -1151,7 +1161,7 @@ public class PlanCollaborationTests {
             WHERE plan_id = %d;
             """.formatted(olderSibling)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         olderSibCreationId = results.getInt(1);
       }
 
@@ -1183,7 +1193,7 @@ public class PlanCollaborationTests {
                 WHERE plan_id = %d;
                 """.formatted(priorAncestor)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         ninthGrandparentCreation = results.getInt(1);
       }
 
@@ -1216,7 +1226,7 @@ public class PlanCollaborationTests {
                 WHERE plan_id = %d;
                 """.formatted(olderSibling)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         olderSiblingCreation = results.getInt(1);
       }
 
@@ -1257,7 +1267,7 @@ public class PlanCollaborationTests {
                 WHERE plan_id = %d;
                 """.formatted(newPlan)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         creationSnapshot = results.getInt(1);
       }
 
@@ -1275,7 +1285,7 @@ public class PlanCollaborationTests {
                 WHERE mr.id = %d;
                 """.formatted(mergeRequest)
         );
-        assertTrue(results.first());
+        assertTrue(results.next());
         postMergeSnapshot = results.getInt(1);
       }
 
@@ -1374,7 +1384,7 @@ public class PlanCollaborationTests {
             select get_merge_base(%d, %d);
             """.formatted(plan1, plan2Snapshot)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertNull(res.getObject(1));
       }
     }
@@ -1520,7 +1530,7 @@ public class PlanCollaborationTests {
             where id = %d;
             """.formatted(planId)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertFalse(res.getBoolean(1));
       }
     }
@@ -2053,7 +2063,7 @@ public class PlanCollaborationTests {
              WHERE plan.id = %d;
              """.formatted(basePlan)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertEquals(basePlan, res.getInt("plan_id"));
         assertFalse(res.getBoolean("is_locked"));
         assertEquals("accepted", res.getString("status"));
@@ -2404,7 +2414,7 @@ public class PlanCollaborationTests {
               WHERE id = %d;
               """.formatted(basePlan1)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.getBoolean(1));
 
         res = statement.executeQuery(
@@ -2414,7 +2424,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan2)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.getBoolean(1));
       }
 
@@ -2443,7 +2453,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan1)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertFalse(res.getBoolean(1));
 
         res = statement.executeQuery(
@@ -2453,7 +2463,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan2)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.getBoolean(1));
       }
     }
@@ -2512,7 +2522,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan1)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.getBoolean(1));
 
         res = statement.executeQuery(
@@ -2522,7 +2532,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan2)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.getBoolean(1));
       }
 
@@ -2551,7 +2561,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan1)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertFalse(res.getBoolean(1));
 
         res = statement.executeQuery(
@@ -2561,7 +2571,7 @@ public class PlanCollaborationTests {
             WHERE id = %d;
             """.formatted(basePlan2)
         );
-        assertTrue(res.first());
+        assertTrue(res.next());
         assertTrue(res.getBoolean(1));
       }
     }

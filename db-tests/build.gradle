@@ -26,7 +26,7 @@ task e2eTest(type: Test) {
 
 dependencies {
   testImplementation 'org.assertj:assertj-core:3.23.1'
-  testImplementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
+  implementation 'org.postgresql:postgresql:42.6.0'
   testImplementation 'org.postgresql:postgresql:42.2.5'
   testImplementation 'com.zaxxer:HikariCP:5.0.1'
   testImplementation 'junit:junit:4.13.2'

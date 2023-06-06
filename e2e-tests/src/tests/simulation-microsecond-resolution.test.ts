@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import req from '../utilities/requests.js';
 import time from "../utilities/time.js";
 
-test.describe('Simulation microsecond resolution', () => {
+test.describe.serial('Simulation microsecond resolution', () => {
   test('GrowBanana with duration of 1 microsecond should finish with a successful simulation', async ({ request }) => {
     const rd = Math.random() * 100;
     const plan_start_timestamp = "2021-001T00:00:00.000";

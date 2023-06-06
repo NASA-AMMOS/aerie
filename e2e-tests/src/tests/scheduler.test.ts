@@ -7,7 +7,7 @@ const eqSet = (xs, ys) =>
     [...xs].every((x) => ys.has(x));
 
 
-test.describe('Scheduling', () => {
+test.describe.serial('Scheduling', () => {
   const rd = Math.random() * 100;
   const plan_start_timestamp = "2021-001T00:00:00.000";
   const plan_end_timestamp = "2021-001T12:00:00.000";

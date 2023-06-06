@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.database;
 
-import com.impossibl.postgres.api.data.Interval;
+import org.postgresql.util.PGInterval;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,8 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
-import java.time.Period;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -118,7 +116,7 @@ public class AnchorTests {
                   INSERT INTO plan (name, model_id, duration, start_time)
                   VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00")
+                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
           );
       res.next();
       return res.getInt("id");
@@ -173,7 +171,7 @@ public class AnchorTests {
     }
   }
 
-  private void updateOffsetFromAnchor(Interval newOffset, int activityId, int planId) throws SQLException {
+  private void updateOffsetFromAnchor(PGInterval newOffset, int activityId, int planId) throws SQLException {
     try(final var statement = connection.createStatement()) {
       statement.execute(
           """
@@ -187,16 +185,16 @@ public class AnchorTests {
   private Activity getActivity(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
-        SELECT *
+        SELECT id, plan_id, start_offset, anchor_id, anchored_to_start, approximate_start_time
         FROM activity_directive_extended
         WHERE id = %d
         AND plan_id = %d;
       """.formatted(activityId, planId));
-      res.first();
+      res.next();
       return new Activity(
           res.getInt("id"),
           res.getInt("plan_id"),
-          (Interval) res.getObject("start_offset"),
+          (PGInterval) res.getObject("start_offset"),
           res.getString("anchor_id"),
           res.getBoolean("anchored_to_start"),
           res.getString("approximate_start_time")
@@ -218,7 +216,7 @@ public class AnchorTests {
         activities.add(new Activity(
             res.getInt("id"),
             res.getInt("plan_id"),
-            (Interval) res.getObject("start_offset"),
+            (PGInterval) res.getObject("start_offset"),
             res.getString("anchor_id"),
             res.getBoolean("anchored_to_start"),
             res.getString("approximate_start_time")
@@ -244,7 +242,7 @@ public class AnchorTests {
         WHERE activity_id = %d
         AND plan_id = %d;
       """.formatted(activityId, planId));
-      res.first();
+      res.next();
       return new AnchorValidationStatus(
           res.getInt("activity_id"),
           res.getInt("plan_id"),
@@ -257,7 +255,7 @@ public class AnchorTests {
     return getValidationStatus(original.planId, original.activityId);
   }
 
-  int insertActivityWithAnchor(final int planId, final Interval startOffset, final int anchorId, final boolean anchoredToStart) throws SQLException {
+  int insertActivityWithAnchor(final int planId, final PGInterval startOffset, final int anchorId, final boolean anchoredToStart) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
@@ -286,7 +284,7 @@ public class AnchorTests {
   private record Activity(
       int activityId,
       int planId,
-      Interval startOffset,
+      PGInterval startOffset,
       String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
       boolean anchoredToStart,
       String approximateStartTime
@@ -299,8 +297,8 @@ public class AnchorTests {
   class AnchorCreationAndExceptions {
     @Test
     void createAnchor() throws SQLException {
-      final Interval oneDay = Interval.of(Period.ofDays(1));
-      final Interval tenMinutes = Interval.of(Duration.ofMinutes(10));
+      final PGInterval oneDay = new PGInterval("1 day");
+      final PGInterval tenMinutes = new PGInterval("10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int anchorActId = insertActivity(planId);
@@ -384,13 +382,13 @@ public class AnchorTests {
   class NetNegativeEndTimeStatus {
     @Test
     void negativeEndTimeOffsetWritesToStatus() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int grandparentActId = insertActivity(planId);
-      final int parentActId = insertActivityWithAnchor(planId, Interval.ZERO, grandparentActId, false);
+      final int parentActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), grandparentActId, false);
       final int negOffsetActId = insertActivity(planId, minusTenMinutes.toString());
-      final int childActId = insertActivityWithAnchor(planId, Interval.ZERO, negOffsetActId, true);
+      final int childActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), negOffsetActId, true);
       final int unrelatedActId = insertActivity(planId);
 
       // Invalid regarding Plan Start
@@ -437,9 +435,9 @@ public class AnchorTests {
 
     @Test
     void immediateDescendentBecomesInvalid() throws SQLException {
-      final Interval fiveMinutes = Interval.of(Duration.ofMinutes(5));
-      final Interval fifteenMinutes = Interval.of(Duration.ofMinutes(15));
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval fiveMinutes = new PGInterval("5 minutes");
+      final PGInterval fifteenMinutes = new PGInterval("15 minutes");
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId); // Should always be valid.
@@ -479,9 +477,9 @@ public class AnchorTests {
 
     @Test
     void childAndGrandchildBecomeInvalid() throws SQLException {
-      final Interval fiveMinutes = Interval.of(Duration.ofMinutes(5));
-      final Interval fifteenMinutes = Interval.of(Duration.ofMinutes(15));
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval fiveMinutes = new PGInterval("5 minutes");
+      final PGInterval fifteenMinutes = new PGInterval("15 minutes");
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId); // Should always be valid.
@@ -491,7 +489,7 @@ public class AnchorTests {
 
       // Create a chain
       final int childActId = insertActivityWithAnchor(planId, minusTenMinutes, baseActId, true);
-      final int grandchildActId = insertActivityWithAnchor(planId, Interval.ZERO, childActId, true);
+      final int grandchildActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), childActId, true);
 
       final AnchorValidationStatus unrelatedValidation = getValidationStatus(planId, unrelatedActId);
       final AnchorValidationStatus baseValidation = getValidationStatus(planId, baseActId);
@@ -533,9 +531,9 @@ public class AnchorTests {
      */
     @Test
     void grandchildEndTimeAnchorIsIgnored() throws SQLException {
-      final Interval fiveMinutes = Interval.of(Duration.ofMinutes(5));
-      final Interval fifteenMinutes = Interval.of(Duration.ofMinutes(15));
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval fiveMinutes = new PGInterval("5 minutes");
+      final PGInterval fifteenMinutes = new PGInterval("15 minutes");
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId); // Should always be valid.
@@ -545,7 +543,7 @@ public class AnchorTests {
 
       // Create a chain
       final int childActId = insertActivityWithAnchor(planId, minusTenMinutes, baseActId, true);
-      final int grandchildActId = insertActivityWithAnchor(planId, Interval.ZERO, childActId, false);
+      final int grandchildActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), childActId, false);
 
       final AnchorValidationStatus unrelatedValidation = getValidationStatus(planId, unrelatedActId);
       final AnchorValidationStatus baseValidation = getValidationStatus(planId, baseActId);
@@ -581,9 +579,9 @@ public class AnchorTests {
 
     @Test
     void onlyGrandchildBecomesInvalid() throws SQLException {
-      final Interval fiveMinutes = Interval.of(Duration.ofMinutes(5));
-      final Interval fifteenMinutes = Interval.of(Duration.ofMinutes(15));
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval fiveMinutes = new PGInterval("5 minutes");
+      final PGInterval fifteenMinutes = new PGInterval("15 minutes");
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId); // Should always be empty.
@@ -592,7 +590,7 @@ public class AnchorTests {
       final int baseActId = insertActivity(planId, fifteenMinutes.toString());
 
       // Create a chain
-      final int childActId = insertActivityWithAnchor(planId, Interval.ZERO, baseActId, true);
+      final int childActId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), baseActId, true);
       final int grandchildActId = insertActivityWithAnchor(planId, minusTenMinutes, childActId, true);
 
       final AnchorValidationStatus unrelatedValidation = getValidationStatus(planId, unrelatedActId);
@@ -629,9 +627,9 @@ public class AnchorTests {
 
     @Test
     void childIsInvalid() throws SQLException {
-      final Interval fiveMinutes = Interval.of(Duration.ofMinutes(5));
-      final Interval fifteenMinutes = Interval.of(Duration.ofMinutes(15));
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval fiveMinutes = new PGInterval("5 minutes");
+      final PGInterval fifteenMinutes = new PGInterval("15 minutes");
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId); // Should always be empty.
@@ -658,9 +656,9 @@ public class AnchorTests {
     @Test
     void farDescendantIsInvalid() throws SQLException {
       // Parent, base is anchored to end with negative offset, 100 anchors to start of base with 0 offset. Both parent and child should be invalid
-      final Interval fiveMinutes = Interval.of(Duration.ofMinutes(5));
-      final Interval fifteenMinutes = Interval.of(Duration.ofMinutes(15));
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
+      final PGInterval fiveMinutes = new PGInterval("5 minutes");
+      final PGInterval fifteenMinutes = new PGInterval("15 minutes");
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId); // Should always be valid.
@@ -670,9 +668,9 @@ public class AnchorTests {
       // Create a chain
       final int baseActId = insertActivityWithAnchor(planId, minusTenMinutes, parentActId, false);
       final int[] interimActIds = new int[100];
-      interimActIds[0] = insertActivityWithAnchor(planId, Interval.ZERO, baseActId, true);
+      interimActIds[0] = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), baseActId, true);
       for(int i = 1; i < 100; i++){
-        interimActIds[i] = insertActivityWithAnchor(planId, Interval.ZERO, interimActIds[i-1], true);
+        interimActIds[i] = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), interimActIds[i-1], true);
       }
       final int childActId = insertActivityWithAnchor(planId, fiveMinutes, interimActIds[99], true);
 
@@ -702,8 +700,8 @@ public class AnchorTests {
   class NetNegativePlanStartStatus {
     @Test
     void negativeToPlanStart() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
-      final Interval tenMinutes = Interval.of(Duration.ofMinutes(10));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
+      final PGInterval tenMinutes = new PGInterval("10 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int activityId = insertActivity(planId, tenMinutes.toString());
@@ -728,15 +726,15 @@ public class AnchorTests {
 
     @Test
     void negativeToPlanStartDownChain() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
-      final Interval elevenMinutes = Interval.of(Duration.ofMinutes(11));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
+      final PGInterval elevenMinutes = new PGInterval("11 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId);
       final int grandparentActId = insertActivity(planId, elevenMinutes.toString());
       final int parentActId = insertActivityWithAnchor(planId, minusTenMinutes, grandparentActId, true);
       final int baseId = insertActivityWithAnchor(planId, elevenMinutes, parentActId, true);
-      final int childId = insertActivityWithAnchor(planId, Interval.ZERO, baseId, true);
+      final int childId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), baseId, true);
 
       // Base is currently valid regarding Plan Start
       final AnchorValidationStatus baseStatus = getValidationStatus(planId, baseId);
@@ -770,9 +768,9 @@ public class AnchorTests {
 
     @Test
     void immediateDescendentBecomesInvalid() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
-      final Interval minusFifteenMinutes = Interval.of(Duration.ofMinutes(-15));
-      final Interval twentyMinutes = Interval.of(Duration.ofMinutes(20));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
+      final PGInterval minusFifteenMinutes = new PGInterval("-15 minutes");
+      final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId);
@@ -808,9 +806,9 @@ public class AnchorTests {
 
     @Test
     void childAndGrandchildBecomeInvalid() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
-      final Interval minusFifteenMinutes = Interval.of(Duration.ofMinutes(-15));
-      final Interval twentyMinutes = Interval.of(Duration.ofMinutes(20));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
+      final PGInterval minusFifteenMinutes = new PGInterval("-15 minutes");
+      final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId);
@@ -851,9 +849,9 @@ public class AnchorTests {
 
     @Test
     void grandchildEndTimeAnchorIsIgnored() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
-      final Interval minusFifteenMinutes = Interval.of(Duration.ofMinutes(-15));
-      final Interval twentyMinutes = Interval.of(Duration.ofMinutes(20));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
+      final PGInterval minusFifteenMinutes = new PGInterval("-15 minutes");
+      final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId);
@@ -899,8 +897,8 @@ public class AnchorTests {
     // This test is the indirect form of negativeToPlanStartDownChain
     @Test
     void onlyGrandchildBecomesInvalid() throws SQLException {
-      final Interval minusTenMinutes = Interval.of(Duration.ofMinutes(-10));
-      final Interval twentyMinutes = Interval.of(Duration.ofMinutes(20));
+      final PGInterval minusTenMinutes = new PGInterval("-10 minutes");
+      final PGInterval twentyMinutes = new PGInterval("20 minutes");
 
       final int planId = insertPlan(missionModelId);
       final int unrelatedActId = insertActivity(planId);
@@ -947,7 +945,7 @@ public class AnchorTests {
     void cantDeleteActivityWithAnchors() throws SQLException {
       final int planId = insertPlan(missionModelId);
       final int anchorId = insertActivity(planId);
-      insertActivityWithAnchor(planId, Interval.ZERO, anchorId, true);
+      insertActivityWithAnchor(planId, new PGInterval("0 seconds"), anchorId, true);
 
       try {
         deleteActivityDirective(planId, anchorId);
@@ -972,7 +970,7 @@ public class AnchorTests {
             """
                 select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, null)
                 """.formatted(activityId));
-        if (results.first()) {
+        if (results.next()) {
           fail();
         }
 
@@ -980,7 +978,7 @@ public class AnchorTests {
             """
                 select hasura_functions.delete_activity_by_pk_reanchor_plan_start(null, %d)
                 """.formatted(planId));
-        if (results.first()) {
+        if (results.next()) {
           fail();
         }
 
@@ -989,7 +987,7 @@ public class AnchorTests {
             """
                 select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, null)
                 """.formatted(activityId));
-        if (results.first()) {
+        if (results.next()) {
           fail();
         }
 
@@ -997,7 +995,7 @@ public class AnchorTests {
             """
                 select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(null, %d)
                 """.formatted(planId));
-        if (results.first()) {
+        if (results.next()) {
           fail();
         }
 
@@ -1006,7 +1004,7 @@ public class AnchorTests {
             """
                 select hasura_functions.delete_activity_by_pk_delete_subtree(%d, null)
                 """.formatted(activityId));
-        if (results.first()) {
+        if (results.next()) {
           fail();
         }
 
@@ -1014,7 +1012,7 @@ public class AnchorTests {
             """
                 select hasura_functions.delete_activity_by_pk_delete_subtree(null, %d)
                 """.formatted(planId));
-        if (results.first()) {
+        if (results.next()) {
           fail();
         }
       }
@@ -1064,9 +1062,9 @@ public class AnchorTests {
     @Test
     void rebaseToAscendantAnchor() throws SQLException{
       final int planId = insertPlan(missionModelId);
-      final Interval oneDay = Interval.of(Period.ofDays(1));
-      final Interval minusTwoDays = Interval.of(Period.ofDays(-2));
-      final Interval minusFourDays = Interval.of(Period.ofDays(-4));
+      final PGInterval oneDay = new PGInterval("1 day");
+      final PGInterval minusTwoDays = new PGInterval("-2 days");
+      final PGInterval minusFourDays = new PGInterval("-4 days");
 
       int lastInsertedId = insertActivity(planId);
       for(int i = 0; i<10; i++){
@@ -1085,9 +1083,9 @@ public class AnchorTests {
       int mostRecentChain3Id = chain3BaseId;
 
       for(int i = 0; i < 100; i++) {
-        mostRecentChain1Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain1Id, true);
-        mostRecentChain2Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain2Id, false);
-        mostRecentChain3Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain3Id, (i & 1) == 0); // alternates true and false
+        mostRecentChain1Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain1Id, true);
+        mostRecentChain2Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain2Id, false);
+        mostRecentChain3Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain3Id, (i & 1) == 0); // alternates true and false
       }
 
       assertEquals(304+untouchedActivities.size(), getActivities(planId).size());
@@ -1114,7 +1112,7 @@ public class AnchorTests {
       assertEquals(""+lastInsertedId, getActivity(planId,chain3BaseId).anchorId);
 
       for(int i = untouchedActivities.size()+3; i<remainingActivities.size(); i++){
-        assertEquals(Interval.ZERO, remainingActivities.get(i).startOffset);
+        assertEquals(new PGInterval("0 seconds"), remainingActivities.get(i).startOffset);
         assertNotNull(remainingActivities.get(i).anchorId);
       }
     }
@@ -1122,9 +1120,9 @@ public class AnchorTests {
     @Test
     void rebaseChainsToPlanStart() throws SQLException{
       final int planId = insertPlan(missionModelId);
-      final Interval oneDay = Interval.of(Period.ofDays(1));
-      final Interval minusTwoDays = Interval.of(Period.ofDays(-2));
-      final Interval sixDays = Interval.of(Period.ofDays(6));
+      final PGInterval oneDay = new PGInterval("1 day");
+      final PGInterval minusTwoDays = new PGInterval("-2 days");
+      final PGInterval sixDays = new PGInterval("6 days");
 
       int lastInsertedId = insertActivity(planId);
       for(int i = 0; i<10; i++){
@@ -1143,9 +1141,9 @@ public class AnchorTests {
       int mostRecentChain3Id = chain3BaseId;
 
       for(int i = 0; i < 100; i++) {
-        mostRecentChain1Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain1Id, true);
-        mostRecentChain2Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain2Id, false);
-        mostRecentChain3Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain3Id, (i & 1) == 0); // alternates true and false
+        mostRecentChain1Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain1Id, true);
+        mostRecentChain2Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain2Id, false);
+        mostRecentChain3Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain3Id, (i & 1) == 0); // alternates true and false
       }
 
       assertEquals(304+untouchedActivities.size(), getActivities(planId).size());
@@ -1172,7 +1170,7 @@ public class AnchorTests {
       assertNull(getActivity(planId,chain3BaseId).anchorId);
 
       for(int i = untouchedActivities.size()+3; i<remainingActivities.size(); i++){
-        assertEquals(Interval.ZERO, remainingActivities.get(i).startOffset);
+        assertEquals(new PGInterval("0 seconds"), remainingActivities.get(i).startOffset);
         assertNotNull(remainingActivities.get(i).anchorId);
       }
     }
@@ -1181,16 +1179,16 @@ public class AnchorTests {
     void deleteChain() throws SQLException{
       final int planId = insertPlan(missionModelId);
       final int grandparentId = insertActivity(planId);
-      final int parentId = insertActivityWithAnchor(planId, Interval.ZERO, grandparentId, true);
-      final int baseId = insertActivityWithAnchor(planId, Interval.ZERO, parentId, true);
+      final int parentId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), grandparentId, true);
+      final int baseId = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), parentId, true);
 
       int mostRecentChain1Id = baseId;
       int mostRecentChain2Id = baseId;
       int mostRecentChain3Id = baseId;
       for(int i = 0; i < 100; i++) {
-        mostRecentChain1Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain1Id, true);
-        mostRecentChain2Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain2Id, false);
-        mostRecentChain3Id = insertActivityWithAnchor(planId, Interval.ZERO, mostRecentChain3Id, (i & 1) == 0); // alternates true and false
+        mostRecentChain1Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain1Id, true);
+        mostRecentChain2Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain2Id, false);
+        mostRecentChain3Id = insertActivityWithAnchor(planId, new PGInterval("0 seconds"), mostRecentChain3Id, (i & 1) == 0); // alternates true and false
       }
 
       assertEquals(303, getActivities(planId).size());

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
@@ -11,13 +10,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
+import org.postgresql.util.PGInterval;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -94,14 +93,22 @@ public final class PostgresParsers {
           discreteProfileTypeP,
           realProfileTypeP);
 
-  public static Duration parseOffset(final ResultSet resultSet, final int index, final Timestamp epoch) throws SQLException {
-    final var interval = Interval.parse(resultSet.getString(index));
-    final Timestamp end = new Timestamp((Instant)interval.addTo(epoch.toInstant()));
-    return Duration.of(epoch.microsUntil(end), Duration.MICROSECONDS);
+  public static Duration parseOffset(final ResultSet resultSet, final int index) throws SQLException {
+    return Duration.of(microsOfPGInterval(new PGInterval(resultSet.getString(index))), Duration.MICROSECONDS);
   }
 
-  public static Duration parseOffset(final ResultSet resultSet, final int index, final Instant epoch) throws SQLException {
-    return parseOffset(resultSet, index, new Timestamp(epoch));
+  static long microsOfPGInterval(final PGInterval interval) {
+    if (interval.getYears() != 0) {
+      throw new IllegalArgumentException("Cannot convert years to microseconds");
+    }
+    if (interval.getMonths() != 0) {
+      throw new IllegalArgumentException("Cannot convert months to microseconds");
+    }
+    return interval.getMicroSeconds() +
+           (1_000_000L * interval.getWholeSeconds()) +
+           (1_000_000L * 60 * interval.getMinutes()) +
+           (1_000_000L * 3600 * interval.getHours()) +
+           (1_000_000L * 3600 * 24 * interval.getDays());
   }
 
   public static Duration parseDurationISO8601(final String iso8601String){

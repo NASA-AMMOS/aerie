@@ -99,9 +99,9 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
     return results;
   }
 
-  static List<PlanDatasetRecord> getAllPlanDatasetsForPlan(final Connection connection, final PlanId planId, final Timestamp planStartTime) throws SQLException {
+  static List<PlanDatasetRecord> getAllPlanDatasetsForPlan(final Connection connection, final PlanId planId) throws SQLException {
     try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
-      return getPlanDatasetsAction.get(planId, planStartTime);
+      return getPlanDatasetsAction.get(planId);
     }
   }
 

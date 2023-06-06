@@ -233,12 +233,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
   getSimulationEvents(
       final Connection connection,
-      final long datasetId,
-      final Timestamp startTime
+      final long datasetId
   ) throws SQLException
   {
     try (final var getSimulationEventsAction = new GetSimulationEventsAction(connection)) {
-      return getSimulationEventsAction.get(datasetId, startTime);
+      return getSimulationEventsAction.get(datasetId);
     }
   }
 
@@ -499,6 +498,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       this.record = record;
     }
 
+    @Override
     public SimulationResults getSimulationResults() {
       try (final var connection = this.dataSource.getConnection()) {
         final var startTimestamp = record.simulationStartTime();
@@ -510,7 +510,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         final var profiles = ProfileRepository.getProfiles(connection, record.datasetId());
         final var activities = getActivities(connection, record.datasetId(), startTimestamp);
         final var topics = getSimulationTopics(connection, record.datasetId());
-        final var events = getSimulationEvents(connection, record.datasetId(), startTimestamp);
+        final var events = getSimulationEvents(connection, record.datasetId());
 
         return new SimulationResults(
             ProfileSet.unwrapOptional(profiles.realProfiles()),

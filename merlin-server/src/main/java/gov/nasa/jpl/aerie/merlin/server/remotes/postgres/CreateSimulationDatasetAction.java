@@ -21,7 +21,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         simulation_end_time,
         arguments
       )
-    values(?, ?, ?, ?)
+    values(?, ?::timestamptz, ?::timestamptz, ?::jsonb)
     returning
       dataset_id,
       status,
@@ -45,7 +45,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement.setLong(1, simulationId);
     PreparedStatements.setTimestamp(this.statement, 2, simulationStart);
     PreparedStatements.setTimestamp(this.statement, 3, simulationEnd);
-    this.statement.setObject(4, simulationArgumentsP.unparse(arguments));
+    this.statement.setString(4, simulationArgumentsP.unparse(arguments).toString());
 
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("simulation_dataset");

@@ -14,7 +14,7 @@ import java.util.Optional;
   private static final @Language("SQL") String sql = """
     update scheduling_request
       set
-        status = ?,
+        status = ?::status_t,
         reason = ?::json,
         dataset_id = ?
       where

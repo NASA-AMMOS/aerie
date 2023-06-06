@@ -1,18 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.graphql;
 
-import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.models.ActivityAttributesRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
-import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -30,6 +27,8 @@ import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
 /**
  * utility methods for parsing graphql scalars as returned by the merlin interface
@@ -74,8 +73,7 @@ public class GraphQLParsers {
    * @param in the input graphql formatted interval scalar string to parse
    * @return the interval object represented by the input string
    */
-  //TODO: unify with wherever this translation must already exist in merlin
-  public static Interval parseGraphQLInterval(final String in) {
+  public static Duration parseGraphQLInterval(final String in) {
 
     final var matcher = intervalPattern.matcher(in);
     if (!matcher.matches()) {
@@ -84,15 +82,15 @@ public class GraphQLParsers {
     final var signValues = Map.of("+", 1, "-", -1);
     final var sign = Optional.ofNullable(matcher.group("sign")).map(signValues::get).orElse(1);
     final var hr = Optional.ofNullable(matcher.group("hr")).map(Integer::parseInt)
-                           .map(Duration::ofHours).orElse(Duration.ZERO);
+                           .map(java.time.Duration::ofHours).orElse(java.time.Duration.ZERO);
     final var min = Optional.ofNullable(matcher.group("min")).map(Integer::parseInt)
-                            .map(Duration::ofMinutes).orElse(Duration.ZERO);
+                            .map(java.time.Duration::ofMinutes).orElse(java.time.Duration.ZERO);
     final var sec = Optional.ofNullable(matcher.group("sec")).map(Double::parseDouble)
                             .map(s -> (long) (s * 1000 * 1000))//seconds->millis->micros
-                            .map(us -> Duration.of(us, ChronoUnit.MICROS))
-                            .orElse(Duration.ZERO);
+                            .map(us -> java.time.Duration.of(us, ChronoUnit.MICROS))
+                            .orElse(java.time.Duration.ZERO);
     final var total = hr.plus(min).plus(sec).multipliedBy(sign);
-    return Interval.of(total);
+    return Duration.of((total.getNano() / 1000) + (total.getSeconds() * 1000_000), MICROSECONDS);
   }
 
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);

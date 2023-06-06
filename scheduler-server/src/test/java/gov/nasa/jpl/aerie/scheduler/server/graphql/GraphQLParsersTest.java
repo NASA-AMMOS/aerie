@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.graphql;
 
-import com.impossibl.postgres.api.data.Interval;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,21 +22,21 @@ class GraphQLParsersTest {
 
   public static Stream<Arguments> parseGraphQLInterval() {
     return Stream.of(
-        Arguments.of("-322:21:15.111", Interval.parse("PT-322H-21M-15.111S")),
-        Arguments.of("+322:21:15.111", Interval.parse("PT322H21M15.111S")),
-        Arguments.of("322:21:15.111", Interval.parse("PT322H21M15.111S")),
-        Arguments.of("322:21:15.", Interval.parse("PT322H21M15S")),
-        Arguments.of("322:21:15", Interval.parse("PT322H21M15S")),
-        Arguments.of("+322:21:15", Interval.parse("PT322H21M15S")),
-        Arguments.of("-322:21:15", Interval.parse("PT-322H-21M-15S")),
-        Arguments.of("21:15.111", Interval.parse("PT21M15.111S")),
-        Arguments.of("+21:15.111", Interval.parse("PT21M15.111S")),
-        Arguments.of("-21:15.111", Interval.parse("PT-21M-15.111S")),
-        Arguments.of("15.111", Interval.parse("PT15.111S")),
-        Arguments.of("15.", Interval.parse("PT15S")),
-        Arguments.of("15", Interval.parse("PT15S")),
-        Arguments.of("-15", Interval.parse("PT-15S")),
-        Arguments.of("+15", Interval.parse("PT15S"))
+        Arguments.of("-322:21:15.111", parseDurationISO8601("PT-322H-21M-15.111S")),
+        Arguments.of("+322:21:15.111", parseDurationISO8601("PT322H21M15.111S")),
+        Arguments.of("322:21:15.111", parseDurationISO8601("PT322H21M15.111S")),
+        Arguments.of("322:21:15.", parseDurationISO8601("PT322H21M15S")),
+        Arguments.of("322:21:15", parseDurationISO8601("PT322H21M15S")),
+        Arguments.of("+322:21:15", parseDurationISO8601("PT322H21M15S")),
+        Arguments.of("-322:21:15", parseDurationISO8601("PT-322H-21M-15S")),
+        Arguments.of("21:15.111", parseDurationISO8601("PT21M15.111S")),
+        Arguments.of("+21:15.111", parseDurationISO8601("PT21M15.111S")),
+        Arguments.of("-21:15.111", parseDurationISO8601("PT-21M-15.111S")),
+        Arguments.of("15.111", parseDurationISO8601("PT15.111S")),
+        Arguments.of("15.", parseDurationISO8601("PT15S")),
+        Arguments.of("15", parseDurationISO8601("PT15S")),
+        Arguments.of("-15", parseDurationISO8601("PT-15S")),
+        Arguments.of("+15", parseDurationISO8601("PT15S"))
     );
   }
 
@@ -49,9 +49,14 @@ class GraphQLParsersTest {
 
   @ParameterizedTest
   @MethodSource
-  void parseGraphQLInterval(String input, Interval expected) {
+  void parseGraphQLInterval(String input, Duration expected) {
     final var actual = GraphQLParsers.parseGraphQLInterval(input);
     assertEquals(expected, actual);
+  }
+
+  private static Duration parseDurationISO8601(final String iso8601String){
+    final var javaDuration = java.time.Duration.parse(iso8601String);
+    return Duration.of((javaDuration.getSeconds() * 1_000_000L) + (javaDuration.getNano() / 1000L), Duration.MICROSECONDS);
   }
 
 }

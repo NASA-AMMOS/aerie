@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
@@ -37,6 +36,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ProfileSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.postgresql.util.PGInterval;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -50,6 +50,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -238,7 +239,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
             .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       }
 
-      final var endTime = (Instant) duration.addTo(startTime.toInstant());
+      final var endTime = startTime.toInstant().plusNanos(1000L * duration.in(MICROSECOND));
       final var horizon = new PlanningHorizon(startTime.toInstant(), endTime);
 
       return new PlanMetadata(
@@ -288,7 +289,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           .getInputType()
           .getEffectiveArguments(deserializedArguments);
       final var merlinActivity = new ActivityDirective(
-          Duration.of(parseGraphQLInterval(start).getDuration().toNanos() / 1000, Duration.MICROSECONDS),
+          parseGraphQLInterval(start),
           type,
           effectiveArguments,
           (anchorId != null) ? new ActivityDirectiveId(anchorId) : null,
@@ -746,6 +747,7 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
       ActivityAttributesRecord attributes
   ) {}
 
+  @Override
   public DatasetId storeSimulationResults(final PlanMetadata planMetadata,
                                           final SimulationResults results,
                                           final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws PlanServiceException, IOException
@@ -923,12 +925,22 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
     return profileRecords;
   }
 
-  public com.impossibl.postgres.api.data.Interval graphQLIntervalFromDuration(Duration duration){
-    return Interval.of(java.time.Duration.ofNanos(duration.in(MICROSECOND)*1000));
+  public PGInterval graphQLIntervalFromDuration(final Duration duration) {
+    try {
+      final var micros = duration.in(MICROSECOND);
+      return new PGInterval("PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public com.impossibl.postgres.api.data.Interval graphQLIntervalFromDuration(Instant instant1, Instant instant2){
-    return Interval.of(java.time.Duration.between(instant1, instant2));
+  public PGInterval graphQLIntervalFromDuration(final Instant instant1, final Instant instant2) {
+    try {
+      final var micros = java.time.Duration.between(instant1, instant2).toNanos() / 1000;
+      return new PGInterval("PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void postProfileSegments(

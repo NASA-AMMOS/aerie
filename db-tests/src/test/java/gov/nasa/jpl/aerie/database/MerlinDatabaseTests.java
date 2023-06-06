@@ -7,13 +7,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.postgresql.util.PGInterval;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -84,7 +84,7 @@ class MerlinDatabaseTests {
   }
 
   int insertPlan(final int missionModelId) throws SQLException {
-    return insertPlan(missionModelId, "2020-1-1 00:00:00");
+    return insertPlan(missionModelId, "2020-1-1 00:00:00+00");
   }
 
   int insertPlan(final int missionModelId, final String start_time) throws SQLException {
@@ -573,43 +573,9 @@ class MerlinDatabaseTests {
 
     @Test
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
-
-      final var planRes = connection.createStatement()
-                                    .executeQuery(
-                                        """
-                                            SELECT * from plan
-                                            WHERE id = %s;"""
-                                            .formatted(planDatasetRecord.plan_id())
-                                    );
-      planRes.next();
-      final var planStartTime = planRes.getTimestamp("start_time");
-      planRes.close();
-
-      final var planDatasetSelectRes = connection.createStatement()
-                                                 .executeQuery(
-                                                     """
-                                                         SELECT * FROM plan_dataset
-                                                         WHERE plan_id = %s and dataset_id = %s;"""
-                                                         .formatted(
-                                                             planDatasetRecord.plan_id(),
-                                                             planDatasetRecord.dataset_id())
-                                                 );
-      planDatasetSelectRes.next();
-      final var offsetFromPlanStart = Duration.parse(planDatasetSelectRes.getString("offset_from_plan_start"));
-      planDatasetSelectRes.close();
-
-      final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
-
-      final var newPlanRes = connection.createStatement()
-                                       .executeQuery(
-                                           """
-                                               SELECT * from plan
-                                               WHERE id = %s;"""
-                                               .formatted(newPlanId)
-                                       );
-      newPlanRes.next();
-      final var newPlanStartTime = newPlanRes.getTimestamp("start_time");
-      newPlanRes.close();
+      // ASSUMPTION: The plan to which `planDatasetRecord` is associated must start at 2020-1-1 00:00:00+00, so that
+      // this new plan starts exactly 1 hour later.
+      final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00+00");
 
       final var planDatasetInsertRes = connection.createStatement()
                                                  .executeQuery(
@@ -620,13 +586,10 @@ class MerlinDatabaseTests {
                                                          .formatted(newPlanId, planDatasetRecord.dataset_id())
                                                  );
       planDatasetInsertRes.next();
-      final var newOffsetFromPlanStart = Duration.parse(planDatasetInsertRes.getString("offset_from_plan_start"));
+      final var newOffsetFromPlanStart = new PGInterval(planDatasetInsertRes.getString("offset_from_plan_start"));
       planDatasetInsertRes.close();
 
-      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime()
-                                                                               - planStartTime.getTime()));
-
-      assertEquals(calculatedOffset, newOffsetFromPlanStart);
+      assertEquals(new PGInterval("-1 hours"), newOffsetFromPlanStart);
     }
 
     @Test
@@ -1076,6 +1039,8 @@ class MerlinDatabaseTests {
     insertProfileSegment(datasetId, winnerId, "6 hours", "\"Bob or Alice\"", false);
     insertProfileSegment(datasetId, winnerId, "10 hours", "\"Alice\"", false);
 
+    connection.prepareStatement("set intervalstyle = 'iso_8601';").execute();
+
     final var segmentsAtStart = getResourcesAtStartOffset(datasetId, "00:00:00");
     final var segmentsAtOneHour = getResourcesAtStartOffset(datasetId, "06:00:00");
     final var segmentsAtTwelveHours = getResourcesAtStartOffset(datasetId, "12:00:00");
@@ -1149,7 +1114,7 @@ class MerlinDatabaseTests {
               VALUES (%d, '%s', '%s', '%s')
               RETURNING id;
               """.formatted(datasetId, name, type, duration));
-      assertTrue(results.first());
+      assertTrue(results.next());
       return results.getInt("id");
     }
   }
@@ -1180,7 +1145,7 @@ class MerlinDatabaseTests {
           """
               SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
               """.formatted(datasetId, profileId));
-      assertTrue(res.first());
+      assertTrue(res.next());
       return res.getInt("count");
     }
   }

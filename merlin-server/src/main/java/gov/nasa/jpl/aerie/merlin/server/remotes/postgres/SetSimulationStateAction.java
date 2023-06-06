@@ -10,7 +10,7 @@ import java.sql.SQLException;
   private final @Language("SQL") String sql = """
         update simulation_dataset
           set
-            status = ?,
+            status = ?::status_t,
             reason = ?::json
           where dataset_id = ?
         """;

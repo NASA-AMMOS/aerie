@@ -23,7 +23,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 /*package-local*/ final class PostProfilesAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       insert into profile (dataset_id, name, type, duration)
-      values (?, ?, ?, ?::interval)
+      values (?, ?, ?::jsonb, ?::interval)
     """;
   private final PreparedStatement statement;
 

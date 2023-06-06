@@ -1,13 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
 import java.net.URI;
-import java.nio.file.Path;
-import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
-import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
@@ -95,16 +92,16 @@ public final class SchedulerAppDriver {
       final AppConfiguration config) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
-      final var pgDataSource = new PGDataSource();
-      pgDataSource.setServerName(pgStore.server());
-      pgDataSource.setPortNumber(pgStore.port());
-      pgDataSource.setDatabaseName(pgStore.database());
-      pgDataSource.setApplicationName("Scheduler Server");
-
       final var hikariConfig = new HikariConfig();
+      hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+      hikariConfig.addDataSourceProperty("serverName", pgStore.server());
+      hikariConfig.addDataSourceProperty("portNumber", pgStore.port());
+      hikariConfig.addDataSourceProperty("databaseName", pgStore.database());
+      hikariConfig.addDataSourceProperty("applicationName", "Scheduler Server");
       hikariConfig.setUsername(pgStore.user());
       hikariConfig.setPassword(pgStore.password());
-      hikariConfig.setDataSource(pgDataSource);
+
+      hikariConfig.setConnectionInitSql("set time zone 'UTC'");
 
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 

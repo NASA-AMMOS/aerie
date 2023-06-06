@@ -118,7 +118,7 @@ public class PresetTests {
                   INSERT INTO plan (name, model_id, duration, start_time)
                   VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00")
+                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00+00")
           );
       res.next();
       return res.getInt("id");
@@ -175,7 +175,7 @@ public class PresetTests {
         WHERE id = %d
         AND plan_id = %d;
       """.formatted(activityId, planId));
-      res.first();
+      res.next();
       return new Activity(
           res.getInt("id"),
           res.getInt("plan_id"),
@@ -280,7 +280,7 @@ public class PresetTests {
       FROM activity_presets ap, (SELECT preset_id from preset_to_directive WHERE (activity_id, plan_id) = (%d, %d)) o
       WHERE ap.id = o.preset_id;
       """.formatted(activityId, planId));
-      return res.first() ?
+      return res.next() ?
        new Preset(
           res.getInt("id"),
           res.getInt("model_id"),

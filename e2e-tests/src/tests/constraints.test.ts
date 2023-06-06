@@ -8,15 +8,17 @@ let mission_model_id: number;
 let plan_id: number;
 let violation: ConstraintViolation;
 let activity_id: number;
-const constraint_name = "fruit_equal_peel"
+const first_constraint_name = "fruit_equal_peel"
+const second_constraint_name = "no_controllable_duration"
+const long_duration = 35 * 24* 60 * 60 * 1000 * 1000 // 35 days in microseconds
 const rd = Math.random() * 100;
 const plan_start_timestamp = "2021-001T00:00:00.000";
-const plan_end_timestamp = "2021-001T12:00:00.000";
+const plan_end_timestamp = "2021-050T12:00:00.000";
 const activity_offset_hours = 1;
 
 // Tests in Initialize don't involve constraints (and therefore shouldn't fail),
 // they simply set up Aerie with a model, plan, and activities for further testing
-test.describe("Initialize", async () => {
+test.describe.serial("Initialize", async () => {
   test("Upload jar and create mission model", async ({ request }) => {
     jar_id = await req.uploadJarFile(request);
 
@@ -70,7 +72,7 @@ test.describe("Initialize", async () => {
 test.describe("Constraints", () => {
   test("Add Constraint to Plan", async ({ request }) => {
     const constraint: ConstraintInsertInput = {
-      name: constraint_name,
+      name: first_constraint_name,
       definition: "export default (): Constraint => Real.Resource(\"/fruit\").equal(Real.Resource(\"/peel\"))",
       description: "",
       model_id: null,
@@ -110,7 +112,7 @@ test.describe("Constraints", () => {
   });
 
   test("Check the violation is the expected one", async () => {
-    expect(violation.constraintName).toEqual(constraint_name)
+    expect(violation.constraintName).toEqual(first_constraint_name)
     expect(violation.constraintId).toEqual(constraint_id)
     expect(violation.associations.resourceIds).toHaveLength(2);
     expect(violation.associations.resourceIds).toContain("/fruit");
@@ -148,6 +150,68 @@ test.describe("Constraints", () => {
     expect(violations).toHaveLength(0);
   });
 
+  /*
+  Test that an activity with a duration longer than one month is written to and read back from the database successfully
+  by Aerie's simulation and constraints checking components respectively. The driving concern here is that Aerie needs
+  to interpret span durations as microseconds; if the simulation results were to be written using the postgres
+  interval's "months" field, constraints checking would fail to load these values back from the database.
+   */
+
+  test("Add No ControllableDurationActivity Constraint to Plan", async ({ request }) => {
+    const constraint: ConstraintInsertInput = {
+      name: second_constraint_name,
+      definition: "export default (): Constraint => Windows.During(ActivityType.ControllableDurationActivity).not()",
+      description: "",
+      model_id: null,
+      plan_id,
+    };
+    constraint_id = await req.insertConstraint(request, constraint);
+
+    expect(constraint_id).not.toBeNull();
+    expect(constraint_id).toBeDefined();
+  });
+
+  test("Check insert long violating activity", async ({ request }) => {
+    activity_id = await req.insertActivity(request, {
+      arguments : {
+        "duration": long_duration
+      },
+      plan_id: plan_id,
+      type : "ControllableDurationActivity",
+      start_offset : "0h",
+    });
+
+    expect(activity_id).not.toBeNull();
+    expect(activity_id).toBeDefined();
+  });
+
+  test("Run simulation of long activity", async ({ request }) => {
+    const resp: SimulationResponse = await awaitSimulation(request, plan_id);
+
+    expect(resp.status).toEqual("complete");
+  });
+
+  test("Check there is one violation again", async ({ request }) => {
+    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+
+    expect(violations).not.toBeNull();
+    expect(violations).toBeDefined();
+    expect(violations).toHaveLength(1);
+
+    violation = violations[0];
+
+    expect(violation).not.toBeNull();
+    expect(violation).toBeDefined();
+  });
+
+  test("Check the violation window duration is correct", async () => {
+    expect(violation.constraintName).toEqual(second_constraint_name);
+    expect(violation.windows).toHaveLength(1);
+    expect(violation.windows[0]).toEqual({
+      start: 0,
+      end: long_duration
+    });
+  });
 });
 
 test.describe("Clean Up", async () => {

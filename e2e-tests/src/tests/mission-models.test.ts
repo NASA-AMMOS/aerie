@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 import req from '../utilities/requests.js';
 
-test.describe('Mission Models', () => {
+test.describe.serial('Mission Models', () => {
   let jar_id: number;
   let mission_model_id: number;
 
