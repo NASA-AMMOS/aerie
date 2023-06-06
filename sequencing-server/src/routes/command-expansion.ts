@@ -75,6 +75,7 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const missionModelId = req.body.input.missionModelId as number;
   const expansionIds = req.body.input.expansionIds as number[];
+  const description = req.body.input.description as string | null;
 
   const [expansions, commandTypes] = await Promise.all([
     context.expansionDataLoader.loadMany(expansionIds.map(id => ({ expansionId: id }))),
@@ -131,10 +132,10 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const { rows } = await db.query(
     `
         with expansion_set_id as (
-          insert into expansion_set (command_dict_id, mission_model_id)
-            values ($1, $2)
+          insert into expansion_set (command_dict_id, mission_model_id, description)
+            values ($1, $2, $3)
             returning id),
-             rules as (select id, activity_type from expansion_rule where id = any ($3::int[]) order by id)
+             rules as (select id, activity_type from expansion_rule where id = any ($4::int[]) order by id)
         insert
         into expansion_set_to_rule (set_id, rule_id, activity_type)
         select a.id, b.id, b.activity_type
@@ -142,7 +143,7 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
              (select id, activity_type from rules) b
         returning (select id from expansion_set_id);
       `,
-    [commandDictionaryId, missionModelId, expansionIds],
+    [commandDictionaryId, missionModelId, description ?? '', expansionIds],
   );
 
   if (rows.length < 1) {
