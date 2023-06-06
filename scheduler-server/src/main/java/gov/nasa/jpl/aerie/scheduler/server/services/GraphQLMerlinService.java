@@ -533,7 +533,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       }
 
       for (final var arg : act.arguments().entrySet()) {
-        //serializedValueP is safe to use here because only unparsing. otherwise subject to int/double typing confusion
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }
       insertionObject.add("arguments", insertionObjectArguments.build());
