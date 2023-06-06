@@ -236,6 +236,8 @@ test.describe.serial('Scheduling', () => {
         expect(eqSet(startOffsetOfResource, startOffsetsActivityDirectives)).toEqual(true)
       }
     }
+    const fruit = dataset.filter($ => $.name === "/fruit")[0];
+    expect(fruit.profile_segments[0].dynamics).toEqual({"initial": 3, "rate": 0});
     let topics = await req.getTopicsEvents(request, dataset_id)
     let prefixInput = "ActivityType.Input."
     let prefixOutput = "ActivityType.Output."
