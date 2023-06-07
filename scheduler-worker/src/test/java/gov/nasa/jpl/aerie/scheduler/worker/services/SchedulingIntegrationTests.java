@@ -2212,4 +2212,57 @@ public class SchedulingIntegrationTests {
         List.of(),
         PLANNING_HORIZON);
   }
+
+  /**
+   * Test filtering CoexistenceGoal.forEach on activity arguments.
+   */
+  @Test
+  void testForEachWithActivityArguments() {
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        Map.of(
+            new ActivityDirectiveId(1L),
+            new ActivityDirective(
+                Duration.ZERO,
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(2),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                true),
+            new ActivityDirectiveId(2L),
+            new ActivityDirective(
+                Duration.of(2, activityDuration),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                true)
+        ),
+        List.of(
+            new SchedulingGoal(new GoalId(0L), """
+                  export default () => Goal.CoexistenceGoal({
+                    forEach: ActivityExpression.build(ActivityTypes.GrowBanana, {quantity: 1}),
+                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
+                  })
+                  """, true, true
+            )
+        ),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    assertEquals(2, planByActivityType.size());
+
+    final var peels = planByActivityType.get("PeelBanana");
+    assertEquals(1, peels.size());
+    assertEquals(peels.iterator().next().startOffset(), Duration.of(5, MINUTE).plus(Duration.of(2, activityDuration)));
+  }
 }
