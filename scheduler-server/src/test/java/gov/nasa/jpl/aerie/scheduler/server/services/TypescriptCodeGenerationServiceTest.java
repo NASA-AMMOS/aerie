@@ -18,6 +18,7 @@ import type { Windows } from './constraints-edsl-fluent-api.js';
 import type * as ConstraintEDSL from './constraints-edsl-fluent-api.js'
 interface SampleActivity1 extends ActivityTemplate<ActivityType.SampleActivity1> {}
 interface SampleActivity2 extends ActivityTemplate<ActivityType.SampleActivity2> {}
+interface SampleActivity3 extends ActivityTemplate<ActivityType.SampleActivity3> {}
 interface SampleActivityEmpty extends ActivityTemplate<ActivityType.SampleActivityEmpty> {}
 export function makeAllDiscreteProfile (argument: any) : any{
   if (argument === undefined){
@@ -68,6 +69,11 @@ const ActivityTemplateConstructors = {
   // @ts-ignore
     return { activityType: ActivityType.SampleActivity2, args: makeArgumentsDiscreteProfiles(args) };
   },
+  SampleActivity3: function SampleActivity3Constructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.SampleActivity3]
+  ): SampleActivity3 {
+  // @ts-ignore
+    return { activityType: ActivityType.SampleActivity3, args: makeArgumentsDiscreteProfiles(args) };
+  },
   SampleActivityEmpty: function SampleActivityEmptyConstructor(): SampleActivityEmpty {
     return { activityType: ActivityType.SampleActivityEmpty, args: {} };
   },
@@ -79,6 +85,13 @@ const ActivityPresetMap = Object.freeze({
     get "my preset"(): { quantity:(number | Real),} {
       return {
         "quantity": 5,
+      };
+    },
+  }),
+  SampleActivity3: Object.freeze({
+    get "my preset"(): { variant:(("option1" | "option2") | Discrete<("option1" | "option2")>),} {
+      return {
+        "variant": "option1",
       };
     },
   }),
