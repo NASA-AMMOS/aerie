@@ -130,7 +130,7 @@ return (<T>makeAllDiscreteProfile(args))
     for (final var activityTypeCode : activityTypeCodes) {
       result.add(indent("%s: Object.freeze({".formatted(activityTypeCode.activityTypeName)));
       for (final var preset: activityTypeCode.presets.entrySet()) {
-        result.add(indent(indent("get \"%s\"(): %s {".formatted(preset.getKey(), serializedValueToType(SerializedValue.of(preset.getValue()))))));
+        result.add(indent(indent("get \"%s\"(): %s {".formatted(preset.getKey(), TypescriptType.toString(activityTypeCode.getArgumentsType(), false)))));
         result.add(indent(indent(indent("return {"))));
         for (final var argument: preset.getValue().entrySet()) {
           final var deserializedJson = serializedValueP.unparse(argument.getValue());
@@ -153,7 +153,13 @@ return (<T>makeAllDiscreteProfile(args))
     return joinLines(s.lines().map(line -> "  " + line).toList());
   }
 
-  private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes, Map<String, Map<String, SerializedValue>> presets) {}
+  private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes, Map<String, Map<String, SerializedValue>> presets) {
+    public TypescriptType getArgumentsType() {
+      return new TypescriptType.TSStruct(
+          parameterTypes.stream().map($ -> Pair.of($.name(), $.type())).toList()
+      );
+    }
+  }
 
   private record ActivityParameter(String name, TypescriptType type) {}
 
@@ -170,7 +176,7 @@ return (<T>makeAllDiscreteProfile(args))
     /**
      * Print this type out in one line.
      */
-    static String toString(final TypescriptType type) {
+    static String toString(final TypescriptType type, boolean topLevelStructIsProfile) {
       if (type instanceof TSString) {
         return "(string | Discrete<string>)";
       } else if (type instanceof TSDouble) {
@@ -183,16 +189,24 @@ return (<T>makeAllDiscreteProfile(args))
       } else if (type instanceof TSDuration) {
         return "(Temporal.Duration | Discrete<Temporal.Duration>)";
       } else if (type instanceof TSArray t) {
-        final var typeStr = toString(t.elementType());
+        final var typeStr = toString(t.elementType(), true);
         return "((" +typeStr+ ")[] | Discrete<("+typeStr+")[]>)";
       } else if (type instanceof TSStruct t) {
 
-        var typeStr = "{ ";
-        for(final var keyAndType :  t.keysAndTypes()){
-          typeStr += keyAndType.getLeft() + ":"+ toString(keyAndType.getRight())+",";
+        var typeStr = new StringBuilder("{ ");
+        for (final var keyAndType :  t.keysAndTypes()) {
+          typeStr
+              .append(keyAndType.getLeft())
+              .append(":")
+              .append(toString(keyAndType.getRight(), true))
+              .append(",");
         }
-        typeStr+="}";
-        return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);
+        typeStr.append("}");
+        if (topLevelStructIsProfile) {
+          return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);
+        } else {
+          return typeStr.toString();
+        }
       } else if (type instanceof TSEnum t) {
         final var typeStr = "(" + String.join(" | ", t.values().stream().map(x -> "\"" + x + "\"").toList()) + ")";
         return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);

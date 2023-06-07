@@ -76,9 +76,7 @@ const ActivityPresetMap = Object.freeze({
   SampleActivity1: Object.freeze({
   }),
   SampleActivity2: Object.freeze({
-    get "my preset"(): {
-      "quantity": number,
-    } {
+    get "my preset"(): { quantity:(number | Real),} {
       return {
         "quantity": 5,
       };
