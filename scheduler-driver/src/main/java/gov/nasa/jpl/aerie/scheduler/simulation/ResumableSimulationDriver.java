@@ -96,8 +96,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
-    this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
-    assert useResourceTracker;
+    this.engine = new SimulationEngine(startTime, missionModel, oldEngine, resourceTracker);
+    if (useResourceTracker) {
+      this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
+      engine.resourceTracker = this.resourceTracker;
+    }
+    //assert useResourceTracker;
     // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
     /* The current real time. */
@@ -115,9 +119,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   private void trackResources() {
     // Begin tracking all resources.
-    if (useResourceTracker) {
-      this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
-    }
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
@@ -151,9 +152,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      while (!resourceTracker.isEmpty(endTime, true)) {
-        resourceTracker.updateResources(endTime, true);
-      }
+      engine.generateResourceProfiles(endTime);
     }
     lastSimResults = null;
   }
@@ -234,21 +233,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.getStartTime()) != 0) {
-      if (useResourceTracker) {
-        while (!resourceTracker.isEmpty(endTime, true)) {
-          resourceTracker.updateResources(endTime, true);
-        }
-        lastSimResults = engine.computeResults(
-            startTimestamp,
-            endTime,
-            activityTopic,
-            resourceTracker.resourceProfiles());
-      } else {
-        lastSimResults = engine.computeResults(
+      lastSimResults = engine.computeResults(
             startTimestamp,
             endTime,
             activityTopic);
-      }
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
@@ -262,6 +250,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    */
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
+    if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
+
     if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
     }
@@ -304,9 +294,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      while (!resourceTracker.isEmpty(curTime(), true)) {
-        resourceTracker.updateResources(curTime(), true);
-      }
+      engine.generateResourceProfiles(curTime());
     }
     lastSimResults = null;
   }

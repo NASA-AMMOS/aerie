@@ -30,6 +30,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
  */
 public class SimulationFacade implements AutoCloseable{
 
+  public static final boolean defaultUseResourceTracker = false;
+
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
 
   private final MissionModel<?> missionModel;
@@ -58,7 +60,7 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
-    this(planningHorizon, missionModel, true);
+    this(planningHorizon, missionModel, defaultUseResourceTracker);
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel, final boolean useResourceTracker) {

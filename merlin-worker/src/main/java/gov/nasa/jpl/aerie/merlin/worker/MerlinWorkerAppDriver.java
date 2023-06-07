@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public final class MerlinWorkerAppDriver {
+  public static boolean defaultUseResourceTracker = false;
+
   public static void main(String[] args) throws Exception {
     final var configuration = loadConfiguration();
     final var store = configuration.store();
@@ -103,7 +105,7 @@ public final class MerlinWorkerAppDriver {
                           getEnv("MERLIN_WORKER_DB_PASSWORD", ""),
                           getEnv("MERLIN_WORKER_DB", "aerie_merlin")),
         Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
-        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", "false"))
+        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", defaultUseResourceTracker ? "true" : "false"))
     );
   }
 }

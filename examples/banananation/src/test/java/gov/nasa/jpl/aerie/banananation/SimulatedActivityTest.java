@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -23,6 +24,66 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class SimulatedActivityTest {
+  @Test
+  public void testRemoveAndAddActivity() {
+    final var schedule1 = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(5, SECONDS),
+            new SerializedActivity("PeelBanana", Map.of()))
+    );
+    final var schedule2 = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(3, SECONDS),
+            new SerializedActivity("PeelBanana", Map.of()))
+    );
+
+    final var simDuration = duration(10, SECOND);
+
+    final var driver = SimulationUtility.getDriver(simDuration);
+
+    final var startTime = Instant.now();
+    var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    System.out.println("fruitProfile = " + fruitProfile);
+
+    driver.initSimulation(simDuration);
+    simulationResults = driver.diffAndSimulate(new HashMap<>(), startTime, simDuration, startTime, simDuration);
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    System.out.println("fruitProfile = " + fruitProfile);
+
+    driver.initSimulation(simDuration);
+    simulationResults = driver.diffAndSimulate(schedule2, startTime, simDuration, startTime, simDuration);
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    System.out.println("fruitProfile = " + fruitProfile);
+
+//    assertEquals(1, simulationResults.getSimulatedActivities().size());
+//
+//    assertEquals(4.0, fruitProfile.get(fruitProfile.size()-1).dynamics().initial);
+  }
+
+  @Test
+  public void testRemoveActivity() {
+    final var schedule = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(5, SECONDS),
+            new SerializedActivity("PeelBanana", Map.of()))
+    );
+
+    final var simDuration = duration(10, SECOND);
+
+    final var driver = SimulationUtility.getDriver(simDuration);
+
+    final var startTime = Instant.now();
+    var simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
+    driver.initSimulation(simDuration);
+    simulationResults = driver.diffAndSimulate(new HashMap<>(), startTime, simDuration, startTime, simDuration);
+
+    assertEquals(0, simulationResults.getSimulatedActivities().size());
+
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+//    assertEquals(4.0, fruitProfile.get(fruitProfile.size()-1).dynamics().initial);
+  }
+
   @Test
   public void testUnspecifiedArgInSimulatedActivity() {
     final var schedule = SimulationUtility.buildSchedule(
@@ -42,8 +103,8 @@ public final class SimulatedActivityTest {
 
     assertEquals(1, simulationResults.getSimulatedActivities().size());
     simulationResults.getSimulatedActivities().forEach( (id, act) -> {
-        assertEquals(1, act.arguments().size());
-        assertTrue(act.arguments().containsKey("peelDirection"));
+      assertEquals(1, act.arguments().size());
+      assertTrue(act.arguments().containsKey("peelDirection"));
     });
 
     assertEquals(1, simulationResults.getUnfinishedActivities().size());
@@ -56,8 +117,7 @@ public final class SimulatedActivityTest {
 
   /** This test is a response to not accounting for all Task ExecutionStates
    * when collecting activities into the results object. This indirectly tests that portion
-   * of {@link gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine#computeResults(
-   * SimulationEngine, Instant, Duration, Topic, TemporalEventSource, MissionModel) computeResults()}
+   * of {@link gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine#computeResults(Instant, Duration, Topic) computeResults()}
    *
    * The schedule in this test, results produces Tasks in all three of the states,
    * {@link gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine.ExecutionState.AwaitingChildren AwaitingChildren},

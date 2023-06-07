@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ResumableSimulationTest {
+  public static boolean useResourceTracker = false;
+
   ResumableSimulationDriver<?> resumableSimulationDriver;
   Duration endOfLastAct;
 
@@ -28,7 +30,7 @@ public class ResumableSimulationTest {
   public void init() {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours, true);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours, useResourceTracker);
     for (var act : acts) {
       resumableSimulationDriver.simulateActivity(act.start, act.activity, null, true, act.id);
     }
@@ -82,7 +84,7 @@ public class ResumableSimulationTest {
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, true);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, useResourceTracker);
     try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
       for (var i = 0; i < 20000; i++) {
         resumableSimulationDriver.initSimulation();

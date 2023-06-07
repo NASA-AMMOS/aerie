@@ -11,6 +11,7 @@ public record ProfilingState<Dynamics> (Resource<Dynamics> resource, Profile<Dyn
   }
 
   public void append(final Duration currentTime, final Querier querier) {
-    this.profile.append(currentTime, this.resource.getDynamics(querier));
+    final Dynamics dynamics = this.resource.getDynamics(querier);
+    this.profile.append(currentTime, dynamics);
   }
 }

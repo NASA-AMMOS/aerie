@@ -20,6 +20,19 @@ public final class SimulationUtility {
     return builder.build(model, registry);
   }
 
+  public static SimulationDriver
+  getDriver(final Duration simulationDuration) {
+    final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
+    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath, Configuration.DEFAULT_INITIAL_CONDITIONS);
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
+
+    var driver = new SimulationDriver(
+        missionModel,
+        simulationDuration,
+        SimulationDriver.defaultUseResourceTracker);
+    return driver;
+  }
+
   public static SimulationResultsInterface
   simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
@@ -33,8 +46,7 @@ public final class SimulationUtility {
         startTime,
         simulationDuration,
         startTime,
-        simulationDuration,
-        true);
+        simulationDuration);
   }
 
   @SafeVarargs

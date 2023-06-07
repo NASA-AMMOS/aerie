@@ -241,14 +241,15 @@ public final class LocalMissionModelService implements MissionModelService {
     SimulationDriver driver = simulationDrivers.get(planInfo);
 
     if (driver == null || !doingIncrementalSim) {
-      driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration(), true);
+      driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration(),
+                                    message.useResourceTracker());
       simulationDrivers.put(planInfo, driver);
       // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
       return driver.simulate(message.activityDirectives(),
                              message.simulationStartTime(),
                              message.simulationDuration(),
                              message.planStartTime(),
-                             message.planDuration(), true);
+                             message.planDuration());
     } else {
       // Try to reuse past simulation.
       driver.initSimulation(message.simulationDuration());
@@ -256,7 +257,7 @@ public final class LocalMissionModelService implements MissionModelService {
                                     message.simulationStartTime(),
                                     message.simulationDuration(),
                                     message.planStartTime(),
-                                    message.planDuration(), true);
+                                    message.planDuration());
     }
 
   }

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface SimulationResultsInterface {
 
@@ -35,6 +36,8 @@ public interface SimulationResultsInterface {
   Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> getDiscreteProfiles();
 
   Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities();
+
+  Set<SimulatedActivityId> getRemovedActivities();
 
   Map<SimulatedActivityId, UnfinishedActivity> getUnfinishedActivities();
 

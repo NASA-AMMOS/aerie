@@ -47,7 +47,7 @@ public final class Subscriptions<TopicRef, QueryRef> {
     return Collections.unmodifiableSet(topics);
   }
 
-  public Set<QueryRef> invalidateTopic(final TopicRef topic) {
+  private Set<QueryRef> removeTopic(final TopicRef topic) {
     final var queries = Optional
         .ofNullable(this.queriesByTopic.remove(topic))
         .orElseGet(Collections::emptySet);
@@ -57,8 +57,22 @@ public final class Subscriptions<TopicRef, QueryRef> {
     return queries;
   }
 
+  public Set<QueryRef> invalidateTopic(final TopicRef topic) {
+    //final var queries = this.queriesByTopic.get(topic);
+    final var queries = removeTopic(topic);
+    return queries;
+  }
+
   public void clear() {
     this.topicsByQuery.clear();
     this.queriesByTopic.clear();
+  }
+
+  @Override
+  public String toString() {
+    return "Subscriptions{" +
+           "topicsByQuery=" + topicsByQuery +
+           ", queriesByTopic=" + queriesByTopic +
+           '}';
   }
 }

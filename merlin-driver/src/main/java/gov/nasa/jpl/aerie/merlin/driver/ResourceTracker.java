@@ -14,10 +14,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ResourceTracker {
   public static final boolean debug = false;
@@ -31,7 +33,7 @@ public class ResourceTracker {
 
   private final SimulationEngine engine;
   private final ResourceTrackerEventSource timeline;
-  private final LiveCells cells;
+  private LiveCells cells;
   private Duration elapsedTime;
 
   public ResourceTracker(final SimulationEngine engine, final LiveCells initialCells) {
@@ -92,12 +94,35 @@ public class ResourceTracker {
       }
       updateExpiredResources(p.delta()); // this call updates ourOwnTimeline and elapsedTime
     } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit p) {
-      expireInvalidatedResources(p.topics());
+      var topics = p.topics();
+      if (timeline.timeline.oldTemporalEventSource != null) {
+        topics = topics.stream().filter(
+            t -> timeline.timeline.isTopicStale(t, elapsedTime)).collect(Collectors.toSet());
+      }
+      expireInvalidatedResources(topics);
     } else {
       throw new Error("Unhandled variant of "
                       + TemporalEventSource.TimePoint.class.getCanonicalName()
                       + ": "
                       + timePoint);
+    }
+  }
+
+  // waitingResources are those that after evaluation are waiting on a topic/cell to change, at which point they are
+  // calculated and stored in the Profile.  When invalidating a topic, we have declared that the topic/cell is
+  // (well might) change, and the resource should be updated.  When the resource is updated, it and its referenced topics
+  // are added to waitingResources.  So, a resource is always in waitingResources but its referenced topics are replaced.
+  // That's not obvious because the replacement is broken up into removing in one function and then adding back in another.
+  public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
+    if (invalidationTime.noLongerThan(invalidationTime)) {
+      var resources = this.waitingResources.invalidateTopic(topic);
+      if (debug) System.out.println("RT invalidate topic: " + topic + " and schedule expiries at " + invalidationTime + " for resources " + resources);
+      for (final var resourceName : resources) {
+        this.resourceExpiries.put(resourceName, this.elapsedTime);
+        if (debug) System.out.println("RT resourceExpiries.put(resourceName=" + resourceName+", elapsedTime=" + invalidationTime + ")");
+      }
+    } else {
+      // need to do this in the future
     }
   }
 
@@ -127,10 +152,13 @@ public class ResourceTracker {
 
       if (resourceQueryTime.longerThan(endTime)) break;
 
-      this.timeline.advance(resourceQueryTime.minus(this.elapsedTime));
-      this.elapsedTime = this.elapsedTime.plus(resourceQueryTime.minus(this.elapsedTime));
+      if (!resourceQueryTime.isEqualTo(this.elapsedTime)) {
+        this.timeline.advance(resourceQueryTime.minus(this.elapsedTime));
+        this.elapsedTime = resourceQueryTime;
+      }
 
       this.resourceExpiries.remove(resourceName);
+      // Compute the new resource value and add to the Profile
       TaskFrame.run(this.resources.get(resourceName), this.cells, (job, frame) -> {
         final var querier = engine.new EngineQuerier(this.elapsedTime, frame);
         this.resourceProfiles.get(resourceName).append(resourceQueryTime, querier);
@@ -152,6 +180,13 @@ public class ResourceTracker {
 
   public Map<String, ProfilingState<?>> resourceProfiles() {
     return this.resourceProfiles;
+  }
+
+  public void reset() {
+    this.cells = new LiveCells(this.timeline, engine.getMissionModel().getInitialCells());
+    this.elapsedTime = Duration.ZERO;
+    (new HashSet<String>(this.resources.keySet())).forEach(name -> track(name, resources.get(name)));
+    this.timepointPastEnd = null;
   }
 
   /**
@@ -188,11 +223,11 @@ public class ResourceTracker {
 
         @Override
         public void stepUp(final Cell<?> cell) {
-          if (debug) System.out.println("stepUp(): BEGIN");
-//          if (brad) {
-//            timeline.stepUp(cell, Duration.MAX_VALUE, true);
-//            return;
-//          }
+          System.out.println("stepUp(): BEGIN");
+          if (brad) {
+            timeline.stepUp(cell, Duration.MAX_VALUE, true);
+            return;
+          }
           // Extend timeline iterator to the current limit
           for (var i = this.offset.pointCount; i < ResourceTrackerEventSource.this.limit.pointCount(); i++) {
             final var point = this.timelineIterator.next();

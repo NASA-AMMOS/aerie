@@ -26,6 +26,8 @@ import gov.nasa.jpl.aerie.scheduler.worker.services.SynchronousSchedulerAgent;
 import io.javalin.Javalin;
 
 public final class SchedulerWorkerAppDriver {
+  public static boolean defaultUseResourceTracker = false;
+
   public static void main(String[] args) throws Exception {
     final var config = loadConfiguration();
 
@@ -117,7 +119,7 @@ public final class SchedulerWorkerAppDriver {
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
-        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", "true"))
+        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", defaultUseResourceTracker ? "true" : "false"))
     );
   }
 }

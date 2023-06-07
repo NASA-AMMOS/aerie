@@ -639,8 +639,7 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays,
-          true);
+          tenDays);
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
     }
@@ -756,8 +755,7 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays,
-          true);
+          tenDays);
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
     }
@@ -915,8 +913,7 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays,
-          true);
+          tenDays);
 
       assertEquals(planStart, actualSimResults.getStartTime());
       assertTrue(actualSimResults.getUnfinishedActivities().isEmpty());
@@ -1053,8 +1050,8 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays,
-          true);
+          tenDays);
+//          defaultUseResourceTracker);
 
       assertEquals(3906, expectedSimResults.getSimulatedActivities().size());
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);

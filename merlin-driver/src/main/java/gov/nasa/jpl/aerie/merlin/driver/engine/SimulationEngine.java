@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.CombinedSimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
+import gov.nasa.jpl.aerie.merlin.driver.ResourceTracker;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
@@ -59,6 +60,8 @@ import java.util.stream.Collectors;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  private static boolean debug = false;
+
   /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
   public final SimulationEngine oldEngine;
 
@@ -73,7 +76,10 @@ public final class SimulationEngine implements AutoCloseable {
   private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
   /** The set of queries depending on a given set of topics. */
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
-
+  /** The topics referenced (cells read) by the last computation of the resource. */
+  private HashMap<ResourceId, Set<Topic<?>>> referencedTopics = new HashMap<>();
+  /** Separates generation of resource profile results from other parts of the simulation */
+  public ResourceTracker resourceTracker;
   /** The history of when tasks read topics/cells */
   private final HashMap<Topic<?>, TreeMap<Duration, HashMap<TaskId, Event>>> cellReadHistory = new HashMap<>();
 
@@ -89,17 +95,21 @@ public final class SimulationEngine implements AutoCloseable {
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
 //  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
   private final HashMap<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
+  private final Set<SimulatedActivityId> removedActivities = new HashSet<>();
   private final HashMap<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
   private final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
   private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
+  private HashMap<String, SimulatedActivityId> taskToSimulatedActivityId = null;
 
-  public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
+  public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine,
+                          final ResourceTracker resourceTracker) {
 
     this.startTime = startTime;
     this.missionModel = missionModel;
     this.oldEngine = oldEngine;
+    this.resourceTracker = resourceTracker;
     this.timeline = new TemporalEventSource(null, missionModel,
                                             oldEngine == null ? null : oldEngine.timeline);
     if (oldEngine != null) {
@@ -111,6 +121,7 @@ public final class SimulationEngine implements AutoCloseable {
       //this.defaultActivityTopic = new Topic<>();
     }
     this.timeline.liveCells = this.cells;
+    if (debug) System.out.println("new SimulationEngine(startTime=" + startTime + ")");
   }
 
   /** When tasks become stale */
@@ -154,7 +165,7 @@ public final class SimulationEngine implements AutoCloseable {
   public Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads(Duration after, Duration before) {
     // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
     // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
-    var earliest = Duration.MAX_VALUE;
+    var earliest = before;
     final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
     final var topicsStale = timeline.staleTopics.keySet();
     for (var topic : topicsStale) {
@@ -163,7 +174,7 @@ public final class SimulationEngine implements AutoCloseable {
         continue;
       }
       final NavigableMap<Duration, HashMap<TaskId, Event>> topicReadsAfter =
-          topicReads.subMap(after, false, Duration.min(earliest, before), true);
+          topicReads.subMap(after, false, earliest, true);
       if (topicReadsAfter == null || topicReadsAfter.isEmpty()) {
         continue;
       }
@@ -175,28 +186,31 @@ public final class SimulationEngine implements AutoCloseable {
             earliest = d;
             tasks.clear();
           } else if (d.longerThan(earliest)) {
+            if (!tasks.isEmpty()) break;
             continue;
           }
           taskIds.forEach((id, event) -> tasks.computeIfAbsent(id, $ -> new HashSet<>()).add(Pair.of(topic, event)));
         }
       }
     }
+    if (tasks.isEmpty()) earliest = Duration.MAX_VALUE;
     return Pair.of(earliest, tasks);
   }
 
   /** Get the earliest time that topics become stale and return those topics with the time */
-  public Pair<List<Topic<?>>, Duration> earliestStaleTopics(Duration before) {
+  public Pair<List<Topic<?>>, Duration> earliestStaleTopics(Duration after, Duration before) {
     var list = new ArrayList<Topic<?>>();
-    Duration earliest = Duration.MAX_VALUE;
+    Duration earliest = before;
     for (var entry : timeline.staleTopics.entrySet()) {
+      var subMap = entry.getValue().subMap(after, false, earliest, true);
       Duration d = null;
-      for (var e : entry.getValue().entrySet()) {
+      for (var e : subMap.entrySet()) {
         if (e.getValue()) {
           d = e.getKey();
           break;
         }
       }
-      if (d == null || d.noShorterThan(before)) {
+      if (d == null) {
         continue;
       }
       int comp = d.compareTo(earliest);
@@ -206,7 +220,16 @@ public final class SimulationEngine implements AutoCloseable {
         earliest = d;
       }
     }
+    if (list.isEmpty()) earliest = Duration.MAX_VALUE;
     return Pair.of(list, earliest);
+  }
+
+  private ExecutionState<?> getTaskExecutionState(TaskId taskId) {
+    var execState = tasks.get(taskId);
+    if (execState == null && oldEngine != null) {
+      execState = oldEngine.getTaskExecutionState(taskId);
+    }
+    return execState;
   }
 
   /**
@@ -225,11 +248,11 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     staleTasks.put(taskId, time);
-    var execState = oldEngine.tasks.get(taskId);
+    final ExecutionState<?> execState = oldEngine.getTaskExecutionState(taskId);
     final Duration taskStart;
-    if (execState != null) taskStart = execState.startOffset();
+    if (execState != null) taskStart = execState.startOffset(); // WARNING: assumes offset is from same plan start
     else {
-      taskStart = Duration.ZERO;
+      //taskStart = Duration.ZERO;
       throw new RuntimeException("Can't find task start!");
     }
     rescheduleTask(taskId, taskStart);
@@ -281,11 +304,56 @@ public final class SimulationEngine implements AutoCloseable {
     }  // for Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>>
   }
 
-  public void removeTaskHistory(TaskId taskId) {
+  public TaskId getTaskIdForDirectiveId(ActivityDirectiveId id) {
+    var taskId = this.taskInfo.getTaskIdForDirectiveId(id);
+    if (taskId == null && oldEngine != null) {
+      taskId = oldEngine.getTaskIdForDirectiveId(id);
+    }
+    return taskId;
+  }
+
+  private TaskId getTaskIdForFactory(TaskFactory<?> taskFactory) {
+    var taskId = taskIdsForFactories.get(taskFactory);
+    if (taskId == null && oldEngine != null) {
+      taskId = oldEngine.getTaskIdForFactory(taskFactory);
+    }
+    return taskId;
+  }
+
+  private TaskFactory<?> getFactoryForTaskId(TaskId taskId) {
+    var taskFactory = taskFactories.get(taskId);
+    if (taskFactory == null && oldEngine != null) {
+      taskFactory = oldEngine.getFactoryForTaskId(taskId);
+    }
+    return taskFactory;
+  }
+
+  private TreeMap<Duration, List<EventGraph<Event>>> getCombinedEventsByTask(TaskId taskId) {
+    var newEvents = this.timeline.eventsByTask.get(taskId);
+    if (oldEngine == null) return newEvents;
+    var oldEvents = this.oldEngine.getCombinedEventsByTask(taskId);
+    return TemporalEventSource.mergeMapsFirstWins(newEvents, oldEvents);
+  }
+
+  private SimulatedActivityId getSimulatedActivityIdForTaskId(TaskId taskId) {
+    var simId = taskToSimulatedActivityId == null ? null : taskToSimulatedActivityId.get(taskId.id());
+    if (simId == null && oldEngine != null) {
+      simId = oldEngine.getSimulatedActivityIdForTaskId(taskId);
+    }
+    return simId;
+  }
+
+  public void removeActivity(final TaskId taskId) {
+    var simId = getSimulatedActivityIdForTaskId(taskId);
+    removedActivities.add(simId);
+    removeTaskHistory(taskId);
+  }
+
+  public void removeTaskHistory(final TaskId taskId) {
     // TODO:  cellReadHistory
     // Look for the task's Events in the old and new timelines.
     final TreeMap<Duration, List<EventGraph<Event>>> graphsForTask = this.timeline.eventsByTask.get(taskId);
-    final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.timeline.eventsByTask.get(taskId);
+    final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.getCombinedEventsByTask(taskId);
     var allKeys = new TreeSet<Duration>();
     if (graphsForTask != null) {
       allKeys.addAll(graphsForTask.keySet());
@@ -299,9 +367,10 @@ public final class SimulationEngine implements AutoCloseable {
       for (var g : gl) {
 //        // invalidate topics for cells affected by the task in the old graph so that resource values are checked at
 //        // this time to erase effects on resources  -- TODO: this doesn't work!  only one scheduled job per resource
-//        var s = new HashSet<Topic<?>>();
-//        TemporalEventSource.extractTopics(s, g, e -> taskId.equals(e.provenance()));
-//        s.forEach(topic -> invalidateTopic(topic, time));
+        var s = new HashSet<Topic<?>>();
+        TemporalEventSource.extractTopics(s, g, e -> taskId.equals(e.provenance()));
+        //s.forEach(topic -> invalidateTopic(topic, time));
+        s.forEach(topic -> timeline.setTopicStale(topic, time));
         // replace the old graph with one without the task's events, updating data structures
         var newG = g.filter(e -> !taskId.equals(e.provenance()));
         if (newG != g) {
@@ -396,9 +465,9 @@ public final class SimulationEngine implements AutoCloseable {
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
   public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
     final var resources = this.waitingResources.invalidateTopic(topic);
-//    if (!resources.isEmpty()) {
-//      System.out.println("invalidate topic: " + topic + " at " + invalidationTime + " and schedule jobs for " + resources.stream().map(r -> r.id()).toList());
-//    }
+    if (debug && !resources.isEmpty()) {
+      if (debug) System.out.println("SimulationEngine.invalidate topic: " + topic + " at " + invalidationTime + " and schedule jobs for " + resources.stream().map(r -> r.id()).toList());
+    }
     for (final var resource : resources) {
       this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(invalidationTime));
     }
@@ -419,9 +488,17 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
   public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic) {
-    //System.out.println("step(): begin -- time = " + curTime());
+    if (debug) System.out.println("step(): begin -- time = " + curTime());
     var timeOfNextJobs = timeOfNextJobs();
     var nextTime = timeOfNextJobs;
+
+    Pair<List<Topic<?>>, Duration> earliestStaleTopics = null;
+    Duration staleTopicTime = null;
+    if (resourceTracker == null) {
+      earliestStaleTopics = earliestStaleTopics(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
+      staleTopicTime = earliestStaleTopics.getRight();
+      nextTime = Duration.min(nextTime, staleTopicTime);
+    }
 
     var earliestStaleReads = earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
     var staleReadTime = earliestStaleReads.getLeft();
@@ -435,8 +512,14 @@ public final class SimulationEngine implements AutoCloseable {
     //   even if they occur at the same real time.
 
     if (nextTime.longerThan(maximumTime) || nextTime.isEqualTo(Duration.MAX_VALUE)) {
-      //System.out.println("step(): end -- time elapsed (" + curTime() + ") past maximum (" + maximumTime + ")");
+      if (debug) System.out.println("step(): end -- time elapsed (" + curTime() + ") past maximum (" + maximumTime + ")");
       return;
+    }
+
+    if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
+      for (Topic<?> topic : earliestStaleTopics.getLeft()) {
+        invalidateTopic(topic, staleTopicTime);  // Is it a problem if staleTopicTime > curTime()?  This case isn't possible if returning above when nextTime > maximumTime.
+      }
     }
 
     if (staleReadTime.isEqualTo(nextTime)) {
@@ -469,7 +552,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.timeline.add(tip, curTime());
       updateTaskInfo(tip);
 
-      //System.out.println("step(): end -- time = " + curTime());
+      if (debug) System.out.println("step(): end -- time = " + curTime());
     }
   }
 
@@ -487,9 +570,7 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (job instanceof JobId.ConditionJobId j) {
       this.updateCondition(j.id(), frame, currentTime, maximumTime, queryTopic);
     } else if (job instanceof JobId.ResourceJobId j) {
-      // TODO: Would like to check if the cells on which this resource depends is stale.
-      //       Where is this info?  EngineQuerier.referencedTopics?
-      //       [Remove this comment when answered before merging changes.]
+      assert resourceTracker == null;
       this.updateResource(j.id(), frame, currentTime);
     } else {
       throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
@@ -628,6 +709,8 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+
+
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
   public void updateResource(
       final ResourceId resource,
@@ -635,15 +718,21 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) {
     // TODO -- this would be better with the ResourceTracker from the branch, prototype/excise-resources-from-sim-engine
-
+    if (debug) System.out.println("SimulationEngine.updateResource(" + resource + ", " + currentTime + ")");
     // We want to avoid saving profile segments if they aren't changing.  We also don't want to compute the resource if
     // none of the cells on which it depends are stale.
+    assert resourceTracker == null;
     boolean skipResourceEvaluation = false;
     if (oldEngine != null) {
-      var ebt = oldEngine.timeline.commitsByTime;
+      var ebt = oldEngine.timeline.getCombinedCommitsByTime();
       var latestTime = ebt.floorKey(currentTime);
+      // Don't skip at the start of simulation.  We need the initial topics to know when stale.
+      // TODO: REVIEW: Actually, we could derive the initial topics from the events in the old timeline.  Should we?
+      if (currentTime.isEqualTo(Duration.ZERO)) {  // Duration.ZERO is assumed to be simulationStartTime
+        skipResourceEvaluation = false;
+      }
       // If no events since plan start, then can't be stale, so nothing to do.
-      if (latestTime == null) skipResourceEvaluation = true;
+      else if (latestTime == null) skipResourceEvaluation = true;
       else {
         // Note that there may or may not be events at this currentTime.
         // So, how can we know it is not stale?
@@ -655,12 +744,38 @@ public final class SimulationEngine implements AutoCloseable {
         //   And, with staleness, we can determine that we need not invalidate a topic in some cases.
 
         // Check if any of the resource's referenced topics are stale
-        var topics = this.waitingResources.getTopics(resource);
+        var topics = this.referencedTopics.get(resource); //this.waitingResources.getTopics(resource);
+        if (debug) System.out.println("topics for resource " + resource.id() + " at " + currentTime + ": " + topics);
+        //if (debug) System.out.println("waitingResources = " + waitingResources);
         var resourceIsStale = topics.stream().anyMatch(t -> timeline.isTopicStale(t, currentTime));
-        if (resourceIsStale) {
-//          System.out.println("skipping evaluation of resource " + resource.id() + " at " + currentTime);
-          skipResourceEvaluation = true;
+        if (debug) System.out.println("topic is stale for " + resource.id() + " at " + currentTime + ": " + topics.stream().map(t -> "" + t + "=" + timeline.isTopicStale(t, currentTime)).toList());
+        if (debug) System.out.println("timeline.staleTopics: " + timeline.staleTopics);
+        if (debug && !resourceIsStale && resource.id().equals("/activitiesExecuted")) {
+          if (debug) System.out.println("AAAAAAHHHHHH");
         }
+        if (!resourceIsStale) {
+          if (debug) System.out.println("skipping evaluation of resource " + resource.id() + " at " + currentTime);
+          skipResourceEvaluation = true;
+        } else {
+          // Check for the case where the effect is removed.  If the timeline has events at this time, but they do not
+          // include any of this resource's referenced topics, then the events were removed, and we need not generate
+          // a profile segment for the resource (setting skipResourceEvaluation = true).
+          boolean foundTopic = false;
+          final List<TemporalEventSource.TimePoint.Commit> commits = timeline.commitsByTime.get(currentTime);
+          //skipResourceEvaluation = commits.stream().anyMatch(c -> new HashSet<>(c.topics()).retainAll(topics))
+          if (commits != null && !commits.isEmpty()) {
+            for (TemporalEventSource.TimePoint.Commit c: commits) {
+              var intersection = new HashSet<>(c.topics());
+              intersection.retainAll(topics);
+              if (intersection.size() > 0) {
+                foundTopic = true;
+                break;
+              }
+            }
+          }
+          skipResourceEvaluation = !foundTopic;
+        }
+
       }
     }
 
@@ -671,8 +786,10 @@ public final class SimulationEngine implements AutoCloseable {
       //       if (profileIsChanging)
       {
         profiles.append(currentTime, querier);
+        if (debug) System.out.println("resource " + resource.id() + " updated profile: " + profiles);
         this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
-//        System.out.println("querier, " + querier + " subscribing " + resource.id() + " to referenced topics: " + querier.referencedTopics);
+        this.referencedTopics.put(resource, querier.referencedTopics);
+        if (debug) System.out.println("querier, " + querier + " subscribing " + resource.id() + " to referenced topics: " + querier.referencedTopics);
       }
     }
 
@@ -828,23 +945,22 @@ public final class SimulationEngine implements AutoCloseable {
     if (taskInfoTrait == null) taskInfoTrait = new TaskInfo.Trait(getMissionModel().getTopics(), defaultActivityTopic);
     g.evaluate(taskInfoTrait, taskInfoTrait::atom).accept(taskInfo);
   }
-  public SimulationResultsInterface computeResults(
-      final Instant startTime,
-      final Duration elapsedTime,
-      final Topic<ActivityDirectiveId> activityTopic
-  )
-  {
-    return computeResults(
-        startTime,
-        elapsedTime,
-        activityTopic,
-        this
-            .resources
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(
-                        $ -> $.getKey().id(),
-                        Map.Entry::getValue)));
+
+  public Map<String, ProfilingState<?>> generateResourceProfiles(final Duration simulationDuration) {
+    if (resourceTracker != null) {
+      resourceTracker.reset();
+      // Replay the timeline to collect resource profiles
+      while (!resourceTracker.isEmpty(simulationDuration, true)) {
+        resourceTracker.updateResources(simulationDuration, true);
+      }
+      return resourceTracker.resourceProfiles();
+    }
+
+    return this.resources
+               .entrySet()
+               .stream()
+               .collect(Collectors.toMap($ -> $.getKey().id(),
+                                         Map.Entry::getValue));
   }
 
   /** Compute a set of results from the current state of simulation. */
@@ -857,10 +973,14 @@ public final class SimulationEngine implements AutoCloseable {
   public SimulationResultsInterface computeResults(
       final Instant startTime,
       final Duration elapsedTime,
-      final Topic<ActivityDirectiveId> activityTopic,
-      final Map<String, ProfilingState<?>> resources
+      final Topic<ActivityDirectiveId> activityTopic
   ) {
-    //System.out.println("computeResults(startTime=" + startTime + ", elapsedTime=" + elapsedTime + "...) at time " + curTime());
+    if (debug) System.out.println("computeResults(startTime=" + startTime + ", elapsedTime=" + elapsedTime + "...) at time " + curTime());
+
+//    if (resourceTracker != null) {
+//      resourceTracker.reset();
+//    }
+    final Map<String, ProfilingState<?>> resources = generateResourceProfiles(elapsedTime);
 
     var serializableTopics = this.missionModel.getTopics();
 
@@ -895,7 +1015,7 @@ public final class SimulationEngine implements AutoCloseable {
 
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var taskToSimulatedActivityId = new HashMap<String, SimulatedActivityId>(taskInfo.taskToPlannedDirective.size());
+    this.taskToSimulatedActivityId = new HashMap<String, SimulatedActivityId>(taskInfo.taskToPlannedDirective.size());
     final var usedSimulatedActivityIds = new HashSet<>();
     for (final var entry : taskInfo.taskToPlannedDirective.entrySet()) {
       taskToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
@@ -1008,6 +1128,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.simulationResults = new SimulationResults(realProfiles,
                                  discreteProfiles,
                                  this.simulatedActivities,
+                                 this.removedActivities,
                                  this.unfinishedActivities,
                                  startTime,
                                  elapsedTime,
@@ -1024,7 +1145,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (oldEngine == null) {
       return this.simulationResults;
     }
-    return new CombinedSimulationResults(this.simulationResults, oldEngine.getCombinedSimulationResults());
+    return new CombinedSimulationResults(this.simulationResults, oldEngine.getCombinedSimulationResults(), timeline);
   }
 
   public Optional<Duration> getTaskDuration(TaskId taskId){
@@ -1188,9 +1309,9 @@ public final class SimulationEngine implements AutoCloseable {
       if (isTaskStale(this.activeTask, this.currentTime)) {
         // Add this event to the timeline.
         this.frame.emit(Event.create(topic, event, this.activeTask));
-//        if (!timeline.isTopicStale(topic, this.currentTime)) {
-//          SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
-//        }
+        if (!timeline.isTopicStale(topic, this.currentTime)) {
+          SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
+        }
       }
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
@@ -1201,13 +1322,13 @@ public final class SimulationEngine implements AutoCloseable {
      * @return the TaskId generated for the task created by taskFactory
      */
     public TaskId getOldTaskIdForDaemon(TaskFactory<?> taskFactory) {
-      var taskId = oldEngine.taskIdsForFactories.get(taskFactory);
+      var taskId = oldEngine.getTaskIdForFactory(taskFactory);
       if (taskId != null) return taskId;
       String daemonId = getMissionModel().getDaemonId(taskFactory);
       if (daemonId == null) return null;
       var oldTaskFactory = oldEngine.getMissionModel().getDaemon(daemonId);
       if (oldTaskFactory == null) return null;
-      taskId = oldEngine.taskIdsForFactories.get(oldTaskFactory);
+      taskId = oldEngine.getTaskIdForFactory(oldTaskFactory);
       return taskId;
     }
 
@@ -1238,8 +1359,12 @@ public final class SimulationEngine implements AutoCloseable {
         if (daemonTaskOrSpawn) {
           daemonTasks.add(task);
           if (settingTaskStale) {
-            // Indicate that this task is not stale by setting its stale time to Duration.MAX_VALUE.
-            setTaskStale(task, Duration.MAX_VALUE);
+            // Indicate that this task is not stale until after the time it last executed.
+            var eventMap = getCombinedEventsByTask(task);
+            var lastEventTimePlusE = eventMap == null ? null : eventMap.lastKey().plus(Duration.EPSILON);
+            if (lastEventTimePlusE != null) {
+              setTaskStale(task, lastEventTimePlusE);
+            }
           }
         }
         // Record task information
@@ -1261,6 +1386,20 @@ public final class SimulationEngine implements AutoCloseable {
     };
   }
 
+  private boolean isActivity(final TaskId taskId) {
+    if (this.taskInfo.isActivity(taskId)) return true;
+    if (oldEngine == null) return false;
+    return this.oldEngine.isActivity(taskId);
+  }
+
+  private TaskId getTaskParent(TaskId taskId) {
+    var parent = this.taskParent.get(taskId);
+    if (parent == null && oldEngine != null) {
+      parent = oldEngine.getTaskParent(taskId);
+    }
+    return parent;
+  }
+
   public void rescheduleTask(TaskId taskId, Duration startOffset) {
     //Look for serialized activity for task
     // If no parent is an activity, then see if it is a daemon task.
@@ -1270,13 +1409,13 @@ public final class SimulationEngine implements AutoCloseable {
     boolean isAct = false;
     boolean isDaemon = true;
     while (true) {
-      if (oldEngine.taskInfo.isActivity(lastId)) {
+      if (oldEngine.isActivity(lastId)) {
         isAct = true;
         activityId = lastId;
         isDaemon = false;
         break;
       }
-      var tempId = oldEngine.taskParent.get(lastId);
+      var tempId = oldEngine.getTaskParent(lastId);
       if (tempId == null) {
         break;
       }
@@ -1287,7 +1426,7 @@ public final class SimulationEngine implements AutoCloseable {
       if (!daemonTasks.contains(taskId)) {
         throw new RuntimeException("WARNING: Expected TaskId to be a daemon task: " + taskId);
       }
-      TaskFactory<?> factory = oldEngine.taskFactories.get(taskId);
+      TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
         scheduleTask(startOffset, factory, taskId);  // TODO: Emit something like with emitAndThen() in the isAct case below?
       } else {
@@ -1390,4 +1529,11 @@ public final class SimulationEngine implements AutoCloseable {
         Duration joinOffset
     ) implements ExecutionState<Return> {}
   }
+
+//  public static Duration getEndOffset(ExecutionState<?> s) {
+//    if (s instanceof ExecutionState.InProgress<?> ip) {
+//      ip.
+//      return null;
+//    }
+//  }
 }

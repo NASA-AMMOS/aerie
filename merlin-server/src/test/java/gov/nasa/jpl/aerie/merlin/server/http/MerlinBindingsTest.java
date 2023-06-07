@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public final class MerlinBindingsTest {
   private static Javalin SERVER = null;
+  public static boolean defaultUseResourceTracker = false;
 
   @BeforeAll
   public static void setupServer() {
@@ -44,7 +45,8 @@ public final class MerlinBindingsTest {
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         missionModelApp,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp, false)),
+        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp,
+                                                                     defaultUseResourceTracker)),
         constraintsDSLCompilationService
     );
 
