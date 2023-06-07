@@ -1,14 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
-import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -29,6 +26,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 
+import java.util.Map;
 import java.util.function.Function;
 
 public class GoalBuilder {
@@ -154,7 +152,22 @@ public class GoalBuilder {
   private static Expression<Spans> spansOfConstraintExpression(
       final SchedulingDSL.ConstraintExpression constraintExpression) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
-      return new ForEachActivitySpans(c.type(), "alias"+c.type(), new ActivitySpan("alias" + c.type()));
+      return new ForEachActivitySpans(
+          ($, simResults, environment) -> {
+            final var startTime = $.interval.start;
+            if (!$.type.equals(c.type())) return false;
+            for (final var arg: c
+                .arguments()
+                .map(expr -> expr.evaluateMap(simResults, startTime, environment))
+                .orElse(Map.of())
+                .entrySet()) {
+              if (!arg.getValue().equals($.parameters.get(arg.getKey()))) return false;
+            }
+            return true;
+          },
+          "alias" + c.type(),
+          new ActivitySpan("alias" + c.type())
+      );
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.WindowsExpression c){
       return new SpansFromWindows(c.expression());
     } else {
