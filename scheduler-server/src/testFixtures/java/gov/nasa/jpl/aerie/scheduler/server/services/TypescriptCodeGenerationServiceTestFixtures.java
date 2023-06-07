@@ -47,6 +47,20 @@ public final class TypescriptCodeGenerationServiceTestFixtures {
                   )
               ),
               new MissionModelService.ActivityType(
+                  "SampleActivity3",
+                  Map.of(
+                      "variant",
+                      ValueSchema.ofVariant(List.of(
+                        new ValueSchema.Variant("option1", "option1"),
+                        new ValueSchema.Variant("option2", "option2")
+                      ))
+                  ),
+                  Map.of(
+                      "my preset",
+                      Map.of("variant", SerializedValue.of("option1"))
+                  )
+              ),
+              new MissionModelService.ActivityType(
                   "SampleActivityEmpty",
                   Map.of(),
                   Map.of()
