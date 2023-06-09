@@ -186,7 +186,12 @@ public class PrioritySolver implements Solver {
         plan.add(act);
         finalSetOfActsInserted.add(act);
       }
-      final var allGeneratedActivities = simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
+      final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> allGeneratedActivities;
+      try {
+        allGeneratedActivities = simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
+      } catch (SimulationFacade.SimulationException e) {
+        throw new RuntimeException("Exception while simulating to get child activities", e);
+      }
       processNewGeneratedActivities(allGeneratedActivities);
       final var replaced = pullActivityDurationsIfNecessary();
       for(final var actReplaced : replaced.entrySet()){
@@ -595,7 +600,11 @@ public class PrioritySolver implements Solver {
     //REVIEW: maybe should have way to request only certain kinds of conflicts
     var lastSimResults = this.simulationFacade.getLatestConstraintSimulationResults();
     if (lastSimResults == null || this.checkSimBeforeEvaluatingGoal) {
-      this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
+      try {
+        this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
+      } catch (SimulationFacade.SimulationException e) {
+        throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
+      }
       lastSimResults = this.simulationFacade.getLatestConstraintSimulationResults();
     }
     final var rawConflicts = goal.getConflicts(plan, lastSimResults);
@@ -747,8 +756,11 @@ public class PrioritySolver implements Solver {
 
     final var totalDomain = Interval.between(windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
     //make sure the simulation results cover the domain
-    simulationFacade.computeSimulationResultsUntil(totalDomain.end);
-
+    try {
+      simulationFacade.computeSimulationResultsUntil(totalDomain.end);
+    } catch (SimulationFacade.SimulationException e) {
+      throw new RuntimeException("Exception while running simulation before evaluating resource constraints", e);
+    }
     //iteratively narrow the windows from each constraint
     //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
     for (final var constraint : constraints) {
@@ -774,14 +786,24 @@ public class PrioritySolver implements Solver {
       return tmp;
     }
     //make sure the simulation results cover the domain
-    simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
+    try {
+      simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
+    } catch(SimulationFacade.SimulationException e){
+      throw new RuntimeException("Exception while running simulation before evaluating global constraints", e);
+    }
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof GlobalConstraintWithIntrospection c) {
-        tmp = c.findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults(), evaluationEnvironment);
+        tmp = c.findWindows(
+            plan,
+            tmp,
+            mac,
+            simulationFacade.getLatestConstraintSimulationResults(),
+            evaluationEnvironment);
       } else {
         throw new Error("Unhandled variant of GlobalConstraint: %s".formatted(gc));
       }
     }
+
   return tmp;
   }
 

@@ -272,7 +272,11 @@ public record SynchronousSchedulerAgent(
   throws PlanServiceException, IOException
   {
     //finish simulation until end of horizon before posting results
-    simulationFacade.computeSimulationResultsUntil(planningHorizon.getEndAerie());
+    try {
+      simulationFacade.computeSimulationResultsUntil(planningHorizon.getEndAerie());
+    } catch (SimulationFacade.SimulationException e) {
+      throw new RuntimeException("Error while running simulation before storing simulation results after scheduling", e);
+    }
     final var schedID_to_MerlinID =
         schedDirectiveToMerlinId.entrySet().stream()
                                 .collect(Collectors.toMap(

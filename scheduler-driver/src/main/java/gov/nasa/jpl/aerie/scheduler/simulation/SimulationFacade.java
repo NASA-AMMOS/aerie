@@ -108,7 +108,9 @@ public class SimulationFacade implements AutoCloseable{
     }
   }
 
-  public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime){
+  public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
+  throws SimulationException
+  {
     computeSimulationResultsUntil(endTime);
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
@@ -220,18 +222,21 @@ public class SimulationFacade implements AutoCloseable{
     simulateActivities(List.of(activity));
   }
 
-  public void computeSimulationResultsUntil(final Duration endTime) {
+  public void computeSimulationResultsUntil(final Duration endTime) throws SimulationException {
     var endTimeWithMargin = endTime;
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
-    //Simulation might throw an exception but we do not catch it because there is no countermeasure
-    final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
-    //compare references
-    if(results != lastSimDriverResults) {
-      //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-      lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results, planningHorizon.getAerieHorizonDuration());
-      lastSimDriverResults = results;
+    try {
+      final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
+      //compare references
+      if(results != lastSimDriverResults) {
+        //simulation results from the last simulation, as converted for use by the constraint evaluation engine
+        lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results, planningHorizon.getAerieHorizonDuration());
+        lastSimDriverResults = results;
+      }
+    } catch (Exception e){
+      throw new SimulationException("An exception happened during simulation", e);
     }
   }
 
