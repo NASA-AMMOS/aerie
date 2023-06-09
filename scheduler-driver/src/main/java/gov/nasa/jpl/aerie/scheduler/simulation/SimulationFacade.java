@@ -16,9 +16,11 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -86,7 +88,6 @@ public class SimulationFacade implements AutoCloseable{
    */
   public Optional<Duration> getActivityDuration(final SchedulingActivityDirective schedulingActivityDirective) {
     if(!planActDirectiveIdToSimulationActivityDirectiveId.containsKey(schedulingActivityDirective.getId())){
-      logger.error("You need to simulate before requesting activity duration");
       return Optional.empty();
     }
     final var duration = driver.getActivityDuration(planActDirectiveIdToSimulationActivityDirectiveId.get(
@@ -107,7 +108,9 @@ public class SimulationFacade implements AutoCloseable{
     }
   }
 
-  public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime){
+  public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
+  throws SimulationException
+  {
     computeSimulationResultsUntil(endTime);
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
@@ -129,23 +132,37 @@ public class SimulationFacade implements AutoCloseable{
     return childActivities;
   }
 
-  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
+  public void removeAndInsertActivitiesFromSimulation(
+      final Collection<SchedulingActivityDirective> activitiesToRemove,
+      final Collection<SchedulingActivityDirective> activitiesToAdd) throws SimulationException
+  {
     var atLeastOne = false;
-    for(final var act: activities){
+    for(final var act: activitiesToRemove){
       if(insertedActivities.containsKey(act)){
         atLeastOne = true;
         insertedActivities.remove(act);
       }
     }
+    Duration earliestActStartTime = Duration.MAX_VALUE;
+    for(final var act: activitiesToAdd){
+      earliestActStartTime = Duration.min(earliestActStartTime, act.startOffset());
+    }
     //reset resumable simulation
-    if(atLeastOne){
-      final var oldInsertedActivities = new HashMap<>(insertedActivities);
+    if(atLeastOne || earliestActStartTime.shorterThan(this.driver.getCurrentSimulationEndTime())){
+      final var allActivitiesToSimulate = new ArrayList<>(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
       if (driver != null) driver.close();
       driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
-      simulateActivities(oldInsertedActivities.keySet());
+      allActivitiesToSimulate.addAll(activitiesToAdd);
+      simulateActivities(allActivitiesToSimulate);
     }
+  }
+
+  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities)
+  throws SimulationException
+  {
+    removeAndInsertActivitiesFromSimulation(activities, List.of());
   }
 
   /**
@@ -170,9 +187,11 @@ public class SimulationFacade implements AutoCloseable{
     this.planActDirectiveIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
   }
 
-  public void simulateActivities(final Collection<SchedulingActivityDirective> activities) {
+  public void simulateActivities(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
     final var activitiesSortedByStartTime =
-        activities.stream().sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
+        activities.stream().filter(activity -> !(insertedActivities.containsKey(activity)))
+                  .sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
+    if(activitiesSortedByStartTime.isEmpty()) return;
     final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
 
     for(final var activity : activitiesSortedByStartTime){
@@ -187,7 +206,11 @@ public class SimulationFacade implements AutoCloseable{
           activityDirective);
       insertedActivities.put(activity, activityDirective);
     }
+    try {
     driver.simulateActivities(directivesToSimulate);
+    } catch(Exception e){
+      throw new SimulationException("An exception happened during simulation", e);
+    }
   }
 
   public static class SimulationException extends Exception {
@@ -197,25 +220,25 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public void simulateActivity(final SchedulingActivityDirective activity) throws SimulationException {
-    final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
-    final var activityDirective = schedulingActToActivityDir(activity);
-
-    planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
-    driver.simulateActivity(activityDirective, activityIdSim);
-    insertedActivities.put(activity, activityDirective);
+    if(insertedActivities.containsKey(activity)) return;
+    simulateActivities(List.of(activity));
   }
 
-  public void computeSimulationResultsUntil(final Duration endTime) {
+  public void computeSimulationResultsUntil(final Duration endTime) throws SimulationException {
     var endTimeWithMargin = endTime;
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
-    final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
-    //compare references
-    if(results != lastSimDriverResults) {
-      //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-      lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results, planningHorizon.getAerieHorizonDuration());
-      lastSimDriverResults = results;
+    try {
+      final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
+      //compare references
+      if(results != lastSimDriverResults) {
+        //simulation results from the last simulation, as converted for use by the constraint evaluation engine
+        lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results, planningHorizon.getAerieHorizonDuration());
+        lastSimDriverResults = results;
+      }
+    } catch (Exception e){
+      throw new SimulationException("An exception happened during simulation", e);
     }
   }
 
@@ -241,8 +264,6 @@ public class SimulationFacade implements AutoCloseable{
       } else {
         throw new Error("Unhandled variant of DurationType: " + durationType);
       }
-    } else {
-      logger.warn("Activity has unconstrained duration {}", activity);
     }
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
     return new ActivityDirective(

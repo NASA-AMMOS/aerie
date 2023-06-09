@@ -19,6 +19,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -29,7 +31,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
-
+  private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine = new SimulationEngine();
   private LiveCells cells;
@@ -63,6 +65,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   /*package-private*/ void clearActivitiesInserted() {activitiesInserted.clear();}
 
   /*package-private*/ void initSimulation(){
+    logger.warn("Reinitialization of the scheduling simulation");
     plannedDirectiveToTask.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
@@ -136,13 +139,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    */
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
-    activitiesInserted.put(activityId, activityToSimulate);
-    if(activityToSimulate.startOffset().noLongerThan(curTime)){
-      initSimulation();
-      simulateSchedule(activitiesInserted);
-    } else {
-      simulateSchedule(Map.of(activityId, activityToSimulate));
-    }
+    simulateActivities(Map.of(activityId, activityToSimulate));
   }
 
   public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate) {

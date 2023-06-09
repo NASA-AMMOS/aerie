@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -189,6 +190,22 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     }
   }
 
+  public record EventWithActivity(Duration start, Duration end, SchedulingActivityDirective activity){}
+
+  public static class HistoryWithActivity{
+    List<EventWithActivity> events;
+
+    public HistoryWithActivity(){
+      events = new ArrayList<>();
+    }
+    public void add(EventWithActivity event){
+      this.events.add(event);
+    }
+    public Optional<EventWithActivity> getLastEvent(){
+      if(!events.isEmpty()) return Optional.of(events.get(events.size()-1));
+      return Optional.empty();
+    }
+  }
   /**
    * create activity if possible
    *
@@ -235,7 +252,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     }
     final var success = tnw.solveConstraints();
     if (!success) {
-      logger.warn("Inconsistent temporal constraints, returning Optional.empty() instead of activity");
+      logger.warn("Inconsistent temporal constraints, will try next opportunity for activity placement if it exists");
       return Optional.empty();
     }
     final var solved = tnw.getAllData(name);
@@ -244,7 +261,8 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     //now it is time to find an assignment compatible
     //CASE 1: activity has an uncontrollable duration
     if(this.type.getDurationType() instanceof DurationType.Uncontrollable){
-      final var f = new EquationSolvingAlgorithms.Function<Duration>(){
+      final var history = new HistoryWithActivity();
+      final var f = new EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity>(){
         //As simulation is called, this is not an approximation
         @Override
         public boolean isApproximation(){
@@ -252,7 +270,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         }
 
         @Override
-        public Duration valueAt(final Duration start) {
+        public Duration valueAt(Duration start, HistoryWithActivity history) {
           final var actToSim = SchedulingActivityDirective.of(
               type,
               start,
@@ -266,18 +284,43 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               null,
               null,
               true);
-          try {
-            facade.simulateActivity(actToSim);
-            final var dur = facade.getActivityDuration(actToSim);
-            facade.removeActivitiesFromSimulation(List.of(actToSim));
-            return dur.map(start::plus).orElse(Duration.MAX_VALUE);
-          } catch (SimulationFacade.SimulationException e) {
-            return Duration.MAX_VALUE;
+          final var lastInsertion = history.getLastEvent();
+          Optional<Duration> computedDuration = Optional.empty();
+          if(lastInsertion.isPresent()){
+            try {
+              //remove and insert at the same time to avoid unnecessary potential resimulation.
+              //
+              // Current sim: A -> B1 -> C
+              // Sim at end of next iteration: A -> B2 -> C
+              //If we would do remove() and then insert(), we would simulation A -> C and then again A -> B2 -> C
+              facade.removeAndInsertActivitiesFromSimulation(List.of(lastInsertion.get().activity()), List.of(actToSim));
+              computedDuration = facade.getActivityDuration(actToSim);
+              //record insertion: if successful, it will stay in the simulation, otherwise, it'll get deleted at the next iteration
+              history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
+            } catch (SimulationFacade.SimulationException e) {
+              //still need to record so we can remove the activity at the next iteration
+              history.add(new EventWithActivity(start, null, actToSim));
+            }
+          } else {
+            try {
+              facade.simulateActivity(actToSim);
+              computedDuration = facade.getActivityDuration(actToSim);
+              if(computedDuration.isPresent()) {
+                history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
+              } else{
+                logger.debug("No simulation error but activity duration could not be found in simulation, unfinished activity?");
+                history.add(new EventWithActivity(start,  null, actToSim));
+              }
+            } catch (SimulationFacade.SimulationException e) {
+              logger.debug("Simulation error while trying to simulate activities: " + e);
+              history.add(new EventWithActivity(start,  null, actToSim));
+            }
           }
+          return computedDuration.map(start::plus).orElse(Duration.MAX_VALUE);
         }
 
       };
-      return rootFindingHelper(f, solved, facade, evaluationEnvironment);
+      return rootFindingHelper(f, history, solved);
       //CASE 2: activity has a controllable duration
     } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
@@ -344,14 +387,15 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           null,
           true));
     } else if (this.type.getDurationType() instanceof DurationType.Parametric dt) {
-      final var f = new EquationSolvingAlgorithms.Function<Duration>() {
+      final var history = new HistoryWithActivity();
+      final var f = new EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity>() {
         @Override
         public boolean isApproximation(){
           return false;
         }
 
         @Override
-        public Duration valueAt(final Duration start) {
+        public Duration valueAt(final Duration start, final HistoryWithActivity history) {
           final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
               arguments,
               start,
@@ -359,8 +403,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               evaluationEnvironment,
               type
           );
+
           try {
-            return dt.durationFunction().apply(instantiatedArgs).plus(start);
+            final var duration = dt.durationFunction().apply(instantiatedArgs);
+            final var activity = SchedulingActivityDirective.of(type,start,
+                                                                duration,
+                                                                instantiatedArgs,
+                                                                null,
+                                                                null,
+                                                                true);
+            history.add(new EventWithActivity(start, start.plus(duration), activity));
+            return duration.plus(start);
           } catch (InstantiationException e) {
             logger.error("Cannot instantiate parameterized duration activity type: " + type.getName());
             throw new RuntimeException(e);
@@ -368,7 +421,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         }
       };
 
-      return rootFindingHelper(f, solved, facade, evaluationEnvironment);
+      return rootFindingHelper(f, history, solved);
     } else {
      throw new UnsupportedOperationException("Unsupported duration type found: " + this.type.getDurationType());
     }
@@ -394,11 +447,10 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     return createInstanceForReal(name,null, facade, plan, planningHorizon, evaluationEnvironment);
   }
 
-  private Optional<SchedulingActivityDirective> rootFindingHelper(
-      final EquationSolvingAlgorithms.Function<Duration> f,
-      final TaskNetworkAdapter.TNActData solved,
-      final SimulationFacade facade,
-      final EvaluationEnvironment evaluationEnvironment
+  private  Optional<SchedulingActivityDirective> rootFindingHelper(
+      final EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity> f,
+      final HistoryWithActivity history,
+      final TaskNetworkAdapter.TNActData solved
   ) {
     try {
       var endInterval = solved.end();
@@ -407,9 +459,10 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
 
       final var result = new EquationSolvingAlgorithms
-          .SecantDurationAlgorithm()
+          .SecantDurationAlgorithm<HistoryWithActivity>()
           .findRoot(
               f,
+              history,
               startInterval.start,
               startInterval.end,
               endInterval.start.plus(durationHalfEndInterval),
@@ -419,34 +472,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               startInterval.end,
               20);
 
-      Duration dur = null;
-      if(!f.isApproximation()){
-        //f is calling simulation -> we do not need to resimulate this activity later
-        dur = result.fx().minus(result.x());
-      }
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivityDirective.of(
-          type,
-          result.x(),
-          dur,
-          SchedulingActivityDirective.instantiateArguments(
-              this.arguments, result.x(),
-              facade.getLatestConstraintSimulationResults(),
-              evaluationEnvironment,
-              type),
-          null,
-          null,
-          true));
+      final var lastActivityTested = result.history().getLastEvent();
+      return Optional.of(lastActivityTested.get().activity);
     } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
       logger.debug("Rootfinding encountered a zero-derivative");
     } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
       logger.debug("Rootfinding encountered an infinite-derivative");
     } catch (EquationSolvingAlgorithms.DivergenceException e) {
       logger.debug("Rootfinding diverged");
-      logger.debug(e.history.history().toString());
     } catch (EquationSolvingAlgorithms.ExceededMaxIterationException e) {
       logger.debug("Too many iterations");
-      logger.debug(e.history.history().toString());
     } catch (EquationSolvingAlgorithms.NoSolutionException e) {
       logger.debug("No solution");
     }

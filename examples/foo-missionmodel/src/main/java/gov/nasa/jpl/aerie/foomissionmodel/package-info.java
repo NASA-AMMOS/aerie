@@ -18,6 +18,7 @@
 
 @WithActivityType(DecompositionTestActivities.ParentActivity.class)
 @WithActivityType(DecompositionTestActivities.ChildActivity.class)
+@WithActivityType(LateRiserActivity.class)
 
 package gov.nasa.jpl.aerie.foomissionmodel;
 
@@ -29,6 +30,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.activities.ControllableDurationActivit
 import gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonCheckerActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.DecompositionTestActivities;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
+import gov.nasa.jpl.aerie.foomissionmodel.activities.LateRiserActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.OtherControllableDurationActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.SolarPanelNonLinear;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.SolarPanelNonLinearTimeDependent;

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.foomissionmodel.models;
 
+import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -7,21 +8,19 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
  * A daemon task that tracks the number of minutes since plan start
  */
 public class TimeTrackerDaemon {
-  private int minutesElapsed;
+  private Counter<Integer> minutesElapsed;
 
   public int getMinutesElapsed() {
-    return minutesElapsed;
+    return minutesElapsed.get();
   }
 
-  public TimeTrackerDaemon(){
-    minutesElapsed = 0;
-  }
+  public TimeTrackerDaemon(){ minutesElapsed = Counter.ofInteger(0);}
 
   public void run(){
-    minutesElapsed = 0;
+    minutesElapsed.add(-minutesElapsed.get());
     while(true) {
       ModelActions.delay(Duration.MINUTE);
-      minutesElapsed++;
+      minutesElapsed.add(1);
     }
   }
 
