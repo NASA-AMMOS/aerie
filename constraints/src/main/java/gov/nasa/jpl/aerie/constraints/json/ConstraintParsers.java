@@ -462,7 +462,7 @@ public final class ConstraintParsers {
         .field("expression", spansExpressionP)
         .map(
             untuple((kind, actType, alias, expression) -> new ForEachActivitySpans(actType, alias, expression)),
-            $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression));
+            $ -> tuple(Unit.UNIT, ((ForEachActivitySpans.MatchType) $.activityPredicate()).type(), $.alias(), $.expression()));
   }
 
   static JsonParser<ForEachActivityViolations> forEachActivityViolationsF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {

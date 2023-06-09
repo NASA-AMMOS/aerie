@@ -1,34 +1,35 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
+import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ForEachActivitySpans implements Expression<Spans> {
-  public final String activityType;
-  public final String alias;
-  public final Expression<Spans> expression;
+public record ForEachActivitySpans(
+    TriFunction<ActivityInstance, SimulationResults, EvaluationEnvironment, Boolean> activityPredicate,
+    String alias,
+    Expression<Spans> expression
+) implements Expression<Spans> {
 
   public ForEachActivitySpans(
       final String activityType,
       final String alias,
       final Expression<Spans> expression
   ) {
-    this.activityType = activityType;
-    this.alias = alias;
-    this.expression = expression;
+    this(new MatchType(activityType), alias, expression);
   }
 
   @Override
   public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var spans = new Spans();
     for (final var activity : results.activities) {
-      if (activity.type.equals(this.activityType)) {
+      if (this.activityPredicate.apply(activity, results, environment)) {
         final var newEnvironment = new EvaluationEnvironment(
             new HashMap<>(environment.activityInstances()),
             environment.spansInstances(),
@@ -55,23 +56,25 @@ public final class ForEachActivitySpans implements Expression<Spans> {
     return String.format(
         "\n%s(for-each-activity %s %s %s)",
         prefix,
-        this.activityType,
+        this.activityPredicate,
         this.alias,
         this.expression.prettyPrint(prefix + "  ")
     );
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof final ForEachActivitySpans o)) return false;
-
-    return Objects.equals(this.activityType, o.activityType) &&
-           Objects.equals(this.alias, o.alias) &&
-           Objects.equals(this.expression, o.expression);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.activityType, this.alias, this.expression);
+  /**
+   * A helper class for activity predicates that only match on type.
+   *
+   * This exists to provide an equality check between predicates. You could make an anonymous function that implements
+   * {@link TriFunction}, but tests will fail because all such objects are considered non-equal, even when in reality they
+   * have identical behavior.
+   *
+   * @param type activity type to match on.
+   */
+  public record MatchType(String type) implements TriFunction<ActivityInstance, SimulationResults, EvaluationEnvironment, Boolean> {
+    @Override
+    public Boolean apply(ActivityInstance act, SimulationResults results, EvaluationEnvironment env) {
+      return Objects.equals(act.type, type);
+    }
   }
 }
