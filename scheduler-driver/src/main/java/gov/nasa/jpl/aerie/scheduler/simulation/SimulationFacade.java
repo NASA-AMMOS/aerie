@@ -189,7 +189,9 @@ public class SimulationFacade implements AutoCloseable{
 
   public void simulateActivities(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
     final var activitiesSortedByStartTime =
-        activities.stream().sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
+        activities.stream().filter(activity -> !(insertedActivities.containsKey(activity)))
+                  .sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
+    if(activitiesSortedByStartTime.isEmpty()) return;
     final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
 
     for(final var activity : activitiesSortedByStartTime){
