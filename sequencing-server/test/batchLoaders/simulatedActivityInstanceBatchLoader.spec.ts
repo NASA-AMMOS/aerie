@@ -1,4 +1,4 @@
-import { GraphQLClient } from 'graphql-request';
+import type { GraphQLClient } from 'graphql-request';
 import {
   simulatedActivitiesBatchLoader,
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
@@ -10,9 +10,10 @@ import {
   insertActivityDirective,
   removeActivityDirective,
 } from '../testUtils/ActivityDirective';
-import {executeSimulation, removeSimulationArtifacts, updateSimulationBounds} from '../testUtils/Simulation';
+import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from '../testUtils/Simulation';
 import DataLoader from 'dataloader';
 import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySchemaBatchLoader.js';
+import { getGraphQLClient } from '../testUtils/testUtils.js';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
@@ -21,18 +22,20 @@ let activityId: number;
 let simulationArtifactIds: { simulationId: number; simulationDatasetId: number };
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
+  graphqlClient = await getGraphQLClient();
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
   activityId = await insertActivityDirective(graphqlClient, planId, 'ParameterTest');
-  await updateSimulationBounds(graphqlClient, {plan_id: planId, simulation_start_time:"2020-001T00:00:00Z", simulation_end_time:"2020-002T00:00:00Z" });
+  await updateSimulationBounds(graphqlClient, {
+    plan_id: planId,
+    simulation_start_time: '2020-001T00:00:00Z',
+    simulation_end_time: '2020-002T00:00:00Z',
+  });
   simulationArtifactIds = await executeSimulation(graphqlClient, planId);
 });
 
 afterAll(async () => {
-  await removeSimulationArtifacts(graphqlClient, {simulationDatasetId: simulationArtifactIds.simulationDatasetId } );
+  await removeSimulationArtifacts(graphqlClient, { simulationDatasetId: simulationArtifactIds.simulationDatasetId });
   await removeActivityDirective(graphqlClient, activityId, planId);
   await removePlan(graphqlClient, planId);
   await removeMissionModel(graphqlClient, missionModelId);

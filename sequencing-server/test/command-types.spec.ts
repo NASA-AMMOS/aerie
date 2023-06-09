@@ -1,19 +1,18 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { Status } from '../src/common.js';
 import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
+import { getGraphQLClient } from './testUtils/testUtils.js';
 
 let graphqlClient: GraphQLClient;
 let commandDictionaryId: number;
 
-beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
+beforeAll(async () => {
+  graphqlClient = await getGraphQLClient();
   commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
 });
 
-afterEach(async () => {
-  await removeCommandDictionary(graphqlClient, commandDictionaryId);
+afterAll(async () => {
+  removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
 it('should return command types', async () => {

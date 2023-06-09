@@ -1,14 +1,16 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { Status } from '../src/common.js';
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel';
+import { getGraphQLClient } from './testUtils/testUtils.js';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 
+beforeAll(async () => {
+  graphqlClient = await getGraphQLClient();
+});
+
 beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
   missionModelId = await uploadMissionModel(graphqlClient);
 }, 10000);
 

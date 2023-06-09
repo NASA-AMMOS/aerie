@@ -1,14 +1,13 @@
-import { GraphQLClient } from 'graphql-request';
+import type { GraphQLClient } from 'graphql-request';
 import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySchemaBatchLoader.js';
 import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionModel.js';
+import { getGraphQLClient } from '../testUtils/testUtils.js';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
-    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
-  });
+  graphqlClient = await getGraphQLClient();
   missionModelId = await uploadMissionModel(graphqlClient);
 });
 
