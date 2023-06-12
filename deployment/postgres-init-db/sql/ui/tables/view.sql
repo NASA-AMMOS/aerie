@@ -3,7 +3,7 @@ create table view (
   definition jsonb not null,
   id integer generated always as identity,
   name text not null,
-  owner text not null default 'system',
+  owner text,
   updated_at timestamptz not null default now(),
 
   constraint view_primary_key primary key (id)
@@ -20,7 +20,7 @@ comment on column view.id is e''
 comment on column view.name is e''
   'Human-readable name of the view.';
 comment on column view.owner is e''
-  'Username of the view owner.';
+  'The user who owns the view.';
 comment on column view.updated_at is e''
   'Time the view was last updated.';
 

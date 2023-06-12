@@ -22,7 +22,7 @@ insert_permissions:
 update_permissions:
   - role: user
     permission:
-      columns: [definition, name]
+      columns: [definition, name, owner]
       filter: {"owner":{"_eq":"x-hasura-user-id"}}
 delete_permissions:
   - role: user
