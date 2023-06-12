@@ -1,6 +1,7 @@
 create table plan_dataset (
   plan_id integer not null,
   dataset_id integer not null,
+  simulation_dataset_id integer,
 
   offset_from_plan_start interval not null,
 
@@ -9,6 +10,11 @@ create table plan_dataset (
   constraint plan_dataset_references_plan
     foreign key (plan_id)
     references plan
+    on update cascade
+    on delete cascade,
+  constraint associated_sim_dataset_exists
+    foreign key (simulation_dataset_id)
+    references simulation_dataset
     on update cascade
     on delete cascade,
   constraint plan_dataset_references_dataset
@@ -22,6 +28,9 @@ comment on column plan_dataset.plan_id is e''
   'The ID of the plan to which the dataset is associated.';
 comment on column plan_dataset.dataset_id is e''
   'The ID of the dataset associated with the plan.';
+comment on column plan_dataset.simulation_dataset_id is e''
+  'The ID of the simulation dataset optionally associated with the dataset.'
+  'If null, the dataset is associated with all simulation runs for the plan.';
 comment on column plan_dataset.offset_from_plan_start is e''
   'The time to judge dataset items against relative to the plan start.'
 '\n'
