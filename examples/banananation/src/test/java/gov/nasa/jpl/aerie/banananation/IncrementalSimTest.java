@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.IntStream;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -164,4 +166,235 @@ public final class IncrementalSimTest {
     assertEquals(2.0, fruitProfile.get(2).dynamics().initial);
   }
 
+  final static String INIT_SIM = "Initial Simulation";
+  final static String COMP_RESULTS = "Compute Results";
+  final static String SERIALIZE_RESULTS = "Serialize Results";
+  final static String INC_SIM = "Incremental Simulation";
+  final static String COMP_INC_RESULTS = "Compute Incremental Results";
+  final static String SERIALIZE_INC_RESULTS = "Serialize Combined Results";
+
+  final static String[] labels = new String[] { INIT_SIM, COMP_RESULTS, SERIALIZE_RESULTS,
+                                                INC_SIM, COMP_INC_RESULTS, SERIALIZE_INC_RESULTS };
+
+  final static String[] incSimLabels = new String[] { INC_SIM, COMP_INC_RESULTS, SERIALIZE_INC_RESULTS };
+
+
+  @Test
+  public void testPerformanceOfOneEditToScaledPlan() {
+    if (debug) System.out.println("testPerformanceOfOneEditToScaledPlan()");
+
+    int scaleFactor = 10000;
+
+    final List<Integer> sizes = IntStream.rangeClosed(1, 20).boxed().map(i -> i * scaleFactor).toList();
+    System.out.println("Numbers of activities to test: " + sizes);
+
+    long spread = 5;
+    Duration unit = SECONDS;
+
+    final SerializedActivity biteBanana = new SerializedActivity("BiteBanana", Map.of());
+
+    final SerializedActivity peelBanana = new SerializedActivity("PeelBanana", Map.of());
+
+    final SerializedActivity changeProducerChiquita = new SerializedActivity("ChangeProducer", Map.of("producer", SerializedValue.of("Chiquita")));
+
+    final SerializedActivity changeProducerDole = new SerializedActivity("ChangeProducer", Map.of("producer", SerializedValue.of("Dole")));
+
+    //HashMap<String, HashMap<String, List<Double>>> stats = new HashMap<>();
+
+    var testTimer = new Timer("testPerformanceOfOneEditToScaledPlan", false);
+
+    // test each case
+    for (int numActs : sizes) {
+
+      var scaleTimer = new Timer("test " + numActs, false);
+
+      // generate numActs activities
+      Pair<Duration, SerializedActivity>[] pairs = new Pair[numActs];
+      for (int i = 0; i < numActs; ++i) {
+        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                           changeProducerChiquita);
+        ++i;
+        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                           changeProducerDole);
+      }
+      final Map<ActivityDirectiveId, ActivityDirective> schedule = SimulationUtility.buildSchedule(pairs);
+
+      final var startTime = Instant.now();
+      final var simDuration = duration(spread * (numActs + 2), SECOND);
+
+      var timer = new Timer(INIT_SIM + " " + numActs, false);
+      final var driver = SimulationUtility.getDriver(simDuration);
+      driver.simulate(schedule, startTime, simDuration, startTime, simDuration, false);
+      timer.stop(false);
+
+      timer = new Timer(COMP_RESULTS + " " + numActs, false);
+      var simulationResults = driver.computeResults(startTime, simDuration);
+      timer.stop(false);
+      timer = new Timer(SERIALIZE_RESULTS + " " + numActs, false);
+      String results = simulationResults.toString();
+      timer.stop(false);
+
+      // Modify a directive in the schedule
+      ActivityDirectiveId directiveId = new ActivityDirectiveId(numActs / 2);  // get middle activity
+      final ActivityDirective directive = schedule.get(directiveId);
+      schedule.put(directiveId, new ActivityDirective(directive.startOffset().plus(1, unit),
+                                                      directive.serializedActivity(), directive.anchorId(),
+                                                      directive.anchoredToStart()));
+
+      timer = new Timer(INC_SIM + " " + numActs, false);
+      driver.initSimulation(simDuration);
+      simulationResults = driver.diffAndSimulate(schedule, startTime, simDuration, startTime, simDuration);
+      timer.stop(false);
+
+      timer = new Timer(COMP_INC_RESULTS + " " + numActs, false);
+      simulationResults = driver.computeResults(startTime, simDuration);
+      timer.stop(false);
+      timer = new Timer(SERIALIZE_INC_RESULTS + " " + numActs, false);
+      results = simulationResults.toString();  // The results are not combined until they forced to be
+      timer.stop(false);
+
+      scaleTimer.stop(false);
+    }
+
+    testTimer.stop(false);
+
+    //Timer.logStats();
+    // Write out stats
+    final ConcurrentSkipListMap<String, ConcurrentSkipListMap<Timer.StatType, Long>>
+        mm = Timer.getStats();
+    ArrayList<String> header = new ArrayList<>();
+    header.add("Number of Activities");
+    for (int i = 0; i < labels.length; ++i) {
+      header.add(labels[i] + " (duration)");
+      header.add(labels[i] + " (cpu time)");
+    }
+    System.out.println(String.join(", ", header));
+    for (int numActs : sizes) {
+      ArrayList<String> row = new ArrayList<>();
+      row.add("" + numActs);
+      for (int i = 0; i < labels.length; ++i) {
+        ConcurrentSkipListMap<Timer.StatType, Long> statMap = mm.get(labels[i] + " " + numActs);
+        row.add("" + Timer.formatDuration(statMap.get(Timer.StatType.wallClockTime)));
+        row.add("" + Timer.formatDuration(statMap.get(Timer.StatType.cpuTime)));
+      }
+      System.out.println(String.join(", ", row));
+    }
+  }
+
+
+  @Test
+  public void testPerformanceOfRepeatedSimsToScaledPlan() {
+    if (debug) System.out.println("testPerformanceOfRepeatedSimsToScaledPlan()");
+
+    int scaleFactor = 100;
+    int numEdits = 500;
+
+    final List<Integer> sizes = IntStream.rangeClosed(1, 5).boxed().map(i -> i * scaleFactor).toList();
+    System.out.println("Numbers of activities to test: " + sizes);
+
+    long spread = 5;
+    Duration unit = SECONDS;
+
+    final SerializedActivity biteBanana = new SerializedActivity("BiteBanana", Map.of());
+    final SerializedActivity peelBanana = new SerializedActivity("PeelBanana", Map.of());
+    final SerializedActivity changeProducerChiquita = new SerializedActivity("ChangeProducer", Map.of("producer", SerializedValue.of("Chiquita")));
+    final SerializedActivity changeProducerDole = new SerializedActivity("ChangeProducer", Map.of("producer", SerializedValue.of("Dole")));
+
+
+    var testTimer = new Timer("testPerformanceOfOneEditToScaledPlan", false);
+
+    // test each case
+    for (int numActs : sizes) {
+
+      var scaleTimer = new Timer("test " + numActs, false);
+
+      // generate numActs activities
+      Pair<Duration, SerializedActivity>[] pairs = new Pair[numActs];
+      for (int i = 0; i < numActs; ++i) {
+        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                           changeProducerChiquita);
+        ++i;
+        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                           changeProducerDole);
+        ++i;
+        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                           peelBanana);
+        ++i;
+        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                           biteBanana);
+      }
+      final Map<ActivityDirectiveId, ActivityDirective> schedule = SimulationUtility.buildSchedule(pairs);
+
+      final var startTime = Instant.now();
+      final var simDuration = duration(spread * (numActs + 2), SECOND);
+
+      var timer = new Timer(INIT_SIM + " " + numActs, false);
+      final var driver = SimulationUtility.getDriver(simDuration);
+      driver.simulate(schedule, startTime, simDuration, startTime, simDuration, false);
+      timer.stop(false);
+
+      timer = new Timer(COMP_RESULTS + " " + numActs, false);
+      var simulationResults = driver.computeResults(startTime, simDuration);
+      timer.stop(false);
+      timer = new Timer(SERIALIZE_RESULTS + " " + numActs, false);
+      String results = simulationResults.toString();
+      timer.stop(false);
+
+      var random = new Random(3);
+
+      for (int j=0; j < numEdits; ++j) {
+
+        // Modify a directive in the schedule
+        int directiveNumber = random.nextInt(numActs);
+        ActivityDirectiveId directiveId = new ActivityDirectiveId(directiveNumber);  // get random activity
+        final ActivityDirective directive = schedule.get(directiveId);
+        Duration newOffset = directive.startOffset().plus(1, unit);
+        if (newOffset.noShorterThan(simDuration)) newOffset = simDuration.minus(1, unit);
+        schedule.put(directiveId, new ActivityDirective(newOffset,
+                                                        directive.serializedActivity(), directive.anchorId(),
+                                                        directive.anchoredToStart()));
+
+        timer = new Timer(INC_SIM + " " + numActs + " " + j, false);
+        driver.initSimulation(simDuration);
+        simulationResults = driver.diffAndSimulate(schedule, startTime, simDuration, startTime, simDuration);
+        timer.stop(false);
+
+        timer = new Timer(COMP_INC_RESULTS + " " + numActs + " " + j, false);
+        simulationResults = driver.computeResults(startTime, simDuration);
+        timer.stop(false);
+        timer = new Timer(SERIALIZE_INC_RESULTS + " " + numActs + " " + j, false);
+        results = simulationResults.toString();  // The results are not combined until they forced to be
+        timer.stop(false);
+      }
+      scaleTimer.stop(false);
+    }
+
+    testTimer.stop(false);
+
+    //Timer.logStats();
+    // Write out stats
+    final ConcurrentSkipListMap<String, ConcurrentSkipListMap<Timer.StatType, Long>>
+        mm = Timer.getStats();
+    ArrayList<String> header = new ArrayList<>();
+    header.add("Number of Activities");
+    header.add("Number of Incremental Simulations");
+    for (int i = 0; i < incSimLabels.length; ++i) {
+      header.add(incSimLabels[i] + " (duration)");
+      header.add(incSimLabels[i] + " (cpu time)");
+    }
+    System.out.println(String.join(", ", header));
+    for (int numActs : sizes) {
+      for (int j = 0; j < numEdits; ++j) {
+        ArrayList<String> row = new ArrayList<>();
+        row.add("" + numActs);
+        row.add("" + j);
+        for (int i = 0; i < incSimLabels.length; ++i) {
+          ConcurrentSkipListMap<Timer.StatType, Long> statMap = mm.get(incSimLabels[i] + " " + numActs + " " + j);
+          row.add("" + Timer.formatDuration(statMap.get(Timer.StatType.wallClockTime)));
+          row.add("" + Timer.formatDuration(statMap.get(Timer.StatType.cpuTime)));
+        }
+        System.out.println(String.join(", ", row));
+      }
+    }
+  }
 }

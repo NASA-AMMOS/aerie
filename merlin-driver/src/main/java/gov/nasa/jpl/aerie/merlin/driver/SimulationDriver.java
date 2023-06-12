@@ -49,12 +49,14 @@ public final class SimulationDriver<Model> {
   /** Whether we're rerunning the simulation, in which case we reuse past results and have an old SimulationEngine */
   private boolean rerunning = false;
 
-  public SimulationDriver(MissionModel<Model> missionModel, Duration planDuration, final boolean useResourceTracker){
+  public SimulationDriver(MissionModel<Model> missionModel, Duration planDuration, final boolean useResourceTracker) {
     this(missionModel, Instant.now(), planDuration, useResourceTracker);
   }
 
-  public SimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration,
-                          boolean useResourceTracker){
+  public SimulationDriver(
+      MissionModel<Model> missionModel, Instant startTime, Duration planDuration,
+      boolean useResourceTracker)
+  {
     this.missionModel = missionModel;
     this.startTime = startTime;
     this.planDuration = planDuration;
@@ -64,7 +66,7 @@ public final class SimulationDriver<Model> {
   }
 
 
-  public void initSimulation(final Duration simDuration){
+  public void initSimulation(final Duration simDuration) {
     if (debug) System.out.println("SimulationDriver.initSimulation()");
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
@@ -89,7 +91,10 @@ public final class SimulationDriver<Model> {
     startDaemons(curTime());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-    engine.scheduleTask(simDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null); // TODO: skip this if rerunning? and end time is same?
+    engine.scheduleTask(
+        simDuration,
+        executor -> $ -> TaskStatus.completed(Unit.UNIT),
+        null); // TODO: skip this if rerunning? and end time is same?
   }
 
 
@@ -99,10 +104,12 @@ public final class SimulationDriver<Model> {
       final Instant simulationStartTime,
       final Duration simulationDuration,
       final Instant planStartTime,
-      final Duration planDuration) {
+      final Duration planDuration)
+  {
     return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration,
                     defaultUseResourceTracker);
   }
+
   public static <Model> SimulationResultsInterface simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
@@ -111,7 +118,8 @@ public final class SimulationDriver<Model> {
       final Instant planStartTime,
       final Duration planDuration,
       final boolean useResourceTracker
-  ) {
+  )
+  {
     var driver = new SimulationDriver<>(missionModel, simulationStartTime, simulationDuration, useResourceTracker);
     return driver.simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration);
   }
@@ -122,63 +130,79 @@ public final class SimulationDriver<Model> {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration
-  ) {
-      try {
-        if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
+  )
+  {
+    return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true);
+  }
 
-        if (engine.scheduledDirectives == null) {
-          engine.scheduledDirectives = new HashMap<>(schedule);
-        }
+  public SimulationResultsInterface simulate(
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration,
+      final boolean doComputeResults
+  )
+  {
+    try {
+      if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
 
-        // Get all activities as close as possible to absolute time
-        // Schedule all activities.
-        // Using HashMap explicitly because it allows `null` as a key.
-        // `null` key means that an activity is not waiting on another activity to finish to know its start time
-        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-        if(resolved.size() != 0) {
-          resolved.put(
-              null,
-              StartOffsetReducer.adjustStartOffset(
-                  resolved.get(null),
-                  Duration.of(
-                      planStartTime.until(simulationStartTime, ChronoUnit.MICROS),
-                      Duration.MICROSECONDS)));
-        }
-        // Filter out activities that are before simulationStartTime
-        resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
-
-        scheduleActivities(
-            schedule,
-            resolved,
-            missionModel,
-            engine,
-            engine.defaultActivityTopic
-        );
-
-        // Drive the engine until we're out of time.
-        // TERMINATION: Actually, we might never break if real time never progresses forward.
-        while (engine.hasJobsScheduledThrough(simulationDuration)) {
-          engine.step(simulationDuration, queryTopic);
-        }
-      } catch (Throwable ex) {
-        throw new SimulationException(curTime(), simulationStartTime, ex);
+      if (engine.scheduledDirectives == null) {
+        engine.scheduledDirectives = new HashMap<>(schedule);
       }
 
-      // A query depends on an event if
-      // - that event has the same topic as the query
-      // - that event occurs causally before the query
+      // Get all activities as close as possible to absolute time
+      // Schedule all activities.
+      // Using HashMap explicitly because it allows `null` as a key.
+      // `null` key means that an activity is not waiting on another activity to finish to know its start time
+      HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+          planDuration,
+          schedule).compute();
+      if (resolved.size() != 0) {
+        resolved.put(
+            null,
+            StartOffsetReducer.adjustStartOffset(
+                resolved.get(null),
+                Duration.of(
+                    planStartTime.until(simulationStartTime, ChronoUnit.MICROS),
+                    Duration.MICROSECONDS)));
+      }
+      // Filter out activities that are before simulationStartTime
+      resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
 
-      // Let A be an event or query issued by task X, and B be either an event or query issued by task Y
-      // A flows to B if B is causally after A and
-      // - X = Y
-      // - X spawned Y causally after A
-      // - Y called X, and emitted B after X terminated
-      // - Transitively: if A flows to C and C flows to B, A flows to B
-      // tstill not enough...?
+      scheduleActivities(
+          schedule,
+          resolved,
+          missionModel,
+          engine,
+          engine.defaultActivityTopic
+      );
 
-    return engine.computeResults(startTime,
-                                 simulationDuration,
-                                 activityTopic);
+      // Drive the engine until we're out of time.
+      // TERMINATION: Actually, we might never break if real time never progresses forward.
+      while (engine.hasJobsScheduledThrough(simulationDuration)) {
+        engine.step(simulationDuration, queryTopic);
+      }
+    } catch (Throwable ex) {
+      throw new SimulationException(curTime(), simulationStartTime, ex);
+    }
+
+    // A query depends on an event if
+    // - that event has the same topic as the query
+    // - that event occurs causally before the query
+
+    // Let A be an event or query issued by task X, and B be either an event or query issued by task Y
+    // A flows to B if B is causally after A and
+    // - X = Y
+    // - X spawned Y causally after A
+    // - Y called X, and emitted B after X terminated
+    // - Transitively: if A flows to C and C flows to B, A flows to B
+    // tstill not enough...?
+
+    if (doComputeResults) {
+      return engine.computeResults(startTime, simulationDuration, activityTopic);
+    }
+    return null;
   }
 
   private void startDaemons(Duration time) {
@@ -205,6 +229,17 @@ public final class SimulationDriver<Model> {
       Duration simulationDuration,
       Instant planStartTime,
       Duration planDuration) {
+    return diffAndSimulate(activityDirectives, simulationStartTime,simulationDuration, planStartTime, planDuration,
+                           true);
+  }
+
+  public SimulationResultsInterface diffAndSimulate(
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
+      Instant simulationStartTime,
+      Duration simulationDuration,
+      Instant planStartTime,
+      Duration planDuration,
+      boolean doComputeResults) {
     Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
     engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
     if (engine.oldEngine != null) {
@@ -217,7 +252,7 @@ public final class SimulationDriver<Model> {
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
     }
-    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration);
+    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults);
   }
 
   public <Return> //static <Model, Return>
@@ -324,4 +359,7 @@ public final class SimulationDriver<Model> {
     });
   }
 
+  public SimulationResultsInterface computeResults(Instant startTime, Duration simDuration) {
+    return engine.computeResults(startTime, simDuration, SimulationEngine.defaultActivityTopic);
+  }
 }
