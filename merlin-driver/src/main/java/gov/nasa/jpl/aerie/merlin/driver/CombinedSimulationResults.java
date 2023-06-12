@@ -27,6 +27,8 @@ import java.util.stream.StreamSupport;
 
 public class CombinedSimulationResults implements SimulationResultsInterface {
 
+  private static boolean debug = false;
+
   final SimulationResultsInterface nr;
   final SimulationResultsInterface or;
   final TemporalEventSource timeline;
@@ -44,35 +46,49 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
 
   @Override
   public Instant getStartTime() {
-    return ObjectUtils.min(nr.getStartTime(), or.getStartTime());
+    if (_startTime == null) {
+      _startTime = ObjectUtils.min(nr.getStartTime(), or.getStartTime());
+    }
+    return _startTime;
   }
+  private Instant _startTime = null;
 
   @Override
   public Duration getDuration() {
-    return Duration.minus(ObjectUtils.max(Duration.addToInstant(nr.getStartTime(), nr.getDuration()),
-                                          Duration.addToInstant(or.getStartTime(), or.getDuration())),
-                          getStartTime());
+    if (_duration == null) {
+      _duration = Duration.minus(ObjectUtils.max(Duration.addToInstant(nr.getStartTime(), nr.getDuration()),
+                                                 Duration.addToInstant(or.getStartTime(), or.getDuration())),
+                                 getStartTime());
+    }
+    return _duration;
   }
+  private Duration _duration = null;
 
   @Override
   public Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> getRealProfiles() {
-    return Stream.of(or.getRealProfiles(), nr.getRealProfiles()).flatMap(m -> m.entrySet().stream())
-                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                                           (pOld, pNew) -> mergeProfiles(or.getStartTime(), nr.getStartTime(),
-                                                                         pOld, pNew, timeline)));
+    String[] resourceName = new String[] {null};
+    if (_realProfiles == null) {
+      _realProfiles = Stream.of(or.getRealProfiles(), nr.getRealProfiles()).flatMap(m -> m.entrySet().stream())
+                            .collect(Collectors.toMap(e -> {resourceName[0] = e.getKey(); if (debug) System.out.println("mergeProfiles for " + e.getKey());
+                                                            return e.getKey();}, Map.Entry::getValue,
+                                                      (pOld, pNew) -> mergeProfiles(or.getStartTime(), nr.getStartTime(),
+                                                                                    resourceName[0], pOld, pNew, timeline)));
+    }
+    return _realProfiles;
   }
+  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> _realProfiles = null;
 
   // We need to pass startTimes for both to know from where they are offset?  We don't want to assume that the two
   // simulations had the same timeframe.
-  static <D> Pair<ValueSchema, List<ProfileSegment<D>>> mergeProfiles(Instant tOld, Instant tNew,
+  static <D> Pair<ValueSchema, List<ProfileSegment<D>>> mergeProfiles(Instant tOld, Instant tNew, String resourceName,
                                                                       Pair<ValueSchema, List<ProfileSegment<D>>> pOld,
                                                                       Pair<ValueSchema, List<ProfileSegment<D>>> pNew,
                                                                       TemporalEventSource timeline) {
     // We assume that the two ValueSchemas are the same and don't check for the sake of minimizing computation.
-    return Pair.of(pOld.getLeft(), mergeSegmentLists(tOld, tNew, pOld.getRight(), pNew.getRight(), timeline));
+    return Pair.of(pOld.getLeft(), mergeSegmentLists(tOld, tNew, resourceName,  pOld.getRight(), pNew.getRight(), timeline));
   }
 
-  static int ctr = 0;
+  static private int ctr = 0;
   /**
    * Merge {@link ProfileSegment}s from an old simulation into those of a new one, replacing the old with the new.
    *
@@ -84,7 +100,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
    * @return the combined list of {@link ProfileSegment}s
    * @param <D>
    */
-  private static <D> List<ProfileSegment<D>> mergeSegmentLists(Instant tOld, Instant tNew,
+  private static <D> List<ProfileSegment<D>> mergeSegmentLists(Instant tOld, Instant tNew, String resourceName,
                                                                List<ProfileSegment<D>> listOld,
                                                                List<ProfileSegment<D>> listNew,
                                                                TemporalEventSource timeline) {
@@ -99,6 +115,9 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
     } else {
       elapsed[1] = elapsed[1].plus(offset);
     }
+
+    if (debug) System.out.println("mergeSegmentLists() -- old segments: " + listOld);
+    if (debug) System.out.println("mergeSegmentLists() -- new segments: " + listNew);
 
     var sOld = listOld.stream();
     var sNew = listNew.stream();
@@ -130,14 +149,14 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
 
       // We need to look at two triples at a time, so we skip the first iteration.  Nulls will be stripped out later.
       if (lastTriple == null) {
-        System.out.println("" + i + " skip first iteration");
+        if (debug) System.out.println("" + i + " skip first iteration");
         return null;
       }
 
       // This is the last pair of triples, the last being (null, null, null).  Just return the segment in the
       // last non-null triple, lastTriple.
       if (t == tripleNull) {
-        System.out.println("" + i + " keeping last " + lastTriple);
+        if (debug) System.out.println("" + i + " keeping last " + lastTriple);
         return lastTriple.getRight();
       }
 
@@ -149,7 +168,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
         // We do the replacement by remembering the new (lastTriple) instead of the old (t) for the next
         // iteration and return nothing in this iteration, thus, skipping the old.
         if (extent.isEqualTo(Duration.ZERO) && !lastTriple.getMiddle().equals(t.getMiddle())) {
-          System.out.println("" + i + " skipping " + t);
+          if (debug) System.out.println("" + i + " skipping " + t);
           last[0] = lastTriple;
           return null;
         }
@@ -157,25 +176,25 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
       // We need to remove old segments where there are new events and no corresponding new segment.
       // We do this by remembering lastTriple instead of the old segment, t.
       if (timeline != null && t.getMiddle() == 1) {
-        var commits = timeline.commitsByTime.get(lastTriple.getLeft());
-        if (commits != null && commits.isEmpty()) {
-          System.out.println("" + i + " skipping removed " + t);
+        var resourcesWithRemovedSegments = timeline.removedResourceSegments.get(t.getLeft());
+        if (resourcesWithRemovedSegments != null && resourcesWithRemovedSegments.contains(resourceName)) {
+          if (debug) System.out.println("" + i + " skipping removed " + t);
           last[0] = lastTriple;
           return null;
         }
       }
 
       // Return a profile segment based on oldTriple and the time difference with t
-      System.out.println("" + i + " keeping " + lastTriple);
+      if (debug) System.out.println("" + i + " keeping " + lastTriple);
       var p = new ProfileSegment<D>(extent, lastTriple.getRight().dynamics());
       return p;
     });
 
-    // remove the nulls, representing skipped, replaced, removed, and non-existent segments
-    var rsss = sss.filter(Objects::nonNull);
+    // remove the nulls, representing skipped, replaced, removed, and non-existent segments, and convert Stream to List
+    var mergedSegments = sss.filter(Objects::nonNull).toList();
+    if (debug) System.out.println("" + i + " combined segments = " + mergedSegments);
 
-    // convert Stream to List
-    return rsss.toList();
+    return mergedSegments;
   }
 
   private static void testMergeSegmentLists() {
@@ -189,10 +208,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
     System.out.println(list1);
     var list2 = List.of(p0);
     System.out.println(list2);
-    var list3 = mergeSegmentLists(t, t, list2, list1, null);
-    System.out.println("merged list3");
-    System.out.println(list3);
-    list3 = mergeSegmentLists(t, t, list2, list1, null);
+    var list3 = mergeSegmentLists(t, t, null, list2, list1, null);
     System.out.println("merged list3");
     System.out.println(list3);
   }
@@ -228,16 +244,24 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
 
   @Override
   public Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> getDiscreteProfiles() {
-    return Stream.of(or.getDiscreteProfiles(), nr.getDiscreteProfiles()).flatMap(m -> m.entrySet().stream())
-                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                                           (p1, p2) -> mergeProfiles(or.getStartTime(), nr.getStartTime(), p1, p2, timeline)));
+    final String[] resourceName = new String[] {null};
+    if (_discreteProfiles == null)
+      _discreteProfiles = Stream.of(or.getDiscreteProfiles(), nr.getDiscreteProfiles()).flatMap(m -> m.entrySet().stream())
+                                .collect(Collectors.toMap(e -> {
+                                  resourceName[0] = e.getKey();
+                                  if (debug) System.out.println("mergeProfiles for " + e.getKey());
+                                  return e.getKey();
+                                }, Map.Entry::getValue, (p1, p2) -> mergeProfiles(or.getStartTime(), nr.getStartTime(),
+                                                                                  resourceName[0], p1, p2, timeline)));
+    return _discreteProfiles;
   }
+  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> _discreteProfiles = null;
 
   @Override
   public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
     var combined = new HashMap<>(or.getSimulatedActivities());
-    combined.putAll(nr.getSimulatedActivities());
     nr.getRemovedActivities().forEach(simActId -> combined.remove(simActId));
+    combined.putAll(nr.getSimulatedActivities());
     return combined;
   }
 
@@ -266,12 +290,17 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
 
   @Override
   public Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> getEvents() {
+    if (_events != null) return _events;
+    // TODO: REVIEW -- Is this right?  Is it the best way to do it?  What about SimulationEngine.getCommitsByTime(),
+    //       which already combined them?  Notice the adjustment for sim start time differences!
     var ors = or.getEvents().entrySet().stream().map(e -> Pair.of(e.getKey().plus(Duration.minus(or.getStartTime(),getStartTime())), e.getValue()));
     var nrs = nr.getEvents().entrySet().stream().map(e -> Pair.of(e.getKey().plus(Duration.minus(nr.getStartTime(),getStartTime())), e.getValue()));
     // overwrite old with new where at the same time
-    return Stream.of(ors, nrs).flatMap(s -> s)
+    _events = Stream.of(ors, nrs).flatMap(s -> s)
                  .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (list1, list2) -> list2));
+    return _events;
   }
+  private Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> _events = null;
 
   @Override
   public String toString() {

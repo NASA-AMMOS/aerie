@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ResourceId;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
-  public static final boolean debug = false;
+  private static boolean debug = false;
   public LiveCells liveCells;
   private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
@@ -35,8 +36,12 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public Map<EventGraph<Event>, Set<Topic<?>>> topicsForEventGraph = new HashMap<>();
   public Map<EventGraph<Event>, Set<TaskId>> tasksForEventGraph = new HashMap<>();
   public Map<EventGraph<Event>, Duration> timeForEventGraph = new HashMap<>();
-  protected HashMap<Cell<?>, Duration> cellTimes = new HashMap<>();
-  protected HashMap<Cell<?>, Boolean> cellTimeStepped = new HashMap<>();
+  HashMap<Cell<?>, Duration> cellTimes = new HashMap<>();
+  HashMap<Cell<?>, Boolean> cellTimeStepped = new HashMap<>();
+
+  public HashMap<Duration, Set<Topic<?>>> topicsOfRemovedEvents = new HashMap<>();
+  /** Times when a resource profile segment should be removed from the simulation results. */
+  public HashMap<Duration, Set<String>> removedResourceSegments = new HashMap<>();
   public TemporalEventSource oldTemporalEventSource;
   protected Duration curTime = Duration.ZERO;
 
@@ -121,10 +126,21 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   public Map<? extends Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> getCombinedEventsByTopic() {
     if (oldTemporalEventSource == null) return eventsByTopic;
-    var mm = Stream.of(eventsByTopic, oldTemporalEventSource.getCombinedEventsByTopic()).flatMap(m -> m.entrySet().stream())
+    if (_eventsByTopic != null && eventsByTopic.size() == _numEventsByTopic) {
+      return _eventsByTopic;
+    }
+    _numEventsByTopic = eventsByTopic.size();
+    if (_oldEventsByTopic == null) {
+      _oldEventsByTopic = oldTemporalEventSource.getCombinedEventsByTopic();
+      oldTemporalEventSource._oldEventsByTopic = null;
+    }
+    _eventsByTopic = Stream.of(eventsByTopic, _oldEventsByTopic).flatMap(m -> m.entrySet().stream())
         .collect(Collectors.toMap(t -> t.getKey(), t -> t.getValue(), (m1, m2) -> mergeMapsFirstWins(m1, m2)));
-    return mm;
+    return _eventsByTopic;
   }
+  private Map<? extends Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> _oldEventsByTopic = null;
+  private Map<? extends Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> _eventsByTopic = null;
+  private long _numEventsByTopic = 0;
 
   public static <K, V> TreeMap<K, V> mergeMapsFirstWins(TreeMap<K, V> m1, TreeMap<K, V> m2) {
     if (m1 == null) return m2;
@@ -242,6 +258,8 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     topicsForEventGraph.put(newG, newTopics);
     var allTopics = new HashSet<Topic<?>>();
     if (oldTopics != null) allTopics.addAll(oldTopics);
+    Set<Topic<?>> lostTopics = oldTopics.stream().filter(t -> !newTopics.contains(t)).collect(Collectors.toSet());
+    this.topicsOfRemovedEvents.computeIfAbsent(time, $ -> new HashSet<>()).addAll(lostTopics);
     allTopics.addAll(newTopics);
     allTopics.forEach(t -> {
 //      if (finalOldTopics != null && finalOldTopics.contains(t) && !newTopics.contains(t)) {
@@ -404,9 +422,25 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public TreeMap<Duration, List<TimePoint.Commit>> getCombinedCommitsByTime() {
     final var mNew = commitsByTime;
     if (oldTemporalEventSource == null) return mNew;
-    final var mOld = oldTemporalEventSource.getCombinedCommitsByTime();
-    return mergeMapsFirstWins(mNew, mOld);
+    final TreeMap<Duration, List<TimePoint.Commit>> mOld;
+    if (_combinedCommitsByTime != null && mNew.size() == _numberCommitsByTime) {
+      return _combinedCommitsByTime;
+    }
+    _numberCommitsByTime = mNew.size();
+    if (_oldCombinedCommitsByTime != null) {
+      mOld = _oldCombinedCommitsByTime;
+    } else {
+      mOld = oldTemporalEventSource.getCombinedCommitsByTime();
+      _oldCombinedCommitsByTime = mOld;
+      oldTemporalEventSource._oldCombinedCommitsByTime = null;
+    }
+    _combinedCommitsByTime = mergeMapsFirstWins(mNew, mOld);
+    return _combinedCommitsByTime;
   }
+  private TreeMap<Duration, List<TimePoint.Commit>> _oldCombinedCommitsByTime = null;
+  private TreeMap<Duration, List<TimePoint.Commit>> _combinedCommitsByTime = null;
+  private long _numberCommitsByTime = 0;
+
 
   private class TimePointIteratorFromCommitMap implements Iterator<TimePoint> {
 

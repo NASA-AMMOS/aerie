@@ -65,7 +65,7 @@ public final class SimulationDriver<Model> {
 
 
   public void initSimulation(final Duration simDuration){
-    System.out.println("SimulationDriver.initSimulation()");
+    if (debug) System.out.println("SimulationDriver.initSimulation()");
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();

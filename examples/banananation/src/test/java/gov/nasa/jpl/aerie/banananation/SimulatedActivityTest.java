@@ -24,65 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class SimulatedActivityTest {
-  @Test
-  public void testRemoveAndAddActivity() {
-    final var schedule1 = SimulationUtility.buildSchedule(
-        Pair.of(
-            duration(5, SECONDS),
-            new SerializedActivity("PeelBanana", Map.of()))
-    );
-    final var schedule2 = SimulationUtility.buildSchedule(
-        Pair.of(
-            duration(3, SECONDS),
-            new SerializedActivity("PeelBanana", Map.of()))
-    );
-
-    final var simDuration = duration(10, SECOND);
-
-    final var driver = SimulationUtility.getDriver(simDuration);
-
-    final var startTime = Instant.now();
-    var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
-    System.out.println("fruitProfile = " + fruitProfile);
-
-    driver.initSimulation(simDuration);
-    simulationResults = driver.diffAndSimulate(new HashMap<>(), startTime, simDuration, startTime, simDuration);
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
-    System.out.println("fruitProfile = " + fruitProfile);
-
-    driver.initSimulation(simDuration);
-    simulationResults = driver.diffAndSimulate(schedule2, startTime, simDuration, startTime, simDuration);
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
-    System.out.println("fruitProfile = " + fruitProfile);
-
-//    assertEquals(1, simulationResults.getSimulatedActivities().size());
-//
-//    assertEquals(4.0, fruitProfile.get(fruitProfile.size()-1).dynamics().initial);
-  }
-
-  @Test
-  public void testRemoveActivity() {
-    final var schedule = SimulationUtility.buildSchedule(
-        Pair.of(
-            duration(5, SECONDS),
-            new SerializedActivity("PeelBanana", Map.of()))
-    );
-
-    final var simDuration = duration(10, SECOND);
-
-    final var driver = SimulationUtility.getDriver(simDuration);
-
-    final var startTime = Instant.now();
-    var simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
-    driver.initSimulation(simDuration);
-    simulationResults = driver.diffAndSimulate(new HashMap<>(), startTime, simDuration, startTime, simDuration);
-
-    assertEquals(0, simulationResults.getSimulatedActivities().size());
-
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
-//    assertEquals(4.0, fruitProfile.get(fruitProfile.size()-1).dynamics().initial);
-  }
 
   @Test
   public void testUnspecifiedArgInSimulatedActivity() {

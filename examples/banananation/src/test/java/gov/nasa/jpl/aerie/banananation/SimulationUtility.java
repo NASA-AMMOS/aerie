@@ -20,7 +20,7 @@ public final class SimulationUtility {
     return builder.build(model, registry);
   }
 
-  public static SimulationDriver
+  public static <Model> SimulationDriver<Model>
   getDriver(final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath, Configuration.DEFAULT_INITIAL_CONDITIONS);
