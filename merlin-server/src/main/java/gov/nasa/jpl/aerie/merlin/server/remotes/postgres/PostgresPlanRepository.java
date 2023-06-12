@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -203,12 +204,18 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public long addExternalDataset(
       final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId,
       final Timestamp datasetStart,
       final ProfileSet profileSet
   ) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
-      final var planDataset = createPlanDataset(connection, planId, plan.startTime(), datasetStart);
+      final var planDataset = createPlanDataset(
+          connection,
+          planId,
+          simulationDatasetId,
+          plan.startTime(),
+          datasetStart);
       ProfileRepository.postResourceProfiles(
           connection,
           planDataset.datasetId(),
@@ -249,9 +256,14 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(
+      final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId)
+  {
     try (final var connection = this.dataSource.getConnection()) {
-      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId);
+      final var planDatasets = simulationDatasetId.isPresent()
+          ? ProfileRepository.getAllPlanDatasetsForSimDataset(connection, planId, simulationDatasetId.get())
+          : ProfileRepository.getAllPlanDatasetsForPlan(connection, planId);
       final var result = new ArrayList<Pair<Duration, ProfileSet>>();
       for (final var planDataset: planDatasets) {
         result.add(Pair.of(
@@ -318,11 +330,12 @@ public final class PostgresPlanRepository implements PlanRepository {
   private static PlanDatasetRecord createPlanDataset(
       final Connection connection,
       final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId,
       final Timestamp planStart,
       final Timestamp datasetStart
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
-      return createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
+      return createPlanDatasetAction.apply(planId.id(), simulationDatasetId, planStart, datasetStart);
     }
   }
 }

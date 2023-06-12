@@ -9,12 +9,14 @@ import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public final class LocalPlanService implements PlanService {
   private final PlanRepository planRepository;
@@ -46,10 +48,14 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
+  public long addExternalDataset(
+      final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId,
+      final Timestamp datasetStart,
+      final ProfileSet profileSet)
   throws NoSuchPlanException
   {
-    return this.planRepository.addExternalDataset(planId, datasetStart, profileSet);
+    return this.planRepository.addExternalDataset(planId, simulationDatasetId, datasetStart, profileSet);
   }
 
   @Override
@@ -60,8 +66,11 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
-    return this.planRepository.getExternalDatasets(planId);
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(
+      final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException
+  {
+    return this.planRepository.getExternalDatasets(planId, simulationDatasetId);
   }
 
   @Override
