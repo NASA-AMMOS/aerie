@@ -3,7 +3,7 @@ create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 create table scheduling_request (
   specification_id integer not null,
   analysis_id integer generated always as identity,
-  requested_by text not null default  '',
+  requested_by text,
   requested_at timestamptz not null default now(),
 
   status status_t not null default 'pending',
