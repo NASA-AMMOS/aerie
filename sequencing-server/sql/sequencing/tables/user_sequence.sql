@@ -4,7 +4,7 @@ create table user_sequence (
   definition text not null,
   id integer generated always as identity,
   name text not null,
-  owner text not null default 'unknown',
+  owner text,
   updated_at timestamptz not null default now(),
 
   constraint user_sequence_primary_key primary key (id)
@@ -21,7 +21,7 @@ comment on column user_sequence.id is e''
 comment on column user_sequence.name is e''
   'Human-readable name of the user sequence.';
 comment on column user_sequence.owner is e''
-  'Username of the user sequence owner.';
+  'The user responsible for this sequence.';
 comment on column user_sequence.updated_at is e''
   'Time the user sequence was last updated.';
 
