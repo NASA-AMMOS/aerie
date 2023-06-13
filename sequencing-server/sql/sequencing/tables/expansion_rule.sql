@@ -11,8 +11,8 @@ create table expansion_rule (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  owner text not null default '',
-  updated_by text not null default '',
+  owner integer,
+  updated_by integer,
 
   description text not null default '',
 
