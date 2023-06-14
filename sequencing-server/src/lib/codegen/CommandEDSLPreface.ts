@@ -2204,9 +2204,6 @@ export class ActivateStep implements Activate {
       ...(this._epoch ? { epoch: this._epoch } : {}),
       ...(this._metadata ? { metadata: this._metadata } : {}),
       ...(this._models ? { model: this._models } : {}),
-      ...(this._absoluteTime ? { absoluteTime: this._absoluteTime } : {}),
-      ...(this._epochTime ? { epochTime: this._epochTime } : {}),
-      ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
     };
   }
 
@@ -2501,9 +2498,6 @@ export class LoadStep implements Load {
       ...(this._epoch ? { epoch: this._epoch } : {}),
       ...(this._metadata ? { metadata: this._metadata } : {}),
       ...(this._models ? { model: this._models } : {}),
-      ...(this._absoluteTime ? { absoluteTime: this._absoluteTime } : {}),
-      ...(this._epochTime ? { epochTime: this._epochTime } : {}),
-      ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
     };
   }
 
