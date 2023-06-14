@@ -305,7 +305,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         }
 
       };
-      return rootFindingHelper(f, history, solved);
+      return rootFindingHelper(f, history, solved, facade);
       //CASE 2: activity has a controllable duration
     } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
@@ -406,7 +406,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         }
       };
 
-      return rootFindingHelper(f, history, solved);
+      return rootFindingHelper(f, history, solved, facade);
     } else {
      throw new UnsupportedOperationException("Unsupported duration type found: " + this.type.getDurationType());
     }
@@ -435,7 +435,8 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
   private  Optional<SchedulingActivityDirective> rootFindingHelper(
       final EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity> f,
       final HistoryWithActivity history,
-      final TaskNetworkAdapter.TNActData solved
+      final TaskNetworkAdapter.TNActData solved,
+      final SimulationFacade simulationFacade
   ) {
     try {
       var endInterval = solved.end();
@@ -470,6 +471,13 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       logger.debug("Too many iterations");
     } catch (EquationSolvingAlgorithms.NoSolutionException e) {
       logger.debug("No solution");
+    }
+    if(!history.events.isEmpty()) {
+      try {
+        simulationFacade.removeActivitiesFromSimulation(List.of(history.getLastEvent().get().activity()));
+      } catch (SimulationFacade.SimulationException e) {
+        throw new RuntimeException("Exception while simulating original plan after activity insertion failure" ,e);
+      }
     }
     return Optional.empty();
   }
