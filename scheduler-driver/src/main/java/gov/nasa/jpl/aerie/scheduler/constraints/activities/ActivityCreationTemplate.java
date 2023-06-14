@@ -286,35 +286,20 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               true);
           final var lastInsertion = history.getLastEvent();
           Optional<Duration> computedDuration = Optional.empty();
-          if(lastInsertion.isPresent()){
-            try {
-              //remove and insert at the same time to avoid unnecessary potential resimulation.
-              //
-              // Current sim: A -> B1 -> C
-              // Sim at end of next iteration: A -> B2 -> C
-              //If we would do remove() and then insert(), we would simulation A -> C and then again A -> B2 -> C
-              facade.removeAndInsertActivitiesFromSimulation(List.of(lastInsertion.get().activity()), List.of(actToSim));
-              computedDuration = facade.getActivityDuration(actToSim);
-              //record insertion: if successful, it will stay in the simulation, otherwise, it'll get deleted at the next iteration
+          final var toRemove = new ArrayList<SchedulingActivityDirective>();
+          lastInsertion.ifPresent(eventWithActivity -> toRemove.add(eventWithActivity.activity()));
+          try {
+            facade.removeAndInsertActivitiesFromSimulation(toRemove, List.of(actToSim));
+            computedDuration = facade.getActivityDuration(actToSim);
+            if(computedDuration.isPresent()) {
               history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
-            } catch (SimulationFacade.SimulationException e) {
-              //still need to record so we can remove the activity at the next iteration
-              history.add(new EventWithActivity(start, null, actToSim));
-            }
-          } else {
-            try {
-              facade.simulateActivity(actToSim);
-              computedDuration = facade.getActivityDuration(actToSim);
-              if(computedDuration.isPresent()) {
-                history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
-              } else{
-                logger.debug("No simulation error but activity duration could not be found in simulation, unfinished activity?");
-                history.add(new EventWithActivity(start,  null, actToSim));
-              }
-            } catch (SimulationFacade.SimulationException e) {
-              logger.debug("Simulation error while trying to simulate activities: " + e);
+            } else{
+              logger.debug("No simulation error but activity duration could not be found in simulation, unfinished activity?");
               history.add(new EventWithActivity(start,  null, actToSim));
             }
+          } catch (SimulationFacade.SimulationException e) {
+            logger.debug("Simulation error while trying to simulate activities: " + e);
+            history.add(new EventWithActivity(start,  null, actToSim));
           }
           return computedDuration.map(start::plus).orElse(Duration.MAX_VALUE);
         }
