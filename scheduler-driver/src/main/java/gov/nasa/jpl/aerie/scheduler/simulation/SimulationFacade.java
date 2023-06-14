@@ -136,10 +136,10 @@ public class SimulationFacade implements AutoCloseable{
       final Collection<SchedulingActivityDirective> activitiesToRemove,
       final Collection<SchedulingActivityDirective> activitiesToAdd) throws SimulationException
   {
-    var atLeastOne = false;
+    var atLeastOneActualRemoval = false;
     for(final var act: activitiesToRemove){
       if(insertedActivities.containsKey(act)){
-        atLeastOne = true;
+        atLeastOneActualRemoval = true;
         insertedActivities.remove(act);
       }
     }
@@ -147,16 +147,16 @@ public class SimulationFacade implements AutoCloseable{
     for(final var act: activitiesToAdd){
       earliestActStartTime = Duration.min(earliestActStartTime, act.startOffset());
     }
+    final var allActivitiesToSimulate = new ArrayList<>(activitiesToAdd);
     //reset resumable simulation
-    if(atLeastOne || earliestActStartTime.shorterThan(this.driver.getCurrentSimulationEndTime())){
-      final var allActivitiesToSimulate = new ArrayList<>(insertedActivities.keySet());
+    if(atLeastOneActualRemoval || earliestActStartTime.shorterThan(this.driver.getCurrentSimulationEndTime())){
+      allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
       if (driver != null) driver.close();
       driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
-      allActivitiesToSimulate.addAll(activitiesToAdd);
-      simulateActivities(allActivitiesToSimulate);
     }
+    simulateActivities(allActivitiesToSimulate);
   }
 
   public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities)
