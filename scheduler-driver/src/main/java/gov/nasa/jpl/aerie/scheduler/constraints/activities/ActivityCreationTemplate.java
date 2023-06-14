@@ -294,7 +294,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
             if(computedDuration.isPresent()) {
               history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
             } else{
-              logger.debug("No simulation error but activity duration could not be found in simulation, unfinished activity?");
+              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
               history.add(new EventWithActivity(start,  null, actToSim));
             }
           } catch (SimulationFacade.SimulationException e) {

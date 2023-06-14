@@ -92,9 +92,6 @@ public class SimulationFacade implements AutoCloseable{
     }
     final var duration = driver.getActivityDuration(planActDirectiveIdToSimulationActivityDirectiveId.get(
         schedulingActivityDirective.getId()));
-    if(duration.isEmpty()){
-      logger.error("Simulation is probably outdated, check that no activity is removed between simulation and querying");
-    }
     return duration;
   }
 
