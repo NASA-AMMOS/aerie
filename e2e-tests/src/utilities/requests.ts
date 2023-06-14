@@ -306,8 +306,8 @@ const req = {
     return id;
   },
 
-  async checkConstraints(request: APIRequestContext, planId: number): Promise<ConstraintViolation[]> {
-    const data = await req.hasura(request, gql.CHECK_CONSTRAINTS, {planId});
+  async checkConstraints(request: APIRequestContext, planId: number, simulationDatasetId?: number): Promise<ConstraintViolation[]> {
+    const data = await req.hasura(request, gql.CHECK_CONSTRAINTS, {planId, simulationDatasetId});
     const { constraintViolations } = data;
     const { violations } = constraintViolations;
     return <ConstraintViolation[]> violations;

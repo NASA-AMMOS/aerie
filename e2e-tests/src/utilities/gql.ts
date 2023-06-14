@@ -309,9 +309,10 @@ const gql = {
   `,
 
   ADD_EXTERNAL_DATASET: `#graphql
-    mutation addExternalDataset($plan_id: Int!, $dataset_start: String!, $profile_set: ProfileSet!) {
+    mutation addExternalDataset($plan_id: Int!, $simulation_dataset_id: Int, $dataset_start: String!, $profile_set: ProfileSet!) {
       addExternalDataset(
         planId: $plan_id
+        simulationDatasetId: $simulation_dataset_id
         datasetStart: $dataset_start
         profileSet: $profile_set
       ) {
@@ -334,6 +335,7 @@ const gql = {
   GET_EXTERNAL_DATASET: `#graphql
     query getExtProfile($plan_id: Int!, $dataset_id: Int!) {
       plan_dataset_by_pk(plan_id:$plan_id, dataset_id:$dataset_id) {
+        simulation_dataset_id
         offset_from_plan_start
         dataset {
           profiles(distinct_on:[], order_by: { name: asc }) {
@@ -364,8 +366,8 @@ const gql = {
   `,
 
   CHECK_CONSTRAINTS: `#graphql
-    query checkConstraints($planId: Int!) {
-      constraintViolations(planId: $planId) {
+    query checkConstraints($planId: Int!, $simulationDatasetId: Int) {
+      constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
         violations
       }
     }
