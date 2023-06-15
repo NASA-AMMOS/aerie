@@ -101,6 +101,7 @@ services:
     depends_on: ["postgres"]
     environment:
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      PUBLIC_LOGIN_PAGE: "enabled"
       ORIGIN: http://localhost
       PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
       PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000
