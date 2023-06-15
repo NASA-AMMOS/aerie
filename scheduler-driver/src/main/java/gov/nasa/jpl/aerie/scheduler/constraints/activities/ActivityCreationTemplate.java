@@ -286,41 +286,26 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               true);
           final var lastInsertion = history.getLastEvent();
           Optional<Duration> computedDuration = Optional.empty();
-          if(lastInsertion.isPresent()){
-            try {
-              //remove and insert at the same time to avoid unnecessary potential resimulation.
-              //
-              // Current sim: A -> B1 -> C
-              // Sim at end of next iteration: A -> B2 -> C
-              //If we would do remove() and then insert(), we would simulation A -> C and then again A -> B2 -> C
-              facade.removeAndInsertActivitiesFromSimulation(List.of(lastInsertion.get().activity()), List.of(actToSim));
-              computedDuration = facade.getActivityDuration(actToSim);
-              //record insertion: if successful, it will stay in the simulation, otherwise, it'll get deleted at the next iteration
+          final var toRemove = new ArrayList<SchedulingActivityDirective>();
+          lastInsertion.ifPresent(eventWithActivity -> toRemove.add(eventWithActivity.activity()));
+          try {
+            facade.removeAndInsertActivitiesFromSimulation(toRemove, List.of(actToSim));
+            computedDuration = facade.getActivityDuration(actToSim);
+            if(computedDuration.isPresent()) {
               history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
-            } catch (SimulationFacade.SimulationException e) {
-              //still need to record so we can remove the activity at the next iteration
-              history.add(new EventWithActivity(start, null, actToSim));
-            }
-          } else {
-            try {
-              facade.simulateActivity(actToSim);
-              computedDuration = facade.getActivityDuration(actToSim);
-              if(computedDuration.isPresent()) {
-                history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
-              } else{
-                logger.debug("No simulation error but activity duration could not be found in simulation, unfinished activity?");
-                history.add(new EventWithActivity(start,  null, actToSim));
-              }
-            } catch (SimulationFacade.SimulationException e) {
-              logger.debug("Simulation error while trying to simulate activities: " + e);
+            } else{
+              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
               history.add(new EventWithActivity(start,  null, actToSim));
             }
+          } catch (SimulationFacade.SimulationException e) {
+            logger.debug("Simulation error while trying to simulate activities: " + e);
+            history.add(new EventWithActivity(start,  null, actToSim));
           }
           return computedDuration.map(start::plus).orElse(Duration.MAX_VALUE);
         }
 
       };
-      return rootFindingHelper(f, history, solved);
+      return rootFindingHelper(f, history, solved, facade);
       //CASE 2: activity has a controllable duration
     } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
@@ -421,7 +406,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         }
       };
 
-      return rootFindingHelper(f, history, solved);
+      return rootFindingHelper(f, history, solved, facade);
     } else {
      throw new UnsupportedOperationException("Unsupported duration type found: " + this.type.getDurationType());
     }
@@ -450,7 +435,8 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
   private  Optional<SchedulingActivityDirective> rootFindingHelper(
       final EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity> f,
       final HistoryWithActivity history,
-      final TaskNetworkAdapter.TNActData solved
+      final TaskNetworkAdapter.TNActData solved,
+      final SimulationFacade simulationFacade
   ) {
     try {
       var endInterval = solved.end();
@@ -485,6 +471,13 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       logger.debug("Too many iterations");
     } catch (EquationSolvingAlgorithms.NoSolutionException e) {
       logger.debug("No solution");
+    }
+    if(!history.events.isEmpty()) {
+      try {
+        simulationFacade.removeActivitiesFromSimulation(List.of(history.getLastEvent().get().activity()));
+      } catch (SimulationFacade.SimulationException e) {
+        throw new RuntimeException("Exception while simulating original plan after activity insertion failure" ,e);
+      }
     }
     return Optional.empty();
   }

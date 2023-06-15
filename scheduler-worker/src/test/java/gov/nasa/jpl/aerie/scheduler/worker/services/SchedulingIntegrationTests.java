@@ -1774,6 +1774,30 @@ public class SchedulingIntegrationTests {
     assertEquals(96, results.updatedPlan().size());
   }
 
+  @Test
+  void testUnfinishedActivity(){
+    final PlanningHorizon PLANNING_HORIZON = new PlanningHorizon(
+        TimeUtility.fromDOY("2025-090T00:00:00"),
+        TimeUtility.fromDOY("2025-134T00:00:00"));
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default (): Goal => {
+                           return Goal.ActivityRecurrenceGoal({
+                             activityTemplate: ActivityTemplates.parent({
+                               label: "label"
+                           }),
+                             interval: Temporal.Duration.from({ days: 30})
+                           })
+                       }
+            """, true)), PLANNING_HORIZON);
+    //parent takes much more than 134 - 90 = 44 days to finish
+    assertEquals(0, results.updatedPlan.size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+    assertFalse(goalResult.satisfied());
+  }
+
   /**
    * If you passed activities without duration to the scheduler in an initial plan, it would fail
    */
