@@ -9,7 +9,7 @@ import subprocess
 import psycopg
 
 def clear_screen():
-  os.system('cls' if os.name=='nt' else 'clear')
+  os.system('cls' if os.name == 'nt' else 'clear')
 
 # internal class
 class DB_Migration:
@@ -18,7 +18,7 @@ class DB_Migration:
   def __init__(self, db_name):
     self.db_name = db_name
 
-  def add_migration_step(self,_migration_step):
+  def add_migration_step(self, _migration_step):
     self.steps = sorted(_migration_step, key=lambda x:int(x.split('_')[0]))
 
 def step_by_step_migration(database, apply):
@@ -49,7 +49,7 @@ def step_by_step_migration(database, apply):
       else:
         display_string += _output[i] + "\n"
     else:
-      if (len(split) == 5 and "Not Present" == (split[3]+" "+split[4])) \
+      if (len(split) == 5 and "Not Present" == (split[3] + " " + split[4])) \
           or (not os.path.isfile(f'migrations/{database.db_name}/{split[0]}_{split[1]}/down.sql')):
         available_steps.remove(f'{split[0]}_{split[1]}')
       else:
@@ -65,52 +65,55 @@ def step_by_step_migration(database, apply):
     timestamp = step.split("_")[0]
 
     if apply:
-      exit_code = os.system(f'hasura migrate apply --version {timestamp} --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --version {timestamp} --database-name {database.db_name} --dry-run --log-level WARN')
     else:
-      exit_code = os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name} --dry-run --log-level WARN')
 
-    if exit_code == 0:
+    print()
+    _value = ''
+    while _value != "y" and _value != "n" and _value != "q":
+      if apply:
+        _value = input(f'Apply {step}? (y/n): ').lower()
+      else:
+        _value = input(f'Revert {step}? (y/n): ').lower()
+
+    if _value == "q":
+      sys.exit()
+    if _value == "y":
+      if apply:
+        print('Applying...')
+        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {database.db_name}')
+      else:
+        print('Reverting...')
+        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name}')
+      os.system('hasura metadata reload')
       print()
-      _value = ''
-      while _value != "y" and _value != "n" and _value != "q":
-        if apply:
-          _value = input(f'Apply {step}? (y/n): ').lower()
-        else:
-          _value = input(f'Revert {step}? (y/n): ').lower()
-
-      if _value == "q":
-        sys.exit()
-      if _value == "y":
-        if apply:
-          print('Applying...')
-          os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {database.db_name}')
-        else:
-          print('Reverting...')
-          os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name}')
-        os.system('hasura metadata reload')
-        print()
-      elif _value == "n":
+      if exit_code != 0:
         return
+    elif _value == "n":
+      return
   input("Press Enter to continue...")
 
 def bulk_migration(migration_db, apply):
   clear_screen()
   # Migrate each database
+  exit_with = 0
   for database in migration_db:
+    exit_with = exit_with << 1
     print('#' * len(database.db_name))
     print(database.db_name)
     print('#' * len(database.db_name))
 
     if apply:
-      exit_code = os.system(f'hasura migrate apply --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --database-name {database.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --database-name {database.db_name}')
       if exit_code != 0:
-        continue
-      os.system(f'hasura migrate apply --database-name {database.db_name}')
+        exit_with += 1
     else:
-      exit_code = os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name}')
       if exit_code != 0:
-        continue
-      os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name}')
+        exit_with += 1
 
     os.system('hasura metadata reload')
 
@@ -121,6 +124,7 @@ def bulk_migration(migration_db, apply):
         f'\n###############')
   for database in migration_db:
     os.system(f'hasura migrate status --database-name {database.db_name}')
+  exit(exit_with)
 
 def mark_current_version(dbs_to_apply, username, password, netloc):
   for db in dbs_to_apply:
@@ -207,7 +211,7 @@ def main():
     print("\033[91mError\033[0m:"+ str(fne).split("]")[1])
     sys.exit(1)
   for db in os.listdir(MIGRATION_PATH):
-    #ignore hidden folders
+    # ignore hidden folders
     if db.startswith('.'):
       continue
     # Only process if the folder is on the list of databases or if we don't have a list of databases
@@ -257,10 +261,10 @@ def main():
         passwordFound = True
         continue
   if not usernameFound:
-    print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env-path+".")
+    print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env_path+".")
     sys.exit(1)
   if not passwordFound:
-    print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env-path+".")
+    print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env_path+".")
     sys.exit(1)
 
   # Navigate to the hasura directory
