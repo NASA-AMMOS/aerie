@@ -65,6 +65,13 @@ type Query {
 }
 
 type Query {
+  getActivityEffectiveArgumentsBulk(
+    missionModelId: ID!
+    activities: [EffectiveArgumentsInput!]!
+  ): [EffectiveArgumentsBulkResponse!]!
+}
+
+type Query {
   getActivityTypeScript(missionModelId: Int!, activityTypeName: String!): DslTypescriptResponse
 }
 
@@ -198,6 +205,13 @@ type EffectiveArgumentsResponse {
   errors: [String!]
 }
 
+type EffectiveArgumentsBulkResponse {
+  typeName: String!
+  success: Boolean!
+  arguments: ActivityArguments
+  errors: [String!]
+}
+
 type AddExternalDatasetResponse {
   datasetId: Int!
 }
@@ -271,6 +285,11 @@ type ResourceSamplesResponse {
 
 type ConstraintViolationsResponse {
   violations: ConstraintViolations!
+}
+
+input EffectiveArgumentsInput {
+  activityTypeName: String!
+  activityArguments: ActivityArguments!
 }
 
 scalar ResourceSchema
