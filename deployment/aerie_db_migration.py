@@ -65,52 +65,55 @@ def step_by_step_migration(database, apply):
     timestamp = step.split("_")[0]
 
     if apply:
-      exit_code = os.system(f'hasura migrate apply --version {timestamp} --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --version {timestamp} --database-name {database.db_name} --dry-run --log-level WARN')
     else:
-      exit_code = os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name} --dry-run --log-level WARN')
 
-    if exit_code == 0:
+    print()
+    _value = ''
+    while _value != "y" and _value != "n" and _value != "q":
+      if apply:
+        _value = input(f'Apply {step}? (y/n): ').lower()
+      else:
+        _value = input(f'Revert {step}? (y/n): ').lower()
+
+    if _value == "q":
+      sys.exit()
+    if _value == "y":
+      if apply:
+        print('Applying...')
+        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {database.db_name}')
+      else:
+        print('Reverting...')
+        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name}')
+      os.system('hasura metadata reload')
       print()
-      _value = ''
-      while _value != "y" and _value != "n" and _value != "q":
-        if apply:
-          _value = input(f'Apply {step}? (y/n): ').lower()
-        else:
-          _value = input(f'Revert {step}? (y/n): ').lower()
-
-      if _value == "q":
-        sys.exit()
-      if _value == "y":
-        if apply:
-          print('Applying...')
-          os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {database.db_name}')
-        else:
-          print('Reverting...')
-          os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name}')
-        os.system('hasura metadata reload')
-        print()
-      elif _value == "n":
+      if exit_code != 0:
         return
+    elif _value == "n":
+      return
   input("Press Enter to continue...")
 
 def bulk_migration(migration_db, apply):
   clear_screen()
   # Migrate each database
+  exit_with = 0
   for database in migration_db:
+    exit_with = exit_with << 1
     print('#' * len(database.db_name))
     print(database.db_name)
     print('#' * len(database.db_name))
 
     if apply:
-      exit_code = os.system(f'hasura migrate apply --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --database-name {database.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --database-name {database.db_name}')
       if exit_code != 0:
-        continue
-      os.system(f'hasura migrate apply --database-name {database.db_name}')
+        exit_with += 1
     else:
-      exit_code = os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name}')
       if exit_code != 0:
-        continue
-      os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name}')
+        exit_with += 1
 
     os.system('hasura metadata reload')
 
@@ -121,6 +124,7 @@ def bulk_migration(migration_db, apply):
         f'\n###############')
   for database in migration_db:
     os.system(f'hasura migrate status --database-name {database.db_name}')
+  exit(exit_with)
 
 def mark_current_version(dbs_to_apply, username, password, netloc):
   for db in dbs_to_apply:
