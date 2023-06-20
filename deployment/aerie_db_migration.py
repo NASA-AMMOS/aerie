@@ -9,7 +9,7 @@ import subprocess
 import psycopg
 
 def clear_screen():
-  os.system('cls' if os.name=='nt' else 'clear')
+  os.system('cls' if os.name == 'nt' else 'clear')
 
 # internal class
 class DB_Migration:
@@ -18,7 +18,7 @@ class DB_Migration:
   def __init__(self, db_name):
     self.db_name = db_name
 
-  def add_migration_step(self,_migration_step):
+  def add_migration_step(self, _migration_step):
     self.steps = sorted(_migration_step, key=lambda x:int(x.split('_')[0]))
 
 def step_by_step_migration(database, apply):
@@ -49,7 +49,7 @@ def step_by_step_migration(database, apply):
       else:
         display_string += _output[i] + "\n"
     else:
-      if (len(split) == 5 and "Not Present" == (split[3]+" "+split[4])) \
+      if (len(split) == 5 and "Not Present" == (split[3] + " " + split[4])) \
           or (not os.path.isfile(f'migrations/{database.db_name}/{split[0]}_{split[1]}/down.sql')):
         available_steps.remove(f'{split[0]}_{split[1]}')
       else:
@@ -207,7 +207,7 @@ def main():
     print("\033[91mError\033[0m:"+ str(fne).split("]")[1])
     sys.exit(1)
   for db in os.listdir(MIGRATION_PATH):
-    #ignore hidden folders
+    # ignore hidden folders
     if db.startswith('.'):
       continue
     # Only process if the folder is on the list of databases or if we don't have a list of databases
@@ -257,10 +257,10 @@ def main():
         passwordFound = True
         continue
   if not usernameFound:
-    print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env-path+".")
+    print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env_path+".")
     sys.exit(1)
   if not passwordFound:
-    print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env-path+".")
+    print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env_path+".")
     sys.exit(1)
 
   # Navigate to the hasura directory
