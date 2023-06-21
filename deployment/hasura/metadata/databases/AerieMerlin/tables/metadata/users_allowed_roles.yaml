@@ -1,0 +1,16 @@
+table:
+  name: users_allowed_roles
+  schema: metadata
+configuration:
+  custom_name: "users_allowed_roles"
+select_permissions:
+  - role: user
+    permission:
+      columns: [user_id, allowed_role]
+      filter: {"user_id":{"_eq":"X-Hasura-User-Id"}}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [user_id, allowed_role]
+      filter: {"user_id":{"_eq":"X-Hasura-User-Id"}}
+      allow_aggregations: true

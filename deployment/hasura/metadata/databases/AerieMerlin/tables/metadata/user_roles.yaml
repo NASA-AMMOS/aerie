@@ -1,0 +1,17 @@
+table:
+  name: user_roles
+  schema: metadata
+configuration:
+  custom_name: "user_roles"
+is_enum: true
+select_permissions:
+  - role: user
+    permission:
+      columns: [role, description]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [role, description]
+      filter: {}
+      allow_aggregations: true

@@ -8,12 +8,12 @@ object_relationships:
 select_permissions:
   - role: user
     permission:
-      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      columns: [comment_id, merge_request_id, commenter, comment_text]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      columns: [comment_id, merge_request_id, commenter, comment_text]
       filter: {}
       allow_aggregations: true
 insert_permissions:
@@ -31,13 +31,13 @@ insert_permissions:
                       {"owner":{"_eq":"X-Hasura-User-Id"}},
                       {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}]}}
       set:
-        commenter_username: 'x-hasura-user-id'
+        commenter: 'x-hasura-user-id'
 update_permissions:
   - role: user
     permission:
       columns: [comment_text]
-      filter: {"commenter_username":{"_eq":"X-Hasura-User-Id"}}
+      filter: {"commenter":{"_eq":"X-Hasura-User-Id"}}
 delete_permissions:
   - role: user
     permission:
-      filter: {"commenter_username":{"_eq":"X-Hasura-User-Id"}}
+      filter: {"commenter":{"_eq":"X-Hasura-User-Id"}}

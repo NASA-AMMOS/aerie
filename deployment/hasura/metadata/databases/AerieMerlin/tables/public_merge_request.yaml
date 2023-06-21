@@ -47,12 +47,12 @@ array_relationships:
 select_permissions:
   - role: user
     permission:
-      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]
+      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester, reviewer]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]
+      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester, reviewer]
       filter: {}
       allow_aggregations: true
 # Insert, Update, and Delete Permissions are not included because these actions are only allowed via SQL functions
