@@ -1,13 +1,17 @@
 create table plan_collaborators(
   plan_id int not null,
-  collaborator text not null,
+  collaborator integer not null,
 
   constraint plan_collaborators_pkey
     primary key (plan_id, collaborator),
   constraint plan_collaborators_plan_id_fkey
     foreign key (plan_id) references plan
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint plan_collaborator_collaborator_fkey
+    foreign key (collaborator) references metadata.users
+        on update cascade
+        on delete cascade
 );
 
 comment on table plan_collaborators is e''
@@ -15,4 +19,4 @@ comment on table plan_collaborators is e''
 comment on column plan_collaborators.plan_id is e''
   'The plan the user is a collaborator on.';
 comment on column plan_collaborators.collaborator is e''
-  'The username of the collaborator';
+  'The user id of the collaborator';

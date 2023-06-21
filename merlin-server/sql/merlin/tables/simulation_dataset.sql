@@ -28,7 +28,7 @@ create table simulation_dataset (
   canceled boolean not null default false,
 
   -- Additional Metadata
-  requested_by text not null default '',
+  requested_by integer,
   requested_at timestamptz not null default now(),
 
   constraint simulation_dataset_synthetic_key
@@ -45,6 +45,10 @@ create table simulation_dataset (
     references dataset
     on update cascade
     on delete cascade,
+  constraint simulation_dataset_requested_by_exists
+    foreign key (requested_by) references metadata.users
+    on update cascade
+    on delete set null,
   constraint start_before_end
     check (simulation_start_time <= simulation_end_time)
 );

@@ -1,3 +1,4 @@
+--------------- TABLES ---------------
 -- USER ROLES
 -- This table is an enum-compatible table (https://hasura.io/docs/latest/schema/postgres/enums/#pg-create-enum-table)
 create table metadata.user_roles(
@@ -70,5 +71,334 @@ create view metadata.users_and_roles as
 comment on view metadata.users_and_roles is e''
 'View a user''s information with their role information';
 
+-- TAGS
+comment on column metadata.tags.owner is null;
+
+insert into metadata.users(username, default_role)
+  select owner, 'user' from metadata.tags
+  where not owner = ''
+  on conflict (username) do nothing;
+
+alter table metadata.tags
+  add column owner_id integer,
+  add constraint tags_owner_exists
+    foreign key (owner_id) references metadata.users
+    on update cascade
+    on delete set null;
+
+update metadata.tags t
+  set owner_id = u.id
+  from metadata.users u
+  where u.username = t.owner;
+
+alter table metadata.tags
+  drop column owner;
+alter table metadata.tags
+  rename owner_id to owner;
+
+comment on column metadata.tags.owner is e''
+  'The user responsible for this tag. '
+  '''Mission Model'' (ID -1) is used to represent tags originating from an uploaded mission model'
+  '''Aerie Legacy'' (ID -2) is used to represent tags originating from a version of Aerie prior to this table''s creation.';
+
+-- ACTIVITY PRESETS
+comment on column activity_presets.owner is null;
+insert into metadata.users(username, default_role)
+  select owner, 'user' from public.activity_presets
+  where not owner = ''
+  on conflict (username) do nothing;
+
+alter table public.activity_presets
+  add column owner_id integer,
+  add constraint activity_presets_owner_exists
+    foreign key (owner_id) references metadata.users
+    on update cascade
+    on delete set null;
+
+update public.activity_presets t
+  set owner_id = u.id
+  from metadata.users u
+  where u.username = t.owner;
+
+alter table public.activity_presets
+  drop column owner;
+alter table public.activity_presets
+  rename column owner_id to owner;
+
+comment on column activity_presets.owner is e''
+  'The owner of this activity preset';
+
+-- CONSTRAINTS
+comment on column "constraint".owner is null;
+comment on column "constraint".updated_by is null;
+
+insert into metadata.users(username, default_role)
+    select owner, 'user' from public."constraint"
+    where not owner = ''
+  union distinct
+    select updated_by, 'user' from public."constraint"
+    where not updated_by = ''
+  on conflict (username) do nothing;
+
+alter table public."constraint"
+  add column owner_id integer,
+  add column updated_by_id integer,
+  add constraint constraint_owner_exists
+    foreign key (owner_id)
+    references metadata.users
+    on update cascade
+    on delete set null,
+  add constraint constraint_updated_by_exists
+    foreign key (updated_by_id)
+    references metadata.users
+    on update cascade
+    on delete set null;
+
+update public."constraint" c
+  set owner_id = u.id
+  from metadata.users u where u.username = c.owner;
+update public."constraint" c
+  set updated_by_id = u.id
+  from metadata.users u where u.username = c.updated_by;
+
+alter table public."constraint"
+  drop column owner,
+  drop column updated_by;
+alter table public."constraint" rename column owner_id to owner;
+alter table public."constraint" rename column updated_by_id to updated_by;
+
+comment on column "constraint".owner is e''
+  'The user responsible for this constraint.';
+comment on column "constraint".updated_by is e''
+  'The user who last modified this constraint.';
+
+-- MISSION MODEL
+comment on column mission_model.owner is null;
+
+insert into metadata.users(username, default_role)
+    select owner, 'user' from public.mission_model
+    where not (owner = '' or owner is null)
+  on conflict (username) do nothing;
+
+alter table public.mission_model
+  add column owner_id integer,
+  add constraint mission_model_owner_exists
+    foreign key (owner_id) references metadata.users
+    on update cascade
+    on delete set null;
+
+update mission_model
+  set owner_id = u.id
+  from metadata.users u
+  where owner = u.username;
+
+alter table public.mission_model drop column owner;
+alter table public.mission_model rename column owner_id to owner;
+
+comment on column mission_model.owner is e''
+  'An identifier for the user responsible for this model.';
+
+-- PLAN
+comment on column plan.owner is null;
+comment on column plan.updated_by is null;
+
+insert into metadata.users(username, default_role)
+    select owner, 'user' from public.plan
+    where not owner = ''
+  union distinct
+    select updated_by, 'user' from public.plan
+    where not updated_by = ''
+  on conflict (username) do nothing;
+
+alter table public.plan
+  add column owner_id integer,
+  add column updated_by_id integer,
+  add constraint plan_owner_exists
+    foreign key (owner_id)
+    references metadata.users
+    on update cascade
+    on delete set null,
+  add constraint plan_updated_by_exists
+    foreign key (updated_by_id)
+    references metadata.users
+    on update cascade
+    on delete set null;
+
+update public.plan p
+  set owner_id = u.id
+  from metadata.users u where u.username = p.owner;
+update public.plan p
+  set updated_by_id = u.id
+  from metadata.users u where u.username = p.updated_by;
+
+alter table public.plan
+  drop column owner,
+  drop column updated_by;
+alter table public.plan rename column owner_id to owner;
+alter table public.plan rename column updated_by_id to updated_by;
+
+comment on column plan.owner is e''
+  'The user who owns the plan.';
+comment on column plan.updated_by is e''
+  'The user who last updated the plan.';
+
+-- PLAN COLLABORATORS
+comment on column plan_collaborators.collaborator is null;
+
+insert into metadata.users(username, default_role)
+    select collaborator, 'user' from public.plan_collaborators
+    where not collaborator = ''
+  on conflict (username) do nothing;
+
+alter table public.plan_collaborators
+  add column collaborator_id integer,
+  drop constraint plan_collaborators_pkey,
+  add constraint plan_collaborators_pkey
+    primary key (plan_id, collaborator_id),
+  add constraint plan_collaborator_collaborator_fkey
+    foreign key (collaborator_id) references metadata.users
+    on update cascade
+    on delete cascade;
+
+update plan_collaborators
+  set collaborator_id = u.id
+  from metadata.users u
+  where collaborator = u.username;
+
+alter table public.plan_collaborators drop column collaborator;
+alter table public.plan_collaborators rename column collaborator_id to collaborator;
+delete from public.plan_collaborators
+  where collaborator is null;
+alter table public.plan_collaborators alter column collaborator set not null;
+
+comment on column plan_collaborators.collaborator is e''
+  'The user id of the collaborator';
+
+-- SIMULATION_DATASET
+comment on column simulation_dataset.requested_by is null;
+
+insert into metadata.users(username, default_role)
+    select requested_by, 'user' from public.simulation_dataset
+    where not requested_by = ''
+  on conflict (username) do nothing;
+
+alter table simulation_dataset
+  add column requested_by_id integer,
+  add constraint simulation_dataset_requested_by_exists
+    foreign key (requested_by_id) references metadata.users
+    on update cascade
+    on delete set null;
+
+update simulation_dataset
+  set requested_by_id = u.id
+  from metadata.users u
+  where requested_by = u.username;
+
+alter table public.simulation_dataset drop column requested_by;
+alter table public.simulation_dataset rename column requested_by_id to requested_by;
+
+comment on column simulation_dataset.requested_by is e''
+  'The user who requested the simulation.';
+
+-- SIMULATION TEMPLATE
+comment on column simulation_template.owner is null;
+
+insert into metadata.users(username, default_role)
+    select owner, 'user' from public.simulation_template
+    where not owner = ''
+  on conflict (username) do nothing;
+
+alter table public.simulation_template
+  add column owner_id integer,
+  add constraint simulation_template_owner_exists
+    foreign key (owner_id)
+    references metadata.users
+    on update cascade
+    on delete set null;
+
+update simulation_template
+  set owner_id = u.id
+  from metadata.users u
+  where owner = u.username;
+
+alter table public.simulation_template drop column owner;
+alter table public.simulation_template rename column owner_id to owner;
+
+comment on column simulation_template.owner is e''
+  'The user responsible for this simulation template';
+
+-- MERGE REQUEST COMMENT
+comment on column merge_request_comment.commenter_username is null;
+
+insert into metadata.users(username, default_role)
+    select commenter_username, 'user' from public.merge_request_comment
+    where not commenter_username = ''
+  on conflict (username) do nothing;
+
+alter table public.merge_request_comment
+  add column commenter integer,
+  add constraint merge_request_commenter_exists
+    foreign key (commenter)
+    references metadata.users
+    on update cascade
+    on delete set null;
+
+update public.merge_request_comment
+  set commenter = u.id
+  from metadata.users u
+  where commenter_username = u.username;
+
+alter table public.merge_request_comment drop column commenter_username;
+
+comment on column merge_request_comment.commenter is e''
+  'The user who left this comment.';
+
+-- MERGE REQUEST
+comment on column merge_request.requester_username is null;
+comment on column merge_request.reviewer_username is null;
+
+insert into metadata.users(username, default_role)
+    select requester_username, 'user' from public.merge_request
+    where not requester_username = ''
+  union distinct
+    select reviewer_username, 'user' from public.merge_request
+    where not reviewer_username = ''
+  on conflict (username) do nothing;
+
+alter table public.merge_request
+  add column requester integer,
+  add column reviewer integer,
+  add constraint merge_request_requester_exists
+    foreign key (requester)
+    references metadata.users
+    on update cascade
+    on delete set null,
+  add constraint merge_request_reviewer_exists
+    foreign key (reviewer)
+    references metadata.users
+    on update cascade
+    on delete set null;
+
+update public.merge_request mr
+  set requester = u.id
+  from metadata.users u where u.username = mr.requester_username;
+update merge_request mr
+  set reviewer = u.id
+  from metadata.users u where u.username = mr.reviewer_username;
+
+alter table public.merge_request
+  drop column requester_username,
+  drop column reviewer_username;
+
+comment on column merge_request.requester is e''
+  'The user who created this merge request.';
+comment on column merge_request.reviewer is e''
+  'The user who reviews this merge request. Is empty until the request enters review.';
+
+-- UPDATE USERS ALLOWED ROLES
+insert into metadata.users_allowed_roles(user_id, allowed_role)
+  select u.id, roles.role
+  from metadata.users u cross join (values ('user'), ('viewer')) roles(role)
+  where u.id >= 0;
 
 call migrations.mark_migration_applied('18');

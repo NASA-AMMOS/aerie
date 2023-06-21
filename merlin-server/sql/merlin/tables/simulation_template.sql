@@ -5,7 +5,7 @@ create table simulation_template (
   model_id integer not null,
   description text not null default '',
   arguments merlin_argument_set not null,
-  owner text not null default '',
+  owner integer,
 
   constraint simulation_template_synthetic_key
     primary key (id),
@@ -13,7 +13,12 @@ create table simulation_template (
     foreign key (model_id)
     references mission_model
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint simulation_template_owner_exists
+    foreign key (owner)
+    references metadata.users
+    on update cascade
+    on delete set null
 );
 
 comment on table simulation_template is e''

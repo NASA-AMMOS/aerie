@@ -7,7 +7,7 @@ create table mission_model (
   version text not null,
   description text not null default '',
 
-  owner text,
+  owner integer,
   jar_id integer not null,
 
   created_at timestamptz not null default now(),
@@ -20,7 +20,11 @@ create table mission_model (
     foreign key (jar_id)
     references uploaded_file
     on update cascade
-    on delete restrict
+    on delete restrict,
+  constraint mission_model_owner_exists
+    foreign key (owner) references metadata.users
+    on update cascade
+    on delete set null
 );
 
 comment on table mission_model is e''
@@ -37,7 +41,7 @@ comment on column mission_model.name is e''
 comment on column mission_model.version is e''
   'A human-meaningful version qualifier.';
 comment on column mission_model.owner is e''
-  'A human-meaningful identifier for the user responsible for this model.';
+  'An identifier for the user responsible for this model.';
 comment on column mission_model.jar_id is e''
   'An uploaded JAR file defining the mission model.';
 comment on column mission_model.created_at is e''

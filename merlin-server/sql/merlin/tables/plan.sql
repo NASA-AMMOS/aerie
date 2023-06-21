@@ -16,8 +16,8 @@ create table plan (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  owner text not null default '',
-  updated_by text not null default '',
+  owner integer,
+  updated_by integer,
 
   constraint plan_synthetic_key
     primary key (id),
@@ -26,6 +26,16 @@ create table plan (
   constraint plan_uses_model
     foreign key (model_id)
     references mission_model
+    on update cascade
+    on delete set null,
+  constraint plan_owner_exists
+    foreign key (owner)
+    references metadata.users
+    on update cascade
+    on delete set null,
+  constraint plan_updated_by_exists
+    foreign key (updated_by)
+    references metadata.users
     on update cascade
     on delete set null
 );
