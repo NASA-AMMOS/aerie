@@ -19,6 +19,9 @@ import java.util.List;
 
 public class TestUtility {
 
+  public static boolean emptyPlan(Plan plan) {
+    return plan.getActivities().isEmpty();
+  }
   public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {
     List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
     for (SchedulingActivityDirective act : acts) {

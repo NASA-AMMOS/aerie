@@ -414,6 +414,9 @@ public class ActivityExpression implements Expression<Spans> {
    */
   protected @Nullable Expression<? extends Profile<?>> duration;
 
+  public @Nullable
+  Expression<? extends Profile<?>>  getDuration() { return duration; }
+
   /**
    * the bounding super-type for matching activities
    *

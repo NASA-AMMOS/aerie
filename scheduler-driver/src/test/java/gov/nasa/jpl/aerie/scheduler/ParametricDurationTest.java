@@ -51,6 +51,7 @@ public class ParametricDurationTest {
         .startsAt(start)
         .named("ParamDurationCoexistenceGoal")
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -79,6 +80,7 @@ public class ParametricDurationTest {
         .startsAt(TimeExpression.offsetByBeforeStart(Duration.of(8, Duration.MINUTE)))
         .named("ParamDurationCoexistenceGoal")
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 

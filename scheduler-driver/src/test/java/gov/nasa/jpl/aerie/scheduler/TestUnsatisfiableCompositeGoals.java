@@ -68,6 +68,7 @@ public class TestUnsatisfiableCompositeGoals {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("hi I'm an alias")
+        .withinPlanHorizon(h)
         .build();
   }
 
@@ -84,6 +85,7 @@ public class TestUnsatisfiableCompositeGoals {
         .and(goal2)
         .and(goal)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .withinPlanHorizon(TestUnsatisfiableCompositeGoals.h)
         .build();
     final var exclusionBasic = TestUtility.createExclusionSchedulingZone(actTypeBasic,
                                                                          new Windows(
@@ -118,6 +120,7 @@ public class TestUnsatisfiableCompositeGoals {
         .and(goal)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
         .shouldRollbackIfUnsatisfied(true)
+        .withinPlanHorizon(TestUnsatisfiableCompositeGoals.h)
         .build();
     final var exclusionBasic = TestUtility.createExclusionSchedulingZone(actTypeBasic,
                                                                          new Windows(
@@ -148,6 +151,7 @@ public class TestUnsatisfiableCompositeGoals {
         .or(goal2)
         .or(goal)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .withinPlanHorizon(TestUnsatisfiableCompositeGoals.h)
         .build();
     final var exclusionBasic = TestUtility.createExclusionSchedulingZone(actTypeBasic,
                                                                          new Windows(
@@ -187,6 +191,7 @@ public class TestUnsatisfiableCompositeGoals {
         .or(goal)
         .shouldRollbackIfUnsatisfied(true)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .withinPlanHorizon(TestUnsatisfiableCompositeGoals.h)
         .build();
     final var exclusionBasic = TestUtility.createExclusionSchedulingZone(actTypeBasic,
                                                                          new Windows(Interval.between(t1hr.minus(d1min), t1hr.plus(d1min)),
@@ -234,6 +239,7 @@ public class TestUnsatisfiableCompositeGoals {
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .owned(ChildCustody.Jointly)
         .shouldRollbackIfUnsatisfied(true)
+        .withinPlanHorizon(TestUnsatisfiableCompositeGoals.h)
         .build();
 
 

@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -44,6 +45,9 @@ public class Goal {
 
   /** Set to true if partial satisfaction is ok, the scheduler will try to do its best */
   private boolean shouldRollbackIfUnsatisfied = false;
+
+  protected PlanningHorizon planHorizon;
+
 
   public boolean shouldRollbackIfUnsatisfied() {
     return shouldRollbackIfUnsatisfied;
@@ -137,6 +141,12 @@ public class Goal {
 
     protected Expression<Windows> range;
 
+    public T withinPlanHorizon(PlanningHorizon planHorizon) {
+      this.planHorizon = planHorizon;
+      return getThis();
+    }
+
+    protected PlanningHorizon planHorizon;
 
     /**
      * allows to attach state constraints to the goal
@@ -222,6 +232,13 @@ public class Goal {
         final var windows = new Windows(false).set(Interval.between(starting, ending), true);
         goal.temporalContext = new WindowsWrapperExpression(windows);
       }
+
+      if (planHorizon == null) {
+        throw new IllegalArgumentException(
+            "Plan Horizon cannot be null");
+      }
+
+      goal.planHorizon = planHorizon;
 
       goal.simulateAfter = this.simulateAfter;
 
