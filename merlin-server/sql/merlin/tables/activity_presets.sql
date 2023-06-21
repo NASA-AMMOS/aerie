@@ -4,12 +4,16 @@ create table activity_presets(
   name text not null,
   associated_activity_type text not null,
   arguments merlin_argument_set not null,
-  owner text not null default '',
+  owner text,
 
   foreign key (model_id, associated_activity_type)
     references activity_type
     on delete cascade,
-  unique (model_id, associated_activity_type, name)
+  unique (model_id, associated_activity_type, name),
+  constraint activity_presets_owner_exists
+    foreign key (owner) references metadata.users
+    on update cascade
+    on delete set null
 );
 
 comment on table activity_presets is e''

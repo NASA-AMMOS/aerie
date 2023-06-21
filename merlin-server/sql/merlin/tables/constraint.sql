@@ -11,11 +11,21 @@ create table "constraint" (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  owner text not null default '',
-  updated_by text not null default '',
+  owner text,
+  updated_by text,
 
   constraint constraint_synthetic_key
     primary key (id),
+  constraint constraint_owner_exists
+    foreign key (owner)
+    references metadata.users
+    on update cascade
+    on delete set null,
+  constraint constraint_updated_by_exists
+    foreign key (updated_by)
+    references metadata.users
+    on update cascade
+    on delete set null,
   constraint constraint_scoped_to_plan
     foreign key (plan_id)
     references plan
