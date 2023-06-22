@@ -402,6 +402,35 @@ const gql = {
       }
     }
   `,
+
+  GET_EFFECTIVE_ACTIVITY_ARGUMENTS: `#graphql
+    query GetEffectiveActivityArguments($modelId: ID!, $activityTypeName: String!, $activityArguments: ActivityArguments!) {
+      getActivityEffectiveArguments(
+        missionModelId: $modelId,
+        activityTypeName: $activityTypeName,
+        activityArguments: $activityArguments
+      ) {
+        arguments
+        errors
+        success
+      }
+    }
+  `,
+
+  GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK: `#graphql
+    query GetEffectiveActivityArgumentsBulk($modelId: ID!, $activities: [EffectiveArgumentsInput!]!) {
+      getActivityEffectiveArgumentsBulk(
+        missionModelId: $modelId,
+        activities: $activities
+      ) {
+        typeName
+        arguments
+        errors
+        success
+      }
+    }
+  `,
+
 };
 
 export default gql;

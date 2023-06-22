@@ -354,6 +354,27 @@ const req = {
     return id;
   },
 
+  async getEffectiveArguments(
+    request: APIRequestContext,
+    modelId: number,
+    activityTypeName: string,
+    activityArguments: any
+  ): Promise<EffectiveArguments> {
+    const data = await req.hasura(request, gql.GET_EFFECTIVE_ACTIVITY_ARGUMENTS, { modelId, activityTypeName, activityArguments });
+    const { getActivityEffectiveArguments } = data;
+    return getActivityEffectiveArguments;
+  },
+
+  async getEffectiveArgumentsBulk(
+    request: APIRequestContext,
+    modelId: number,
+    activities: EffectiveArgumentItem[]
+  ): Promise<EffectiveArguments[]> {
+    const data = await req.hasura(request, gql.GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK, { modelId, activities });
+    const { getActivityEffectiveArgumentsBulk } = data;
+    return <EffectiveArguments[]> getActivityEffectiveArgumentsBulk;
+  },
+
   async getConstraintRuns(request: APIRequestContext, simulationDatasetId: number): Promise<ConstraintRun[]> {
     const data = await req.hasura(request, gql.GET_CONSTRAINT_RUNS, { simulationDatasetId });
     const { constraint_run } = data;

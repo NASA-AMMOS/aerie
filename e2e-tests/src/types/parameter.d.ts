@@ -1,9 +1,14 @@
 type EffectiveArguments = {
-  arguments: ArgumentsMap;
-  errors: ParametersErrorMap;
+  arguments?: ArgumentsMap;
+  errors?: ParametersErrorMap;
   success: boolean;
+  typeName?: string;
 };
 
+type EffectiveArgumentItem = {
+  activityTypeName: string;
+  activityArguments: ArgumentsMap;
+};
 
 type Argument = any;
 
