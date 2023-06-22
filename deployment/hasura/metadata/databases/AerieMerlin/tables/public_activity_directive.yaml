@@ -42,6 +42,16 @@ array_relationships:
       insertion_order: null
       column_mapping:
         id: directive_id
+- name: tags
+  using:
+    manual_configuration:
+      insertion_order: null
+      remote_table:
+        name: activity_directive_tags
+        schema: metadata
+      column_mapping:
+        id: directive_id
+        plan_id: plan_id
 remote_relationships:
 - name: source_scheduling_goal
   definition:
@@ -57,25 +67,25 @@ select_permissions:
   - role: user
     permission:
       # Need to specify all columns manually
-      columns: [ id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
+      columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
                  arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [ id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
+      columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
                  arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start ]
       filter: {}
       allow_aggregations: true
 update_permissions:
   - role: user
     permission:
-      columns: [name, tags, start_offset, arguments, metadata, anchor_id, anchored_to_start]
+      columns: [name, start_offset, arguments, metadata, anchor_id, anchored_to_start]
       filter: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
 insert_permissions:
   - role: user
     permission:
-      columns: [name, tags, start_offset, arguments, metadata, anchor_id, anchored_to_start, plan_id, type]
+      columns: [name, start_offset, arguments, metadata, anchor_id, anchored_to_start, plan_id, type]
       check: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
 delete_permissions:
   - role: user

@@ -7,3 +7,5 @@
 - "!include public_scheduling_specification.yaml"
 - "!include public_scheduling_specification_goals.yaml"
 - "!include public_scheduling_specification_conditions.yaml"
+# Metadata
+- "!include metadata/scheduling_goal_tags.yaml"

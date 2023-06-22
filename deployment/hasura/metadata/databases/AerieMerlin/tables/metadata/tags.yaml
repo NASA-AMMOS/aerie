@@ -1,0 +1,32 @@
+table:
+  name: tags
+  schema: metadata
+configuration:
+  custom_name: "tags"
+select_permissions:
+  - role: user
+    permission:
+      columns: [id, name, color, owner, created_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [id, name, color, owner, created_at]
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: user
+    permission:
+      columns: [name, color]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+update_permissions:
+  - role: user
+    permission:
+      columns: [name, color, owner]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}

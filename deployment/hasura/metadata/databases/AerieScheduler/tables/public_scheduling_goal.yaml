@@ -9,22 +9,31 @@ array_relationships:
       table:
         name: scheduling_goal_analysis
         schema: public
+- name: tags
+  using:
+    manual_configuration:
+      remote_table:
+        name: scheduling_goal_tags
+        schema: metadata
+      insertion_order: null
+      column_mapping:
+        id: goal_id
 select_permissions:
   - role: user
     permission:
-      columns: [id, revision, name, definition, tags, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision, name, definition, tags, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
 insert_permissions:
   - role: user
     permission:
-      columns: [name, definition, tags, model_id, description]
+      columns: [name, definition, model_id, description]
       check: {}
       set:
         author: "x-hasura-user-id"
@@ -32,7 +41,7 @@ insert_permissions:
 update_permissions:
   - role: user
     permission:
-      columns: [name, definition, tags, description]
+      columns: [name, definition, description]
       filter: {}
       set:
         last_modified_by: "x-hasura-user-id"

@@ -1,6 +1,10 @@
 table:
   name: activity_type
   schema: public
+object_relationships:
+  - name: subsystem_tag
+    using:
+      foreign_key_constraint_on: subsystem
 array_relationships:
   - name: presets
     using:

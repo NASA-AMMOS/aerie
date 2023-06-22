@@ -4,7 +4,6 @@ create table "constraint" (
   name text not null,
   description text not null default '',
   definition text not null,
-  tags text[] default '{}',
 
   plan_id integer null,
   model_id integer null,
@@ -51,8 +50,6 @@ comment on column "constraint".plan_id is e''
   'The ID of the plan owning this constraint, if plan-scoped.';
 comment on column "constraint".model_id is e''
   'The ID of the mission model owning this constraint, if model-scoped.';
-comment on column "constraint".tags is e''
-  'The tags associated with this constraint.';
 comment on column "constraint".owner is e''
   'The user responsible for this constraint.';
 comment on column "constraint".updated_by is e''

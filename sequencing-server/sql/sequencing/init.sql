@@ -1,6 +1,9 @@
 -- The order of inclusion is important! Tables referenced by foreign keys must be loaded before their dependants.
 
 begin;
+  --Schemas
+  \ir schemas.sql
+
   -- Schema migrations
   \ir tables/schema_migrations.sql
   \ir applied_migrations.sql
@@ -17,4 +20,6 @@ begin;
   \ir tables/user_sequence.sql
   \ir tables/expanded_sequences.sql
 
+  -- Table-specific Metadata
+  \ir tables/metadata/expansion_rule_tags.sql
 end;

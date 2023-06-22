@@ -4,7 +4,9 @@ create table activity_type (
   parameters merlin_parameter_set not null,
   required_parameters merlin_required_parameter_set not null,
   computed_attributes_value_schema jsonb,
-  subsystem text null,
+  subsystem integer references metadata.tags
+    on update cascade
+    on delete restrict,
 
   constraint activity_type_natural_key
     primary key (model_id, name),
