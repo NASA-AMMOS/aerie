@@ -103,7 +103,7 @@ public class PlanCollaborationTests {
   int duplicatePlan(final int planId, final String newPlanName) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
-        select duplicate_plan(%s, '%s', 'DBTests') as id;
+        select duplicate_plan(%s, '%s', -1) as id;
       """.formatted(planId, newPlanName));
       res.next();
       return res.getInt("id");
@@ -182,7 +182,7 @@ public class PlanCollaborationTests {
     try(final var statement = connection.createStatement()){
       final var res = statement.executeQuery(
           """
-              select create_merge_request(%d, %d, 'PlanCollaborationTests Requester');
+              select create_merge_request(%d, %d, -1);
               """.formatted(planId_supplying, planId_receiving)
       );
       res.next();
@@ -194,7 +194,7 @@ public class PlanCollaborationTests {
     try(final var statement = connection.createStatement()){
       statement.execute(
           """
-          call begin_merge(%d, 'PlanCollaborationTests Reviewer')
+          call begin_merge(%d, -2)
           """.formatted(mergeRequestId)
       );
     }
@@ -2807,7 +2807,7 @@ public class PlanCollaborationTests {
       assertEquals(2, activities.size());
       assertEquals(new ArrayList<Tag>(), tagsHelper.getTagsOnActivity(untaggedActivityId, planId));
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tagId, "Farm", null, "TagsTest"));
+      expectedTags.add(new Tag(tagId, "Farm", null, -1));
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(taggedActivityId, planId));
     }
 
@@ -2828,7 +2828,7 @@ public class PlanCollaborationTests {
 
       // Assertions
       final var expectedTag = new ArrayList<Tag>();
-      expectedTag.add(new Tag(tagId, "Farm", null, "TagsTest"));
+      expectedTag.add(new Tag(tagId, "Farm", null, -1));
       assertEquals(expectedTag, tagsHelper.getTagsOnActivity(activityId, planId));
     }
 
@@ -2856,8 +2856,8 @@ public class PlanCollaborationTests {
       // Assertions
       final var tags = tagsHelper.getTagsOnActivity(activityId, planId);
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(farmTagId, "Farm", null, "TagsTest"));
-      expectedTags.add(new Tag(barnTagId, "Barn", null, "TagsTest"));
+      expectedTags.add(new Tag(farmTagId, "Farm", null, -1));
+      expectedTags.add(new Tag(barnTagId, "Barn", null, -1));
       assertEquals(2, tags.size());
       assertEquals(expectedTags, tags);
     }
@@ -2887,8 +2887,8 @@ public class PlanCollaborationTests {
       final var activities = getActivities(planId);
       assertEquals(1, activities.size());
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
-      expectedTags.add(new Tag(barnTagId, "Barn", null, "TagsTest"));
+      expectedTags.add(new Tag(tractorTagId, "Tractor", null, -1));
+      expectedTags.add(new Tag(barnTagId, "Barn", null, -1));
 
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(activityId, planId));
     }
@@ -2917,8 +2917,8 @@ public class PlanCollaborationTests {
       final var activities = getActivities(planId);
       assertEquals(1, activities.size());
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
-      expectedTags.add(new Tag(barnTagId, "Barn", null, "TagsTest"));
+      expectedTags.add(new Tag(tractorTagId, "Tractor", null, -1));
+      expectedTags.add(new Tag(barnTagId, "Barn", null, -1));
 
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(activityId, planId));
     }
@@ -2952,8 +2952,8 @@ public class PlanCollaborationTests {
       assertEquals(2, activities.size());
 
       final var expectedSourceTags = new ArrayList<Tag>();
-      expectedSourceTags.add(new Tag(farmTagId, "Farm", null, "TagsTest"));
-      expectedSourceTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
+      expectedSourceTags.add(new Tag(farmTagId, "Farm", null, -1));
+      expectedSourceTags.add(new Tag(tractorTagId, "Tractor", null, -1));
 
       final var expectedTargetTags = new ArrayList<Tag>();
 
@@ -2981,7 +2981,7 @@ public class PlanCollaborationTests {
       commitMerge(mergeRQ);
 
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
+      expectedTags.add(new Tag(tractorTagId, "Tractor", null, -1));
 
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(oneTagActivityId, planId));
       assertEquals(new ArrayList<Tag>(), tagsHelper.getTagsOnActivity(noTagsActivityId, planId));
@@ -3004,11 +3004,11 @@ public class PlanCollaborationTests {
       8. Added activity, tag
        */
       final int farmTagId = tagsHelper.insertTag("Farm");
-      final Tag farmTag = new Tag(farmTagId, "Farm", null, "TagsTest");
+      final Tag farmTag = new Tag(farmTagId, "Farm", null, -1);
       final int tractorTagId = tagsHelper.insertTag("Tractor");
-      final Tag tractorTag = new Tag(tractorTagId, "Tractor", null, "TagsTest");
+      final Tag tractorTag = new Tag(tractorTagId, "Tractor", null, -1);
       final int barnTagId = tagsHelper.insertTag("Barn");
-      final Tag barnTag = new Tag(barnTagId, "Barn", null, "TagsTest");
+      final Tag barnTag = new Tag(barnTagId, "Barn", null, -1);
 
       final int planId = merlinHelper.insertPlan(missionModelId);
 

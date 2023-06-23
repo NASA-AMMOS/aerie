@@ -32,7 +32,7 @@ final class MerlinDatabaseTestHelper {
           .executeQuery(
               """
                   INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
+                  VALUES ('test-mission-model-%s', 'test-mission', -1, '0', %s)
                   RETURNING id;"""
                   .formatted(UUID.randomUUID().toString(), fileId)
           );
@@ -126,7 +126,7 @@ final class MerlinDatabaseTestHelper {
           """
           INSERT INTO public.constraint
             (name, description, definition, plan_id, owner, updated_by)
-          VALUES ('%s', 'Merlin DB Test Constraint', '%s', %d, 'Merlin DB Tests', 'Merlin DB Tests')
+          VALUES ('%s', 'Merlin DB Test Constraint', '%s', %d, -1, -1)
           RETURNING id;
           """.formatted(name, definition, plan_id));
       res.next();

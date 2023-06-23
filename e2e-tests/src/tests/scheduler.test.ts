@@ -60,9 +60,9 @@ test.describe.serial('Scheduling', () => {
 
     const schedulingGoal : SchedulingGoalInsertInput =
         {
-          last_modified_by : "test",
+          last_modified_by : -1,
           description: "Test goal",
-          author:"Test",
+          author:-1,
           model_id: mission_model_id,
           name: "my first scheduling goal!"+rd,
           definition: `export default function myGoal() {
@@ -104,9 +104,9 @@ test.describe.serial('Scheduling', () => {
 
     const schedulingGoal : SchedulingGoalInsertInput =
         {
-          last_modified_by : "test",
+          last_modified_by : -1,
           description: "Second test goal",
-          author: "Test",
+          author: -1,
           model_id: mission_model_id,
           name: "my second scheduling goal!"+rd,
           definition: `export default function myGoal() {

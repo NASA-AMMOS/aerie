@@ -11,12 +11,12 @@ type TypescriptFile = {
 
 type SchedulingGoal = {
   analyses: SchedulingGoalAnalysis[];
-  author: string | null;
+  author: number | null;
   created_date: string;
   definition: string;
   description: string | null;
   id: number;
-  last_modified_by: string | null;
+  last_modified_by: number | null;
   model_id: number;
   modified_date: string;
   name: string;

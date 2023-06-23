@@ -51,7 +51,7 @@ class SchedulerDatabaseTests {
       final var res = statement.executeQuery("""
         insert into scheduling_goal(
           revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date
-        ) values (0, 'goal', 'does thing', 0, 'hey there', 'its me', 'also me', now(), now()) returning id;
+        ) values (0, 'goal', 'does thing', 0, 'hey there', -1, -1, now(), now()) returning id;
       """);
       res.next();
       return res.getInt("id");

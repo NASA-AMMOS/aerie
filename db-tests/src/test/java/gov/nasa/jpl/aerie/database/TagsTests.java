@@ -90,7 +90,7 @@ public class TagsTests {
       final var res = statement.executeQuery(
           """
               INSERT INTO metadata.tags (name, owner)
-              VALUES ('%s', 'TagsTest')
+              VALUES ('%s', -1)
               RETURNING id;
               """.formatted(name)
       );
@@ -104,7 +104,7 @@ public class TagsTests {
       final var res = statement.executeQuery(
           """
               INSERT INTO metadata.tags (name, color, owner)
-              VALUES ('%s', '%s', 'TagsTest')
+              VALUES ('%s', '%s', -1)
               RETURNING id;
               """.formatted(name, color)
       );
@@ -128,7 +128,7 @@ public class TagsTests {
           res.getInt("id"),
           res.getString("name"),
           res.getString("color"),
-          res.getString("owner")
+          res.getInt("owner")
       );
     }
   }
@@ -148,7 +148,7 @@ public class TagsTests {
           res.getInt("id"),
           res.getString("name"),
           res.getString("color"),
-          res.getString("owner")
+          res.getInt("owner")
       );
     }
   }
@@ -167,7 +167,7 @@ public class TagsTests {
         res.getInt("id"),
         res.getString("name"),
         res.getString("color"),
-        res.getString("owner"));
+        res.getInt("owner"));
     }
   }
 
@@ -185,7 +185,7 @@ public class TagsTests {
             res.getInt("id"),
             res.getString("name"),
             res.getString("color"),
-            res.getString("owner")));
+            res.getInt("owner")));
       }
       return tags;
     }
@@ -240,7 +240,7 @@ public class TagsTests {
             res.getInt("id"),
             res.getString("name"),
             res.getString("color"),
-            res.getString("owner")));
+            res.getInt("owner")));
       }
       return tags;
     }
@@ -263,7 +263,7 @@ public class TagsTests {
             res.getInt("id"),
             res.getString("name"),
             res.getString("color"),
-            res.getString("owner")));
+            res.getInt("owner")));
       }
       return tags;
     }
@@ -306,7 +306,7 @@ public class TagsTests {
             res.getInt("id"),
             res.getString("name"),
             res.getString("color"),
-            res.getString("owner")));
+            res.getInt("owner")));
       }
       return tags;
     }
@@ -349,7 +349,7 @@ public class TagsTests {
             res.getInt("id"),
             res.getString("name"),
             res.getString("color"),
-            res.getString("owner")));
+            res.getInt("owner")));
       }
       return tags;
     }
@@ -389,7 +389,7 @@ public class TagsTests {
   //endregion
 
   //region Records
-  record Tag(int id, String name, String color, String owner) {}
+  record Tag(int id, String name, String color, int owner) {}
   //endregion
 
   @Test
@@ -410,10 +410,10 @@ public class TagsTests {
     final var constraintTags = getTagsOnConstraint(constraintId);
 
     final ArrayList<Tag> expected = new ArrayList<>();
-    expected.add(new Tag(tagId, "Farm", null, "TagsTest"));
+    expected.add(new Tag(tagId, "Farm", null, -1));
 
     final ArrayList<Tag> expectedPlan = new ArrayList<>(expected);
-    expectedPlan.add(new Tag(secondTagId, "Banana", null, "TagsTest"));
+    expectedPlan.add(new Tag(secondTagId, "Banana", null, -1));
 
 
     assertEquals(expectedPlan, planTags);
@@ -441,10 +441,10 @@ public class TagsTests {
     final var constraintTags = getTagsOnActivity(activityId, planId);
 
     final var expected = new ArrayList<Tag>(1);
-    expected.add(new Tag(tagId, "Farm", null, "TagsTest"));
+    expected.add(new Tag(tagId, "Farm", null, -1));
 
     final var expectedPlan = new ArrayList<Tag>(1);
-    expectedPlan.add(new Tag(secondTagId, "Banana", null, "TagsTest"));
+    expectedPlan.add(new Tag(secondTagId, "Banana", null, -1));
 
     assertEquals(expectedPlan, planTags);
     assertEquals(expected, activityTags);
@@ -513,7 +513,7 @@ public class TagsTests {
     final var constraintTags = getTagsOnConstraint(constraintId);
 
     final ArrayList<Tag> expected = new ArrayList<>();
-    expected.add(new Tag(secondTagId, "Banana", null, "TagsTest"));
+    expected.add(new Tag(secondTagId, "Banana", null, -1));
 
     assertEquals(expected, planTags);
     assertEquals(expected, activityTags);
