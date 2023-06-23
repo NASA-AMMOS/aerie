@@ -553,6 +553,23 @@ export class Real {
   }
 
   /**
+   * Create a real profile by subtracting another real profile from this.
+   * @param other
+   */
+  public minus(other: Real | number): Real {
+    if (!(other instanceof Real)) {
+      other = Real.Value(-other);
+    } else {
+      other = other.negate();
+    }
+    return new Real({
+      kind: AST.NodeKind.RealProfilePlus,
+      left: this.__astNode,
+      right: other.__astNode,
+    });
+  }
+
+  /**
    * Create a real profile where all segments are negated.
    */
   public negate(): Real {
@@ -1252,6 +1269,12 @@ declare global {
      * @param other
      */
     public plus(other: Real | number): Real;
+
+    /**
+     * Create a real profile by subtracting another profile from this.
+     * @param other
+     */
+    public minus(other: Real | number): Real;
 
     /**
      * Create a real profile where all segments are negated.
