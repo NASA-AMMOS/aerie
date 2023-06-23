@@ -1,7 +1,7 @@
 -- TODO list:
 --   - duplicate temporal subset of plan
 
-create function duplicate_plan(_plan_id integer, new_plan_name text, new_owner text)
+create function duplicate_plan(_plan_id integer, new_plan_name text, new_owner integer)
   returns integer -- plan_id of the new plan
   security definer
   language plpgsql as $$
@@ -59,7 +59,7 @@ begin
 end
 $$;
 
-comment on function duplicate_plan(plan_id integer, new_plan_name text, new_owner text) is e''
+comment on function duplicate_plan(plan_id integer, new_plan_name text, new_owner integer) is e''
   'Copies all of a given plan''s properties and activities into a new plan with the specified name.
   When duplicating a plan, a snapshot is created of the original plan.
   Additionally, that snapshot becomes the latest snapshot of the new plan.';

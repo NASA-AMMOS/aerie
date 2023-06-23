@@ -4,10 +4,10 @@ create function hasura_functions.create_merge_request(source_plan_id integer, ta
   language plpgsql as $$
 declare
   res integer;
-  requester_username text;
+  requester integer;
 begin
-  requester_username := (hasura_session ->> 'x-hasura-user-id');
-  select create_merge_request(source_plan_id, target_plan_id, requester_username) into res;
+  requester := (hasura_session ->> 'x-hasura-user-id');
+  select create_merge_request(source_plan_id, target_plan_id, requester) into res;
   return row(res)::hasura_functions.create_merge_request_return_value;
 end;
 $$;
@@ -111,10 +111,10 @@ create function hasura_functions.begin_merge(merge_request_id integer, hasura_se
   declare
     non_conflicting_activities hasura_functions.get_non_conflicting_activities_return_value[];
     conflicting_activities hasura_functions.get_conflicting_activities_return_value[];
-    reviewer_username text;
+    reviewer integer;
 begin
-  reviewer_username := (hasura_session ->> 'x-hasura-user-id');
-  call public.begin_merge($1, reviewer_username);
+  reviewer := (hasura_session ->> 'x-hasura-user-id');
+  call public.begin_merge($1, reviewer);
 
   non_conflicting_activities := array(select hasura_functions.get_non_conflicting_activities($1));
   conflicting_activities := array(select hasura_functions.get_conflicting_activities($1));

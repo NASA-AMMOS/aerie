@@ -20,7 +20,7 @@
             Modify              |             Delete            | Into CA
             Delete              |             Delete            | Dropped
  */
-create procedure begin_merge(_merge_request_id integer, review_username text)
+create procedure begin_merge(_merge_request_id integer, _reviewer integer)
   language plpgsql as $$
   declare
     validate_id integer;
@@ -68,7 +68,7 @@ begin
   update merge_request
     set status = 'in-progress',
     merge_base_snapshot_id = merge_base_id,
-    reviewer_username = review_username
+    reviewer = _reviewer
     where id = _merge_request_id;
 
 
@@ -315,7 +315,6 @@ begin
       raise exception 'Cannot begin merge. The contents of the two plans are identical.';
     end if;
   end if;
-
 
   -- clean up
   drop table supplying_diff;

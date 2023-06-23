@@ -4,7 +4,7 @@ create function hasura_functions.duplicate_plan(plan_id integer, new_plan_name t
   language plpgsql as $$
 declare
   res integer;
-  new_owner text;
+  new_owner integer;
 begin
   new_owner := (hasura_session ->> 'x-hasura-user-id');
   select duplicate_plan(plan_id, new_plan_name, new_owner) into res;

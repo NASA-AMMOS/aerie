@@ -1,4 +1,4 @@
-create function create_merge_request(plan_id_supplying integer, plan_id_receiving integer, request_username text)
+create function create_merge_request(plan_id_supplying integer, plan_id_receiving integer, requester integer)
   returns integer
   language plpgsql as $$
 declare
@@ -27,8 +27,8 @@ begin
   end if;
 
 
-  insert into merge_request(plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, requester_username)
-    values(plan_id_receiving, supplying_snapshot_id, merge_base_snapshot_id, request_username)
+  insert into merge_request(plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, requester)
+    values(plan_id_receiving, supplying_snapshot_id, merge_base_snapshot_id, requester)
     returning id into merge_request_id;
   return merge_request_id;
 end
