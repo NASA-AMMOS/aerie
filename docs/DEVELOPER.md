@@ -14,6 +14,7 @@ This document describes how to set up your development environment to build and 
 - [Remove Docker Images](#remove-docker-images)
 - [Remove Docker Volumes](#remove-docker-volumes)
 - [Entering a Docker Container](#entering-a-docker-container)
+- [Apple Silicon](#apple-silicon)
 
 ## Prerequisite Software
 
@@ -143,4 +144,13 @@ At times it is helpful to enter a docker container and inspect the filesystem or
 
 ```sh
 docker exec -it aerie-postgres /bin/sh
+```
+
+## Apple Silicon
+
+If you're having issues building the Docker containers with Apple Silicon you can try setting the follow environment variables.
+This will disable BuildKit and try to default to using `linux/arm` as the platform.
+```sh
+export DOCKER_DEFAULT_PLATFORM=linux/arm64
+export DOCKER_BUILDKIT=0
 ```
