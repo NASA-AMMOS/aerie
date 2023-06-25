@@ -611,7 +611,7 @@ public final class SimulationEngine implements AutoCloseable {
         this.waitingConditions.unsubscribeQuery(s.id());
       }
 
-      setCurTime(batch.offsetFromStart());
+      //setCurTime(batch.offsetFromStart());
       var tip = EventGraph.<Event>empty();
       for (final var job$ : batch.jobs()) {
         tip = EventGraph.concurrently(tip, TaskFrame.run(job$, this.cells, (job, frame) -> {
@@ -797,7 +797,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var querier = new EngineQuerier(currentTime, frame, queryTopic, condition.sourceTask());
     final var prediction = this.conditions
         .get(condition)
-        .nextSatisfied(querier, Duration.MAX_VALUE)
+        .nextSatisfied(querier, Duration.MAX_VALUE) //horizonTime.minus(currentTime)
         .map(currentTime::plus);
 
     this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);

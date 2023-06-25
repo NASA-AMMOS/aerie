@@ -576,6 +576,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param includeEndTime whether to apply the Events occurring at endTime
    */
   public void stepUpSimple(final Cell<?> cell, final Duration endTime, final boolean includeEndTime) {
+    if (debug) System.out.println("stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") BEGIN");
     final NavigableMap<Duration, List<EventGraph<Event>>> subTimeline;
     var cellTimePair = getCellTime(cell);
     var cellTime = cellTimePair.getLeft();
@@ -587,11 +588,13 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       final TreeMap<Duration, List<EventGraph<Event>>> eventsByTimeForTopic = eventsByTopic.get(cell.getTopic());
       if (eventsByTimeForTopic == null) {
         if (endTime.longerThan(cellTime) && endTime.shorterThan(Duration.MAX_VALUE)) {
+          if (debug) System.out.println("cell.step(" + endTime.minus(cellTime) + ")");
           cell.step(endTime.minus(cellTime));
           cellTime = endTime;
           cellSteppedAtTime = false;
           putCellTime(cell, cellTime, cellSteppedAtTime);
         }
+        if (debug) System.out.println("stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") END");
         return;
       }
       subTimeline = eventsByTimeForTopic.subMap(cellTime, true, endTime, includeEndTime);
@@ -602,6 +605,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       final List<EventGraph<Event>> eventGraphList = e.getValue();
       var delta = e.getKey().minus(cellTime);
       if (delta.isPositive()) {
+        if (debug) System.out.println("cell.step(" + delta + ")");
         cell.step(delta);
         cellTime = e.getKey();
         cellSteppedAtTime = false;
@@ -614,6 +618,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         // We've already applied this graph; not doing it twice!
       } else {
         for (var eventGraph : eventGraphList) {
+          if (debug) System.out.println("cell.apply(" + eventGraph + ")");
           cell.apply(eventGraph, null, false);
         }
         cellTime = e.getKey();
@@ -622,9 +627,11 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       }
     }
     if (endTime.longerThan(cellTime) && endTime.shorterThan(Duration.MAX_VALUE)) {
+      if (debug) System.out.println("cell.step(" + endTime.minus(cellTime) + ")");
       cell.step(endTime.minus(cellTime));
       putCellTime(cell, endTime, false);
     }
+    if (debug) System.out.println("stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") END");
   }
 
   /**
@@ -800,6 +807,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
     }
     putCellTime(cell, cellTime, cellSteppedAtTime);
+    if (debug) System.out.println("" + i + " END stepUp(" + cell.getTopic() + ", " + endTime + ", " + includeEndTime + "): cellState = " + cell.toString() + ", stale = " + stale + ", cellTime = " + cellTimePair);
   }
 
   protected boolean updateStale(Cell<?> cell, Cell<?> oldCell) {
