@@ -5,12 +5,16 @@
     custom_root_fields:
       function: duplicate_plan
     session_argument: hasura_session
+  permissions:
+    - role: user
 - function:
     name: get_plan_history
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: get_plan_history
+  permissions:
+    - role: user
 - function:
     name: create_merge_request
     schema: hasura_functions
@@ -18,6 +22,8 @@
     custom_root_fields:
       function: create_merge_request
     session_argument: hasura_session
+  permissions:
+    - role: user
 - function:
     name: begin_merge
     schema: hasura_functions
@@ -25,98 +31,132 @@
     custom_root_fields:
       function: begin_merge
     session_argument: hasura_session
+  permissions:
+    - role: user
 - function:
     name: commit_merge
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: commit_merge
+  permissions:
+    - role: user
 - function:
     name: deny_merge
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: deny_merge
+  permissions:
+    - role: user
 - function:
     name: withdraw_merge_request
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: withdraw_merge_request
+  permissions:
+    - role: user
 - function:
     name: cancel_merge
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: cancel_merge
+  permissions:
+    - role: user
 - function:
     name: get_non_conflicting_activities
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: get_non_conflicting_activities
+  permissions:
+    - role: user
 - function:
     name: get_conflicting_activities
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: get_conflicting_activities
+  permissions:
+    - role: user
 - function:
     name: set_resolution
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: set_resolution
+  permissions:
+    - role: user
 - function:
     name: set_resolution_bulk
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: set_resolution_bulk
+  permissions:
+    - role: user
 - function:
     name: delete_activity_by_pk_reanchor_plan_start
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_plan_start
+  permissions:
+    - role: user
 - function:
     name: delete_activity_by_pk_reanchor_to_anchor
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_to_anchor
+  permissions:
+    - role: user
 - function:
     name: delete_activity_by_pk_delete_subtree
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree
+  permissions:
+    - role: user
 - function:
     name: delete_activity_by_pk_reanchor_plan_start_bulk
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_plan_start_bulk
+  permissions:
+    - role: user
 - function:
     name: delete_activity_by_pk_reanchor_to_anchor_bulk
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_to_anchor_bulk
+  permissions:
+    - role: user
 - function:
     name: delete_activity_by_pk_delete_subtree_bulk
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree_bulk
+  permissions:
+    - role: user
 - function:
     name: apply_preset_to_activity
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: apply_preset_to_activity
+  permissions:
+    - role: user
 - function:
     name: get_resources_at_start_offset
     schema: hasura_functions
   configuration:
     custom_name: getResourcesAtStartOffset
+  permissions:
+    - role: user
