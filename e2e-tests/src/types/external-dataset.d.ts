@@ -1,5 +1,6 @@
 type ExternalDatasetInsertInput = {
   plan_id: number,
+  simulation_dataset_id?: number,
   dataset_start: String,
   profile_set: {
     [key: string]: {

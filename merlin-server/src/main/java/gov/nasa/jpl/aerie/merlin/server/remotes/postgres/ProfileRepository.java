@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -103,6 +104,15 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
     try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
       return getPlanDatasetsAction.get(planId);
     }
+  }
+
+  static List<PlanDatasetRecord> getAllPlanDatasetsForSimDataset(
+      final Connection connection,
+      final PlanId planId,
+      final SimulationDatasetId simulationDatasetId) throws SQLException {
+      try (final var getSimAssociatedPlanDatasetsAction = new GetSimAssociatedPlanDatasetsAction(connection)) {
+        return getSimAssociatedPlanDatasetsAction.get(planId, simulationDatasetId);
+      }
   }
 
   static List<ProfileRecord> getProfileRecords(

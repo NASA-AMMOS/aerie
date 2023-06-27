@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -123,7 +124,11 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
+  public long addExternalDataset(
+      final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId,
+      final Timestamp datasetStart,
+      final ProfileSet profileSet)
   {
     return 0;
   }
@@ -134,7 +139,10 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) {
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(
+      final PlanId planId,
+      final Optional<SimulationDatasetId> simulationDatasetId)
+  {
     return List.of();
   }
 

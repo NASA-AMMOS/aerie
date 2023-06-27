@@ -7,7 +7,9 @@ type Constraint = {
   plan_id: number | null;
 };
 
-type ConstraintInsertInput = Omit<Constraint, 'id'>;
+type ConstraintInsertInput = Omit<Constraint, 'id'> & {
+  simulationDatasetId?: number;
+};
 
 type ConstraintType = 'model' | 'plan';
 
