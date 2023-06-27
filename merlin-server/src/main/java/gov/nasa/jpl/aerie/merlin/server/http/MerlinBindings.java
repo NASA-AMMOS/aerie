@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityBulkActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityDirectiveEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsViolationsActionP;
@@ -89,6 +90,7 @@ public final class MerlinBindings implements Plugin {
       path("validatePlan", () -> post(this::validatePlan));
       path("getModelEffectiveArguments", () -> post(this::getModelEffectiveArguments));
       path("getActivityEffectiveArguments", () -> post(this::getActivityEffectiveArguments));
+      path("getActivityEffectiveArgumentsBulk", () -> post(this::getActivityEffectiveArgumentsBulk));
       path("addExternalDataset", () -> post(this::addExternalDataset));
       path("extendExternalDataset", () -> post(this::extendExternalDataset));
       path("constraintsDslTypescript", () -> post(this::getConstraintsDslTypescript));
@@ -344,6 +346,24 @@ public final class MerlinBindings implements Plugin {
     } catch (final MissionModelService.NoSuchActivityTypeException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void getActivityEffectiveArgumentsBulk(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraActivityBulkActionP).input();
+      final var missionModelId = input.missionModelId();
+      final var activities = input.activities();
+
+      final var response = this.missionModelService.getActivityEffectiveArgumentsBulk(missionModelId, activities);
+
+      ctx.result(ResponseSerializers.serializeBulkEffectiveArgumentResponseList(response).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final InvalidJsonException ex) {
