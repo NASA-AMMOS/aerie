@@ -55,3 +55,11 @@ update_permissions:
         { "mission_model": { "plans": { "owner": { "_eq": "X-Hasura-User-Id" } } } } ] }
       set:
         updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: user
+    permission:
+      filter: {"_or": [
+        {"plan":{"owner":{"_eq":"X-Hasura-User-Id"}}},
+        {"plan":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}},
+        {"mission_model":{"plans":{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}}},
+        {"mission_model":{"plans":{"owner":{"_eq":"X-Hasura-User-Id"}}}}]}
