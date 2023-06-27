@@ -15,6 +15,7 @@ begin;
 
   -- Deployment-level Metadata
   \ir tables/metadata/user_roles.sql
+  \ir tables/metadata/user_role_permission.sql
   \ir tables/metadata/users.sql
   \ir tables/metadata/users_allowed_roles.sql
   \ir tables/metadata/tags.sql
