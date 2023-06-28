@@ -359,7 +359,7 @@ public class ASTTests {
   @Test
   public void testExpandBy() {
     final var simResults = new SimulationResults(
-        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(-100, 200, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -391,7 +391,7 @@ public class ASTTests {
   @Test
   public void testShrink() {
     final var simResults = new SimulationResults(
-        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(-100, 200, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -1052,6 +1052,75 @@ public class ASTTests {
     final var expected = new Spans(Interval.between(0, 10, SECONDS));
 
     assertEquals(expected, result);
+  }
+
+  @Test
+  public void testShiftByBoundsAdjustment() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var expression = new ShiftBy<>(
+        new DiscreteValue(SerializedValue.of("strang")),
+        Supplier.of(Duration.of(10, SECONDS))
+    );
+
+    final var result = expression.evaluate(simResults);
+
+    final var expected = new DiscreteProfile(
+        Segment.of(Interval.between(0, 20, SECONDS), SerializedValue.of("strang"))
+    );
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
+  public void testShiftWindowsEdgesBoundsAdjustment() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var crossingStartOfPlan = new Windows(false).set(Interval.between(-1, 1, SECONDS), true);
+
+    final var result1 = new ShiftWindowsEdges(
+        Supplier.of(crossingStartOfPlan),
+        Supplier.of(Duration.ZERO),
+        Supplier.of(Duration.of(10, SECONDS))
+    ).evaluate(simResults);
+    final var expected1 = new Windows(false).set(Interval.between(-1, 11, SECONDS), true).select(simResults.bounds);
+    assertIterableEquals(expected1, result1);
+
+    final var result2 = new ShiftWindowsEdges(
+        Supplier.of(crossingStartOfPlan),
+        Supplier.of(Duration.of(-10, SECONDS)),
+        Supplier.of(Duration.ZERO)
+    ).evaluate(simResults);
+    final var expected2 = new Windows(false).set(Interval.between(0, 1, SECONDS), true).select(simResults.bounds);
+    assertIterableEquals(expected2, result2);
+
+    final var crossingEndOfPlan = new Windows(false).set(Interval.between(19, 21, SECONDS), true);
+
+    final var result3 = new ShiftWindowsEdges(
+        Supplier.of(crossingEndOfPlan),
+        Supplier.of(Duration.ZERO),
+        Supplier.of(Duration.of(10, SECONDS))
+    ).evaluate(simResults);
+    final var expected3 = new Windows(false).set(Interval.between(19, 20, SECONDS), true).select(simResults.bounds);
+    assertIterableEquals(expected3, result3);
+
+    final var result4 = new ShiftWindowsEdges(
+        Supplier.of(crossingEndOfPlan),
+        Supplier.of(Duration.of(-10, SECONDS)),
+        Supplier.of(Duration.ZERO)
+    ).evaluate(simResults);
+    final var expected4 = new Windows(false).set(Interval.between(9, 21, SECONDS), true).select(simResults.bounds);
+    assertIterableEquals(expected2, result2);
   }
 
   private static final class Supplier<T> implements Expression<T> {
