@@ -9,11 +9,13 @@ import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
+import gov.nasa.jpl.aerie.merlin.server.http.PermissionsService;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PermissionsRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
@@ -85,7 +87,8 @@ public final class AerieAppDriver {
         planController,
         simulationAction,
         generateConstraintsLibAction,
-        constraintAction
+        constraintAction,
+        new PermissionsService(stores.permissions())
     );
     // Configure an HTTP server.
     //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
@@ -111,7 +114,13 @@ public final class AerieAppDriver {
     javalin.start(configuration.httpPort());
   }
 
-  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results, ConstraintRepository constraints) {}
+  private record Stores (
+      PlanRepository plans,
+      MissionModelRepository missionModels,
+      ResultsCellRepository results,
+      ConstraintRepository constraints,
+      PermissionsRepository permissions
+  ) {}
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
@@ -134,7 +143,8 @@ public final class AerieAppDriver {
           new PostgresPlanRepository(hikariDataSource),
           new PostgresMissionModelRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource),
-          new PostgresConstraintRepository(hikariDataSource));
+          new PostgresConstraintRepository(hikariDataSource),
+          new PermissionsRepository(hikariDataSource));
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
     }
