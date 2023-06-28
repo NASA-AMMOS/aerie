@@ -11,12 +11,12 @@ object_relationships:
 select_permissions:
   - role: user
     permission:
-      columns: [plan_id, dataset_id, offset_from_plan_start]
+      columns: [plan_id, dataset_id, offset_from_plan_start, simulation_dataset_id]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [plan_id, dataset_id, offset_from_plan_start]
+      columns: [plan_id, dataset_id, offset_from_plan_start, simulation_dataset_id]
       filter: {}
       allow_aggregations: true
 delete_permissions:
