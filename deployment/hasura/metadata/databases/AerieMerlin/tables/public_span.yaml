@@ -26,11 +26,11 @@ array_relationships:
 select_permissions:
   - role: user
     permission:
-      columns: [id, dataset_id, parent_id, start_offset, type, attributes]
+      columns: [id, duration, dataset_id, parent_id, start_offset, type, attributes]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, dataset_id, parent_id, start_offset, type, attributes]
+      columns: [id, duration, dataset_id, parent_id, start_offset, type, attributes]
       filter: {}
       allow_aggregations: true

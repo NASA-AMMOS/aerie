@@ -12,11 +12,11 @@ array_relationships:
 select_permissions:
   - role: user
     permission:
-      columns: [id, command_types_typescript_path, mission, version, created_at]
+      columns: [id, command_types_typescript_path, mission, version, created_at, parsed_json]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, command_types_typescript_path, mission, version, created_at]
+      columns: [id, command_types_typescript_path, mission, version, created_at, parsed_json]
       filter: {}
       allow_aggregations: true
