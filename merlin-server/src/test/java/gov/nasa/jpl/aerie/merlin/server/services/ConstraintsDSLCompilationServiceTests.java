@@ -31,6 +31,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftWindowsEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
@@ -1225,6 +1226,33 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         "TypeError: TS2345 Argument of type 'Discrete<string>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+    );
+  }
+
+  @Test
+  void testProfileShiftBy() {
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Real.Resource("state of charge").shiftBy(minute(2)).equal(Real.Value(4.0))
+        }
+        """,
+        new ViolationsOfWindows(
+            new Equal<>(new ShiftBy<>(new RealResource("state of charge"), new DurationLiteral(Duration.of(2, Duration.MINUTE))), new RealValue(4.0))
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Discrete.Resource("mode").shiftBy(minute(2)).equal("Option1")
+        }
+        """,
+        new ViolationsOfWindows(
+            new Equal<>(new ShiftBy<>(new DiscreteResource("mode"), new DurationLiteral(Duration.of(2, Duration.MINUTE))), new DiscreteValue(SerializedValue.of("Option1")))
+        )
     );
   }
 

@@ -505,6 +505,25 @@ public class ASTTests {
     assertEquivalent(expected, result);
   }
 
+
+  @Test
+  public void testDiscreteShiftBy() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of(
+            "discrete", new DiscreteProfile(Segment.of(Interval.between(1, 2, SECONDS), SerializedValue.of("much value")))
+        )
+    );
+
+    final var result = new ShiftBy<>(new DiscreteResource("discrete"), new DurationLiteral(Duration.of(1, SECONDS))).evaluate(simResults, new EvaluationEnvironment());
+
+    final var expected = new DiscreteProfile(Segment.of(Interval.between(2, 3, SECONDS), SerializedValue.of("much value")));
+
+    assertEquivalent(expected, result);
+  }
+
   @Test
   public void testValueAt(){
     final var simResults = new SimulationResults(
@@ -619,6 +638,24 @@ public class ASTTests {
       return;
     }
     fail("Expected RealResource node to fail on non-existent resource");
+  }
+
+  @Test
+  public void testRealShiftBy() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(
+            "real", new LinearProfile(Segment.of(Interval.between(1, 2, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 1, 1)))
+        ),
+        Map.of()
+    );
+
+    final var result = new ShiftBy<>(new RealResource("real"), new DurationLiteral(Duration.of(1, SECONDS))).evaluate(simResults, new EvaluationEnvironment());
+
+    final var expected = new LinearProfile(Segment.of(Interval.between(2, 3, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 1, 1)));
+
+    assertEquivalent(expected, result);
   }
 
   @Test
