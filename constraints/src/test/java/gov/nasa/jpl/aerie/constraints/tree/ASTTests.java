@@ -844,7 +844,7 @@ public class ASTTests {
     final var result = new StartOf("act").evaluate(simResults, environment);
 
     final var expected = new Windows(
-        Segment.of(FOREVER, false),
+        Segment.of(simResults.bounds, false),
         Segment.of(at(4, SECONDS), true)
     );
 
@@ -878,7 +878,7 @@ public class ASTTests {
     final var result = new EndOf("act").evaluate(simResults, environment);
 
     final var expected = new Windows(
-        Segment.of(FOREVER, false),
+        Segment.of(simResults.bounds, false),
         Segment.of(at(8, SECONDS), true)
     );
 

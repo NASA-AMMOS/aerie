@@ -14,8 +14,11 @@ public record ShiftBy<P extends Profile<P>>(
 
   @Override
   public P evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var originalProfile = this.expression.evaluate(results, bounds, environment);
+    // bounds aren't shifted here because duration expressions don't care about them; durations don't exist on the timeline.
     final var duration = this.duration.evaluate(results, bounds, environment);
+
+    final var shiftedBounds = bounds.shiftBy(Duration.negate(duration));
+    final var originalProfile = this.expression.evaluate(results, shiftedBounds, environment);
 
     return originalProfile.shiftBy(duration);
   }

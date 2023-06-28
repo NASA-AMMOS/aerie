@@ -22,8 +22,18 @@ public final class ShiftWindowsEdges implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var windows = this.windows.evaluate(results, bounds, environment);
-    return windows.shiftEdges(this.fromStart.evaluate(results, bounds, environment), this.fromEnd.evaluate(results, bounds, environment));
+    final var shiftRising = this.fromStart.evaluate(results, bounds, environment);
+    final var shiftFalling = this.fromEnd.evaluate(results, bounds, environment);
+
+    final var newBounds = Interval.between(
+        Duration.min(bounds.start.minus(shiftRising), bounds.start.minus(shiftFalling)),
+        bounds.startInclusivity,
+        Duration.max(bounds.end.minus(shiftRising), bounds.end.minus(shiftFalling)),
+        bounds.endInclusivity
+    );
+
+    final var windows = this.windows.evaluate(results, newBounds, environment);
+    return windows.shiftEdges(shiftRising, shiftFalling).select(bounds);
   }
 
   @Override
