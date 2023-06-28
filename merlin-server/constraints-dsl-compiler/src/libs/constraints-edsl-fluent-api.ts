@@ -716,6 +716,11 @@ export class Real {
     });
   }
 
+  /**
+   * Shifts the profile forward or backward in time.
+   *
+   * @param duration duration shift each segment (can be negative)
+   */
   public shiftBy(duration: Temporal.Duration): Real {
     return new Real({
       kind: AST.NodeKind.ProfileExpressionShiftBy,
@@ -885,6 +890,11 @@ export class Discrete<Schema> {
     });
   }
 
+  /**
+   * Shifts the profile forward or backward in time.
+   *
+   * @param duration duration shift each segment (can be negative)
+   */
   public shiftBy(duration: Temporal.Duration): Discrete<Schema> {
     return new Discrete<Schema>({
       kind: AST.NodeKind.ProfileExpressionShiftBy,
@@ -1359,6 +1369,11 @@ declare global {
      */
     public valueAt(timepoint: Spans): Discrete<number>;
 
+    /**
+     * Shifts the profile forward or backward in time.
+     *
+     * @param duration duration shift each segment (can be negative)
+     */
     public shiftBy(duration: Temporal.Duration): Real;
   }
 
@@ -1449,6 +1464,11 @@ declare global {
      */
     public valueAt(timepoint: Spans): Discrete<Schema>;
 
+    /**
+     * Shifts the profile forward or backward in time.
+     *
+     * @param duration duration shift each segment (can be negative)
+     */
     public shiftBy(duration: Temporal.Duration): Discrete<Schema>;
   }
 
