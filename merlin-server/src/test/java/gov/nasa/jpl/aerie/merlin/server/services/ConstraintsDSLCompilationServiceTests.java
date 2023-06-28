@@ -539,6 +539,27 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
+  void testMinus() {
+    checkSuccessfulCompilation(
+        """
+            export default() => {
+              return Real.Resource("state of charge").minus(2.0).equal(4.0)
+            }
+        """,
+        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(-2.0)), new RealValue(4.0)))
+    );
+
+    checkSuccessfulCompilation(
+        """
+            export default() => {
+              return Real.Resource("state of charge").minus(Real.Resource("state of charge")).equal(4.0)
+            }
+        """,
+        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new Times(new RealResource("state of charge"), -1.0)), new RealValue(4.0)))
+    );
+  }
+
+  @Test
   void testLessThan() {
     checkSuccessfulCompilation(
         """
