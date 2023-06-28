@@ -121,6 +121,19 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
   }
 
   @Override
+  public DiscreteProfile shiftBy(final Duration duration) {
+    final var builder = IntervalMap.<SerializedValue>builder();
+
+    for (final var segment : this.profilePieces) {
+      final var interval = segment.interval();
+      final var shiftedInterval = interval.shiftBy(duration);
+
+      builder.set(Segment.of(shiftedInterval, segment.value()));
+    }
+    return new DiscreteProfile(builder.build());
+  }
+
+  @Override
   public Optional<SerializedValue> valueAt(final Duration timepoint) {
     final var matchPiece = profilePieces
         .stream()

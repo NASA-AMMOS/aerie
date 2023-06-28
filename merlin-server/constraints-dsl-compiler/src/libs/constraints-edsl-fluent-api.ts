@@ -226,13 +226,21 @@ export class Windows {
    * @param fromStart duration to add from the start of each true segment
    * @param fromEnd duration to add from the end of each true segment
    */
-  public shiftBy(fromStart: AST.Duration, fromEnd: AST.Duration) : Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionShiftBy,
-      windowExpression: this.__astNode,
-      fromStart,
-      fromEnd
-    })
+  public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined) : Windows {
+    if (fromEnd === undefined) {
+      return new Windows({
+        kind: AST.NodeKind.ProfileExpressionShiftBy,
+        expression: this.__astNode,
+        duration: fromStart
+      });
+    } else {
+      return new Windows({
+        kind: AST.NodeKind.WindowsExpressionShiftBy,
+        windowExpression: this.__astNode,
+        fromStart,
+        fromEnd
+      })
+    }
   }
 
   /**
@@ -707,6 +715,14 @@ export class Real {
       timepoint : timepoint.__astNode
     });
   }
+
+  public shiftBy(duration: Temporal.Duration): Real {
+    return new Real({
+      kind: AST.NodeKind.ProfileExpressionShiftBy,
+      expression: this.__astNode,
+      duration
+    })
+  }
 }
 
 /**
@@ -867,6 +883,14 @@ export class Discrete<Schema> {
       originalProfile: this.__astNode,
       defaultProfile: defaultProfile.__astNode
     });
+  }
+
+  public shiftBy(duration: Temporal.Duration): Discrete<Schema> {
+    return new Discrete<Schema>({
+      kind: AST.NodeKind.ProfileExpressionShiftBy,
+      expression: this.__astNode,
+      duration
+    })
   }
 }
 
@@ -1071,7 +1095,7 @@ declare global {
      * @param fromStart duration to add from the start of each true segment
      * @param fromEnd duration to add from the end of each true segment
      */
-    public shiftBy(fromStart: AST.Duration, fromEnd: AST.Duration): Windows;
+    public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Windows;
 
     /**
      * Returns a new windows object, with all true segments shorter than or equal to the given
@@ -1334,6 +1358,8 @@ declare global {
      * @param timepoint the timepoint, represented by a Spans (must be reduced to a single point)
      */
     public valueAt(timepoint: Spans): Discrete<number>;
+
+    public shiftBy(duration: Temporal.Duration): Real;
   }
 
   /**
@@ -1422,6 +1448,8 @@ declare global {
      * @param timepoint the timepoint, represented by a Spans (must be reduced to a single point)
      */
     public valueAt(timepoint: Spans): Discrete<Schema>;
+
+    public shiftBy(duration: Temporal.Duration): Discrete<Schema>;
   }
 
   /** An enum for whether an interval includes its bounds. */

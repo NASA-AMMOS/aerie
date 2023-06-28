@@ -13,6 +13,7 @@ public interface Profile<P extends Profile<P>> {
   boolean isConstant();
 
   P assignGaps(P def);
+  P shiftBy(Duration duration);
 
   Optional<SerializedValue> valueAt(Duration timepoint);
 }

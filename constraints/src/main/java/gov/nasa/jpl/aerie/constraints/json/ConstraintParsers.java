@@ -74,6 +74,18 @@ public final class ConstraintParsers {
         );
   }
 
+  static <P extends Profile<P>> JsonParser<ShiftBy<P>> shiftByF(final JsonParser<Expression<P>> profileParser) {
+    return productP
+        .field("kind", literalP("ProfileExpressionShiftBy"))
+        .field("expression", profileParser)
+        .field("duration", durationExprP)
+        .map(
+            untuple((kind, expression, duration) -> new ShiftBy<>(expression, duration)),
+            $ -> tuple(Unit.UNIT, $.expression(), $.duration())
+        );
+  }
+
+
   static final JsonParser<DiscreteResource> discreteResourceP =
       productP
           .field("kind", literalP("DiscreteProfileResource"))
@@ -106,6 +118,7 @@ public final class ConstraintParsers {
         discreteValueP,
         discreteParameterP,
         assignGapsF(selfP),
+        shiftByF(selfP),
         valueAtExpressionF(profileExpressionP, spansExpressionP),
         listExpressionF(profileExpressionP),
         structExpressionF(profileExpressionP)
@@ -206,6 +219,7 @@ public final class ConstraintParsers {
         timesF(selfP),
         rateF(selfP),
         assignGapsF(selfP),
+        shiftByF(selfP),
         accumulatedDurationF(windowsP),
         accumulatedDurationF(spansP)
     ));
@@ -288,14 +302,14 @@ public final class ConstraintParsers {
               $ -> tuple(Unit.UNIT, $.value(), $.interval())
           );
 
-  static JsonParser<ShiftBy> shiftByF(JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<ShiftWindowsEdges> shiftWindowsEdgesF(JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
         .field("kind", literalP("WindowsExpressionShiftBy"))
         .field("windowExpression", windowsExpressionP)
         .field("fromStart", durationExprP)
         .field("fromEnd", durationExprP)
         .map(
-            untuple((kind, windowsExpression, fromStart, fromEnd) -> new ShiftBy(windowsExpression, fromStart, fromEnd)),
+            untuple((kind, windowsExpression, fromStart, fromEnd) -> new ShiftWindowsEdges(windowsExpression, fromStart, fromEnd)),
             $ -> tuple(Unit.UNIT, $.windows, $.fromStart, $.fromEnd));
   }
   static final JsonParser<EndOf> endOfP =
@@ -515,12 +529,13 @@ public final class ConstraintParsers {
         andF(selfP),
         orF(selfP),
         notF(selfP),
-        shiftByF(selfP),
+        shiftWindowsEdgesF(selfP),
         startsF(selfP),
         endsF(selfP),
         windowsFromSpansF(spansP),
         activityWindowP,
-        assignGapsF(selfP)
+        assignGapsF(selfP),
+        shiftByF(selfP)
     ));
   }
 

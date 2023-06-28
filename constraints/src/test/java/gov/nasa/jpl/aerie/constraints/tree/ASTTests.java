@@ -376,7 +376,7 @@ public class ASTTests {
     final var expandByFromStart = Duration.of(-1, SECONDS);
     final var expandByFromEnd = Duration.of(0, SECONDS);
 
-    final var result = new ShiftBy(Supplier.of(left), Supplier.of(expandByFromStart), Supplier.of(expandByFromEnd)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new ShiftWindowsEdges(Supplier.of(left), Supplier.of(expandByFromStart), Supplier.of(expandByFromEnd)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(-1, Inclusive, 7, Inclusive, SECONDS), true)
@@ -408,7 +408,7 @@ public class ASTTests {
     final var clampFromStart = Duration.of(1, SECONDS);
     final var clampFromEnd = Duration.negate(Duration.of(1, SECONDS));
 
-    final var result = new ShiftBy(Supplier.of(left), Supplier.of(clampFromStart), Supplier.of(clampFromEnd)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new ShiftWindowsEdges(Supplier.of(left), Supplier.of(clampFromStart), Supplier.of(clampFromEnd)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(1, Inclusive, 4, Exclusive, SECONDS), true)
