@@ -4,5 +4,5 @@ table:
 select_permissions:
   - role: user
     permission:
-      columns: [activity_id, change_type, source, target]
+      columns: [activity_id, change_type, source, target, source_tags, target_tags]
       filter: {}

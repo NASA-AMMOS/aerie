@@ -17,7 +17,9 @@ create table hasura_functions.get_non_conflicting_activities_return_value(
    activity_id integer,
    change_type activity_change_type,
    source plan_snapshot_activities,
-   target activity_directive
+   target activity_directive,
+   source_tags jsonb,
+   target_tags jsonb
 );
 create function hasura_functions.get_non_conflicting_activities(merge_request_id integer)
   returns setof hasura_functions.get_non_conflicting_activities_return_value
@@ -33,11 +35,39 @@ begin
   into _snapshot_id_supplying_changes, _plan_id_receiving_changes;
 
   return query
+    with plan_tags as (
+      select jsonb_agg(json_build_object(
+        'id', id,
+        'name', name,
+        'color', color,
+        'owner', owner,
+        'created_at', created_at
+        )) as tags, adt.directive_id
+      from metadata.tags tags, metadata.activity_directive_tags adt
+      where tags.id = adt.tag_id
+        and adt.plan_id = _plan_id_receiving_changes
+      group by adt.directive_id
+    ),
+    snapshot_tags as (
+      select jsonb_agg(json_build_object(
+        'id', id,
+        'name', name,
+        'color', color,
+        'owner', owner,
+        'created_at', created_at
+        )) as tags, sat.directive_id
+      from metadata.tags tags, metadata.snapshot_activity_tags sat
+      where tags.id = sat.tag_id
+        and sat.snapshot_id = _snapshot_id_supplying_changes
+      group by sat.directive_id
+    )
     select
       activity_id,
       change_type,
       snap_act,
-      act
+      act,
+      coalesce(st.tags, '[]'),
+      coalesce(pt.tags, '[]')
     from
       (select msa.activity_id, msa.change_type
        from merge_staging_area msa
@@ -47,7 +77,11 @@ begin
               and c.activity_id = snap_act.id
         left join activity_directive act
                on _plan_id_receiving_changes = act.plan_id
-              and c.activity_id = act.id;
+              and c.activity_id = act.id
+        left join plan_tags pt
+               on c.activity_id = pt.directive_id
+        left join snapshot_tags st
+               on c.activity_id = st.directive_id;
 end
 $$;
 
@@ -59,9 +93,12 @@ create table hasura_functions.get_conflicting_activities_return_value(
    resolution resolution_type,
    source plan_snapshot_activities,
    target activity_directive,
-   merge_base plan_snapshot_activities
+   merge_base plan_snapshot_activities,
+   source_tags jsonb,
+   target_tags jsonb,
+   merge_base_tags jsonb
 );
-create or replace function hasura_functions.get_conflicting_activities(merge_request_id integer)
+create function hasura_functions.get_conflicting_activities(merge_request_id integer)
   returns setof hasura_functions.get_conflicting_activities_return_value
   strict
   language plpgsql stable as $$
@@ -76,6 +113,32 @@ begin
   into _snapshot_id_supplying_changes, _plan_id_receiving_changes, _merge_base_snapshot_id;
 
   return query
+    with plan_tags as (
+      select jsonb_agg(json_build_object(
+        'id', id,
+        'name', name,
+        'color', color,
+        'owner', owner,
+        'created_at', created_at
+        )) as tags, adt.directive_id
+      from metadata.tags tags, metadata.activity_directive_tags adt
+      where tags.id = adt.tag_id
+        and _plan_id_receiving_changes = adt.plan_id
+      group by adt.directive_id
+    ), snapshot_tags as (
+      select jsonb_agg(json_build_object(
+        'id', id,
+        'name', name,
+        'color', color,
+        'owner', owner,
+        'created_at', created_at
+        )) as tags, sdt.directive_id, sdt.snapshot_id
+      from metadata.tags tags, metadata.snapshot_activity_tags sdt
+      where tags.id = sdt.tag_id
+        and (sdt.snapshot_id = _snapshot_id_supplying_changes
+         or sdt.snapshot_id = _merge_base_snapshot_id)
+      group by sdt.directive_id, sdt.snapshot_id
+    )
     select
       activity_id,
       change_type_supplying,
@@ -87,7 +150,10 @@ begin
       end,
       snap_act,
       act,
-      merge_base_act
+      merge_base_act,
+      coalesce(st.tags, '[]'),
+      coalesce(pt.tags, '[]'),
+      coalesce(mbt.tags, '[]')
     from
       (select * from conflicting_activities c where c.merge_request_id = $1) c
         left join plan_snapshot_activities merge_base_act
@@ -95,7 +161,13 @@ begin
         left join plan_snapshot_activities snap_act
                   on c.activity_id = snap_act.id and _snapshot_id_supplying_changes = snap_act.snapshot_id
         left join activity_directive act
-                  on _plan_id_receiving_changes = act.plan_id and c.activity_id = act.id;
+                  on _plan_id_receiving_changes = act.plan_id and c.activity_id = act.id
+        left join plan_tags pt
+                  on c.activity_id = pt.directive_id
+        left join snapshot_tags st
+                  on c.activity_id = st.directive_id and _snapshot_id_supplying_changes = st.snapshot_id
+        left join snapshot_tags mbt
+                  on c.activity_id = st.directive_id and _merge_base_snapshot_id = st.snapshot_id;
 end;
 $$;
 
