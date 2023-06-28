@@ -1,0 +1,21 @@
+table:
+  name: constraint_run
+  schema: public
+object_relationships:
+  - name: constraint
+    using:
+      foreign_key_constraint_on: constraint_id
+  - name: simulation
+    using:
+      foreign_key_constraint_on: simulation_id
+select_permissions:
+  - role: user
+    permission:
+      columns: [constraint_id, constraint_definition, simulation_id, status, violations, requested_by, requested_at]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [constraint_id, constraint_definition, simulation_id, status, violations, requested_by, requested_at]
+      filter: {}
+      allow_aggregations: true

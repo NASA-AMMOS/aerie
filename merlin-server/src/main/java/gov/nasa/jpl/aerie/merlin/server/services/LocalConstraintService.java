@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 
@@ -20,10 +20,15 @@ public class LocalConstraintService implements ConstraintService {
   }
 
   @Override
+  public void createConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, Violation> violations, final Long simulationId) {
+    this.constraintRepository.insertConstraintRuns(constraintMap, violations, simulationId);
+  }
+
+  @Override
   public Map<Long, ConstraintRunRecord> getPreviouslyResolvedConstraints(List<Constraint> constraints) {
     final var resolvedConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
     final var constraintIds = constraints.stream().map(Constraint::id).collect(Collectors.toList());
-    final var constraintRuns = constraintRepository.getConstraintRuns(constraintIds);
+    final var constraintRuns = constraintRepository.getSuccessfulConstraintRuns(constraintIds);
 
     for (final var constraintRun : constraintRuns) {
       resolvedConstraintRuns.put(constraintRun.constraintId(), constraintRun);

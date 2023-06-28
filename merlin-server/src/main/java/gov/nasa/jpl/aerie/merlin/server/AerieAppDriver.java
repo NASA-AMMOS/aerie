@@ -8,16 +8,20 @@ import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBindings;
+import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalConstraintService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
@@ -67,12 +71,23 @@ public final class AerieAppDriver {
         simulationController,
         constraintsDSLCompilationService
     );
+    final var constraintService = new LocalConstraintService(
+        stores.constraints()
+    );
+    final var constraintAction = new ConstraintAction(
+      constraintsDSLCompilationService,
+      constraintService,
+      planController,
+      missionModelController,
+      simulationController
+    );
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
     final var merlinBindings = new MerlinBindings(
         missionModelController,
         planController,
         simulationAction,
-        generateConstraintsLibAction
+        generateConstraintsLibAction,
+        constraintAction
     );
     // Configure an HTTP server.
     //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
@@ -98,7 +113,7 @@ public final class AerieAppDriver {
     javalin.start(configuration.httpPort());
   }
 
-  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results) {}
+  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results, ConstraintRepository constraints) {}
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
@@ -120,7 +135,8 @@ public final class AerieAppDriver {
       return new Stores(
           new PostgresPlanRepository(hikariDataSource),
           new PostgresMissionModelRepository(hikariDataSource),
-          new PostgresResultsCellRepository(hikariDataSource));
+          new PostgresResultsCellRepository(hikariDataSource),
+          new PostgresConstraintRepository(hikariDataSource));
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
     }

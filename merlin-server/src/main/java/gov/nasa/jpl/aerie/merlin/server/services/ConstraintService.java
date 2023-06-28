@@ -8,6 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface ConstraintService {
-  void createConstraintRun (Violation violation);
+  void createConstraintRuns(Map<Long, Constraint> constraintMap, Map<Long, Violation> violations, Long simulationId);
   Map<Long, ConstraintRunRecord> getPreviouslyResolvedConstraints(List<Constraint> constraints);
 }

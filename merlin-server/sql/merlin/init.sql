@@ -48,6 +48,7 @@ begin;
 
   -- Analysis intents
   \ir tables/constraint.sql
+  \ir tables/constraint_run.sql
 
   \ir tables/mission_model_parameters.sql
   \ir tables/simulation_dataset.sql

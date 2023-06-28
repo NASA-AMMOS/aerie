@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -46,12 +47,11 @@ public class ConstraintAction {
     this.simulationService = simulationService;
   }
 
-  public List<Violation> getViolations(final PlanId planId)
+  public List<Violation> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlanForValidation(planId);
     final var revisionData = this.planService.getPlanRevisionData(planId);
-
     final var constraintCode = new HashMap<Long, Constraint>();
 
     try {
@@ -63,15 +63,15 @@ public class ConstraintAction {
 
     final var constraintSize = constraintCode.size();
     final var previouslyResolvedConstraints = this.constraintService.getPreviouslyResolvedConstraints(constraintCode.values().stream().toList());
-    final var violations = new ArrayList<Violation>();
+    final var violations = new HashMap<Long, Violation>();
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : previouslyResolvedConstraints.values()) {
-      // TODO: Add the violations here.
       constraintCode.remove(constraintRun.constraintId());
+      violations.put(constraintRun.constraintId(), constraintRun.violation());
     }
 
-    // If the lengths don't match we need check constraints.
+    // If the lengths don't match we need check the left-over constraints.
     if (previouslyResolvedConstraints.size() != constraintSize) {
       final var resultsHandle$ = this.simulationService.get(planId, revisionData);
       final var simStartTime = resultsHandle$
@@ -219,12 +219,13 @@ public class ConstraintAction {
               violation.violationWindows,
               violation.gaps);
 
-          violations.add(newViolation);
-          constraintService.createConstraintRun(newViolation);
+          violations.put(entry.getKey(), newViolation);
         });
       }
+
+      constraintService.createConstraintRuns(constraintCode, violations, null);
     }
 
-    return violations;
+    return violations.values().stream().toList();
   }
 }

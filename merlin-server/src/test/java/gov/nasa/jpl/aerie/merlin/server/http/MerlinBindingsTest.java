@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubConstraintService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintService;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -41,19 +44,22 @@ public final class MerlinBindingsTest {
 
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
+    final var simulationService = new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp));
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         missionModelApp,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)),
+        simulationService,
         constraintsDSLCompilationService
     );
 
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+    final var constraintService = new StubConstraintService();
+    final var constraintAction = new ConstraintAction(constraintsDSLCompilationService, constraintService, planApp, missionModelApp, simulationService);
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
-      config.plugins.register(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction));
+      config.plugins.register(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction, constraintAction));
     });
 
     SERVER.start(54321); // Use likely unused port to avoid clash with any currently hosted port 80 services

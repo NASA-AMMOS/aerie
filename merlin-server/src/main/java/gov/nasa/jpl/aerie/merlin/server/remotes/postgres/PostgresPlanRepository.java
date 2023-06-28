@@ -190,6 +190,7 @@ public final class PostgresPlanRepository implements PlanRepository {
             .collect(Collectors.toMap(
                 ConstraintRecord::id,
                 r -> new Constraint(
+                    r.id(),
                     r.name(),
                     r.description(),
                     r.definition(),

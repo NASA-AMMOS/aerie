@@ -7,6 +7,7 @@
 - "!include public_anchor_validation_status.yaml"
 - "!include public_conflicting_activities.yaml"
 - "!include public_constraint.yaml"
+- "!include public_constraint_run.yaml"
 - "!include public_dataset.yaml"
 - "!include public_event.yaml"
 - "!include public_merge_request.yaml"
