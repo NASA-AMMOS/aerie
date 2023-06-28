@@ -30,8 +30,7 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationP;
     for (Constraint constraint : constraintMap.values()) {
       statement.setLong(1, constraint.id());
       statement.setString(2, constraint.definition());
-      // TODO: Fix the hardcoded sim id
-      statement.setLong(3, 1L);
+      statement.setLong(3, simulationId);
       statement.setString(4, ConstraintRunRecord.Status.SUCCESS.label);
       statement.setString(5, violationP.unparse(violations.get(constraint.id())).toString());
 

@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -152,6 +153,12 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
     public InMemorySimulationResultsHandle(final SimulationResults simulationResults) {
       this.simulationResults = simulationResults;
+    }
+
+    @Override
+    public SimulationDatasetId getSimulationDatasetId() {
+      // TODO: What should it return here?
+      return new SimulationDatasetId(1L);
     }
 
     @Override

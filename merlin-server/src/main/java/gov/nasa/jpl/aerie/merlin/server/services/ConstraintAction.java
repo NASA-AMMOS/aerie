@@ -105,7 +105,7 @@ public class ConstraintAction {
             Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
       }
 
-      final var externalDatasets = this.planService.getExternalDatasets(planId);
+      final var externalDatasets = this.planService.getExternalDatasets(planId, simulationDatasetId);
       final var realExternalProfiles = new HashMap<String, LinearProfile>();
       final var discreteExternalProfiles = new HashMap<String, DiscreteProfile>();
 
@@ -223,7 +223,12 @@ public class ConstraintAction {
         });
       }
 
-      constraintService.createConstraintRuns(constraintCode, violations, null);
+      constraintService.createConstraintRuns(
+          constraintCode,
+          violations,
+          simulationDatasetId.orElseGet(() -> resultsHandle$
+              .map(SimulationResultsHandle::getSimulationDatasetId)
+              .orElse(null)));
     }
 
     return violations.values().stream().toList();

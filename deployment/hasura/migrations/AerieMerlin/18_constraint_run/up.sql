@@ -1,25 +1,25 @@
 create type constraint_status as enum('resolved', 'constraint-outdated', 'simulation-outdated');
 
 create table constraint_run (
-                              constraint_id integer not null,
-                              constraint_definition text not null,
-                              dataset_id integer not null,
+  constraint_id integer not null,
+  constraint_definition text not null,
+  dataset_id integer not null,
 
-                              status constraint_status not null default 'resolved',
-                              violations jsonb null,
+  status constraint_status not null default 'resolved',
+  violations jsonb null,
 
   -- Additional Metadata
-                              requested_by text not null default '',
-                              requested_at timestamptz not null default now(),
+  requested_by text not null default '',
+  requested_at timestamptz not null default now(),
 
-                              constraint constraint_run_to_constraint
-                                foreign key (constraint_id)
-                                  references "constraint"
-                                  on delete cascade,
-                              constraint constraint_run_to_simulation_dataset
-                                foreign key (dataset_id)
-                                  references simulation_dataset
-                                  on delete cascade
+  constraint constraint_run_to_constraint
+    foreign key (constraint_id)
+      references "constraint"
+      on delete cascade,
+  constraint constraint_run_to_simulation_dataset
+    foreign key (dataset_id)
+      references simulation_dataset
+      on delete cascade
 );
 
 comment on table constraint_run is e''
