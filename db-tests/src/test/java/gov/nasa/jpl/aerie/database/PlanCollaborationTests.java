@@ -80,6 +80,10 @@ public class PlanCollaborationTests {
     helper.startDatabase();
     connection = helper.connection();
     merlinHelper = new MerlinDatabaseTestHelper(connection);
+    merlinHelper.insertUser("PlanCollaborationTests");
+    merlinHelper.insertUser("PlanCollaborationTests Reviewer");
+    merlinHelper.insertUser("PlanCollaborationTests Requester");
+    merlinHelper.insertUser("TagsTest");
   }
 
   @AfterAll
@@ -104,7 +108,7 @@ public class PlanCollaborationTests {
   int duplicatePlan(final int planId, final String newPlanName) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
-        select duplicate_plan(%s, '%s', 'DBTests') as id;
+        select duplicate_plan(%s, '%s', 'PlanCollaborationTests') as id;
       """.formatted(planId, newPlanName));
       res.next();
       return res.getInt("id");

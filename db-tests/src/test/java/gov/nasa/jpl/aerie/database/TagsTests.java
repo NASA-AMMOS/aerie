@@ -75,6 +75,7 @@ public class TagsTests {
     helper.startDatabase();
     setConnection(helper);
     merlinHelper = new MerlinDatabaseTestHelper(connection);
+    merlinHelper.insertUser("TagsTest");
   }
 
   @AfterAll
