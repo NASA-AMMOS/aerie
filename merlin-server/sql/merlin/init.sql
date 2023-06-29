@@ -89,6 +89,12 @@ begin;
   \ir views/resource_profile.sql
   \ir views/activity_directive_extended.sql
 
+  -- Permission Functions
+  \ir functions/metadata/get_role.sql
+  \ir functions/metadata/get_function_permissions.sql
+  \ir functions/metadata/check_general_permissions.sql
+  \ir functions/metadata/merge_permissions.sql
+
   -- Hasura Functions
   \ir functions/hasura/activity_preset_functions.sql
   \ir functions/hasura/delete_anchor_functions.sql
