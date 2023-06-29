@@ -39,7 +39,13 @@ type Mutation {
 }
 
 type Mutation {
-  createExpansionSet(commandDictionaryId: Int!, missionModelId: Int!, expansionIds: [Int!]!, description: String): ExpansionSetResponse
+  createExpansionSet(
+    commandDictionaryId: Int!,
+    missionModelId: Int!,
+    expansionIds: [Int!]!,
+    description: String,
+    name: String
+  ): ExpansionSetResponse
 }
 
 type Mutation {
