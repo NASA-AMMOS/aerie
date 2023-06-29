@@ -306,16 +306,16 @@ create or replace function simulation_dataset_check_constraint_run()
   returns trigger
   security definer
   language plpgsql as $$begin
-  if new.dataset_id != old.dataset_id
+  if new.simulation_id = old.simulation_id
   then
     update constraint_run
     set status = 'simulation-outdated'
-    where new.dataset_id == simulation_dataset_id;
+    where old.dataset_id = dataset_id;
   end if;
   return new;
 end$$;
 
 create trigger simulation_dataset_check_constraint_run_trigger
-  before update on simulation_dataset
+  before insert on simulation_dataset
   for each row
 execute function simulation_dataset_check_constraint_run();

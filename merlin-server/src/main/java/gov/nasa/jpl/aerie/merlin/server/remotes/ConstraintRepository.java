@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ConstraintRepository {
-  void insertConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, Violation> violations, final Long simulationId);
+  void insertConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, Violation> violations, final Long simulationDatasetId);
 
   List<ConstraintRunRecord> getSuccessfulConstraintRuns(List<Long> constraintIds);
 }

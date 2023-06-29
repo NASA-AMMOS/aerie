@@ -18,7 +18,7 @@ final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
       cr.status,
       cr.violations
     from constraint_run as cr
-    where cr.status = 'success'
+    where cr.status = 'resolved'
   """;
 
   private final PreparedStatement statement;

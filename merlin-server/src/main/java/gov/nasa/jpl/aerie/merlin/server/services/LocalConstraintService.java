@@ -22,7 +22,7 @@ public class LocalConstraintService implements ConstraintService {
 
   @Override
   public void createConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, Violation> violations, final SimulationDatasetId simulationDatasetId) {
-    this.constraintRepository.insertConstraintRuns(constraintMap, violations, simulationDatasetId);
+    this.constraintRepository.insertConstraintRuns(constraintMap, violations, simulationDatasetId.id());
   }
 
   @Override

@@ -8,10 +8,9 @@ public record ConstraintRunRecord(
   Violation violation
 ) {
   public enum Status {
-    PENDING("pending"),
-    INCOMPLETE("incomplete"),
-    FAILED("failed"),
-    SUCCESS("success");
+    CONSTRAINT_OUTDATED("constraint-outdated"),
+    SIMULATION_OUTDATED("simulation-outdated"),
+    RESOLVED("resolved");
 
     public final String label;
 
@@ -21,10 +20,9 @@ public record ConstraintRunRecord(
 
     public static Status fromString(final String label) throws InvalidRequestStatusException {
       return switch (label) {
-        case "pending" -> PENDING;
-        case "incomplete" -> INCOMPLETE;
-        case "failed" -> FAILED;
-        case "success" -> SUCCESS;
+        case "constraint-outdated" -> CONSTRAINT_OUTDATED;
+        case "simulation-outdated" -> SIMULATION_OUTDATED;
+        case "resolved" -> RESOLVED;
         default -> throw new InvalidRequestStatusException(label);
       };
     }
