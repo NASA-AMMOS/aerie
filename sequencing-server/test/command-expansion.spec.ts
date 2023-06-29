@@ -9,6 +9,7 @@ import { insertCommandDictionary, removeCommandDictionary } from './testUtils/Co
 import {
   expand,
   getExpandedSequence,
+  getExpansionSet,
   insertExpansion,
   insertExpansionSet,
   removeExpansion,
@@ -373,4 +374,44 @@ describe('expansion', () => {
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansionRun(graphqlClient, expansionRunPk);
   }, 30000);
+
+  it('should handle optional name and descripton for expansion sets', async () => {
+    const expansionId = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        A\`2023-091T10:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.GROW_BANANA({ quantity: 10, durationSecs: 7200 })
+      ];
+    }
+    `,
+    );
+    const name = "test name";
+    const description = "test desc";
+
+    const testProvidedExpansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId], description, name);
+    expect(testProvidedExpansionSetId).not.toBeNull();
+    expect(testProvidedExpansionSetId).toBeDefined();
+    expect(testProvidedExpansionSetId).toBeNumber();
+
+    const testProvidedResp = await getExpansionSet(graphqlClient, testProvidedExpansionSetId);
+    expect(testProvidedResp.expansion_set_by_pk.name).toBe(name);
+    expect(testProvidedResp.expansion_set_by_pk.description).toBe(description);
+
+    const testDefaultExpansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    expect(testDefaultExpansionSetId).not.toBeNull();
+    expect(testDefaultExpansionSetId).toBeDefined();
+    expect(testDefaultExpansionSetId).toBeNumber();
+
+    const testDefaultResp = await getExpansionSet(graphqlClient, testDefaultExpansionSetId);
+    expect(testDefaultResp.expansion_set_by_pk.name).toBe("");
+    expect(testDefaultResp.expansion_set_by_pk.description).toBe("");
+
+    // Cleanup
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, testProvidedExpansionSetId);
+    await removeExpansionSet(graphqlClient, testProvidedExpansionSetId);
+  });
 });
