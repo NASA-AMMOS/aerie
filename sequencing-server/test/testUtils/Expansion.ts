@@ -43,16 +43,26 @@ export async function insertExpansionSet(
   commandDictionaryId: number,
   missionModelId: number,
   expansionIds: number[],
+  description?: string,
+  name?: string
 ): Promise<number> {
   const res = await graphqlClient.request<{
     createExpansionSet: { id: number };
   }>(
     gql`
-      mutation AddExpansionSet($commandDictionaryId: Int!, $missionModelId: Int!, $expansionIds: [Int!]!) {
+      mutation AddExpansionSet(
+        $commandDictionaryId: Int!,
+        $missionModelId: Int!,
+        $expansionIds: [Int!]!,
+        $description: String,
+        $name: String
+      ) {
         createExpansionSet(
           commandDictionaryId: $commandDictionaryId
           missionModelId: $missionModelId
           expansionIds: $expansionIds
+          description: $description
+          name: $name
         ) {
           id
         }
@@ -62,9 +72,27 @@ export async function insertExpansionSet(
       commandDictionaryId,
       missionModelId,
       expansionIds,
+      description,
+      name
     },
   );
   return res.createExpansionSet.id;
+}
+
+export async function getExpansionSet(graphqlClient: GraphQLClient, expansionSetId: number): Promise<any> {
+  return graphqlClient.request(
+    gql`
+      query GetExpansionRule($expansionSetId: Int!) {
+        expansion_set_by_pk(id: $expansionSetId) {
+          name
+          description
+        }
+      }
+    `,
+    {
+      expansionSetId,
+    },
+  );
 }
 
 export async function removeExpansionSet(graphqlClient: GraphQLClient, expansionSetId: number): Promise<void> {
