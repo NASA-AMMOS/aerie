@@ -9,4 +9,9 @@ comment on table metadata.user_role_permission is null;
 
 drop table metadata.user_role_permission;
 
+-- ENUMS
+drop type metadata.function_permission_key;
+drop type metadata.action_permission_key;
+drop type metadata.permission;
+
 call migrations.mark_migration_rolled_back('21');
