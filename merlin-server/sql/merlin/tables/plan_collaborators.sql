@@ -7,7 +7,11 @@ create table plan_collaborators(
   constraint plan_collaborators_plan_id_fkey
     foreign key (plan_id) references plan
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint plan_collaborator_collaborator_fkey
+    foreign key (collaborator) references metadata.users
+        on update cascade
+        on delete cascade
 );
 
 comment on table plan_collaborators is e''

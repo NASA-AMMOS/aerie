@@ -7,8 +7,24 @@ import java.util.UUID;
 final class MerlinDatabaseTestHelper {
   private final Connection connection;
 
-  MerlinDatabaseTestHelper(Connection connection) {
+  MerlinDatabaseTestHelper(Connection connection) throws SQLException {
     this.connection = connection;
+    insertUser("Merlin DB Tests");
+  }
+
+  void insertUser(final String username) throws SQLException {
+    insertUser(username, "admin");
+  }
+
+  void insertUser(final String username, final String defaultRole) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+              """
+              INSERT INTO metadata.users (username, default_role)
+              VALUES ('%s', '%s');
+              """.formatted(username, defaultRole)
+          );
+    }
   }
 
   int insertFileUpload() throws SQLException {
@@ -32,7 +48,7 @@ final class MerlinDatabaseTestHelper {
           .executeQuery(
               """
                   INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'tester', '0', %s)
+                  VALUES ('test-mission-model-%s', 'test-mission', 'Merlin DB Tests', '0', %s)
                   RETURNING id;"""
                   .formatted(UUID.randomUUID().toString(), fileId)
           );

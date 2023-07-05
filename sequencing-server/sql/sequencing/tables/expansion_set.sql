@@ -9,8 +9,8 @@ create table expansion_set (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  owner text not null default '',
-  updated_by text not null default '',
+  owner text,
+  updated_by text,
 
   constraint expansion_set_unique_name_per_dict_and_model
     unique (mission_model_id, command_dict_id, name),

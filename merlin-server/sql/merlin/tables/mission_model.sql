@@ -20,7 +20,11 @@ create table mission_model (
     foreign key (jar_id)
     references uploaded_file
     on update cascade
-    on delete restrict
+    on delete restrict,
+  constraint mission_model_owner_exists
+    foreign key (owner) references metadata.users
+    on update cascade
+    on delete set null
 );
 
 comment on table mission_model is e''
