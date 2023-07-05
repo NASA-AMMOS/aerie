@@ -220,11 +220,14 @@ export class Windows {
   /**
    * Shifts the start and end of all true segments by a duration.
    *
-   * Shifts the start and end of all false segment by the opposite directions (i.e. the start of each false segment
+   * The second argument is optional: if omitted, `shiftBy(dur)` shifts all segments uniformly by `dur`, which
+   * is equivalent to `shiftBy(dur, dur)`.
+   *
+   * Shifts the start and end of all false segment by the reversed directions (i.e. the start of each false segment
    * is shifted by `fromEnd`).
    *
    * @param fromStart duration to add from the start of each true segment
-   * @param fromEnd duration to add from the end of each true segment
+   * @param fromEnd duration to add from the end of each true segment. Default is equal to `fromStart` if omitted.
    */
   public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined) : Windows {
     if (fromEnd === undefined) {
@@ -1099,11 +1102,14 @@ declare global {
     /**
      * Shifts the start and end of all true segments by a duration.
      *
-     * Shifts the start and end of all false segment by the opposite directions (i.e. the start of each false segment
+     * The second argument is optional: if omitted, `shiftBy(dur)` shifts all segments uniformly by `dur`, which
+     * is equivalent to `shiftBy(dur, dur)`.
+     *
+     * Shifts the start and end of all false segment by the reversed directions (i.e. the start of each false segment
      * is shifted by `fromEnd`).
      *
      * @param fromStart duration to add from the start of each true segment
-     * @param fromEnd duration to add from the end of each true segment
+     * @param fromEnd duration to add from the end of each true segment. Default is equal to `fromStart` if omitted.
      */
     public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Windows;
 
