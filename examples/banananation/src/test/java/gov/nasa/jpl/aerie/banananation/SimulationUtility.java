@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public final class SimulationUtility {
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
@@ -49,14 +50,15 @@ public final class SimulationUtility {
         simulationDuration);
   }
 
+  private static long _counter = 0;
+
   @SafeVarargs
   public static Map<ActivityDirectiveId, ActivityDirective> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
-    final var schedule = new HashMap<ActivityDirectiveId, ActivityDirective>();
-    long counter = 0;
+    final var schedule = new TreeMap<ActivityDirectiveId, ActivityDirective>();
 
     for (final var activitySpec : activitySpecs) {
       schedule.put(
-          new ActivityDirectiveId(counter++),
+          new ActivityDirectiveId(_counter++),
           new ActivityDirective(activitySpec.getLeft(), activitySpec.getRight(), null, true));
     }
 

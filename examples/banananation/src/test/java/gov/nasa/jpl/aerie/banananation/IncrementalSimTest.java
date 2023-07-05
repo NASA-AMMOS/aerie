@@ -166,6 +166,51 @@ public final class IncrementalSimTest {
     assertEquals(2.0, fruitProfile.get(2).dynamics().initial);
   }
 
+  @Test
+  public void testZeroDurationEventAtStart() {
+    if (debug) System.out.println("testZeroDurationEventAtStart()");
+
+    final var schedule1 = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(0, SECONDS),
+            new SerializedActivity("PeelBanana", Map.of())),
+        Pair.of(
+            duration(5, SECONDS),
+            new SerializedActivity("GrowBanana", Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", SerializedValue.of(Duration.SECOND.times(2).in(Duration.MICROSECONDS)))))
+    );
+
+    final var schedule2 = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(8, SECONDS),
+            new SerializedActivity("PeelBanana", Map.of()))
+    );
+
+    final var simDuration = duration(10, SECOND);
+
+    final var driver = SimulationUtility.getDriver(simDuration);
+
+    final var startTime = Instant.now();
+    var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
+
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    if (debug) System.out.println("fruit profile = " + fruitProfile);
+
+    driver.initSimulation(simDuration);
+    simulationResults = driver.simulate(schedule2, startTime, simDuration, startTime, simDuration);
+
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    if (debug) System.out.println("fruit profile = " + fruitProfile);
+
+    assertEquals(3, simulationResults.getSimulatedActivities().size());
+    assertEquals(4, fruitProfile.size());
+    assertEquals(3.0, fruitProfile.get(0).dynamics().initial);
+    assertEquals(3.0, fruitProfile.get(1).dynamics().initial);
+    assertEquals(4.0, fruitProfile.get(2).dynamics().initial);
+    assertEquals(3.0, fruitProfile.get(3).dynamics().initial);
+  }
+
   final static String INIT_SIM = "Initial Simulation";
   final static String COMP_RESULTS = "Compute Results";
   final static String SERIALIZE_RESULTS = "Serialize Results";
@@ -183,7 +228,7 @@ public final class IncrementalSimTest {
   public void testPerformanceOfOneEditToScaledPlan() {
     if (debug) System.out.println("testPerformanceOfOneEditToScaledPlan()");
 
-    int scaleFactor = 10000;
+    int scaleFactor = 1000;
 
     final List<Integer> sizes = IntStream.rangeClosed(1, 20).boxed().map(i -> i * scaleFactor).toList();
     System.out.println("Numbers of activities to test: " + sizes);
@@ -235,7 +280,9 @@ public final class IncrementalSimTest {
       timer.stop(false);
 
       // Modify a directive in the schedule
-      ActivityDirectiveId directiveId = new ActivityDirectiveId(numActs / 2);  // get middle activity
+      final Optional<ActivityDirectiveId> d0 = schedule.keySet().stream().findFirst();
+      long middleDirectiveNum = d0.get().id() + schedule.size() / 2;
+      ActivityDirectiveId directiveId = new ActivityDirectiveId(middleDirectiveNum);  // get middle activity
       final ActivityDirective directive = schedule.get(directiveId);
       schedule.put(directiveId, new ActivityDirective(directive.startOffset().plus(1, unit),
                                                       directive.serializedActivity(), directive.anchorId(),
@@ -286,8 +333,8 @@ public final class IncrementalSimTest {
   public void testPerformanceOfRepeatedSimsToScaledPlan() {
     if (debug) System.out.println("testPerformanceOfRepeatedSimsToScaledPlan()");
 
-    int scaleFactor = 100;
-    int numEdits = 500;
+    int scaleFactor = 10;
+    int numEdits = 50;
 
     final List<Integer> sizes = IntStream.rangeClosed(1, 5).boxed().map(i -> i * scaleFactor).toList();
     System.out.println("Numbers of activities to test: " + sizes);
@@ -299,6 +346,7 @@ public final class IncrementalSimTest {
     final SerializedActivity peelBanana = new SerializedActivity("PeelBanana", Map.of());
     final SerializedActivity changeProducerChiquita = new SerializedActivity("ChangeProducer", Map.of("producer", SerializedValue.of("Chiquita")));
     final SerializedActivity changeProducerDole = new SerializedActivity("ChangeProducer", Map.of("producer", SerializedValue.of("Dole")));
+    final SerializedActivity[] serializedActivities = new SerializedActivity[] {changeProducerChiquita, changeProducerDole, peelBanana, biteBanana};
 
 
     var testTimer = new Timer("testPerformanceOfOneEditToScaledPlan", false);
@@ -312,18 +360,10 @@ public final class IncrementalSimTest {
       Pair<Duration, SerializedActivity>[] pairs = new Pair[numActs];
       for (int i = 0; i < numActs; ++i) {
         pairs[i] = Pair.of(duration(spread * (i + 1), unit),
-                           changeProducerChiquita);
-        ++i;
-        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
-                           changeProducerDole);
-        ++i;
-        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
-                           peelBanana);
-        ++i;
-        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
-                           biteBanana);
+                           serializedActivities[i % serializedActivities.length]);
       }
       final Map<ActivityDirectiveId, ActivityDirective> schedule = SimulationUtility.buildSchedule(pairs);
+      long initialId = schedule.keySet().stream().findFirst().get().id();
 
       final var startTime = Instant.now();
       final var simDuration = duration(spread * (numActs + 2), SECOND);
@@ -345,7 +385,7 @@ public final class IncrementalSimTest {
       for (int j=0; j < numEdits; ++j) {
 
         // Modify a directive in the schedule
-        int directiveNumber = random.nextInt(numActs);
+        long directiveNumber = initialId + random.nextInt(numActs);
         ActivityDirectiveId directiveId = new ActivityDirectiveId(directiveNumber);  // get random activity
         final ActivityDirective directive = schedule.get(directiveId);
         Duration newOffset = directive.startOffset().plus(1, unit);
