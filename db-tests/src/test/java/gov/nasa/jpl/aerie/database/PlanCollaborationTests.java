@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -2961,30 +2962,54 @@ public class PlanCollaborationTests {
       assertEquals(expectedTargetTags, tagsHelper.getTagsOnActivity(targetActivityId, planId));
     }
 
-    // If the tag in a snapshot is deleted mid-merge, it should not be present in the final activity directive
+    // If a tag is on an activity directive or snapshot directive involved in a merge, it may not be deleted
     @Test
-    void postMergeTagIsAbsentIfTagDeleted() throws SQLException {
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
+    void tagsCannotBeDeletedMidMerge() throws SQLException {
+      final int activityTagId = tagsHelper.insertTag("Farm");
+      final int snapshotTagId = tagsHelper.insertTag("Tractor");
+      final int unrelatedTagId = tagsHelper.insertTag("Mars");
 
       final int planId = merlinHelper.insertPlan(missionModelId);
-      final int oneTagActivityId = merlinHelper.insertActivity(planId);
-      tagsHelper.assignTagToActivity(oneTagActivityId, planId, farmTagId);
-      final int noTagsActivityId = merlinHelper.insertActivity(planId);
-      tagsHelper.assignTagToActivity(noTagsActivityId, planId, farmTagId);
-      final int branchId = duplicatePlan(planId, "Tags Modify Delete");
-      tagsHelper.assignTagToActivity(oneTagActivityId, branchId, tractorTagId);
+      final int activityId = merlinHelper.insertActivity(planId);
+      final int branchId = duplicatePlan(planId, "Tags Fail to Delete");
+
+      tagsHelper.assignTagToActivity(activityId, planId, activityTagId);
+      tagsHelper.assignTagToActivity(activityId, branchId, snapshotTagId);
 
       final int mergeRQ = createMergeRequest(planId, branchId);
       beginMerge(mergeRQ);
-      tagsHelper.deleteTag(farmTagId);
-      commitMerge(mergeRQ);
 
-      final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
+      try {
+        tagsHelper.deleteTag(activityTagId);
+      } catch (SQLException ex) {
+        if(!ex.getMessage().contains("Plan "+planId +" is locked.")){
+          throw ex;
+        }
+      }
+      try {
+        tagsHelper.deleteTag(snapshotTagId);
+      } catch (SQLException ex) {
+        if(!ex.getMessage().contains("Cannot delete. Snapshot is in use in an active merge review.")){
+          throw ex;
+        }
+      }
+      assertDoesNotThrow(()->tagsHelper.deleteTag(unrelatedTagId));
 
-      assertEquals(expectedTags, tagsHelper.getTagsOnActivity(oneTagActivityId, planId));
-      assertEquals(new ArrayList<Tag>(), tagsHelper.getTagsOnActivity(noTagsActivityId, planId));
+      unlockPlan(planId);
+    }
+
+    @Test
+    void tagsCanBeDeletedIfSnapshotIsNotMidMerge() throws SQLException {
+      final int tagId = tagsHelper.insertTag("Tractor");
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
+
+      tagsHelper.assignTagToActivity(activityId, planId, tagId);
+      createSnapshot(planId);
+      tagsHelper.removeTagFromActivity(activityId,planId, tagId);
+
+      // Tag is now only on the snapshot activity
+      assertDoesNotThrow(()->tagsHelper.deleteTag(tagId));
     }
 
     // Tags do not get shuffled during merge
