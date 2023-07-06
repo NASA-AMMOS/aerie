@@ -1363,7 +1363,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
         : json.time.type === TimingTypes.COMMAND_RELATIVE
             ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING,true) }
         : {};
 
     return CommandStem.new({
@@ -1696,7 +1696,7 @@ export class Ground_Block implements GroundBlock {
         : json.time.type === TimingTypes.COMMAND_RELATIVE
             ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING,true) }
         : {};
 
     return Ground_Block.new({
@@ -1928,7 +1928,7 @@ export class Ground_Event implements GroundEvent {
         : json.time.type === TimingTypes.COMMAND_RELATIVE
             ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING,true) }
         : {};
 
     return Ground_Event.new({
@@ -2216,7 +2216,7 @@ export class ActivateStep implements Activate {
         : json.time.type === TimingTypes.COMMAND_RELATIVE
             ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING,true) }
         : {};
 
     return ActivateStep.new({
@@ -2510,7 +2510,7 @@ export class LoadStep implements Load {
         : json.time.type === TimingTypes.COMMAND_RELATIVE
             ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+            ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING,true) }
         : {};
 
     return LoadStep.new({
@@ -2859,7 +2859,7 @@ class RequestTime extends RequestCommon implements RequestWithTime {
           : json.time.type === TimingTypes.COMMAND_RELATIVE
               ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
           : json.time.type === TimingTypes.EPOCH_RELATIVE
-              ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+              ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING,true) }
           : {}
         : {};
 
@@ -3061,7 +3061,7 @@ export type DOY_STRING = string & { __brand: 'DOY_STRING' };
 export type HMS_STRING = string & { __brand: 'HMS_STRING' };
 
 const DOY_REGEX = /(\d{4})-(\d{3})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
-const HMS_REGEX = /(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
+const HMS_REGEX = /^([-+])?(\d{3}T)?(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?$/;
 
 /** YYYY-DOYTHH:MM:SS.sss */
 export function instantToDoy(time: Temporal.Instant): DOY_STRING {
@@ -3117,32 +3117,49 @@ export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
   }).toInstant();
 }
 
-/** HH:MM:SS.sss */
+/** [+/-][DDDT]HH:MM:SS.sss */
 export function durationToHms(time: Temporal.Duration): HMS_STRING {
-  const HH = formatNumber(time.hours, 2);
-  const MM = formatNumber(time.minutes, 2);
-  const SS = formatNumber(time.seconds, 2);
-  const sss = formatNumber(time.milliseconds, 3);
+  let { days, hours, minutes, seconds, milliseconds } = time;
 
-  return `${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
+  const DD = days !== 0 ? `${formatNumber(days, 3)}T` : '';
+  const HH = days !== 0 ? formatNumber(hours, 2).replace('-', '') : formatNumber(hours, 2);
+  const MM = formatNumber(minutes, 2).replace('-', '');
+  const SS = formatNumber(seconds, 2).replace('-', '');
+  const sss = formatNumber(milliseconds, 3).replace('-', '');
+
+  return `${DD}${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
 }
 
-export function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
+export function hmsToDuration(hms: HMS_STRING, epoch: boolean = false): Temporal.Duration {
   const match = hms.match(HMS_REGEX);
   if (match === null) {
     throw new Error(`Invalid HMS string: ${hms}`);
   }
-  const [, hours, minutes, seconds, milliseconds] = match as [unknown, string, string, string, string | undefined];
+
+  const [, sign, days = '0', hours = "0", minutes = "0", seconds = "0", milliseconds = '0'] = match;
+  const isPositive = sign !== '-';
+  const parseNumber = (value: string) => (isPositive ? 1 : -1) * parseInt(value, 10);
+
+  if (!epoch) {
+    if(!isPositive)
+      throw new Error(`Signed time (+/-) is not allowed for Relative Times: ${hms}`);
+    if(days !== '0')
+      throw new Error(`Day (DDD) is not allowed for Relative Times: ${hms}`);
+  }
   return Temporal.Duration.from({
-    hours: parseInt(hours, 10),
-    minutes: parseInt(minutes, 10),
-    seconds: parseInt(seconds, 10),
-    milliseconds: parseInt(milliseconds ?? '0', 10),
+    days: parseNumber(days.replace('T', '')),
+    hours: parseNumber(hours),
+    minutes: parseNumber(minutes),
+    seconds: parseNumber(seconds),
+    milliseconds: parseNumber(milliseconds),
   });
 }
 
 function formatNumber(number: number, size: number): string {
-  return number.toString().padStart(size, '0');
+  const isNegative = number < 0;
+  const absoluteNumber = Math.abs(number).toString();
+  const formattedNumber = absoluteNumber.padStart(size, '0');
+  return isNegative ? `-${formattedNumber}` : formattedNumber;
 }
 
 // @ts-ignore : Used in generated code
@@ -3186,9 +3203,9 @@ function E(
     typeof Commands & typeof STEPS & typeof REQUESTS {
   let duration: Temporal.Duration;
   if (Array.isArray(args[0])) {
-    duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+    duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING,true);
   } else if (typeof args[0] === 'string') {
-    duration = hmsToDuration(args[0] as HMS_STRING);
+    duration = hmsToDuration(args[0] as HMS_STRING,true);
   } else {
     duration = args[0] as Temporal.Duration;
   }
