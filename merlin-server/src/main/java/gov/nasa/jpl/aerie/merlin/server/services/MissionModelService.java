@@ -45,11 +45,6 @@ public interface MissionModelService {
       SerializedActivity> activities
   ) throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
 
-  Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
-  throws NoSuchMissionModelException,
-         NoSuchActivityTypeException,
-         InstantiationException;
-
   List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
       String missionModelId,
       List<SerializedActivity> serializedActivities)

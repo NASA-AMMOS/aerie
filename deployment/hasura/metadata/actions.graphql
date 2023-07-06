@@ -62,13 +62,14 @@ type Query {
     activityTypeName: String!
     activityArguments: ActivityArguments!
   ): EffectiveArgumentsResponse
+  @deprecated(reason: "Use bulk query getActivityEffectiveArgumentsBulk instead")
 }
 
 type Query {
   getActivityEffectiveArgumentsBulk(
     missionModelId: ID!
     activities: [EffectiveArgumentsInput!]!
-  ): [EffectiveArgumentsBulkResponse!]!
+  ): [EffectiveArgumentsResponse!]!
 }
 
 type Query {
@@ -203,13 +204,7 @@ type EffectiveArgumentsResponse {
   success: Boolean!
   arguments: ActivityArguments
   errors: [String!]
-}
-
-type EffectiveArgumentsBulkResponse {
-  typeName: String!
-  success: Boolean!
-  arguments: ActivityArguments
-  errors: [String!]
+  typeName: String
 }
 
 type AddExternalDatasetResponse {

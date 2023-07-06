@@ -167,21 +167,6 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, SerializedValue> getActivityEffectiveArguments(final String missionModelId, final SerializedActivity activity)
-  throws NoSuchMissionModelException,
-         NoSuchActivityTypeException,
-         MissionModelLoadException,
-         InstantiationException
-  {
-    final var modelType = this.loadMissionModelType(missionModelId);
-    final var registry = DirectiveTypeRegistry.extract(modelType);
-    final var directiveType = Optional
-        .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
-        .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
-    return directiveType.getInputType().getEffectiveArguments(activity.getArguments());
-  }
-
-  @Override
   public List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
       final String missionModelId,
       final List<SerializedActivity> serializedActivities)

@@ -328,6 +328,7 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
+  @Deprecated
   private void getActivityEffectiveArguments(final Context ctx) {
     try {
       final var input = parseJson(ctx.body(), hasuraActivityActionP).input();
@@ -338,14 +339,11 @@ public final class MerlinBindings implements Plugin {
 
       final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
 
-      final var arguments = this.missionModelService.getActivityEffectiveArguments(missionModelId, serializedActivity);
+      final var arguments = this.missionModelService.getActivityEffectiveArgumentsBulk(
+          missionModelId,
+          List.of(serializedActivity));
 
-      ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
-    } catch (final InstantiationException ex) {
-      ctx.status(200).result(ResponseSerializers.serializeInstantiationException(ex).toString());
-    } catch (final MissionModelService.NoSuchActivityTypeException ex) {
-      ctx.status(400)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+      ctx.result(ResponseSerializers.serializeBulkEffectiveArgumentResponse(arguments.get(0)).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final InvalidJsonException ex) {
