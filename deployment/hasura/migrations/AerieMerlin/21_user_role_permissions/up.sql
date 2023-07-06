@@ -398,4 +398,7 @@ begin
 end
 $$;
 
+-- UPDATE VOLATILITY
+alter function hasura_functions.get_resources_at_start_offset(_dataset_id integer, _start_offset interval) stable;
+
 call migrations.mark_migration_applied('21');

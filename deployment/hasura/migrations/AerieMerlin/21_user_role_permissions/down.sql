@@ -1,3 +1,6 @@
+-- UPDATE VOLATILITY
+alter function hasura_functions.get_resources_at_start_offset(_dataset_id integer, _start_offset interval) immutable;
+
 -- NEW FUNCTIONS
 drop procedure metadata.check_merge_permissions(_function metadata.function_permission_key, _permission metadata.permission, _plan_id_receiving integer, _snapshot_id_supplying integer, _user text);
 drop procedure metadata.check_merge_permissions(_function metadata.function_permission_key, _merge_request_id integer, hasura_session json);
