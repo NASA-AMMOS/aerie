@@ -100,7 +100,7 @@ describe('sequence generation', () => {
         A(Temporal.Instant.from("2025-12-24T12:01:59Z")).PREHEAT_OVEN({ temperature: 360 }),
         R\`00:15:30\`.PREHEAT_OVEN({ temperature: 425 }),
         R(Temporal.Duration.from({ hours: 1, minutes: 15, seconds: 30 })).EAT_BANANA,
-        E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
+        E(Temporal.Duration.from({ days: -1, hours: -12, minutes: -16, seconds: -54 })).PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
         E\`04:56:54\`.EAT_BANANA,
         C.PACKAGE_BANANA({
           bundle: [
@@ -305,7 +305,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -624,7 +624,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -831,7 +831,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -1131,7 +1131,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -1481,7 +1481,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -1691,7 +1691,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -1994,7 +1994,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -2324,7 +2324,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -2531,7 +2531,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: {
-          tag: '12:06:54.000',
+          tag: '-001T12:16:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
@@ -3140,7 +3140,7 @@ describe('sequence generation', () => {
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
         A\`2023-091T08:19:00.000\`.ADD_WATER,
-        E\`04:00:00.000\`.PICK_BANANA,
+        E\`000T04:00:00.000\`.PICK_BANANA,
         A\`2023-091T04:20:00.000\`.GROW_BANANA({ quantity: 10, durationSecs: 7200 })
       ];
     }
@@ -3341,7 +3341,7 @@ describe('user sequence to seqjson', () => {
         steps: [
             C.BAKE_BREAD,
             A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
-            E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
+            E(Temporal.Duration.from({ hours: -12, minutes: -1, seconds: -54 })).PACKAGE_BANANA({
               lot_number: 1093,
               bundle: [
                 {
@@ -3381,7 +3381,7 @@ describe('user sequence to seqjson', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: {
-          tag: '12:06:54.000',
+          tag: '-12:01:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [
