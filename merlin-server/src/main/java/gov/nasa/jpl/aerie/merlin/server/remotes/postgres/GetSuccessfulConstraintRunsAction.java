@@ -15,31 +15,44 @@ final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select
       cr.constraint_id,
+      cr.simulation_dataset_id,
       cr.status,
       cr.violations
     from constraint_run as cr
     where cr.status = 'resolved'
+    and cr.constraint_id = any(?)
+    and cr.simulation_dataset_id in (select distinct on (simulation_id) id from simulation_dataset order by simulation_id, id desc)
   """;
 
   private final PreparedStatement statement;
+  private final List<Long> constraintIds;
 
-  public GetSuccessfulConstraintRunsAction(final Connection connection) throws SQLException {
+  public GetSuccessfulConstraintRunsAction(final Connection connection, final List<Long> constraintIds) throws SQLException {
     this.statement = connection.prepareStatement(sql);
+    this.constraintIds = constraintIds;
   }
 
   public List<ConstraintRunRecord> get() throws SQLException, ConstraintRunRecord.Status.InvalidRequestStatusException {
+    this.statement.setArray(1, this.statement.getConnection().createArrayOf("integer", constraintIds.toArray()));
+
     try (final var results = this.statement.executeQuery()) {
       final var constraintRuns = new ArrayList<ConstraintRunRecord>();
 
       while (results.next()) {
-        constraintRuns.add(
-            new ConstraintRunRecord(
-                results.getLong("constraint_id"),
-                ConstraintRunRecord.Status.fromString(results.getString("status")),
-                getJsonColumn(results, "violations", violationP)
-                    .getSuccessOrThrow($ -> new Error("Corrupt violations cannot be parsed: " + $.reason()))
-            )
-        );
+        final var constraintId = results.getLong("constraint_id");
+        final var status = ConstraintRunRecord.Status.fromString(results.getString("status"));
+        final var violationString = results.getString("violations");
+
+        // The constraint run didn't have any violations
+        if (violationString.equals("{}")) {
+          constraintRuns.add(new ConstraintRunRecord(constraintId, status, null));
+        } else {
+          constraintRuns.add(new ConstraintRunRecord(
+              constraintId,
+              status,
+              getJsonColumn(results, "violations", violationP)
+                  .getSuccessOrThrow($ -> new Error("Corrupt violations cannot be parsed: " + $.reason()))));
+        }
       }
 
       return constraintRuns;

@@ -36,7 +36,7 @@ const gql = {
     }
   `,
 
-  GET_TOPIC_EVENTS:`#graphql
+  GET_TOPIC_EVENTS: `#graphql
   query GetTopicsEvents($datasetId: Int!) {
     topic(where: {dataset_id: {_eq: $datasetId}}) {
       name
@@ -52,7 +52,7 @@ const gql = {
   }
   `,
 
-  GET_PROFILES:`#graphql
+  GET_PROFILES: `#graphql
     query GetProfiles($datasetId: Int!){
       profile(where: {dataset_id: {_eq: $datasetId}}) {
         name
@@ -381,6 +381,17 @@ const gql = {
     }
   `,
 
+  GET_CONSTRAINT_RUNS: `#graphql
+    query getConstraintRuns($simulationDatasetId: Int!) {
+      constraint_run(where: {simulation_dataset_id: {_eq: $simulationDatasetId}}) {
+        constraint_definition
+        constraint_id
+        simulation_dataset_id
+        status
+        violations
+      }
+    }
+  `,
 };
 
 export default gql;

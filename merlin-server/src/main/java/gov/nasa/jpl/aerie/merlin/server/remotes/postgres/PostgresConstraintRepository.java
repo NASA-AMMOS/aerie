@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 
 import javax.sql.DataSource;
@@ -17,10 +18,15 @@ public class PostgresConstraintRepository implements ConstraintRepository {
   }
 
   @Override
-  public void insertConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, Violation> violations, final Long simulationDatasetId) {
+  public void insertConstraintRuns(
+      final Map<Long, Constraint> constraintMap,
+      final Map<Long, Violation> violations,
+      final PlanId planId,
+      final Long simulationDatasetId
+  ) {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var insertConstraintRunsAction = new InsertConstraintRunsAction(connection)) {
-        insertConstraintRunsAction.apply(constraintMap, violations, simulationDatasetId);
+        insertConstraintRunsAction.apply(constraintMap, violations, planId, simulationDatasetId);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to save constraint run", ex);
@@ -30,7 +36,7 @@ public class PostgresConstraintRepository implements ConstraintRepository {
   @Override
   public List<ConstraintRunRecord> getSuccessfulConstraintRuns(List<Long> constraintIds) {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var getConstraintRuns = new GetSuccessfulConstraintRunsAction(connection)) {
+      try (final var getConstraintRuns = new GetSuccessfulConstraintRunsAction(connection, constraintIds)) {
         return getConstraintRuns.get();
       } catch (ConstraintRunRecord.Status.InvalidRequestStatusException ex) {
         throw new Error("Constraint run had an invalid status", ex);

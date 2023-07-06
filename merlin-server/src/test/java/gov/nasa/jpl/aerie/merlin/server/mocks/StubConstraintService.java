@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintService;
@@ -14,6 +15,7 @@ public class StubConstraintService implements ConstraintService {
   public void createConstraintRuns(
       final Map<Long, Constraint> constraintMap,
       final Map<Long, Violation> violations,
+      final PlanId planId,
       final SimulationDatasetId simulationDatasetId)
   {
 

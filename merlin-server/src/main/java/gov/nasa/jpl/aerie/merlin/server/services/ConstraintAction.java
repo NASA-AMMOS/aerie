@@ -68,7 +68,10 @@ public class ConstraintAction {
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : previouslyResolvedConstraints.values()) {
       constraintCode.remove(constraintRun.constraintId());
-      violations.put(constraintRun.constraintId(), constraintRun.violation());
+
+      if (constraintRun.violation() != null) {
+        violations.put(constraintRun.constraintId(), constraintRun.violation());
+      }
     }
 
     // If the lengths don't match we need check the left-over constraints.
@@ -223,12 +226,17 @@ public class ConstraintAction {
         });
       }
 
-      constraintService.createConstraintRuns(
-          constraintCode,
-          violations,
-          simulationDatasetId.orElseGet(() -> resultsHandle$
+      final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
               .map(SimulationResultsHandle::getSimulationDatasetId)
-              .orElse(null)));
+              .orElse(null));
+
+      if (simDatasetId != null) {
+        constraintService.createConstraintRuns(
+            constraintCode,
+            violations,
+            planId,
+            simDatasetId);
+      }
     }
 
     return violations.values().stream().toList();
