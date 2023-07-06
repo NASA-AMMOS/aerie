@@ -20,7 +20,7 @@ public final class ActivityWindow implements Expression<Windows> {
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
     return new Windows(
-        Segment.of(Interval.FOREVER, false),
+        Segment.of(bounds, false),
         Segment.of(activity.interval, true)
     );
   }

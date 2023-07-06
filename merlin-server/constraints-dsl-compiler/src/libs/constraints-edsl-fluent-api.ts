@@ -220,19 +220,30 @@ export class Windows {
   /**
    * Shifts the start and end of all true segments by a duration.
    *
-   * Shifts the start and end of all false segment by the opposite directions (i.e. the start of each false segment
+   * The second argument is optional: if omitted, `shiftBy(dur)` shifts all segments uniformly by `dur`, which
+   * is equivalent to `shiftBy(dur, dur)`.
+   *
+   * Shifts the start and end of all false segment by the reversed directions (i.e. the start of each false segment
    * is shifted by `fromEnd`).
    *
    * @param fromStart duration to add from the start of each true segment
-   * @param fromEnd duration to add from the end of each true segment
+   * @param fromEnd duration to add from the end of each true segment. Default is equal to `fromStart` if omitted.
    */
-  public shiftBy(fromStart: AST.Duration, fromEnd: AST.Duration) : Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionShiftBy,
-      windowExpression: this.__astNode,
-      fromStart,
-      fromEnd
-    })
+  public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined) : Windows {
+    if (fromEnd === undefined) {
+      return new Windows({
+        kind: AST.NodeKind.ProfileExpressionShiftBy,
+        expression: this.__astNode,
+        duration: fromStart
+      });
+    } else {
+      return new Windows({
+        kind: AST.NodeKind.WindowsExpressionShiftBy,
+        windowExpression: this.__astNode,
+        fromStart,
+        fromEnd
+      })
+    }
   }
 
   /**
@@ -707,6 +718,19 @@ export class Real {
       timepoint : timepoint.__astNode
     });
   }
+
+  /**
+   * Shifts the profile forward or backward in time.
+   *
+   * @param duration duration shift each segment (can be negative)
+   */
+  public shiftBy(duration: Temporal.Duration): Real {
+    return new Real({
+      kind: AST.NodeKind.ProfileExpressionShiftBy,
+      expression: this.__astNode,
+      duration
+    })
+  }
 }
 
 /**
@@ -867,6 +891,19 @@ export class Discrete<Schema> {
       originalProfile: this.__astNode,
       defaultProfile: defaultProfile.__astNode
     });
+  }
+
+  /**
+   * Shifts the profile forward or backward in time.
+   *
+   * @param duration duration shift each segment (can be negative)
+   */
+  public shiftBy(duration: Temporal.Duration): Discrete<Schema> {
+    return new Discrete<Schema>({
+      kind: AST.NodeKind.ProfileExpressionShiftBy,
+      expression: this.__astNode,
+      duration
+    })
   }
 }
 
@@ -1065,13 +1102,16 @@ declare global {
     /**
      * Shifts the start and end of all true segments by a duration.
      *
-     * Shifts the start and end of all false segment by the opposite directions (i.e. the start of each false segment
+     * The second argument is optional: if omitted, `shiftBy(dur)` shifts all segments uniformly by `dur`, which
+     * is equivalent to `shiftBy(dur, dur)`.
+     *
+     * Shifts the start and end of all false segment by the reversed directions (i.e. the start of each false segment
      * is shifted by `fromEnd`).
      *
      * @param fromStart duration to add from the start of each true segment
-     * @param fromEnd duration to add from the end of each true segment
+     * @param fromEnd duration to add from the end of each true segment. Default is equal to `fromStart` if omitted.
      */
-    public shiftBy(fromStart: AST.Duration, fromEnd: AST.Duration): Windows;
+    public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Windows;
 
     /**
      * Returns a new windows object, with all true segments shorter than or equal to the given
@@ -1334,6 +1374,13 @@ declare global {
      * @param timepoint the timepoint, represented by a Spans (must be reduced to a single point)
      */
     public valueAt(timepoint: Spans): Discrete<number>;
+
+    /**
+     * Shifts the profile forward or backward in time.
+     *
+     * @param duration duration shift each segment (can be negative)
+     */
+    public shiftBy(duration: Temporal.Duration): Real;
   }
 
   /**
@@ -1422,6 +1469,13 @@ declare global {
      * @param timepoint the timepoint, represented by a Spans (must be reduced to a single point)
      */
     public valueAt(timepoint: Spans): Discrete<Schema>;
+
+    /**
+     * Shifts the profile forward or backward in time.
+     *
+     * @param duration duration shift each segment (can be negative)
+     */
+    public shiftBy(duration: Temporal.Duration): Discrete<Schema>;
   }
 
   /** An enum for whether an interval includes its bounds. */

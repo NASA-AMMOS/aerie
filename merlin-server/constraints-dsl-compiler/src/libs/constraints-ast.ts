@@ -43,6 +43,7 @@ export enum NodeKind {
   ForEachActivitySpans = 'ForEachActivitySpans',
   ForEachActivityViolations = 'ForEachActivityViolations',
   ProfileChanges = 'ProfileChanges',
+  ProfileExpressionShiftBy = 'ProfileExpressionShiftBy',
   ViolationsOf = 'ViolationsOf',
   AbsoluteInterval = 'AbsoluteInterval',
   IntervalAlias = 'IntervalAlias',
@@ -82,6 +83,7 @@ export type WindowsExpression =
   | WindowsExpressionStartOf
   | WindowsExpressionEndOf
   | ProfileChanges
+  | ProfileExpressionShiftBy<WindowsExpression>
   | RealProfileLessThan
   | RealProfileLessThanOrEqual
   | RealProfileGreaterThan
@@ -118,6 +120,12 @@ export type IntervalsExpression =
 export interface ProfileChanges {
   kind: NodeKind.ProfileChanges;
   expression: ProfileExpression;
+}
+
+export interface ProfileExpressionShiftBy<P extends ProfileExpression> {
+  kind: NodeKind.ProfileExpressionShiftBy,
+  expression: P,
+  duration: Duration
 }
 
 export interface WindowsExpressionValue {
@@ -266,7 +274,8 @@ export type RealProfileExpression =
   | RealProfileValue
   | RealProfileParameter
   | AssignGapsExpression<RealProfileExpression>
-  | RealProfileAccumulatedDuration;
+  | RealProfileAccumulatedDuration
+  | ProfileExpressionShiftBy<RealProfileExpression>;
 
 export interface StructProfileExpression {
   kind: NodeKind.StructProfileExpression,
@@ -333,7 +342,8 @@ export type DiscreteProfileExpression =
     | StructProfileExpression
     | ListProfileExpression
     | ValueAtExpression
-    | IntervalDuration;
+    | IntervalDuration
+    | ProfileExpressionShiftBy<DiscreteProfileExpression>;
 
 export interface DiscreteProfileResource {
   kind: NodeKind.DiscreteProfileResource;

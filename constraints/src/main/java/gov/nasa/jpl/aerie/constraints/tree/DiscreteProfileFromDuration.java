@@ -18,7 +18,7 @@ public record DiscreteProfileFromDuration(
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final Duration duration = this.duration.evaluate(results, bounds, environment);
-    return new DiscreteProfile(Segment.of(Interval.FOREVER, SerializedValue.of(duration.in(Duration.MICROSECOND))));
+    return new DiscreteProfile(Segment.of(bounds, SerializedValue.of(duration.in(Duration.MICROSECOND))));
   }
 
   @Override

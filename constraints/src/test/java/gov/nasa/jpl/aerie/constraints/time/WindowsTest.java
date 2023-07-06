@@ -347,7 +347,7 @@ public class WindowsTest {
                                Segment.of(interval(14, Exclusive, 17, Exclusive, SECONDS), false),
                                Segment.of(at(Duration.MAX_VALUE), true)); //long overflow if at max value
 
-    Windows result = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
+    Windows result = orig.shiftEdges(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
 
 
     Windows expected = new Windows(
@@ -392,7 +392,7 @@ public class WindowsTest {
         .set(interval(0, 2, SECONDS), true)
         .set(interval(8, 10, SECONDS), true);
 
-    var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
+    var fromStartPosFromEndPos = orig.shiftEdges(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
     assertIterableEquals(
         new Windows(interval(0, 10, SECONDS), false)
             .set(interval(-1, 3, SECONDS), true)
@@ -400,7 +400,7 @@ public class WindowsTest {
         fromStartPosFromEndPos
     );
 
-    var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
+    var fromStartPosFromEndNeg = orig.shiftEdges(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
     assertEquals(
         new Windows(interval(1, Exclusive, 9, Exclusive, SECONDS), false)
             .set(at(1, SECONDS), true)
@@ -408,7 +408,7 @@ public class WindowsTest {
         fromStartPosFromEndNeg
     );
 
-    var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
+    var fromStartNegFromEndPos = orig.shiftEdges(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
     assertEquals(
         new Windows(interval(1, 11, SECONDS), false)
             .set(interval(1, 3, SECONDS), true)
@@ -416,7 +416,7 @@ public class WindowsTest {
         fromStartNegFromEndPos
     );
 
-    var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
+    var fromStartNegFromEndNeg = orig.shiftEdges(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
     assertEquals(
         new Windows(interval(-1, 9, SECONDS), false)
             .set(interval(-1, 1, SECONDS), true)
@@ -424,7 +424,7 @@ public class WindowsTest {
         fromStartNegFromEndNeg
     );
 
-    var removal = orig.shiftBy(Duration.of(0, SECONDS), Duration.of(-3, SECONDS));
+    var removal = orig.shiftEdges(Duration.of(0, SECONDS), Duration.of(-3, SECONDS));
     assertEquals(
         new Windows(interval(-1, Exclusive, 8, Exclusive, SECONDS), false),
         removal
@@ -437,19 +437,19 @@ public class WindowsTest {
         .set(at(0, SECONDS), true)
         .set(at(2, SECONDS), false);
 
-    var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
+    var fromStartPosFromEndPos = orig.shiftEdges(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
     assertIterableEquals(
         new Windows(interval(-1, 1, SECONDS), true),
         fromStartPosFromEndPos
     );
 
-    var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
+    var fromStartPosFromEndNeg = orig.shiftEdges(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
     assertIterableEquals(
         new Windows(interval(1, 3, SECONDS), false),
         fromStartPosFromEndNeg
     );
 
-    var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
+    var fromStartNegFromEndPos = orig.shiftEdges(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
     assertIterableEquals(
         new Windows()
             .set(at(1, SECONDS), true)
@@ -457,7 +457,7 @@ public class WindowsTest {
         fromStartNegFromEndPos
     );
 
-    var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
+    var fromStartNegFromEndNeg = orig.shiftEdges(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
     assertIterableEquals(
         new Windows()
             .set(at(-1, SECONDS), true)

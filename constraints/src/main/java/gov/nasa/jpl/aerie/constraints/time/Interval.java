@@ -148,6 +148,15 @@ public final class Interval implements Comparable<Interval>{
         this.start == this.end;
   }
 
+  public Interval shiftBy(final Duration duration) {
+    return Interval.between(
+        this.start.saturatingPlus(duration),
+        this.startInclusivity,
+        this.end.saturatingPlus(duration),
+        this.endInclusivity
+    );
+  }
+
   public Duration duration() {
     if (this.isEmpty()) return Duration.ZERO;
     return this.end.minus(this.start);

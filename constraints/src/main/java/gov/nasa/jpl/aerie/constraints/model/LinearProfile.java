@@ -156,6 +156,25 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
         .map(linearEquationSegment -> SerializedValue.of(linearEquationSegment.value().valueAt(timepoint)));
   }
 
+  @Override
+  public LinearProfile shiftBy(final Duration duration) {
+    final var builder = IntervalMap.<LinearEquation>builder();
+
+    for (final var segment : this.profilePieces) {
+      final var interval = segment.interval();
+      final var shiftedInterval = interval.shiftBy(duration);
+
+      final var shiftedValue = new LinearEquation(
+          segment.value().initialTime.saturatingPlus(duration),
+          segment.value().initialValue,
+          segment.value().rate
+      );
+
+      builder.set(Segment.of(shiftedInterval, shiftedValue));
+    }
+    return new LinearProfile(builder.build());
+  }
+
   public static LinearProfile fromSimulatedProfile(final List<ProfileSegment<RealDynamics>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }
