@@ -10,7 +10,7 @@ create table constraint_run (
   violations jsonb null,
 
   -- Additional Metadata
-  requested_by text not null default '',
+  requested_by text,
   requested_at timestamptz not null default now(),
 
   constraint constraint_run_to_constraint
@@ -20,7 +20,12 @@ create table constraint_run (
   constraint constraint_run_to_simulation_dataset
     foreign key (simulation_dataset_id)
       references simulation_dataset
-      on delete cascade
+      on delete cascade,
+  constraint constraint_run_requested_by
+    foreign key (requested_by)
+      references metadata.users
+      on update cascade
+      on delete set null
 );
 
 comment on table constraint_run is e''

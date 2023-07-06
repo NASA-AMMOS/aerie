@@ -1,6 +1,7 @@
 comment on column constraint_run.constraint_id is null;
 comment on column constraint_run.constraint_definition is null;
-comment on column constraint_run.dataset_id is null;
+comment on column constraint_run.plan_id is null;
+comment on column constraint_run.simulation_dataset_id is null;
 comment on column constraint_run.status is null;
 comment on column constraint_run.violations is null;
 comment on column constraint_run.requested_by is null;
@@ -15,4 +16,4 @@ drop function constraint_check_constraint_run();
 drop trigger simulation_dataset_check_constraint_run_trigger on simulation_dataset;
 drop function simulation_dataset_check_constraint_run();
 
-call migrations.mark_migration_rolled_back('18');
+call migrations.mark_migration_rolled_back('20');

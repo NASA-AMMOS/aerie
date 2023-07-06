@@ -3,13 +3,14 @@ create type constraint_status as enum('resolved', 'constraint-outdated', 'simula
 create table constraint_run (
   constraint_id integer not null,
   constraint_definition text not null,
-  dataset_id integer not null,
+  plan_id integer not null,
+  simulation_dataset_id integer not null,
 
   status constraint_status not null default 'resolved',
   violations jsonb null,
 
   -- Additional Metadata
-  requested_by text not null default '',
+  requested_by text,
   requested_at timestamptz not null default now(),
 
   constraint constraint_run_to_constraint
@@ -17,9 +18,14 @@ create table constraint_run (
       references "constraint"
       on delete cascade,
   constraint constraint_run_to_simulation_dataset
-    foreign key (dataset_id)
+    foreign key (simulation_dataset_id)
       references simulation_dataset
-      on delete cascade
+      on delete cascade,
+  constraint constraint_run_requested_by
+    foreign key (requested_by)
+      references metadata.users
+      on update cascade
+      on delete set null
 );
 
 comment on table constraint_run is e''
@@ -29,7 +35,9 @@ comment on column constraint_run.constraint_id is e''
   'The constraint that we are evaluating during the run.';
 comment on column constraint_run.constraint_definition is e''
   'The definition of the constraint that is being checked, used to determine staleness.';
-comment on column constraint_run.dataset_id is e''
+comment on column constraint_run.plan_id is e''
+  'The plan that the constraint run is associated with.';
+comment on column constraint_run.simulation_dataset_id is e''
   'The simulation dataset id from when the constraint was checked, used to determine staleness.';
 comment on column constraint_run.status is e''
   'The current status of the constraint run.';
@@ -59,12 +67,12 @@ create or replace function simulation_dataset_check_constraint_run()
   returns trigger
   security definer
   language plpgsql as $$begin
-  if new.simulation_id = old.simulation_id
-  then
-    update constraint_run
-    set status = 'simulation-outdated'
-    where old.dataset_id = dataset_id;
-  end if;
+  update constraint_run cr
+  set status = 'simulation-outdated'
+  from simulation s
+  where cr.status = 'resolved'
+    and s.plan_id = cr.plan_id
+    and s.id = new.simulation_id;
   return new;
 end$$;
 
@@ -73,4 +81,4 @@ create trigger simulation_dataset_check_constraint_run_trigger
   for each row
 execute function simulation_dataset_check_constraint_run();
 
-call migrations.mark_migration_applied('18');
+call migrations.mark_migration_applied('20');
