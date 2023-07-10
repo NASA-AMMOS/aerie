@@ -32,12 +32,10 @@ type ConstraintViolation = {
   windows: TimeRange[];
 };
 
-type ConstraintRunStatus = 'constraint_outdated' | 'resolved' | 'simulation_outdated';
-
 type ConstraintRun = {
   constraint_definition: string;
   constraint_id: number;
   simulation_dataset_id: number;
-  status: ConstraintRunStatus;
+  definition_outdated: boolean;
   violations: ConstraintViolation;
 };

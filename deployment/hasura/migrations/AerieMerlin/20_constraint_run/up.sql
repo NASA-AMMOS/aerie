@@ -1,11 +1,9 @@
-create type constraint_status as enum('resolved', 'constraint-outdated');
-
 create table constraint_run (
   constraint_id integer not null,
   constraint_definition text not null,
   simulation_dataset_id integer not null,
 
-  status constraint_status not null default 'resolved',
+  definition_outdated boolean default false not null,
   violations jsonb null,
 
   -- Additional Metadata
@@ -38,8 +36,8 @@ comment on column constraint_run.constraint_definition is e''
   'The definition of the constraint that is being checked, used to determine staleness.';
 comment on column constraint_run.simulation_dataset_id is e''
   'The simulation dataset id from when the constraint was checked, used to determine staleness.';
-comment on column constraint_run.status is e''
-  'The current status of the constraint run.';
+comment on column constraint_run.definition_outdated is e''
+  'Tracks if the constraint definition is outdated because the constraint has been changed.';
 comment on column constraint_run.violations is e''
   'Any violations that were found during the constraint check.';
 comment on column constraint_run.requested_by is e''
@@ -53,16 +51,16 @@ create or replace function constraint_check_constraint_run()
   language plpgsql as $$begin
   if new.definition != old.definition then
     update constraint_run
-    set status = 'constraint-outdated'
+    set definition_outdated = true
     where constraint_id = new.id
       and constraint_definition != new.definition
-      and status = 'resolved';
+      and definition_outdated = false;
   else
     update constraint_run
-    set status = 'resolved'
+    set definition_outdated = false
     where constraint_id = new.id
       and constraint_definition == new.definition
-      and status = 'constraint-outdated';
+      and definition_outdated = true;
   end if;
   return new;
 end$$;

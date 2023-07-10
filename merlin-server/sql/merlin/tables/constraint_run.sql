@@ -3,7 +3,7 @@ create table constraint_run (
   constraint_definition text not null,
   simulation_dataset_id integer not null,
 
-  status constraint_status not null default 'resolved',
+  definition_outdated boolean default false not null,
   violations jsonb null,
 
   -- Additional Metadata
@@ -36,8 +36,8 @@ comment on column constraint_run.constraint_definition is e''
   'The definition of the constraint that is being checked, used to determine staleness.';
 comment on column constraint_run.simulation_dataset_id is e''
   'The simulation dataset id from when the constraint was checked, used to determine staleness.';
-comment on column constraint_run.status is e''
-  'The current status of the constraint run.';
+comment on column constraint_run.definition_outdated is e''
+  'Tracks if the constraint definition is outdated because the constraint has been changed.';
 comment on column constraint_run.violations is e''
   'Any violations that were found during the constraint check.';
 comment on column constraint_run.requested_by is e''

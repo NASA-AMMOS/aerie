@@ -16,10 +16,10 @@ final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
     select
       cr.constraint_id,
       cr.simulation_dataset_id,
-      cr.status,
+      cr.definition_outdated,
       cr.violations
     from constraint_run as cr
-    where cr.status = 'resolved'
+    where cr.definition_outdated = false
     and cr.constraint_id = any(?)
     and cr.simulation_dataset_id in (select distinct on (simulation_id) id from simulation_dataset order by simulation_id, id desc)
   """;
@@ -32,7 +32,7 @@ final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
     this.constraintIds = constraintIds;
   }
 
-  public List<ConstraintRunRecord> get() throws SQLException, ConstraintRunRecord.Status.InvalidRequestStatusException {
+  public List<ConstraintRunRecord> get() throws SQLException {
     this.statement.setArray(1, this.statement.getConnection().createArrayOf("integer", constraintIds.toArray()));
 
     try (final var results = this.statement.executeQuery()) {
@@ -40,16 +40,14 @@ final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
 
       while (results.next()) {
         final var constraintId = results.getLong("constraint_id");
-        final var status = ConstraintRunRecord.Status.fromString(results.getString("status"));
         final var violationString = results.getString("violations");
 
         // The constraint run didn't have any violations
         if (violationString.equals("{}")) {
-          constraintRuns.add(new ConstraintRunRecord(constraintId, status, null));
+          constraintRuns.add(new ConstraintRunRecord(constraintId, null));
         } else {
           constraintRuns.add(new ConstraintRunRecord(
               constraintId,
-              status,
               getJsonColumn(results, "violations", violationP)
                   .getSuccessOrThrow($ -> new Error("Corrupt violations cannot be parsed: " + $.reason()))));
         }

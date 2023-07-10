@@ -365,6 +365,16 @@ const gql = {
     }
   `,
 
+  UPDATE_CONSTRAINT: `#graphql
+    mutation updateConstraint($constraintId: Int!, $constraintDefinition: String!) {
+      update_constraint(where: {id: {_eq: $constraintId}}, _set: {definition: $constraintDefinition}) {
+        returning {
+          definition
+        }
+      }
+    }
+  `,
+
   CHECK_CONSTRAINTS: `#graphql
     query checkConstraints($planId: Int!, $simulationDatasetId: Int) {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
@@ -387,7 +397,7 @@ const gql = {
         constraint_definition
         constraint_id
         simulation_dataset_id
-        status
+        definition_outdated
         violations
       }
     }

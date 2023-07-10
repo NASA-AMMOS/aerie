@@ -534,7 +534,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
     expect(violations).toHaveLength(1);
   });
 
-  test("Check that the first constraint run is marked as 'simulation-outdated' when a new simulation has been run", async ({
+  test('Check that the first constraint run is not marked as outdated when a new simulation has been run', async ({
     request,
   }) => {
     const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, first_simulation_dataset_id);
@@ -542,7 +542,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
     expect(constraintRuns).not.toBeNull();
     expect(constraintRuns).toBeDefined();
     expect(constraintRuns).toHaveLength(1);
-    expect(constraintRuns[0].status).toEqual('simulation-outdated');
+    expect(constraintRuns[0].definition_outdated).toEqual(false);
   });
 
   test('Check there is still one violation when the first simulationDatasetId is provided', async ({ request }) => {

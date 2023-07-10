@@ -157,8 +157,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public SimulationDatasetId getSimulationDatasetId() {
-      // TODO: What should it return here?
-      return new SimulationDatasetId(1L);
+      throw new UnsupportedOperationException();
     }
 
     @Override

@@ -9,6 +9,7 @@ let plan_id: number;
 let violation: ConstraintViolation;
 let activity_id: number;
 let simulationDatasetId: number;
+let newSimulationDatasetId: number;
 const first_constraint_name = 'fruit_equal_peel';
 const second_constraint_name = 'no_controllable_duration';
 const long_duration = 35 * 24 * 60 * 60 * 1000 * 1000; // 35 days in microseconds
@@ -130,6 +131,16 @@ test.describe.serial('Constraints', () => {
     expect(violation.windows[0].end).toEqual(plan_duration_micro);
   });
 
+  test('Check that there is a constraint_run with the violation', async ({ request }) => {
+    const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, simulationDatasetId);
+
+    expect(constraintRuns).not.toBeNull();
+    expect(constraintRuns).toBeDefined();
+    expect(constraintRuns).toHaveLength(1);
+    expect(constraintRuns[0].definition_outdated).toEqual(false);
+    expect(constraintRuns[0].violations).not.toBe({});
+  });
+
   test('Check delete violating activity', async ({ request }) => {
     const id = await req.deleteActivity(request, plan_id, activity_id);
     expect(id).not.toBeNull();
@@ -140,11 +151,12 @@ test.describe.serial('Constraints', () => {
   test('Run new simulation', async ({ request }) => {
     const resp: SimulationResponse = await awaitSimulation(request, plan_id);
 
+    newSimulationDatasetId = resp.simulationDatasetId;
+
     expect(resp.status).toEqual('complete');
   });
 
   test('Check there are no violations anymore', async ({ request }) => {
-    console.log(plan_id);
     const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
@@ -152,13 +164,30 @@ test.describe.serial('Constraints', () => {
     expect(violations).toHaveLength(0);
   });
 
-  test('Check that there is an invalidated constraint_run', async ({ request }) => {
-    const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, simulationDatasetId);
+  test('Check that there is a constraint_run with no violations', async ({ request }) => {
+    const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, newSimulationDatasetId);
 
     expect(constraintRuns).not.toBeNull();
     expect(constraintRuns).toBeDefined();
     expect(constraintRuns).toHaveLength(1);
-    expect(constraintRuns[0].status).toEqual('simulation-outdated');
+    expect(constraintRuns[0].definition_outdated).toEqual(false);
+    expect(constraintRuns[0].violations).toEqual({});
+  });
+
+  test('Check that updating the constraint outdates the constraint_run', async ({ request }) => {
+    const updatedDefinition = await req.updateConstraint(
+      request,
+      constraint_id,
+      'export default (): Constraint => Real.Resource("/peel").equal(Real.Resource("/fruit"))',
+    );
+    const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, newSimulationDatasetId);
+
+    expect(constraintRuns).not.toBeNull();
+    expect(constraintRuns).toBeDefined();
+    expect(constraintRuns).toHaveLength(1);
+    expect(constraintRuns[0].definition_outdated).toEqual(true);
+    expect(constraintRuns[0].constraint_definition).not.toBe(updatedDefinition);
+    expect(constraintRuns[0].violations).toEqual({});
   });
 
   /*

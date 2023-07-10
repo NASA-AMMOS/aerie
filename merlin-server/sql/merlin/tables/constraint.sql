@@ -89,16 +89,16 @@ security definer
 language plpgsql as $$begin
   if new.definition != old.definition then
     update constraint_run
-    set status = 'constraint-outdated'
+    set definition_outdated = true
     where constraint_id = new.id
       and constraint_definition != new.definition
-      and status = 'resolved';
+      and definition_outdated = false;
   else
     update constraint_run
-    set status = 'resolved'
+    set definition_outdated = false
     where constraint_id = new.id
       and constraint_definition == new.definition
-      and status = 'constraint-outdated';
+      and definition_outdated = true;
   end if;
   return new;
 end$$;

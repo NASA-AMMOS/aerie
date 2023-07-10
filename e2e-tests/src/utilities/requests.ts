@@ -325,6 +325,17 @@ const req = {
     return id;
   },
 
+  async updateConstraint(
+    request: APIRequestContext,
+    constraintId: number,
+    constraintDefinition: string,
+  ): Promise<string> {
+    const data = await req.hasura(request, gql.UPDATE_CONSTRAINT, { constraintId, constraintDefinition });
+    const { update_constraint } = data;
+    const { definition } = update_constraint;
+    return definition;
+  },
+
   async checkConstraints(
     request: APIRequestContext,
     planId: number,

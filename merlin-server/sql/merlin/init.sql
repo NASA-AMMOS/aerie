@@ -12,7 +12,6 @@ begin;
   \ir domain-types/merlin-arguments.sql
   \ir domain-types/merlin-activity-directive-metadata.sql
   \ir domain-types/plan-merge-types.sql
-  \ir domain-types/merlin-types.sql
 
   -- Deployment-level Metadata
   \ir tables/metadata/user_roles.sql

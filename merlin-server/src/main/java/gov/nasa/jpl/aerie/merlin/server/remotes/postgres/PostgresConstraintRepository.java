@@ -35,11 +35,7 @@ public class PostgresConstraintRepository implements ConstraintRepository {
   @Override
   public List<ConstraintRunRecord> getSuccessfulConstraintRuns(List<Long> constraintIds) {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var getConstraintRuns = new GetSuccessfulConstraintRunsAction(connection, constraintIds)) {
-        return getConstraintRuns.get();
-      } catch (ConstraintRunRecord.Status.InvalidRequestStatusException ex) {
-        throw new Error("Constraint run had an invalid status", ex);
-      }
+      return new GetSuccessfulConstraintRunsAction(connection, constraintIds).get();
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get constraint runs", ex);
     }
