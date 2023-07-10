@@ -2,6 +2,10 @@ table:
   name: mission_model_parameters
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, revision, parameters]
+      filter: {}
   - role: user
     permission:
       columns: [model_id, revision, parameters]
@@ -12,3 +16,12 @@ select_permissions:
       columns: [model_id, revision, parameters]
       filter: {}
       allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [parameters]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

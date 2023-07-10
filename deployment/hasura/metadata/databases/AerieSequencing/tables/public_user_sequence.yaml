@@ -12,6 +12,11 @@ object_relationships:
       column_mapping:
         authoring_command_dict_id: id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
@@ -23,6 +28,12 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [authoring_command_dict_id, definition, name]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
   - role: user
     permission:
       columns: [definition, name, authoring_command_dict_id]
@@ -30,11 +41,18 @@ insert_permissions:
       set:
         owner: "x-hasura-user-id"
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [definition, name, authoring_command_dict_id, owner]
+      filter: {}
   - role: user
     permission:
       columns: [definition, name, authoring_command_dict_id, owner]
       filter: {"owner":{"_eq":"x-hasura-user-id"}}
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {"owner":{"_eq":"x-hasura-user-id"}}

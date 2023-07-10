@@ -78,6 +78,12 @@ remote_relationships:
       field_mapping:
         id: plan_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
+                 created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
@@ -91,6 +97,13 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, duration, model_id, parent_id, start_time]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, duration, model_id, parent_id, start_time]
@@ -99,6 +112,12 @@ insert_permissions:
         owner: "x-hasura-user-id"
         updated_by: "x-hasura-user-id"
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, owner, duration, model_id, parent_id, start_time]
+      filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, owner]
@@ -106,6 +125,9 @@ update_permissions:
       set:
         updated_by: "x-hasura-user-id"
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {"owner":{"_eq":"X-Hasura-User-Id"}}

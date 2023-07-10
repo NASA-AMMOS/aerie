@@ -10,6 +10,11 @@ array_relationships:
         name: expansion_set
         schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, command_types_typescript_path, mission, version, created_at, parsed_json]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, command_types_typescript_path, mission, version, created_at, parsed_json]
@@ -20,3 +25,7 @@ select_permissions:
       columns: [id, command_types_typescript_path, mission, version, created_at, parsed_json]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

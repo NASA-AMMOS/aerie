@@ -21,6 +21,11 @@ array_relationships:
       column_mapping:
         rule_id: id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [set_id, rule_id, activity_type]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [set_id, rule_id, activity_type]

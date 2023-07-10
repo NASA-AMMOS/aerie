@@ -2,6 +2,11 @@ table:
   name: anchor_validation_status
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [activity_id, plan_id, reason_invalid]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [activity_id, plan_id, reason_invalid]
@@ -12,3 +17,7 @@ select_permissions:
       columns: [activity_id, plan_id, reason_invalid]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

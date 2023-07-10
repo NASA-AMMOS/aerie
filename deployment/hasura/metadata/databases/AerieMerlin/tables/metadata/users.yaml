@@ -4,6 +4,11 @@ table:
 configuration:
   custom_name: "users"
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, default_role]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [username]
@@ -14,3 +19,17 @@ select_permissions:
       columns: [username]
       filter: {}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, default_role]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, default_role]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

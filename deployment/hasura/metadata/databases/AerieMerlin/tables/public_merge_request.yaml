@@ -45,6 +45,11 @@ array_relationships:
         name: merge_staging_area
         schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]

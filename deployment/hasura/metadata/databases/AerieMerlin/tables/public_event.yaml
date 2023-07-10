@@ -2,6 +2,11 @@ table:
   name: event
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [dataset_id, real_time, transaction_index, causal_time, value, topic_index]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [dataset_id, real_time, transaction_index, causal_time, value, topic_index]
@@ -12,3 +17,7 @@ select_permissions:
       columns: [dataset_id, real_time, transaction_index, causal_time, value, topic_index]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

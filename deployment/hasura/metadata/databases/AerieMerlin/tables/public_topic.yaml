@@ -12,6 +12,11 @@ array_relationships:
         dataset_id: dataset_id
         topic_index: topic_index
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [dataset_id, topic_index, name, value_schema]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [dataset_id, topic_index, name, value_schema]
@@ -22,3 +27,7 @@ select_permissions:
       columns: [dataset_id, topic_index, name, value_schema]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

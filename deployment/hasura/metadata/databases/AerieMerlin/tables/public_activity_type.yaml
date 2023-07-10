@@ -28,6 +28,11 @@ remote_relationships:
       field_mapping:
         name: activity_type
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
@@ -38,3 +43,17 @@ select_permissions:
       columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
       filter: {}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

@@ -2,6 +2,11 @@ table:
   name: view
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [created_at, definition, id, name, owner, updated_at]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [created_at, definition, id, name, owner, updated_at]
@@ -13,6 +18,12 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [definition, name]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
   - role: user
     permission:
       columns: [definition, name]
@@ -20,11 +31,18 @@ insert_permissions:
       set:
         owner: "x-hasura-user-id"
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [definition, name, owner]
+      filter: {}
   - role: user
     permission:
       columns: [definition, name, owner]
       filter: {"owner":{"_eq":"x-hasura-user-id"}}
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {"owner":{"_eq":"x-hasura-user-id"}}

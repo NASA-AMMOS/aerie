@@ -2,6 +2,10 @@ table:
   name: scheduling_goal_analysis_satisfying_activities
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [analysis_id, goal_id, activity_id]
+      filter: {}
   - role: user
     permission:
       columns: [analysis_id, goal_id, activity_id]
@@ -12,3 +16,7 @@ select_permissions:
       columns: [ analysis_id, goal_id, activity_id ]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

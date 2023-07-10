@@ -6,6 +6,11 @@ object_relationships:
     using:
       foreign_key_constraint_on: merge_request_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [merge_request_id, activity_id, change_type_supplying, change_type_receiving, resolution]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [merge_request_id, activity_id, change_type_supplying, change_type_receiving, resolution]
@@ -17,6 +22,10 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [resolution]
+      filter: {}
   - role: user
     permission:
       columns: [resolution]

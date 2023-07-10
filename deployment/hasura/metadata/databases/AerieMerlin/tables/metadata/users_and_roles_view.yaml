@@ -4,6 +4,11 @@ table:
 configuration:
   custom_name: "users_and_roles"
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, hasura_default_role, hasura_allowed_roles]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [username, hasura_default_role, hasura_allowed_roles]

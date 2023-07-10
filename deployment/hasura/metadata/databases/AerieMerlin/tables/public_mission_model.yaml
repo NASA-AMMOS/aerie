@@ -42,6 +42,11 @@ array_relationships:
         name: resource_type
         schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, revision, mission, name, version, description, owner, jar_id, created_at]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, revision, mission, name, version, description, owner, jar_id, created_at]
@@ -52,6 +57,23 @@ select_permissions:
       columns: [id, revision, mission, name, version, description, owner, jar_id, created_at]
       filter: {}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [mission, name, version, description, jar_id]
+      check: {}
+      set:
+        owner: 'x-hasura-user-id'
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [mission, name, version, description, owner]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+
 event_triggers:
 - definition:
     enable_manual: false

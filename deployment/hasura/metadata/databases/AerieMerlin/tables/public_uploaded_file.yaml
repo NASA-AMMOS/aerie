@@ -2,6 +2,11 @@ table:
   name: uploaded_file
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, path, name, created_date, modified_date, deleted_date]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, path, name, created_date, modified_date, deleted_date]
@@ -12,3 +17,7 @@ select_permissions:
       columns: [id, path, name, created_date, modified_date, deleted_date]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

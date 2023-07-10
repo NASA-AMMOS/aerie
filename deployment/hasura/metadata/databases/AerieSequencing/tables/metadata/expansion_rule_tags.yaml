@@ -19,6 +19,11 @@ remote_relationships:
         field_mapping:
           tag_id: id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [rule_id, tag_id]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [rule_id, tag_id]
@@ -30,11 +35,18 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [rule_id, tag_id]
+      check: {}
   - role: user
     permission:
       columns: [rule_id, tag_id]
       check: {}
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {}

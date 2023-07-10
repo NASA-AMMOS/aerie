@@ -4,6 +4,11 @@ table:
 configuration:
   custom_name: "users_allowed_roles"
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, allowed_role]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [username, allowed_role]
@@ -14,3 +19,17 @@ select_permissions:
       columns: [username, allowed_role]
       filter: {"username":{"_eq":"X-Hasura-User-Id"}}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, allowed_role]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [username, allowed_role]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

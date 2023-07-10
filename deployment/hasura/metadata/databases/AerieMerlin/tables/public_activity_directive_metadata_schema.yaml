@@ -2,6 +2,11 @@ table:
   name: activity_directive_metadata_schema
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, schema, created_at, updated_at]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [key, schema, created_at, updated_at]
@@ -13,12 +18,24 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, schema, created_at]
+      check: {}
   - role: user
     permission:
-      columns: [key, schema, created_at, updated_at]
+      columns: [key, schema, created_at]
       check: {}
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, schema, created_at]
+      filter: {}
   - role: user
     permission:
-      columns: [key, schema, created_at, updated_at]
+      columns: [key, schema, created_at]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
       filter: {}
