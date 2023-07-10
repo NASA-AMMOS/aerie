@@ -9,7 +9,6 @@ public record ConstraintRunRecord(
 ) {
   public enum Status {
     CONSTRAINT_OUTDATED("constraint-outdated"),
-    SIMULATION_OUTDATED("simulation-outdated"),
     RESOLVED("resolved");
 
     public final String label;
@@ -21,7 +20,6 @@ public record ConstraintRunRecord(
     public static Status fromString(final String label) throws InvalidRequestStatusException {
       return switch (label) {
         case "constraint-outdated" -> CONSTRAINT_OUTDATED;
-        case "simulation-outdated" -> SIMULATION_OUTDATED;
         case "resolved" -> RESOLVED;
         default -> throw new InvalidRequestStatusException(label);
       };

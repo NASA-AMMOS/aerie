@@ -1,9 +1,8 @@
-create type constraint_status as enum('resolved', 'constraint-outdated', 'simulation-outdated');
+create type constraint_status as enum('resolved', 'constraint-outdated');
 
 create table constraint_run (
   constraint_id integer not null,
   constraint_definition text not null,
-  plan_id integer not null,
   simulation_dataset_id integer not null,
 
   status constraint_status not null default 'resolved',
@@ -37,8 +36,6 @@ comment on column constraint_run.constraint_id is e''
   'The constraint that we are evaluating during the run.';
 comment on column constraint_run.constraint_definition is e''
   'The definition of the constraint that is being checked, used to determine staleness.';
-comment on column constraint_run.plan_id is e''
-  'The plan that the constraint run is associated with.';
 comment on column constraint_run.simulation_dataset_id is e''
   'The simulation dataset id from when the constraint was checked, used to determine staleness.';
 comment on column constraint_run.status is e''
@@ -67,23 +64,5 @@ create trigger constraint_check_constraint_run_trigger
   for each row
   when (new.definition != old.definition)
 execute function constraint_check_constraint_run();
-
-create or replace function simulation_dataset_check_constraint_run()
-  returns trigger
-  security definer
-  language plpgsql as $$begin
-  update constraint_run cr
-  set status = 'simulation-outdated'
-  from simulation s
-  where cr.status = 'resolved'
-    and s.plan_id = cr.plan_id
-    and s.id = new.simulation_id;
-  return new;
-end$$;
-
-create trigger simulation_dataset_check_constraint_run_trigger
-  before insert on simulation_dataset
-  for each row
-execute function simulation_dataset_check_constraint_run();
 
 call migrations.mark_migration_applied('20');

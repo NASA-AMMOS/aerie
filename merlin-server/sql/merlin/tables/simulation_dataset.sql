@@ -301,21 +301,3 @@ create trigger update_offset_from_plan_start_trigger
 before insert or update on simulation_dataset
 for each row
 execute function update_offset_from_plan_start();
-
-create function simulation_dataset_check_constraint_run()
-  returns trigger
-  security definer
-  language plpgsql as $$begin
-    update constraint_run cr
-    set status = 'simulation-outdated'
-    from simulation s
-    where cr.status = 'resolved'
-      and s.plan_id = cr.plan_id
-      and s.id = new.simulation_id;
-  return new;
-end$$;
-
-create trigger simulation_dataset_check_constraint_run_trigger
-  before insert on simulation_dataset
-  for each row
-execute function simulation_dataset_check_constraint_run();

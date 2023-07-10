@@ -15,7 +15,7 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationP;
 /* package local */ class InsertConstraintRunsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     insert into constraint_run (constraint_id, constraint_definition, plan_id, simulation_dataset_id, status, violations)
-    values (?, ?, ?, ?, ?::constraint_status, ?::json)
+    values (?, ?, ?, ?::constraint_status, ?::json)
   """;
 
   private final PreparedStatement statement;
@@ -27,19 +27,17 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationP;
   public void apply(
       Map<Long, Constraint> constraintMap,
       Map<Long, Violation> violations,
-      PlanId planId,
       Long simulationDatasetId) throws SQLException {
     for (Constraint constraint : constraintMap.values()) {
       statement.setLong(1, constraint.id());
       statement.setString(2, constraint.definition());
-      statement.setLong(3, planId.id());
-      statement.setLong(4, simulationDatasetId);
-      statement.setString(5, ConstraintRunRecord.Status.RESOLVED.label);
+      statement.setLong(3, simulationDatasetId);
+      statement.setString(4, ConstraintRunRecord.Status.RESOLVED.label);
 
       if (violations.get(constraint.id()) != null) {
-        statement.setString(6, violationP.unparse(violations.get(constraint.id())).toString());
+        statement.setString(5, violationP.unparse(violations.get(constraint.id())).toString());
       } else {
-        statement.setString(6, "{}");
+        statement.setString(5, "{}");
       }
 
       this.statement.addBatch();

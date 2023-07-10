@@ -10,6 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface ConstraintService {
-  void createConstraintRuns(Map<Long, Constraint> constraintMap, Map<Long, Violation> violations, PlanId planId, SimulationDatasetId simulationDatasetId);
+  void createConstraintRuns(Map<Long, Constraint> constraintMap, Map<Long, Violation> violations, SimulationDatasetId simulationDatasetId);
   Map<Long, ConstraintRunRecord> getPreviouslyResolvedConstraints(List<Constraint> constraints);
 }

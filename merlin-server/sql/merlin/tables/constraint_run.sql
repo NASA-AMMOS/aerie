@@ -1,7 +1,6 @@
 create table constraint_run (
   constraint_id integer not null,
   constraint_definition text not null,
-  plan_id integer not null,
   simulation_dataset_id integer not null,
 
   status constraint_status not null default 'resolved',
@@ -35,8 +34,6 @@ comment on column constraint_run.constraint_id is e''
   'The constraint that we are evaluating during the run.';
 comment on column constraint_run.constraint_definition is e''
   'The definition of the constraint that is being checked, used to determine staleness.';
-comment on column constraint_run.plan_id is e''
-  'The plan that the constraint run is associated with.';
 comment on column constraint_run.simulation_dataset_id is e''
   'The simulation dataset id from when the constraint was checked, used to determine staleness.';
 comment on column constraint_run.status is e''

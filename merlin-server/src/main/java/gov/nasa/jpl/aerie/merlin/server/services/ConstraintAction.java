@@ -234,7 +234,6 @@ public class ConstraintAction {
         constraintService.createConstraintRuns(
             constraintCode,
             violations,
-            planId,
             simDatasetId);
       }
     }

@@ -14,7 +14,4 @@ drop type constraint_status;
 drop trigger constraint_check_constraint_run_trigger on "constraint";
 drop function constraint_check_constraint_run();
 
-drop trigger simulation_dataset_check_constraint_run_trigger on simulation_dataset;
-drop function simulation_dataset_check_constraint_run();
-
 call migrations.mark_migration_rolled_back('20');
