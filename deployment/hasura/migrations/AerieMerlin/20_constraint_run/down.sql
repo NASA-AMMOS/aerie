@@ -1,8 +1,7 @@
 comment on column constraint_run.constraint_id is null;
 comment on column constraint_run.constraint_definition is null;
-comment on column constraint_run.definition_outdated is null;
 comment on column constraint_run.simulation_dataset_id is null;
-comment on column constraint_run.status is null;
+comment on column constraint_run.definition_outdated is null;
 comment on column constraint_run.violations is null;
 comment on column constraint_run.requested_by is null;
 comment on column constraint_run.requested_at is null;
