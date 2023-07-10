@@ -13,6 +13,8 @@ create table constraint_run (
   requested_by text,
   requested_at timestamptz not null default now(),
 
+  constraint constraint_run_key
+    primary key (constraint_id, constraint_definition, simulation_dataset_id),
   constraint constraint_run_to_constraint
     foreign key (constraint_id)
       references "constraint"
@@ -63,6 +65,7 @@ end$$;
 create trigger constraint_check_constraint_run_trigger
   after update on "constraint"
   for each row
+  when (new.definition != old.definition)
 execute function constraint_check_constraint_run();
 
 create or replace function simulation_dataset_check_constraint_run()

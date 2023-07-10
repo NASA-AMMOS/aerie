@@ -1,5 +1,3 @@
-create type constraint_status as enum('resolved', 'constraint-outdated', 'simulation-outdated');
-
 create table constraint_run (
   constraint_id integer not null,
   constraint_definition text not null,
@@ -13,6 +11,8 @@ create table constraint_run (
   requested_by text,
   requested_at timestamptz not null default now(),
 
+  constraint constraint_run_key
+    primary key (constraint_id, constraint_definition, simulation_dataset_id),
   constraint constraint_run_to_constraint
     foreign key (constraint_id)
       references "constraint"

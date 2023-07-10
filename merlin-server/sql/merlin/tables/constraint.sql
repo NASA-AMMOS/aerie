@@ -83,19 +83,20 @@ before update on "constraint"
 for each row
 execute function constraint_set_updated_at();
 
-create or replace function constraint_check_constraint_run()
+create function constraint_check_constraint_run()
 returns trigger
 security definer
 language plpgsql as $$begin
   update constraint_run
   set status = 'constraint-outdated'
   where constraint_id = new.id
-  and constraint_definition != new.definition
-  and status = 'resolved';
+    and constraint_definition != new.definition
+    and status = 'resolved';
   return new;
 end$$;
 
 create trigger constraint_check_constraint_run_trigger
-after update on "constraint"
-for each row
+  after update on "constraint"
+  for each row
+  when (new.definition != old.definition)
 execute function constraint_check_constraint_run();
