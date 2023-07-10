@@ -62,11 +62,11 @@ public class ConstraintAction {
     }
 
     final var constraintSize = constraintCode.size();
-    final var previouslyResolvedConstraints = this.constraintService.getPreviouslyResolvedConstraints(constraintCode.values().stream().toList());
+    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList());
     final var violations = new HashMap<Long, Violation>();
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
-    for (ConstraintRunRecord constraintRun : previouslyResolvedConstraints.values()) {
+    for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
       constraintCode.remove(constraintRun.constraintId());
 
       if (constraintRun.violation() != null) {
@@ -75,7 +75,7 @@ public class ConstraintAction {
     }
 
     // If the lengths don't match we need check the left-over constraints.
-    if (previouslyResolvedConstraints.size() != constraintSize) {
+    if (validConstraintRuns.size() != constraintSize) {
       final var resultsHandle$ = this.simulationService.get(planId, revisionData);
       final var simStartTime = resultsHandle$
           .map(gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle::startTime)

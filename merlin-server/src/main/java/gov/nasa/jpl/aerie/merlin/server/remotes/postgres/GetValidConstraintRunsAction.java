@@ -11,7 +11,7 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
-final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
+final class GetValidConstraintRunsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select
       cr.constraint_id,
@@ -27,7 +27,7 @@ final class GetSuccessfulConstraintRunsAction implements AutoCloseable {
   private final PreparedStatement statement;
   private final List<Long> constraintIds;
 
-  public GetSuccessfulConstraintRunsAction(final Connection connection, final List<Long> constraintIds) throws SQLException {
+  public GetValidConstraintRunsAction(final Connection connection, final List<Long> constraintIds) throws SQLException {
     this.statement = connection.prepareStatement(sql);
     this.constraintIds = constraintIds;
   }

@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
@@ -27,15 +26,15 @@ public class LocalConstraintService implements ConstraintService {
   }
 
   @Override
-  public Map<Long, ConstraintRunRecord> getPreviouslyResolvedConstraints(List<Constraint> constraints) {
-    final var resolvedConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
+  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Constraint> constraints) {
+    final var validConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
     final var constraintIds = constraints.stream().map(Constraint::id).collect(Collectors.toList());
-    final var constraintRuns = constraintRepository.getSuccessfulConstraintRuns(constraintIds);
+    final var constraintRuns = constraintRepository.getValidConstraintRuns(constraintIds);
 
     for (final var constraintRun : constraintRuns) {
-      resolvedConstraintRuns.put(constraintRun.constraintId(), constraintRun);
+      validConstraintRuns.put(constraintRun.constraintId(), constraintRun);
     }
 
-    return resolvedConstraintRuns;
+    return validConstraintRuns;
   }
 }

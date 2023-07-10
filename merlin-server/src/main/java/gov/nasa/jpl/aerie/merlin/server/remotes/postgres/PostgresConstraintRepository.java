@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 
 import javax.sql.DataSource;
@@ -33,9 +32,9 @@ public class PostgresConstraintRepository implements ConstraintRepository {
   }
 
   @Override
-  public List<ConstraintRunRecord> getSuccessfulConstraintRuns(List<Long> constraintIds) {
+  public List<ConstraintRunRecord> getValidConstraintRuns(List<Long> constraintIds) {
     try (final var connection = this.dataSource.getConnection()) {
-      return new GetSuccessfulConstraintRunsAction(connection, constraintIds).get();
+      return new GetValidConstraintRunsAction(connection, constraintIds).get();
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get constraint runs", ex);
     }
