@@ -4,7 +4,7 @@ create table constraint_run (
   simulation_dataset_id integer not null,
 
   definition_outdated boolean default false not null,
-  violations jsonb null,
+  violations jsonb not null default '{}',
 
   -- Additional Metadata
   requested_by text,
