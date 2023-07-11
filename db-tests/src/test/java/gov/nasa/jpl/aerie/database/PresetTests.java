@@ -82,10 +82,14 @@ public class PresetTests {
 
   //region Helper Methods
   Activity assignPreset(int presetId, int activityId, int planId) throws SQLException {
+    return assignPreset(presetId, activityId, planId, merlinHelper.admin.session());
+  }
+
+  Activity assignPreset(int presetId, int activityId, int planId, String userSession) throws SQLException {
     try(final var statement = connection.createStatement()){
       statement.execute("""
-         select hasura_functions.apply_preset_to_activity(%d, %d, %d);
-         """.formatted(presetId, activityId, planId));
+         select hasura_functions.apply_preset_to_activity(%d, %d, %d, '%s'::json);
+         """.formatted(presetId, activityId, planId, userSession));
       return getActivity(planId, activityId);
     }
   }

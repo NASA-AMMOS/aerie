@@ -6,17 +6,24 @@ import java.util.UUID;
 
 final class MerlinDatabaseTestHelper {
   private final Connection connection;
+  final User admin;
+  final User user;
+  final User viewer;
 
   MerlinDatabaseTestHelper(Connection connection) throws SQLException {
     this.connection = connection;
-    insertUser("Merlin DB Tests");
+    admin = insertUser("MerlinAdmin");
+    user = insertUser("MerlinUser", "user");
+    viewer = insertUser("MerlinViewer", "viewer");
   }
 
-  void insertUser(final String username) throws SQLException {
-    insertUser(username, "admin");
+  record User(String name, String defaultRole, String session) {}
+
+  User insertUser(final String username) throws SQLException {
+    return insertUser(username, "aerie_admin");
   }
 
-  void insertUser(final String username, final String defaultRole) throws SQLException {
+  User insertUser(final String username, final String defaultRole) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
               """
@@ -25,6 +32,11 @@ final class MerlinDatabaseTestHelper {
               """.formatted(username, defaultRole)
           );
     }
+    return new User(
+        username,
+        defaultRole,
+        "{ \"x-hasura-user-id\": \"%s\", \"x-hasura-default-role\": \"%s\" }"
+            .formatted(username, defaultRole));
   }
 
   int insertFileUpload() throws SQLException {
@@ -48,7 +60,7 @@ final class MerlinDatabaseTestHelper {
           .executeQuery(
               """
                   INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'Merlin DB Tests', '0', %s)
+                  VALUES ('test-mission-model-%s', 'test-mission', 'MerlinAdmin', '0', %s)
                   RETURNING id;"""
                   .formatted(UUID.randomUUID().toString(), fileId)
           );
@@ -58,18 +70,22 @@ final class MerlinDatabaseTestHelper {
   }
 
   int insertPlan(final int missionModelId) throws SQLException {
-    return insertPlan(missionModelId, "2020-1-1 00:00:00+00");
+    return insertPlan(missionModelId, admin.name);
   }
 
-  int insertPlan(final int missionModelId, final String start_time) throws SQLException {
+  int insertPlan(final int missionModelId, final String username) throws SQLException {
+    return insertPlan(missionModelId, username, "2020-1-1 00:00:00+00");
+  }
+
+  int insertPlan(final int missionModelId, final String username, final String start_time) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
               """
-                  INSERT INTO plan (name, model_id, duration, start_time)
-                  VALUES ('test-plan-%s', '%s', '0', '%s')
+                  INSERT INTO plan (name, model_id, duration, start_time, owner)
+                  VALUES ('test-plan-%s', '%s', '0', '%s', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, start_time)
+                  .formatted(UUID.randomUUID().toString(), missionModelId, start_time, username)
           );
       res.next();
       return res.getInt("id");
@@ -136,15 +152,15 @@ final class MerlinDatabaseTestHelper {
     }
   }
 
-  int insertConstraintPlan(int plan_id, String name, String definition) throws SQLException {
+  int insertConstraintPlan(int plan_id, String name, String definition, User user) throws SQLException {
     try(final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
           """
           INSERT INTO public.constraint
             (name, description, definition, plan_id, owner, updated_by)
-          VALUES ('%s', 'Merlin DB Test Constraint', '%s', %d, 'Merlin DB Tests', 'Merlin DB Tests')
+          VALUES ('%s', 'Merlin DB Test Constraint', '%s', %d, '%s', '%s')
           RETURNING id;
-          """.formatted(name, definition, plan_id));
+          """.formatted(name, definition, plan_id, user.name, user.name));
       res.next();
       return res.getInt("id");
     }

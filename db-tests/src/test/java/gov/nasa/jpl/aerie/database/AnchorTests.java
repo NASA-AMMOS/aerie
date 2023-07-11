@@ -877,16 +877,16 @@ public class AnchorTests {
         // Reanchor to Plan Start
         var results = statement.executeQuery(
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, null)
-                """.formatted(activityId));
+                select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, null, '%s'::json)
+                """.formatted(activityId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         results = statement.executeQuery(
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_plan_start(null, %d)
-                """.formatted(planId));
+                select hasura_functions.delete_activity_by_pk_reanchor_plan_start(null, %d, '%s'::json)
+                """.formatted(planId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
@@ -894,16 +894,16 @@ public class AnchorTests {
         // Reanchor to ascendant anchor
         results = statement.executeQuery(
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, null)
-                """.formatted(activityId));
+                select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, null, '%s'::json)
+                """.formatted(activityId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         results = statement.executeQuery(
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(null, %d)
-                """.formatted(planId));
+                select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(null, %d, '%s'::json)
+                """.formatted(planId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
@@ -911,16 +911,16 @@ public class AnchorTests {
         // Delete Remaining Chain
         results = statement.executeQuery(
             """
-                select hasura_functions.delete_activity_by_pk_delete_subtree(%d, null)
-                """.formatted(activityId));
+                select hasura_functions.delete_activity_by_pk_delete_subtree(%d, null, '%s'::json)
+                """.formatted(activityId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         results = statement.executeQuery(
             """
-                select hasura_functions.delete_activity_by_pk_delete_subtree(null, %d)
-                """.formatted(planId));
+                select hasura_functions.delete_activity_by_pk_delete_subtree(null, %d, '%s'::json)
+                """.formatted(planId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
@@ -934,8 +934,8 @@ public class AnchorTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(-1, %d)
-             """.formatted(planId));
+             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(-1, %d, '%s'::json)
+             """.formatted(planId, merlinHelper.admin.session()));
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains("Activity Directive -1 does not exist in Plan "+planId)){
@@ -946,8 +946,8 @@ public class AnchorTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(-1, %d)
-             """.formatted(planId));
+             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(-1, %d, '%s'::json)
+             """.formatted(planId, merlinHelper.admin.session()));
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains("Activity Directive -1 does not exist in Plan "+planId)){
@@ -958,8 +958,8 @@ public class AnchorTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_delete_subtree(-1, %d)
-             """.formatted(planId));
+             select hasura_functions.delete_activity_by_pk_delete_subtree(-1, %d, '%s'::json)
+             """.formatted(planId, merlinHelper.admin.session()));
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains("Activity Directive -1 does not exist in Plan "+planId)){
@@ -1002,8 +1002,8 @@ public class AnchorTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d)
-             """.formatted(baseId, planId));
+             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d, '%s'::json)
+             """.formatted(baseId, planId, merlinHelper.admin.session()));
       }
 
       final var remainingActivities = getActivities(planId);
@@ -1060,8 +1060,8 @@ public class AnchorTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d)
-             """.formatted(baseId, planId));
+             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d, '%s'::json)
+             """.formatted(baseId, planId, merlinHelper.admin.session()));
       }
 
       final var remainingActivities = getActivities(planId);
@@ -1108,8 +1108,8 @@ public class AnchorTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d)
-             """.formatted(baseId, planId));
+             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d, '%s'::json)
+             """.formatted(baseId, planId, merlinHelper.admin.session()));
       }
 
       final var remainingActivities = getActivities(planId);

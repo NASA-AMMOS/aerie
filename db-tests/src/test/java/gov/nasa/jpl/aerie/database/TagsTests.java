@@ -31,6 +31,7 @@ public class TagsTests {
   int fileId;
   int missionModelId;
   int tagId;
+  MerlinDatabaseTestHelper.User tagsUser;
 
   void setConnection(DatabaseTestHelper helper) {
     connection = helper.connection();
@@ -75,7 +76,7 @@ public class TagsTests {
     helper.startDatabase();
     setConnection(helper);
     merlinHelper = new MerlinDatabaseTestHelper(connection);
-    merlinHelper.insertUser("TagsTest");
+    tagsUser = merlinHelper.insertUser("TagsTest");
   }
 
   @AfterAll
@@ -86,28 +87,31 @@ public class TagsTests {
   }
 
   //region Helper Functions
-  int insertTag(String name) throws SQLException {
+  private int insertTag(String name) throws SQLException {
+    return insertTag(name, tagsUser.name());
+  }
+  int insertTag(String name, String username) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
           """
               INSERT INTO metadata.tags (name, owner)
-              VALUES ('%s', 'TagsTest')
+              VALUES ('%s', '%s')
               RETURNING id;
-              """.formatted(name)
+              """.formatted(name, username)
       );
       res.next();
       return res.getInt("id");
     }
   }
 
-  int insertTag(String name, String color) throws SQLException {
+  int insertTag(String name, String username, String color) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
           """
               INSERT INTO metadata.tags (name, color, owner)
-              VALUES ('%s', '%s', 'TagsTest')
+              VALUES ('%s', '%s', '%s')
               RETURNING id;
-              """.formatted(name, color)
+              """.formatted(name, color, username)
       );
       res.next();
       return res.getInt("id");
@@ -398,7 +402,7 @@ public class TagsTests {
     final var secondTagId = insertTag("Banana");
     final var planId = merlinHelper.insertPlan(missionModelId);
     final var activityId = merlinHelper.insertActivity(planId);
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition);
+    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
 
     assignTagToPlan(planId, tagId);
     assignTagToActivity(activityId, planId, tagId);
@@ -427,7 +431,7 @@ public class TagsTests {
     final var secondTagId = insertTag("Banana");
     final var planId = merlinHelper.insertPlan(missionModelId);
     final var activityId = merlinHelper.insertActivity(planId);
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition);
+    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
 
     assignTagToPlan(planId, tagId);
     assignTagToActivity(activityId, planId, tagId);
@@ -442,10 +446,10 @@ public class TagsTests {
     final var constraintTags = getTagsOnActivity(activityId, planId);
 
     final var expected = new ArrayList<Tag>(1);
-    expected.add(new Tag(tagId, "Farm", null, "TagsTest"));
+    expected.add(new Tag(tagId, "Farm", null, tagsUser.name()));
 
     final var expectedPlan = new ArrayList<Tag>(1);
-    expectedPlan.add(new Tag(secondTagId, "Banana", null, "TagsTest"));
+    expectedPlan.add(new Tag(secondTagId, "Banana", null, tagsUser.name()));
 
     assertEquals(expectedPlan, planTags);
     assertEquals(expected, activityTags);
@@ -473,7 +477,7 @@ public class TagsTests {
       }
     }
     // Constraint
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition);
+    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
     try {
       assignTagToConstraint(constraintId, -1);
     } catch (SQLException e) {
@@ -497,7 +501,7 @@ public class TagsTests {
     final var secondTagId = insertTag("Banana");
     final var planId = merlinHelper.insertPlan(missionModelId);
     final var activityId = merlinHelper.insertActivity(planId);
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition);
+    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
 
     assignTagToPlan(planId, tagId);
     assignTagToActivity(activityId, planId, tagId);
@@ -514,7 +518,7 @@ public class TagsTests {
     final var constraintTags = getTagsOnConstraint(constraintId);
 
     final ArrayList<Tag> expected = new ArrayList<>();
-    expected.add(new Tag(secondTagId, "Banana", null, "TagsTest"));
+    expected.add(new Tag(secondTagId, "Banana", null, tagsUser.name()));
 
     assertEquals(expected, planTags);
     assertEquals(expected, activityTags);
@@ -544,12 +548,12 @@ public class TagsTests {
   @Test
   void tagColorMustBeHexOrNull() throws SQLException {
     assertDoesNotThrow(()->insertTag("Null Color Tag"));
-    assertDoesNotThrow(()->insertTag("Hex Color Tag", "#ad6ef5"));
-    assertDoesNotThrow(()->insertTag("Uppercase Hex Color Tag", "#AD6EF5"));
+    assertDoesNotThrow(()->insertTag("Hex Color Tag", tagsUser.name(), "#ad6ef5"));
+    assertDoesNotThrow(()->insertTag("Uppercase Hex Color Tag", tagsUser.name(), "#AD6EF5"));
     final var javaColorString = String.format("#%02x%02x%02x", Color.PINK.getRed(), Color.PINK.getBlue(), Color.PINK.getGreen());
-    assertDoesNotThrow(()->insertTag("Java Colors Tag", javaColorString));
+    assertDoesNotThrow(()->insertTag("Java Colors Tag", tagsUser.name(), javaColorString));
     try {
-      insertTag("Invalid Color", "bad color :(");
+      insertTag("Invalid Color", tagsUser.name(), "bad color :(");
     } catch (SQLException e) {
       if (!e.getMessage()
           .contains("new row for relation \"tags\" violates check constraint \"color_is_hex_format\"\n")) {
