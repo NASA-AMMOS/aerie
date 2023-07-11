@@ -61,22 +61,27 @@ public class ConstraintAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var constraintSize = constraintCode.size();
-    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList());
+    final var resultsHandle$ = this.simulationService.get(planId, revisionData);
+    final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
+        .map(SimulationResultsHandle::getSimulationDatasetId)
+        .orElse(null));
     final var violations = new HashMap<Long, Violation>();
 
-    // Remove any constraints that we've already checked, so they aren't rechecked.
-    for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
-      constraintCode.remove(constraintRun.constraintId());
+    if (simDatasetId != null) {
+      final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
 
-      if (constraintRun.violation() != null) {
-        violations.put(constraintRun.constraintId(), constraintRun.violation());
+      // Remove any constraints that we've already checked, so they aren't rechecked.
+      for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
+        constraintCode.remove(constraintRun.constraintId());
+
+        if (constraintRun.violation() != null) {
+          violations.put(constraintRun.constraintId(), constraintRun.violation());
+        }
       }
     }
 
     // If the lengths don't match we need check the left-over constraints.
-    if (validConstraintRuns.size() != constraintSize) {
-      final var resultsHandle$ = this.simulationService.get(planId, revisionData);
+    if (!constraintCode.isEmpty()) {
       final var simStartTime = resultsHandle$
           .map(gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle::startTime)
           .orElse(plan.startTimestamp.toInstant());
@@ -225,10 +230,6 @@ public class ConstraintAction {
           violations.put(entry.getKey(), newViolation);
         });
       }
-
-      final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
-              .map(SimulationResultsHandle::getSimulationDatasetId)
-              .orElse(null));
 
       if (simDatasetId != null) {
         constraintService.createConstraintRuns(

@@ -10,5 +10,5 @@ import java.util.Map;
 
 public interface ConstraintService {
   void createConstraintRuns(Map<Long, Constraint> constraintMap, Map<Long, Violation> violations, SimulationDatasetId simulationDatasetId);
-  Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Constraint> constraints);
+  Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Constraint> constraints, SimulationDatasetId simulationDatasetId);
 }

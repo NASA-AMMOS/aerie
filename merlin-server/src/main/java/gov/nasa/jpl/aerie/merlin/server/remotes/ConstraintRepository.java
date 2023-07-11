@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 
 import java.util.List;
@@ -11,5 +12,5 @@ public interface ConstraintRepository {
   void insertConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, Violation> violations,
                             final Long simulationDatasetId);
 
-  List<ConstraintRunRecord> getValidConstraintRuns(List<Long> constraintIds);
+  Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Long> constraintIds, SimulationDatasetId simulationDatasetId);
 }

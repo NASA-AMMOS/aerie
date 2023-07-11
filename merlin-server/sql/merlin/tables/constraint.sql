@@ -106,4 +106,5 @@ end$$;
 create trigger constraint_check_constraint_run_trigger
   after update on "constraint"
   for each row
+  when (new.definition != old.definition)
 execute function constraint_check_constraint_run();

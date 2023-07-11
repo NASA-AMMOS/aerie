@@ -21,7 +21,7 @@ public class StubConstraintService implements ConstraintService {
   }
 
   @Override
-  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(final List<Constraint> constraints) {
+  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(final List<Constraint> constraints, SimulationDatasetId simulationDatasetId) {
     return null;
   }
 }

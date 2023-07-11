@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -21,19 +22,22 @@ final class GetValidConstraintRunsAction implements AutoCloseable {
     from constraint_run as cr
     where cr.definition_outdated = false
     and cr.constraint_id = any(?)
-    and cr.simulation_dataset_id in (select distinct on (simulation_id) id from simulation_dataset order by simulation_id, id desc)
+    and cr.simulation_dataset_id = ?
   """;
 
   private final PreparedStatement statement;
   private final List<Long> constraintIds;
+  private final SimulationDatasetId simulationDatasetId;
 
-  public GetValidConstraintRunsAction(final Connection connection, final List<Long> constraintIds) throws SQLException {
+  public GetValidConstraintRunsAction(final Connection connection, final List<Long> constraintIds, final SimulationDatasetId simulationDatasetId) throws SQLException {
     this.statement = connection.prepareStatement(sql);
     this.constraintIds = constraintIds;
+    this.simulationDatasetId = simulationDatasetId;
   }
 
   public List<ConstraintRunRecord> get() throws SQLException {
     this.statement.setArray(1, this.statement.getConnection().createArrayOf("integer", constraintIds.toArray()));
+    this.statement.setLong(2, simulationDatasetId.id());
 
     try (final var results = this.statement.executeQuery()) {
       final var constraintRuns = new ArrayList<ConstraintRunRecord>();

@@ -275,7 +275,7 @@ public final class ConstraintParsers {
               microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
               duration -> duration.in(Duration.MICROSECONDS));
 
-  public static final JsonParser<Interval> intervalP =
+  static final JsonParser<Interval> intervalP =
       productP
           .field("start", durationP)
           .field("end", durationP)

@@ -28,14 +28,14 @@ create table constraint_run (
 );
 
 comment on table constraint_run is e''
-  'A single constraint run, used to cache violation results to be reused if the constraint and simulation are not stale.';
+  'A single constraint run, used to cache violation results to be reused if the constraint definition is not stale.';
 
 comment on column constraint_run.constraint_id is e''
   'The constraint that we are evaluating during the run.';
 comment on column constraint_run.constraint_definition is e''
-  'The definition of the constraint that is being checked, used to determine staleness.';
+  'The definition of the constraint when it was checked, used to determine staleness.';
 comment on column constraint_run.simulation_dataset_id is e''
-  'The simulation dataset id from when the constraint was checked, used to determine staleness.';
+  'The simulation dataset id from when the constraint was checked.';
 comment on column constraint_run.definition_outdated is e''
   'Tracks if the constraint definition is outdated because the constraint has been changed.';
 comment on column constraint_run.violations is e''
@@ -68,6 +68,7 @@ end$$;
 create trigger constraint_check_constraint_run_trigger
   after update on "constraint"
   for each row
+  when (new.definition != old.definition)
 execute function constraint_check_constraint_run();
 
 call migrations.mark_migration_applied('20');

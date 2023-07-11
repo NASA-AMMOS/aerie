@@ -26,15 +26,7 @@ public class LocalConstraintService implements ConstraintService {
   }
 
   @Override
-  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Constraint> constraints) {
-    final var validConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
-    final var constraintIds = constraints.stream().map(Constraint::id).collect(Collectors.toList());
-    final var constraintRuns = constraintRepository.getValidConstraintRuns(constraintIds);
-
-    for (final var constraintRun : constraintRuns) {
-      validConstraintRuns.put(constraintRun.constraintId(), constraintRun);
-    }
-
-    return validConstraintRuns;
+  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Constraint> constraints, SimulationDatasetId simulationDatasetId) {
+    return constraintRepository.getValidConstraintRuns(constraints.stream().map(Constraint::id).toList(), simulationDatasetId);
   }
 }
