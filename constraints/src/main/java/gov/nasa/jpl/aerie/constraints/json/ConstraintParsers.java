@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
+import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
@@ -36,7 +37,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.se
 public final class ConstraintParsers {
   private ConstraintParsers() {}
 
-  static final JsonParser<Interval.Inclusivity> inclusivityP =
+  public static final JsonParser<Interval.Inclusivity> inclusivityP =
       enumP(Interval.Inclusivity.class, Enum::name);
 
   static final JsonParser<IntervalAlias> intervalAliasP =
@@ -273,6 +274,31 @@ public final class ConstraintParsers {
           .map(
               microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
               duration -> duration.in(Duration.MICROSECONDS));
+
+  static final JsonParser<Interval> intervalP =
+      productP
+          .field("start", durationP)
+          .field("end", durationP)
+          .field("startInclusivity", inclusivityP)
+          .field("endInclusivity", inclusivityP)
+          .map(
+              untuple((start, end, startInclusivity, endInclusivity) -> Interval.between(start, startInclusivity, end, endInclusivity)),
+              $ -> tuple($.start, $.end, $.startInclusivity, $.endInclusivity)
+          );
+
+  public static final JsonParser<Violation> violationP =
+      productP
+          .field("constraintName", stringP)
+          .field("constraintId", longP)
+          .field("constraintType", enumP(ConstraintType.class, Enum::name))
+          .field("activityInstanceIds", listP(longP))
+          .field("resourceNames", listP(stringP))
+          .field("violationWindows", listP(intervalP))
+          .field("gaps", listP(intervalP))
+          .map(
+              untuple((constraintName, constraintId, constraintType, activityInstanceIds, resourceNames, violationWindows, gaps) -> new Violation(constraintName, constraintId, constraintType, activityInstanceIds, resourceNames, violationWindows, gaps)),
+              $ -> tuple($.constraintName, $.constraintId, $.constraintType, $.activityInstanceIds, $.resourceNames, $.violationWindows, $.gaps)
+          );
 
   static final JsonParser<IntervalDuration> intervalDurationP =
       productP

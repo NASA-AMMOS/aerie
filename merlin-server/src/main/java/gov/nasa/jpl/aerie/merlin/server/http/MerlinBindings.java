@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -54,17 +55,20 @@ public final class MerlinBindings implements Plugin {
   private final PlanService planService;
   private final GetSimulationResultsAction simulationAction;
   private final GenerateConstraintsLibAction generateConstraintsLibAction;
+  private final ConstraintAction constraintAction;
 
   public MerlinBindings(
       final MissionModelService missionModelService,
       final PlanService planService,
       final GetSimulationResultsAction simulationAction,
-      final GenerateConstraintsLibAction generateConstraintsLibAction
+      final GenerateConstraintsLibAction generateConstraintsLibAction,
+      final ConstraintAction constraintAction
   ) {
     this.missionModelService = missionModelService;
     this.planService = planService;
     this.simulationAction = simulationAction;
     this.generateConstraintsLibAction = generateConstraintsLibAction;
+    this.constraintAction = constraintAction;
   }
 
   @Override
@@ -221,7 +225,7 @@ public final class MerlinBindings implements Plugin {
       final var planId = input.planId();
       final var simulationDatasetId = input.simulationDatasetId();
 
-      final var constraintViolations = this.simulationAction.getViolations(planId, simulationDatasetId);
+      final var constraintViolations = this.constraintAction.getViolations(planId, simulationDatasetId);
 
       ctx.result(ResponseSerializers.serializeConstraintViolations(constraintViolations).toString());
     } catch (final InvalidJsonException ex) {

@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
@@ -496,6 +497,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     public PostgresSimulationResultsHandle(DataSource dataSource, SimulationDatasetRecord record) {
       this.dataSource = dataSource;
       this.record = record;
+    }
+
+    @Override
+    public SimulationDatasetId getSimulationDatasetId() {
+      return new SimulationDatasetId(this.record.simulationDatasetId());
     }
 
     @Override

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface SimulationResultsHandle {
+  SimulationDatasetId getSimulationDatasetId();
+
   Instant startTime();
 
   Duration duration();
