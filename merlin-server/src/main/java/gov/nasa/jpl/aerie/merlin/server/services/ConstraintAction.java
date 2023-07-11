@@ -143,14 +143,10 @@ public class ConstraintAction {
       final var discreteProfiles = new HashMap<String, DiscreteProfile>();
 
       for (final var entry : constraintCode.entrySet()) {
-
-        // Pipeline switch
-        // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
-        // and the else branch of this if statement.
         final var constraint = entry.getValue();
         final Expression<List<Violation>> expression;
 
-        // TODO: cache these results
+        // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
             plan.missionModelId,
             Optional.of(planId),

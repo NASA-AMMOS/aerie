@@ -18,6 +18,15 @@ array_relationships:
       insertion_order: null
       column_mapping:
         id: simulation_dataset_id
+- name: constraint_runs
+  using:
+    manual_configuration:
+      remote_table:
+        schema: public
+        name: constraint_run
+      insertion_order: null
+      column_mapping:
+        id: simulation_dataset_id
 select_permissions:
   - role: user
     permission:
