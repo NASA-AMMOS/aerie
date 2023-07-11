@@ -7,6 +7,8 @@ comment on column constraint_run.requested_by is null;
 comment on column constraint_run.requested_at is null;
 comment on table constraint_run is null;
 
+drop index constraint_run_simulation_dataset_id_index;
+
 drop table constraint_run;
 
 drop trigger constraint_check_constraint_run_trigger on "constraint";

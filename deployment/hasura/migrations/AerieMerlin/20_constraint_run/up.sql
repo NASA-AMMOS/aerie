@@ -27,6 +27,9 @@ create table constraint_run (
       on delete set null
 );
 
+create index constraint_run_simulation_dataset_id_index
+  on constraint_run (simulation_dataset_id);
+
 comment on table constraint_run is e''
   'A single constraint run, used to cache violation results to be reused if the constraint definition is not stale.';
 

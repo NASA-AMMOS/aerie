@@ -67,9 +67,7 @@ public final class AerieAppDriver {
     final var simulationController = new CachedSimulationService(stores.results());
     final var simulationAction = new GetSimulationResultsAction(
         planController,
-        missionModelController,
-        simulationController,
-        constraintsDSLCompilationService
+        simulationController
     );
     final var constraintService = new LocalConstraintService(
         stores.constraints()
