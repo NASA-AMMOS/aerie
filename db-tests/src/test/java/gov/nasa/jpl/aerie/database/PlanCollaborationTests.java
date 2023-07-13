@@ -2637,9 +2637,9 @@ public class PlanCollaborationTests {
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Add Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity");
       final int activityId = merlinHelper.insertActivity(branchId);
-      presetTests.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
+      merlinHelper.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
 
       // Merge
       final int mergeRQId = createMergeRequest(planId, branchId);
@@ -2661,8 +2661,8 @@ public class PlanCollaborationTests {
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
       final int branchId = duplicatePlan(planId, "Modify Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity", "{\"destination\": \"Mars\"}");
-      presetTests.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity", merlinHelper.admin.name(), "{\"destination\": \"Mars\"}");
+      merlinHelper.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
 
       // Merge
       final int mergeRQId = createMergeRequest(planId, branchId);
@@ -2683,9 +2683,9 @@ public class PlanCollaborationTests {
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Delete Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity");
       final int activityId = merlinHelper.insertActivity(branchId);
-      presetTests.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
+      merlinHelper.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
 
       // Merge
       final int mergeRQId = createMergeRequest(planId, branchId);

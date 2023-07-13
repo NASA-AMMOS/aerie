@@ -55,14 +55,18 @@ final class MerlinDatabaseTestHelper {
   }
 
   int insertMissionModel(final int fileId) throws SQLException {
+    return insertMissionModel(fileId, admin.name);
+  }
+
+  int insertMissionModel(final int fileId, final String username) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
               """
                   INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', 'MerlinAdmin', '0', %s)
+                  VALUES ('test-mission-model-%s', 'test-mission', '%s', '0', %s)
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), fileId)
+                  .formatted(UUID.randomUUID().toString(), username, fileId)
           );
       res.next();
       return res.getInt("id");
@@ -74,21 +78,36 @@ final class MerlinDatabaseTestHelper {
   }
 
   int insertPlan(final int missionModelId, final String username) throws SQLException {
-    return insertPlan(missionModelId, username, "2020-1-1 00:00:00+00");
+    return insertPlan(missionModelId, username, "test-plan-"+UUID.randomUUID(), "2020-1-1 00:00:00+00");
   }
 
-  int insertPlan(final int missionModelId, final String username, final String start_time) throws SQLException {
+  int insertPlan(final int missionModelId, final String username, final  String planName) throws SQLException {
+    return insertPlan(missionModelId, username, planName, "2020-1-1 00:00:00+00");
+  }
+
+  int insertPlan(final int missionModelId, final String username, final String planName, final String start_time) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
               """
                   INSERT INTO plan (name, model_id, duration, start_time, owner)
-                  VALUES ('test-plan-%s', '%s', '0', '%s', '%s')
+                  VALUES ('%s', '%s', '0', '%s', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, start_time, username)
+                  .formatted(planName, missionModelId, start_time, username)
           );
       res.next();
       return res.getInt("id");
+    }
+  }
+
+  void insertPlanCollaborator(final int planId, final String username) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+        """
+        INSERT INTO plan_collaborators (plan_id, collaborator)
+        VALUES (%d, '%s');
+        """.formatted(planId, username)
+      );
     }
   }
 
@@ -151,6 +170,42 @@ final class MerlinDatabaseTestHelper {
       );
     }
   }
+
+  int insertPreset(int modelId, String name, String associatedActivityType) throws SQLException {
+    return insertPreset(modelId, name, associatedActivityType, admin.name, "{}");
+  }
+
+  int insertPreset(int modelId, String name, String associatedActivityType, String username)
+  throws SQLException
+  {
+    return insertPreset(modelId, name, associatedActivityType, username, "{}");
+  }
+
+  int insertPreset(int modelId, String name, String associatedActivityType, String username, String arguments)
+  throws SQLException
+  {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement
+          .executeQuery(
+              """
+                  INSERT INTO activity_presets (model_id, name, associated_activity_type, arguments, owner)
+                  VALUES (%d, '%s', '%s', '%s', '%s')
+                  RETURNING id;"""
+                  .formatted(modelId, name, associatedActivityType, arguments, username)
+          );
+      res.next();
+      return res.getInt("id");
+    }
+  }
+
+  void assignPreset(int presetId, int activityId, int planId, String userSession) throws SQLException {
+    try(final var statement = connection.createStatement()){
+      statement.execute("""
+         select hasura_functions.apply_preset_to_activity(%d, %d, %d, '%s'::json);
+         """.formatted(presetId, activityId, planId, userSession));
+    }
+  }
+
 
   int insertConstraintPlan(int plan_id, String name, String definition, User user) throws SQLException {
     try(final var statement = connection.createStatement()) {

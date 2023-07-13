@@ -512,7 +512,7 @@ class MerlinDatabaseTests {
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
       // ASSUMPTION: The plan to which `planDatasetRecord` is associated must start at 2020-1-1 00:00:00+00, so that
       // this new plan starts exactly 1 hour later.
-      final var newPlanId = merlinHelper.insertPlan(missionModelId, merlinHelper.admin.name(), "2020-1-1 01:00:00+00");
+      final var newPlanId = merlinHelper.insertPlan(missionModelId, merlinHelper.admin.name(), "test-plan-"+UUID.randomUUID(), "2020-1-1 01:00:00+00");
 
       final var planDatasetInsertRes = connection.createStatement()
                                                  .executeQuery(

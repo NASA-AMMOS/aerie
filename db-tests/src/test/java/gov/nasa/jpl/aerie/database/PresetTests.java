@@ -82,16 +82,8 @@ public class PresetTests {
 
   //region Helper Methods
   Activity assignPreset(int presetId, int activityId, int planId) throws SQLException {
-    return assignPreset(presetId, activityId, planId, merlinHelper.admin.session());
-  }
-
-  Activity assignPreset(int presetId, int activityId, int planId, String userSession) throws SQLException {
-    try(final var statement = connection.createStatement()){
-      statement.execute("""
-         select hasura_functions.apply_preset_to_activity(%d, %d, %d, '%s'::json);
-         """.formatted(presetId, activityId, planId, userSession));
-      return getActivity(planId, activityId);
-    }
+    merlinHelper.assignPreset(presetId, activityId, planId, merlinHelper.admin.session());
+    return getActivity(planId, activityId);
   }
 
   Activity getActivity(final int planId, final int activityId) throws SQLException {
@@ -141,27 +133,6 @@ public class PresetTests {
     assertEquals(expected.planId, actual.planId);
     assertEquals(expected.name, actual.name);
     assertEquals(expected.type, actual.type);
-  }
-
-  int insertPreset(int modelId, String name, String associatedActivityType) throws SQLException {
-    return insertPreset(modelId, name, associatedActivityType, "{}");
-  }
-
-  int insertPreset(int modelId, String name, String associatedActivityType, String arguments)
-  throws SQLException
-  {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO activity_presets (model_id, name, associated_activity_type, arguments)
-                  VALUES (%d, '%s', '%s', '%s')
-                  RETURNING id;"""
-                  .formatted(modelId, name, associatedActivityType, arguments)
-          );
-      res.next();
-      return res.getInt("id");
-    }
   }
 
   void deletePreset(int presetId) throws SQLException {
@@ -230,9 +201,9 @@ public class PresetTests {
     final String activityArgs = "{\"fruitCount\": 40}";
     final int activityId = merlinHelper.insertActivity(planId, "00:00:00", activityArgs);
     final String simplePresetArgs = "{\"fruitCount\": 80}";
-    final int simplePresetId = insertPreset(missionModelId, "simple preset", "test-activity", simplePresetArgs);
+    final int simplePresetId = merlinHelper.insertPreset(missionModelId, "simple preset", "test-activity", merlinHelper.admin.name(), simplePresetArgs);
     final String extendedPresetArgs = "{\"coreCount\": 120, \"destination\": \"Mars\"}";
-    final int extendedPresetId = insertPreset(missionModelId, "extended preset", "test-activity", extendedPresetArgs);
+    final int extendedPresetId = merlinHelper.insertPreset(missionModelId, "extended preset", "test-activity", merlinHelper.admin.name(), extendedPresetArgs);
 
     var simplePresetActivities = getActivitiesWithPreset(simplePresetId);
     var extendedPresetActivities = getActivitiesWithPreset(extendedPresetId);
@@ -274,7 +245,7 @@ public class PresetTests {
     merlinHelper.insertActivityType(missionModelId, "fake-type");
     final int planId = merlinHelper.insertPlan(missionModelId);
     final int activityId = merlinHelper.insertActivity(planId);
-    final int presetId = insertPreset(missionModelId, "test preset", "fake-type");
+    final int presetId = merlinHelper.insertPreset(missionModelId, "test preset", "fake-type");
 
     final Activity activity = getActivity(planId, activityId);
     assertEquals("test-activity", activity.type);
@@ -307,7 +278,7 @@ public class PresetTests {
   @Test
   void cannotApplyPresetToNonexistentActivity() throws SQLException {
     final int planId = merlinHelper.insertPlan(missionModelId);
-    final int presetId = insertPreset(missionModelId, "test preset", "test-activity");
+    final int presetId = merlinHelper.insertPreset(missionModelId, "test preset", "test-activity");
 
     try{
       assignPreset(presetId, -1, planId);
@@ -331,13 +302,13 @@ public class PresetTests {
     merlinHelper.insertActivityType(otherModelId, "Shared Type");
     merlinHelper.insertActivityType(otherModelId, "Unique Type");
 
-    insertPreset(missionModelId, "Shared Name", "Shared Type");
-    insertPreset(missionModelId, "Shared Name", "Different Type");
-    insertPreset(otherModelId, "Shared Name", "Shared Type");
-    insertPreset(missionModelId, "Different Name", "Shared Type");
-    insertPreset(otherModelId, "Unique Name", "Unique Type");
+    merlinHelper.insertPreset(missionModelId, "Shared Name", "Shared Type");
+    merlinHelper.insertPreset(missionModelId, "Shared Name", "Different Type");
+    merlinHelper.insertPreset(otherModelId, "Shared Name", "Shared Type");
+    merlinHelper.insertPreset(missionModelId, "Different Name", "Shared Type");
+    merlinHelper.insertPreset(otherModelId, "Unique Name", "Unique Type");
     try{
-      insertPreset(missionModelId, "Shared Name", "Shared Type");
+      merlinHelper.insertPreset(missionModelId, "Shared Name", "Shared Type");
       fail();
     } catch (SQLException ex){
       if(!ex.getMessage().contains("duplicate key value violates unique constraint \"activity_presets_model_id_associated_activity_type_name_key\"")){
