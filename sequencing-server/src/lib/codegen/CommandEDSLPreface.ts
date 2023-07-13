@@ -1412,7 +1412,10 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
                 ? `R\`${durationToHms(this.relativeTime)}\``
                 : 'C';
 
-    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${argumentsToString(this.arguments)})`;
+    const argsString =
+        Object.keys(this.arguments).length === 0
+            ? ''
+            : `(${argumentsToPositionString(this.arguments)})`;
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
@@ -1502,7 +1505,11 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
   }
 
   public toEDSLString(): string {
-    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${argumentsToString(this.arguments)})`;
+    const argsString =
+        Object.keys(this.arguments).length === 0
+            ? ''
+            : `(${argumentsToPositionString(this.arguments)})`;
+
 
     const metadata =
         this._metadata && Object.keys(this._metadata).length !== 0
@@ -1648,11 +1655,11 @@ export class Ground_Block implements GroundBlock {
   }
 
   // @ts-ignore : 'Description' found in JSON Spec
-  public ARGUMENTS(args: Args): Ground_Block {
+  public ARGUMENTS(...args: [Args] | [A, ...A[]]): Ground_Block {
     return Ground_Block.new({
       name: this.name,
       ...(this._models && { models: this._models }),
-      args: args,
+      args: typeof args[0] === 'object' ? args[0] : convertArgsToInterfaces(commandArraysToObj(args, [])),
       ...(this._description && { description: this._description }),
       ...(this._metadata && { metadata: this._metadata }),
       ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
@@ -1720,7 +1727,7 @@ export class Ground_Block implements GroundBlock {
 
     const args =
         this._args && Object.keys(this._args).length !== 0
-            ? '\n' + indent(`.ARGUMENTS(${argumentsToString(this._args)})`, 1)
+            ? '\n' + indent(`.ARGUMENTS(${argumentsToPositionString(convertInterfacesToArgs(this._args))})`, 1)
             : '';
 
     const metadata =
@@ -1881,11 +1888,11 @@ export class Ground_Event implements GroundEvent {
   }
 
   // @ts-ignore : 'Description' found in JSON Spec
-  public ARGUMENTS(args: Args): Ground_Event {
+  public ARGUMENTS(...args: [Args] | [A, ...A[]]): Ground_Event {
     return Ground_Event.new({
       name: this.name,
       ...(this._models && { models: this._models }),
-      args: args,
+      args: typeof args[0] === 'object' ? args[0] : convertArgsToInterfaces(commandArraysToObj(args, [])),
       ...(this._description && { description: this._description }),
       ...(this._metadata && { metadata: this._metadata }),
       ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
@@ -1952,7 +1959,7 @@ export class Ground_Event implements GroundEvent {
 
     const args =
         this._args && Object.keys(this._args).length !== 0
-            ? `\n` + indent(`.ARGUMENTS(${argumentsToString(this._args)})`, 1)
+            ? `\n` + indent(`.ARGUMENTS(${argumentsToPositionString(convertInterfacesToArgs(this._args))})`, 1)
             : '';
 
     const metadata =
@@ -2066,10 +2073,10 @@ export class ActivateStep implements Activate {
   }
 
   // @ts-ignore : 'Args' found in JSON Spec
-  public ARGUMENTS(args: Args): ActivateStep {
+  public ARGUMENTS(...args: [Args] | [A, ...A[]]): ActivateStep {
     return ActivateStep.new({
       sequence: this.sequence,
-      args: args,
+      args: typeof args[0] === 'object' ? args[0] : convertArgsToInterfaces(commandArraysToObj(args, [])),
       ...(this._description && { description: this._description }),
       ...(this._engine && { engine: this._engine }),
       ...(this._epoch && { epoch: this._epoch }),
@@ -2242,7 +2249,7 @@ export class ActivateStep implements Activate {
 
     const args =
         this._args && Object.keys(this._args).length !== 0
-            ? '\n' + indent(`.ARGUMENTS(${argumentsToString(this._args)})`, 1)
+            ? '\n' + indent(`.ARGUMENTS(${argumentsToPositionString(convertInterfacesToArgs(this._args))})`, 1)
             : '';
 
     const description =
@@ -2360,10 +2367,10 @@ export class LoadStep implements Load {
   }
 
   // @ts-ignore : 'Args' found in JSON Spec
-  public ARGUMENTS(args: Args): LoadStep {
+  public ARGUMENTS(...args: [Args] | [A, ...A[]]): LoadStep {
     return LoadStep.new({
       sequence: this.sequence,
-      args: args,
+      args: typeof args[0] === 'object' ? args[0] : convertArgsToInterfaces(commandArraysToObj(args, [])),
       ...(this._description && { description: this._description }),
       ...(this._engine && { engine: this._engine }),
       ...(this._epoch && { epoch: this._epoch }),
@@ -2536,7 +2543,7 @@ export class LoadStep implements Load {
 
     const args =
         this._args && Object.keys(this._args).length !== 0
-            ? '\n' + indent(`.ARGUMENTS(${argumentsToString(this._args)})`, 1)
+            ? '\n' + indent(`.ARGUMENTS(${argumentsToPositionString(convertInterfacesToArgs(this._args))})`, 1)
             : '';
 
     const description =
@@ -3293,6 +3300,46 @@ function commandsWithTimeValue<T extends TimingTypes>(
  * ---------------------------------
  */
 
+
+/**
+ * Converts an array of arguments and keys into an object.
+ *
+ * @param {any[]} args - The array of arguments.
+ * @param {string[]} keys - The array of keys.
+ * @returns {Record<string, any>} The object.
+ */
+// @ts-ignore : Used in generated code
+function commandArraysToObj(args: any[], keys: string[]): Record<string, any> {
+  const obj: Record<string, any> = {};
+
+  function handleNestedArrays(values: any[], subKeys: string[]): any[] {
+    const nestedObjs = [];
+    for (const subArray of values) {
+      nestedObjs.push(commandArraysToObj(subArray, subKeys));
+    }
+    return nestedObjs;
+  }
+
+  for (let i = 0; i < args.length; i++) {
+    const key = keys[i] || `arg_${i}`; // Use `arg_${i}` if key is undefined
+    const value = args[i];
+
+    if (Array.isArray(value)) {
+      const subKeys = keys.slice(i + 1);
+      obj[key] = handleNestedArrays(value, subKeys);
+      if (value.length > 0) {
+        keys = keys.slice(0, i + 1).concat(subKeys.slice(value[0].length));
+      }
+    } else {
+      // Assign values to properties
+      obj[key] = value;
+    }
+  }
+
+  return obj;
+}
+
+
 // @ts-ignore : Used in generated code
 function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {
   if (typeof args[0] === 'object') {
@@ -3422,7 +3469,7 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
             } else if (parameterNames && parameterNames.includes(arg.value)) {
               variable.setKind('parameters');
             } else {
-              const errorMsg = `Variable '${arg.value}' is not defined as a local or parameter`;
+              const errorMsg = `Variable '${arg.value}' is not defined as a local or parameter\n`;
               variable = Variable.new({ name: `${arg.value} //ERROR: ${errorMsg}`, type: VariableType.INT });
               variable.setKind('unknown');
             }
@@ -3590,6 +3637,73 @@ function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | 
     output += ']';
   } else {
     output += '}';
+  }
+
+  return output;
+}
+
+/**
+ * Converts an object of arguments to an array string representation,
+ * preserving the position-based structure of the arguments.
+ *
+ * @template A - Type parameter representing the type of the arguments.
+ * @param {A} args - The arguments to convert.
+ * @returns {string} - The string representation of the arguments.
+ */
+function argumentsToPositionString<A extends any[] | { [argName: string]: any } = [] | {}>(args: A): string {
+  let output = '';
+
+  function printObject(obj: { [argName: string]: any }) {
+    Object.keys(obj).forEach((key, index) => {
+      const value = obj[key];
+
+      if (Array.isArray(value)) {
+        if (index > 0) output += ',';
+        output += `[`;
+        printArray(value);
+        output += `]`;
+      } else if (typeof value === 'object') {
+        if (value instanceof Variable) {
+          if (index > 0) output += ',';
+          output += `${value.toReferenceString()}`;
+        } else {
+          if (index > 0) output += ',';
+          output += `[`;
+          printValue(value);
+          output += `]`;
+        }
+      } else {
+        if (index > 0) output += ',';
+        output += `${typeof value === 'string' ? `'${value}'` : value}`;
+      }
+    });
+  }
+
+  function printArray(array: any[]) {
+    array.forEach((item, index) => {
+      if (index > 0) output += ',';
+      output += `[`;
+      printValue(item);
+      output += `]`;
+    });
+  }
+
+  function printValue(value: any) {
+    if (Array.isArray(value)) {
+      printArray(value);
+    } else if (typeof value === 'object') {
+      printObject(value);
+    } else {
+      output += `${typeof value === 'string' ? `'${value}'` : value}`;
+    }
+  }
+
+  if (Array.isArray(args)) {
+    printArray(args);
+  } else if (typeof args === 'object') {
+    printObject(args);
+  } else {
+    output += `${typeof args === 'string' ? `'${args}'` : args}`;
   }
 
   return output;
