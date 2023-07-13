@@ -108,7 +108,7 @@ public final class MerlinParsersTest {
               .build())
           .add("session_variables", Json
               .createObjectBuilder()
-              .add("x-hasura-role", "admin")
+              .add("x-hasura-role", "aerie_admin")
               .build())
           .add("request_query", "query { someValue }")
           .build();
@@ -116,7 +116,7 @@ public final class MerlinParsersTest {
       final var expected = new HasuraAction<>(
           "testAction",
           new HasuraAction.MissionModelInput("1"),
-          new HasuraAction.Session("admin", ""));
+          new HasuraAction.Session("aerie_admin", ""));
 
       assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
     }
@@ -134,7 +134,7 @@ public final class MerlinParsersTest {
               .build())
           .add("session_variables", Json
               .createObjectBuilder()
-              .add("x-hasura-role", "admin")
+              .add("x-hasura-role", "aerie_admin")
               .add("x-hasura-user-id", "userId")
               .build())
           .add("request_query", "query { someValue }")
@@ -143,7 +143,7 @@ public final class MerlinParsersTest {
       final var expected = new HasuraAction<>(
           "testAction",
           new HasuraAction.MissionModelInput("1"),
-          new HasuraAction.Session("admin", "userId"));
+          new HasuraAction.Session("aerie_admin", "userId"));
 
       assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
     }

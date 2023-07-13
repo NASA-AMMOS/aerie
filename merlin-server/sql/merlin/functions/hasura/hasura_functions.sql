@@ -12,7 +12,7 @@ create table hasura_functions.resource_at_start_offset_return_value(
 create function hasura_functions.get_resources_at_start_offset(_dataset_id int, _start_offset interval)
 returns setof hasura_functions.resource_at_start_offset_return_value
 strict
-immutable
+stable
 security invoker
 language plpgsql as $$
 begin

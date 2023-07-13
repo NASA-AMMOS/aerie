@@ -2,6 +2,10 @@ table:
   name: get_non_conflicting_activities_return_value
   schema: hasura_functions
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [activity_id, change_type, source, target, source_tags, target_tags]
+      filter: {}
   - role: user
     permission:
       columns: [activity_id, change_type, source, target, source_tags, target_tags]

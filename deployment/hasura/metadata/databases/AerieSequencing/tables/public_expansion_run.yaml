@@ -32,6 +32,11 @@ remote_relationships:
         field_mapping:
           simulation_dataset_id: id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, simulation_dataset_id, expansion_set_id, created_at]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, simulation_dataset_id, expansion_set_id, created_at]
@@ -43,6 +48,9 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {}

@@ -2,6 +2,11 @@ table:
   name: scheduling_condition
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
@@ -14,6 +19,13 @@ select_permissions:
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, definition, model_id, description]
+      check: {}
+      set:
+        author: "x-hasura-user-id"
+        last_modified_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, definition, model_id, description]
@@ -22,6 +34,12 @@ insert_permissions:
         author: "x-hasura-user-id"
         last_modified_by: "x-hasura-user-id"
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, definition, description, model_id]
+      filter: {}
+      set:
+        last_modified_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, definition, description]
@@ -29,6 +47,9 @@ update_permissions:
       set:
         last_modified_by: "x-hasura-user-id"
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {}

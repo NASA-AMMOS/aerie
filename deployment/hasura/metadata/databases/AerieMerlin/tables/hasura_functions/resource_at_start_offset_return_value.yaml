@@ -2,6 +2,10 @@ table:
   name: resource_at_start_offset_return_value
   schema: hasura_functions
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [dataset_id, id, name, type, start_offset, dynamics, is_gap]
+      filter: {}
   - role: user
     permission:
       columns: [dataset_id, id, name, type, start_offset, dynamics, is_gap]

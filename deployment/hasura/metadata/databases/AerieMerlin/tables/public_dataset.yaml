@@ -26,6 +26,11 @@ array_relationships:
         name: topic
         schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, revision]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, revision]
@@ -36,3 +41,12 @@ select_permissions:
       columns: [id, revision]
       filter: {}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [revision]
+      check: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

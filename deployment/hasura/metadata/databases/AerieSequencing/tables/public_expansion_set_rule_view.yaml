@@ -12,6 +12,12 @@ array_relationships:
         column_mapping:
           set_id: id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [set_id, id, activity_type, expansion_logic, authoring_command_dict_id,
+                authoring_mission_model_id, created_at, updated_at, name, owner, updated_by, description]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [set_id, id, activity_type, expansion_logic, authoring_command_dict_id,

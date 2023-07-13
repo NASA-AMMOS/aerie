@@ -28,6 +28,13 @@ array_relationships:
       column_mapping:
         id: simulation_dataset_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
+                simulation_template_revision, simulation_revision, dataset_revision, arguments, simulation_start_time,
+                simulation_end_time, status, reason, canceled, requested_by, requested_at]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
@@ -42,7 +49,15 @@ select_permissions:
                 simulation_end_time, status, reason, canceled, requested_by, requested_at]
       filter: {}
       allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [requested_by]
+      filter: {}
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {"simulation":{"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}

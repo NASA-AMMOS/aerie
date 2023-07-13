@@ -51,5 +51,6 @@
 - "!include metadata/plan_tags.yaml"
 - "!include metadata/users_allowed_roles.yaml"
 - "!include metadata/user_roles.yaml"
+- "!include metadata/user_role_permission.yaml"
 - "!include metadata/users.yaml"
 - "!include metadata/users_and_roles_view.yaml"

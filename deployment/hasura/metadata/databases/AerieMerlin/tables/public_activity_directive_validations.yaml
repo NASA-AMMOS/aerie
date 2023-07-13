@@ -2,6 +2,11 @@ table:
   name: activity_directive_validations
   schema: public
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [directive_id, plan_id, last_modified_at, validations]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [directive_id, plan_id, last_modified_at, validations]
@@ -12,3 +17,7 @@ select_permissions:
       columns: [directive_id, plan_id, last_modified_at, validations]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

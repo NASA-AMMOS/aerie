@@ -12,6 +12,11 @@ array_relationships:
         id: profile_id
         dataset_id: dataset_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, dataset_id, name, type, duration]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, dataset_id, name, type, duration]
@@ -22,3 +27,7 @@ select_permissions:
       columns: [id, dataset_id, name, type, duration]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

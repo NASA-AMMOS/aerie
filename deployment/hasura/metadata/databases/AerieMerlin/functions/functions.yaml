@@ -6,6 +6,7 @@
       function: duplicate_plan
     session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: get_plan_history
@@ -13,7 +14,9 @@
   configuration:
     custom_root_fields:
       function: get_plan_history
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: create_merge_request
@@ -23,6 +26,7 @@
       function: create_merge_request
     session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: begin_merge
@@ -32,6 +36,7 @@
       function: begin_merge
     session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: commit_merge
@@ -39,7 +44,9 @@
   configuration:
     custom_root_fields:
       function: commit_merge
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: deny_merge
@@ -47,7 +54,9 @@
   configuration:
     custom_root_fields:
       function: deny_merge
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: withdraw_merge_request
@@ -55,7 +64,9 @@
   configuration:
     custom_root_fields:
       function: withdraw_merge_request
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: cancel_merge
@@ -63,7 +74,9 @@
   configuration:
     custom_root_fields:
       function: cancel_merge
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: get_non_conflicting_activities
@@ -71,23 +84,31 @@
   configuration:
     custom_root_fields:
       function: get_non_conflicting_activities
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
+    - role: viewer
 - function:
     name: get_conflicting_activities
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: get_conflicting_activities
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
+    - role: viewer
 - function:
     name: set_resolution
     schema: hasura_functions
   configuration:
     custom_root_fields:
       function: set_resolution
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: set_resolution_bulk
@@ -95,7 +116,9 @@
   configuration:
     custom_root_fields:
       function: set_resolution_bulk
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_plan_start
@@ -103,7 +126,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_plan_start
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_to_anchor
@@ -111,7 +136,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_to_anchor
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: delete_activity_by_pk_delete_subtree
@@ -119,7 +146,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_plan_start_bulk
@@ -127,7 +156,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_plan_start_bulk
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_to_anchor_bulk
@@ -135,7 +166,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_to_anchor_bulk
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: delete_activity_by_pk_delete_subtree_bulk
@@ -143,7 +176,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree_bulk
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: apply_preset_to_activity
@@ -151,7 +186,9 @@
   configuration:
     custom_root_fields:
       function: apply_preset_to_activity
+    session_argument: hasura_session
   permissions:
+    - role: aerie_admin
     - role: user
 - function:
     name: get_resources_at_start_offset
@@ -159,4 +196,6 @@
   configuration:
     custom_name: getResourcesAtStartOffset
   permissions:
+    - role: aerie_admin
     - role: user
+    - role: viewer

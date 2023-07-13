@@ -17,6 +17,11 @@ array_relationships:
           name: constraint_tags
           schema: metadata
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [id, name, description, definition, plan_id, model_id, created_at, updated_at, owner, updated_by]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [id, name, description, definition, plan_id, model_id, created_at, updated_at, owner, updated_by]
@@ -28,6 +33,13 @@ select_permissions:
       filter: {}
       allow_aggregations: true
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, description, definition, plan_id, model_id]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, description, definition, plan_id, model_id]
@@ -40,6 +52,12 @@ insert_permissions:
         owner: "x-hasura-user-id"
         updated_by: "x-hasura-user-id"
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, description, definition, owner, model_id, plan_id]
+      filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, description, definition, owner, model_id, plan_id]
@@ -56,6 +74,9 @@ update_permissions:
       set:
         updated_by: "x-hasura-user-id"
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {"_or": [

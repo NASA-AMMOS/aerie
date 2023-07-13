@@ -2,6 +2,10 @@ table:
   name: delete_anchor_return_value
   schema: hasura_functions
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [affected_row, change_type]
+      filter: {}
   - role: user
     permission:
       columns: [affected_row, change_type]

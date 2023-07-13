@@ -23,6 +23,11 @@ array_relationships:
         goal_id: goal_id
         analysis_id: analysis_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [analysis_id, goal_id, satisfied]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [analysis_id, goal_id, satisfied]
@@ -33,3 +38,12 @@ select_permissions:
       columns: [analysis_id, goal_id, satisfied]
       filter: {}
       allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [satisfied]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

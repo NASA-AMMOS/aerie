@@ -83,7 +83,6 @@ public class PlanCollaborationTests {
     merlinHelper.insertUser("PlanCollaborationTests");
     merlinHelper.insertUser("PlanCollaborationTests Reviewer");
     merlinHelper.insertUser("PlanCollaborationTests Requester");
-    merlinHelper.insertUser("TagsTest");
   }
 
   @AfterAll
@@ -2568,8 +2567,8 @@ public class PlanCollaborationTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d)
-             """.formatted(activityAId, planId));
+             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d, '%s'::json)
+             """.formatted(activityAId, planId, merlinHelper.admin.session()));
       }
       assertEquals(0, getActivities(planId).size());
       assertEquals(2, getActivities(childPlanId).size());
@@ -2591,8 +2590,8 @@ public class PlanCollaborationTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d)
-             """.formatted(activityAId, planId));
+             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d, '%s'::json)
+             """.formatted(activityAId, planId, merlinHelper.admin.session()));
       }
       assertEquals(1, getActivities(planId).size());
       assertEquals(2, getActivities(childPlanId).size());
@@ -2616,8 +2615,8 @@ public class PlanCollaborationTests {
       try(final var statement = connection.createStatement()) {
         statement.execute(
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d)
-             """.formatted(activityAId, planId));
+             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d, '%s'::json)
+             """.formatted(activityAId, planId, merlinHelper.admin.session()));
       }
       assertEquals(2, getActivities(planId).size());
       assertEquals(3, getActivities(childPlanId).size());
@@ -2638,9 +2637,9 @@ public class PlanCollaborationTests {
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Add Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity");
       final int activityId = merlinHelper.insertActivity(branchId);
-      presetTests.assignPreset(presetId, activityId, branchId);
+      merlinHelper.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
 
       // Merge
       final int mergeRQId = createMergeRequest(planId, branchId);
@@ -2662,8 +2661,8 @@ public class PlanCollaborationTests {
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
       final int branchId = duplicatePlan(planId, "Modify Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity", "{\"destination\": \"Mars\"}");
-      presetTests.assignPreset(presetId, activityId, branchId);
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity", merlinHelper.admin.name(), "{\"destination\": \"Mars\"}");
+      merlinHelper.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
 
       // Merge
       final int mergeRQId = createMergeRequest(planId, branchId);
@@ -2684,9 +2683,9 @@ public class PlanCollaborationTests {
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Delete Preset Branch");
-      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity");
       final int activityId = merlinHelper.insertActivity(branchId);
-      presetTests.assignPreset(presetId, activityId, branchId);
+      merlinHelper.assignPreset(presetId, activityId, branchId, merlinHelper.admin.session());
 
       // Merge
       final int mergeRQId = createMergeRequest(planId, branchId);
@@ -2713,8 +2712,8 @@ public class PlanCollaborationTests {
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityCount = 200;
       final var activityIds = new HashSet<>();
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
       for (var i = 0; i < activityCount; i++) {
         final int activityId = merlinHelper.insertActivity(planId);
         activityIds.add(activityId);
@@ -2756,8 +2755,8 @@ public class PlanCollaborationTests {
       final var planId = merlinHelper.insertPlan(missionModelId);
       final int activityCount = 200;
       final var activityIds = new HashSet<>();
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
       for (var i = 0; i < activityCount; i++) {
         final int activityId = merlinHelper.insertActivity(planId);
         activityIds.add(activityId);
@@ -2798,7 +2797,7 @@ public class PlanCollaborationTests {
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int untaggedActivityId = merlinHelper.insertActivity(planId);
       final int branchId = duplicatePlan(planId, "Add Tag Branch");
-      final int tagId = tagsHelper.insertTag("Farm");
+      final int tagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
       final int taggedActivityId = merlinHelper.insertActivity(branchId);
       tagsHelper.assignTagToActivity(taggedActivityId, branchId, tagId);
 
@@ -2812,7 +2811,7 @@ public class PlanCollaborationTests {
       assertEquals(2, activities.size());
       assertEquals(new ArrayList<Tag>(), tagsHelper.getTagsOnActivity(untaggedActivityId, planId));
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tagId, "Farm", null, "TagsTest"));
+      expectedTags.add(new Tag(tagId, "Farm", null, "MerlinAdmin"));
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(taggedActivityId, planId));
     }
 
@@ -2821,7 +2820,7 @@ public class PlanCollaborationTests {
     void tagsPersistWithModify() throws SQLException {
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
-      final int tagId = tagsHelper.insertTag("Farm");
+      final int tagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
       tagsHelper.assignTagToActivity(activityId, planId, tagId);
       final int branchId = duplicatePlan(planId, "Modify Tags Branch");
       updateActivityName("New Name", activityId, branchId);
@@ -2833,16 +2832,16 @@ public class PlanCollaborationTests {
 
       // Assertions
       final var expectedTag = new ArrayList<Tag>();
-      expectedTag.add(new Tag(tagId, "Farm", null, "TagsTest"));
+      expectedTag.add(new Tag(tagId, "Farm", null, "MerlinAdmin"));
       assertEquals(expectedTag, tagsHelper.getTagsOnActivity(activityId, planId));
     }
 
     // If the tags on an activity are updated, the tags on the activity post-merge should reflect that
     @Test
     void tagsUpdatedWithModify() throws SQLException {
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
-      final int barnTagId = tagsHelper.insertTag("Barn");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
+      final int barnTagId = tagsHelper.insertTag("Barn", merlinHelper.admin.name());
 
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
@@ -2861,8 +2860,8 @@ public class PlanCollaborationTests {
       // Assertions
       final var tags = tagsHelper.getTagsOnActivity(activityId, planId);
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(farmTagId, "Farm", null, "TagsTest"));
-      expectedTags.add(new Tag(barnTagId, "Barn", null, "TagsTest"));
+      expectedTags.add(new Tag(farmTagId, "Farm", null, "MerlinAdmin"));
+      expectedTags.add(new Tag(barnTagId, "Barn", null, "MerlinAdmin"));
       assertEquals(2, tags.size());
       assertEquals(expectedTags, tags);
     }
@@ -2870,9 +2869,9 @@ public class PlanCollaborationTests {
     // In these modify-delete conflicts, the "modify" option is always picked
     @Test
     void tagsPersistWithModifyDeleteConflict() throws SQLException {
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
-      final int barnTagId = tagsHelper.insertTag("Barn");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
+      final int barnTagId = tagsHelper.insertTag("Barn", merlinHelper.admin.name());
 
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
@@ -2892,17 +2891,17 @@ public class PlanCollaborationTests {
       final var activities = getActivities(planId);
       assertEquals(1, activities.size());
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
-      expectedTags.add(new Tag(barnTagId, "Barn", null, "TagsTest"));
+      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "MerlinAdmin"));
+      expectedTags.add(new Tag(barnTagId, "Barn", null, "MerlinAdmin"));
 
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(activityId, planId));
     }
 
     @Test
     void tagsPersistWithDeleteModifyConflict() throws SQLException {
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
-      final int barnTagId = tagsHelper.insertTag("Barn");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
+      final int barnTagId = tagsHelper.insertTag("Barn", merlinHelper.admin.name());
 
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
@@ -2922,17 +2921,17 @@ public class PlanCollaborationTests {
       final var activities = getActivities(planId);
       assertEquals(1, activities.size());
       final var expectedTags = new ArrayList<Tag>();
-      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
-      expectedTags.add(new Tag(barnTagId, "Barn", null, "TagsTest"));
+      expectedTags.add(new Tag(tractorTagId, "Tractor", null, "MerlinAdmin"));
+      expectedTags.add(new Tag(barnTagId, "Barn", null, "MerlinAdmin"));
 
       assertEquals(expectedTags, tagsHelper.getTagsOnActivity(activityId, planId));
     }
 
     @Test
     void tagsPersistWithModifyModifyConflict() throws SQLException {
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
-      final int barnTagId = tagsHelper.insertTag("Barn");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
+      final int barnTagId = tagsHelper.insertTag("Barn", merlinHelper.admin.name());
 
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int sourceActivityId = merlinHelper.insertActivity(planId);
@@ -2957,8 +2956,8 @@ public class PlanCollaborationTests {
       assertEquals(2, activities.size());
 
       final var expectedSourceTags = new ArrayList<Tag>();
-      expectedSourceTags.add(new Tag(farmTagId, "Farm", null, "TagsTest"));
-      expectedSourceTags.add(new Tag(tractorTagId, "Tractor", null, "TagsTest"));
+      expectedSourceTags.add(new Tag(farmTagId, "Farm", null, "MerlinAdmin"));
+      expectedSourceTags.add(new Tag(tractorTagId, "Tractor", null, "MerlinAdmin"));
 
       final var expectedTargetTags = new ArrayList<Tag>();
 
@@ -2969,9 +2968,9 @@ public class PlanCollaborationTests {
     // If a tag is on an activity directive or snapshot directive involved in a merge, it may not be deleted
     @Test
     void tagsCannotBeDeletedMidMerge() throws SQLException {
-      final int activityTagId = tagsHelper.insertTag("Farm");
-      final int snapshotTagId = tagsHelper.insertTag("Tractor");
-      final int unrelatedTagId = tagsHelper.insertTag("Mars");
+      final int activityTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final int snapshotTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
+      final int unrelatedTagId = tagsHelper.insertTag("Mars", merlinHelper.admin.name());
 
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
@@ -3004,7 +3003,7 @@ public class PlanCollaborationTests {
 
     @Test
     void tagsCanBeDeletedIfSnapshotIsNotMidMerge() throws SQLException {
-      final int tagId = tagsHelper.insertTag("Tractor");
+      final int tagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
 
@@ -3032,12 +3031,12 @@ public class PlanCollaborationTests {
       7. Added activity, no tag
       8. Added activity, tag
        */
-      final int farmTagId = tagsHelper.insertTag("Farm");
-      final Tag farmTag = new Tag(farmTagId, "Farm", null, "TagsTest");
-      final int tractorTagId = tagsHelper.insertTag("Tractor");
-      final Tag tractorTag = new Tag(tractorTagId, "Tractor", null, "TagsTest");
-      final int barnTagId = tagsHelper.insertTag("Barn");
-      final Tag barnTag = new Tag(barnTagId, "Barn", null, "TagsTest");
+      final int farmTagId = tagsHelper.insertTag("Farm", merlinHelper.admin.name());
+      final Tag farmTag = new Tag(farmTagId, "Farm", null, "MerlinAdmin");
+      final int tractorTagId = tagsHelper.insertTag("Tractor", merlinHelper.admin.name());
+      final Tag tractorTag = new Tag(tractorTagId, "Tractor", null, "MerlinAdmin");
+      final int barnTagId = tagsHelper.insertTag("Barn", merlinHelper.admin.name());
+      final Tag barnTag = new Tag(barnTagId, "Barn", null, "MerlinAdmin");
 
       final int planId = merlinHelper.insertPlan(missionModelId);
 

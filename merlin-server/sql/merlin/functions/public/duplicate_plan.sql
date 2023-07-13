@@ -17,9 +17,9 @@ begin
 
   select create_snapshot(_plan_id) into created_snapshot_id;
 
-  insert into plan(revision, name, model_id, duration, start_time, parent_id, owner)
+  insert into plan(revision, name, model_id, duration, start_time, parent_id, owner, updated_by)
     select
-        0, new_plan_name, model_id, duration, start_time, _plan_id, new_owner
+        0, new_plan_name, model_id, duration, start_time, _plan_id, new_owner, new_owner
     from plan where id = _plan_id
     returning id into new_plan_id;
   insert into activity_directive(

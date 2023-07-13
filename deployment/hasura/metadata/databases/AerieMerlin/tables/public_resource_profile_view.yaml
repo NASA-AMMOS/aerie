@@ -19,6 +19,11 @@ object_relationships:
       column_mapping:
         profile_id: id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [dataset_id, profile_id, start_offset, dynamics, start_time, end_time]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [dataset_id, profile_id, start_offset, dynamics, start_time, end_time]
@@ -29,3 +34,7 @@ select_permissions:
       columns: [dataset_id, profile_id, start_offset, dynamics, start_time, end_time]
       filter: {}
       allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

@@ -9,12 +9,14 @@ begin;
   \ir applied_migrations.sql
 
   -- Domain types.
+  \ir domain-types/permissions.sql
   \ir domain-types/merlin-arguments.sql
   \ir domain-types/merlin-activity-directive-metadata.sql
   \ir domain-types/plan-merge-types.sql
 
   -- Deployment-level Metadata
   \ir tables/metadata/user_roles.sql
+  \ir tables/metadata/user_role_permission.sql
   \ir tables/metadata/users.sql
   \ir tables/metadata/users_allowed_roles.sql
   \ir tables/metadata/tags.sql
@@ -86,6 +88,12 @@ begin;
   \ir views/simulated_activity.sql
   \ir views/resource_profile.sql
   \ir views/activity_directive_extended.sql
+
+  -- Permission Functions
+  \ir functions/metadata/get_role.sql
+  \ir functions/metadata/get_function_permissions.sql
+  \ir functions/metadata/check_general_permissions.sql
+  \ir functions/metadata/merge_permissions.sql
 
   -- Hasura Functions
   \ir functions/hasura/activity_preset_functions.sql

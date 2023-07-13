@@ -16,6 +16,11 @@ object_relationships:
     using:
       foreign_key_constraint_on: preset_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [preset_id, activity_id, plan_id]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [preset_id, activity_id, plan_id]
@@ -26,7 +31,15 @@ select_permissions:
       columns: [preset_id, activity_id, plan_id]
       filter: {}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [preset_id, activity_id, plan_id]
+      check: {}
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {"directive_applied_to":{"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}

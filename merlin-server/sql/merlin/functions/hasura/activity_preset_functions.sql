@@ -1,13 +1,32 @@
 -- Activity Presets
-create function hasura_functions.apply_preset_to_activity(_preset_id int, _activity_id int, _plan_id int)
+create function hasura_functions.apply_preset_to_activity(_preset_id int, _activity_id int, _plan_id int, hasura_session json)
 returns activity_directive
 strict
+volatile
 language plpgsql as $$
   declare
     returning_directive activity_directive;
     ad_activity_type text;
     preset_activity_type text;
+    _function_permission metadata.permission;
+    _user text;
 begin
+    _function_permission := metadata.get_function_permissions('apply_preset', hasura_session);
+    perform metadata.raise_if_plan_merge_permission('apply_preset', _function_permission);
+    -- Check valid permissions
+    _user := hasura_session ->> 'x-hasura-user-id';
+    if not _function_permission = 'NO_CHECK' then
+      if _function_permission = 'OWNER' then
+        if not exists(select * from public.activity_presets ap where ap.id = _preset_id and ap.owner = _user) then
+          raise insufficient_privilege
+            using message = 'Cannot run ''apply_preset'': '''|| _user ||''' is not OWNER on Activity Preset '
+                            || _preset_id ||'.';
+        end if;
+      end if;
+      -- Additionally, the user needs to be OWNER of the plan
+      call metadata.check_general_permissions('apply_preset', _function_permission, _plan_id, _user);
+    end if;
+
     if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
       raise exception 'Activity directive % does not exist in plan %', _activity_id, _plan_id;
     end if;

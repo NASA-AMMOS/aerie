@@ -6,6 +6,12 @@ object_relationships:
     using:
       foreign_key_constraint_on: merge_request_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, start_offset, type,
+                arguments, metadata, anchor_id, anchored_to_start, change_type]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, start_offset, type,

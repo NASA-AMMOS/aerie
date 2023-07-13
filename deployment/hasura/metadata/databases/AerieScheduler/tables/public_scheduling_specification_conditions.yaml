@@ -9,6 +9,11 @@ object_relationships:
   using:
     foreign_key_constraint_on: specification_id
 select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [specification_id, condition_id, enabled]
+      filter: {}
+      allow_aggregations: true
   - role: user
     permission:
       columns: [specification_id, condition_id, enabled]
@@ -21,16 +26,27 @@ select_permissions:
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
 insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [specification_id, condition_id, enabled]
+      check: {}
   - role: user
     permission:
       columns: [specification_id, condition_id, enabled]
       check: {}
 update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [specification_id, condition_id, enabled]
+      filter: {}
   - role: user
     permission:
       columns: [enabled]
       filter: {}
 delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
   - role: user
     permission:
       filter: {}
