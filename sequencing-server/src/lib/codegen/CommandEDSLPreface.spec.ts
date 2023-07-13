@@ -575,3 +575,94 @@ describe('Sequence', () => {
     });
   });
 });
+
+describe('Time Validation', () => {
+  it('should have valid Epoch and Relative Times', () => {
+    let epoch = CommandStem.new({
+      stem: 'TEST',
+      arguments: {
+      },
+      epochTime : hmsToDuration('001T00:01:34.284' as HMS_STRING,true),
+    })
+    expect(epoch.toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "001T00:01:34.284",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    epoch = CommandStem.new({
+      stem: 'TEST',
+      arguments: {
+      },
+      epochTime : hmsToDuration('-001T00:01:34.284' as HMS_STRING,true),
+    })
+    expect(epoch.toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "-001T00:01:34.284",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    epoch = CommandStem.new({
+      stem: 'TEST',
+      arguments: {
+      },
+      epochTime : hmsToDuration('-000T03:01:34.284' as HMS_STRING,true),
+    })
+    expect(epoch.toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "-03:01:34.284",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    let relative = CommandStem.new({
+      stem: 'TEST',
+      arguments: {
+      },
+      relativeTime : hmsToDuration('03:01:34.284' as HMS_STRING),
+    })
+    expect(relative.toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "03:01:34.284",
+        "type": "COMMAND_RELATIVE"
+      },
+      type: 'command',
+    });
+  });
+
+  it('should have invalid Relative Times', () => {
+
+    try {
+      CommandStem.new({
+        stem: 'TEST',
+        arguments: {},
+        relativeTime: hmsToDuration('-03:01:34.284' as HMS_STRING),
+      })
+    }catch (e: any) {
+      expect(e.message).toEqual('Signed time (+/-) is not allowed for Relative Times: -03:01:34.284')
+    }
+    try {
+      CommandStem.new({
+        stem: 'TEST',
+        arguments: {},
+        relativeTime: hmsToDuration('009T03:01:34.284' as HMS_STRING),
+      })
+    }catch (e: any) {
+      expect(e.message).toEqual('Day (DDD) is not allowed for Relative Times: 009T03:01:34.284')
+    }
+  });
+
+});
