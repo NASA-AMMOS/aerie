@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.config;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Objects;
@@ -9,7 +10,9 @@ public record AppConfiguration (
     boolean enableJavalinDevLogging,
     Path merlinFileStore,
     Store store,
-    Instant untruePlanStart
+    Instant untruePlanStart,
+    URI hasuraGraphqlURI,
+    String hasuraGraphQlAdminSecret
 ) {
   public AppConfiguration {
     Objects.requireNonNull(merlinFileStore);

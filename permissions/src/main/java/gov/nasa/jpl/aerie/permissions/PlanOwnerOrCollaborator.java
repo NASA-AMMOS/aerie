@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
+package gov.nasa.jpl.aerie.permissions;
 
 public enum PlanOwnerOrCollaborator {
   NEITHER,

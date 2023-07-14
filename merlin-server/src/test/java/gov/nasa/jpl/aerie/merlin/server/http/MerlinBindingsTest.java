@@ -11,6 +11,8 @@ import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
+import gov.nasa.jpl.aerie.permissions.PermissionsService;
+import gov.nasa.jpl.aerie.permissions.gql.GraphQLPermissionsService;
 import io.javalin.Javalin;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import org.junit.jupiter.api.AfterAll;
@@ -53,11 +55,20 @@ public final class MerlinBindingsTest {
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
     final var constraintService = new StubConstraintService();
     final var constraintAction = new ConstraintAction(constraintsDSLCompilationService, constraintService, planApp, missionModelApp, simulationService);
+    final var permissionsService = new PermissionsService(new GraphQLPermissionsService(URI.create("localhost:8080/v1/graphql"), "aerie"));
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
-      config.plugins.register(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction, constraintAction));
+      config.plugins.register(
+          new MerlinBindings(
+              missionModelApp,
+              planApp,
+              simulationAction,
+              generateConstraintsLibAction,
+              constraintAction,
+              permissionsService
+          ));
     });
 
     SERVER.start(54321); // Use likely unused port to avoid clash with any currently hosted port 80 services

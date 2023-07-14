@@ -7,13 +7,15 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
-import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
+import gov.nasa.jpl.aerie.permissions.Action;
+import gov.nasa.jpl.aerie.permissions.PermissionsService;
+import gov.nasa.jpl.aerie.permissions.exceptions.Unauthorized;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.Plugin;
@@ -198,7 +200,7 @@ public final class MerlinBindings implements Plugin {
       final var body = parseJson(ctx.body(), hasuraPlanActionP);
       final var planId = body.input().planId();
 
-      this.checkPlanPermissions("simulate", body.session(), planId);
+      this.checkPermissions(Action.simulate, body.session(), planId);
 
       final var response = this.simulationAction.run(planId);
       ctx.result(ResponseSerializers.serializeSimulationResultsResponse(response).toString());
@@ -218,7 +220,7 @@ public final class MerlinBindings implements Plugin {
       final var body = parseJson(ctx.body(), hasuraPlanActionP);
       final var planId = body.input().planId();
 
-      this.checkPlanPermissions("resource_samples", body.session(), planId);
+      this.checkPermissions(Action.resource_samples, body.session(), planId);
 
       final var resourceSamples = this.simulationAction.getResourceSamples(planId);
       ctx.result(ResponseSerializers.serializeResourceSamples(resourceSamples).toString());
@@ -236,7 +238,7 @@ public final class MerlinBindings implements Plugin {
       final var input = body.input();
       final var planId = input.planId();
 
-      this.checkPlanPermissions("check_constraints", body.session(), planId);
+      this.checkPermissions(Action.check_constraints, body.session(), planId);
 
       final var simulationDatasetId = input.simulationDatasetId();
 
@@ -390,7 +392,7 @@ public final class MerlinBindings implements Plugin {
       final var input = body.input();
 
       final var planId = input.planId();
-      this.checkPlanPermissions("insert_ext_dataset", body.session(), planId);
+      this.checkPermissions(Action.insert_ext_dataset, body.session(), planId);
 
       final var simulationDatasetId = input.simulationDatasetId();
       final var datasetStart = input.datasetStart();
@@ -408,12 +410,10 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
-  private void extendExternalDataset(final Context ctx) throws NoSuchPlanException, Unauthorized {
+  private void extendExternalDataset(final Context ctx) {
     try {
       final var body = parseJson(ctx.body(), hasuraExtendExternalDatasetActionP);
       final var datasetId = body.input().datasetId();
-
-      this.checkDatasetPermissions("extend_ext_dataset", body.session(), datasetId);
 
       final var profileSet = body.input().profileSet();
       this.planService.extendExternalDataset(datasetId, profileSet);
@@ -488,19 +488,13 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
-  private void checkPlanPermissions(
-      final String action,
+  private void checkPermissions(
+      final Action action,
       final HasuraAction.Session session,
       final PlanId planId
   ) throws NoSuchPlanException, Unauthorized {
-    permissionsService.check(action, session, planId);
+    final var permissionsPlanId = new gov.nasa.jpl.aerie.permissions.gql.PlanId(planId.id());
+    permissionsService.check(action, session.hasuraRole(), session.hasuraUserId(), permissionsPlanId);
   }
 
-  private void checkDatasetPermissions(
-      final String action,
-      final HasuraAction.Session session,
-      final DatasetId datasetId
-  ) throws Unauthorized {
-    permissionsService.check(action, session, datasetId);
-  }
 }

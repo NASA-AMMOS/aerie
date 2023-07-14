@@ -10,6 +10,7 @@ include 'contrib'
 
 // Service support
 include 'parsing-utilities'
+include 'permissions'
 
 // Services for deployment within the Aerie infrastructure
 include 'merlin-server'
