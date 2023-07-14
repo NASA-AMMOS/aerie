@@ -335,15 +335,15 @@ public final class ConstraintParsers {
               $ -> tuple(Unit.UNIT, $.value(), $.interval())
           );
 
-  static JsonParser<ShiftWindowsEdges> shiftWindowsEdgesF(JsonParser<Expression<Windows>> windowsExpressionP) {
+  static <I extends IntervalContainer<I>> JsonParser<ShiftEdges<I>> shiftEdgesF(final JsonParser<Expression<I>> intervalExpressionP) {
     return productP
-        .field("kind", literalP("WindowsExpressionShiftBy"))
-        .field("windowExpression", windowsExpressionP)
+        .field("kind", literalP("IntervalsExpressionShiftEdges"))
+        .field("expression", intervalExpressionP)
         .field("fromStart", durationExprP)
         .field("fromEnd", durationExprP)
         .map(
-            untuple((kind, windowsExpression, fromStart, fromEnd) -> new ShiftWindowsEdges(windowsExpression, fromStart, fromEnd)),
-            $ -> tuple(Unit.UNIT, $.windows, $.fromStart, $.fromEnd));
+            untuple((kind, expr, fromStart, fromEnd) -> new ShiftEdges<I>(expr, fromStart, fromEnd)),
+            $ -> tuple(Unit.UNIT, $.expression, $.fromStart, $.fromEnd));
   }
   static final JsonParser<EndOf> endOfP =
       productP
@@ -562,7 +562,7 @@ public final class ConstraintParsers {
         andF(selfP),
         orF(selfP),
         notF(selfP),
-        shiftWindowsEdgesF(selfP),
+        shiftEdgesF(selfP),
         startsF(selfP),
         endsF(selfP),
         windowsFromSpansF(spansP),
@@ -595,6 +595,7 @@ public final class ConstraintParsers {
           spansIntervalP,
           startsF(selfP),
           endsF(selfP),
+          shiftEdgesF(selfP),
           splitF(selfP),
           splitF(windowsP),
           spansFromWindowsF(windowsP),

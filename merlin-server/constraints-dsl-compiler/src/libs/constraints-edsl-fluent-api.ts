@@ -280,8 +280,8 @@ export class Windows {
       });
     } else {
       return new Windows({
-        kind: AST.NodeKind.WindowsExpressionShiftBy,
-        windowExpression: this.__astNode,
+        kind: AST.NodeKind.IntervalsExpressionShiftEdges,
+        expression: this.__astNode,
         fromStart,
         fromEnd
       })
@@ -468,6 +468,21 @@ export class Spans {
     return new Spans({
       kind: AST.NodeKind.IntervalsExpressionEnds,
       expression: this.__astNode
+    })
+  }
+
+  /**
+   * Shifts the start and end of each Span by a duration.
+   *
+   * @param fromStart duration to shift start by
+   * @param fromEnd duration to shift end by (defaults is `fromStart` if omitted)
+   */
+  public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Spans {
+    return new Spans({
+      kind: AST.NodeKind.IntervalsExpressionShiftEdges,
+      expression: this.__astNode,
+      fromStart,
+      fromEnd: fromEnd !== undefined ? fromEnd : fromStart
     })
   }
 
@@ -1313,6 +1328,14 @@ declare global {
      * Returns the instantaneous end points of the these spans.
      */
     public ends(): Spans;
+
+    /**
+     * Shifts the start and end of each Span by a duration.
+     *
+     * @param fromStart duration to shift start by
+     * @param fromEnd duration to shift end by (defaults is `fromStart` if omitted)
+     */
+    public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Spans;
 
     /**
      * Splits each span into equal sized sub-spans.

@@ -33,7 +33,7 @@ import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
-import gov.nasa.jpl.aerie.constraints.tree.ShiftWindowsEdges;
+import gov.nasa.jpl.aerie.constraints.tree.ShiftEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.Split;
@@ -501,7 +501,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(minute(2), minute(-20))
             }
         """,
-        new ViolationsOfWindows(new ShiftWindowsEdges(
+        new ViolationsOfWindows(new ShiftEdges(
             new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
             new DurationLiteral(Duration.of(2, Duration.MINUTE)),
             new DurationLiteral(Duration.of(-20, Duration.MINUTE)))
