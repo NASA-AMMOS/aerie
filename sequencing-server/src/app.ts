@@ -62,6 +62,7 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       req.url,
       graphqlClient,
       getHasuraSession(req.body.session_variables, req.headers.authorization),
+      req.body,
     ))
   ) {
     throw new Error(`You do not have sufficient permissions to perform this action.`);

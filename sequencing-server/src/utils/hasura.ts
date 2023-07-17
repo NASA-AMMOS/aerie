@@ -3,6 +3,20 @@ import jwtDecode from 'jwt-decode';
 import type { AuthSessionVariables, Jwt } from '../types/jwtAuthentication';
 import { gql, type GraphQLClient } from 'graphql-request';
 
+enum HasuraPermissions {
+  NO_CHECK = 'NO_CHECK',
+  MISSION_MODEL_OWNER = 'MISSION_MODEL_OWNER',
+  OWNER = 'OWNER',
+  PLAN_OWNER = 'PLAN_OWNER',
+  PLAN_COLLABORATOR = 'PLAN_COLLABORATOR',
+  PLAN_OWNER_COLLABORATOR = 'PLAN_OWNER_COLLABORATOR',
+}
+
+/**
+ * Endpoints that don't need any permission checking.
+ */
+const ENDPOINTS_WHITELIST = new Set(['/health', '/get-command-typescript', '/get-activity-typescript']);
+
 /**
  * Mapping of Sequencing endpoints to their DB action check. Any new endpoints need
  * to be evaulated and added here if they need fine-grained permissions.
@@ -76,33 +90,120 @@ export async function canUserPerformAction(
   url: string,
   graphqlClient: GraphQLClient,
   hasuraSession: AuthSessionVariables,
+  body: any,
 ): Promise<boolean> {
-  if (url in ENDPOINTS_TO_ACTION_KEY) {
-    const role = hasuraSession['x-hasura-role'];
+  if (ENDPOINTS_WHITELIST.has(url)) {
+    return true;
+  }
 
-    // The aerie_admin role always has NO_CHECK permissions on all actions.
-    if (role === 'aerie_admin') {
-      return true;
-    }
+  const role = hasuraSession['x-hasura-role'];
+  const user = hasuraSession['x-hasura-user-id'];
 
-    const permissionCheckQuery = await graphqlClient.request(
-      gql`
-        query checkUserPermissions($role: user_roles_enum!, $key: String!) {
-          user_role_permission_by_pk(role: $role) {
-            action_permissions(path: $key)
-          }
+  // The aerie_admin role always has NO_CHECK permissions on all actions.
+  if (role === 'aerie_admin') {
+    return true;
+  }
+
+  const permissionCheckQuery = await graphqlClient.request(
+    gql`
+      query checkUserPermissions($role: user_roles_enum!, $key: String!) {
+        user_role_permission_by_pk(role: $role) {
+          action_permissions(path: $key)
         }
-      `,
-      {
-        role,
-        key: ENDPOINTS_TO_ACTION_KEY[url],
-      },
-    );
+      }
+    `,
+    {
+      role,
+      key: ENDPOINTS_TO_ACTION_KEY[url],
+    },
+  );
 
-    if (permissionCheckQuery.user_role_permission_by_pk.action_permissions === null) {
-      return false;
+  const permission = permissionCheckQuery.user_role_permission_by_pk.action_permissions as HasuraPermissions | null;
+
+  if (permission === null) {
+    return false;
+  }
+
+  const missionModelId = body.input.missionModelId as number;
+  const planId = body.input.planId as number;
+
+  switch (permission) {
+    case HasuraPermissions.NO_CHECK:
+      return true;
+    case HasuraPermissions.MISSION_MODEL_OWNER:
+      return missionModelId !== null && (await isMissionModelOwner(graphqlClient, missionModelId, user));
+    case HasuraPermissions.OWNER:
+      return planId !== null && (await isPlanOwner(graphqlClient, planId, user));
+    case HasuraPermissions.PLAN_OWNER:
+      return planId !== null && (await isPlanOwner(graphqlClient, planId, user));
+    case HasuraPermissions.PLAN_COLLABORATOR:
+      return planId !== null && (await isPlanCollaborator(graphqlClient, planId, user));
+    case HasuraPermissions.PLAN_OWNER_COLLABORATOR:
+      return (
+        planId !== null &&
+        (await isPlanOwner(graphqlClient, planId, user)) &&
+        (await isPlanCollaborator(graphqlClient, planId, user))
+      );
+  }
+}
+
+async function isMissionModelOwner(
+  graphqlClient: GraphQLClient,
+  missionModelId: number,
+  user: string,
+): Promise<boolean> {
+  const missionModelOwner = await graphqlClient.request<{
+    mission_model: { owner: string }[];
+  }>(
+    gql`
+      query missionModelOwner($missionModelId: Int!) {
+        mission_model(where: { id: { _eq: $missionModelId } }) {
+          owner
+        }
+      }
+    `,
+    { missionModelId },
+  );
+
+  return user === missionModelOwner.mission_model[0]?.owner;
+}
+
+async function isPlanOwner(graphqlClient: GraphQLClient, planId: number, user: string): Promise<boolean> {
+  const planOwner = await graphqlClient.request<{
+    plan: { owner: string }[];
+  }>(
+    gql`
+      query planOwner($planId: Int!) {
+        plan(where: { id: { _eq: $planId } }) {
+          owner
+        }
+      }
+    `,
+    { planId },
+  );
+
+  return user === planOwner.plan[0]?.owner;
+}
+
+async function isPlanCollaborator(graphqlClient: GraphQLClient, planId: number, user: string): Promise<boolean> {
+  const planCollaboratorRes = await graphqlClient.request<{
+    plan_collaborators: { collaborator: string }[];
+  }>(
+    gql`
+      query planCollaborator($planId: Int!) {
+        plan_collaborators(where: { id: { _eq: $planId } }) {
+          collaborator
+        }
+      }
+    `,
+    { planId },
+  );
+
+  for (const planCollaborator of planCollaboratorRes.plan_collaborators) {
+    if (user === planCollaborator.collaborator) {
+      return true;
     }
   }
 
-  return true;
+  return false;
 }
