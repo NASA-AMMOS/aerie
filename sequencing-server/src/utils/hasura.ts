@@ -61,14 +61,15 @@ export function getUsername(
 
 /**
  * This function checks to see if request coming from the Hasura action is being executed
- * by a user with enough permissions. To check this we need to call the db function
- * `metadata.get_action_permissions()` with the action key and the user session.
+ * by a user with enough permissions. To check this we need to call a GQL query with the
+ * action key and the user session. If we ever merge the databases this should be changed
+ * to call the db function that does the permission checking directly.
  *
  * Some endpoints don't need to be checked which is why we have the mappings of endpoints
  * to actions to check.
  *
  * @param url The endpoint that we're checking the permissions for.
- * @param db A handle to the db so we can execute the permission check.
+ * @param graphqlClient The GQL Client we're using to make the permission check.
  * @returns True if the user is able to call the given action, false otherwise.
  */
 export async function canUserPerformAction(
