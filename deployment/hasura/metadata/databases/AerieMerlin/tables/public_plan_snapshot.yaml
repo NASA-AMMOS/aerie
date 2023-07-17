@@ -11,3 +11,23 @@ object_relationships:
       remote_table:
         name: plan
         schema: public
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [snapshot_id, plan_id, revision, name, duration, start_time]
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: [snapshot_id, plan_id, revision, name, duration, start_time]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [snapshot_id, plan_id, revision, name, duration, start_time]
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
