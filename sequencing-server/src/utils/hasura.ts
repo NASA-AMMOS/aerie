@@ -140,8 +140,7 @@ export async function canUserPerformAction(
       return planId !== null && (await isPlanCollaborator(graphqlClient, planId, user));
     case HasuraPermissions.PLAN_OWNER_COLLABORATOR:
       return (
-        planId !== null &&
-        (await isPlanOwner(graphqlClient, planId, user)) &&
+        (planId !== null && (await isPlanOwner(graphqlClient, planId, user))) ||
         (await isPlanCollaborator(graphqlClient, planId, user))
       );
   }
