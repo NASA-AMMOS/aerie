@@ -15,22 +15,25 @@ enum HasuraPermissions {
 /**
  * Endpoints that don't need any permission checking.
  */
-export const ENDPOINTS_WHITELIST = new Set(['/health', '/get-command-typescript', '/get-activity-typescript']);
+export const ENDPOINTS_WHITELIST = new Set([
+  '/health',
+  '/get-command-typescript',
+  '/get-activity-typescript',
+  '/put-dictionary',
+  '/seqjson/bulk-get-seqjson-for-sequence-standalone',
+  '/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset',
+  '/seqjson/get-seqjson-for-sequence-standalone',
+  '/seqjson/get-seqjson-for-seqid-and-simulation-dataset',
+]);
 
 /**
  * Mapping of Sequencing endpoints to their DB action check. Any new endpoints need
  * to be evaulated and added here if they need fine-grained permissions.
  */
 const ENDPOINTS_TO_ACTION_KEY: Record<string, string> = {
-  '/put-dictionary': 'insert_command_dict',
   '/command-expansion/put-expansion-set': 'create_expansion_set',
   '/command-expansion/put-expansion': 'create_expansion_rule',
   '/command-expansion/expand-all-activity-instances': 'expand_all_activities',
-  '/seqjson/get-seqjson-for-seqid-and-simulation-dataset': 'sequence_seq_json',
-  '/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset': 'sequence_seq_json_bulk',
-  '/seqjson/get-seqjson-for-sequence-standalone': 'user_sequence_seq_json',
-  '/seqjson/bulk-get-seqjson-for-sequence-standalone': 'user_sequence_seq_json_bulk',
-  '/get-command-typescript': 'get_command_dict_ts',
 };
 
 /**
