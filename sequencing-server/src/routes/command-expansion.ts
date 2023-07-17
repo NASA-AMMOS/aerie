@@ -12,7 +12,7 @@ import { InheritedError } from '../utils/InheritedError.js';
 import { unwrapPromiseSettledResults } from '../lib/batchLoaders/index.js';
 import { defaultSeqBuilder } from '../defaultSeqBuilder.js';
 import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
-import { getUsername } from '../utils/helpers.js';
+import { getUsername } from '../utils/hasura.js';
 
 const logger = getLogger('app');
 
