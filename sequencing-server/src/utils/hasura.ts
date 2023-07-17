@@ -15,7 +15,7 @@ enum HasuraPermissions {
 /**
  * Endpoints that don't need any permission checking.
  */
-const ENDPOINTS_WHITELIST = new Set(['/health', '/get-command-typescript', '/get-activity-typescript']);
+export const ENDPOINTS_WHITELIST = new Set(['/health', '/get-command-typescript', '/get-activity-typescript']);
 
 /**
  * Mapping of Sequencing endpoints to their DB action check. Any new endpoints need
@@ -92,10 +92,6 @@ export async function canUserPerformAction(
   hasuraSession: AuthSessionVariables,
   body: any,
 ): Promise<boolean> {
-  if (ENDPOINTS_WHITELIST.has(url)) {
-    return true;
-  }
-
   const role = hasuraSession['x-hasura-role'];
   const user = hasuraSession['x-hasura-user-id'];
 

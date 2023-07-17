@@ -23,7 +23,7 @@ import './polyfills.js';
 import getLogger from './utils/logger.js';
 import { commandExpansionRouter } from './routes/command-expansion.js';
 import { seqjsonRouter } from './routes/seqjson.js';
-import { getHasuraSession, canUserPerformAction } from './utils/hasura.js';
+import { getHasuraSession, canUserPerformAction, ENDPOINTS_WHITELIST } from './utils/hasura.js';
 
 const logger = getLogger('app');
 
@@ -58,6 +58,7 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
 
   // Check and make sure the user making the request has the required permissions.
   if (
+    !ENDPOINTS_WHITELIST.has(req.url) &&
     !(await canUserPerformAction(
       req.url,
       graphqlClient,
