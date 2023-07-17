@@ -85,6 +85,7 @@
     custom_root_fields:
       function: get_non_conflicting_activities
     session_argument: hasura_session
+    exposed_as: query
   permissions:
     - role: aerie_admin
     - role: user
@@ -96,6 +97,7 @@
     custom_root_fields:
       function: get_conflicting_activities
     session_argument: hasura_session
+    exposed_as: query
   permissions:
     - role: aerie_admin
     - role: user
