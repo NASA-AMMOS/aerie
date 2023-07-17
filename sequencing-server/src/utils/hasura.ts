@@ -78,6 +78,13 @@ export async function canUserPerformAction(
   hasuraSession: AuthSessionVariables,
 ): Promise<boolean> {
   if (url in ENDPOINTS_TO_ACTION_KEY) {
+    const role = hasuraSession['x-hasura-role'];
+
+    // The aerie_admin role always has NO_CHECK permissions on all actions.
+    if (role === 'aerie_admin') {
+      return true;
+    }
+
     const permissionCheckQuery = await graphqlClient.request(
       gql`
         query checkUserPermissions($role: user_roles_enum!, $key: String!) {
@@ -87,7 +94,7 @@ export async function canUserPerformAction(
         }
       `,
       {
-        role: hasuraSession['x-hasura-role'],
+        role,
         key: ENDPOINTS_TO_ACTION_KEY[url],
       },
     );
