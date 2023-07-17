@@ -29,7 +29,7 @@ create table hasura_functions.get_non_conflicting_activities_return_value(
 create function hasura_functions.get_non_conflicting_activities(_merge_request_id integer, hasura_session json)
   returns setof hasura_functions.get_non_conflicting_activities_return_value
   strict
-  stable
+  volatile
   language plpgsql as $$
 declare
   _snapshot_id_supplying_changes integer;
@@ -109,7 +109,7 @@ create table hasura_functions.get_conflicting_activities_return_value(
 create function hasura_functions.get_conflicting_activities(_merge_request_id integer, hasura_session json)
   returns setof hasura_functions.get_conflicting_activities_return_value
   strict
-  stable
+  volatile
   language plpgsql as $$
 declare
   _snapshot_id_supplying_changes integer;
