@@ -1,20 +1,31 @@
 table:
   name: scheduling_condition
   schema: public
+array_relationships:
+  - name: scheduling_specification_conditions
+    using:
+      foreign_key_constraint_on:
+        column: condition_id
+        table:
+          name: scheduling_specification_conditions
+          schema: public
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns:
+        [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns:
+        [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns:
+        [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
