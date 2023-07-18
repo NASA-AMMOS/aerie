@@ -25,8 +25,4 @@ public enum PermissionType {
    * The given user must be either the plan owner or a plan collaborator on the given plan
    */
   PLAN_OWNER_COLLABORATOR,
-  /**
-   * The given role is never allowed to perform this action
-   */
-  ALWAYS_UNAUTHORIZED
 }
