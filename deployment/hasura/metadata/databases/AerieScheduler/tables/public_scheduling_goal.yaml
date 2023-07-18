@@ -1,6 +1,14 @@
 table:
   name: scheduling_goal
   schema: public
+object_relationships:
+  - name: scheduling_specification_goal
+    using:
+      foreign_key_constraint_on:
+        column: goal_id
+        table:
+          name: scheduling_specification_goals
+          schema: public
 array_relationships:
 - name: analyses
   using:

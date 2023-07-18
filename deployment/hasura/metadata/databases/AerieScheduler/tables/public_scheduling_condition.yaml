@@ -1,6 +1,14 @@
 table:
   name: scheduling_condition
   schema: public
+array_relationships:
+  - name: scheduling_specification_conditions
+    using:
+      foreign_key_constraint_on:
+        column: condition_id
+        table:
+          name: scheduling_specification_conditions
+          schema: public
 select_permissions:
   - role: aerie_admin
     permission:
