@@ -21,7 +21,6 @@ export const ENDPOINTS_WHITELIST = new Set([
   '/get-activity-typescript',
   '/put-dictionary',
   '/seqjson/bulk-get-seqjson-for-sequence-standalone',
-  '/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset',
   '/seqjson/get-seqjson-for-sequence-standalone',
   '/seqjson/get-seqjson-for-seqid-and-simulation-dataset',
 ]);
@@ -34,6 +33,7 @@ const ENDPOINTS_TO_ACTION_KEY: Record<string, string> = {
   '/command-expansion/put-expansion-set': 'create_expansion_set',
   '/command-expansion/put-expansion': 'create_expansion_rule',
   '/command-expansion/expand-all-activity-instances': 'expand_all_activities',
+  '/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset': 'sequence_seq_json_bulk',
 };
 
 /**
