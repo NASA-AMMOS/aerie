@@ -27,6 +27,12 @@ import java.util.Map;
  *   The result of performing the directive to completion.
  */
 public interface DirectiveType<Model, Arguments, Result> {
+  /** Gets the human-readable description of this directive type **/
+  String getDescription();
+
+  /** Gets the human-readable description of parameters of this directive type **/
+  Map<String, String> getParameterDescriptions();
+
   /** Gets the type of input accepted by this directive. */
   InputType<Arguments> getInputType();
 

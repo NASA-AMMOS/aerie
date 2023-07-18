@@ -18,6 +18,10 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
  */
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity {
+
+  /**
+   * The amount by which to reduce /fruit
+   */
   @Parameter
   public double biteSize = 1.0;
 

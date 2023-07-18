@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
+import com.sun.source.doctree.DocCommentTree;
+import com.sun.source.doctree.ParamTree;
+import com.sun.source.util.DocTrees;
+import com.sun.source.util.SimpleDocTreeVisitor;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
@@ -15,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -34,8 +39,10 @@ import java.lang.annotation.Repeatable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -43,7 +50,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Parses mission model annotations to record type metamodels. */
-/*package-private*/ record MissionModelParser(Elements elementUtils, Types typeUtils) {
+/*package-private*/ record MissionModelParser(Elements elementUtils, Types typeUtils, DocTrees treeUtils) {
 
   //
   // MISSION MODEL PARSING
@@ -310,6 +317,7 @@ import java.util.stream.Collectors;
     final var parameters = this.getExportParameters(activityTypeElement);
     final var validations = this.getExportValidations(activityTypeElement, parameters);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
+    final var javadoc = this.getJavadoc(activityTypeElement);
 
     final var durationParameterName = effectModel.flatMap(EffectModelRecord::durationParameter);
     if (durationParameterName.isPresent()) {
@@ -331,7 +339,9 @@ import java.util.stream.Collectors;
         fullyQualifiedClassName.toString(),
         name,
         new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
-        effectModel);
+        effectModel,
+        javadoc.getLeft(),
+        javadoc.getRight());
   }
 
   private void validateControllableDurationParameter(
@@ -394,6 +404,62 @@ import java.util.stream.Collectors;
             annotationMirror));
 
     return (String) nameAttribute.getValue();
+  }
+
+  private Pair<String, Map<String, String>> getJavadoc(final TypeElement activityTypeElement) {
+    final var docCommentTrees = Optional.ofNullable(this.treeUtils().getDocCommentTree(activityTypeElement))
+                                        .map(DocCommentTree::getBlockTags)
+                                        .orElse(List.of());
+
+    final var paramComments = docCommentTrees
+        .stream()
+        .flatMap(tree -> new SimpleDocTreeVisitor<>(Optional.<Pair<String, String>>empty()) {
+          @Override
+          public Optional<Pair<String, String>> visitParam(final ParamTree node, final Object unused) {
+            return Optional.of(Pair.of(node.getName().toString(), node.getDescription().toString()));
+          }
+        }.visit(tree, null).stream())
+        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+
+    final var defaultsStyle = this.getExportDefaultsStyle(activityTypeElement);
+    final Predicate<Element> excludeParamPred = switch (defaultsStyle) {
+      case AllDefined -> e -> e.getAnnotation(Export.Parameter.class) == null; // Exclude class members with @Parameter annotations
+      default ->         e -> e.getModifiers().contains(Modifier.STATIC);      // Exclude static class members
+    };
+
+    activityTypeElement
+        .getEnclosedElements()
+        .stream()
+        .filter(e -> e.getKind() == ElementKind.FIELD) // Element must be a field
+        .filter(e -> !excludeParamPred.test(e))        // Element must not be deemed excluded for the defaults style
+        .flatMap(e -> Optional
+            .ofNullable(this.elementUtils().getDocComment(e))
+            .map(MissionModelParser::removeSingleLeadingSpaceFromEachLine)
+            .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
+            .stream())
+        .forEach($ -> paramComments.put($.getKey(), $.getValue()));
+
+    final var activityTypeDescription = Optional.ofNullable(this.elementUtils().getDocComment(activityTypeElement))
+        .map(MissionModelParser::removeSingleLeadingSpaceFromEachLine)
+        .orElse("");
+
+    return Pair.of(activityTypeDescription, paramComments);
+  }
+
+  /**
+   * It is common for Javadoc to be written with every line indented by one space.
+   * This method removes that space, if it exists, from every line.
+   */
+  private static String removeSingleLeadingSpaceFromEachLine(final String s) {
+    final var lines = new ArrayList<String>();
+    for (final var line : s.split("\n")){
+      if (line.startsWith(" ")) {
+        lines.add(line.substring(1));
+      } else {
+        lines.add(line);
+      }
+    }
+    return String.join("\n", lines);
   }
 
   private MapperRecord getExportMapper(final PackageElement missionModelElement, final TypeElement exportTypeElement)

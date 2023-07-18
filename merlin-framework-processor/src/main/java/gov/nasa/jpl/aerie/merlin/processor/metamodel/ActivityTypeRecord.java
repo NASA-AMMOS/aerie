@@ -5,13 +5,16 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public record ActivityTypeRecord(
     String fullyQualifiedClass,
     String name,
     InputTypeRecord inputType,
-    Optional<EffectModelRecord> effectModel
+    Optional<EffectModelRecord> effectModel,
+    String description,
+    Map<String, String> parameterDescriptions
 ) {
   public TypeName getOutputTypeName() {
     return this.effectModel

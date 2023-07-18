@@ -17,6 +17,8 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
  *
  * @subsystem fruit
  * @contact John Doe
+ * @param quantity The number of bananas to grow
+ * @param growingDuration The total duration of this activity
  */
 @ActivityType("GrowBanana")
 public record GrowBananaActivity(int quantity, Duration growingDuration) {

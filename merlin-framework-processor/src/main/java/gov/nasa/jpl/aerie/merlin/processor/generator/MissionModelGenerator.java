@@ -761,6 +761,45 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .build())
         .addMethod(
             MethodSpec
+                .methodBuilder("getDescription")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(String.class)
+                .addStatement("return $S", activityType.description())
+                .build()
+        )
+        .addMethod(
+            MethodSpec
+                .methodBuilder("getParameterDescriptions")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(ParameterizedTypeName.get(
+                    Map.class,
+                    String.class,
+                    String.class))
+                .addStatement(
+                    "return $L",
+                    CodeBlock.of(
+                        "$T.ofEntries($>$>$L$<$<)",
+                        ClassName.get(Map.class),
+                        activityType
+                            .parameterDescriptions()
+                            .entrySet()
+                            .stream()
+                            .map(parameter -> CodeBlock
+                                .builder()
+                                .add(
+                                    "\n$T.entry($S, $S)",
+                                    ClassName.get(Map.class),
+                                    parameter.getKey(),
+                                    parameter.getValue()))
+                            .reduce((x, y) -> x.add(",").add(y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build()))
+                .build()
+        )
+        .addMethod(
+            MethodSpec
                 .methodBuilder("getTaskFactory")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
