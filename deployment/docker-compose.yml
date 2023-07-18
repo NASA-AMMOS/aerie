@@ -24,6 +24,8 @@ services:
     container_name: aerie_merlin
     depends_on: ["postgres"]
     environment:
+      HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
+      HASURA_GRAPHQL_URL: http://hasura:8080/v1/graphql
       MERLIN_DB: "aerie_merlin"
       MERLIN_DB_PASSWORD: "${AERIE_PASSWORD}"
       MERLIN_DB_PORT: 5432
