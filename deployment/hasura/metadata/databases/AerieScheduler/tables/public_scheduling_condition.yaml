@@ -12,20 +12,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns:
-        [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns:
-        [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns:
-        [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
+      columns: [id, revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date]
       filter: {}
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
