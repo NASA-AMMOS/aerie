@@ -13,6 +13,13 @@ public class ExceptionSerializers {
                .build();
   }
 
+  public static JsonValue serializeNoSuchSchedulingSpecificationException(final NoSuchSchedulingSpecificationException ex) {
+    return Json.createObjectBuilder()
+               .add("message", "no such plan")
+               .add("plan_id", ex.id.id())
+               .build();
+  }
+
   public static JsonValue serializePermissionsServiceException(final PermissionsServiceException ex) {
     return Json.createObjectBuilder()
                .add("message", "error in response")

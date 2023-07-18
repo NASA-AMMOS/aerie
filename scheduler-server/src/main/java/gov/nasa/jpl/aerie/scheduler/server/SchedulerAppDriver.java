@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.server;
 import java.net.URI;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import gov.nasa.jpl.aerie.permissions.PermissionsService;
+import gov.nasa.jpl.aerie.permissions.gql.GraphQLPermissionsService;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
@@ -50,6 +52,7 @@ public final class SchedulerAppDriver {
     final var config = loadConfiguration();
 
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
+    final var permissionsService = new PermissionsService(new GraphQLPermissionsService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret()));
 
     final var stores = loadStores(config);
 
@@ -61,7 +64,11 @@ public final class SchedulerAppDriver {
     final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
 
     //establish bindings to the service layers
-    final var bindings = new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);
+    final var bindings = new SchedulerBindings(
+        schedulerService,
+        scheduleAction,
+        generateSchedulingLibAction,
+        permissionsService);
 
     //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
     final var server = new Server(new QueuedThreadPool(250));

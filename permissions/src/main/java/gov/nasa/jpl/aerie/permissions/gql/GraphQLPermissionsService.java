@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.permissions.Action;
 import gov.nasa.jpl.aerie.permissions.PermissionType;
 import gov.nasa.jpl.aerie.permissions.PlanOwnerOrCollaborator;
 import gov.nasa.jpl.aerie.permissions.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.permissions.exceptions.NoSuchSchedulingSpecificationException;
 import gov.nasa.jpl.aerie.permissions.exceptions.PermissionsServiceException;
 import gov.nasa.jpl.aerie.permissions.exceptions.Unauthorized;
 
@@ -153,4 +154,27 @@ public record GraphQLPermissionsService(
     return username.equals(owner);
   }
 
+  public PlanId getPlanIdFromSchedulingSpecificationId(final SchedulingSpecificationId specificationId)
+  throws PermissionsServiceException, IOException, NoSuchSchedulingSpecificationException
+  {
+    final var query = """
+        query planIdFromSpecId($id: Int!) {
+          spec: scheduling_specification_by_pk(id: $id) {
+            plan_id
+          }
+        }
+        """;
+    final var variables = Json.createObjectBuilder().add("id", specificationId.id()).build();
+
+    final var response = postRequest(query, variables)
+        .orElseThrow(() -> new NoSuchSchedulingSpecificationException(specificationId))
+        .getJsonObject("data");
+
+    if (response.isNull("spec")) throw new NoSuchSchedulingSpecificationException(specificationId);
+
+    final long planId = response.getJsonObject("spec")
+                                .getJsonNumber("plan_id")
+                                .longValue();
+    return new PlanId(planId);
+  }
 }

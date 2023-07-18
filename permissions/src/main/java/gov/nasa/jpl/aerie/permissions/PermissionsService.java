@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.permissions;
 
 import gov.nasa.jpl.aerie.permissions.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.permissions.exceptions.NoSuchSchedulingSpecificationException;
 import gov.nasa.jpl.aerie.permissions.exceptions.PermissionsServiceException;
 import gov.nasa.jpl.aerie.permissions.exceptions.Unauthorized;
 import gov.nasa.jpl.aerie.permissions.gql.GraphQLPermissionsService;
 import gov.nasa.jpl.aerie.permissions.gql.PlanId;
+import gov.nasa.jpl.aerie.permissions.gql.SchedulingSpecificationId;
 
 import java.io.IOException;
 
@@ -19,6 +21,18 @@ public final class PermissionsService {
     final var permissionType = getActionPermission(action, role);
     final var authorized = canPerformAction(permissionType, username, planId);
     if (!authorized) throw new Unauthorized(action, role, username, permissionType, planId);
+  }
+
+    public void check(
+      final Action action,
+      final String role,
+      final String username,
+      final SchedulingSpecificationId specificationId)
+  throws Unauthorized, IOException, PermissionsServiceException, NoSuchSchedulingSpecificationException,
+         NoSuchPlanException
+  {
+    final var planId = gqlService.getPlanIdFromSchedulingSpecificationId(specificationId);
+    check(action, role, username, planId);
   }
 
   private PermissionType getActionPermission(final Action action, final String role)
