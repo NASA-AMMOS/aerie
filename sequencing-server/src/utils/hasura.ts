@@ -96,7 +96,7 @@ export async function canUserPerformAction(
   body: any,
 ): Promise<boolean> {
   const role = hasuraSession['x-hasura-role'];
-  const user = hasuraSession['x-hasura-user-id'];
+  const username = hasuraSession['x-hasura-user-id'];
 
   // The aerie_admin role always has NO_CHECK permissions on all actions.
   if (role === 'aerie_admin') {
@@ -124,38 +124,44 @@ export async function canUserPerformAction(
   }
 
   const missionModelId = body.input.missionModelId as number;
-  const planId = body.input.planId as number;
+  const simulationDatasetId = body.input.simulationDatasetId as number;
+  let planId = body.input.planId as number;
+
+  // If we have a simulationDatasetId we need to get the planId to do permission checking.
+  if (simulationDatasetId !== null) {
+    planId = await getPlanId(graphqlClient, simulationDatasetId);
+  }
 
   switch (permission) {
     case HasuraPermissions.NO_CHECK:
       return true;
     case HasuraPermissions.MISSION_MODEL_OWNER:
-      return missionModelId !== null && (await isMissionModelOwner(graphqlClient, missionModelId, user));
+      return missionModelId !== null && (await isMissionModelOwner(graphqlClient, username, missionModelId));
     case HasuraPermissions.OWNER:
-      return planId !== null && (await isPlanOwner(graphqlClient, planId, user));
+      return planId !== null && (await isPlanOwner(graphqlClient, username, planId));
     case HasuraPermissions.PLAN_OWNER:
-      return planId !== null && (await isPlanOwner(graphqlClient, planId, user));
+      return planId !== null && (await isPlanOwner(graphqlClient, username, planId));
     case HasuraPermissions.PLAN_COLLABORATOR:
-      return planId !== null && (await isPlanCollaborator(graphqlClient, planId, user));
+      return planId !== null && (await isPlanCollaborator(graphqlClient, username, planId));
     case HasuraPermissions.PLAN_OWNER_COLLABORATOR:
       return (
-        (planId !== null && (await isPlanOwner(graphqlClient, planId, user))) ||
-        (await isPlanCollaborator(graphqlClient, planId, user))
+        (planId !== null && (await isPlanOwner(graphqlClient, username, planId))) ||
+        (await isPlanCollaborator(graphqlClient, username, planId))
       );
   }
 }
 
 async function isMissionModelOwner(
   graphqlClient: GraphQLClient,
+  username: string,
   missionModelId: number,
-  user: string,
 ): Promise<boolean> {
   const missionModelOwner = await graphqlClient.request<{
-    mission_model: { owner: string }[];
+    mission_model_by_pk: { owner: string };
   }>(
     gql`
       query missionModelOwner($missionModelId: Int!) {
-        mission_model(where: { id: { _eq: $missionModelId } }) {
+        mission_model_by_pk(id: $missionModelId) {
           owner
         }
       }
@@ -163,16 +169,16 @@ async function isMissionModelOwner(
     { missionModelId },
   );
 
-  return user === missionModelOwner.mission_model[0]?.owner;
+  return username === missionModelOwner.mission_model_by_pk?.owner;
 }
 
-async function isPlanOwner(graphqlClient: GraphQLClient, planId: number, user: string): Promise<boolean> {
+async function isPlanOwner(graphqlClient: GraphQLClient, username: string, planId: number): Promise<boolean> {
   const planOwner = await graphqlClient.request<{
-    plan: { owner: string }[];
+    plan_by_pk: { owner: string };
   }>(
     gql`
       query planOwner($planId: Int!) {
-        plan(where: { id: { _eq: $planId } }) {
+        plan_by_pk(id $planId) {
           owner
         }
       }
@@ -180,28 +186,45 @@ async function isPlanOwner(graphqlClient: GraphQLClient, planId: number, user: s
     { planId },
   );
 
-  return user === planOwner.plan[0]?.owner;
+  return username === planOwner.plan_by_pk?.owner;
 }
 
-async function isPlanCollaborator(graphqlClient: GraphQLClient, planId: number, user: string): Promise<boolean> {
-  const planCollaboratorRes = await graphqlClient.request<{
-    plan_collaborators: { collaborator: string }[];
+async function isPlanCollaborator(graphqlClient: GraphQLClient, username: string, planId: number): Promise<boolean> {
+  const planCollaborator = await graphqlClient.request<{
+    plan_collaborators_by_pk: { collaborator: string | null };
   }>(
     gql`
-      query planCollaborator($planId: Int!) {
-        plan_collaborators(where: { id: { _eq: $planId } }) {
+      query planCollaborator($planId: Int!, $username: String!) {
+        plan_collaborators_by_pk(plan_id: $planId, collaborator: $username) {
           collaborator
         }
       }
     `,
-    { planId },
+    { planId, username },
   );
 
-  for (const planCollaborator of planCollaboratorRes.plan_collaborators) {
-    if (user === planCollaborator.collaborator) {
-      return true;
-    }
+  return planCollaborator !== null;
+}
+
+async function getPlanId(graphqlClient: GraphQLClient, simulationDatasetId: number): Promise<number> {
+  const planId = (
+    await graphqlClient.request<{
+      plan: { id: number }[];
+    }>(
+      gql`
+        query plan($simulationDatasetId: Int!) {
+          plan(where: { simulations: { simulation_dataset: { id: { _eq: $simulationDatasetId } } } }) {
+            id
+          }
+        }
+      `,
+      { simulationDatasetId },
+    )
+  ).plan[0]?.id;
+
+  if (planId === null || planId === undefined) {
+    throw new Error('Could not determine the plan based on the provided simulationDatasetId');
   }
 
-  return false;
+  return planId;
 }
