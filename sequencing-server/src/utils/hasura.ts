@@ -12,6 +12,12 @@ enum HasuraPermissions {
   PLAN_OWNER_COLLABORATOR = 'PLAN_OWNER_COLLABORATOR',
 }
 
+const HASURA_PLAN_PERMISSIONS = [
+  HasuraPermissions.PLAN_COLLABORATOR,
+  HasuraPermissions.PLAN_OWNER,
+  HasuraPermissions.PLAN_OWNER_COLLABORATOR,
+];
+
 /**
  * Endpoints that don't need any permission checking.
  */
@@ -123,20 +129,29 @@ export async function canUserPerformAction(
     return false;
   }
 
-  const missionModelId = body.input.missionModelId as number;
   const simulationDatasetId = body.input.simulationDatasetId as number;
+  let missionModelId = body.input.missionModelId as number;
   let planId = body.input.planId as number;
 
-  // If we have a simulationDatasetId we need to get the planId to do permission checking.
-  if (simulationDatasetId !== null) {
-    planId = await getPlanId(graphqlClient, simulationDatasetId);
+  // If we have a missionModelId and we need to check a plan permission, get the planId.
+  if (missionModelId !== null && permission in HASURA_PLAN_PERMISSIONS) {
+    planId = await getPlanId(graphqlClient, missionModelId);
+  }
+
+  // If we have a simulationDatasetId and we need to check a plan permission, get the planId.
+  if (simulationDatasetId !== null && permission in HASURA_PLAN_PERMISSIONS) {
+    planId = await getPlanId(graphqlClient, undefined, simulationDatasetId);
   }
 
   switch (permission) {
     case HasuraPermissions.NO_CHECK:
       return true;
     case HasuraPermissions.MISSION_MODEL_OWNER:
-      return missionModelId !== null && (await isMissionModelOwner(graphqlClient, username, missionModelId));
+      if (missionModelId === null) {
+        missionModelId = await getMissionModelId(graphqlClient, planId, simulationDatasetId);
+      }
+
+      return await isMissionModelOwner(graphqlClient, username, missionModelId);
     case HasuraPermissions.OWNER:
       return planId !== null && (await isPlanOwner(graphqlClient, username, planId));
     case HasuraPermissions.PLAN_OWNER:
@@ -206,24 +221,93 @@ async function isPlanCollaborator(graphqlClient: GraphQLClient, username: string
   return planCollaborator !== null;
 }
 
-async function getPlanId(graphqlClient: GraphQLClient, simulationDatasetId: number): Promise<number> {
-  const planId = (
-    await graphqlClient.request<{
-      plan: { id: number }[];
-    }>(
-      gql`
-        query plan($simulationDatasetId: Int!) {
-          plan(where: { simulations: { simulation_dataset: { id: { _eq: $simulationDatasetId } } } }) {
-            id
+async function getPlanId(
+  graphqlClient: GraphQLClient,
+  missionModelId?: number,
+  simulationDatasetId?: number,
+): Promise<number> {
+  let planId;
+
+  if (missionModelId) {
+    planId = (
+      await graphqlClient.request<{
+        plan: { id: number }[];
+      }>(
+        gql`
+          query plan($missionModelId: Int!) {
+            plan(where: { model_id: { _eq: $missionModelId } }) {
+              id
+            }
           }
-        }
-      `,
-      { simulationDatasetId },
-    )
-  ).plan[0]?.id;
+        `,
+        { missionModelId },
+      )
+    ).plan[0]?.id;
+  } else if (simulationDatasetId) {
+    planId = (
+      await graphqlClient.request<{
+        plan: { id: number }[];
+      }>(
+        gql`
+          query plan($simulationDatasetId: Int!) {
+            plan(where: { simulations: { simulation_dataset: { id: { _eq: $simulationDatasetId } } } }) {
+              id
+            }
+          }
+        `,
+        { simulationDatasetId },
+      )
+    ).plan[0]?.id;
+  }
 
   if (planId === null || planId === undefined) {
-    throw new Error('Could not determine the plan based on the provided simulationDatasetId');
+    throw new Error('Could not determine the plan based on the provided missionModelId or simulationDatasetId');
+  }
+
+  return planId;
+}
+
+async function getMissionModelId(
+  graphqlClient: GraphQLClient,
+  planId?: number,
+  simulationDatasetId?: number,
+): Promise<number> {
+  if (planId) {
+    planId = (
+      await graphqlClient.request<{
+        mission_model: { id: number }[];
+      }>(
+        gql`
+          query mission_model($planId: Int!) {
+            plan(where: { plans: { id: { _eq: $planId } } }) {
+              id
+            }
+          }
+        `,
+        { planId },
+      )
+    ).mission_model[0]?.id;
+  } else if (simulationDatasetId) {
+    planId = (
+      await graphqlClient.request<{
+        mission_model: { id: number }[];
+      }>(
+        gql`
+          query mission_model($simulationDatasetId: Int!) {
+            mission_model(
+              where: { plans: { simulations: { simulation_dataset: { id: { _eq: $simulationDatasetId } } } } }
+            ) {
+              id
+            }
+          }
+        `,
+        { simulationDatasetId },
+      )
+    ).mission_model[0]?.id;
+  }
+
+  if (planId === null || planId === undefined) {
+    throw new Error('Could not determine the plan based on the provided missionModelId or simulationDatasetId');
   }
 
   return planId;
