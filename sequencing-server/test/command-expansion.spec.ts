@@ -357,10 +357,7 @@ describe('expansion', () => {
         .METADATA({
           simulatedActivityId: ${simulatedActivityId},
         }),
-      R\`04:00:00.000\`.GROW_BANANA({
-        quantity: 10,
-        durationSecs: 7200,
-      })
+      R\`04:00:00.000\`.GROW_BANANA(10,7200)
         .METADATA({
           simulatedActivityId: ${simulatedActivityId},
         }),
