@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,6 +19,7 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
   public record ActivityInput(String missionModelId,
                               String activityTypeName,
                               Map<String, SerializedValue> arguments) implements Input {}
+  public record ActivityBulkInput(String missionModelId, List<SerializedActivity> activities) implements Input {}
   public record MissionModelArgumentsInput(String missionModelId,
                               Map<String, SerializedValue> arguments) implements Input {}
   public record UploadExternalDatasetInput(PlanId planId,

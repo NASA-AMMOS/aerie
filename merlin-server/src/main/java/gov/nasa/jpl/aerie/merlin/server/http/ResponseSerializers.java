@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkEffectiveArgumentResponse;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -117,6 +118,39 @@ public final class ResponseSerializers {
        .add("success", JsonValue.TRUE)
        .add("arguments", serializeMap(ResponseSerializers::serializeArgument, fields))
        .build();
+  }
+
+  public static JsonValue serializeBulkEffectiveArgumentResponseList(final List<BulkEffectiveArgumentResponse> responses) {
+    return serializeIterable(ResponseSerializers::serializeBulkEffectiveArgumentResponse, responses);
+  }
+
+  public static JsonValue serializeBulkEffectiveArgumentResponse(BulkEffectiveArgumentResponse response) {
+    // TODO use pattern matching in switch statement with JDK 21
+    if (response instanceof BulkEffectiveArgumentResponse.Success s) {
+      return Json.createObjectBuilder()
+          .add("typeName",
+               s.activity().getTypeName())
+          .add("success", JsonValue.TRUE)
+          .add("arguments",
+               serializeMap(
+                   ResponseSerializers::serializeArgument,
+                   s.activity().getArguments()))
+          .build();
+    } else if (response instanceof BulkEffectiveArgumentResponse.TypeFailure f) {
+      return Json.createObjectBuilder()
+          .add("typeName", f.ex().activityTypeId)
+          .add("success", JsonValue.FALSE)
+          .add("errors", "No such activity type")
+          .build();
+    } else if (response instanceof BulkEffectiveArgumentResponse.InstantiationFailure f) {
+      return Json.createObjectBuilder(serializeInstantiationException(f.ex()).asJsonObject())
+          .add("typeName", f.ex().containerName)
+          .build();
+    }
+    return Json.createObjectBuilder()
+        .add("success", JsonValue.FALSE)
+        .add("errors", String.format("Internal error: %s", response))
+        .build();
   }
 
   public static JsonValue serializeCreatedDatasetId(final long datasetId) {

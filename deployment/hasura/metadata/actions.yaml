@@ -79,6 +79,14 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+  - name: getActivityEffectiveArgumentsBulk
+    definition:
+      kind: ""
+      handler: "{{AERIE_MERLIN_URL}}/getActivityEffectiveArgumentsBulk"
+      timeout: 300
+    permissions:
+      - role: aerie_admin
+      - role: user
   - name: getActivityTypeScript
     definition:
       kind: ""

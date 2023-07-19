@@ -169,11 +169,10 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, SerializedValue> getActivityEffectiveArguments(
-      final String missionModelId,
-      final SerializedActivity activity)
-  {
-    return Map.of();
+  public List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
+      String missionModelId,
+      List<SerializedActivity> serializedActivities) {
+    return List.of();
   }
 
   @Override

@@ -45,10 +45,10 @@ public interface MissionModelService {
       SerializedActivity> activities
   ) throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
 
-  Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
-  throws NoSuchMissionModelException,
-         NoSuchActivityTypeException,
-         InstantiationException;
+  List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
+      String missionModelId,
+      List<SerializedActivity> serializedActivities)
+  throws NoSuchMissionModelException;
 
   List<ValidationNotice> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
@@ -97,5 +97,11 @@ public interface MissionModelService {
     }
 
     public NoSuchActivityTypeException(final String activityTypeId) { this(activityTypeId, null); }
+  }
+
+  sealed interface BulkEffectiveArgumentResponse {
+    record Success(SerializedActivity activity) implements  BulkEffectiveArgumentResponse { }
+    record TypeFailure(NoSuchActivityTypeException ex) implements  BulkEffectiveArgumentResponse { }
+    record InstantiationFailure(InstantiationException ex) implements  BulkEffectiveArgumentResponse { }
   }
 }

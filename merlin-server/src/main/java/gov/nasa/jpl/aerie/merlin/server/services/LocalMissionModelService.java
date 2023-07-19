@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,18 +167,35 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, SerializedValue> getActivityEffectiveArguments(final String missionModelId, final SerializedActivity activity)
-  throws NoSuchMissionModelException,
-         NoSuchActivityTypeException,
-         MissionModelLoadException,
-         InstantiationException
-  {
-    final var modelType = this.loadMissionModelType(missionModelId);
-    final var registry = DirectiveTypeRegistry.extract(modelType);
-    final var directiveType = Optional
-        .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
-        .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
-    return directiveType.getInputType().getEffectiveArguments(activity.getArguments());
+  public List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
+      final String missionModelId,
+      final List<SerializedActivity> serializedActivities)
+  throws NoSuchMissionModelException, MissionModelLoadException {
+      final var modelType = this.loadMissionModelType(missionModelId);
+      final var registry = DirectiveTypeRegistry.extract(modelType);
+      final var response = new ArrayList<BulkEffectiveArgumentResponse>();
+
+      for (final var activity : serializedActivities) {
+        final var typeName = activity.getTypeName();
+
+        try {
+          final var directiveType = Optional
+              .ofNullable(registry.directiveTypes().get(typeName))
+              .orElseThrow(() -> new NoSuchActivityTypeException(activity.getTypeName()));
+
+          response.add(new BulkEffectiveArgumentResponse.Success(
+              new SerializedActivity(
+              typeName,
+              directiveType.getInputType().getEffectiveArguments(activity.getArguments())
+          )));
+        } catch (NoSuchActivityTypeException e) {
+          response.add(new BulkEffectiveArgumentResponse.TypeFailure(e));
+        } catch (InstantiationException e) {
+          response.add(new BulkEffectiveArgumentResponse.InstantiationFailure(e));
+        }
+      }
+
+      return response;
   }
 
   @Override

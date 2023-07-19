@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraActivityDirectiveEvent;
@@ -9,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
@@ -132,6 +134,23 @@ public abstract class HasuraParsers {
       .map(
           untuple(HasuraAction.ActivityInput::new),
           $ -> tuple($.missionModelId(), $.activityTypeName(), $.arguments()));
+
+  private static final JsonParser<SerializedActivity> hasuraActivityBulkItemP
+      = productP
+      .field("activityTypeName", stringP)
+      .field("activityArguments", mapP(serializedValueP))
+      .map(
+          untuple(SerializedActivity::new),
+          $ -> tuple($.getTypeName(), $.getArguments()));
+
+  public static final JsonParser<HasuraAction<HasuraAction.ActivityBulkInput>> hasuraActivityBulkActionP
+      = hasuraActionF(
+          productP
+              .field("missionModelId", stringP)
+              .field("activities", listP(hasuraActivityBulkItemP))
+              .map(
+                  untuple(HasuraAction.ActivityBulkInput::new),
+                  $ -> tuple($.missionModelId(), $.activities())));
 
   public static final JsonParser<HasuraAction<HasuraAction.ActivityInput>> hasuraActivityActionP
       = hasuraActionF(hasuraActivityInputP);
