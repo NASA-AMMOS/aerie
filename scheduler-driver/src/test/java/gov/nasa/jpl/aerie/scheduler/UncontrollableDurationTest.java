@@ -205,6 +205,7 @@ public class UncontrollableDurationTest {
         .forEach(horizonExpression)
         .startsAt(intervalStartTimeExpression)
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(coexistenceControllable));
