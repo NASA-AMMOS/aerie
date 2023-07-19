@@ -65,19 +65,13 @@ values
    '{
       "simulate":"PLAN_OWNER_COLLABORATOR",
       "schedule":"PLAN_OWNER_COLLABORATOR",
-      "insert_command_dict": "NO_CHECK",
       "insert_ext_dataset": "PLAN_OWNER",
-      "extend_ext_dataset": "PLAN_OWNER",
       "check_constraints": "PLAN_OWNER_COLLABORATOR",
       "create_expansion_set": "NO_CHECK",
       "create_expansion_rule": "NO_CHECK",
       "expand_all_activities": "NO_CHECK",
       "resource_samples": "NO_CHECK",
-      "sequence_seq_json": "NO_CHECK",
-      "sequence_seq_json_bulk": "NO_CHECK",
-      "user_sequence_seq_json": "NO_CHECK",
-      "user_sequence_seq_json_bulk": "NO_CHECK",
-      "get_command_dict_ts": "NO_CHECK"
+      "sequence_seq_json_bulk": "NO_CHECK"
     }',
    '{
       "apply_preset": "PLAN_OWNER_COLLABORATOR",
@@ -103,11 +97,7 @@ values
   ('viewer',
    '{
       "resource_samples": "NO_CHECK",
-      "sequence_seq_json": "NO_CHECK",
-      "sequence_seq_json_bulk": "NO_CHECK",
-      "user_sequence_seq_json": "NO_CHECK",
-      "user_sequence_seq_json_bulk": "NO_CHECK",
-      "get_command_dict_ts": "NO_CHECK"
+      "sequence_seq_json_bulk": "NO_CHECK"
     }',
    '{
       "get_conflicting_activities": "NO_CHECK",
