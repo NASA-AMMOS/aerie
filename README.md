@@ -48,6 +48,7 @@ To get started using Aerie for the first time please do our [fast track tutorial
 ├── merlin-server               # Service for planning and simulation
 ├── merlin-worker               # Worker for executing simulations
 ├── parsing-utilities           # Java classes for JSON serialization and deserialization
+├── permissions                 # Java library for authorizing endpoint requests
 ├── scheduler-driver            # Java library for goal-oriented scheduling
 ├── scheduler-server            # Service for scheduling
 ├── scheduler-worker            # Worker for executing scheduling goals
