@@ -29,9 +29,14 @@ const req = {
     request: APIRequestContext,
     query: string,
     variables: Record<string, unknown> = {},
+    headers: Record<string, string> = {'x-hasura-role': 'aerie_admin', 'x-hasura-user-id': 'Aerie Legacy'},
   ): Promise<T> {
     const hasuraAdminSecret = (process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string) ?? '';
-    const options = { headers: { 'x-hasura-admin-secret': hasuraAdminSecret }, data: { query, variables } };
+    const option_headers = { 'x-hasura-admin-secret': hasuraAdminSecret }
+    for (const key in headers) {
+      option_headers[key] = headers[key];
+    }
+    const options = { headers: option_headers, data: { query, variables } };
     const response = await request.post(`${urls.HASURA_URL}/v1/graphql`, options);
 
     if (response.ok()) {

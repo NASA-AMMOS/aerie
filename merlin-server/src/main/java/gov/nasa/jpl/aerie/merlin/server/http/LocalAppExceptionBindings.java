@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import io.javalin.Javalin;
 import io.javalin.plugin.Plugin;
 
+
 public final class LocalAppExceptionBindings implements Plugin {
     @Override
     public void apply(final Javalin javalin) {

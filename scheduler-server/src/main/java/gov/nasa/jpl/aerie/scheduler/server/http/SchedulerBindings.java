@@ -11,6 +11,14 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMi
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.*;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.permissions.Action;
+import gov.nasa.jpl.aerie.permissions.PermissionsService;
+import gov.nasa.jpl.aerie.permissions.exceptions.ExceptionSerializers;
+import gov.nasa.jpl.aerie.permissions.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.permissions.exceptions.NoSuchSchedulingSpecificationException;
+import gov.nasa.jpl.aerie.permissions.exceptions.PermissionsServiceException;
+import gov.nasa.jpl.aerie.permissions.exceptions.Unauthorized;
+import gov.nasa.jpl.aerie.permissions.gql.SchedulingSpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
@@ -23,19 +31,22 @@ import org.slf4j.LoggerFactory;
 
 /**
  * set up mapping between scheduler http endpoints and java method calls
- *  @param schedulerService object that will service synchronous scheduling api requests (like goal reordering)
+ * @param schedulerService object that will service synchronous scheduling api requests (like goal reordering)
  * @param scheduleAction action that initiates scheduling of a plan and collects results, possibly asynchronously
  * @param generateSchedulingLibAction
+ * @param permissionsService service that authorizes action requests
  */
 public record SchedulerBindings(
     SchedulerService schedulerService,
     ScheduleAction scheduleAction,
-    GenerateSchedulingLibAction generateSchedulingLibAction
+    GenerateSchedulingLibAction generateSchedulingLibAction,
+    PermissionsService permissionsService
 ) implements Plugin {
   public SchedulerBindings {
     Objects.requireNonNull(schedulerService);
     Objects.requireNonNull(scheduleAction);
     Objects.requireNonNull(generateSchedulingLibAction);
+    Objects.requireNonNull(permissionsService);
   }
 
   private static final Logger log = LoggerFactory.getLogger(SchedulerBindings.class);
@@ -67,6 +78,15 @@ public record SchedulerBindings(
       final var body = parseJson(ctx.body(), hasuraSpecificationActionP);
       final var specificationId = body.input().specificationId();
 
+      final var session = body.session();
+      final var permissionsSpecId = new SchedulingSpecificationId(specificationId.id());
+      try {
+        permissionsService.check(Action.schedule, session.hasuraRole(), session.hasuraUserId(), permissionsSpecId);
+      } catch (final IOException ex) {
+        // this IOException is caught here so that it isn't mistaken for an IOException during scheduling
+        ctx.status(500).result(ExceptionSerializers.serializeIOException(ex).toString());
+      }
+
       final var response = this.scheduleAction.run(specificationId);
       ctx.result(serializeScheduleResultsResponse(response).toString());
     } catch (final IOException e) {
@@ -78,6 +98,14 @@ public record SchedulerBindings(
       ctx.status(400).result(serializeInvalidJsonException(ex).toString());
     } catch (final NoSuchSpecificationException ex) {
       ctx.status(404).result(serializeException(ex).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ExceptionSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final NoSuchSchedulingSpecificationException ex) {
+      ctx.status(404).result(ExceptionSerializers.serializeNoSuchSchedulingSpecificationException(ex).toString());
+    } catch (final PermissionsServiceException ex) {
+      ctx.status(503).result(ExceptionSerializers.serializePermissionsServiceException(ex).toString());
+    } catch (final Unauthorized ex) {
+      ctx.status(403).result(ExceptionSerializers.serializeUnauthorizedException(ex).toString());
     }
   }
 

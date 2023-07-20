@@ -21,6 +21,7 @@ application {
 dependencies {
   implementation project(':merlin-driver')
   implementation project(':parsing-utilities')
+  implementation project(':permissions')
   implementation project(':constraints')
   implementation project(':scheduler-driver')
 

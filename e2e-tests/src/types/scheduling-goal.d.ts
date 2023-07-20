@@ -31,7 +31,7 @@ type SchedulingGoalAnalysis = {
 
 type SchedulingGoalInsertInput = Omit<
     SchedulingGoal,
-    'analyses' | 'created_date' | 'id' | 'modified_date' | 'revision'
+    'analyses' | 'created_date' | 'id' | 'modified_date' | 'revision' | 'author' | 'last_modified_by'
     >;
 
 type SchedulingResponseStatus = 'pending' | 'complete' | 'failed' | 'incomplete';

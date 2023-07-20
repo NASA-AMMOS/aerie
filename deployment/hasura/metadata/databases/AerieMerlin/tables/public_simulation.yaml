@@ -49,3 +49,7 @@ update_permissions:
       columns: [simulation_template_id, arguments, simulation_start_time, simulation_end_time]
       filter: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
   # Insert/Delete are handled via Postgres Triggers
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
+import gov.nasa.jpl.aerie.permissions.PermissionsService;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
@@ -26,6 +27,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.permissions.gql.GraphQLPermissionsService;
 import io.javalin.Javalin;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.LowResourceMonitor;
@@ -36,6 +38,7 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Instant;
 
@@ -80,12 +83,15 @@ public final class AerieAppDriver {
       simulationController
     );
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+    final var permissionsService = new PermissionsService(
+        new GraphQLPermissionsService(configuration.hasuraGraphqlURI(), configuration.hasuraGraphQlAdminSecret()));
     final var merlinBindings = new MerlinBindings(
         missionModelController,
         planController,
         simulationAction,
         generateConstraintsLibAction,
-        constraintAction
+        constraintAction,
+        permissionsService
     );
     // Configure an HTTP server.
     //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
@@ -111,7 +117,12 @@ public final class AerieAppDriver {
     javalin.start(configuration.httpPort());
   }
 
-  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results, ConstraintRepository constraints) {}
+  private record Stores (
+      PlanRepository plans,
+      MissionModelRepository missionModels,
+      ResultsCellRepository results,
+      ConstraintRepository constraints
+  ) {}
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
@@ -156,7 +167,9 @@ public final class AerieAppDriver {
                           Integer.parseInt(getEnv("MERLIN_DB_PORT", "5432")),
                           getEnv("MERLIN_DB_PASSWORD", ""),
                           getEnv("MERLIN_DB", "aerie_merlin")),
-        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
+        Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
+        URI.create(getEnv("HASURA_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
+        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
     );
   }
 }
