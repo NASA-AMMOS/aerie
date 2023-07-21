@@ -23,6 +23,7 @@ import './polyfills.js';
 import getLogger from './utils/logger.js';
 import { commandExpansionRouter } from './routes/command-expansion.js';
 import { seqjsonRouter } from './routes/seqjson.js';
+import { getHasuraSession, canUserPerformAction, ENDPOINTS_WHITELIST } from './utils/hasura.js';
 
 const logger = getLogger('app');
 
@@ -50,10 +51,23 @@ export type Context = {
   expansionDataLoader: InferredDataloader<typeof expansionBatchLoader>;
 };
 
-app.use(async (_: Request, res: Response, next: NextFunction) => {
+app.use(async (req: Request, res: Response, next: NextFunction) => {
   const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL, {
     headers: { 'x-hasura-admin-secret': getEnv().HASURA_GRAPHQL_ADMIN_SECRET },
   });
+
+  // Check and make sure the user making the request has the required permissions.
+  if (
+    !ENDPOINTS_WHITELIST.has(req.url) &&
+    !(await canUserPerformAction(
+      req.url,
+      graphqlClient,
+      getHasuraSession(req.body.session_variables, req.headers.authorization),
+      req.body,
+    ))
+  ) {
+    throw new Error(`You do not have sufficient permissions to perform this action.`);
+  }
 
   const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }), {
     cacheKeyFn: objectCacheKeyFunction,
