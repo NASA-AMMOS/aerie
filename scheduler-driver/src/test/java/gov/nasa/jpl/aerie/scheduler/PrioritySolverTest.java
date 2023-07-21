@@ -137,6 +137,7 @@ public class PrioritySolverTest {
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .withinPlanHorizon(h)
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -156,6 +157,7 @@ public class PrioritySolverTest {
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .withinPlanHorizon(h)
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -182,6 +184,7 @@ public class PrioritySolverTest {
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
                             .duration(d1min)
                             .build())
+        .withinPlanHorizon(h)
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -217,6 +220,7 @@ public class PrioritySolverTest {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(h)
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -260,6 +264,7 @@ public class PrioritySolverTest {
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(h)
         .build();
 
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);

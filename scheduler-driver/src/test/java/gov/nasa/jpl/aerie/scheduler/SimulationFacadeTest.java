@@ -156,6 +156,7 @@ public class SimulationFacadeTest {
                            .build())
         .startsAt(TimeAnchor.END)
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(horizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -285,6 +286,7 @@ public class SimulationFacadeTest {
         .owned(ChildCustody.Jointly)
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(horizon)
         .build();
 
     problem.setGoals(List.of(cg));
@@ -324,6 +326,7 @@ public class SimulationFacadeTest {
         .attachStateConstraint(constraint)
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(horizon)
         .build();
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
@@ -365,6 +368,7 @@ public class SimulationFacadeTest {
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(horizon)
         .build();
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));

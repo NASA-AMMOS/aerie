@@ -56,6 +56,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -90,6 +91,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -124,6 +126,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -158,6 +161,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -178,6 +182,19 @@ public class TestApplyWhen {
 
   @Test
   public void testRecurrenceBabyWindow() {
+    /*
+    The plan horizon ranges from [0,20).
+    The recurrent activities can be placed inside the following window: [1,2). That is, there is exactly 1 unit of time where an activity can be placed
+    If the interval was [1,2], the time available to place activities would be 1.000....1
+    The activities instantiating the goal have a duration of 1
+    The activities should repeat every 5 time units
+
+    It is therefore possible to place an activity in time slot 1, with a duration of 1
+    Graphically
+    RECURRENCE WINDOW: [+----+----+----+----]
+    GOAL WINDOW: [+-------------------]
+    RESULT: [+-------------------]
+    */
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
@@ -192,6 +209,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -204,7 +222,7 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString());
     }
 
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
@@ -236,6 +254,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -281,6 +300,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -293,9 +313,9 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString());
     }
 
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType)); //cutting off mid interval should fail, i.e. no scheduling
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
   }
 
@@ -327,6 +347,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(3, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -342,7 +363,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(8, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(17, Duration.SECONDS), activityType)); //interval (len 4) needs to be 2 longer than the recurrence repeatingEvery (len 3)
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(17, Duration.SECONDS), activityType)); //interval (len 4) needs to be 2 longer than the recurrence repeatingEvery (len 3)
   }
 
   @Test
@@ -373,6 +394,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -406,6 +428,7 @@ public class TestApplyWhen {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -450,6 +473,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -495,6 +519,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -545,6 +570,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -590,6 +616,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -648,6 +675,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -702,6 +730,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -763,6 +792,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -827,6 +857,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -897,6 +928,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -967,6 +999,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -1032,6 +1065,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -1089,6 +1123,7 @@ public class TestApplyWhen {
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
@@ -1137,6 +1172,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(gte)
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(hor)
         .build();
 
 
@@ -1150,6 +1186,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(hor)
         .build();
 
     //problem.setGoals(List.of(whenActivitiesGreaterThan2, addRecurringActivityModifyingResource)); ORDER SENSITIVE
@@ -1212,6 +1249,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(gte)
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(hor)
         .build();
 
 
@@ -1225,6 +1263,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(hor)
         .build();
 
     //problem.setGoals(List.of(whenActivitiesGreaterThan2, addRecurringActivityModifyingResource)); ORDER SENSITIVE
@@ -1295,6 +1334,7 @@ public class TestApplyWhen {
         .named("TestCardGoal")
         .forAllTimeIn(gte)
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(hor)
         .build();
 
 
@@ -1308,6 +1348,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(hor)
         .build();
 
     //problem.setGoals(List.of(whenActivitiesGreaterThan2, addRecurringActivityModifyingResource)); ORDER SENSITIVE

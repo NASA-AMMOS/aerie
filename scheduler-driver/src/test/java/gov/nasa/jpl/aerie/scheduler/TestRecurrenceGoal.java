@@ -35,6 +35,7 @@ public class TestRecurrenceGoal {
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -70,6 +71,7 @@ public class TestRecurrenceGoal {
                               .ofType(activityType)
                               .build())
           .repeatingEvery(Duration.of(-1, Duration.SECONDS))
+          .withinPlanHorizon(planningHorizon)
           .build();
     }
     catch (IllegalArgumentException e) {

@@ -71,6 +71,7 @@ public class UncontrollableDurationTest {
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .repeatingEvery(Duration.of(1000, Duration.SECONDS))
         .named("UncontrollableRecurrenceGoal")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -81,6 +82,7 @@ public class UncontrollableDurationTest {
         .endsAt(TimeAnchor.START)
         .named("UncontrollableCoexistenceGoal")
         .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -119,6 +121,7 @@ public class UncontrollableDurationTest {
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .repeatingEvery(Duration.of(1000, Duration.SECONDS))
         .named("UncontrollableRecurrenceGoal")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -130,6 +133,7 @@ public class UncontrollableDurationTest {
         .endsAt(start)
         .named("UncontrollableCoexistenceGoal")
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -166,6 +170,7 @@ public class UncontrollableDurationTest {
         .forEach(ActivityExpression.ofType(problem.getActivityType("ControllableDurationActivity")))
         .startsAt(intervalStartTimeExpression)
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(coexistenceControllable));
@@ -200,6 +205,7 @@ public class UncontrollableDurationTest {
         .forEach(horizonExpression)
         .startsAt(intervalStartTimeExpression)
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(coexistenceControllable));

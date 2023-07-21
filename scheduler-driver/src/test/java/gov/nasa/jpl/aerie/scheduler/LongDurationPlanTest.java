@@ -88,6 +88,7 @@ public class LongDurationPlanTest {
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .withinPlanHorizon(h)
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);

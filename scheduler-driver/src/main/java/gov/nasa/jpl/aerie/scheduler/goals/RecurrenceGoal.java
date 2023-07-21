@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
@@ -106,7 +107,16 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //unwrap temporalContext
-    final var windows = getTemporalContext().evaluate(simulationResults);
+    final var tempWindowPlanHorizon = new Windows(false).set(List.of(this.planHorizon.getHor()), true);
+    final var windows = tempWindowPlanHorizon.and(this.getTemporalContext().evaluate(simulationResults));
+
+    //check repeat is larger than activity duration
+    if(this.getActTemplate().getType().getDurationType() instanceof DurationType.Fixed act){
+      boolean durActVSRec = act.duration().longerThan(this.recurrenceInterval.min);
+      if(durActVSRec){
+        throw new UnexpectedTemporalContextChangeException("The goal is unsatisfiable as its duration is longer than the repeat duration");
+      }
+    }
 
     //make sure it hasn't changed
     if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
@@ -195,16 +205,17 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
-    if(end.minus(start).noLongerThan(recurrenceInterval.max)){
-      return conflicts;
-    }
-
     for (var intervalT = start.plus(recurrenceInterval.max);
          ;
          intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
-      conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment()));
+      if(windows.iterateEqualTo(true).iterator().hasNext()){
+        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment()));
+      }
+      else{
+        System.out.println();
+      }
       if(intervalT.compareTo(end) >= 0){
         break;
       }

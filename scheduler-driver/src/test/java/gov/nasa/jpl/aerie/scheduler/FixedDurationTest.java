@@ -47,6 +47,7 @@ public class FixedDurationTest {
         .startsAt(start)
         .named("FixedCoexistenceGoal")
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 
@@ -75,6 +76,7 @@ public class FixedDurationTest {
         .startsAt(start)
         .named("FixedCoexistenceGoal")
         .aliasForAnchors("its a me")
+        .withinPlanHorizon(planningHorizon)
         .build();
 
 

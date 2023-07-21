@@ -132,6 +132,7 @@ public class Problem {
     goalsOrderedByPriority.addAll(goals);
   }
 
+
   /**
    * retrieves the set of all requested plan goals
    *

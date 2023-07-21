@@ -42,6 +42,7 @@ public class TestCardinalityGoal {
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .owned(ChildCustody.Jointly)
+        .withinPlanHorizon(planningHorizon)
         .build();
 
     problem.setGoals(List.of(goal));
