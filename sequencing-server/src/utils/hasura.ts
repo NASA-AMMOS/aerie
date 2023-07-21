@@ -130,12 +130,12 @@ export async function canUserPerformAction(
     return false;
   }
 
-  const simulationDatasetId = body.input.simulationDatasetId as number;
-  let missionModelId = body.input.missionModelId as number;
-  let planId = body.input.planId as number;
+  const simulationDatasetId = body.input.simulationDatasetId as number | undefined;
+  let missionModelId = body.input.missionModelId as number | undefined;
+  let planId = body.input.planId as number | undefined;
 
   // If we have a simulationDatasetId and we need to check a plan permission, get the planId.
-  if (simulationDatasetId !== null && permission in HASURA_PLAN_PERMISSIONS) {
+  if (simulationDatasetId !== undefined && permission in HASURA_PLAN_PERMISSIONS) {
     planId = await getPlanId(graphqlClient, simulationDatasetId);
   }
 
@@ -143,16 +143,16 @@ export async function canUserPerformAction(
     case HasuraPermissions.NO_CHECK:
       return true;
     case HasuraPermissions.MISSION_MODEL_OWNER:
-      if (missionModelId === null) {
+      if (missionModelId === undefined) {
         missionModelId = await getMissionModelId(graphqlClient, planId, simulationDatasetId);
       }
 
       return await isMissionModelOwner(graphqlClient, username, missionModelId);
     case HasuraPermissions.OWNER:
       // Owner has 2 different meanings, either owner of the mission model or owner of the plan.
-      if (missionModelId !== null) {
+      if (missionModelId !== undefined) {
         return await isMissionModelOwner(graphqlClient, username, missionModelId);
-      } else if (planId !== null) {
+      } else if (planId !== undefined) {
         return await isPlanOwner(graphqlClient, username, planId);
       }
 
@@ -196,7 +196,7 @@ async function isPlanOwner(
   planId?: number,
   missionModelId?: number,
 ): Promise<boolean> {
-  if (planId !== null) {
+  if (planId !== undefined) {
     const planOwner = await graphqlClient.request<{
       plan_by_pk: { owner: string };
     }>(
@@ -211,7 +211,7 @@ async function isPlanOwner(
     );
 
     return username === planOwner.plan_by_pk?.owner;
-  } else if (missionModelId !== null) {
+  } else if (missionModelId !== undefined) {
     const planOwner = await graphqlClient.request<{
       mission_model_by_pk: { plans: { name: string }[] };
     }>(
@@ -246,7 +246,7 @@ async function isPlanCollaborator(
   planId?: number,
   missionModelId?: number,
 ): Promise<boolean> {
-  if (planId !== null) {
+  if (planId !== undefined) {
     const planCollaborator = await graphqlClient.request<{
       plan_collaborators_by_pk: { collaborator: string | null };
     }>(
@@ -261,7 +261,7 @@ async function isPlanCollaborator(
     );
 
     return planCollaborator !== null;
-  } else if (missionModelId !== null) {
+  } else if (missionModelId !== undefined) {
     const planCollaborator = await graphqlClient.request<{
       mission_model_by_pk: { plans: { collaborators: { collaborator: string | null } }[] };
     }>(
@@ -321,7 +321,7 @@ async function getMissionModelId(
 ): Promise<number> {
   let missionModelId;
 
-  if (planId) {
+  if (planId !== undefined) {
     missionModelId = (
       await graphqlClient.request<{
         plan_by_pk: { model_id: number }[];
@@ -336,7 +336,7 @@ async function getMissionModelId(
         { planId },
       )
     ).plan_by_pk[0]?.model_id;
-  } else if (simulationDatasetId) {
+  } else if (simulationDatasetId !== undefined) {
     missionModelId = (
       await graphqlClient.request<{
         simulation_dataset_by_pk: { simulation: { plan: { model_id: number } } };
