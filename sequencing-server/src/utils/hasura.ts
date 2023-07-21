@@ -135,7 +135,7 @@ export async function canUserPerformAction(
   let planId = body.input.planId as number | undefined;
 
   // If we have a simulationDatasetId and we need to check a plan permission, get the planId.
-  if (simulationDatasetId !== undefined && permission in HASURA_PLAN_PERMISSIONS) {
+  if (simulationDatasetId !== undefined && HASURA_PLAN_PERMISSIONS.includes(permission)) {
     planId = await getPlanId(graphqlClient, simulationDatasetId);
   }
 
