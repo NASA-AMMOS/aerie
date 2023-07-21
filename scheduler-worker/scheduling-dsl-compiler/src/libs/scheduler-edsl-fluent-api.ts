@@ -319,7 +319,7 @@ export class Goal {
    * The Coexistence Goal specifies that a certain activity should occur once **for each** occurrence of some condition.
    *
    * #### Inputs
-   * - **forEach**: a set of time windows (`Windows`, see [documentation](../../constraints-edsl-api/classes/Windows) on how to produce such an expression) or a set of activities (`ActivityExpression`)
+   * - **forEach**: a set of time windows (`Windows`, see [documentation](../../constraints-edsl-api/classes/Windows) on how to produce such an expression) or a set of activities (`ActivityExpression`) or an Interval or a Temporal.Instant
    * - **activityTemplate**: the description of the activity to insert after each activity identified by `forEach`. If activityFinder is not defined, used for both matching against existing activities and creating new ones.
    * - **activityFinder: an optional activity expression. If present, it will be used as replacement of activityTemplate to match against existing activities in the plan.
    * - **startsAt**: optionally specify a specific time when the activity should start relative to the window
@@ -383,7 +383,7 @@ export class Goal {
 
   public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType,  B extends WindowsEDSL.Gen.ActivityType>(opts: ({
     activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    forEach:  WindowsEDSL.Windows,
+    forEach:  WindowsEDSL.Windows | WindowsEDSL.Interval | Temporal.Instant,
     activityFinder?: ActivityExpression<B>
   } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
@@ -393,7 +393,16 @@ export class Goal {
 
     let alias: string;
 
-    if (opts.forEach instanceof WindowsEDSL.Windows) {
+    let localForEach;
+    if (opts.forEach instanceof WindowsEDSL.Interval) {
+      localForEach = Windows.Value(true, opts.forEach).assignGaps(false);
+    } else if (opts.forEach instanceof Temporal.Instant) {
+      localForEach = Windows.Value(true,Interval.At(opts.forEach)).assignGaps(false);
+    } else {
+      localForEach = opts.forEach;
+    }
+
+    if (localForEach instanceof WindowsEDSL.Windows) {
       alias = 'coexistence interval alias ' + Goal.__numGeneratedAliases;
     } else {
       alias = 'coexistence activity alias ' + Goal.__numGeneratedAliases;
@@ -403,13 +412,13 @@ export class Goal {
     let activityTemplate: ActivityTemplate<S>;
 
     if (opts.activityTemplate instanceof Function) {
-      if (opts.forEach instanceof WindowsEDSL.Windows) {
+      if (localForEach instanceof WindowsEDSL.Windows) {
         activityTemplate = (opts.activityTemplate as (i: WindowsEDSL.Interval) => ActivityTemplate<S>)(new WindowsEDSL.Interval({
           kind: ConstraintsAST.NodeKind.IntervalAlias,
           alias
         }));
       } else {
-        activityTemplate = (opts.activityTemplate as (a: ActivityInstance<T>) => ActivityTemplate<S>)(new ActivityInstance((<ActivityExpression<T>>opts.forEach).activityType, alias));
+        activityTemplate = (opts.activityTemplate as (a: ActivityInstance<T>) => ActivityTemplate<S>)(new ActivityInstance((<ActivityExpression<T>>localForEach).activityType, alias));
       }
     } else {
       activityTemplate = opts.activityTemplate;
@@ -420,7 +429,7 @@ export class Goal {
       alias: alias,
       activityTemplate: activityTemplate,
       activityFinder: opts.activityFinder?.__astNode,
-      forEach: opts.forEach.__astNode,
+      forEach: localForEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
       shouldRollbackIfUnsatisfied: false
