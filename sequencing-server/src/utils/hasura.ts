@@ -201,12 +201,12 @@ async function isPlanOwner(
       plan_by_pk: { owner: string };
     }>(
       gql`
-      query planOwner($planId: Int!) {
-        plan_by_pk(id $planId) {
-          owner
+        query planOwner($planId: Int!) {
+          plan_by_pk(id: $planId) {
+            owner
+          }
         }
-      }
-    `,
+      `,
       { planId },
     );
 
@@ -216,15 +216,15 @@ async function isPlanOwner(
       mission_model_by_pk: { plans: { name: string }[] };
     }>(
       gql`
-        query planOwner($id: Int!, $username: String!) {
-          mission_model_by_pk(id: $id) {
+        query planOwner($missionModelId: Int!, $username: String!) {
+          mission_model_by_pk(id: $missionModelId) {
             plans(where: { owner: { _eq: $username } }, limit: 1) {
               name
             }
           }
         }
       `,
-      { planId },
+      { missionModelId, username },
     );
 
     // planOwner.mission_model_by_pk will be null in the case of an invalid missionModelId being passed.
@@ -266,15 +266,15 @@ async function isPlanCollaborator(
       mission_model_by_pk: { plans: { collaborators: { collaborator: string | null } }[] };
     }>(
       gql`
-        query planCollaborator($id: Int!, $username: String!) {
-          mission_model_by_pk(id: $id) {
+        query planCollaborator($missionModelId: Int!, $username: String!) {
+          mission_model_by_pk(id: $missionModelId) {
             plans(where: { collaborators: { collaborator: { _eq: $username } } }, limit: 1) {
               name
             }
           }
         }
       `,
-      { planId, username },
+      { missionModelId, username },
     );
 
     if (planCollaborator.mission_model_by_pk !== null) {
