@@ -34,7 +34,7 @@ update_permissions:
       filter: {}
   - role: user
     permission:
-      columns: [horizon_start, horizon_end, simulation_arguments, analysis_only]
+      columns: [plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
       filter: {}
 delete_permissions:
   - role: aerie_admin
