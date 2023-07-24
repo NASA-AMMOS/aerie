@@ -47,7 +47,6 @@ public class SimulationFacade implements AutoCloseable{
   private final Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
       planActDirectiveIdToSimulationActivityDirectiveId = new HashMap<>();
   private final Map<SchedulingActivityDirective, ActivityDirective> insertedActivities;
-  private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
   //counts the total number of simulation restarts, used as performance metric in the scheduler
   private int pastSimulationRestarts;
 
@@ -149,7 +148,7 @@ public class SimulationFacade implements AutoCloseable{
     }
     final var allActivitiesToSimulate = new ArrayList<>(activitiesToAdd);
     //reset resumable simulation
-    if(atLeastOneActualRemoval || earliestActStartTime.shorterThan(this.driver.getCurrentSimulationEndTime())){
+    if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(this.driver.getCurrentSimulationEndTime())){
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
@@ -236,12 +235,8 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public void computeSimulationResultsUntil(final Duration endTime) throws SimulationException {
-    var endTimeWithMargin = endTime;
-    if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
-      endTimeWithMargin = endTime.plus(MARGIN);
-    }
     try {
-      final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
+      final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTime);
       //compare references
       if(results != lastSimDriverResults) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine

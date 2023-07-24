@@ -288,6 +288,14 @@ public final class Interval implements Comparable<Interval>{
     return 0;
   }
 
+  public static boolean hasSameStart(Interval x, Interval y){
+    return compareStartToStart(x,y) == 0;
+  }
+
+  public static boolean hasSameEnd(Interval x, Interval y){
+    return compareEndToEnd(x,y) == 0;
+  }
+
   public static int compareStartToEnd(final Interval x, final Interval y) {
     // First, order by absolute time.
     if (!x.start.isEqualTo(y.end)) {

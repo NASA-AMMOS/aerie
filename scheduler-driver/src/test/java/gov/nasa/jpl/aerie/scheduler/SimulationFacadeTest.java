@@ -203,7 +203,7 @@ public class SimulationFacadeTest {
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, 5, SECONDS), false)
+        Segment.of(interval(2, Inclusive,5, Exclusive, SECONDS), false)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -215,7 +215,7 @@ public class SimulationFacadeTest {
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
-        Segment.of(interval(2, 5, SECONDS), true)
+        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -228,7 +228,7 @@ public class SimulationFacadeTest {
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -241,7 +241,7 @@ public class SimulationFacadeTest {
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -254,7 +254,7 @@ public class SimulationFacadeTest {
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
-        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
+        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
     );
     assertThat(actual).isEqualTo(expected);
   }

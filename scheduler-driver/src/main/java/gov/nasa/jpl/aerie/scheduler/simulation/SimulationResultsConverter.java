@@ -30,7 +30,7 @@ public class SimulationResultsConverter {
                                                              .collect(Collectors.toList());
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         driverResults.startTime,
-        Interval.between(Duration.ZERO, planDuration),
+        Interval.betweenClosedOpen(Duration.ZERO, planDuration),
         activities,
         Maps.transformValues(driverResults.realProfiles, $ -> LinearProfile.fromSimulatedProfile($.getRight())),
         Maps.transformValues(driverResults.discreteProfiles, $ -> DiscreteProfile.fromSimulatedProfile($.getRight()))

@@ -496,14 +496,18 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     boolean boundsStartContained = false;
     boolean boundsEndContained = false;
     if(this.segments.size() == 1){
-      if (segments.get(0).interval().contains(bounds.start)) boundsStartContained = true;
-      if (segments.get(0).interval().contains(bounds.end)) boundsEndContained = true;
+      if (segments.get(0).interval().contains(bounds.start) ||
+          Interval.hasSameStart(segments.get(0).interval(), bounds)) boundsStartContained = true;
+      if (segments.get(0).interval().contains(bounds.end) ||
+          Interval.hasSameEnd(segments.get(0).interval(), bounds)) boundsEndContained = true;
     }
     for (int i = 0; i < this.segments.size() - 1; i++) {
       final var leftInterval = this.segments.get(i).interval();
       final var rightInterval = this.segments.get(i+1).interval();
-      if (leftInterval.contains(bounds.start) || rightInterval.contains(bounds.start)) boundsStartContained = true;
-      if (leftInterval.contains(bounds.end) || rightInterval.contains(bounds.end)) boundsEndContained = true;
+      if((leftInterval.contains(bounds.start) || rightInterval.contains(bounds.start)) ||
+         Interval.hasSameStart(leftInterval, bounds) || Interval.hasSameStart(rightInterval, bounds)) boundsStartContained = true;
+      if((leftInterval.contains(bounds.end) || rightInterval.contains(bounds.end)) ||
+         Interval.hasSameEnd(leftInterval, bounds) || Interval.hasSameEnd(rightInterval, bounds)) boundsEndContained = true;
       if (leftInterval.isStrictlyBefore(bounds)) continue;
       if (rightInterval.isStrictlyAfter(bounds)) continue;
       if (!leftInterval.adjacent(rightInterval)) {
