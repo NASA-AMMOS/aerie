@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Test Results
-          path: "**/sequencing-server/test-report.html"
+          path: "**/sequencing-server/test-report.*"
       - name: Print Logs for Services
         if: always()
         run: docker compose -f ./e2e-tests/docker-compose-test.yml logs -t

@@ -20,6 +20,7 @@ export default {
   setupFilesAfterEnv: ['jest-extended/all'],
   reporters: [
     'default',
+    [ 'jest-junit', { outputName: "test-report.xml" } ],
     [
       'jest-html-reporters',
       {
