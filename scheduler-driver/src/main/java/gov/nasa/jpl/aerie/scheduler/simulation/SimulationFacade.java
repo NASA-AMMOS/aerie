@@ -110,6 +110,7 @@ public class SimulationFacade implements AutoCloseable{
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
   throws SimulationException
   {
+    if(insertedActivities.size() == 0) return Map.of();
     computeSimulationResultsUntil(endTime);
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
