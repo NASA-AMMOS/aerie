@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * describes the desired recurrence of an activity every time period
@@ -211,7 +212,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
       if(windows.iterateEqualTo(true).iterator().hasNext()){
-        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment()));
+        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment(), 1, Optional.empty()));
       }
       else{
         System.out.println();

@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
@@ -516,59 +517,88 @@ public class PrioritySolver implements Solver {
     //setting the number of conflicts detected at first evaluation, will be used at backtracking
     evaluation.forGoal(goal).setNbConflictsDetected(missingConflicts.size());
     assert missingConflicts != null;
-    boolean madeProgress = true;
 
+    final var itConflicts = missingConflicts.iterator();
 
-    while (!missingConflicts.isEmpty() && madeProgress) {
-      madeProgress = false;
+    //create new activity instances for each missing conflict
+    while (itConflicts.hasNext()) {
+      final var missing = itConflicts.next();
+      assert missing != null;
 
-      //create new activity instances for each missing conflict
-      for (final var missing : missingConflicts) {
-        assert missing != null;
+      //determine the best activities to satisfy the conflict
+      if (!analysisOnly && (missing instanceof MissingActivityInstanceConflict missingActivityInstanceConflict)) {
+        final var acts = getBestNewActivities(missingActivityInstanceConflict);
+        assert acts != null;
+        //add the activities to the output plan
+        if (!acts.isEmpty()) {
+          final var insertionResult = checkAndInsertActs(acts);
+          if(insertionResult.success){
 
-        //determine the best activities to satisfy the conflict
-        if (!analysisOnly && (missing instanceof MissingActivityInstanceConflict || missing instanceof MissingActivityTemplateConflict)) {
-          final var acts = getBestNewActivities((MissingActivityConflict) missing);
+            evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
+            itConflicts.remove();
+            //REVIEW: really association should be via the goal's own query...
+
+            //NB: repropagation of new activity effects occurs on demand
+            //    at next constraint query, if relevant
+          }
+        }
+      }
+      else if(!analysisOnly &&  (missing instanceof MissingActivityTemplateConflict missingActivityTemplateConflict)){
+        var cardinalityLeft = missingActivityTemplateConflict.getCardinality();
+        var durationToAccomplish = missingActivityTemplateConflict.getTotalDuration();
+        var durationLeft = Duration.ZERO;
+        if(durationToAccomplish.isPresent()) {
+          durationLeft = durationToAccomplish.get();
+        }
+        while(cardinalityLeft > 0 || durationLeft.longerThan(Duration.ZERO)){
+          final var acts = getBestNewActivities(missingActivityTemplateConflict);
           assert acts != null;
           //add the activities to the output plan
           if (!acts.isEmpty()) {
             final var insertionResult = checkAndInsertActs(acts);
-            if(insertionResult.success){
-              madeProgress = true;
+            if(insertionResult.success()){
 
               evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
               //REVIEW: really association should be via the goal's own query...
 
               //NB: repropagation of new activity effects occurs on demand
               //    at next constraint query, if relevant
+              cardinalityLeft--;
+              durationLeft = durationLeft.minus(insertionResult
+                                                    .activitiesInserted()
+                                                    .stream()
+                                                    .map(SchedulingActivityDirective::duration)
+                                                    .reduce(Duration.ZERO, Duration::plus));
             }
-          }
-        } else if(missing instanceof MissingAssociationConflict missingAssociationConflict){
-          var actToChooseFrom = missingAssociationConflict.getActivityInstancesToChooseFrom();
-          //no act type constraint to consider as the activities have been scheduled
-          //no global constraint for the same reason above mentioned
-          //only the target goal state constraints to consider
-          for(var act : actToChooseFrom){
-            var actWindow = new Windows(false).set(Interval.between(act.startOffset(), act.getEndTime()), true);
-            var stateConstraints = goal.getResourceConstraints();
-            var narrowed = actWindow;
-            if(stateConstraints!= null) {
-              narrowed = narrowByResourceConstraints(actWindow, List.of(stateConstraints));
-            }
-            if(narrowed.includes(actWindow)){
-              //decision-making here, we choose the first satisfying activity
-              evaluation.forGoal(goal).associate(act, false);
-              madeProgress = true;
-              break;
-            }
+          } else{
+            break;
           }
         }
-      }//for(missing)
-
-      if (madeProgress) {
-        missingConflicts = getConflicts(goal);
+        if(cardinalityLeft <= 0 && durationLeft.noLongerThan(Duration.ZERO)){
+          itConflicts.remove();
+        }
+      } else if(missing instanceof MissingAssociationConflict missingAssociationConflict){
+        var actToChooseFrom = missingAssociationConflict.getActivityInstancesToChooseFrom();
+        //no act type constraint to consider as the activities have been scheduled
+        //no global constraint for the same reason above mentioned
+        //only the target goal state constraints to consider
+        for(var act : actToChooseFrom){
+          var actWindow = new Windows(false).set(Interval.between(act.startOffset(), act.getEndTime()), true);
+          var stateConstraints = goal.getResourceConstraints();
+          var narrowed = actWindow;
+          if(stateConstraints!= null) {
+            narrowed = narrowByResourceConstraints(actWindow, List.of(stateConstraints));
+          }
+          if(narrowed.includes(actWindow)){
+            //decision-making here, we choose the first satisfying activity
+            evaluation.forGoal(goal).associate(act, false);
+            itConflicts.remove();
+            break;
+          }
+        }
       }
-    }//while(missingConflicts&&madeProgress)
+    }//for(missing)
+
 
     if(!missingConflicts.isEmpty() && goal.shouldRollbackIfUnsatisfied()){
       rollback(goal);

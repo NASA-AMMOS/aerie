@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -194,17 +195,15 @@ public class CardinalityGoal extends ActivityTemplateGoal {
           conflicts.add(new MissingAssociationConflict(this, List.of(act)));
         }
       }
-      //1) solve occurence part, we just need a certain number of activities
-      for (int i = 0; i < nbToSchedule; i++) {
-        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
-      }
-      /*
-       * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
-       * activity then the conflict will be reevaluated and if the scheduled duration so far is less than needed, another
-       * conflict will be posted and so on
-       * */
-      if (nbToSchedule == 0 && durToSchedule.isPositive()) {
-        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
+
+      if(nbToSchedule>0 || durToSchedule.isPositive()) {
+        conflicts.add(new MissingActivityTemplateConflict(
+            this,
+            subIntervalWindows,
+            this.desiredActTemplate,
+            new EvaluationEnvironment(),
+            nbToSchedule,
+            durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
       }
     }
 
