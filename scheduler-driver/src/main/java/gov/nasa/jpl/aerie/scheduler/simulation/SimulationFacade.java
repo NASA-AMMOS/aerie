@@ -241,7 +241,7 @@ public class SimulationFacade implements AutoCloseable{
       //compare references
       if(results != lastSimDriverResults) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results, planningHorizon.getAerieHorizonDuration());
+        lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results);
         lastSimDriverResults = results;
       }
     } catch (Exception e){
