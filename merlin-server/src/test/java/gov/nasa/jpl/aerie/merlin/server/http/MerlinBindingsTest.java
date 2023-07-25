@@ -46,7 +46,7 @@ public final class MerlinBindingsTest {
 
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
-    final var simulationService = new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp));
+    final var simulationService = new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp, 5000));
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         simulationService

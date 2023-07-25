@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 public final class StubMissionModelService implements MissionModelService {
   public static final String EXISTENT_MISSION_MODEL_ID = "abc";
@@ -197,7 +199,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchMissionModelException {
+  public SimulationResults runSimulation(final CreateSimulationMessage message, Consumer<Duration> simulationExtentConsumer) throws NoSuchMissionModelException {
     if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(message.missionModelId());
     }

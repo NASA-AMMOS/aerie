@@ -223,6 +223,25 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
+  private static void deleteSimulationExtent(final Connection connection, final long datasetId)
+  throws SQLException, NoSuchSimulationDatasetException
+  {
+    try (final var deleteSimulationExtent = new DeleteSimulationExtentAction(connection)) {
+      deleteSimulationExtent.apply(datasetId);
+    }
+  }
+
+  private static void reportSimulationExtent(
+      final Connection connection,
+      final long datasetId,
+      final Duration extent
+  ) throws SQLException, NoSuchSimulationDatasetException
+  {
+    try (final var updateSimulationExtentAction = new UpdateSimulationExtentAction(connection)) {
+      updateSimulationExtentAction.apply(datasetId, extent);
+    }
+  }
+
   private static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
   throws SQLException
   {
@@ -465,6 +484,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
         postSimulationResults(connection, datasetId, results);
+        deleteSimulationExtent(connection, datasetId);
         transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);
@@ -477,11 +497,27 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public void failWith(final SimulationFailure reason) {
-      try (final var connection = dataSource.getConnection()) {
+      try (final var connection = dataSource.getConnection();
+           final var transactionContext = new TransactionContext(connection)) {
         failSimulation(connection, datasetId, reason);
+        deleteSimulationExtent(connection, datasetId);
+        transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update simulation state to failure", ex);
       } catch (final NoSuchSimulationDatasetException ex) {
+        // A cell should only be created for a valid, existing dataset
+        // A dataset should only be deleted by its cell
+        throw new Error("Cell references nonexistent simulation dataset");
+      }
+    }
+
+    @Override
+    public void reportSimulationExtent(final Duration extent) {
+      try (final var connection = dataSource.getConnection()) {
+        PostgresResultsCellRepository.reportSimulationExtent(connection, datasetId, extent);
+      } catch (SQLException ex) {
+        throw new DatabaseException("Failed to update simulation extent", ex);
+      } catch (NoSuchSimulationDatasetException e) {
         // A cell should only be created for a valid, existing dataset
         // A dataset should only be deleted by its cell
         throw new Error("Cell references nonexistent simulation dataset");

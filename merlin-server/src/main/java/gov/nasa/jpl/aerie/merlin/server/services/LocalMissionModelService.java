@@ -242,7 +242,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message)
+  public SimulationResults runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
   throws NoSuchMissionModelException
   {
     final var config = message.configuration();
@@ -253,12 +253,16 @@ public final class LocalMissionModelService implements MissionModelService {
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(message.missionModelId(), message.simulationStartTime(), SerializedValue.of(config)),
+        loadAndInstantiateMissionModel(
+            message.missionModelId(),
+            message.simulationStartTime(),
+            SerializedValue.of(config)),
         message.activityDirectives(),
         message.simulationStartTime(),
         message.simulationDuration(),
         message.planStartTime(),
-        message.planDuration());
+        message.planDuration(),
+        simulationExtentConsumer);
   }
 
   @Override
