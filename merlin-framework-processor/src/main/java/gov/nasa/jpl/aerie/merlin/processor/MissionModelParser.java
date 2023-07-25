@@ -18,8 +18,10 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import gov.nasa.jpl.aerie.merlin.processor.utils.JavadocParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -341,6 +343,7 @@ import java.util.stream.Collectors;
         new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
         effectModel,
         javadoc.getLeft(),
+        javadoc.getMiddle(),
         javadoc.getRight());
   }
 
@@ -406,10 +409,11 @@ import java.util.stream.Collectors;
     return (String) nameAttribute.getValue();
   }
 
-  private Pair<String, Map<String, String>> getJavadoc(final TypeElement activityTypeElement) {
+  private Triple<String, Map<String, String>, Map<String, String>> getJavadoc(final TypeElement activityTypeElement) {
     final var docCommentTrees = Optional.ofNullable(this.treeUtils().getDocCommentTree(activityTypeElement))
                                         .map(DocCommentTree::getBlockTags)
                                         .orElse(List.of());
+
 
     final var paramComments = docCommentTrees
         .stream()
@@ -427,6 +431,8 @@ import java.util.stream.Collectors;
       default ->         e -> e.getModifiers().contains(Modifier.STATIC);      // Exclude static class members
     };
 
+    final var units = new HashMap<String, String>();
+
     activityTypeElement
         .getEnclosedElements()
         .stream()
@@ -434,32 +440,25 @@ import java.util.stream.Collectors;
         .filter(e -> !excludeParamPred.test(e))        // Element must not be deemed excluded for the defaults style
         .flatMap(e -> Optional
             .ofNullable(this.elementUtils().getDocComment(e))
-            .map(MissionModelParser::removeSingleLeadingSpaceFromEachLine)
+            .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
             .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
             .stream())
-        .forEach($ -> paramComments.put($.getKey(), $.getValue()));
+        .forEach($ -> {
+          paramComments.put($.getKey(), $.getValue());
+
+          units.putAll(JavadocParser.parseUnitsFromParameterComment($.getKey(), $.getValue()));
+        });
 
     final var activityTypeDescription = Optional.ofNullable(this.elementUtils().getDocComment(activityTypeElement))
-        .map(MissionModelParser::removeSingleLeadingSpaceFromEachLine)
+        .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+        .map(comment -> {
+          units.putAll(JavadocParser.parseUnitsFromBlockComment(comment));
+
+          return comment;
+        })
         .orElse("");
 
-    return Pair.of(activityTypeDescription, paramComments);
-  }
-
-  /**
-   * It is common for Javadoc to be written with every line indented by one space.
-   * This method removes that space, if it exists, from every line.
-   */
-  private static String removeSingleLeadingSpaceFromEachLine(final String s) {
-    final var lines = new ArrayList<String>();
-    for (final var line : s.split("\n")){
-      if (line.startsWith(" ")) {
-        lines.add(line.substring(1));
-      } else {
-        lines.add(line);
-      }
-    }
-    return String.join("\n", lines);
+    return Triple.of(activityTypeDescription, paramComments, units);
   }
 
   private MapperRecord getExportMapper(final PackageElement missionModelElement, final TypeElement exportTypeElement)

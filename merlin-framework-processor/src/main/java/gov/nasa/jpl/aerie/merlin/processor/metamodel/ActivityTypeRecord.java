@@ -14,7 +14,8 @@ public record ActivityTypeRecord(
     InputTypeRecord inputType,
     Optional<EffectModelRecord> effectModel,
     String description,
-    Map<String, String> parameterDescriptions
+    Map<String, String> parameterDescriptions,
+    Map<String, String> units
 ) {
   public TypeName getOutputTypeName() {
     return this.effectModel

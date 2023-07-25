@@ -33,6 +33,9 @@ public interface DirectiveType<Model, Arguments, Result> {
   /** Gets the human-readable description of parameters of this directive type **/
   Map<String, String> getParameterDescriptions();
 
+  /** Gets the mapping of parameters to their unit of this directive type **/
+  Map<String, String> getUnits();
+
   /** Gets the type of input accepted by this directive. */
   InputType<Arguments> getInputType();
 
