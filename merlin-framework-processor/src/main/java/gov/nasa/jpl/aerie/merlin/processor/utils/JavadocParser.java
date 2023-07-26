@@ -27,7 +27,7 @@ public class JavadocParser {
 
       // If we've come across a parameter, and then we see a units tag, keep track of it.
       if (!lastParam.equals("") && splitComment.contains(UNITS_TAG)) {
-        units.put(lastParam, splitComment.substring(splitComment.indexOf(UNITS_TAG) + UNITS_TAG.length()));
+        units.put(lastParam, extractTagValue(UNITS_TAG, splitComment));
       }
     }
 
@@ -44,7 +44,7 @@ public class JavadocParser {
     final var units = new HashMap<String, String>();
 
     if (comment.contains(UNITS_TAG)) {
-      units.put(parameter, comment.substring(comment.indexOf(UNITS_TAG) + UNITS_TAG.length()));
+      units.put(parameter, extractTagValue(UNITS_TAG, comment));
     }
 
     return units;
@@ -64,5 +64,21 @@ public class JavadocParser {
       }
     }
     return String.join("\n", lines);
+  }
+
+  /**
+   * Extracts the tag value from a given tag and comment.
+   * Ex: "@unit mass in grams" will return "mass in grams".
+   *
+   * @param tag The tag to search for.
+   * @param comment The entire comment string that we're parsing the tag value from.
+   * @return The comment value after the found tag.
+   */
+  private static String extractTagValue(String tag, String comment) {
+    if (comment.equals("") || !comment.contains(tag)) {
+      return "";
+    }
+
+    return comment.substring(comment.indexOf(tag) + tag.length()).trim();
   }
 }

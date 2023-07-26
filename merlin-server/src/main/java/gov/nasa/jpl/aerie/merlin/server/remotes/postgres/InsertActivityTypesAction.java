@@ -10,12 +10,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 /*package-local*/ final class InsertActivityTypesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema)
-    values (?, ?, ?::json, ?::json, ?::json)
+    insert into activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema, units)
+    values (?, ?, ?::json, ?::json, ?::json, ?::json)
     on conflict (model_id, name) do update
       set parameters = excluded.parameters,
       required_parameters = excluded.required_parameters,
@@ -45,6 +47,12 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
         PreparedStatements.setParameters(statement, 3, activityType.parameters());
         PreparedStatements.setRequiredParameters(this.statement, 4, activityType.requiredParameters());
         this.statement.setString(5, valueSchemaString);
+
+        if (activityType.units().isEmpty()) {
+          statement.setString(6, "{}");
+        } else {
+          statement.setString(6, mapP(stringP).unparse(activityType.units()).toString());
+        }
 
         statement.addBatch();
       }

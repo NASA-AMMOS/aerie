@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
@@ -60,6 +61,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
                                                   + $.reason())),
             getJsonColumn(results, "computed_attributes_value_schema", valueSchemaP)
                 .getSuccessOrThrow($ -> new Error("Corrupt activity type computed attribute schema cannot be parsed: "
+                                                  + $.reason())),
+            getJsonColumn(results, "units", mapP(stringP))
+                .getSuccessOrThrow($ -> new Error("Corrupt activity type units cannot be parsed: "
                                                   + $.reason()))
         ));
       }

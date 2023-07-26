@@ -37,7 +37,8 @@ public final class StubMissionModelService implements MissionModelService {
       EXISTENT_ACTIVITY_TYPE,
       List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL), new Parameter("Duration", ValueSchema.DURATION)),
       List.of(),
-      ValueSchema.ofStruct(Map.of()));
+      ValueSchema.ofStruct(Map.of()),
+      Map.of("Param", "Param units", "AnotherParam", "AnotherParam units"));
   public static final String EXISTENT_ACTIVITY_TYPE_2 = "activity2";
   public static final ActivityType EXISTENT_ACTIVITY_2 = new ActivityType(
       EXISTENT_ACTIVITY_TYPE_2,
@@ -45,7 +46,8 @@ public final class StubMissionModelService implements MissionModelService {
           new ValueSchema.Variant("hello", "hello"), new ValueSchema.Variant("there", "there")
       )))),
       List.of(),
-      ValueSchema.ofStruct(Map.of())
+      ValueSchema.ofStruct(Map.of()),
+      Map.of()
   );
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(

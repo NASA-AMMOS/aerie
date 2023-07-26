@@ -46,7 +46,8 @@ public final class MissionModelTest {
                   new Parameter("z", ValueSchema.INT),
                   new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
               List.of(),
-              ValueSchema.ofStruct(Map.of())
+              ValueSchema.ofStruct(Map.of()),
+              Map.of()
           ));
 
     // WHEN
@@ -56,7 +57,8 @@ public final class MissionModelTest {
         new ActivityType(name,
                          specType.getInputType().getParameters(),
                          specType.getInputType().getRequiredParameters(),
-                         specType.getOutputType().getSchema())));
+                         specType.getOutputType().getSchema(),
+                         specType.getUnits())));
 
     // THEN
     assertThat(activityTypes).containsAllEntriesOf(expectedTypes);
@@ -73,7 +75,8 @@ public final class MissionModelTest {
               new Parameter("z", ValueSchema.INT),
               new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
           List.of(),
-          ValueSchema.ofStruct(Map.of())
+          ValueSchema.ofStruct(Map.of()),
+          Map.of()
       );
 
     // WHEN
@@ -86,7 +89,41 @@ public final class MissionModelTest {
         typeName,
         specType.getInputType().getParameters(),
         specType.getInputType().getRequiredParameters(),
-        specType.getOutputType().getSchema());
+        specType.getOutputType().getSchema(),
+        specType.getUnits());
+
+    // THEN
+    assertThat(type).isEqualTo(expectedType);
+  }
+
+
+  @Test
+  public void shouldInstantiateActivityInstanceWithUnits() throws MissionModelService.NoSuchActivityTypeException {
+    // GIVEN
+    final ActivityType expectedType = new ActivityType(
+        "foo",
+        List.of(
+            new Parameter("x", ValueSchema.INT),
+            new Parameter("y", ValueSchema.STRING),
+            new Parameter("z", ValueSchema.INT),
+            new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+        List.of(),
+        ValueSchema.ofStruct(Map.of()),
+        Map.of("x", "x units")
+    );
+
+    // WHEN
+    final var typeName = expectedType.name();
+    final var specType = Optional
+        .ofNullable(registry.directiveTypes().get(typeName))
+        .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(typeName));
+
+    final var type = new ActivityType(
+        typeName,
+        specType.getInputType().getParameters(),
+        specType.getInputType().getRequiredParameters(),
+        specType.getOutputType().getSchema(),
+        specType.getUnits());
 
     // THEN
     assertThat(type).isEqualTo(expectedType);
@@ -107,7 +144,8 @@ public final class MissionModelTest {
             activityId,
             specType.getInputType().getParameters(),
             specType.getInputType().getRequiredParameters(),
-            specType.getOutputType().getSchema());
+            specType.getOutputType().getSchema(),
+            specType.getUnits());
     });
 
     // THEN

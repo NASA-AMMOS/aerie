@@ -16,6 +16,9 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
 @ActivityType("foo")
 public final class FooActivity {
+  /**
+   * @unit x units
+   */
   @Parameter
   public int x = 0;
 

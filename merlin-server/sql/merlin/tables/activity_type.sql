@@ -7,6 +7,7 @@ create table activity_type (
   subsystem integer references metadata.tags
     on update cascade
     on delete restrict,
+  units jsonb not null default '{}',
 
   constraint activity_type_natural_key
     primary key (model_id, name),
@@ -31,3 +32,5 @@ comment on column activity_type.computed_attributes_value_schema is e''
   'The type of value returned by the effect model of this activity type';
 comment on column activity_type.subsystem is e''
   'The subsystem this activity type belongs to.';
+comment on column activity_type.units is e''
+  'The units optionally defined in the mission model.';

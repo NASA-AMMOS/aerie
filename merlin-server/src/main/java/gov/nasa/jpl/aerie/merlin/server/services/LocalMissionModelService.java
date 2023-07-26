@@ -287,11 +287,13 @@ public final class LocalMissionModelService implements MissionModelService {
       registry.directiveTypes().forEach((name, directiveType) -> {
         final var inputType = directiveType.getInputType();
         final var outputType = directiveType.getOutputType();
+
         activityTypes.put(name, new ActivityType(
             name,
             inputType.getParameters(),
             inputType.getRequiredParameters(),
-            outputType.getSchema()));
+            outputType.getSchema(),
+            directiveType.getUnits()));
       });
       this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
