@@ -10,7 +10,7 @@ import org.intellij.lang.annotations.Language;
     update scheduling_request
       set
         status = 'incomplete'
-      where (specification_id = ? and status = 'pending');
+      where (specification_id = ? and status = 'pending' and not canceled);
   """;
 
   private final PreparedStatement statement;
