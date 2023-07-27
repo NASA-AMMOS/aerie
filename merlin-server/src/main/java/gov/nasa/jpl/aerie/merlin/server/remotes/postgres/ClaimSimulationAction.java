@@ -11,7 +11,7 @@ import java.sql.SQLException;
     update simulation_dataset
       set
         status = 'incomplete'
-      where (dataset_id = ? and status = 'pending');
+      where (dataset_id = ? and status = 'pending' and not canceled);
   """;
 
   private final PreparedStatement statement;
