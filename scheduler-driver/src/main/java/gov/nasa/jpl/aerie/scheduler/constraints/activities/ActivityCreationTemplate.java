@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -271,6 +272,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
 
         @Override
         public Duration valueAt(Duration start, HistoryWithActivity history) {
+          final var latestConstraintsSimulationResults = getLatestSimulationResults(facade, start);
           final var actToSim = SchedulingActivityDirective.of(
               type,
               start,
@@ -278,7 +280,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               SchedulingActivityDirective.instantiateArguments(
                   arguments,
                   start,
-                  facade.getLatestConstraintSimulationResults(),
+                  latestConstraintsSimulationResults,
                   evaluationEnvironment,
                   type),
               null,
@@ -313,7 +315,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(
           this.arguments,
           earliestStart,
-          facade.getLatestConstraintSimulationResults(),
+          getLatestSimulationResults(facade, earliestStart),
           evaluationEnvironment,
           type);
 
@@ -343,7 +345,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           SchedulingActivityDirective.instantiateArguments(
               this.arguments,
               earliestStart,
-              facade.getLatestConstraintSimulationResults(),
+              getLatestSimulationResults(facade, earliestStart),
               evaluationEnvironment,
               type),
           null,
@@ -365,7 +367,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           SchedulingActivityDirective.instantiateArguments(
               this.arguments,
               earliestStart,
-              facade.getLatestConstraintSimulationResults(),
+              getLatestSimulationResults(facade, earliestStart),
               evaluationEnvironment,
               type),
           null,
@@ -384,7 +386,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
               arguments,
               start,
-              facade.getLatestConstraintSimulationResults(),
+              getLatestSimulationResults(facade, start),
               evaluationEnvironment,
               type
           );
@@ -482,5 +484,18 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     return Optional.empty();
   }
 
+  private SimulationResults getLatestSimulationResults(final SimulationFacade facade, final Duration until){
+    final var latestConstraintsSimulationResults = facade.getLatestConstraintSimulationResults();
+    if(latestConstraintsSimulationResults.isEmpty()){
+      try {
+        facade.computeSimulationResultsUntil(until);
+        return facade.getLatestConstraintSimulationResults().get();
+      } catch(SimulationFacade.SimulationException e){
+        throw new RuntimeException("Simulation is in irreparable state");
+      }
+    } else{
+      return latestConstraintsSimulationResults.get();
+    }
+  }
 
 }

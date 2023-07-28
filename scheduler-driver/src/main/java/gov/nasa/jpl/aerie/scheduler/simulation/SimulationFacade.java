@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -23,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
 /**
  * A facade for simulating plans and processing simulation results.
@@ -41,21 +40,57 @@ public class SimulationFacade implements AutoCloseable{
   private ResumableSimulationDriver<?> driver;
   private int itSimActivityId;
 
-  //simulation results from the last simulation, as output directly by simulation driver
-  private SimulationResults lastSimDriverResults;
-  private gov.nasa.jpl.aerie.constraints.model.SimulationResults lastSimConstraintResults;
   private final Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
       planActDirectiveIdToSimulationActivityDirectiveId = new HashMap<>();
   private final Map<SchedulingActivityDirective, ActivityDirective> insertedActivities;
   //counts the total number of simulation restarts, used as performance metric in the scheduler
   private int pastSimulationRestarts;
 
-  public gov.nasa.jpl.aerie.constraints.model.SimulationResults getLatestConstraintSimulationResults(){
-    return lastSimConstraintResults;
+  public SimulationData lastSimulationData;
+
+  /**
+   * state boolean stating whether the initial plan has been modified to allow initial simulation results to be used
+   */
+  private boolean initialPlanHasBeenModified = false;
+
+  /* External initial simulation results that will be served only if initialPlanHasBeenModified is equal to false*/
+  private Optional<SimulationData> initialSimulationResults;
+
+  /**
+   * The set of activities to be added to the first simulation.
+   * Used to potentially delay the first simulation until the loaded results are stale.
+   * The only way to add activities to the facade is to simulate them. But sometimes, we have initial sim results and we
+   * do not need to simulate before the first activity insertion. This initial plan allows the facade to "load" the activities in simulation
+   * and wait until the first needed simulation to simulate them.
+   */
+  private List<SchedulingActivityDirective> initialPlan;
+
+  /**
+   * Loads initial simulation results into the simulation. They will be served until initialSimulationResultsAreStale()
+   * is called.
+   * @param simulationData the initial simulation results
+   */
+  public void loadInitialSimResults(SimulationData simulationData){
+    initialPlanHasBeenModified = false;
+    this.initialSimulationResults = Optional.of(simulationData);
+  }
+
+  /**
+   * Signals to the facade that the initial simulation results are stale and should not be used anymore
+   */
+  public void initialSimulationResultsAreStale(){
+    this.initialPlanHasBeenModified = true;
+  }
+
+  public Optional<gov.nasa.jpl.aerie.constraints.model.SimulationResults> getLatestConstraintSimulationResults(){
+    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().constraintsResults());
+    if(lastSimulationData == null) return Optional.empty();
+    return Optional.of(lastSimulationData.constraintsResults());
   }
 
   public SimulationResults getLatestDriverSimulationResults(){
-    return lastSimDriverResults;
+    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return this.initialSimulationResults.get().driverResults();
+    return lastSimulationData.driverResults();
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
@@ -66,11 +101,23 @@ public class SimulationFacade implements AutoCloseable{
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
     this.pastSimulationRestarts = 0;
+    this.initialPlan = new ArrayList<>();
+    this.initialSimulationResults = Optional.empty();
   }
 
   @Override
   public void close(){
     driver.close();
+  }
+
+  /**
+   * Adds a set of activities that will not be simulated yet. They will be simulated at the latest possible time, when it cannot be avoided.
+   * This is to allow the use of initial simulation results in PrioritySolver.
+   * @param initialPlan the initial set of activities in the plan
+   */
+  public void addInitialPlan(Collection<SchedulingActivityDirective> initialPlan){
+    this.initialPlan.clear();
+    this.initialPlan.addAll(initialPlan);
   }
 
   public void setActivityTypes(final Collection<ActivityType> activityTypes){
@@ -113,9 +160,9 @@ public class SimulationFacade implements AutoCloseable{
     if(insertedActivities.size() == 0) return Map.of();
     computeSimulationResultsUntil(endTime);
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
-    this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
+    this.lastSimulationData.driverResults().simulatedActivities.forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
-      final var rootParent = getIdOfRootParent(this.lastSimDriverResults, activityInstanceId);
+      final var rootParent = getIdOfRootParent(this.lastSimulationData.driverResults(), activityInstanceId);
       final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(
           entry -> entry.getValue().equals(rootParent)
       ).findFirst().get().getKey();
@@ -143,11 +190,15 @@ public class SimulationFacade implements AutoCloseable{
         insertedActivities.remove(act);
       }
     }
+    var allActivitiesToSimulate = new ArrayList<>(activitiesToAdd);
+    if(!initialPlan.isEmpty()) allActivitiesToSimulate.addAll(this.initialPlan);
+    this.initialPlan.clear();
+    allActivitiesToSimulate = new ArrayList<>(allActivitiesToSimulate.stream().filter(a -> !insertedActivities.containsKey(a)).toList());
     Duration earliestActStartTime = Duration.MAX_VALUE;
     for(final var act: activitiesToAdd){
       earliestActStartTime = Duration.min(earliestActStartTime, act.startOffset());
     }
-    final var allActivitiesToSimulate = new ArrayList<>(activitiesToAdd);
+    if(allActivitiesToSimulate.isEmpty() && !atLeastOneActualRemoval) return;
     //reset resumable simulation
     if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(this.driver.getCurrentSimulationEndTime())){
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
@@ -176,6 +227,12 @@ public class SimulationFacade implements AutoCloseable{
     return this.driver.getCountSimulationRestarts() + this.pastSimulationRestarts;
   }
 
+  public void insertActivitiesIntoSimulation(final Collection<SchedulingActivityDirective> activities)
+  throws SimulationException
+  {
+    removeAndInsertActivitiesFromSimulation(List.of(), activities);
+  }
+
   /**
    * Replaces an activity instance with another, strictly when they have the same id
    * @param toBeReplaced the activity to be replaced
@@ -198,7 +255,7 @@ public class SimulationFacade implements AutoCloseable{
     this.planActDirectiveIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
   }
 
-  public void simulateActivities(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
+  private void simulateActivities(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
     final var activitiesSortedByStartTime =
         activities.stream().filter(activity -> !(insertedActivities.containsKey(activity)))
                   .sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
@@ -230,19 +287,18 @@ public class SimulationFacade implements AutoCloseable{
     }
   }
 
-  public void simulateActivity(final SchedulingActivityDirective activity) throws SimulationException {
-    if(insertedActivities.containsKey(activity)) return;
-    simulateActivities(List.of(activity));
-  }
-
   public void computeSimulationResultsUntil(final Duration endTime) throws SimulationException {
+    if(!initialPlan.isEmpty()){
+      final var toSimulate = new ArrayList<>(this.initialPlan);
+      this.initialPlan.clear();
+      this.insertActivitiesIntoSimulation(toSimulate);
+    }
     try {
       final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTime);
       //compare references
-      if(results != lastSimDriverResults) {
+      if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results);
-        lastSimDriverResults = results;
+        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results), this.insertedActivities.keySet());
       }
     } catch (Exception e){
       throw new SimulationException("An exception happened during simulation", e);
