@@ -16,12 +16,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityAttributesP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setDuration;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
 
 /*package-local*/ final class PostSpansAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
       insert into span (dataset_id, start_offset, duration, type, attributes)
-      values (?, ?::timestamptz - ?::timestamptz, ?::timestamptz - ?::timestamptz, ?, ?::jsonb)
+      values (?, ?::interval, ?::interval, ?, ?::jsonb)
     """;
 
   private final PreparedStatement statement;
@@ -38,26 +39,19 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     final var ids = spans.keySet().stream().toList();
     for (final var id : ids) {
       final var act = spans.get(id);
-      final var startTimestamp = new Timestamp(act.start());
-
-      final var endTimestamp = act.duration().map(duration -> {
-        final var actEnd = act.start().plus(duration.dividedBy(Duration.MICROSECOND), ChronoUnit.MICROS);
-        return new Timestamp(actEnd);
-      });
+      final var startOffset = Duration.of(simulationStart.microsUntil(new Timestamp(act.start())), Duration.MICROSECONDS);
 
       statement.setLong(1, datasetId);
-      setTimestamp(statement, 2, startTimestamp);
-      setTimestamp(statement, 3, simulationStart);
+      setDuration(statement, 2, startOffset);
 
-      if (endTimestamp.isPresent()) {
-        setTimestamp(statement, 4, endTimestamp.get());
+      if (act.duration().isPresent()) {
+        setDuration(statement, 3, act.duration().get());
       } else {
-        statement.setNull(4, Types.TIMESTAMP_WITH_TIMEZONE);
+        statement.setNull(3, Types.TIMESTAMP_WITH_TIMEZONE);
       }
 
-      setTimestamp(statement, 5, startTimestamp);
-      statement.setString(6, act.type());
-      statement.setString(7, buildAttributes(act.attributes().directiveId(), act.attributes().arguments(), act.attributes().computedAttributes()));
+      statement.setString(4, act.type());
+      statement.setString(5, buildAttributes(act.attributes().directiveId(), act.attributes().arguments(), act.attributes().computedAttributes()));
       statement.addBatch();
     }
 
