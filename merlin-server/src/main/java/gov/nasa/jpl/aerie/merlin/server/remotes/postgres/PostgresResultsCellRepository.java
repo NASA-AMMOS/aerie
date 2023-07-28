@@ -298,7 +298,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     ProfileRepository.postResourceProfiles(connection, datasetId, profileSet);
     postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
     insertSimulationTopics(connection, datasetId, results.topics);
-    insertSimulationEvents(connection, datasetId, results.events, simulationStart);
+    insertSimulationEvents(connection, datasetId, results.events);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
       setSimulationStateAction.apply(datasetId, SimulationStateRecord.success());
@@ -318,15 +318,15 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   private static void insertSimulationEvents(
-      Connection connection,
-      long datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
-      Timestamp simulationStart) throws SQLException
+      final Connection connection,
+      final long datasetId,
+      final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events
+  ) throws SQLException
   {
     try (
         final var insertSimulationEventsAction = new InsertSimulationEventsAction(connection)
     ) {
-        insertSimulationEventsAction.apply(datasetId, events, simulationStart);
+        insertSimulationEventsAction.apply(datasetId, events);
     }
   }
 
