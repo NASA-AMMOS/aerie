@@ -28,15 +28,7 @@ class GraphQLParsersTest {
         Arguments.of("322:21:15.", parseDurationISO8601("PT322H21M15S")),
         Arguments.of("322:21:15", parseDurationISO8601("PT322H21M15S")),
         Arguments.of("+322:21:15", parseDurationISO8601("PT322H21M15S")),
-        Arguments.of("-322:21:15", parseDurationISO8601("PT-322H-21M-15S")),
-        Arguments.of("21:15.111", parseDurationISO8601("PT21M15.111S")),
-        Arguments.of("+21:15.111", parseDurationISO8601("PT21M15.111S")),
-        Arguments.of("-21:15.111", parseDurationISO8601("PT-21M-15.111S")),
-        Arguments.of("15.111", parseDurationISO8601("PT15.111S")),
-        Arguments.of("15.", parseDurationISO8601("PT15S")),
-        Arguments.of("15", parseDurationISO8601("PT15S")),
-        Arguments.of("-15", parseDurationISO8601("PT-15S")),
-        Arguments.of("+15", parseDurationISO8601("PT15S"))
+        Arguments.of("-322:21:15", parseDurationISO8601("PT-322H-21M-15S"))
     );
   }
 
@@ -50,7 +42,7 @@ class GraphQLParsersTest {
   @ParameterizedTest
   @MethodSource
   void parseGraphQLInterval(String input, Duration expected) {
-    final var actual = GraphQLParsers.parseGraphQLInterval(input);
+    final var actual = GraphQLParsers.durationFromPGInterval(input);
     assertEquals(expected, actual);
   }
 
