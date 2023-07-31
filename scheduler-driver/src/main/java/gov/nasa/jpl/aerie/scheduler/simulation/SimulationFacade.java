@@ -48,6 +48,8 @@ public class SimulationFacade implements AutoCloseable{
       planActDirectiveIdToSimulationActivityDirectiveId = new HashMap<>();
   private final Map<SchedulingActivityDirective, ActivityDirective> insertedActivities;
   private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
+  //counts the total number of simulation restarts, used as performance metric in the scheduler
+  private int pastSimulationRestarts;
 
   public gov.nasa.jpl.aerie.constraints.model.SimulationResults getLatestConstraintSimulationResults(){
     return lastSimConstraintResults;
@@ -64,6 +66,7 @@ public class SimulationFacade implements AutoCloseable{
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
+    this.pastSimulationRestarts = 0;
   }
 
   @Override
@@ -150,7 +153,10 @@ public class SimulationFacade implements AutoCloseable{
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
-      if (driver != null) driver.close();
+      if (driver != null) {
+        this.pastSimulationRestarts += driver.getCountSimulationRestarts();
+        driver.close();
+      }
       driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
     }
     simulateActivities(allActivitiesToSimulate);
@@ -160,6 +166,14 @@ public class SimulationFacade implements AutoCloseable{
   throws SimulationException
   {
     removeAndInsertActivitiesFromSimulation(activities, List.of());
+  }
+
+  /**
+   * Returns the total number of simulation restarts
+   * @return the number of simulation restarts
+   */
+  public int countSimulationRestarts(){
+    return this.driver.getCountSimulationRestarts() + this.pastSimulationRestarts;
   }
 
   /**
