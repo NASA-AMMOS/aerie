@@ -27,6 +27,7 @@ import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
@@ -127,6 +128,7 @@ public class PrioritySolverTest {
     assertThat(plan.get().getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -147,6 +149,7 @@ public class PrioritySolverTest {
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -170,6 +173,7 @@ public class PrioritySolverTest {
     assertThat(eval.getAssociatedActivities())
         .comparingElementsUsing(equalExceptInName)
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -200,6 +204,7 @@ public class PrioritySolverTest {
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime()).inOrder();
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -233,6 +238,7 @@ public class PrioritySolverTest {
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -274,6 +280,7 @@ public class PrioritySolverTest {
     var plan = solver.getNextSolution().orElseThrow();
     //will insert an activity at the beginning of the plan in addition of the two already-present activities
     assertThat(plan.getActivities().size()).isEqualTo(3);
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 

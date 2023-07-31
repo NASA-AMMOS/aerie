@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -48,6 +49,7 @@ public class TestRecurrenceGoal {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -83,6 +85,7 @@ public class TestRecurrenceGoal {
     catch (Exception e) {
       fail(e.getMessage());
     }
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 }

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FixedDurationTest {
@@ -57,6 +58,7 @@ public class FixedDurationTest {
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("PT1H1M"), problem.getActivityType("BananaNap")));
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -86,6 +88,7 @@ public class FixedDurationTest {
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("P2DT1M"), problem.getActivityType("RipenBanana")));
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 }
