@@ -338,7 +338,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Timestamp simulationStart
   ) throws SQLException {
     try (
-        final var postActivitiesAction = new PostSpansAction(connection);
+        final var insertSpansAction = new InsertSpansAction(connection);
         final var updateSimulatedActivityParentsAction = new UpdateSimulatedActivityParentsAction(connection)
     ) {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
@@ -352,7 +352,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
               e -> unfinishedActivityToRecord(e.getValue())));
       allActivityRecords.putAll(simulatedActivityRecords);
 
-      final var simIdToPgId = postActivitiesAction.apply(
+      final var simIdToPgId = insertSpansAction.apply(
           datasetId,
           allActivityRecords,
           simulationStart);

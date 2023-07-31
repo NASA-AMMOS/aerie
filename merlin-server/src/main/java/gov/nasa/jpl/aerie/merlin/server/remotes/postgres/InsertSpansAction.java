@@ -10,16 +10,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityAttributesP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setDuration;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
 
-/*package-local*/ final class PostSpansAction implements AutoCloseable {
+/*package-local*/ final class InsertSpansAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
       insert into span (dataset_id, start_offset, duration, type, attributes)
       values (?, ?::interval, ?::interval, ?, ?::jsonb)
@@ -27,7 +25,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
   private final PreparedStatement statement;
 
-  public PostSpansAction(final Connection connection) throws SQLException {
+  public InsertSpansAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
   }
 
