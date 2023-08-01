@@ -47,7 +47,7 @@ public final class MissionModelTest {
                   new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
               List.of(),
               ValueSchema.ofStruct(Map.of()),
-              Map.of()
+              Map.of("x", "x units")
           ));
 
     // WHEN
@@ -76,7 +76,7 @@ public final class MissionModelTest {
               new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
           List.of(),
           ValueSchema.ofStruct(Map.of()),
-          Map.of()
+          Map.of("x", "x units")
       );
 
     // WHEN
