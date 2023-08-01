@@ -15,7 +15,7 @@ public class ExceptionSerializers {
 
   public static JsonValue serializeNoSuchSchedulingSpecificationException(final NoSuchSchedulingSpecificationException ex) {
     return Json.createObjectBuilder()
-               .add("message", "no such plan")
+               .add("message", "no such scheduling specification")
                .add("plan_id", ex.id.id())
                .build();
   }
