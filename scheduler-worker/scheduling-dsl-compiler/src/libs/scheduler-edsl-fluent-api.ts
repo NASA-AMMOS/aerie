@@ -10,6 +10,7 @@ import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import {ActivityInstance} from "./constraints-edsl-fluent-api.js";
 import * as ConstraintsAST from "./constraints-ast.js";
 import {makeArgumentsDiscreteProfiles} from "./scheduler-mission-model-generated-code";
+import type {ActivityTimingConstraintFlexibleRange} from "./scheduler-ast.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
@@ -519,11 +520,11 @@ export class Goal {
 /**
  * An StartTimingConstraint is a constraint applying on the start time of an activity template.
  */
-export type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint }
+export type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint | FlexibleRangeTimingConstraint }
 /**
  * An EndTimingConstraint is a constraint applying on the end time of an activity template.
  */
-export type EndTimingConstraint = { endsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | {endsWithin: RangeTimingConstraint }
+export type EndTimingConstraint = { endsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { endsWithin: RangeTimingConstraint | FlexibleRangeTimingConstraint }
 /**
  * An CoexistenceGoalTimingConstraints is a constraint that can be used to constrain the start or end times of activities in coexistence goals.
  */
@@ -610,6 +611,14 @@ export class TimingConstraint {
       singleton: false
     })
   }
+
+  public static bounds(lowerBound: SingletonTimingConstraint, upperBound: SingletonTimingConstraint): FlexibleRangeTimingConstraint {
+    return FlexibleRangeTimingConstraint.new({
+      lowerBound: lowerBound.__astNode,
+      upperBound: upperBound.__astNode,
+      singleton: false
+    })
+  }
 }
 
 /**
@@ -685,6 +694,22 @@ export class RangeTimingConstraint {
   /** @internal **/
   public static new(__astNode: AST.ActivityTimingConstraintRange): RangeTimingConstraint {
     return new RangeTimingConstraint(__astNode);
+  }
+}
+
+/**
+ * A flexible range timing constraint specifies that the start or the end time of an activity must be within certain bounds. Use {@link TimingConstraint.singleton} to specify the bounds.
+ */
+export class FlexibleRangeTimingConstraint {
+  /** @internal **/
+  public readonly __astNode: AST.ActivityTimingConstraintFlexibleRange
+  /** @internal **/
+  private constructor(__astNode: AST.ActivityTimingConstraintFlexibleRange) {
+    this.__astNode = __astNode;
+  }
+  /** @internal **/
+  public static new(__astNode: AST.ActivityTimingConstraintFlexibleRange): FlexibleRangeTimingConstraint {
+    return new FlexibleRangeTimingConstraint(__astNode);
   }
 }
 
@@ -815,6 +840,8 @@ declare global {
      * @param operand the duration offset
      */
     public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Temporal.Duration): RangeTimingConstraint
+
+    public static bounds(lowerBound: SingletonTimingConstraint, upperBound: SingletonTimingConstraint): FlexibleRangeTimingConstraint
   }
   var WindowProperty: typeof AST.WindowProperty
   var Operator: typeof AST.TimingConstraintOperator
@@ -838,4 +865,14 @@ export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
 export interface ActivityTemplate<A extends WindowsEDSL.Gen.ActivityType> extends AST.ActivityTemplate<A> {}
 
 // Make Goal available on the global object
-Object.assign(globalThis, { GlobalSchedulingCondition, Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator, ActivityTypes: WindowsEDSL.Gen.ActivityType});
+Object.assign(globalThis,
+    {
+      GlobalSchedulingCondition,
+      Goal,
+      ActivityExpression,
+      TimingConstraint: TimingConstraint,
+      WindowProperty: AST.WindowProperty,
+      Operator: AST.TimingConstraintOperator,
+      ActivityTypes: WindowsEDSL.Gen.ActivityType,
+      FlexibleRangeTimingConstraint
+    });

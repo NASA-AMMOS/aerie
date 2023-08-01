@@ -42,6 +42,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -470,7 +471,51 @@ class SchedulingDSLCompilationServiceTests {
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.empty(),
+              false
+          ),
+          r.value()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testCoexistenceGoalFlexibleTimingConstraint() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: (span) => ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2.0}]},
+                duration: Temporal.Duration.from({ hours : 1 })
+              }),
+              forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2),
+              startsWithin: TimingConstraint.bounds(
+                TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ seconds : 1 })),
+                TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ seconds : 5 })))
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
+              new SchedulingDSL.ActivityTemplate("SampleActivity1",
+                                                 getSampleActivity1Parameters()
+              ),
+              Optional.empty(),
+              "coexistence activity alias 0",
+              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange(
+                  new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true),
+                  new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, Duration.of(5, SECONDS), true),
+                  false
+              )),
               Optional.empty(),
               false
           ),
@@ -511,7 +556,7 @@ class SchedulingDSLCompilationServiceTests {
               ))),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
               false
           ),
@@ -558,7 +603,7 @@ class SchedulingDSLCompilationServiceTests {
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
               false
           ),
@@ -605,7 +650,7 @@ class SchedulingDSLCompilationServiceTests {
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty(),
               false
           ),
@@ -760,7 +805,7 @@ class SchedulingDSLCompilationServiceTests {
               Optional.empty(),
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty(),
               false
           ),
@@ -800,7 +845,7 @@ class SchedulingDSLCompilationServiceTests {
               Optional.empty(),
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
-              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
+              Optional.of(new SchedulingDSL.TimingConstraint.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty(),
               false
           ),
