@@ -76,8 +76,8 @@ export interface ActivityCoexistenceGoal {
   activityFinder: ActivityExpression<any> | undefined,
   alias: string,
   forEach: WindowsExpressions.WindowsExpression | ActivityExpression<any>,
-  startConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
-  endConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
+  startConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | ActivityTimingConstraintFlexibleRange | undefined,
+  endConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | ActivityTimingConstraintFlexibleRange | undefined,
   shouldRollbackIfUnsatisfied: boolean
 }
 
@@ -135,6 +135,12 @@ export interface ActivityTimingConstraintRange {
   windowProperty: WindowProperty;
   operator: TimingConstraintOperator;
   operand: Temporal.Duration
+  singleton: false
+}
+
+export interface ActivityTimingConstraintFlexibleRange {
+  lowerBound: ActivityTimingConstraintSingleton,
+  upperBound: ActivityTimingConstraintSingleton,
   singleton: false
 }
 
