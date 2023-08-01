@@ -20,13 +20,13 @@ public interface Condition {
   }
 
 
-  Condition TRUE = (positive, atEarliest, atLatest) -> Optional.of(atEarliest);
-  Condition FALSE = (positive, atEarliest, atLatest) -> Optional.empty();
+  Condition TRUE = (positive, atEarliest, atLatest) -> Optional.of(atEarliest).filter(t -> positive);
+  Condition FALSE = not(TRUE);
 
   static Condition or(final Condition left, final Condition right) {
     return (positive, atEarliest, atLatest) -> {
       if (atLatest.shorterThan(atEarliest)) return Optional.empty();
-      if (!positive) return and(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
+      if (!positive) return and(not(left), not(right)).nextSatisfied(true, atEarliest, atLatest);
 
       final var left$ = left.nextSatisfied(positive, atEarliest, atLatest);
       final var right$ = right.nextSatisfied(positive, atEarliest, left$.orElse(atLatest));
@@ -40,7 +40,7 @@ public interface Condition {
   static Condition and(final Condition left, final Condition right) {
     return (positive, atEarliest, atLatest) -> {
       if (atLatest.shorterThan(atEarliest)) return Optional.empty();
-      if (!positive) return or(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
+      if (!positive) return or(not(left), not(right)).nextSatisfied(true, atEarliest, atLatest);
 
       Optional<Duration> left$, right$;
 
