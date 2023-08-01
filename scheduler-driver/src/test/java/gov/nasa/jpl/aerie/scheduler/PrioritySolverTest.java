@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
@@ -248,6 +249,47 @@ public class PrioritySolverTest {
     assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
+  /**
+   * This test is the same as getNextSolution_coexistenceGoalOnActivityWorks except for the initial simulation results that
+   * are loaded with the initial plan. This results in 1 less simulation as the initial results are used for generating conflicts.
+   */
+  @Test
+  public void getNextSolution_coexistenceGoalOnActivityWorks_withInitialSimResults()
+  throws SimulationFacade.SimulationException
+  {
+    final var problem = makeTestMissionAB();
+
+    final var adHocFacade = new SimulationFacade(problem.getPlanningHorizon(), problem.getMissionModel());
+    adHocFacade.insertActivitiesIntoSimulation(makePlanA012(problem).getActivities());
+    adHocFacade.computeSimulationResultsUntil(problem.getPlanningHorizon().getEndAerie());
+    final var simResults = adHocFacade.getLatestDriverSimulationResults();
+    problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults));
+
+    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
+    final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
+    final var goal = new CoexistenceGoal.Builder()
+        .named("g0")
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
+        .forEach(new ActivityExpression.Builder()
+                     .ofType(actTypeA)
+                     .build())
+        .thereExistsOne(new ActivityCreationTemplate.Builder()
+                            .ofType(actTypeB)
+                            .duration(d1min)
+                            .build())
+        .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
+        .withinPlanHorizon(h)
+        .build();
+    problem.setGoals(List.of(goal));
+    final var solver = makeProblemSolver(problem);
+    final var plan = solver.getNextSolution().orElseThrow();
+    final var expectedPlan = makePlanAB012(problem);
+    assertThat(plan.getActivitiesByTime())
+        .comparingElementsUsing(equalExceptInName)
+        .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+  }
 
   @Test
   public void testCardGoalWithApplyWhen(){
