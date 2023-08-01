@@ -22,4 +22,4 @@ comment on column resource_type.model_id is e''
 comment on column resource_type.schema is e''
   'The structure of this resource type.';
 comment on column resource_type.units is e''
-  'The optionally defined units for the resource types';
+  'The optionally defined units for the resource type';
