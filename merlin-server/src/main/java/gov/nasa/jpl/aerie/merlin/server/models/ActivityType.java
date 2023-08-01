@@ -11,5 +11,6 @@ public record ActivityType(
     List<Parameter> parameters,
     List<String> requiredParameters,
     ValueSchema computedAttributesValueSchema,
-    Map<String, String> units
+    Map<String, String> parameterUnits,
+    Map<String, String> computedAttributeUnits
 ) {}

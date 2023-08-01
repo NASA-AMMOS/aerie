@@ -829,7 +829,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         )
         .addMethod(
             MethodSpec
-                .methodBuilder("getUnits")
+                .methodBuilder("getComputedAttributeUnits")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .returns(ParameterizedTypeName.get(
@@ -842,16 +842,46 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "$T.ofEntries($>$>$L$<$<)",
                         ClassName.get(Map.class),
                         activityType
-                            .units()
+                            .computedAttributeUnits()
                             .entrySet()
                             .stream()
-                            .map(parameter -> CodeBlock
+                            .map(units -> CodeBlock
                                 .builder()
                                 .add(
                                     "\n$T.entry($S, $S)",
                                     ClassName.get(Map.class),
-                                    parameter.getKey(),
-                                    parameter.getValue()))
+                                    units.getKey(),
+                                    units.getValue()))
+                            .reduce((x, y) -> x.add(",").add(y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build()))
+                .build()
+        )
+        .addMethod(
+            MethodSpec
+                .methodBuilder("getParameterUnits")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(ParameterizedTypeName.get(
+                    Map.class,
+                    String.class,
+                    String.class))
+                .addStatement(
+                    "return $L",
+                    CodeBlock.of(
+                        "$T.ofEntries($>$>$L$<$<)",
+                        ClassName.get(Map.class),
+                        activityType
+                            .parameterUnits()
+                            .entrySet()
+                            .stream()
+                            .map(units -> CodeBlock
+                                .builder()
+                                .add(
+                                    "\n$T.entry($S, $S)",
+                                    ClassName.get(Map.class),
+                                    units.getKey(),
+                                    units.getValue()))
                             .reduce((x, y) -> x.add(",").add(y.build()))
                             .orElse(CodeBlock.builder())
                             .build()))

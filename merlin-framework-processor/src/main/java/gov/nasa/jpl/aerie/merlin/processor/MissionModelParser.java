@@ -100,25 +100,7 @@ import java.util.stream.Collectors;
         .toList();
     final var nParameters = parameters.size();
     final var foundPlanStart = parameters.contains(ClassName.get(Instant.class));
-
-    final var docCommentTrees = Optional.ofNullable(this.treeUtils().getDocCommentTree(modelTypeElement))
-                                        .map(DocCommentTree::getBlockTags)
-                                        .orElse(List.of());
-
-    final var resourceTypeUnits = JavadocParser.parseUnitsFromJavadocs(this.elementUtils(), modelTypeElement);
-
-   modelTypeElement
-        .getEnclosedElements()
-        .stream()
-        .flatMap(e -> Optional
-            .ofNullable(this.elementUtils().getDocComment(e))
-            .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
-            .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
-            .stream())
-        .forEach($ -> {
-          System.out.println("Key: " + $.getKey());
-          System.out.println("Value: " + $.getValue());
-        });
+    final var resourceTypeUnits = JavadocParser.parseMissionModelUnits(this.elementUtils(), modelTypeElement);
 
     // Ensure model only has one constructor, one of:
     // - (Registrar, Instant, Configuration)
@@ -365,7 +347,8 @@ import java.util.stream.Collectors;
         effectModel,
         javadoc.getLeft(),
         javadoc.getMiddle(),
-        javadoc.getRight());
+        javadoc.getRight().getLeft(),
+        javadoc.getRight().getRight());
   }
 
   private void validateControllableDurationParameter(
@@ -430,7 +413,8 @@ import java.util.stream.Collectors;
     return (String) nameAttribute.getValue();
   }
 
-  private Triple<String, Map<String, String>, Map<String, String>> getJavadoc(final TypeElement activityTypeElement) {
+  private Triple<String, Map<String, String>, Pair<Map<String, String>, Map<String, String>>>
+    getJavadoc(final TypeElement activityTypeElement) {
     final var docCommentTrees = Optional.ofNullable(this.treeUtils().getDocCommentTree(activityTypeElement))
                                         .map(DocCommentTree::getBlockTags)
                                         .orElse(List.of());
@@ -466,7 +450,7 @@ import java.util.stream.Collectors;
           paramComments.put($.getKey(), $.getValue());
         });
 
-    final var units = JavadocParser.parseUnitsFromJavadocs(this.elementUtils(), activityTypeElement);
+    final var units = JavadocParser.parseActivityTypeUnits(this.elementUtils(), activityTypeElement);
 
     final var activityTypeDescription = Optional.ofNullable(this.elementUtils().getDocComment(activityTypeElement))
         .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)

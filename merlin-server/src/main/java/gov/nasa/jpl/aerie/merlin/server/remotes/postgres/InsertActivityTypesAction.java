@@ -16,8 +16,8 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
 
 /*package-local*/ final class InsertActivityTypesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema, units)
-    values (?, ?, ?::json, ?::json, ?::json, ?::json)
+    insert into activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema, parameter_units, computed_attribute_units)
+    values (?, ?, ?::json, ?::json, ?::json, ?::json, ?::json)
     on conflict (model_id, name) do update
       set parameters = excluded.parameters,
       required_parameters = excluded.required_parameters,
@@ -48,10 +48,16 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
         PreparedStatements.setRequiredParameters(this.statement, 4, activityType.requiredParameters());
         this.statement.setString(5, valueSchemaString);
 
-        if (activityType.units().isEmpty()) {
+        if (activityType.parameterUnits().isEmpty()) {
           statement.setString(6, "{}");
         } else {
-          statement.setString(6, mapP(stringP).unparse(activityType.units()).toString());
+          statement.setString(6, mapP(stringP).unparse(activityType.parameterUnits()).toString());
+        }
+
+        if (activityType.computedAttributeUnits().isEmpty()) {
+          statement.setString(7, "{}");
+        } else {
+          statement.setString(7, mapP(stringP).unparse(activityType.computedAttributeUnits()).toString());
         }
 
         statement.addBatch();

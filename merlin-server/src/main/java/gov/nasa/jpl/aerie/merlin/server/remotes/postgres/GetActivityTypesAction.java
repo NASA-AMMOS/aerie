@@ -62,8 +62,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
             getJsonColumn(results, "computed_attributes_value_schema", valueSchemaP)
                 .getSuccessOrThrow($ -> new Error("Corrupt activity type computed attribute schema cannot be parsed: "
                                                   + $.reason())),
-            getJsonColumn(results, "units", mapP(stringP))
-                .getSuccessOrThrow($ -> new Error("Corrupt activity type units cannot be parsed: "
+            getJsonColumn(results, "parameter_units", mapP(stringP))
+                .getSuccessOrThrow($ -> new Error("Corrupt activity type parameter units cannot be parsed: "
+                                                  + $.reason())),
+            getJsonColumn(results, "computed_attribute_units", mapP(stringP))
+                .getSuccessOrThrow($ -> new Error("Corrupt activity type computed attribute units cannot be parsed: "
                                                   + $.reason()))
         ));
       }

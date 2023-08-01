@@ -11,44 +11,28 @@ import java.util.Map;
 import java.util.Optional;
 
 public class JavadocParser {
-  private static final String PARAMETERS_TAG = "@param";
+  private static final String COMPUTED_ATTRIBUTE_TAG = "@computedAttribute";
   private static final String RESOURCE_TYPE_TAG = "@registeredState";
   private static final String UNITS_TAG = "@unit";
 
   /**
-   * Parses a block comment searching for param + unit paris. This would be more common
-   * on a record type.
+   * Parses javadocs searching for resource type + unit paris.
    * @param elementUtils Utility functions for file parsing.
    * @param element The element we're parsing the comments for.
-   * @return A map of parameters or resource types to their associated unit.
+   * @return A map of resource types to their associated unit.
    */
-  public static Map<String, String> parseUnitsFromJavadocs(Elements elementUtils, TypeElement element) {
-    final var parsedTags = new HashMap<String, String>();
+  public static Map<String, String> parseMissionModelUnits(Elements elementUtils, TypeElement element) {
+    final var parsedUnits = new HashMap<String, String>();
 
     // Parse the class javadoc.
     Optional.ofNullable(elementUtils.getDocComment(element))
         .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
         .map(comment -> {
-          // Keep track of the last param or resource type that we came across.
-          var lastItem = "";
-
-          for (var splitComment : comment.split("\n")) {
-            // The item being annotated is either a parameter or a resource type.
-            if (splitComment.contains(PARAMETERS_TAG)) {
-              lastItem = splitComment.split(" ")[1];
-            } else if (splitComment.contains(RESOURCE_TYPE_TAG)) {
-              lastItem = splitComment.split(" ")[1];
-            }
-
-            if (!lastItem.isEmpty() && splitComment.contains(UNITS_TAG)) {
-              parsedTags.put(lastItem, extractTagValue(UNITS_TAG, splitComment));
-            }
-          }
+          parseComment(comment, parsedUnits, RESOURCE_TYPE_TAG);
 
           return comment;
         });
 
-    // Parse the parameter javadocs.
     element
         .getEnclosedElements()
         .stream()
@@ -67,11 +51,62 @@ public class JavadocParser {
               property = "/" + property;
             }
 
-            parsedTags.put(property, extractTagValue(UNITS_TAG, value));
+            parsedUnits.put(property, extractTagValue(UNITS_TAG, value));
           }
         });
 
-    return parsedTags;
+    return parsedUnits;
+  }
+
+  /**
+   * Parses javadocs searching for parameters  + unit paris and computed attributes + unit pairs.
+   * @param elementUtils Utility functions for file parsing.
+   * @param element The element we're parsing the comments for.
+   * @return A pair of maps, one with the parameter units and one with the computed attribute units.
+   */
+  public static Pair<Map<String, String>, Map<String, String>> parseActivityTypeUnits(
+      Elements elementUtils,
+      TypeElement element
+  ) {
+    final var parameterUnits = new HashMap<String, String>();
+    final var computedAttributeUnits = new HashMap<String, String>();
+
+    // Parse the parameter javadocs.
+    element
+        .getEnclosedElements()
+        .stream()
+        .flatMap(e -> Optional
+            .ofNullable(elementUtils.getDocComment(e))
+            .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+            .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
+            .stream())
+        .forEach($ -> {
+          final var value = $.getValue();
+          var property = $.getKey();
+
+          if (value.contains(UNITS_TAG) && !value.contains(COMPUTED_ATTRIBUTE_TAG)) {
+            parameterUnits.put(property, extractTagValue(UNITS_TAG, value));
+          }
+        });
+
+    // Parse the computed attributes
+    element
+        .getEnclosedElements()
+        .stream()
+        // Computed Attribute units will be documented a record.
+        .filter(e -> e.getKind() == ElementKind.RECORD)
+        .flatMap(e -> Optional
+            .ofNullable(elementUtils.getDocComment(e))
+            .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+            .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
+            .stream())
+        .forEach($ -> {
+          final var comment = $.getValue();
+
+          parseComment(comment, computedAttributeUnits, COMPUTED_ATTRIBUTE_TAG);
+        });
+
+    return Pair.of(parameterUnits, computedAttributeUnits);
   }
 
   /**
@@ -104,5 +139,20 @@ public class JavadocParser {
     }
 
     return comment.substring(comment.indexOf(tag) + tag.length()).trim();
+  }
+
+  private static void parseComment(String comment, Map<String, String> parsedUnits, String tag) {
+    // Keep track of the last computed attribute that we came across.
+    var lastItem = "";
+
+    for (var splitComment : comment.split("\n")) {
+      if (splitComment.contains(tag)) {
+        lastItem = splitComment.split(" ")[1];
+      }
+
+      if (!lastItem.isEmpty() && splitComment.contains(UNITS_TAG)) {
+        parsedUnits.put(lastItem, extractTagValue(UNITS_TAG, splitComment));
+      }
+    }
   }
 }

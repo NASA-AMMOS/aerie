@@ -15,8 +15,9 @@ public record ActivityTypeRecord(
     Optional<EffectModelRecord> effectModel,
     String description,
     Map<String, String> parameterDescriptions,
-    Map<String, String> units
-) {
+    Map<String, String> parameterUnits,
+    Map<String, String> computedAttributeUnits
+    ) {
   public TypeName getOutputTypeName() {
     return this.effectModel
         .flatMap(EffectModelRecord::returnType)

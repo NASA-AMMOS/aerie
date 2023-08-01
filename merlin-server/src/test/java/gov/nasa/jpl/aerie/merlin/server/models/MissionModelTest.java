@@ -47,7 +47,8 @@ public final class MissionModelTest {
                   new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
               List.of(),
               ValueSchema.ofStruct(Map.of()),
-              Map.of("x", "x units")
+              Map.of("x", "x units"),
+              Map.of()
           ));
 
     // WHEN
@@ -58,7 +59,8 @@ public final class MissionModelTest {
                          specType.getInputType().getParameters(),
                          specType.getInputType().getRequiredParameters(),
                          specType.getOutputType().getSchema(),
-                         specType.getUnits())));
+                         specType.getParameterUnits(),
+                         specType.getComputedAttributeUnits())));
 
     // THEN
     assertThat(activityTypes).containsAllEntriesOf(expectedTypes);
@@ -76,7 +78,8 @@ public final class MissionModelTest {
               new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
           List.of(),
           ValueSchema.ofStruct(Map.of()),
-          Map.of("x", "x units")
+          Map.of("x", "x units"),
+          Map.of()
       );
 
     // WHEN
@@ -90,7 +93,8 @@ public final class MissionModelTest {
         specType.getInputType().getParameters(),
         specType.getInputType().getRequiredParameters(),
         specType.getOutputType().getSchema(),
-        specType.getUnits());
+        specType.getParameterUnits(),
+        specType.getComputedAttributeUnits());
 
     // THEN
     assertThat(type).isEqualTo(expectedType);
@@ -109,7 +113,8 @@ public final class MissionModelTest {
             new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
         List.of(),
         ValueSchema.ofStruct(Map.of()),
-        Map.of("x", "x units")
+        Map.of("x", "x units"),
+        Map.of()
     );
 
     // WHEN
@@ -123,7 +128,8 @@ public final class MissionModelTest {
         specType.getInputType().getParameters(),
         specType.getInputType().getRequiredParameters(),
         specType.getOutputType().getSchema(),
-        specType.getUnits());
+        specType.getParameterUnits(),
+        specType.getComputedAttributeUnits());
 
     // THEN
     assertThat(type).isEqualTo(expectedType);
@@ -145,7 +151,8 @@ public final class MissionModelTest {
             specType.getInputType().getParameters(),
             specType.getInputType().getRequiredParameters(),
             specType.getOutputType().getSchema(),
-            specType.getUnits());
+            specType.getParameterUnits(),
+            specType.getComputedAttributeUnits());
     });
 
     // THEN
