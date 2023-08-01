@@ -96,7 +96,7 @@ public class UncontrollableDurationTest {
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT1M29S"), problem.getActivityType("SolarPanelNonLinear")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT16M40S"), planningHorizon.fromStart("PT18M9S"), problem.getActivityType("SolarPanelNonLinear")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT33M20S"), planningHorizon.fromStart("PT34M49S"), problem.getActivityType("SolarPanelNonLinear")));
-    assertEquals(31, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(13, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -149,7 +149,7 @@ public class UncontrollableDurationTest {
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT33M20S"), planningHorizon.fromStart("PT36M47S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT2M21S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT16M40S"), planningHorizon.fromStart("PT17M18S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assertEquals(41, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(21, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -223,7 +223,7 @@ public class UncontrollableDurationTest {
                                             planningHorizon.fromStart("PT120S"),
                                             planningHorizon.fromStart("PT120S"),
                                             problem.getActivityType("LateRiser")));
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 }

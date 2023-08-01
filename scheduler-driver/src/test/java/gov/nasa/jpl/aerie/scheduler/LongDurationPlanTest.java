@@ -79,7 +79,7 @@ public class LongDurationPlanTest {
     Truth.assertThat(plan.get().getActivitiesByTime())
          .comparingElementsUsing(equalExceptInName)
          .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test

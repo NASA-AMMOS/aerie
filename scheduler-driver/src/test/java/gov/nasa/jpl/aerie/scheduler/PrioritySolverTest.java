@@ -136,7 +136,7 @@ public class PrioritySolverTest {
     assertThat(plan.get().getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -246,7 +246,7 @@ public class PrioritySolverTest {
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   /**
@@ -288,7 +288,7 @@ public class PrioritySolverTest {
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
