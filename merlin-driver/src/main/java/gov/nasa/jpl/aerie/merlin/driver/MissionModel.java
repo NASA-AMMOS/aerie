@@ -21,6 +21,7 @@ public final class MissionModel<Model> {
   private final List<SerializableTopic<?>> topics;
   private final DirectiveTypeRegistry<Model> directiveTypes;
   private final List<TaskFactory<?>> daemons;
+  private final Map<String, String> resourceTypeUnits;
 
   public MissionModel(
       final Model model,
@@ -28,7 +29,8 @@ public final class MissionModel<Model> {
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
       final List<TaskFactory<?>> daemons,
-      final DirectiveTypeRegistry<Model> directiveTypes)
+      final DirectiveTypeRegistry<Model> directiveTypes,
+      final Map<String, String> resourceTypeUnits)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
@@ -36,6 +38,7 @@ public final class MissionModel<Model> {
     this.topics = Collections.unmodifiableList(topics);
     this.directiveTypes = Objects.requireNonNull(directiveTypes);
     this.daemons = Collections.unmodifiableList(daemons);
+    this.resourceTypeUnits = Objects.requireNonNull(resourceTypeUnits);
   }
 
   public Model getModel() {
@@ -62,6 +65,10 @@ public final class MissionModel<Model> {
 
   public Map<String, Resource<?>> getResources() {
     return this.resources;
+  }
+
+  public Map<String, String> getResourceTypeUnits() {
+    return this.resourceTypeUnits;
   }
 
   public LiveCells getInitialCells() {

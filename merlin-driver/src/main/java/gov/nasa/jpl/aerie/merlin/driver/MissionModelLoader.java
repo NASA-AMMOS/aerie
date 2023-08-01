@@ -52,7 +52,7 @@ public final class MissionModelLoader {
             final var config = modelType.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(modelType);
             final var model = modelType.instantiate(planStart, config, builder);
-            return builder.build(model, registry);
+            return builder.build(model, registry, modelType.getResourceTypeUnits());
         } catch (final InstantiationException ex) {
             throw new MissionModelInstantiationException(ex);
         }

@@ -1,53 +1,77 @@
 package gov.nasa.jpl.aerie.merlin.processor.utils;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class JavadocParser {
   private static final String PARAMETERS_TAG = "@param";
-
+  private static final String RESOURCE_TYPE_TAG = "@registeredState";
   private static final String UNITS_TAG = "@unit";
 
   /**
    * Parses a block comment searching for param + unit paris. This would be more common
    * on a record type.
-   * @param comment The block jsdoc comment to parse.
-   * @return A map of parameters to their associated unit.
+   * @param elementUtils Utility functions for file parsing.
+   * @param element The element we're parsing the comments for.
+   * @return A map of parameters or resource types to their associated unit.
    */
-  public static Map<String, String> parseUnitsFromBlockComment(final String comment) {
-    final var units = new HashMap<String, String>();
-    // Keep track of the last parameter we saw, so we know what the units tag is referring to.
-    var lastParam = "";
+  public static Map<String, String> parseUnitsFromJavadocs(Elements elementUtils, TypeElement element) {
+    final var parsedTags = new HashMap<String, String>();
 
-    for (var splitComment : comment.split("\n")) {
-      if (splitComment.contains(PARAMETERS_TAG)) {
-        lastParam = splitComment.split(" ")[1];
-      }
+    // Parse the class javadoc.
+    Optional.ofNullable(elementUtils.getDocComment(element))
+        .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+        .map(comment -> {
+          // Keep track of the last param or resource type that we came across.
+          var lastItem = "";
 
-      // If we've come across a parameter, and then we see a units tag, keep track of it.
-      if (!lastParam.equals("") && splitComment.contains(UNITS_TAG)) {
-        units.put(lastParam, extractTagValue(UNITS_TAG, splitComment));
-      }
-    }
+          for (var splitComment : comment.split("\n")) {
+            // The item being annotated is either a parameter or a resource type.
+            if (splitComment.contains(PARAMETERS_TAG)) {
+              lastItem = splitComment.split(" ")[1];
+            } else if (splitComment.contains(RESOURCE_TYPE_TAG)) {
+              lastItem = splitComment.split(" ")[1];
+            }
 
-    return units;
-  }
+            if (!lastItem.isEmpty() && splitComment.contains(UNITS_TAG)) {
+              parsedTags.put(lastItem, extractTagValue(UNITS_TAG, splitComment));
+            }
+          }
 
-  /**
-   * Parses the units from a comment for a specific parameter.
-   * @param parameter The name of the parameter that has been commented.
-   * @param comment The comment text that has been parsed.
-   * @return A map of parameters to their associated unit.
-   */
-  public static Map<String, String> parseUnitsFromParameterComment(final String parameter, final String comment) {
-    final var units = new HashMap<String, String>();
+          return comment;
+        });
 
-    if (comment.contains(UNITS_TAG)) {
-      units.put(parameter, extractTagValue(UNITS_TAG, comment));
-    }
+    // Parse the parameter javadocs.
+    element
+        .getEnclosedElements()
+        .stream()
+        .flatMap(e -> Optional
+            .ofNullable(elementUtils.getDocComment(e))
+            .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+            .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
+            .stream())
+        .forEach($ -> {
+          final var value = $.getValue();
+          var property = $.getKey();
 
-    return units;
+          if (value.contains(UNITS_TAG)) {
+            // Prepend the registered state with a "/" as it's removed from the property name.
+            if (value.contains(RESOURCE_TYPE_TAG)) {
+              property = "/" + property;
+            }
+
+            parsedTags.put(property, extractTagValue(UNITS_TAG, value));
+          }
+        });
+
+    return parsedTags;
   }
 
   /**
@@ -75,7 +99,7 @@ public class JavadocParser {
    * @return The comment value after the found tag.
    */
   private static String extractTagValue(String tag, String comment) {
-    if (comment.equals("") || !comment.contains(tag)) {
+    if (comment.isEmpty() || !comment.contains(tag)) {
       return "";
     }
 

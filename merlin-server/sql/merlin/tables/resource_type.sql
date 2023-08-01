@@ -2,6 +2,7 @@ create table resource_type (
   model_id integer not null,
   name text not null,
   schema jsonb not null,
+  units jsonb not null default '{}',
 
   constraint resource_type_pkey
     primary key (model_id, name),
@@ -20,3 +21,5 @@ comment on column resource_type.model_id is e''
   'The model defining this resource type.';
 comment on column resource_type.schema is e''
   'The structure of this resource type.';
+comment on column resource_type.units is e''
+  'The optionally defined units for the resource types';

@@ -10,12 +10,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 /*package-private*/ final class InsertResourceTypesAction implements AutoCloseable{
     private static final @Language("SQL") String sql = """
-    insert into resource_type (model_id, name, schema)
-    values (?, ?, ?::json)
+    insert into resource_type (model_id, name, schema, units)
+    values (?, ?, ?::json, ?::json)
     on conflict (model_id, name) do update
     set schema = excluded.schema
     """;
@@ -26,7 +28,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(final int modelId, Map<String, ValueSchema> resourceTypes)
+  public void apply(final int modelId, Map<String, ValueSchema> resourceTypes, Map<String, String> resourceTypeUnits)
   throws SQLException, FailedInsertException
   {
     final var connection = statement.getConnection();
@@ -39,6 +41,13 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
       for(final var resource : resourceTypes.entrySet()){
         statement.setString(2, resource.getKey());
         statement.setString(3, valueSchemaP.unparse(resource.getValue()).toString());
+        if (resourceTypeUnits.isEmpty() || !resourceTypeUnits.containsKey(resource.getKey())) {
+          statement.setString(4, "{}");
+        } else {
+          // Construct a new map of just the current resource type we're looking at.
+          final var units = Map.of(resource.getKey(), resourceTypeUnits.get(resource.getKey()));
+          statement.setString(4, mapP(stringP).unparse(units).toString());
+        }
         statement.addBatch();
       }
 

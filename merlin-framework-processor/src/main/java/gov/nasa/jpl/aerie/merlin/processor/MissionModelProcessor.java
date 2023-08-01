@@ -113,7 +113,8 @@ public final class MissionModelProcessor implements Processor {
             missionModelRecord$.expectsPlanStart,
             missionModelRecord$.modelConfigurationType,
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes
+            missionModelRecord$.activityTypes,
+            missionModelRecord$.resourceTypeUnits
         );
 
         final var generatedFiles = new ArrayList<>(List.of(

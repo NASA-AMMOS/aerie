@@ -17,9 +17,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * @registeredState /fruit
+ * @unit Number of fruit
+ */
 public final class Mission {
   public final Accumulator fruit;
   public final AdditiveRegister peel;
+  /**
+   * @registeredState /flag
+   * @unit flag
+   */
   public final Register<Flag> flag;
   public final Register<Integer> lineCount = Register.forImmutable(0);
   public final Counter<Integer> plant;

@@ -62,15 +62,16 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   public <Model>
-  MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
-    return this.state.build(model, registry);
+  MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry, Map<String, String> resourceTypeUnits) {
+    return this.state.build(model, registry, resourceTypeUnits);
   }
 
   private interface MissionModelBuilderState extends Initializer {
     <Model> MissionModel<Model>
     build(
         Model model,
-        DirectiveTypeRegistry<Model> registry);
+        DirectiveTypeRegistry<Model> registry,
+        Map<String, String> resourceTypeUnits);
   }
 
   private final class UnbuiltState implements MissionModelBuilderState {
@@ -137,14 +138,15 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
+    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry, final Map<String, String> resourceTypeUnits) {
       final var missionModel = new MissionModel<>(
           model,
           this.initialCells,
           this.resources,
           this.topics,
           this.daemons,
-          registry);
+          registry,
+          resourceTypeUnits);
 
       MissionModelBuilder.this.state = new BuiltState();
 
@@ -192,7 +194,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
+    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry, final Map<String, String> resourceTypeUnits) {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }

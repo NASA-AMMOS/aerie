@@ -131,7 +131,7 @@ public final class MerlinExtension
         throw ex.wrapped;
       }
 
-      this.missionModel = this.builder.build(Unit.UNIT, new DirectiveTypeRegistry<>(Map.of()));
+      this.missionModel = this.builder.build(Unit.UNIT, new DirectiveTypeRegistry<>(Map.of()), Map.of());
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;

@@ -76,4 +76,6 @@ public interface ModelType<Config, Model> {
   // TODO: Every model instance should export the same resources and topics, independent of any provided configuration.
   //   Extract resource and topic registration from the `Initializer` to the top-level `ModelType`.
   Model instantiate(Instant planStart, Config configuration, Initializer builder);
+
+  Map<String, String> getResourceTypeUnits();
 }

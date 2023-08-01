@@ -79,13 +79,15 @@ import java.util.stream.Collectors;
         topLevelModel.expectsPlanStart,
         topLevelModel.configurationType,
         typeRules,
-        activityTypes);
+        activityTypes,
+        topLevelModel.resourceTypeUnits);
   }
 
   private record MissionModelTypeRecord(
       TypeElement type,
       boolean expectsPlanStart,
-      Optional<InputTypeRecord> configurationType) { }
+      Optional<InputTypeRecord> configurationType,
+      Map<String, String> resourceTypeUnits) { }
 
   private MissionModelTypeRecord getMissionModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
@@ -98,6 +100,25 @@ import java.util.stream.Collectors;
         .toList();
     final var nParameters = parameters.size();
     final var foundPlanStart = parameters.contains(ClassName.get(Instant.class));
+
+    final var docCommentTrees = Optional.ofNullable(this.treeUtils().getDocCommentTree(modelTypeElement))
+                                        .map(DocCommentTree::getBlockTags)
+                                        .orElse(List.of());
+
+    final var resourceTypeUnits = JavadocParser.parseUnitsFromJavadocs(this.elementUtils(), modelTypeElement);
+
+   modelTypeElement
+        .getEnclosedElements()
+        .stream()
+        .flatMap(e -> Optional
+            .ofNullable(this.elementUtils().getDocComment(e))
+            .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+            .map(comment -> Pair.of(e.getSimpleName().toString(), comment))
+            .stream())
+        .forEach($ -> {
+          System.out.println("Key: " + $.getKey());
+          System.out.println("Value: " + $.getValue());
+        });
 
     // Ensure model only has one constructor, one of:
     // - (Registrar, Instant, Configuration)
@@ -124,7 +145,7 @@ import java.util.stream.Collectors;
     // TODO: Consider enrolling the given model in a dependency injection framework,
     //   such that the Cursor can be injected like any other constructor argument,
     //   and indeed such that other arguments can flexibly be supported.
-    return new MissionModelTypeRecord(modelTypeElement, foundPlanStart, configurationType);
+    return new MissionModelTypeRecord(modelTypeElement, foundPlanStart, configurationType, resourceTypeUnits);
   }
 
   private TypeElement getMissionModelTypeElement(final PackageElement missionModelElement)
@@ -431,8 +452,6 @@ import java.util.stream.Collectors;
       default ->         e -> e.getModifiers().contains(Modifier.STATIC);      // Exclude static class members
     };
 
-    final var units = new HashMap<String, String>();
-
     activityTypeElement
         .getEnclosedElements()
         .stream()
@@ -445,17 +464,12 @@ import java.util.stream.Collectors;
             .stream())
         .forEach($ -> {
           paramComments.put($.getKey(), $.getValue());
-
-          units.putAll(JavadocParser.parseUnitsFromParameterComment($.getKey(), $.getValue()));
         });
+
+    final var units = JavadocParser.parseUnitsFromJavadocs(this.elementUtils(), activityTypeElement);
 
     final var activityTypeDescription = Optional.ofNullable(this.elementUtils().getDocComment(activityTypeElement))
         .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
-        .map(comment -> {
-          units.putAll(JavadocParser.parseUnitsFromBlockComment(comment));
-
-          return comment;
-        })
         .orElse("");
 
     return Triple.of(activityTypeDescription, paramComments, units);

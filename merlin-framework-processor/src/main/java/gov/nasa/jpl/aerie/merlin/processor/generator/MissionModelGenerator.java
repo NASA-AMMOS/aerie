@@ -221,6 +221,35 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "builder",
                         generateMissionModelInstantiation(missionModel))
                     .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getResourceTypeUnits")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(
+                        Map.class,
+                        String.class,
+                        String.class))
+                    .addStatement(
+                        "return $L",
+                        CodeBlock.of(
+                            "$T.ofEntries($>$>$L$<$<)",
+                            ClassName.get(Map.class),
+                            missionModel
+                                .resourceTypeUnits
+                                .entrySet()
+                                .stream()
+                                .map(parameter -> CodeBlock
+                                    .builder()
+                                    .add(
+                                        "\n$T.entry($S, $S)",
+                                        ClassName.get(Map.class),
+                                        parameter.getKey(),
+                                        parameter.getValue()))
+                                .reduce((x, y) -> x.add(",").add(y.build()))
+                                .orElse(CodeBlock.builder())
+                                .build()))
+                    .build())
             .build();
 
     return JavaFile

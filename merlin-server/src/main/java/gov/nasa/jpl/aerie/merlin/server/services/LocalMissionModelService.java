@@ -306,7 +306,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException {
     try {
       final var model = this.loadAndInstantiateMissionModel(missionModelId);
-      this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources());
+      this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources(), model.getResourceTypeUnits());
     } catch (MissionModelRepository.NoSuchMissionModelException e) {
       throw new NoSuchMissionModelException(missionModelId);
     }
