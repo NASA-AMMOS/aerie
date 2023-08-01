@@ -28,7 +28,10 @@ import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
-import gov.nasa.jpl.aerie.scheduler.model.*;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
@@ -40,7 +43,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -260,8 +262,8 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testCoexistenceGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
+  public void testCoexistenceGoalWithResourceConstraint() {
+    problem.setInitialPlan(makeTestPlanP0B1());
 
     /**
     * reminder for PB1
@@ -300,8 +302,8 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testProceduralGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
+  public void testProceduralGoalWithResourceConstraint() {
+    problem.setInitialPlan(makeTestPlanP0B1());
 
     final var constraint = new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
@@ -342,8 +344,8 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testActivityTypeWithResourceConstraint() throws SimulationFacade.SimulationException {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
+  public void testActivityTypeWithResourceConstraint() {
+    problem.setInitialPlan(makeTestPlanP0B1());
 
     final var constraint = new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
