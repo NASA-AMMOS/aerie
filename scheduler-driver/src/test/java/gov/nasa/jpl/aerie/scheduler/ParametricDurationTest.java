@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParametricDurationTest {
@@ -61,6 +62,7 @@ public class ParametricDurationTest {
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("PT2M"), problem.getActivityType("DownloadBanana")));
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -90,5 +92,6 @@ public class ParametricDurationTest {
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT2M"), planningHorizon.fromStart("PT12M"), problem.getActivityType("DownloadBanana")));
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

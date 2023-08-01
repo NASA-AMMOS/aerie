@@ -53,10 +53,15 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   //List of activities simulated since the last reset
   private final Map<ActivityDirectiveId, ActivityDirective> activitiesInserted = new HashMap<>();
 
+  //counts the number of simulation restarts, used as performance metric in the scheduler
+  //effectively counting the number of calls to initSimulation()
+  private int countSimulationRestarts;
+
   public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     this.planDuration = planDuration;
+    countSimulationRestarts = 0;
     initSimulation();
     batch = null;
   }
@@ -93,6 +98,15 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
     }
+    countSimulationRestarts++;
+  }
+
+  /**
+   * Return the number of simulation restarts
+   * @return the number of simulation restarts
+   */
+  public int getCountSimulationRestarts(){
+    return countSimulationRestarts;
   }
 
   @Override

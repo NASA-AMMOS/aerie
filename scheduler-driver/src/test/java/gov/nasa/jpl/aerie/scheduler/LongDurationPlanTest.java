@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.google.common.truth.Truth8.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LongDurationPlanTest {
 
@@ -78,6 +79,7 @@ public class LongDurationPlanTest {
     Truth.assertThat(plan.get().getActivitiesByTime())
          .comparingElementsUsing(equalExceptInName)
          .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -98,5 +100,6 @@ public class LongDurationPlanTest {
     Truth.assertThat(plan.getActivitiesByTime())
          .comparingElementsUsing(equalExceptInName)
          .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

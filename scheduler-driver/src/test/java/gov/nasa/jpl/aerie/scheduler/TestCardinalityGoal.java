@@ -53,5 +53,6 @@ public class TestCardinalityGoal {
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));
+    assertEquals(7, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

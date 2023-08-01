@@ -48,6 +48,7 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SimulationFacadeTest {
@@ -173,6 +174,7 @@ public class SimulationFacadeTest {
     final var actAssociatedInSecondRun = plan2.get().getEvaluation().forGoal(goal).getAssociatedActivities();
     assertThat(actAssociatedInSecondRun.size()).isEqualTo(1);
     assertThat(actAssociatedInFirstRun.iterator().next().equalsInProperties(actAssociatedInSecondRun.iterator().next())).isTrue();
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -191,6 +193,7 @@ public class SimulationFacadeTest {
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(2.9));
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -293,6 +296,7 @@ public class SimulationFacadeTest {
     final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -335,6 +339,7 @@ public class SimulationFacadeTest {
 
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -376,5 +381,6 @@ public class SimulationFacadeTest {
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

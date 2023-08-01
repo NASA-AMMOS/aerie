@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUnsatisfiableCompositeGoals {
 
@@ -104,7 +105,8 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBar));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBasic));
     Assertions.assertEquals(plan.getActivities().size(), 5);
-    }
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+  }
 
   @Test
   public void testAndWithBackTrack(){
@@ -136,6 +138,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t1hr, actTypeControllable));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeControllable));
     Assertions.assertEquals(plan.getActivities().size(), 2);
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -175,6 +178,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBar));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBasic));
     Assertions.assertEquals(plan.getActivities().size(), 4);
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -209,6 +213,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t1hr, actTypeControllable));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeControllable));
     Assertions.assertEquals(plan.getActivities().size(), 2);
+    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -250,5 +255,6 @@ public class TestUnsatisfiableCompositeGoals {
 
     var plan = solver.getNextSolution().orElseThrow();
     assertThat(plan.getActivities().size()).isEqualTo(0);
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

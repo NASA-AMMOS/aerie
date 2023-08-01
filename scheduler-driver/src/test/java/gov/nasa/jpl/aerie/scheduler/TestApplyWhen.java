@@ -73,6 +73,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -108,6 +109,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -143,6 +145,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -178,6 +181,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -226,6 +230,7 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -271,7 +276,7 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -317,6 +322,7 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -364,6 +370,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(8, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(17, Duration.SECONDS), activityType)); //interval (len 4) needs to be 2 longer than the recurrence repeatingEvery (len 3)
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -411,6 +418,7 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     //assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));  //should fail, won't work if cutoff mid-activity - interval expected to be longer than activity duration!!!
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -445,6 +453,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    assertEquals(13, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -488,6 +497,7 @@ public class TestApplyWhen {
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(4, Duration.SECOND)); //1 gets added, then throws 4 warnings meaning it tried to schedule 5 in total, not the expected 8...
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -537,7 +547,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(3, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(13, Duration.SECONDS), activityType));
-
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -588,6 +598,7 @@ public class TestApplyWhen {
     //assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(7, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(9, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -633,6 +644,7 @@ public class TestApplyWhen {
                             .reduce(Duration.ZERO, Duration::plus);
     assertTrue(size >= 3 && size <= 10);
     assertTrue(totalDuration.dividedBy(Duration.SECOND) >= 16 && totalDuration.dividedBy(Duration.SECOND) <= 19);
+    assertEquals(17, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -686,7 +698,7 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertEquals(4, plan.get().getActivitiesByTime().size());
-
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -741,7 +753,7 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertEquals(5, plan.get().getActivitiesByTime().size());
-
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -805,6 +817,7 @@ public class TestApplyWhen {
     assertEquals(2, plan.get().getActivitiesByTime()
                         .stream().filter($ -> $.duration().dividedBy(Duration.SECOND) == 2).toList()
                         .size());
+    assertEquals(6, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -870,7 +883,7 @@ public class TestApplyWhen {
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(14, Duration.SECONDS), actTypeA));
-
+    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -945,6 +958,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(10, Duration.SECONDS), actTypeB));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(16, Duration.SECONDS), actTypeB));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(25, Duration.SECONDS), actTypeB));
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1013,6 +1027,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(8, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(10, Duration.SECONDS), actTypeA));
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1080,6 +1095,7 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(5, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(9, Duration.SECONDS), actTypeA));
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(14, Duration.SECONDS), actTypeA));
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1134,6 +1150,7 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertEquals(5, plan.get().getActivitiesByTime().size());
+    assertEquals(6, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1210,6 +1227,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(13, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(15, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(17, Duration.SECONDS), activityTypeDependent));
+    assertEquals(11, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1287,7 +1305,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(13, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(15, Duration.SECONDS), activityTypeDependent));
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(17, Duration.SECONDS), activityTypeDependent));
-
+    assertEquals(10, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1372,6 +1390,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(13, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(15, Duration.SECONDS), activityTypeDependent));
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(17, Duration.SECONDS), activityTypeDependent));
-
+    assertEquals(10, problem.getSimulationFacade().countSimulationRestarts());
   }
 }
