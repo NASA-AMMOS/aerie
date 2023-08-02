@@ -278,7 +278,24 @@ type ResourceSamplesResponse {
   resourceSamples: ResourceSamples!
 }
 
-scalar ConstraintResult
+type ConstraintResult {
+  violations: [ConstraintViolation!]!,
+  gaps: [Interval!]!
+  constraintId: Int!,
+  constraintName: String!,
+  type: String!,
+  resourceIds: [String!]!
+}
+
+type ConstraintViolation {
+  windows: [Interval!]!,
+  activityInstanceIds: [Int!]!
+}
+
+type Interval {
+  start: Int!,
+  end: Int!
+}
 
 input EffectiveArgumentsInput {
   activityTypeName: String!

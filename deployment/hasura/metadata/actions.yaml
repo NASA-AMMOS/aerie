@@ -265,10 +265,12 @@ custom_types:
     - name: UserCodeError
     - name: CodeLocation
     - name: ResourceSamplesResponse
+    - name: ConstraintResult
+    - name: ConstraintViolation
+    - name: Interval
   scalars:
     - name: ResourceSchema
     - name: ResourceSamples
-    - name: ConstraintResult
     - name: MerlinSimulationFailureReason
     - name: ModelArguments
     - name: ActivityArguments
