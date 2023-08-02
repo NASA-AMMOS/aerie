@@ -105,7 +105,7 @@ type Query {
 }
 
 type Query {
-  constraintViolations(planId: Int!, simulationDatasetId: Int): ConstraintViolationsResponse
+  constraintViolations(planId: Int!, simulationDatasetId: Int): [ConstraintResult!]!
 }
 
 type Query {
@@ -278,9 +278,7 @@ type ResourceSamplesResponse {
   resourceSamples: ResourceSamples!
 }
 
-type ConstraintViolationsResponse {
-  violations: ConstraintViolations!
-}
+scalar ConstraintResult
 
 input EffectiveArgumentsInput {
   activityTypeName: String!
@@ -290,8 +288,6 @@ input EffectiveArgumentsInput {
 scalar ResourceSchema
 
 scalar ResourceSamples
-
-scalar ConstraintViolations
 
 scalar MerlinSimulationFailureReason
 
