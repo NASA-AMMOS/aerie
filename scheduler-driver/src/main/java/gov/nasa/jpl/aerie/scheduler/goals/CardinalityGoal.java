@@ -162,6 +162,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         if (total.compareTo(this.durationRange.start) < 0) {
           durToSchedule = this.durationRange.start.minus(total);
         } else if (total.compareTo(this.durationRange.end) > 0) {
+          logger.warn(
               "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities");
           return List.of(new UnsatisfiableGoalConflict(
               this,
