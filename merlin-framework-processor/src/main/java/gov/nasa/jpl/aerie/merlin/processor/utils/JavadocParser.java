@@ -51,7 +51,7 @@ public class JavadocParser {
               property = "/" + property;
             }
 
-            parsedUnits.put(property, extractTagValue(UNITS_TAG, value));
+            parsedUnits.put(property, extractTagValue(value));
           }
         });
 
@@ -59,7 +59,7 @@ public class JavadocParser {
   }
 
   /**
-   * Parses javadocs searching for parameters  + unit paris and computed attributes + unit pairs.
+   * Parses javadocs searching for parameters + unit paris and computed attributes + unit pairs.
    * @param elementUtils Utility functions for file parsing.
    * @param element The element we're parsing the comments for.
    * @return A pair of maps, one with the parameter units and one with the computed attribute units.
@@ -85,7 +85,7 @@ public class JavadocParser {
           var property = $.getKey();
 
           if (value.contains(UNITS_TAG) && !value.contains(COMPUTED_ATTRIBUTE_TAG)) {
-            parameterUnits.put(property, extractTagValue(UNITS_TAG, value));
+            parameterUnits.put(property, extractTagValue(value));
           }
         });
 
@@ -129,16 +129,15 @@ public class JavadocParser {
    * Extracts the tag value from a given tag and comment.
    * Ex: "@unit mass in grams" will return "mass in grams".
    *
-   * @param tag The tag to search for.
    * @param comment The entire comment string that we're parsing the tag value from.
    * @return The comment value after the found tag.
    */
-  private static String extractTagValue(String tag, String comment) {
-    if (comment.isEmpty() || !comment.contains(tag)) {
+  private static String extractTagValue(String comment) {
+    if (!comment.contains(JavadocParser.UNITS_TAG)) {
       return "";
     }
 
-    return comment.substring(comment.indexOf(tag) + tag.length()).trim();
+    return comment.substring(comment.indexOf(JavadocParser.UNITS_TAG) + JavadocParser.UNITS_TAG.length()).trim();
   }
 
   private static void parseComment(String comment, Map<String, String> parsedUnits, String tag) {
@@ -151,7 +150,7 @@ public class JavadocParser {
       }
 
       if (!lastItem.isEmpty() && splitComment.contains(UNITS_TAG)) {
-        parsedUnits.put(lastItem, extractTagValue(UNITS_TAG, splitComment));
+        parsedUnits.put(lastItem, extractTagValue(splitComment));
       }
     }
   }
