@@ -195,9 +195,7 @@ public class ConstraintAction {
             realProfiles,
             discreteProfiles);
 
-        ConstraintResult constraintResult;
-
-        constraintResult = expression.evaluate(preparedResults, environment);
+        ConstraintResult constraintResult = expression.evaluate(preparedResults, environment);
 
         if (constraintResult.isEmpty()) continue;
 
