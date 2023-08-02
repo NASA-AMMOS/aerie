@@ -2,13 +2,13 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
-import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -693,30 +694,38 @@ public class ASTTests {
         List.of(
             new ActivityInstance(1, "TypeA", Map.of(), Interval.between(4, 6, SECONDS)),
             new ActivityInstance(2, "TypeB", Map.of(), Interval.between(5, 7, SECONDS)),
-            new  ActivityInstance(3, "TypeA", Map.of(), Interval.between(9, 10, SECONDS))
+            new ActivityInstance(3, "TypeA", Map.of(), Interval.between(9, 10, SECONDS))
         ),
         Map.of(),
         Map.of()
     );
 
-    final var violation = new Violation("Constraint Test", 1L, ConstraintType.model, List.of(), List.of(), new Windows(interval(4, 6, SECONDS), true));
     final var result = new ForEachActivityViolations(
         "TypeA",
         "act",
         new ForEachActivityViolations(
             "TypeB",
             "act",
-            new Supplier<>(List.of(violation))
+            new UniqueSupplier<>(
+                () -> new ConstraintResult(
+                    List.of(new Violation(List.of(Interval.between(1, 2, SECONDS)), new ArrayList<>())),
+                    new ArrayList<>()
+                )
+            )
         )
     ).evaluate(simResults, new EvaluationEnvironment());
 
     // We expect two violations because there are two activities of TypeA
     // The details of the violation will be the same, since we are using a supplier
-    final var expected = List.of(
-        new Violation("Constraint Test", 1L, ConstraintType.model, List.of(1L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)),
-        new Violation("Constraint Test", 1L, ConstraintType.model, List.of(3L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)));
+    final var expected = new ConstraintResult(
+        List.of(
+            new Violation(List.of(Interval.between(1, 2, SECONDS)), List.of(1L, 2L)),
+            new Violation(List.of(Interval.between(1, 2, SECONDS)), List.of(3L, 2L))
+        ),
+        List.of()
+    );
 
-    assertEquivalent(expected, result);
+    assertEquals(expected, result);
   }
 
   @Test
@@ -764,22 +773,17 @@ public class ASTTests {
 
     final var result = new ViolationsOfWindows(new Supplier<>(windows)).evaluate(simResults, new EvaluationEnvironment());
 
-    final var expected = List.of(new Violation(
-        "Constraint Test",
-        1L,
-        ConstraintType.model,
-        List.of(),
-        List.of(),
-        List.of(Interval.between(5, 6, SECONDS)),
+    final var expected = new ConstraintResult(
+        List.of(new Violation(List.of(Interval.between(5, 6, SECONDS)), List.of())),
         List.of(
             Interval.between(Duration.MIN_VALUE, Inclusive, Duration.SECOND, Exclusive),
             Interval.between(4, Exclusive, 5, Exclusive, SECONDS),
             Interval.between(6, Exclusive, 7, Exclusive, SECONDS),
             Interval.between(Duration.of(20, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive)
         )
-    ));
+    );
 
-    assertEquivalent(expected, result);
+    assertEquals(expected, result);
   }
 
   @Test
@@ -1123,6 +1127,9 @@ public class ASTTests {
     assertIterableEquals(expected2, result2);
   }
 
+  /**
+   * An expression that yields the same aliased object every time it is evaluated.
+   */
   private static final class Supplier<T> implements Expression<T> {
     private final T value;
 
@@ -1146,6 +1153,26 @@ public class ASTTests {
 
     public static <V> Supplier<V> of(V value) {
       return new Supplier<>(value);
+    }
+  }
+
+  /**
+   * An expression that calls a supplier function and produces a new object every time it is evaluated.
+   */
+  private record UniqueSupplier<T>(java.util.function.Supplier<T> supplier) implements Expression<T> {
+    @Override
+    public T evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+      return supplier.get();
+    }
+
+    @Override
+    public String prettyPrint(final String prefix) {
+      return this.toString();
+    }
+
+    @Override
+    public void extractResources(final Set<String> names) {
+
     }
   }
 }

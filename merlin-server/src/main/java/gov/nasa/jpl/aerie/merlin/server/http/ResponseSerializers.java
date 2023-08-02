@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
@@ -162,16 +163,20 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
-        .add("constraintId", violation.constraintId)
-        .add("constraintName", violation.constraintName)
-        .add("associations", Json
-            .createObjectBuilder()
-            .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))
-            .add("resourceIds", serializeIterable(Json::createValue, violation.resourceNames))
-            .build())
-        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.violationWindows))
-        .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, violation.gaps))
-        .add("type", violation.constraintType.name())
+        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.violationIntervals()))
+        .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds()))
+        .build();
+  }
+
+  public static JsonValue serializeConstraintResult(final ConstraintResult list) {
+    return Json
+        .createObjectBuilder()
+        .add("constraintId", list.constraintId)
+        .add("constraintName", list.constraintName)
+        .add("violations", serializeIterable(ResponseSerializers::serializeConstraintViolation, list.violations))
+        .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, list.gaps))
+        .add("type", list.constraintType.name())
+        .add("resourceIds", serializeIterable(Json::createValue, list.resourceNames))
         .build();
   }
 
@@ -265,15 +270,8 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeConstraintViolations(final List<Violation> violations) {
-    final var builder = Json.createArrayBuilder();
-
-    for (final var violation : violations) builder.add(serializeConstraintViolation(violation));
-
-    return Json
-        .createObjectBuilder()
-        .add("violations", builder.build())
-        .build();
+  public static JsonValue serializeConstraintResults(final List<ConstraintResult> list) {
+    return serializeIterable(ResponseSerializers::serializeConstraintResult, list);
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {

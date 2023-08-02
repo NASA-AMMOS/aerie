@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -47,7 +46,7 @@ public class ConstraintAction {
     this.simulationService = simulationService;
   }
 
-  public List<Violation> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
+  public List<ConstraintResult> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlanForValidation(planId);
@@ -65,7 +64,7 @@ public class ConstraintAction {
     final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
         .map(SimulationResultsHandle::getSimulationDatasetId)
         .orElse(null));
-    final var violations = new HashMap<Long, Violation>();
+    final var violations = new HashMap<Long, ConstraintResult>();
 
     if (simDatasetId != null) {
       final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
@@ -144,7 +143,7 @@ public class ConstraintAction {
 
       for (final var entry : constraintCode.entrySet()) {
         final var constraint = entry.getValue();
-        final Expression<List<Violation>> expression;
+        final Expression<ConstraintResult> expression;
 
         // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
@@ -196,35 +195,18 @@ public class ConstraintAction {
             realProfiles,
             discreteProfiles);
 
-        final var violationEvents = new ArrayList<Violation>();
+        ConstraintResult constraintResult;
 
-        try {
-          violationEvents.addAll(expression.evaluate(preparedResults, environment));
-        } catch (final InputMismatchException ex) {
-          // @TODO Need a better way to catch and propagate the exception to the
-          // front end and to log the evaluation failure. This is captured in AERIE-1285.
-        }
+        constraintResult = expression.evaluate(preparedResults, environment);
 
+        if (constraintResult.isEmpty()) continue;
 
-        if (violationEvents.isEmpty()) continue;
+        constraintResult.constraintName = entry.getValue().name();
+        constraintResult.constraintId = entry.getKey();
+        constraintResult.constraintType = entry.getValue().type();
+        constraintResult.resourceNames = List.copyOf(names);
 
-      /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
-          which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
-          created to account for refactoring and removing the need for this condition. */
-        if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
-
-        violationEvents.forEach(violation -> {
-          final var newViolation = new Violation(
-              entry.getValue().name(),
-              entry.getKey(),
-              entry.getValue().type(),
-              violation.activityInstanceIds,
-              new ArrayList<>(names),
-              violation.violationWindows,
-              violation.gaps);
-
-          violations.put(entry.getKey(), newViolation);
-        });
+        violations.put(entry.getKey(), constraintResult);
       }
 
       if (simDatasetId != null) {

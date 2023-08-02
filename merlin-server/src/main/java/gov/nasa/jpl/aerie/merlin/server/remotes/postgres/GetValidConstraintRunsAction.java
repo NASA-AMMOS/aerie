@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintResultP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
 final class GetValidConstraintRunsAction implements AutoCloseable {
@@ -52,7 +52,7 @@ final class GetValidConstraintRunsAction implements AutoCloseable {
         } else {
           constraintRuns.add(new ConstraintRunRecord(
               constraintId,
-              getJsonColumn(results, "violations", violationP)
+              getJsonColumn(results, "violations", constraintResultP)
                   .getSuccessOrThrow($ -> new Error("Corrupt violations cannot be parsed: " + $.reason()))));
         }
       }

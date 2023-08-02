@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
@@ -14,8 +15,6 @@ import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
-import java.util.List;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -288,16 +287,24 @@ public final class ConstraintParsers {
 
   public static final JsonParser<Violation> violationP =
       productP
-          .field("constraintName", stringP)
-          .field("constraintId", longP)
-          .field("constraintType", enumP(ConstraintType.class, Enum::name))
-          .field("activityInstanceIds", listP(longP))
-          .field("resourceNames", listP(stringP))
           .field("violationWindows", listP(intervalP))
-          .field("gaps", listP(intervalP))
+          .field("activityInstanceIds", listP(longP))
           .map(
-              untuple((constraintName, constraintId, constraintType, activityInstanceIds, resourceNames, violationWindows, gaps) -> new Violation(constraintName, constraintId, constraintType, activityInstanceIds, resourceNames, violationWindows, gaps)),
-              $ -> tuple($.constraintName, $.constraintId, $.constraintType, $.activityInstanceIds, $.resourceNames, $.violationWindows, $.gaps)
+              untuple(Violation::new),
+              $ -> tuple($.violationIntervals(), $.activityInstanceIds())
+          );
+
+  public static final JsonParser<ConstraintResult> constraintResultP =
+      productP
+          .field("violations", listP(violationP))
+          .field("gaps", listP(intervalP))
+          .field("constraintType", enumP(ConstraintType.class, Enum::name))
+          .field("resourceNames", listP(stringP))
+          .field("constraintId", longP)
+          .field("constraintName", stringP)
+          .map(
+              untuple((violations, gaps, constraintType, resourceNames, constraintId, constraintName) -> new ConstraintResult(violations, gaps, constraintType, resourceNames, constraintId, constraintName)),
+              $ -> tuple($.violations, $.gaps, $.constraintType, $.resourceNames, $.constraintId, $.constraintName)
           );
 
   static final JsonParser<IntervalDuration> intervalDurationP =
@@ -505,7 +512,7 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, ((ForEachActivitySpans.MatchType) $.activityPredicate()).type(), $.alias(), $.expression()));
   }
 
-  static JsonParser<ForEachActivityViolations> forEachActivityViolationsF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
+  static JsonParser<ForEachActivityViolations> forEachActivityViolationsF(final JsonParser<Expression<ConstraintResult>> violationListExpressionP) {
     return productP
         .field("kind", literalP("ForEachActivityViolations"))
         .field("activityType", stringP)
@@ -513,7 +520,7 @@ public final class ConstraintParsers {
         .field("expression", violationListExpressionP)
         .map(
             untuple((kind, actType, alias, expression) -> new ForEachActivityViolations(actType, alias, expression)),
-            $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression));
+            $ -> tuple(Unit.UNIT, $.activityType(), $.alias(), $.expression()));
   }
 
   public static JsonParser<ValueAt<?>> valueAtExpressionF(JsonParser<ProfileExpression<?>> profileExpressionP, JsonParser<Expression<Spans>> spansExpressionP) {
@@ -610,7 +617,7 @@ public final class ConstraintParsers {
               untuple((kind, expression) -> new ViolationsOfWindows(expression)),
               $ -> tuple(Unit.UNIT, $.expression));
 
-  public static final JsonParser<Expression<List<Violation>>> constraintP =
+  public static final JsonParser<Expression<ConstraintResult>> constraintP =
       recursiveP(selfP -> chooseP(
           forEachActivityViolationsF(selfP),
           windowsExpressionP.map(ViolationsOfWindows::new, $ -> $.expression),

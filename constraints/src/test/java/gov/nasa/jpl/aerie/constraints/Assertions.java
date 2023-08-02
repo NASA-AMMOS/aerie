@@ -36,8 +36,8 @@ public final class Assertions {
   public static void assertEquivalent(final Violation expected, final Violation actual) {
     assertEquals(expected, actual);
 
-    assertTrue(areEquivalent(expected.activityInstanceIds, actual.activityInstanceIds));
-    assertTrue(areEquivalent(expected.violationWindows, actual.violationWindows));
+    assertTrue(areEquivalent(expected.activityInstanceIds(), actual.activityInstanceIds()));
+    assertTrue(areEquivalent(expected.violationIntervals(), actual.violationIntervals()));
   }
 
   public static void assertEquivalent(final Windows expected, final Windows actual) {

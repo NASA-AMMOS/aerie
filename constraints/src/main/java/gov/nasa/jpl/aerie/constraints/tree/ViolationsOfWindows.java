@@ -3,14 +3,16 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
-public final class ViolationsOfWindows implements Expression<List<Violation>> {
+public final class ViolationsOfWindows implements Expression<ConstraintResult> {
   public final Expression<Windows> expression;
 
   public ViolationsOfWindows(Expression<Windows> expression) {
@@ -18,9 +20,17 @@ public final class ViolationsOfWindows implements Expression<List<Violation>> {
   }
 
   @Override
-  public List<Violation> evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
-    final var satisfiedWindows = this.expression.evaluate(results, bounds, environment);
-    return List.of(new Violation(satisfiedWindows.not().select(bounds)));
+  public ConstraintResult evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
+    final var windows = this.expression.evaluate(results, bounds, environment);
+    return new ConstraintResult(
+        StreamSupport.stream(windows.iterateEqualTo(false).spliterator(), false)
+                     .map(i -> new Violation(List.of(i), List.of()))
+                     .toList(),
+        StreamSupport.stream(
+            windows.notEqualTo(windows).assignGaps(new Windows(true)).iterateEqualTo(true).spliterator(),
+            false
+        ).toList()
+    );
   }
 
   @Override
