@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Some utility functions used in tests
@@ -28,7 +29,7 @@ public class AerieLanderTestUtility {
     final var modelType = new gov.nasa.jpl.aerielander.generated.GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(modelType);
     final var model = modelType.instantiate(Instant.EPOCH, configuration, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, Map.of());
   }
 
   static SchedulerModel getMerlinSightSchedulerModel() {

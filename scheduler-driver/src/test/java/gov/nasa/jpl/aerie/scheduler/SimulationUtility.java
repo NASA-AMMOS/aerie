@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Map;
 
 public final class SimulationUtility {
 
@@ -16,7 +17,7 @@ public final class SimulationUtility {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, Map.of());
   }
 
   public static MissionModel<Mission>
@@ -26,7 +27,7 @@ public final class SimulationUtility {
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, Map.of());
   }
 
   public static SchedulerModel getFooSchedulerModel(){

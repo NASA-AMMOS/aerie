@@ -27,7 +27,7 @@ public class SimulateMapSchedule {
     final var factory = new GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(planStart, config, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, Map.of());
   }
 
   private static

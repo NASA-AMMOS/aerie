@@ -1067,6 +1067,26 @@ public final class AnchorSimulationTest {
     private static final Topic<Object> delayedActivityDirectiveOutputTopic = new Topic<>();
     /* package-private*/ static final DirectiveType<Object, Object, Object> delayedActivityDirective = new DirectiveType<>() {
       @Override
+      public String getDescription() {
+        return "";
+      }
+
+      @Override
+      public Map<String, String> getParameterDescriptions() {
+        return Map.of();
+      }
+
+      @Override
+      public Map<String, String> getParameterUnits() {
+        return Map.of();
+      }
+
+      @Override
+      public Map<String, String> getComputedAttributeUnits() {
+        return Map.of();
+      }
+
+      @Override
       public InputType<Object> getInputType() {
         return testModelInputType;
       }
@@ -1091,6 +1111,26 @@ public final class AnchorSimulationTest {
     private static final Topic<Object> decomposingActivityDirectiveInputTopic = new Topic<>();
     private static final Topic<Object> decomposingActivityDirectiveOutputTopic = new Topic<>();
     /* package-private */  static final DirectiveType<Object, Object, Object> decomposingActivityDirective = new DirectiveType<>() {
+      @Override
+      public String getDescription() {
+        return "";
+      }
+
+      @Override
+      public Map<String, String> getParameterDescriptions() {
+        return Map.of();
+      }
+
+      @Override
+      public Map<String, String> getParameterUnits() {
+        return Map.of();
+      }
+
+      @Override
+      public Map<String, String> getComputedAttributeUnits() {
+        return Map.of();
+      }
+
       @Override
       public InputType<Object> getInputType() {
         return testModelInputType;
@@ -1216,8 +1256,14 @@ public final class AnchorSimulationTest {
               {
                 return new Object();
               }
+
+              @Override
+              public Map<String, String> getResourceTypeUnits() {
+                return Map.of();
+              }
             }
-        )
+        ),
+        Map.of()
     );
     //endregion
   }

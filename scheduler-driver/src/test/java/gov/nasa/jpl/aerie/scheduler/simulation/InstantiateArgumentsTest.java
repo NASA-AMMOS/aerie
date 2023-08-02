@@ -130,6 +130,26 @@ public class InstantiateArgumentsTest {
   private static final Topic<Object> delayedActivityDirectiveOutputTopic = new Topic<>();
   private static final DirectiveType<Object, Object, Object> delayedActivityDirective = new DirectiveType<>() {
     @Override
+    public String getDescription() {
+      return "";
+    }
+
+    @Override
+    public Map<String, String> getParameterDescriptions() {
+      return Map.of();
+    }
+
+    @Override
+    public Map<String, String> getParameterUnits() {
+      return Map.of();
+    }
+
+    @Override
+    public Map<String, String> getComputedAttributeUnits() {
+      return Map.of();
+    }
+
+    @Override
     public InputType<Object> getInputType() {
       return testModelInputType;
     }
