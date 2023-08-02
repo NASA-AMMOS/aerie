@@ -42,131 +42,50 @@ describe('Command', () => {
     it('should handle absolute time tagged commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
+        arguments: [],
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.TEST([
-  {
-    type: 'string',
-    value: 'string',
-  },
-  {
-    type: 'number',
-    value: 0,
-  },
-  {
-    type: 'boolean',
-    value: true,
-  },
-])`);
+      expect(command.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.TEST`);
     });
 
     it('should handle relative time tagged commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
+        arguments: [],
         relativeTime: hmsToDuration('00:00:00.000' as HMS_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual(`R\`00:00:00.000\`.TEST([
-  {
-    type: 'string',
-    value: 'string',
-  },
-  {
-    type: 'number',
-    value: 0,
-  },
-  {
-    type: 'boolean',
-    value: true,
-  },
-])`);
+      expect(command.toEDSLString()).toEqual(`R\`00:00:00.000\`.TEST`);
     });
 
     it('should handle epoch relative time tagged commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
+        arguments: [],
         epochTime: hmsToDuration('00:00:00.000' as HMS_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual(`E\`00:00:00.000\`.TEST([
-  {
-    type: 'string',
-    value: 'string',
-  },
-  {
-    type: 'number',
-    value: 0,
-  },
-  {
-    type: 'boolean',
-    value: true,
-  },
-])`);
+      expect(command.toEDSLString()).toEqual(`E\`00:00:00.000\`.TEST`);
     });
 
     it('should handle command complete commands', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
-      });
-
-      expect(command.toEDSLString()).toEqual(`C.TEST([
-  {
-    type: 'string',
-    value: 'string',
-  },
-  {
-    type: 'number',
-    value: 0,
-  },
-  {
-    type: 'boolean',
-    value: true,
-  },
-])`);
-    });
-
-    it('should handle commands without arguments', () => {
-      const command = CommandStem.new({
-        stem: 'TEST',
         arguments: [],
       });
 
-      expect(command.toEDSLString()).toEqual('C.TEST');
-
-      const command2 = CommandStem.new({
-        stem: 'TEST',
-        arguments: {},
-      });
-
-      expect(command2.toEDSLString()).toEqual('C.TEST');
+      expect(command.toEDSLString()).toEqual(`C.TEST`);
     });
 
     it('should convert to EDSL string with array arguments', () => {
       const command = CommandStem.new({
         stem: 'TEST',
-        arguments: [{type: 'string', value: 'string' }, {type: 'number', value: 0 }, { type: 'boolean', value: true }],
+        arguments: [{value: 'string' }, { value: 0 }, { value: true }],
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.TEST([
-  {
-    type: 'string',
-    value: 'string',
-  },
-  {
-    type: 'number',
-    value: 0,
-  },
-  {
-    type: 'boolean',
-    value: true,
-  },
-])`);
+      expect(command.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.TEST(['string'],[0],[true])`);
     });
 
     it('should convert to EDSL string with named arguments', () => {
@@ -181,7 +100,7 @@ describe('Command', () => {
       });
 
       expect(command.toEDSLString()).toEqual(
-        "A`2020-001T00:00:00.000`.TEST({\n  string: 'string',\n  number: 0,\n  boolean: true,\n})",
+        "A`2020-001T00:00:00.000`.TEST('string',0,true)",
       );
     });
 
@@ -195,13 +114,7 @@ describe('Command', () => {
       });
 
       expect(groundEvent.toEDSLString()).toEqual(`A\`2020-001T00:00:00.000\`.GROUND_EVENT('Ground Event Name')
-  .ARGUMENTS([
-    {
-      name: 'name',
-      type: 'string',
-      value: 'hello',
-    },
-  ])
+  .ARGUMENTS('hello')
   .DESCRIPTION('ground event description')
   .METADATA({
     author: 'Emery',
@@ -217,13 +130,7 @@ describe('Command', () => {
       });
 
       expect(groundBlock.toEDSLString()).toEqual(`C.GROUND_BLOCK('Ground Block Name')
-  .ARGUMENTS([
-    {
-      name: 'turnOff',
-      type: 'boolean',
-      value: false,
-    },
-  ])
+  .ARGUMENTS(false)
   .DESCRIPTION('ground block description')
   .METADATA({
     author: 'Jasmine',
@@ -246,13 +153,7 @@ describe('Command', () => {
       });
 
       expect(activateStep.toEDSLString()).toEqual(`C.ACTIVATE('test0001')
-  .ARGUMENTS([
-    {
-      name: 'turnOff',
-      type: 'boolean',
-      value: false,
-    },
-  ])
+  .ARGUMENTS(false)
   .DESCRIPTION('ground block description')
   .ENGINE(45)
   .EPOCH('epoch1')
@@ -284,13 +185,7 @@ describe('Command', () => {
       });
 
       expect(loadStep.toEDSLString()).toEqual(`C.LOAD('test0001')
-  .ARGUMENTS([
-    {
-      name: 'turnOff',
-      type: 'boolean',
-      value: false,
-    },
-  ])
+  .ARGUMENTS(false)
   .DESCRIPTION('ground block description')
   .ENGINE(45)
   .EPOCH('epoch1')\t  .METADATA({
@@ -497,23 +392,12 @@ describe('Sequence', () => {
       ENUM('duration', 'POSSIBLE_DURATION')
     ],
     steps: ({ locals, parameters }) => ([
-      A\`2020-001T00:00:00.000\`.TEST([
-          'string',
-          0,
-          true,
-      ]),
-      A\`2020-001T00:00:00.000\`.TEST({
-        string: 'string',
-        number: 0,
-        boolean: true,
-      })
+      A\`2020-001T00:00:00.000\`.TEST(['string'],[0],[true]),
+      A\`2020-001T00:00:00.000\`.TEST('string',0,true)
         .METADATA({
           author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
         }),
-      A\`2021-001T00:00:00.000\`.TEST({
-        temperature: locals.temp,
-        duration: parameters.duration,
-      })
+      A\`2021-001T00:00:00.000\`.TEST(locals.temp,parameters.duration)
         .METADATA({
           author: 'ZZZZ',
         }),
@@ -562,9 +446,7 @@ describe('Sequence', () => {
     seqId: 'Immediate',
     metadata: {},
     immediate_commands: [
-      SMASH_BANANA({
-        behavior: 'AGRESSIVE',
-      })
+      SMASH_BANANA('AGRESSIVE')
         .DESCRIPTION('Hulk smash banannas')
         .METADATA({
           author: 'An Avenger',

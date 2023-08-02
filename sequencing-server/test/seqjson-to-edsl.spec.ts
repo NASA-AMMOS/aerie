@@ -49,9 +49,7 @@ describe('getEdslForSeqJson', () => {
     metadata: {},
     steps: ({ locals, parameters }) => ([
       C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
-        temperature: 100,
-      }),
+      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
     ]),
   });`);
   });
@@ -413,72 +411,11 @@ describe('getEdslForSeqJson', () => {
     ],
     steps: ({ locals, parameters }) => ([
       E\`00:00:01.000\`.ACTIVATE('d:/eng/test.mod')
-        .ARGUMENTS([
-          {
-            type: 'number',
-            value: 30,
-          },
-          {
-            type: 'number',
-            value: 4.3,
-          },
-          {
-            type: 'boolean',
-            value: true,
-          },
-          {
-            type: 'string',
-            value: 'test_string',
-          },
-          {
-            type: 'repeat',
-            value: [
-              [
-                {
-                  type: 'number',
-                  value: 10,
-                },
-                {
-                  type: 'string',
-                  value: 'another_test',
-                },
-                {
-                  type: 'boolean',
-                  value: false,
-                },
-              ],
-              [
-                {
-                  type: 'number',
-                  value: 5,
-                },
-                {
-                  type: 'string',
-                  value: 'repeat_test',
-                },
-                {
-                  type: 'boolean',
-                  value: true,
-                },
-              ],
-            ],
-          },
-        ])
+        .ARGUMENTS(30,4.3,true,'test_string',[[10,'another_test',false],[5,'repeat_test',true]])
         .DESCRIPTION('Epoch-relative activate step for test.mod into engine 2 with all possible fields.')
         .ENGINE(2)
         .EPOCH('TEST_EPOCH'),
-      A\`2020-173T20:00:00.000\`.FAKE_COMMAND1({
-        arg0: 30,
-        arg1: 4.3,
-        arg2: true,
-        arg3: 'test_string',
-        arg4: [
-          {
-            repeat0: 10,
-            repeat1: 'another_test',
-          },
-        ],
-      })
+      A\`2020-173T20:00:00.000\`.FAKE_COMMAND1(30,4.3,true,'test_string',[[10,'another_test']])
         .DESCRIPTION('Absolute-timed standard command step with all possible fields.')
         .MODELS([
           {
@@ -503,36 +440,7 @@ describe('getEdslForSeqJson', () => {
           }
         ]),
       R\`00:00:01.000\`.GROUND_BLOCK('SEQTRAN_directive')
-        .ARGUMENTS([
-          {
-            type: 'string',
-            value: 'SEQSTR',
-          },
-          {
-            type: 'string',
-            value: '2019-365T00:00:00',
-          },
-          {
-            type: 'string',
-            value: '2020-025T00:00:00',
-          },
-          {
-            type: 'string',
-            value: 'BOTH',
-          },
-          {
-            type: 'string',
-            value: '',
-          },
-          {
-            type: 'string',
-            value: '',
-          },
-          {
-            type: 'string',
-            value: 'real_time_cmds',
-          },
-        ])
+        .ARGUMENTS('SEQSTR','2019-365T00:00:00','2020-025T00:00:00','BOTH','','','real_time_cmds')
         .DESCRIPTION('Ground activity step with required fields.')
         .METADATA({
           stringfield: 'stringval',
@@ -560,16 +468,7 @@ describe('getEdslForSeqJson', () => {
           }
         ]),
       C.GROUND_EVENT('UPLINK_SEQUENCE_FILE')
-        .ARGUMENTS([
-          {
-            type: 'string',
-            value: '/domops/data/nsyt/189/seq/satf_sct/nsy.orf.f2_seq_eng_nom_htr_off_mod.r1.satf',
-          },
-          {
-            type: 'string',
-            value: 'd:/tmp/eng_nom_htr_off.mod',
-          },
-        ])
+        .ARGUMENTS('/domops/data/nsyt/189/seq/satf_sct/nsy.orf.f2_seq_eng_nom_htr_off_mod.r1.satf','d:/tmp/eng_nom_htr_off.mod')
         .DESCRIPTION('Ground event step with all possible fields.')
         .METADATA({
           listfield: [
@@ -600,16 +499,9 @@ describe('getEdslForSeqJson', () => {
           }
         ]),
       E\`00:00:01.000\`.LOAD('d:/eng/test.mod')
-        .ARGUMENTS([
-          {
-            type: 'symbol',
-            value: 'Local_Var_A',
-          },
-          {
-            type: 'symbol',
-            value: 'Global_Var_B',
-          },
-        ])
+        .ARGUMENTS(unknown.Local_Var_A //ERROR: Variable 'Local_Var_A' is not defined as a local or parameter
+        ,unknown.Global_Var_B //ERROR: Variable 'Global_Var_B' is not defined as a local or parameter
+        )
         .DESCRIPTION('Epoch-relative activate step for test.mod into engine 2 with all possible fields.')
         .ENGINE(2)
         .EPOCH('TEST_EPOCH'),
@@ -708,13 +600,9 @@ describe('getEdslForSeqJson', () => {
       INT('sugar')
     ],
     steps: ({ locals, parameters }) => ([
-      C.PREHEAT_OVEN({
-        temperature: locals.temp,
-      }),
-      C.PREPARE_LOAF({
-        tb_sugar: unknown.sugarrrrr //ERROR: Variable 'sugarrrrr' is not defined as a local or parameter,
-        gluten_free: 'FALSE',
-      }),
+      C.PREHEAT_OVEN(locals.temp),
+      C.PREPARE_LOAF(unknown.sugarrrrr //ERROR: Variable 'sugarrrrr' is not defined as a local or parameter
+      ,'FALSE'),
     ]),
   });`);
   });
@@ -779,8 +667,8 @@ describe('getEdslForSeqJsonBulk', () => {
     );
 
     expect(res.getEdslForSeqJsonBulk).toEqual([
-      "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });",
-      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ]),\n  });",
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN(100),\n    ]),\n  });",
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: ({ locals, parameters }) => ([\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN(100),\n    ]),\n  });"
     ]);
   });
 });
