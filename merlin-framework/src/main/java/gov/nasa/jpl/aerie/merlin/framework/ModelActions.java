@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.framework.TrampoliningTask.RepeatingTaskStatus;
+import gov.nasa.jpl.aerie.merlin.framework.TrampoliningTask.TrampoliningTaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -34,6 +36,15 @@ public /*non-final*/ class ModelActions {
       task.run();
       return Unit.UNIT;
     });
+  }
+
+
+  public static <T> TaskFactory<T> trampolining(final Supplier<TrampoliningTaskStatus<T>> task) {
+    return executor -> new TrampoliningTask<>(ModelActions.context, task);
+  }
+
+  public static <T> TaskFactory<T> repeating(final Supplier<RepeatingTaskStatus<T>> task) {
+    return executor -> new TrampoliningTask<>(ModelActions.context, TrampoliningTask.repeating(task));
   }
 
 

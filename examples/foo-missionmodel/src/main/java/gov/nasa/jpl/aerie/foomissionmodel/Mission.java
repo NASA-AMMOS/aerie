@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.foomissionmodel.models.Imager;
 import gov.nasa.jpl.aerie.foomissionmodel.models.ImagerMode;
 import gov.nasa.jpl.aerie.foomissionmodel.models.SimpleData;
 import gov.nasa.jpl.aerie.foomissionmodel.models.TimeTrackerDaemon;
-import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -19,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.time.Instant;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static gov.nasa.jpl.aerie.merlin.framework.TrampoliningTask.RepeatingTaskStatus.delayed;
 
 public final class Mission {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
@@ -74,13 +74,11 @@ public final class Mission {
     registrar.real("/simple_data/b/rate", this.simpleData.b.rate);
     registrar.real("/simple_data/total_volume", this.simpleData.totalVolume);
 
-    spawn(timeTrackerDaemon::run);
+    timeTrackerDaemon.run();
 
-    spawn(() -> { // Register a never-ending daemon task
-      while (true) {
-        ModelActions.delay(Duration.SECOND);
-      }
-    });
+    spawn(repeating(() -> { // Register a never-ending daemon task
+      return delayed(Duration.SECOND);
+    }));
   }
 
   public void test() {
