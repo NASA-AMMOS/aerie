@@ -20,16 +20,16 @@ public interface Condition {
   }
 
 
-  Condition TRUE = (positive, atEarliest, atLatest) -> Optional.of(atEarliest);
-  Condition FALSE = (positive, atEarliest, atLatest) -> Optional.empty();
+  Condition TRUE = (positive, atEarliest, atLatest) -> Optional.of(atEarliest).filter(t -> positive);
+  Condition FALSE = not(TRUE);
 
   static Condition or(final Condition left, final Condition right) {
     return (positive, atEarliest, atLatest) -> {
       if (atLatest.shorterThan(atEarliest)) return Optional.empty();
-      if (!positive) return and(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
+      if (!positive) return and(not(left), not(right)).nextSatisfied(true, atEarliest, atLatest);
 
-      final var left$ = left.nextSatisfied(positive, atEarliest, atLatest);
-      final var right$ = right.nextSatisfied(positive, atEarliest, left$.orElse(atLatest));
+      final var left$ = left.nextSatisfied(true, atEarliest, atLatest);
+      final var right$ = right.nextSatisfied(true, atEarliest, left$.orElse(atLatest));
 
       if (left$.isEmpty()) return right$;
       if (right$.isEmpty()) return left$;
@@ -40,25 +40,25 @@ public interface Condition {
   static Condition and(final Condition left, final Condition right) {
     return (positive, atEarliest, atLatest) -> {
       if (atLatest.shorterThan(atEarliest)) return Optional.empty();
-      if (!positive) return or(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
+      if (!positive) return or(not(left), not(right)).nextSatisfied(true, atEarliest, atLatest);
 
       Optional<Duration> left$, right$;
 
-      left$ = left.nextSatisfied(positive, atEarliest, atLatest);
+      left$ = left.nextSatisfied(true, atEarliest, atLatest);
       if (left$.isEmpty()) return Optional.empty();
 
       while (true) {
         atEarliest = left$.get();
         if (atLatest.shorterThan(atEarliest)) break;
 
-        right$ = right.nextSatisfied(positive, atEarliest, atLatest);
+        right$ = right.nextSatisfied(true, atEarliest, atLatest);
         if (right$.isEmpty()) break;
         if (right$.get().isEqualTo(left$.get())) return left$;
 
         atEarliest = right$.get();
         if (atLatest.shorterThan(atEarliest)) break;
 
-        left$ = left.nextSatisfied(positive, atEarliest, atLatest);
+        left$ = left.nextSatisfied(true, atEarliest, atLatest);
         if (left$.isEmpty()) break;
         if (left$.get().isEqualTo(right$.get())) return right$;
       }
@@ -68,7 +68,7 @@ public interface Condition {
   }
 
   static Condition not(final Condition base) {
-    return (positive, atEarlist, atLatest) ->
-        base.nextSatisfied(!positive, atEarlist, atLatest);
+    return (positive, atEarliest, atLatest) ->
+        base.nextSatisfied(!positive, atEarliest, atLatest);
   }
 }
