@@ -431,6 +431,57 @@ const gql = {
     }
   `,
 
+  CREATE_USER: `#graphql
+    mutation createUser($user: users_insert_input!, $allowed_roles: [users_allowed_roles_insert_input!]!) {
+      insert_users_one(object: $user) {
+        default_role
+        username
+      }
+      insert_users_allowed_roles(objects: $allowed_roles) {
+        returning {
+          allowed_role
+          username
+        }
+      }
+    }
+  `,
+
+  DELETE_USER: `#graphql
+    mutation deleteUser($username: String!) {
+      delete_users_by_pk(username: $username) {
+        username
+        default_role
+      }
+    }
+  `,
+
+  ADD_PLAN_COLLABORATOR: `#graphql
+    mutation addPlanCollaborator($collaborator: plan_collaborators_insert_input!) {
+      insert_plan_collaborators_one(object: $collaborator) {
+        collaborator
+        plan_id
+      }
+    }
+  `,
+
+  GET_ROLE_ACTION_PERMISSIONS: `#graphl
+    query getRolePermissions($role: user_roles_enum!){
+      permissions: user_role_permission_by_pk(role: $role) {
+        action_permissions
+      }
+    }
+  `,
+
+  UPDATE_ROLE_ACTION_PERMISSIONS: `#graphl
+    mutation updateRolePermissions($role: user_roles_enum!, $action_permissions: jsonb!) {
+      permissions: update_user_role_permission_by_pk(
+        pk_columns: {role: $role},
+        _set: {action_permissions: $action_permissions})
+      {
+        action_permissions
+      }
+    }
+  `
 };
 
 export default gql;
