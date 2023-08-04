@@ -42,6 +42,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   private Optional<MissionModelInfo> missionModelInfo = Optional.empty();
   private MerlinPlan initialPlan;
   Collection<ActivityDirective> updatedPlan;
+  Plan plan;
 
   MockMerlinService() {
     this.initialPlan = new MerlinPlan();
@@ -90,7 +91,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
         this.missionModelInfo.get().config());
   }
 
-  @Override
+    @Override
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
   {
     // TODO this gets the planMetadata from above
@@ -123,6 +124,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   )
   {
     this.updatedPlan = extractActivityDirectives(plan);
+    this.plan = plan;
     final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
     for (final var activity : plan.getActivities()) {
       res.put(activity, new ActivityDirectiveId(activity.id().id()));

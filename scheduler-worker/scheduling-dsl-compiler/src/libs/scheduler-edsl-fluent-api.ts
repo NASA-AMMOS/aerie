@@ -10,7 +10,6 @@ import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import {ActivityInstance} from "./constraints-edsl-fluent-api.js";
 import * as ConstraintsAST from "./constraints-ast.js";
 import {makeArgumentsDiscreteProfiles} from "./scheduler-mission-model-generated-code";
-import type {ActivityTimingConstraintFlexibleRange} from "./scheduler-ast.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
@@ -529,7 +528,7 @@ export class Goal {
 /**
  * An StartTimingConstraint is a constraint applying on the start time of an activity template.
  */
-export type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint | FlexibleRangeTimingConstraint }
+export type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint | FlexibleRangeTimingConstraint}
 /**
  * An EndTimingConstraint is a constraint applying on the end time of an activity template.
  */
@@ -707,17 +706,17 @@ export class RangeTimingConstraint {
 }
 
 /**
- * A flexible range timing constraint specifies that the start or the end time of an activity must be within certain bounds. Use {@link TimingConstraint.singleton} to specify the bounds.
+ * A FlexibleRange timing constraint specifies that the start or the end time of an activity must be within certain bounds. Use {@link TimingConstraint.bounds} to specify the bounds.
  */
 export class FlexibleRangeTimingConstraint {
   /** @internal **/
-  public readonly __astNode: AST.ActivityTimingConstraintFlexibleRange
+  public readonly __astNode: AST.ActivityTimingConstraintInterval
   /** @internal **/
-  private constructor(__astNode: AST.ActivityTimingConstraintFlexibleRange) {
+  private constructor(__astNode: AST.ActivityTimingConstraintInterval) {
     this.__astNode = __astNode;
   }
   /** @internal **/
-  public static new(__astNode: AST.ActivityTimingConstraintFlexibleRange): FlexibleRangeTimingConstraint {
+  public static new(__astNode: AST.ActivityTimingConstraintInterval): FlexibleRangeTimingConstraint {
     return new FlexibleRangeTimingConstraint(__astNode);
   }
 }

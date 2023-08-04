@@ -79,8 +79,8 @@ public class GoalBuilder {
         final var endConstraint = g.endConstraint().get();
         if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint e) {
           builder.endsAt(makeTimeExpressionRelativeFixed(e));
-        } if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange e) {
-          builder.startsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
+        } else if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange e) {
+          builder.endsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
         } else {
           throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, endConstraint);
         }
