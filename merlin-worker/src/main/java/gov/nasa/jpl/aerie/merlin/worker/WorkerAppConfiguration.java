@@ -9,6 +9,7 @@ import java.util.Objects;
 public record WorkerAppConfiguration(
     Path merlinFileStore,
     Store store,
+    long simulationProgressPollPeriodMillis,
     Instant untruePlanStart
 ) {
   public WorkerAppConfiguration {

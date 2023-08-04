@@ -1,0 +1,23 @@
+table:
+  name: simulation_extent
+  schema: public
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [simulation_dataset_id, extent]
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: [simulation_dataset_id, extent]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [simulation_dataset_id, extent]
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

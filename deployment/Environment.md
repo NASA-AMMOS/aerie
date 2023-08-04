@@ -39,6 +39,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `MERLIN_WORKER_DB_USER`     | Username of the DB instance                                                                                                 | `string` | (this must the same as the Merlin container) |
 | `MERLIN_WORKER_DB_PASSWORD` | Password of the DB instance                                                                                                 | `string` | (this must the same as the Merlin container) |
 | `MERLIN_WORKER_DB`          | The DB for Merlin.                                                                                                          | `string` | (this must the same as the Merlin container) |
+| `SIMULATION_PROGRESS_POLL_PERIOD_MILLIS`          | Cadence at which the worker will report simulation progress to the database.                                                | `number` | 5000                                         |
 | `UNTRUE_PLAN_START`         | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on | `string` |                                              |
 
 ## Aerie Scheduler

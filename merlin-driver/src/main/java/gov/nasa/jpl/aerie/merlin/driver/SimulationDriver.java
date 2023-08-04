@@ -16,6 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class SimulationDriver {
   public static <Model>
@@ -26,6 +27,20 @@ public final class SimulationDriver {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration
+  )
+  {
+    return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, $ -> {});
+  }
+
+  public static <Model>
+  SimulationResults simulate(
+      final MissionModel<Model> missionModel,
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration,
+      final Consumer<Duration> simulationExtentConsumer
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
@@ -33,6 +48,8 @@ public final class SimulationDriver {
       var cells = new LiveCells(timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
+
+      simulationExtentConsumer.accept(elapsedTime);
 
       // Begin tracking all resources.
       for (final var entry : missionModel.getResources().entrySet()) {
@@ -90,6 +107,8 @@ public final class SimulationDriver {
           timeline.add(delta);
           // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
           //   even if they occur at the same real time.
+
+          simulationExtentConsumer.accept(elapsedTime);
 
           if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
             break;

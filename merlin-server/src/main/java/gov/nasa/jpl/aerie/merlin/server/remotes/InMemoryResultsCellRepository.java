@@ -129,6 +129,11 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
       this.state = new ResultsProtocol.State.Failed(0, reason);
     }
 
+    @Override
+    public void reportSimulationExtent(final Duration extent) {
+      System.out.println("Simulation extent: " + extent);
+    }
+
     public boolean isEqualTo(final InMemoryCell other) {
       if (this.canceled != other.canceled) return false;
       return Objects.equals(this.state, other.state);

@@ -1,10 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -23,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
@@ -235,7 +242,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message)
+  public SimulationResults runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
   throws NoSuchMissionModelException
   {
     final var config = message.configuration();
@@ -246,12 +253,16 @@ public final class LocalMissionModelService implements MissionModelService {
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(message.missionModelId(), message.simulationStartTime(), SerializedValue.of(config)),
+        loadAndInstantiateMissionModel(
+            message.missionModelId(),
+            message.simulationStartTime(),
+            SerializedValue.of(config)),
         message.activityDirectives(),
         message.simulationStartTime(),
         message.simulationDuration(),
         message.planStartTime(),
-        message.planDuration());
+        message.planDuration(),
+        simulationExtentConsumer);
   }
 
   @Override

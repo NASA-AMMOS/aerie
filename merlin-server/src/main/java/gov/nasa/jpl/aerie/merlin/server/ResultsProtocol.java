@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 
 import java.util.function.Consumer;
@@ -46,6 +47,8 @@ public final class ResultsProtocol {
       builderConsumer.accept(builder);
       failWith(builder.build());
     }
+
+    void reportSimulationExtent(Duration extent);
   }
 
   public interface OwnerRole extends ReaderRole, WriterRole {}

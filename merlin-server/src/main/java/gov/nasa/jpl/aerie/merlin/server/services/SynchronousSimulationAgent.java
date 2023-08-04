@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 
 public record SynchronousSimulationAgent (
     PlanService planService,
-    MissionModelService missionModelService
+    MissionModelService missionModelService,
+    long simulationProgressPollPeriod
 ) implements SimulationAgent {
   public sealed interface Response {
     record Failed(String reason) implements Response {}
@@ -57,30 +58,34 @@ public record SynchronousSimulationAgent (
     final SimulationResults results;
     try {
       // Validate plan activity construction
-      {
-        final var failures = this.missionModelService.validateActivityInstantiations(
-            plan.missionModelId,
-            plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                e -> e.getValue().serializedActivity())));
+      final var failures = this.missionModelService.validateActivityInstantiations(
+          plan.missionModelId,
+          plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
+              Map.Entry::getKey,
+              e -> e.getValue().serializedActivity())));
 
-        if (!failures.isEmpty()) {
-          writer.failWith(b -> b
-              .type("PLAN_CONTAINS_UNCONSTRUCTABLE_ACTIVITIES")
-              .message("Plan contains unconstructable activities")
-              .data(ResponseSerializers.serializeUnconstructableActivityFailures(failures)));
-          return;
-        }
+      if (!failures.isEmpty()) {
+        writer.failWith(b -> b
+            .type("PLAN_CONTAINS_UNCONSTRUCTABLE_ACTIVITIES")
+            .message("Plan contains unconstructable activities")
+            .data(ResponseSerializers.serializeUnconstructableActivityFailures(failures)));
+        return;
       }
 
-      results = this.missionModelService.runSimulation(new CreateSimulationMessage(
-          plan.missionModelId,
-          plan.simulationStartTimestamp.toInstant(),
-          simDuration,
-          plan.startTimestamp.toInstant(),
-          planDuration,
-          plan.activityDirectives,
-          plan.configuration));
+      try (final var extentListener = FixedRateListener.callAtFixedRate(
+          writer::reportSimulationExtent,
+          Duration.ZERO,
+          simulationProgressPollPeriod)
+      ) {
+        results = this.missionModelService.runSimulation(new CreateSimulationMessage(
+            plan.missionModelId,
+            plan.simulationStartTimestamp.toInstant(),
+            simDuration,
+            plan.startTimestamp.toInstant(),
+            planDuration,
+            plan.activityDirectives,
+            plan.configuration), extentListener::updateValue);
+      }
     } catch (SimulationException ex) {
       writer.failWith(b -> b
           .type("SIMULATION_EXCEPTION")

@@ -27,6 +27,7 @@
 - "!include public_simulation.yaml"
 - "!include public_simulated_activity_view.yaml"
 - "!include public_simulation_dataset.yaml"
+- "!include public_simulation_extent.yaml"
 - "!include public_simulation_template.yaml"
 - "!include public_span.yaml"
 - "!include public_topic.yaml"
