@@ -71,6 +71,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: getActivityEffectiveArguments
     definition:
       kind: ""
@@ -79,6 +80,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: getActivityEffectiveArgumentsBulk
     definition:
       kind: ""
@@ -87,6 +89,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: getActivityTypeScript
     definition:
       kind: ""
