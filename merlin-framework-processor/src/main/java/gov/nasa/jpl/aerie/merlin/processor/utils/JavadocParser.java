@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class JavadocParser {
   private static final String COMPUTED_ATTRIBUTE_TAG = "@computedAttribute";
-  private static final String RESOURCE_TYPE_TAG = "@registeredState";
+  private static final String RESOURCE_TYPE_TAG = "@resourceName";
   private static final String UNITS_TAG = "@unit";
 
   /**

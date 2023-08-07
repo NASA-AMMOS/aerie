@@ -18,14 +18,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * @registeredState /fruit
+ * @resourceName /fruit
  * @unit Number of fruit
  */
 public final class Mission {
   public final Accumulator fruit;
   public final AdditiveRegister peel;
   /**
-   * @registeredState /flag
+   * @resourceName /flag
    * @unit flag
    */
   public final Register<Flag> flag;
