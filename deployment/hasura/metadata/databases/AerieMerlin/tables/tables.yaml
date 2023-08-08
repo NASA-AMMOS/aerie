@@ -20,6 +20,7 @@
 - "!include public_plan_collaborators.yaml"
 - "!include public_plan_dataset.yaml"
 - "!include public_plan_snapshot.yaml"
+- "!include public_plan_snapshot_activities.yaml"
 - "!include public_preset_to_directive.yaml"
 - "!include public_profile.yaml"
 - "!include public_profile_segment.yaml"
