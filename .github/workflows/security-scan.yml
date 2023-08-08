@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      contents: read
+      contents: write
       security-events: write
 
     strategy:
@@ -43,6 +43,33 @@ jobs:
           ./gradlew testClasses
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
+      - name: Gradle Dependency Submission
+        uses: mikepenz/gradle-dependency-submission@v0.9.0
+        with:
+          gradle-build-module: |-
+            :merlin-sdk
+            :merlin-driver
+            :merlin-framework
+            :merlin-framework-junit
+            :merlin-framework-processor
+            :contrib
+            :parsing-utilities
+            :permissions
+            :merlin-server
+            :merlin-worker
+            :scheduler-server
+            :scheduler-worker
+            :sequencing-server
+            :constraints
+            :scheduler-driver
+            :db-tests
+            :e2e-tests
+            :examples:banananation
+            :examples:foo-missionmodel
+            :examples:config-with-defaults
+            :examples:config-without-defaults
+            :examples:minimal-mission-model
+          sub-module-mode: "COMBINED"
       - name: NASA Scrub
         run: |
           python3 -m pip install nasa-scrub
