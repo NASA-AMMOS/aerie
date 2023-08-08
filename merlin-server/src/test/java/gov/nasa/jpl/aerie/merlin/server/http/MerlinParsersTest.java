@@ -3,19 +3,13 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
-import gov.nasa.jpl.aerie.merlin.server.models.HasuraActivityDirectiveEvent;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
@@ -24,7 +18,6 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.*;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class MerlinParsersTest {
@@ -171,35 +164,5 @@ public final class MerlinParsersTest {
     final var expected = new HasuraMissionModelEvent("1");
 
     assertThat(hasuraMissionModelEventTriggerP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
-  }
-
-  @Test
-  public void testHasuraActivityDirectiveEventParser() {
-    final var now = new Timestamp(Instant.now());
-
-    final var json = Json
-        .createObjectBuilder()
-        .add("event", Json
-            .createObjectBuilder()
-            .add("data", Json
-                .createObjectBuilder()
-                .add("new", Json
-                    .createObjectBuilder()
-                    .add("plan_id", 1)
-                    .add("id", 1)
-                    .add("type", "Test")
-                    .add("arguments", Json.createObjectBuilder().add("A", 42).build())
-                    .add("last_modified_arguments_at", pgTimestampP.unparse(now))
-                    .build())
-                .add("old", JsonValue.NULL)
-                .build())
-            .add("op", "INSERT")
-            .build())
-        .add("id", "8907a407-28a5-440a-8de6-240b80c58a8b")
-        .build();
-
-    final var expected = new HasuraActivityDirectiveEvent(new PlanId(1), new ActivityDirectiveId(1), "Test", Map.of("A", SerializedValue.of(42)), now);
-
-    assertThat(hasuraActivityDirectiveEventTriggerP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
   }
 }

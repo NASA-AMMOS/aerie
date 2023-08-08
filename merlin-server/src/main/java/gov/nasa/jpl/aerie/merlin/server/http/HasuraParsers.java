@@ -2,11 +2,8 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
-import gov.nasa.jpl.aerie.merlin.server.models.HasuraActivityDirectiveEvent;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 import java.util.Optional;
 
@@ -24,7 +21,6 @@ import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.simulationDatasetIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.timestampP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.profileSetP;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
 
 public abstract class HasuraParsers {
   private HasuraParsers() {}
@@ -95,25 +91,6 @@ public abstract class HasuraParsers {
       .map(
           untuple(missionModelId -> new HasuraMissionModelEvent(String.valueOf(missionModelId))),
           $ -> tuple(Long.parseLong($.missionModelId())));
-
-  public static final JsonParser<HasuraActivityDirectiveEvent> hasuraActivityDirectiveEventTriggerP
-      = productP
-      .field("event", productP
-          .field("data", productP
-              .field("new", productP
-                  .field("plan_id", longP)
-                  .field("id", longP)
-                  .field("type", stringP)
-                  .field("arguments", mapP(serializedValueP))
-                  .field("last_modified_arguments_at", pgTimestampP)
-                  .rest())
-              .rest())
-          .rest())
-      .rest()
-      .map(
-          untuple((planId, activityDirectiveId, type, arguments, argumentsModifiedTime) ->
-              new HasuraActivityDirectiveEvent(new PlanId(planId), new ActivityDirectiveId(activityDirectiveId), type, arguments, argumentsModifiedTime)),
-          $ -> tuple($.planId().id(), $.activityDirectiveId().id(), $.activityTypeName(), $.arguments(), $.argumentsModifiedTime()));
 
   private static final JsonParser<HasuraAction.MissionModelArgumentsInput> hasuraMissionModelArgumentsInputP
       = productP

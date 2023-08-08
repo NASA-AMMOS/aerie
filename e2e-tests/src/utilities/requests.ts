@@ -10,8 +10,8 @@ import time from './time.js';
  * Aerie API request functions.
  */
 const req = {
-  async createMissionModel(request: APIRequestContext, model: MissionModelInsertInput): Promise<number> {
-    const data = await req.hasura(request, gql.CREATE_MISSION_MODEL, { model: model });
+  async createMissionModel(request: APIRequestContext, model: MissionModelInsertInput, headers?: Record<string, string>): Promise<number> {
+    const data = await req.hasura(request, gql.CREATE_MISSION_MODEL, { model: model }, headers);
     const { insert_mission_model_one } = data;
     const { id: mission_model_id } = insert_mission_model_one;
 
@@ -126,8 +126,8 @@ const req = {
     }
   },
 
-  async createPlan(request: APIRequestContext, model: CreatePlanInput): Promise<number> {
-    const data = await req.hasura(request, gql.CREATE_PLAN, { plan: model });
+  async createPlan(request: APIRequestContext, model: CreatePlanInput, headers?: Record<string, string>): Promise<number> {
+    const data = await req.hasura(request, gql.CREATE_PLAN, { plan: model }, headers);
     const { insert_plan_one } = data;
     const { id: plan_id } = insert_plan_one;
     return plan_id;
@@ -385,6 +385,34 @@ const req = {
     const { constraint_run } = data;
     return constraint_run;
   },
+
+  // User-related requests
+  async createUser(request: APIRequestContext, user: User): Promise<void> {
+    const userInput: UserInsert = {username: user.username, default_role: user.default_role};
+    const allowedRolesInput: UserAllowedRole[] = user.allowed_roles.map(role => { return {username: user.username, allowed_role: role}})
+    await req.hasura(request, gql.CREATE_USER, { user: userInput, allowed_roles: allowedRolesInput } )
+  },
+
+  async deleteUser(request: APIRequestContext, username: string): Promise<void> {
+    await req.hasura(request, gql.DELETE_USER, { username })
+  },
+
+  async addPlanCollaborator(request: APIRequestContext, username: string, planId: number): Promise<void> {
+    const planCollaboratorInsertInput = {planId: planId, collaborator: username};
+    await req.hasura(request, gql.ADD_PLAN_COLLABORATOR, { planCollaboratorInsertInput });
+  },
+
+  async getActionPermissionsForRole(request: APIRequestContext, role: string): Promise<ActionPermissionSet> {
+    const data = await req.hasura(request, gql.GET_ROLE_ACTION_PERMISSIONS, { role });
+    const { permissions } = data;
+    const { action_permissions } = permissions;
+    return action_permissions;
+  },
+
+  async updateActionPermissionsForRole(request: APIRequestContext, role: string, permissions: ActionPermissionSet): Promise<void> {
+    const strippedPermissions = Object.fromEntries(Object.entries(permissions).filter(([_, v]) => v != null));
+    await req.hasura(request, gql.UPDATE_ROLE_ACTION_PERMISSIONS, { role: role, action_permissions: strippedPermissions });
+  }
 };
 /**
  * Converts any activity to an Activity.

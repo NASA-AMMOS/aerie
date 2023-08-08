@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -32,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityBulkActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityDirectiveEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsViolationsActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraUploadExternalDatasetActionP;
@@ -94,7 +92,6 @@ public final class MerlinBindings implements Plugin {
       path("constraintViolations", () -> post(this::getConstraintViolations));
       path("refreshModelParameters", () -> post(this::postRefreshModelParameters));
       path("refreshActivityTypes", () -> post(this::postRefreshActivityTypes));
-      path("refreshActivityValidations", () -> post(this::postRefreshActivityValidations));
       path("refreshResourceTypes", () -> post(this::postRefreshResourceTypes));
       path("validateActivityArguments", () -> post(this::validateActivityArguments));
       path("validateModelArguments", () -> post(this::validateModelArguments));
@@ -138,30 +135,6 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final MissionModelService.NoSuchMissionModelException ex) {
-      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
-    }
-  }
-
-  private void postRefreshActivityValidations(final Context ctx) {
-    try {
-      final var input = parseJson(ctx.body(), hasuraActivityDirectiveEventTriggerP);
-      final var planId = input.planId();
-      final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
-      final var activityDirective = new ActivityDirectiveForValidation(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
-
-      final var plan = this.planService.getPlanForValidation(planId);
-      this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);
-      ctx.status(200);
-    } catch (final InvalidJsonException ex) {
-      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
-    } catch (final InvalidEntityException ex) {
-      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final InstantiationException ex) {
-      ctx.status(400)
-          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
-    } catch (final NoSuchPlanException ex) {
-      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }
