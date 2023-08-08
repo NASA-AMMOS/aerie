@@ -525,7 +525,7 @@ describe('Time Validation', () => {
     });
   });
 
-  it('should have invalid Relative Times', () => {
+  it('should have invalid Times', () => {
 
     try {
       CommandStem.new({
@@ -545,6 +545,220 @@ describe('Time Validation', () => {
     }catch (e: any) {
       expect(e.message).toEqual('Day (DDD) is not allowed for Relative Times: 009T03:01:34.284')
     }
+    try {
+      CommandStem.new({
+        stem: 'TEST',
+        arguments: {},
+        epochTime: hmsToDuration('365T23:59:60' as HMS_STRING,true),
+      })
+    }catch (e: any) {
+      expect(e.message).toEqual('Days cannot exceed 365: 365T23:59:60')
+    }
   });
+
+  it('should balance unbalance durations', () => {
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      relativeTime: hmsToDuration('12:34:70' as HMS_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "12:35:10.000",
+        "type": "COMMAND_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      relativeTime: hmsToDuration('12:70:56' as HMS_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "13:10:56.000",
+        "type": "COMMAND_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      epochTime: hmsToDuration('25:34:56' as HMS_STRING,true),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "001T01:34:56.000",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      epochTime: hmsToDuration('23:59:60' as HMS_STRING,true),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "001T00:00:00.000",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      epochTime: hmsToDuration('-23:59:60' as HMS_STRING,true),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "-001T00:00:00.000",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      epochTime: hmsToDuration('-000T24:60:60' as HMS_STRING,true),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "-001T01:01:00.000",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      epochTime: hmsToDuration('-000T20:90:90' as HMS_STRING,true),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "-21:31:30.000",
+        "type": "EPOCH_RELATIVE"
+      },
+      type: 'command',
+    });
+
+  });
+
+  it('should balance unbalance instants', () => {
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2022-001T24:00:00' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2022-002T00:00:00.000",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2022-365T00:00:00' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2022-365T00:00:00.000",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2022-365T23:59:60' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2023-001T00:00:00.000",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2023-365T23:59:60.789' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2024-001T00:00:00.789",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2022-001T00:00:90' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2022-001T00:01:30.000",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2024-366T00:00:00.789' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2024-366T00:00:00.789",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+
+    expect(CommandStem.new({
+      stem: 'TEST',
+      arguments: {},
+      absoluteTime: doyToInstant('2024-366T23:60:60.789' as DOY_STRING),
+    }).toSeqJson()).toEqual({
+      args: [],
+      stem: 'TEST',
+      time: {
+        "tag": "2025-001T00:01:00.789",
+        "type": "ABSOLUTE"
+      },
+      type: 'command',
+    });
+  });
+
+
 
 });

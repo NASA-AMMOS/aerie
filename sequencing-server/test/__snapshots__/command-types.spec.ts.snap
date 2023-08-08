@@ -3101,8 +3101,8 @@ export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
   ];
 
   //use to convert doy to month and day
-  const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
-  // convert to UTC Date
+  const doyDate = new Date(Date.UTC(parseInt(year, 10), 0, parseInt(doyStr, 10), parseInt(hour, 10),parseInt(minute,10),parseInt(second,10),parseInt(millisecond ? millisecond : '0',10)));
+  // Convert to UTC Date
   const utcDoyDate = new Date(
     Date.UTC(
       doyDate.getUTCFullYear(),
@@ -3116,13 +3116,13 @@ export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
   );
 
   return Temporal.ZonedDateTime.from({
-    year: parseInt(year, 10),
+    year: utcDoyDate.getUTCFullYear(),
     month: utcDoyDate.getUTCMonth() + 1,
     day: utcDoyDate.getUTCDate(),
-    hour: parseInt(hour, 10),
-    minute: parseInt(minute, 10),
-    second: parseInt(second, 10),
-    millisecond: parseInt(millisecond ?? '0', 10),
+    hour: utcDoyDate.getUTCHours(),
+    minute: utcDoyDate.getUTCMinutes(),
+    second: utcDoyDate.getUTCSeconds(),
+    millisecond: utcDoyDate.getUTCMilliseconds(),
     timeZone: 'UTC',
   }).toInstant();
 }
@@ -3142,26 +3142,57 @@ export function durationToHms(time: Temporal.Duration): HMS_STRING {
 
 export function hmsToDuration(hms: HMS_STRING, epoch: boolean = false): Temporal.Duration {
   const match = hms.match(HMS_REGEX);
-  if (match === null) {
+  if (!match) {
     throw new Error(\`Invalid HMS string: \${hms}\`);
   }
 
-  const [, sign, days = '0', hours = "0", minutes = "0", seconds = "0", milliseconds = '0'] = match;
-  const isPositive = sign !== '-';
-  const parseNumber = (value: string) => (isPositive ? 1 : -1) * parseInt(value, 10);
+  const [, sign, days = '0', hours = '0', minutes = '0', seconds = '0', milliseconds = '0'] = match;
+  const isNegative = sign === '-';
+
+  let daysNum = parseInt(days.replace('T', ''),10)
+  let hoursNum = parseInt(hours,10)
+  let minuteNum = parseInt(minutes,10)
+  let secondsNum = parseInt(seconds,10)
+  let millisecondNum = parseInt(milliseconds,10)
+
+  // Normalize milliseconds, seconds, minutes, and hours iteratively
+  if (isNegative) {
+    daysNum = Math.abs(daysNum);
+    hoursNum = Math.abs(hoursNum);
+    minuteNum = Math.abs(minuteNum);
+    secondsNum = Math.abs(secondsNum);
+    millisecondNum = Math.abs(millisecondNum);
+  }
+  // Normalize milliseconds and seconds
+  secondsNum += Math.floor(secondsNum / 1000);
+  millisecondNum = millisecondNum % 1000;
+
+  // Normalize seconds and minutes
+  minuteNum += Math.floor(secondsNum / 60);
+  secondsNum = secondsNum % 60;
+
+  // Normalize minutes and hours
+  hoursNum += Math.floor(minuteNum / 60);
+  minuteNum = minuteNum % 60;
+
+  // Normalize hours and days
+  daysNum += Math.floor(hoursNum / 24);
+  hoursNum = hoursNum % 24;
+
+  if (daysNum > 365){
+    throw new Error(\`Days cannot exceed 365: \${hms}\`);
+  }
 
   if (!epoch) {
-    if(!isPositive)
-      throw new Error(\`Signed time (+/-) is not allowed for Relative Times: \${hms}\`);
-    if(days !== '0')
-      throw new Error(\`Day (DDD) is not allowed for Relative Times: \${hms}\`);
+    if (isNegative) {throw new Error(\`Signed time (+/-) is not allowed for Relative Times: \${hms}\`);}
+    if (daysNum !== 0) {throw new Error(\`Day (DDD) is not allowed for Relative Times: \${hms}\`);}
   }
   return Temporal.Duration.from({
-    days: parseNumber(days.replace('T', '')),
-    hours: parseNumber(hours),
-    minutes: parseNumber(minutes),
-    seconds: parseNumber(seconds),
-    milliseconds: parseNumber(milliseconds),
+    days: isNegative ? -daysNum : daysNum,
+    hours: isNegative ? -hoursNum : hoursNum,
+    minutes: isNegative ? -minuteNum : minuteNum,
+    seconds: isNegative ? -secondsNum : secondsNum,
+    milliseconds: isNegative ? -millisecondNum : millisecondNum ,
   });
 }
 
