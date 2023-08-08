@@ -257,15 +257,15 @@ function convertObjectArgsToPassByPosition(name : string, type: string){
  */
 function argumentTypeToVariable(argumentType : string) : string{
   if (argumentType.startsWith('F')) {
-    return "| 'FLOAT'";
+    return "| VARIABLE_FLOAT";
   } else if (argumentType.startsWith('I')) {
-    return "| 'INT'";
+    return "| VARIABLE_INT";
   } else if (argumentType.startsWith('U')) {
-    return "| 'UINT'";
+    return "| VARIABLE_UINT";
   } else if (argumentType.startsWith('VarString')) {
-    return "| 'STRING'";
+    return "| VARIABLE_STRING";
   } else if (argumentType.startsWith('(')) {
-    return "| 'ENUM'";
+    return "| VARIABLE_ENUM";
   } else {
     return ''
   }
