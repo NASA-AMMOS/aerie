@@ -79,7 +79,7 @@ test {
   }
 
   // Add node bin directory to PATH, helps CI/CD services without node installed
-  environment 'NODE_PATH', nodeSetup.nodeDir.get().toString().concat("/bin/node")
+  environment 'NODE_PATH', node.computedNodeDir.get().toString().concat("/bin/node")
 
   environment "SCHEDULING_DSL_COMPILER_ROOT", projectDir.toPath().resolve('scheduling-dsl-compiler')
   environment "SCHEDULING_DSL_COMPILER_COMMAND", './build/main.js'
