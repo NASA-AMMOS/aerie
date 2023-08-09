@@ -51,6 +51,7 @@ public final class SchedulerWorkerAppDriver {
     hikariConfig.addDataSourceProperty("applicationName", "Scheduler Worker");
     hikariConfig.setUsername(postgresStore.user());
     hikariConfig.setPassword(postgresStore.password());
+    hikariConfig.setMaximumPoolSize(2);
 
     hikariConfig.setConnectionInitSql("set time zone 'UTC'");
 
