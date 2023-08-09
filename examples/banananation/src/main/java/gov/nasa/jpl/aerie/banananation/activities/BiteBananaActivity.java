@@ -21,7 +21,7 @@ public final class BiteBananaActivity {
 
   /**
    * The amount by which to reduce /fruit
-   * @unit number
+   * @aerie.unit number
    */
   @Parameter
   public double biteSize = 1.0;
@@ -43,10 +43,10 @@ public final class BiteBananaActivity {
 
   /**
    *
-   * @computedAttribute biteSizeWasBig
-   * @unit Was the bite big?
-   * @computedAttribute newFlag
-   * @unit A or B.
+   * @aerie.computedAttribute biteSizeWasBig
+   * @aerie.unit Was the bite big?
+   * @aerie.computedAttribute newFlag
+   * @aerie.unit A or B.
    */
   @AutoValueMapper.Record
   public record ComputedAttributes(boolean biteSizeWasBig, Flag newFlag) {}

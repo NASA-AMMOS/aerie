@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.processor.utils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.lang.model.element.ElementKind;
@@ -11,9 +12,12 @@ import java.util.Map;
 import java.util.Optional;
 
 public class JavadocParser {
-  private static final String COMPUTED_ATTRIBUTE_TAG = "@computedAttribute";
-  private static final String RESOURCE_TYPE_TAG = "@resourceName";
-  private static final String UNITS_TAG = "@unit";
+  private static final String TAG_PREFIX = "@aerie";
+  private static final String COMPUTED_ATTRIBUTE_TAG = "%s.computedAttribute".formatted(TAG_PREFIX);
+  // @param is a built-in tag, so we don't prefix it.
+  private static final String PARAM_TAG = "@param";
+  private static final String RESOURCE_TYPE_TAG = "%s.resourceName".formatted(TAG_PREFIX);
+  private static final String UNITS_TAG = "%s.unit".formatted(TAG_PREFIX);
 
   /**
    * Parses javadocs searching for resource type + unit paris.
@@ -45,9 +49,9 @@ public class JavadocParser {
           final var value = $.getValue();
           var property = $.getKey();
 
-          if (value.contains(UNITS_TAG)) {
+          if (StringUtils.containsIgnoreCase(value, UNITS_TAG)) {
             // Prepend the registered state with a "/" as it's removed from the property name.
-            if (value.contains(RESOURCE_TYPE_TAG)) {
+            if (StringUtils.containsIgnoreCase(value, RESOURCE_TYPE_TAG)) {
               property = "/" + property;
             }
 
@@ -71,7 +75,16 @@ public class JavadocParser {
     final var parameterUnits = new HashMap<String, String>();
     final var computedAttributeUnits = new HashMap<String, String>();
 
-    // Parse the parameter javadocs.
+    // Parse the activity type class javadoc.
+    Optional.ofNullable(elementUtils.getDocComment(element))
+          .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
+          .map(comment -> {
+            parseComment(comment, parameterUnits, PARAM_TAG);
+
+            return comment;
+          });
+
+    // Parse the parameter javadocs inside the class.
     element
         .getEnclosedElements()
         .stream()
@@ -84,7 +97,12 @@ public class JavadocParser {
           final var value = $.getValue();
           var property = $.getKey();
 
-          if (value.contains(UNITS_TAG) && !value.contains(COMPUTED_ATTRIBUTE_TAG)) {
+          System.out.println(value);
+          System.out.println(property);
+          System.out.println();
+          System.out.println();
+
+          if (StringUtils.containsIgnoreCase(value, UNITS_TAG) && !StringUtils.containsIgnoreCase(value, COMPUTED_ATTRIBUTE_TAG)) {
             parameterUnits.put(property, extractTagValue(value));
           }
         });
@@ -127,17 +145,17 @@ public class JavadocParser {
 
   /**
    * Extracts the tag value from a given tag and comment.
-   * Ex: "@unit mass in grams" will return "mass in grams".
+   * Ex: "@aerie.unit mass in grams" will return "mass in grams".
    *
    * @param comment The entire comment string that we're parsing the tag value from.
    * @return The comment value after the found tag.
    */
   private static String extractTagValue(String comment) {
-    if (!comment.contains(JavadocParser.UNITS_TAG)) {
+    if (!StringUtils.containsIgnoreCase(comment, UNITS_TAG)) {
       return "";
     }
 
-    return comment.substring(comment.indexOf(JavadocParser.UNITS_TAG) + JavadocParser.UNITS_TAG.length()).trim();
+    return comment.substring(comment.indexOf(UNITS_TAG) + UNITS_TAG.length()).trim();
   }
 
   private static void parseComment(String comment, Map<String, String> parsedUnits, String tag) {
@@ -145,11 +163,11 @@ public class JavadocParser {
     var lastItem = "";
 
     for (var splitComment : comment.split("\n")) {
-      if (splitComment.contains(tag)) {
+      if (StringUtils.containsIgnoreCase(splitComment, tag)) {
         lastItem = splitComment.split(" ")[1];
       }
 
-      if (!lastItem.isEmpty() && splitComment.contains(UNITS_TAG)) {
+      if (!lastItem.isEmpty() && StringUtils.containsIgnoreCase(splitComment, UNITS_TAG)) {
         parsedUnits.put(lastItem, extractTagValue(splitComment));
       }
     }

@@ -18,15 +18,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * @resourceName /fruit
- * @unit Number of fruit
+ * @aerie.resourceName /fruit
+ * @aerie.unit Number of fruit
  */
 public final class Mission {
   public final Accumulator fruit;
   public final AdditiveRegister peel;
   /**
-   * @resourceName /flag
-   * @unit flag
+   * @aerie.resourceName /flag
+   * @aerie.unit flag
    */
   public final Register<Flag> flag;
   public final Register<Integer> lineCount = Register.forImmutable(0);

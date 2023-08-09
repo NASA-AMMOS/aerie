@@ -45,8 +45,6 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
 
-javadoc.options.tags = [ "contact", "subsystem", "unit", "resourceName", "computedAttribute" ]
-
 publishing {
   publications {
     library(MavenPublication) {
