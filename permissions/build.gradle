@@ -11,11 +11,11 @@ java {
 }
 
 dependencies {
-  implementation 'io.javalin:javalin:5.1.2'
+  implementation 'io.javalin:javalin:5.6.2'
   implementation 'org.glassfish:javax.json:1.1.4'
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-  testImplementation 'org.assertj:assertj-core:3.23.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.assertj:assertj-core:3.24.2'
 }
 
 test {

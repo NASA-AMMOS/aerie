@@ -20,7 +20,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 dependencies {
   api project(':merlin-driver')
   api project(':merlin-framework')
-  api 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+  api 'org.junit.jupiter:junit-jupiter-api:5.10.0'
 }
 
 publishing {

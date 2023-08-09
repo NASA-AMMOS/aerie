@@ -36,12 +36,12 @@ dependencies {
 
   api project(':merlin-sdk')
   api 'org.glassfish:javax.json:1.1.4'
-  implementation 'it.unimi.dsi:fastutil:8.5.6'
+  implementation 'it.unimi.dsi:fastutil:8.5.12'
 
   testImplementation project(':merlin-framework')
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation "net.jqwik:jqwik:1.6.5"
 }
 

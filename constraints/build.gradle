@@ -30,7 +30,7 @@ dependencies {
   implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
 
 publishing {

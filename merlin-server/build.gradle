@@ -1,7 +1,7 @@
 plugins {
   id 'java'
   id 'application'
-  id 'com.github.node-gradle.node' version '3.5.0'
+  id 'com.github.node-gradle.node' version '5.0.0'
   id 'jacoco'
 }
 
@@ -56,7 +56,7 @@ test {
   }
 
   // Add node bin directory to PATH, helps CI/CD services without node installed
-  environment 'NODE_PATH', nodeSetup.nodeDir.get().toString().concat("/bin/node")
+  environment 'NODE_PATH', node.computedNodeDir.get().toString().concat("/bin/node")
 
   environment "CONSTRAINTS_DSL_COMPILER_ROOT", projectDir.toPath().resolve('constraints-dsl-compiler')
   environment "CONSTRAINTS_DSL_COMPILER_COMMAND", './build/main.js'
@@ -80,19 +80,19 @@ dependencies {
   implementation project(':constraints')
   implementation project(':permissions')
 
-  implementation 'org.apache.commons:commons-lang3:3.12.0'
-  implementation 'io.javalin:javalin:5.1.2'
-  implementation 'org.slf4j:slf4j-simple:2.0.3'
+  implementation 'org.apache.commons:commons-lang3:3.13.0'
+  implementation 'io.javalin:javalin:5.6.2'
+  implementation 'org.slf4j:slf4j-simple:2.0.7'
   implementation 'org.glassfish:javax.json:1.1.4'
-  implementation 'org.apache.bcel:bcel:6.6.0'
+  implementation 'org.apache.bcel:bcel:6.7.0'
 
   implementation 'org.postgresql:postgresql:42.6.0'
   implementation 'com.zaxxer:HikariCP:5.0.1'
 
   testImplementation project(':examples:foo-missionmodel')
   testImplementation project(':merlin-framework')
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-  testImplementation 'org.assertj:assertj-core:3.23.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.assertj:assertj-core:3.24.2'
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'net.jqwik:jqwik:1.6.5'
 }
