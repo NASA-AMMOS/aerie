@@ -87,6 +87,12 @@ jobs:
         with:
           name: Test Results
           path: "**/e2e-tests/test-results"
+      - name: Upload DB Test Results as HTML
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results
+          path: "**/db-tests/build/reports/tests/e2eTest"
       - name: Upload Sequencing Server Test Results
         if: always()
         uses: actions/upload-artifact@v3
