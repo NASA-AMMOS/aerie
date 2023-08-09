@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
@@ -307,7 +309,24 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException {
     try {
       final var model = this.loadAndInstantiateMissionModel(missionModelId);
-      this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources(), model.getResourceTypeUnits());
+      final var unitMap = new HashMap<String, String>();
+
+      // Resource type units can be regex so go through our resources and apply the matching units.
+      for (final var resource : model.getResources().keySet()) {
+        for (final var unitString : model.getResourceTypeUnits().keySet()) {
+          // Check validity of the regex.
+          try {
+            Pattern.compile(unitString);
+
+            // Check for regex matches and assign them to the matching resource.
+            if (Pattern.matches(unitString, resource)) {
+              unitMap.put(resource, model.getResourceTypeUnits().get(unitString));
+            }
+          } catch (PatternSyntaxException ignored) { }
+        }
+      }
+
+      this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources(), unitMap);
     } catch (MissionModelRepository.NoSuchMissionModelException e) {
       throw new NoSuchMissionModelException(missionModelId);
     }

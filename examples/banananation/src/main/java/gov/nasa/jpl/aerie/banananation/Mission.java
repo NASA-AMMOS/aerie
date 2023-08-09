@@ -18,8 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * @aerie.resourceName /fruit
- * @aerie.unit Number of fruit
+ * @aerie.resourceName \/p.*
+ * @aerie.unit Things that start with p
  */
 public final class Mission {
   public final Accumulator fruit;
