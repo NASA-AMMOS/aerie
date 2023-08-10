@@ -149,6 +149,15 @@ public class PlanCollaborationTests {
     }
   }
 
+  void restoreFromSnapshot(final int planId, final int snapshotId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+        """
+        call restore_from_snapshot(%d, %d)
+        """.formatted(planId, snapshotId));
+    }
+  }
+
   int getParentPlanId(final int planId) throws SQLException{
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
@@ -452,6 +461,7 @@ public class PlanCollaborationTests {
 
   public static void assertActivityEquals(final Activity expected, final Activity actual) {
     // validate all shared properties
+    assertEquals(expected.activityId, actual.activityId);
     assertEquals(expected.name, actual.name);
     assertEquals(expected.sourceSchedulingGoalId, actual.sourceSchedulingGoalId);
     assertEquals(expected.createdAt, actual.createdAt);
@@ -628,6 +638,126 @@ public class PlanCollaborationTests {
         if(!sqlEx.getMessage().contains("Plan 1000 does not exist."))
           throw sqlEx;
       }
+    }
+  }
+
+  @Nested
+  class RestorePlanSnapshotTests{
+    @Test
+    void restoreFailsForNonexistentPlan() throws SQLException {
+      final int snapshotId = createSnapshot(merlinHelper.insertPlan(missionModelId));
+      try {
+        restoreFromSnapshot(-1, snapshotId);
+      } catch (SQLException ex) {
+        if (!ex.getMessage().contains("Cannot Restore: Plan with ID -1 does not exist.")) {
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void restoreFailsForNonexistentSnapshot() throws SQLException {
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      try {
+        restoreFromSnapshot(planId, -1);
+      } catch (SQLException ex) {
+        if (!ex.getMessage().contains("Cannot Restore: Snapshot with ID -1 does not exist.")) {
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void cannotRestoreSnapshotOfDifferentPlan() throws SQLException {
+      final int wrongPlan = merlinHelper.insertPlan(missionModelId);
+      final int snapshotId = createSnapshot(wrongPlan);
+      final int planId = merlinHelper.insertPlan(missionModelId, merlinHelper.user.name(), "Other Plan");
+
+      try {
+        restoreFromSnapshot(planId, snapshotId);
+      } catch (SQLException ex) {
+        if (!ex.getMessage().contains("Cannot Restore: Snapshot %d is not a snapshot of Plan 'Other Plan' (ID %d)"
+                            .formatted(snapshotId, planId))) {
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void cannotRestoreBranchToParentSnapshot() throws SQLException {
+      final int wrongPlan = merlinHelper.insertPlan(missionModelId);
+      final int snapshotId = createSnapshot(wrongPlan);
+      final int branchId = duplicatePlan(wrongPlan, "Different Plan");
+
+      try{
+        restoreFromSnapshot(branchId, snapshotId);
+      } catch (SQLException ex) {
+        if (!ex.getMessage().contains("Cannot Restore: Snapshot %d is not a snapshot of Plan 'Different Plan' (ID %d)"
+                            .formatted(snapshotId, branchId))) {
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void restoresDeletedActivities() throws SQLException {
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final Activity deletedDirective = getActivity(planId, merlinHelper.insertActivity(planId));
+      final int snapshotId =  createSnapshot(planId);
+
+      // Empty Plan
+      deleteActivityDirective(planId, deletedDirective.activityId);
+      assertEquals(0, getActivities(planId).size());
+
+      // Restore Plan from Snapshot
+      restoreFromSnapshot(planId, snapshotId);
+      final var planActivities = getActivities(planId);
+      assertEquals(1, planActivities.size());
+
+      // Assert that restored directive equals what it did before (aside from last_updated fields)
+      final Activity restoredDirective = planActivities.get(0);
+      assertActivityEquals(deletedDirective, restoredDirective);
+    }
+
+    @Test
+    void restoreDeletesAddedActivities() throws SQLException {
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final Activity stableDirective = getActivity(planId, merlinHelper.insertActivity(planId));
+      final int snapshotId =  createSnapshot(planId);
+
+      // Add new Directive
+      merlinHelper.insertActivity(planId);
+      assertEquals(2, getActivities(planId).size());
+
+      // Restore Plan from Snapshot
+      restoreFromSnapshot(planId, snapshotId);
+      final var planActivities = getActivities(planId);
+      assertEquals(1, planActivities.size());
+
+      // Assert that remaining directive is the one that was there at the time of the snapshot
+      final Activity restoredDirective = planActivities.get(0);
+      assertActivityEquals(stableDirective, restoredDirective);
+    }
+
+    @Test
+    void restoresChangedActivities() throws SQLException {
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int oldDirectiveId = merlinHelper.insertActivity(planId);
+      updateActivityName("old name", oldDirectiveId, planId);
+      final Activity oldDirective = getActivity(planId, oldDirectiveId);
+      final int snapshotId =  createSnapshot(planId);
+
+      // Modify Directive
+      updateActivityName("new name", oldDirective.activityId, planId);
+
+      // Restore Plan from Snapshot
+      restoreFromSnapshot(planId, snapshotId);
+      final var planActivities = getActivities(planId);
+      assertEquals(1, planActivities.size());
+
+      // Assert that directive's state has been restored
+      final Activity restoredDirective = planActivities.get(0);
+      assertActivityEquals(oldDirective, restoredDirective);
     }
   }
 
