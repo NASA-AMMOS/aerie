@@ -11,11 +11,16 @@ export enum TimingTypes {
   COMMAND_COMPLETE = 'COMMAND_COMPLETE',
 }
 
+type VARIABLE_INT = 'INT' & { __brand: 'VARIABLE_INT' };
+type VARIABLE_UINT = 'UINT' & { __brand: 'VARIABLE_UINT' };
+type VARIABLE_FLOAT = 'FLOAT' & { __brand: 'VARIABLE_FLOAT' };
+type VARIABLE_STRING = 'STRING' & { __brand: 'VARIABLE_STRING' };
+type VARIABLE_ENUM = 'ENUM' & { __brand: 'VARIABLE_UNIT' };
 export enum VariableType {
-  FLOAT = 'FLOAT',
   INT = 'INT',
-  STRING = 'STRING',
   UINT = 'UINT',
+  FLOAT = 'FLOAT',
+  STRING = 'STRING',
   ENUM = 'ENUM'
 }
 
@@ -34,7 +39,7 @@ enum StepType {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface INT<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.INT;
+  type: VARIABLE_INT;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -44,7 +49,7 @@ export interface INT<N extends string> extends VariableDeclaration {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface UINT<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.UINT;
+  type: VARIABLE_UINT;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -54,7 +59,7 @@ export interface UINT<N extends string> extends VariableDeclaration {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface FLOAT<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.FLOAT;
+  type: VARIABLE_FLOAT;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -64,7 +69,7 @@ export interface FLOAT<N extends string> extends VariableDeclaration {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface STRING<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.STRING;
+  type: VARIABLE_STRING;
   allowable_values?: unknown[] | undefined;
   sc_name?: string | undefined;
 }
@@ -73,7 +78,7 @@ export interface STRING<N extends string> extends VariableDeclaration {
 export interface ENUM<N extends string, E extends string> extends VariableDeclaration {
   name: N;
   enum_name: E;
-  type: VariableType.ENUM;
+  type: VARIABLE_ENUM;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -87,7 +92,7 @@ export interface ENUM<N extends string, E extends string> extends VariableDeclar
 
 export type VariableOptions = {
   name: string;
-  type: VariableType;
+  type: VariableType | VARIABLE_ENUM | VARIABLE_INT | VARIABLE_UINT | VARIABLE_FLOAT | VARIABLE_STRING;
   enum_name?: string | undefined;
   allowable_values?: unknown[] | undefined;
   // @ts-ignore : 'VariableRange' found in JSON Spec
@@ -970,7 +975,7 @@ export class Variable implements VariableDeclaration {
 
   constructor(opts: VariableOptions) {
     this.name = opts.name;
-    this.type = opts.type;
+    this.type = opts.type as VariableType;
 
     this._enum_name = opts.enum_name ?? undefined;
     this._allowable_ranges = opts.allowable_ranges ?? undefined;
@@ -1117,7 +1122,7 @@ export function INT<N extends string>(
     },
 ): INT<N> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.INT, allowable_ranges, allowable_values, sc_name };
+  return { name, type: VariableType.INT as unknown as VARIABLE_INT, allowable_ranges, allowable_values, sc_name };
 }
 
 export function UINT<N extends string>(name: N): UINT<N>;
@@ -1140,7 +1145,7 @@ export function UINT<N extends string>(
     },
 ): UINT<N> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.UINT, allowable_ranges, allowable_values, sc_name };
+  return { name, type: VariableType.UINT as unknown as VARIABLE_UINT, allowable_ranges, allowable_values, sc_name };
 }
 
 export function FLOAT<N extends string>(name: N): FLOAT<N>;
@@ -1163,7 +1168,7 @@ export function FLOAT<N extends string>(
     },
 ): FLOAT<N> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.FLOAT, allowable_ranges, allowable_values, sc_name };
+  return { name, type: VariableType.FLOAT as unknown as VARIABLE_FLOAT, allowable_ranges, allowable_values, sc_name };
 }
 
 export function STRING<N extends string>(name: N): STRING<N>;
@@ -1182,7 +1187,7 @@ export function STRING<N extends string>(
     },
 ): STRING<N> {
   const { allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.STRING, allowable_values, sc_name };
+  return { name, type: VariableType.STRING as unknown as VARIABLE_STRING, allowable_values, sc_name };
 }
 
 export function ENUM<const N extends string, const E extends string>(name: N, enum_name: E): ENUM<N, E>;
@@ -1207,7 +1212,7 @@ export function ENUM<const N extends string, const E extends string>(
     },
 ): ENUM<N, E> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, enum_name, type: VariableType.ENUM, allowable_ranges, allowable_values, sc_name };
+  return { name, enum_name, type: VariableType.ENUM as unknown as VARIABLE_ENUM, allowable_ranges, allowable_values, sc_name };
 }
 
 /**

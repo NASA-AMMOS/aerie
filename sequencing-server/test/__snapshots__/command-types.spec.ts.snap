@@ -14,11 +14,16 @@ export enum TimingTypes {
   COMMAND_COMPLETE = 'COMMAND_COMPLETE',
 }
 
+type VARIABLE_INT = 'INT' & { __brand: 'VARIABLE_INT' };
+type VARIABLE_UINT = 'UINT' & { __brand: 'VARIABLE_UINT' };
+type VARIABLE_FLOAT = 'FLOAT' & { __brand: 'VARIABLE_FLOAT' };
+type VARIABLE_STRING = 'STRING' & { __brand: 'VARIABLE_STRING' };
+type VARIABLE_ENUM = 'ENUM' & { __brand: 'VARIABLE_UNIT' };
 export enum VariableType {
-  FLOAT = 'FLOAT',
   INT = 'INT',
-  STRING = 'STRING',
   UINT = 'UINT',
+  FLOAT = 'FLOAT',
+  STRING = 'STRING',
   ENUM = 'ENUM'
 }
 
@@ -37,7 +42,7 @@ enum StepType {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface INT<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.INT;
+  type: VARIABLE_INT;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -47,7 +52,7 @@ export interface INT<N extends string> extends VariableDeclaration {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface UINT<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.UINT;
+  type: VARIABLE_UINT;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -57,7 +62,7 @@ export interface UINT<N extends string> extends VariableDeclaration {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface FLOAT<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.FLOAT;
+  type: VARIABLE_FLOAT;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -67,7 +72,7 @@ export interface FLOAT<N extends string> extends VariableDeclaration {
 // @ts-ignore : 'VariableDeclaration' found in JSON Spec
 export interface STRING<N extends string> extends VariableDeclaration {
   name: N;
-  type: VariableType.STRING;
+  type: VARIABLE_STRING;
   allowable_values?: unknown[] | undefined;
   sc_name?: string | undefined;
 }
@@ -76,7 +81,7 @@ export interface STRING<N extends string> extends VariableDeclaration {
 export interface ENUM<N extends string, E extends string> extends VariableDeclaration {
   name: N;
   enum_name: E;
-  type: VariableType.ENUM;
+  type: VARIABLE_ENUM;
   // @ts-ignore : 'VariableRange' found in JSON Spec
   allowable_ranges?: VariableRange[] | undefined;
   allowable_values?: unknown[] | undefined;
@@ -90,7 +95,7 @@ export interface ENUM<N extends string, E extends string> extends VariableDeclar
 
 export type VariableOptions = {
   name: string;
-  type: VariableType;
+  type: VariableType | VARIABLE_ENUM | VARIABLE_INT | VARIABLE_UINT | VARIABLE_FLOAT | VARIABLE_STRING;
   enum_name?: string | undefined;
   allowable_values?: unknown[] | undefined;
   // @ts-ignore : 'VariableRange' found in JSON Spec
@@ -973,7 +978,7 @@ export class Variable implements VariableDeclaration {
 
   constructor(opts: VariableOptions) {
     this.name = opts.name;
-    this.type = opts.type;
+    this.type = opts.type as VariableType;
 
     this._enum_name = opts.enum_name ?? undefined;
     this._allowable_ranges = opts.allowable_ranges ?? undefined;
@@ -1120,7 +1125,7 @@ export function INT<N extends string>(
     },
 ): INT<N> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.INT, allowable_ranges, allowable_values, sc_name };
+  return { name, type: VariableType.INT as unknown as VARIABLE_INT, allowable_ranges, allowable_values, sc_name };
 }
 
 export function UINT<N extends string>(name: N): UINT<N>;
@@ -1143,7 +1148,7 @@ export function UINT<N extends string>(
     },
 ): UINT<N> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.UINT, allowable_ranges, allowable_values, sc_name };
+  return { name, type: VariableType.UINT as unknown as VARIABLE_UINT, allowable_ranges, allowable_values, sc_name };
 }
 
 export function FLOAT<N extends string>(name: N): FLOAT<N>;
@@ -1166,7 +1171,7 @@ export function FLOAT<N extends string>(
     },
 ): FLOAT<N> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.FLOAT, allowable_ranges, allowable_values, sc_name };
+  return { name, type: VariableType.FLOAT as unknown as VARIABLE_FLOAT, allowable_ranges, allowable_values, sc_name };
 }
 
 export function STRING<N extends string>(name: N): STRING<N>;
@@ -1185,7 +1190,7 @@ export function STRING<N extends string>(
     },
 ): STRING<N> {
   const { allowable_values, sc_name } = optionals || {};
-  return { name, type: VariableType.STRING, allowable_values, sc_name };
+  return { name, type: VariableType.STRING as unknown as VARIABLE_STRING, allowable_values, sc_name };
 }
 
 export function ENUM<const N extends string, const E extends string>(name: N, enum_name: E): ENUM<N, E>;
@@ -1210,7 +1215,7 @@ export function ENUM<const N extends string, const E extends string>(
     },
 ): ENUM<N, E> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
-  return { name, enum_name, type: VariableType.ENUM, allowable_ranges, allowable_values, sc_name };
+  return { name, enum_name, type: VariableType.ENUM as unknown as VARIABLE_ENUM, allowable_ranges, allowable_values, sc_name };
 }
 
 /**
@@ -4148,8 +4153,8 @@ declare global {
 		 | [ echo_string : VarString<8, 1024>]
 		 | [{ 'echo_string': VarString<8, 1024> }]]> {}
 	interface ECHO_STEP extends CommandStem<[
-		 | [ echo_string : VarString<8, 1024> | 'STRING']
-		 | [{ 'echo_string': VarString<8, 1024>| 'STRING' }]]> {}
+		 | [ echo_string : VarString<8, 1024> | VARIABLE_STRING]
+		 | [{ 'echo_string': VarString<8, 1024>| VARIABLE_STRING }]]> {}
 	function ECHO(...args:
 		| [ echo_string : VarString<8, 1024>]
 		| [{ 'echo_string': VarString<8, 1024> }]) : ECHO_IMMEDIATE
@@ -4158,8 +4163,8 @@ declare global {
 		 | [ temperature : U8]
 		 | [{ 'temperature': U8 }]]> {}
 	interface PREHEAT_OVEN_STEP extends CommandStem<[
-		 | [ temperature : U8 | 'UINT']
-		 | [{ 'temperature': U8| 'UINT' }]]> {}
+		 | [ temperature : U8 | VARIABLE_UINT]
+		 | [{ 'temperature': U8| VARIABLE_UINT }]]> {}
 	function PREHEAT_OVEN(...args:
 		| [ temperature : U8]
 		| [{ 'temperature': U8 }]) : PREHEAT_OVEN_IMMEDIATE
@@ -4168,8 +4173,8 @@ declare global {
 		 | [ distance : U8]
 		 | [{ 'distance': U8 }]]> {}
 	interface THROW_BANANA_STEP extends CommandStem<[
-		 | [ distance : U8 | 'UINT']
-		 | [{ 'distance': U8| 'UINT' }]]> {}
+		 | [ distance : U8 | VARIABLE_UINT]
+		 | [{ 'distance': U8| VARIABLE_UINT }]]> {}
 	function THROW_BANANA(...args:
 		| [ distance : U8]
 		| [{ 'distance': U8 }]) : THROW_BANANA_IMMEDIATE
@@ -4178,8 +4183,8 @@ declare global {
 		 | [ quantity : U8,durationSecs : U8]
 		 | [{ 'quantity': U8,'durationSecs': U8 }]]> {}
 	interface GROW_BANANA_STEP extends CommandStem<[
-		 | [ quantity : U8 | 'UINT',durationSecs : U8 | 'UINT']
-		 | [{ 'quantity': U8| 'UINT','durationSecs': U8| 'UINT' }]]> {}
+		 | [ quantity : U8 | VARIABLE_UINT,durationSecs : U8 | VARIABLE_UINT]
+		 | [{ 'quantity': U8| VARIABLE_UINT,'durationSecs': U8| VARIABLE_UINT }]]> {}
 	function GROW_BANANA(...args:
 		| [ quantity : U8,durationSecs : U8]
 		| [{ 'quantity': U8,'durationSecs': U8 }]) : GROW_BANANA_IMMEDIATE
@@ -4188,8 +4193,8 @@ declare global {
 		 | [ quantity : U8,durationSecs : U8]
 		 | [{ 'quantity': U8,'durationSecs': U8 }]]> {}
 	interface GrowBanana_STEP extends CommandStem<[
-		 | [ quantity : U8 | 'UINT',durationSecs : U8 | 'UINT']
-		 | [{ 'quantity': U8| 'UINT','durationSecs': U8| 'UINT' }]]> {}
+		 | [ quantity : U8 | VARIABLE_UINT,durationSecs : U8 | VARIABLE_UINT]
+		 | [{ 'quantity': U8| VARIABLE_UINT,'durationSecs': U8| VARIABLE_UINT }]]> {}
 	function GrowBanana(...args:
 		| [ quantity : U8,durationSecs : U8]
 		| [{ 'quantity': U8,'durationSecs': U8 }]) : GrowBanana_IMMEDIATE
@@ -4198,8 +4203,8 @@ declare global {
 		 | [ tb_sugar : U8,gluten_free : ('FALSE' | 'TRUE')]
 		 | [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]]> {}
 	interface PREPARE_LOAF_STEP extends CommandStem<[
-		 | [ tb_sugar : U8 | 'UINT',gluten_free : ('FALSE' | 'TRUE') | 'ENUM']
-		 | [{ 'tb_sugar': U8| 'UINT','gluten_free': ('FALSE' | 'TRUE')| 'ENUM' }]]> {}
+		 | [ tb_sugar : U8 | VARIABLE_UINT,gluten_free : ('FALSE' | 'TRUE') | VARIABLE_ENUM]
+		 | [{ 'tb_sugar': U8| VARIABLE_UINT,'gluten_free': ('FALSE' | 'TRUE')| VARIABLE_ENUM }]]> {}
 	function PREPARE_LOAF(...args:
 		| [ tb_sugar : U8,gluten_free : ('FALSE' | 'TRUE')]
 		| [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]) : PREPARE_LOAF_IMMEDIATE
@@ -4208,8 +4213,8 @@ declare global {
 		 | [ peelDirection : ('fromStem' | 'fromTip')]
 		 | [{ 'peelDirection': ('fromStem' | 'fromTip') }]]> {}
 	interface PEEL_BANANA_STEP extends CommandStem<[
-		 | [ peelDirection : ('fromStem' | 'fromTip') | 'ENUM']
-		 | [{ 'peelDirection': ('fromStem' | 'fromTip')| 'ENUM' }]]> {}
+		 | [ peelDirection : ('fromStem' | 'fromTip') | VARIABLE_ENUM]
+		 | [{ 'peelDirection': ('fromStem' | 'fromTip')| VARIABLE_ENUM }]]> {}
 	function PEEL_BANANA(...args:
 		| [ peelDirection : ('fromStem' | 'fromTip')]
 		| [{ 'peelDirection': ('fromStem' | 'fromTip') }]) : PEEL_BANANA_IMMEDIATE
@@ -4238,8 +4243,8 @@ declare global {
 		 | [ lot_number : U16,bundle : Array<[ bundle_name: VarString<8, 1024>, number_of_bananas: U8 ]>]
 		 | [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]]> {}
 	interface PACKAGE_BANANA_STEP extends CommandStem<[
-		 | [ lot_number : U16 | 'UINT',bundle : Array<[ bundle_name: VarString<8, 1024>, number_of_bananas: U8 ]> ]
-		 | [{ 'lot_number': U16| 'UINT','bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]]> {}
+		 | [ lot_number : U16 | VARIABLE_UINT,bundle : Array<[ bundle_name: VarString<8, 1024>, number_of_bananas: U8 ]> ]
+		 | [{ 'lot_number': U16| VARIABLE_UINT,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]]> {}
 	function PACKAGE_BANANA(...args:
 		| [ lot_number : U16,bundle : Array<[ bundle_name: VarString<8, 1024>, number_of_bananas: U8 ]>]
 		| [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) : PACKAGE_BANANA_IMMEDIATE
@@ -4320,8 +4325,8 @@ function ECHO(...args:
   }) as ECHO_IMMEDIATE;
 }
 function ECHO_STEP(...args:
-		|[ echo_string : VarString<8, 1024> | 'STRING' ]
-		|[{ 'echo_string': VarString<8, 1024>| 'STRING' }]) {
+		|[ echo_string : VarString<8, 1024> | VARIABLE_STRING ]
+		|[{ 'echo_string': VarString<8, 1024>| VARIABLE_STRING }]) {
   return CommandStem.new({
     stem: 'ECHO',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['ECHO']) : commandArraysToObj(args, argumentOrders['ECHO']),
@@ -4342,8 +4347,8 @@ function PREHEAT_OVEN(...args:
   }) as PREHEAT_OVEN_IMMEDIATE;
 }
 function PREHEAT_OVEN_STEP(...args:
-		|[ temperature : U8 | 'UINT' ]
-		|[{ 'temperature': U8| 'UINT' }]) {
+		|[ temperature : U8 | VARIABLE_UINT ]
+		|[{ 'temperature': U8| VARIABLE_UINT }]) {
   return CommandStem.new({
     stem: 'PREHEAT_OVEN',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['PREHEAT_OVEN']) : commandArraysToObj(args, argumentOrders['PREHEAT_OVEN']),
@@ -4364,8 +4369,8 @@ function THROW_BANANA(...args:
   }) as THROW_BANANA_IMMEDIATE;
 }
 function THROW_BANANA_STEP(...args:
-		|[ distance : U8 | 'UINT' ]
-		|[{ 'distance': U8| 'UINT' }]) {
+		|[ distance : U8 | VARIABLE_UINT ]
+		|[{ 'distance': U8| VARIABLE_UINT }]) {
   return CommandStem.new({
     stem: 'THROW_BANANA',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['THROW_BANANA']) : commandArraysToObj(args, argumentOrders['THROW_BANANA']),
@@ -4387,8 +4392,8 @@ function GROW_BANANA(...args:
   }) as GROW_BANANA_IMMEDIATE;
 }
 function GROW_BANANA_STEP(...args:
-		|[ quantity : U8 | 'UINT',durationSecs : U8 | 'UINT' ]
-		|[{ 'quantity': U8| 'UINT','durationSecs': U8| 'UINT' }]) {
+		|[ quantity : U8 | VARIABLE_UINT,durationSecs : U8 | VARIABLE_UINT ]
+		|[{ 'quantity': U8| VARIABLE_UINT,'durationSecs': U8| VARIABLE_UINT }]) {
   return CommandStem.new({
     stem: 'GROW_BANANA',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['GROW_BANANA']) : commandArraysToObj(args, argumentOrders['GROW_BANANA']),
@@ -4410,8 +4415,8 @@ function GrowBanana(...args:
   }) as GrowBanana_IMMEDIATE;
 }
 function GrowBanana_STEP(...args:
-		|[ quantity : U8 | 'UINT',durationSecs : U8 | 'UINT' ]
-		|[{ 'quantity': U8| 'UINT','durationSecs': U8| 'UINT' }]) {
+		|[ quantity : U8 | VARIABLE_UINT,durationSecs : U8 | VARIABLE_UINT ]
+		|[{ 'quantity': U8| VARIABLE_UINT,'durationSecs': U8| VARIABLE_UINT }]) {
   return CommandStem.new({
     stem: 'GrowBanana',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['GrowBanana']) : commandArraysToObj(args, argumentOrders['GrowBanana']),
@@ -4433,8 +4438,8 @@ function PREPARE_LOAF(...args:
   }) as PREPARE_LOAF_IMMEDIATE;
 }
 function PREPARE_LOAF_STEP(...args:
-		|[ tb_sugar : U8 | 'UINT',gluten_free : ('FALSE' | 'TRUE') | 'ENUM' ]
-		|[{ 'tb_sugar': U8| 'UINT','gluten_free': ('FALSE' | 'TRUE')| 'ENUM' }]) {
+		|[ tb_sugar : U8 | VARIABLE_UINT,gluten_free : ('FALSE' | 'TRUE') | VARIABLE_ENUM ]
+		|[{ 'tb_sugar': U8| VARIABLE_UINT,'gluten_free': ('FALSE' | 'TRUE')| VARIABLE_ENUM }]) {
   return CommandStem.new({
     stem: 'PREPARE_LOAF',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['PREPARE_LOAF']) : commandArraysToObj(args, argumentOrders['PREPARE_LOAF']),
@@ -4455,8 +4460,8 @@ function PEEL_BANANA(...args:
   }) as PEEL_BANANA_IMMEDIATE;
 }
 function PEEL_BANANA_STEP(...args:
-		|[ peelDirection : ('fromStem' | 'fromTip') | 'ENUM' ]
-		|[{ 'peelDirection': ('fromStem' | 'fromTip')| 'ENUM' }]) {
+		|[ peelDirection : ('fromStem' | 'fromTip') | VARIABLE_ENUM ]
+		|[{ 'peelDirection': ('fromStem' | 'fromTip')| VARIABLE_ENUM }]) {
   return CommandStem.new({
     stem: 'PEEL_BANANA',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['PEEL_BANANA']) : commandArraysToObj(args, argumentOrders['PEEL_BANANA']),
@@ -4506,8 +4511,8 @@ function PACKAGE_BANANA(...args:
   }) as PACKAGE_BANANA_IMMEDIATE;
 }
 function PACKAGE_BANANA_STEP(...args:
-		|[ lot_number : U16 | 'UINT',bundle : Array<[ bundle_name: VarString<8, 1024>, number_of_bananas: U8 ]>  ]
-		|[{ 'lot_number': U16| 'UINT','bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) {
+		|[ lot_number : U16 | VARIABLE_UINT,bundle : Array<[ bundle_name: VarString<8, 1024>, number_of_bananas: U8 ]>  ]
+		|[{ 'lot_number': U16| VARIABLE_UINT,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) {
   return CommandStem.new({
     stem: 'PACKAGE_BANANA',
     arguments: typeof args[0] === 'object' && !Array.isArray(args[0]) && !(args[0] instanceof Variable) ? sortCommandArguments(args, argumentOrders['PACKAGE_BANANA']) : commandArraysToObj(args, argumentOrders['PACKAGE_BANANA']),
