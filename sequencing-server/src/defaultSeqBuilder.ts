@@ -1,4 +1,4 @@
-import { CommandStem, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import { ActivateStep, CommandStem, LoadStep, Sequence } from './lib/codegen/CommandEDSLPreface.js';
 import type { SeqBuilder } from './types/seqBuilder';
 
 export const defaultSeqBuilder: SeqBuilder = (
@@ -7,16 +7,16 @@ export const defaultSeqBuilder: SeqBuilder = (
   seqMetadata,
   simulationDatasetId,
 ) => {
-  const convertedCommands: CommandStem<{} | []>[] = [];
+  const convertedCommands: (CommandStem | ActivateStep | LoadStep)[] = []
 
   // A combined list of all the activity instance commands.
-  let allCommands: CommandStem<{} | []>[] = [];
+  let allCommands: (CommandStem | ActivateStep | LoadStep)[] = [];
   let activityInstaceCount = 0;
   let planId;
   // Keep track if we should try and sort the commands.
   let shouldSort = true;
   let timeSorted = false;
-  let previousTime: Temporal.Instant | null = null;
+  let previousTime: Temporal.Instant | undefined = undefined;
 
   for (const ai of sortedActivityInstancesWithCommands) {
     // If errors, no associated Expansion
@@ -44,25 +44,28 @@ export const defaultSeqBuilder: SeqBuilder = (
        * sort later. Also convert any relative commands to absolute.
        */
       for (const command of ai.commands) {
+
+        const currentCommand = command instanceof CommandStem ? command as CommandStem : command instanceof LoadStep ? command as LoadStep : command as ActivateStep;
+
+        // Check conditions related to time properties
         // If the command is epoch-relative, complete, or the first command and relative then short circuit and don't try and sort.
         if (
-          command.epochTime !== null ||
-          (command.absoluteTime === null && command.epochTime === null && command.relativeTime === null) ||
-          (command.relativeTime !== null && ai.commands.indexOf(command) === 0)
+            currentCommand.GET_EPOCH_TIME() ||
+            (!currentCommand.GET_ABSOLUTE_TIME() && !currentCommand.GET_EPOCH_TIME() && !currentCommand.GET_RELATIVE_TIME()) ||
+            (currentCommand.GET_RELATIVE_TIME() && ai.commands.indexOf(command) === 0)
         ) {
-          shouldSort = false;
-          break;
+          shouldSort = false; // Set the sorting flag to false
+          break; // No need to continue checking other commands
         }
 
         // If we come across a relative command, convert it to absolute.
-        if (command.relativeTime !== null && previousTime !== null) {
-          const absoluteCommand = command.absoluteTiming(previousTime.add(command.relativeTime));
-
+        if (currentCommand.GET_RELATIVE_TIME() && previousTime) {
+          const absoluteCommand : CommandStem | LoadStep | ActivateStep = currentCommand.absoluteTiming(previousTime.add(currentCommand.GET_RELATIVE_TIME() as Temporal.Duration));
           convertedCommands.push(absoluteCommand);
-          previousTime = absoluteCommand.absoluteTime;
+          previousTime = absoluteCommand.GET_ABSOLUTE_TIME();
         } else {
-          convertedCommands.push(command);
-          previousTime = command.absoluteTime;
+          convertedCommands.push(currentCommand);
+          previousTime = currentCommand.GET_ABSOLUTE_TIME();
         }
       }
 
@@ -76,8 +79,14 @@ export const defaultSeqBuilder: SeqBuilder = (
   if (activityInstaceCount > 1 && shouldSort) {
     timeSorted = true;
     allCommands = convertedCommands.sort((a, b) => {
-      if (a.absoluteTime !== null && b.absoluteTime !== null) {
-        return Temporal.Instant.compare(a.absoluteTime, b.absoluteTime);
+      const aStep = a instanceof CommandStem ? a as CommandStem : a instanceof LoadStep ? a as LoadStep : a as ActivateStep;
+      const bStep = b instanceof CommandStem ? b as CommandStem : b instanceof LoadStep ? b as LoadStep : b as ActivateStep;
+
+      const aAbsoluteTime = aStep.GET_ABSOLUTE_TIME();
+      const bAbsoluteTime = bStep.GET_ABSOLUTE_TIME();
+
+      if (aAbsoluteTime && bAbsoluteTime) {
+        return Temporal.Instant.compare(aAbsoluteTime, bAbsoluteTime);
       }
 
       return 0;
