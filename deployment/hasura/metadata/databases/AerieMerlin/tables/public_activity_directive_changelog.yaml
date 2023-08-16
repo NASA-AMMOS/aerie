@@ -1,0 +1,81 @@
+table:
+  name: activity_directive_changelog
+  schema: public
+object_relationships:
+- name: activity_directive
+  using:
+    manual_configuration:
+      remote_table:
+        name: activity_directive
+        schema: public
+      column_mapping:
+        plan_id: plan_id
+        activity_directive_id: id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns:
+       - revision
+       - plan_id
+       - activity_directive_id
+       - name
+       - source_scheduling_goal_id
+       - changed_at
+       - changed_by
+       - start_offset
+       - type
+       - arguments
+       - changed_arguments_at
+       - metadata
+       - anchor_id
+       - anchored_to_start
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns:
+       - revision
+       - plan_id
+       - activity_directive_id
+       - name
+       - source_scheduling_goal_id
+       - changed_at
+       - changed_by
+       - start_offset
+       - type
+       - arguments
+       - changed_arguments_at
+       - metadata
+       - anchor_id
+       - anchored_to_start
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns:
+       - revision
+       - plan_id
+       - activity_directive_id
+       - name
+       - source_scheduling_goal_id
+       - changed_at
+       - changed_by
+       - start_offset
+       - type
+       - arguments
+       - changed_arguments_at
+       - metadata
+       - anchor_id
+       - anchored_to_start
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns:
+       - changed_by
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

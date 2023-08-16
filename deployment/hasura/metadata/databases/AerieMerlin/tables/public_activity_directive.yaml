@@ -52,6 +52,16 @@ array_relationships:
       column_mapping:
         id: directive_id
         plan_id: plan_id
+- name: activity_directive_changelog
+  using:
+    manual_configuration:
+      insertion_order: null
+      remote_table:
+        name: activity_directive_changelog
+        schema: public
+      column_mapping:
+        id: activity_directive_id
+        plan_id: plan_id
 remote_relationships:
 - name: source_scheduling_goal
   definition:
