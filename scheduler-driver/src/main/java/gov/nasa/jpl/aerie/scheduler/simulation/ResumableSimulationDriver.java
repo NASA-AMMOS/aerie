@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
@@ -223,9 +222,11 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     // Get all activities as close as possible to absolute time, then schedule all activities.
     // Using HashMap explicitly because it allows `null` as a key.
     // `null` key means that an activity is not waiting on another activity to finish to know its start time
-    final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+    HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
         planDuration,
         schedule).compute();
+    // Filter out activities that are before the plan start
+    resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
 
     scheduleActivities(
         schedule,

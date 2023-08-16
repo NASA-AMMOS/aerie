@@ -133,10 +133,6 @@ public class PrioritySolver implements Solver {
 
   public record InsertActivityResult(boolean success, List<SchedulingActivityDirective> activitiesInserted){}
 
-  private InsertActivityResult checkAndInsertAct(SchedulingActivityDirective act){
-    return checkAndInsertActs(List.of(act));
-  }
-
   /**
    * Tries to insert a collection of activity instances in plan. Simulates each of the activity and checks whether the expected
    * duration is equal to the simulated duration.
@@ -220,10 +216,7 @@ public class PrioritySolver implements Solver {
     //turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
-    problem.getInitialPlan().getActivitiesByTime().stream()
-      .filter( act -> (act.startOffset()==null)
-               || problem.getPlanningHorizon().contains( act.startOffset() ) )
-      .forEach(this::checkAndInsertAct);
+    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime());
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
