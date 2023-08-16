@@ -77,6 +77,7 @@ create view activity_directive_extended as
     ad.source_scheduling_goal_id as source_scheduling_goal_id,
     ad.created_at as created_at,
     ad.last_modified_at as last_modified_at,
+    ad.last_modified_by as last_modified_by,
     ad.start_offset as start_offset,
     ad.type as type,
     ad.arguments as arguments,

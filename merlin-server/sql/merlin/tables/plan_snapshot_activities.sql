@@ -8,6 +8,7 @@ create table plan_snapshot_activities(
     source_scheduling_goal_id integer,
     created_at timestamptz not null,
     last_modified_at timestamptz not null,
+    last_modified_by text,
     start_offset interval not null,
     type text not null,
     arguments merlin_argument_set not null,

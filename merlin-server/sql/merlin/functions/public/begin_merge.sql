@@ -108,14 +108,14 @@ begin
     select activity_id, 'none'
       from(
         select psa.id as activity_id, name, metadata.tag_ids_activity_snapshot(psa.id, merge_base_id),
-               source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
-               last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+               source_scheduling_goal_id, created_at, start_offset, type, arguments,
+               metadata, anchor_id, anchored_to_start
         from plan_snapshot_activities psa
         where psa.snapshot_id = merge_base_id
     intersect
       select id as activity_id, name, metadata.tag_ids_activity_snapshot(psa.id, snapshot_id_supplying),
-             source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
-             last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+             source_scheduling_goal_id, created_at, start_offset, type, arguments,
+             metadata, anchor_id, anchored_to_start
         from plan_snapshot_activities psa
         where psa.snapshot_id = snapshot_id_supplying) a;
 
@@ -159,14 +159,14 @@ begin
   select activity_id, 'none'
   from(
         select id as activity_id, name, metadata.tag_ids_activity_snapshot(id, merge_base_id),
-               source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
-               last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+               source_scheduling_goal_id, created_at, start_offset, type, arguments,
+               metadata, anchor_id, anchored_to_start
         from plan_snapshot_activities psa
         where psa.snapshot_id = merge_base_id
         intersect
         select id as activity_id, name, metadata.tag_ids_activity_directive(id, plan_id_receiving),
-               source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
-               last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+               source_scheduling_goal_id, created_at, start_offset, type, arguments,
+               metadata, anchor_id, anchored_to_start
         from activity_directive ad
         where ad.plan_id = plan_id_receiving) a;
 
@@ -201,12 +201,12 @@ begin
   -- receiving 'delete' against supplying 'none' does not enter the merge staging area table
 
   insert into merge_staging_area (
-    merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at,
+    merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_by,
     start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
          )
   -- 'adds' can go directly into the merge staging area table
   select _merge_request_id, activity_id, name, metadata.tag_ids_activity_snapshot(s_diff.activity_id, psa.snapshot_id),  source_scheduling_goal_id, created_at,
-         start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
+         last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
     from supplying_diff as  s_diff
     join plan_snapshot_activities psa
       on s_diff.activity_id = psa.id
@@ -214,7 +214,7 @@ begin
   union
   -- an 'add' between the receiving plan and merge base is actually a 'none'
   select _merge_request_id, activity_id, name, metadata.tag_ids_activity_directive(r_diff.activity_id, ad.plan_id),  source_scheduling_goal_id, created_at,
-         start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'::activity_change_type
+         last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'::activity_change_type
     from receiving_diff as r_diff
     join activity_directive ad
       on r_diff.activity_id = ad.id
@@ -233,12 +233,12 @@ begin
        or (change_type_receiving = 'delete' and change_type_supplying = 'none');
 
   insert into merge_staging_area (
-    merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at,
+    merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_by,
     start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
   )
   -- receiving 'none' and 'modify' against 'none' in the supplying side go into the merge staging area as 'none'
   select _merge_request_id, activity_id, name, metadata.tag_ids_activity_directive(diff_diff.activity_id, plan_id),  source_scheduling_goal_id, created_at,
-         start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
+         last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
     from diff_diff
     join activity_directive
       on activity_id=id
@@ -248,7 +248,7 @@ begin
   union
   -- supplying 'modify' against receiving 'none' go into the merge staging area as 'modify'
   select _merge_request_id, activity_id, name, metadata.tag_ids_activity_snapshot(diff_diff.activity_id, snapshot_id),  source_scheduling_goal_id, created_at,
-         start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
+         last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
     from diff_diff
     join plan_snapshot_activities p
       on diff_diff.activity_id = p.id
@@ -257,33 +257,36 @@ begin
   union
   -- supplying 'delete' against receiving 'none' go into the merge staging area as 'delete'
     select _merge_request_id, activity_id, name, metadata.tag_ids_activity_directive(diff_diff.activity_id, plan_id),  source_scheduling_goal_id, created_at,
-         start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
+         last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
     from diff_diff
     join activity_directive p
       on diff_diff.activity_id = p.id
     where plan_id = plan_id_receiving
-      and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'delete')
-  union
+      and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'delete');
+
   -- 'modify' against a 'modify' must be checked for equality first.
-  select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
-         start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
-  from (
+  with false_modify as (
     select activity_id, name, metadata.tag_ids_activity_directive(dd.activity_id, psa.snapshot_id) as tags,
            source_scheduling_goal_id, created_at, start_offset, type, arguments, metadata, anchor_id, anchored_to_start
-      from plan_snapshot_activities psa
-      join diff_diff dd
-        on dd.activity_id = psa.id
-      where psa.snapshot_id = snapshot_id_supplying
-        and (dd.change_type_receiving = 'modify' and dd.change_type_supplying = 'modify')
+    from plan_snapshot_activities psa
+    join diff_diff dd
+      on dd.activity_id = psa.id
+    where psa.snapshot_id = snapshot_id_supplying
+      and (dd.change_type_receiving = 'modify' and dd.change_type_supplying = 'modify')
     intersect
     select activity_id, name, metadata.tag_ids_activity_directive(dd.activity_id, ad.plan_id) as tags,
            source_scheduling_goal_id, created_at, start_offset, type, arguments, metadata, anchor_id, anchored_to_start
-      from diff_diff dd
-      join activity_directive ad
-        on dd.activity_id = ad.id
-      where ad.plan_id = plan_id_receiving
-        and (dd.change_type_supplying = 'modify' and dd.change_type_receiving = 'modify')
-  ) a;
+    from diff_diff dd
+    join activity_directive ad
+      on dd.activity_id = ad.id
+    where ad.plan_id = plan_id_receiving
+      and (dd.change_type_supplying = 'modify' and dd.change_type_receiving = 'modify'))
+  insert into merge_staging_area (
+    merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_by,
+    start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type)
+  select _merge_request_id, ad.id, ad.name, tags,  ad.source_scheduling_goal_id, ad.created_at,
+         ad.last_modified_by, ad.start_offset, ad.type, ad.arguments, ad.metadata, ad.anchor_id, ad.anchored_to_start, 'none'
+  from false_modify fm left join activity_directive ad on (ad.plan_id, ad.id) = (plan_id_receiving, fm.activity_id);
 
   -- 'modify' against 'delete' and inequal 'modify' against 'modify' goes into conflict table (aka everything left in diff_diff)
   insert into conflicting_activities (merge_request_id, activity_id, change_type_supplying, change_type_receiving)

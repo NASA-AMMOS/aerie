@@ -67,20 +67,20 @@ select_permissions:
   - role: aerie_admin
     permission:
       columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start]
+                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, last_modified_by]
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
       # Need to specify all columns manually
       columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start]
+                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, last_modified_by]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
       columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start ]
+                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, last_modified_by]
       filter: {}
       allow_aggregations: true
 update_permissions:
@@ -88,19 +88,27 @@ update_permissions:
     permission:
       columns: [ name, start_offset, type, arguments, metadata, anchor_id, anchored_to_start ]
       filter: {}
+      set:
+        last_modified_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, start_offset, arguments, metadata, anchor_id, anchored_to_start]
       filter: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
+      set:
+        last_modified_by: "x-hasura-user-id"
 insert_permissions:
   - role: aerie_admin
     permission:
       columns: [name, start_offset, arguments, metadata, anchor_id, anchored_to_start, plan_id, type]
       check: {}
+      set:
+        last_modified_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, start_offset, arguments, metadata, anchor_id, anchored_to_start, plan_id, type]
       check: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
+      set:
+        last_modified_by: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:
