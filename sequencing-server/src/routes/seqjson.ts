@@ -6,10 +6,10 @@ import pgFormat from 'pg-format';
 import { defaultSeqBuilder } from './../defaultSeqBuilder.js';
 import Ajv from 'ajv/dist/2020.js';
 import schema from '@nasa-jpl/seq-json-schema/schema.json' assert { type: 'json' };
-import { Sequence } from './../lib/codegen/CommandEDSLPreface.js';
+import { ActivateStep, LoadStep, Sequence } from './../lib/codegen/CommandEDSLPreface.js';
 import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
 import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
-import type { Command } from '@nasa-jpl/seq-json-schema/types';
+import type { Command , Activate, Load} from '@nasa-jpl/seq-json-schema/types';
 import { FallibleStatus } from './../types.js';
 import { assertDefined, assertOne } from './../utils/assertions.js';
 import { isResolved } from './../utils/typeguards.js';
@@ -132,7 +132,7 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: Command[];
+      commands: (Command | Activate | Load)[];
       activity_instance_id: number;
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
     }>(
@@ -215,7 +215,18 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     }
     return {
       ...ai,
-      commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
+      commands: row.commands?.map(c => {
+        switch (c.type) {
+          case 'command':
+            return CommandStem.fromSeqJson(c);
+          case 'load':
+            return LoadStep.fromSeqJson(c);
+          case 'activate':
+            return ActivateStep.fromSeqJson(c)
+          default:
+            throw new Error(`Unknown command type: ${c}`);
+        }
+      }) ?? null,
       errors: row.errors,
     };
   });
@@ -262,7 +273,7 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: Command[];
+      commands: (Command | Activate | Load)[];
       activity_instance_id: number;
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
       seq_id: string;
@@ -374,7 +385,18 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
         }
         return {
           ...ai,
-          commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
+          commands: row.commands?.map(c => {
+            switch (c.type) {
+              case 'command':
+                return CommandStem.fromSeqJson(c);
+              case 'load':
+                return LoadStep.fromSeqJson(c);
+              case 'activate':
+                return ActivateStep.fromSeqJson(c)
+              default:
+                throw new Error(`Unknown command type: ${c}`);
+            }
+          }) ?? null,
           errors: row.errors,
         };
       });
