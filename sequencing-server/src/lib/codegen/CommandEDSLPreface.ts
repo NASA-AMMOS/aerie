@@ -246,8 +246,6 @@ export type RequestOptions =
   metadata?: Metadata;
 };
 
-export type Arrayable<T> = T | Arrayable<T>[];
-
 /**-----------------------------
  *      GLOBAL eDSL Declarations
  * -----------------------------
@@ -385,7 +383,8 @@ declare global {
   }
 
   type Context = {};
-  type ExpansionReturn = Arrayable<CommandStem>;
+  // @ts-ignore : 'Description' found in JSON Spec
+  type ExpansionReturn = (Command | Load | Activate)[];
 
   type U<BitLength extends 8 | 16 | 32 | 64> = number;
   type U8 = U<8>;
@@ -1224,9 +1223,10 @@ export function ENUM<const N extends string, const E extends string>(
 // @ts-ignore : 'Args' found in JSON Spec
 export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
   public readonly arguments: A;
-  public readonly absoluteTime: Temporal.Instant | null = null;
-  public readonly epochTime: Temporal.Duration | null = null;
-  public readonly relativeTime: Temporal.Duration | null = null;
+  private readonly _absoluteTime: Temporal.Instant | undefined = undefined;
+  private readonly _epochTime: Temporal.Duration | undefined = undefined;
+  private readonly _relativeTime: Temporal.Duration | undefined = undefined;
+
 
   public readonly stem: string;
   // @ts-ignore : 'Args' found in JSON Spec
@@ -1246,11 +1246,11 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
     this.arguments = opts.arguments;
 
     if ('absoluteTime' in opts) {
-      this.absoluteTime = opts.absoluteTime;
+      this._absoluteTime = opts.absoluteTime;
     } else if ('epochTime' in opts) {
-      this.epochTime = opts.epochTime;
+      this._epochTime = opts.epochTime;
     } else if ('relativeTime' in opts) {
-      this.relativeTime = opts.relativeTime;
+      this._relativeTime = opts.relativeTime;
     }
     this._metadata = opts.metadata;
     this._description = opts.description;
@@ -1286,9 +1286,9 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       models: models,
       metadata: this._metadata,
       description: this._description,
-      ...(this.absoluteTime && { absoluteTime: this.absoluteTime }),
-      ...(this.epochTime && { epochTime: this.epochTime }),
-      ...(this.relativeTime && { relativeTime: this.relativeTime }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
     });
   }
 
@@ -1305,9 +1305,9 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       models: this._models,
       metadata: metadata,
       description: this._description,
-      ...(this.absoluteTime && { absoluteTime: this.absoluteTime }),
-      ...(this.epochTime && { epochTime: this.epochTime }),
-      ...(this.relativeTime && { relativeTime: this.relativeTime }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
     });
   }
 
@@ -1324,14 +1324,26 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       models: this._models,
       metadata: this._metadata,
       description: description,
-      ...(this.absoluteTime && { absoluteTime: this.absoluteTime }),
-      ...(this.epochTime && { epochTime: this.epochTime }),
-      ...(this.relativeTime && { relativeTime: this.relativeTime }),
+      ...(this._absoluteTime && { absoluteTime: this._absoluteTime }),
+      ...(this._epochTime && { epochTime: this._epochTime }),
+      ...(this._relativeTime && { relativeTime: this._relativeTime }),
     });
   }
   // @ts-ignore : 'Description' found in JSON Spec
   public GET_DESCRIPTION(): Description | undefined {
     return this._description;
+  }
+
+  public GET_ABSOLUTE_TIME(): Temporal.Instant | undefined {
+    return this._absoluteTime;
+  }
+
+  public GET_EPOCH_TIME(): Temporal.Duration | undefined {
+    return this._epochTime;
+  }
+
+  public GET_RELATIVE_TIME(): Temporal.Duration | undefined {
+    return this._relativeTime;
   }
 
   // @ts-ignore : 'Command' found in JSON Spec
@@ -1341,12 +1353,12 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       stem: this.stem,
       // prettier-ignore
       time:
-          this.absoluteTime !== null
-              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this.absoluteTime) }
-          : this.epochTime !== null
-              ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this.epochTime) }
-          : this.relativeTime !== null
-              ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this.relativeTime) }
+          this._absoluteTime
+              ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
+          : this._epochTime
+              ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
+          : this._relativeTime
+              ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       type: this.type,
       ...(this._metadata ? { metadata: this._metadata } : {}),
@@ -1409,12 +1421,12 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
   }
 
   public toEDSLString(): string {
-    const timeString = this.absoluteTime
-        ? `A\`${instantToDoy(this.absoluteTime)}\``
-        : this.epochTime
-            ? `E\`${durationToHms(this.epochTime)}\``
-            : this.relativeTime
-                ? `R\`${durationToHms(this.relativeTime)}\``
+    const timeString = this._absoluteTime
+        ? `A\`${instantToDoy(this._absoluteTime)}\``
+        : this._epochTime
+            ? `E\`${durationToHms(this._epochTime)}\``
+            : this._relativeTime
+                ? `R\`${durationToHms(this._relativeTime)}\``
                 : 'C';
 
     const argsString =
@@ -1536,9 +1548,9 @@ export class Ground_Block implements GroundBlock {
   time!: Time;
   type: 'ground_block' = StepType.GroundBlock;
 
-  private readonly _absoluteTime: Temporal.Instant | null = null;
-  private readonly _epochTime: Temporal.Duration | null = null;
-  private readonly _relativeTime: Temporal.Duration | null = null;
+  private readonly _absoluteTime: Temporal.Instant | undefined = undefined;
+  private readonly _epochTime: Temporal.Duration | undefined = undefined;
+  private readonly _relativeTime: Temporal.Duration | undefined = undefined;
 
   // @ts-ignore : 'Args' found in JSON Spec
   private readonly _args: Args | undefined;
@@ -1678,17 +1690,29 @@ export class Ground_Block implements GroundBlock {
     return this._args;
   }
 
+  public GET_ABSOLUTE_TIME(): Temporal.Instant | undefined {
+    return this._absoluteTime;
+  }
+
+  public GET_EPOCH_TIME(): Temporal.Duration | undefined {
+    return this._epochTime;
+  }
+
+  public GET_RELATIVE_TIME(): Temporal.Duration | undefined {
+    return this._relativeTime;
+  }
+
   // @ts-ignore : 'GroundBlock' found in JSON Spec
   public toSeqJson(): GroundBlock {
     return {
       name: this.name,
       // prettier-ignore
       time:
-          this._absoluteTime !== null
+          this._absoluteTime
               ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
-          : this._epochTime !== null
+          : this._epochTime
               ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
-          : this._relativeTime !== null
+          : this._relativeTime
               ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       ...(this._args ? { args: this._args } : {}),
@@ -1769,9 +1793,9 @@ export class Ground_Event implements GroundEvent {
   time!: Time;
   type: 'ground_event' = StepType.GroundEvent;
 
-  private readonly _absoluteTime: Temporal.Instant | null = null;
-  private readonly _epochTime: Temporal.Duration | null = null;
-  private readonly _relativeTime: Temporal.Duration | null = null;
+  private readonly _absoluteTime: Temporal.Instant | undefined = undefined;
+  private readonly _epochTime: Temporal.Duration | undefined = undefined;
+  private readonly _relativeTime: Temporal.Duration | undefined = undefined;
 
   // @ts-ignore : 'Args' found in JSON Spec
   private readonly _args: Args | undefined;
@@ -1911,16 +1935,28 @@ export class Ground_Event implements GroundEvent {
     return this._args;
   }
 
+  public GET_ABSOLUTE_TIME(): Temporal.Instant | undefined {
+    return this._absoluteTime;
+  }
+
+  public GET_EPOCH_TIME(): Temporal.Duration | undefined {
+    return this._epochTime;
+  }
+
+  public GET_RELATIVE_TIME(): Temporal.Duration | undefined {
+    return this._relativeTime;
+  }
+
   // @ts-ignore : 'Ground_Event' found in JSON Spec
   public toSeqJson(): GroundEvent {
     return {
       name: this.name,
       time:
-          this._absoluteTime !== null
+          this._absoluteTime
               ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
-              : this._epochTime !== null
+              : this._epochTime
                   ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
-                  : this._relativeTime !== null
+                  : this._relativeTime
                       ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
                       : { type: TimingTypes.COMMAND_COMPLETE },
       ...(this._args ? { args: this._args } : {}),
@@ -2001,9 +2037,9 @@ export class ActivateStep implements Activate {
   time!: Time;
   type: 'activate' = StepType.Activate;
 
-  private readonly _absoluteTime: Temporal.Instant | null = null;
-  private readonly _epochTime: Temporal.Duration | null = null;
-  private readonly _relativeTime: Temporal.Duration | null = null;
+  private readonly _absoluteTime: Temporal.Instant | undefined = undefined;
+  private readonly _epochTime: Temporal.Duration | undefined = undefined;
+  private readonly _relativeTime: Temporal.Duration | undefined = undefined;
 
   // @ts-ignore : 'Args' found in JSON Spec
   private readonly _args?: Args | undefined;
@@ -2197,16 +2233,28 @@ export class ActivateStep implements Activate {
     return this._models;
   }
 
+  public GET_ABSOLUTE_TIME(): Temporal.Instant | undefined {
+    return this._absoluteTime;
+  }
+
+  public GET_EPOCH_TIME(): Temporal.Duration | undefined {
+    return this._epochTime;
+  }
+
+  public GET_RELATIVE_TIME(): Temporal.Duration | undefined {
+    return this._relativeTime;
+  }
+
   // @ts-ignore : 'Activate' found in JSON Spec
   public toSeqJson(): Activate {
     return {
       sequence: this.sequence,
       time:
-          this._absoluteTime !== null
+          this._absoluteTime
               ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
-              : this._epochTime !== null
+              : this._epochTime
                   ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
-                  : this._relativeTime !== null
+                  : this._relativeTime
                       ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
                       : { type: TimingTypes.COMMAND_COMPLETE },
       type: this.type,
@@ -2295,9 +2343,9 @@ export class LoadStep implements Load {
   time!: Time;
   type: 'load' = StepType.Load;
 
-  private readonly _absoluteTime: Temporal.Instant | null = null;
-  private readonly _epochTime: Temporal.Duration | null = null;
-  private readonly _relativeTime: Temporal.Duration | null = null;
+  private readonly _absoluteTime: Temporal.Instant | undefined = undefined;
+  private readonly _epochTime: Temporal.Duration | undefined = undefined;
+  private readonly _relativeTime: Temporal.Duration | undefined = undefined;
 
   // @ts-ignore : 'Args' found in JSON Spec
   private readonly _args?: Args | undefined;
@@ -2491,16 +2539,28 @@ export class LoadStep implements Load {
     return this._models;
   }
 
+  public GET_ABSOLUTE_TIME(): Temporal.Instant | undefined {
+    return this._absoluteTime;
+  }
+
+  public GET_EPOCH_TIME(): Temporal.Duration | undefined {
+    return this._epochTime;
+  }
+
+  public GET_RELATIVE_TIME(): Temporal.Duration | undefined {
+    return this._relativeTime;
+  }
+
   // @ts-ignore : 'Load' found in JSON Spec
   public toSeqJson(): Load {
     return {
       sequence: this.sequence,
       time:
-          this._absoluteTime !== null
+          this._absoluteTime
               ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
-              : this._epochTime !== null
+              : this._epochTime
                   ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
-                  : this._relativeTime !== null
+                  : this._relativeTime
                       ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
                       : { type: TimingTypes.COMMAND_COMPLETE },
       type: this.type,
@@ -2785,9 +2845,9 @@ class RequestCommon {
   }
 }
 class RequestTime extends RequestCommon implements RequestWithTime {
-  private readonly _absoluteTime: Temporal.Instant | null = null;
-  private readonly _epochTime: Temporal.Duration | null = null;
-  private readonly _relativeTime: Temporal.Duration | null = null;
+  private readonly _absoluteTime: Temporal.Instant | undefined = undefined;
+  private readonly _epochTime: Temporal.Duration | undefined = undefined;
+  private readonly _relativeTime: Temporal.Duration | undefined = undefined;
 
   private constructor(opts: RequestOptions) {
     super(opts);
@@ -2861,8 +2921,20 @@ class RequestTime extends RequestCommon implements RequestWithTime {
       ...(this._relativeTime ? { relativeTime: this._relativeTime } : {}),
     });
   }
-  // @ts-ignore : 'Request' found in JSON Spec
 
+  public GET_ABSOLUTE_TIME(): Temporal.Instant | undefined {
+    return this._absoluteTime;
+  }
+
+  public GET_EPOCH_TIME(): Temporal.Duration | undefined {
+    return this._epochTime;
+  }
+
+  public GET_RELATIVE_TIME(): Temporal.Duration | undefined {
+    return this._relativeTime;
+  }
+
+  // @ts-ignore : 'Request' found in JSON Spec
   public static override fromSeqJson(json: Request): RequestTime {
     // prettier-ignore
     const timeValue = json.time
@@ -2925,11 +2997,11 @@ class RequestTime extends RequestCommon implements RequestWithTime {
       ...{
         // prettier-ignore
         time:
-            this._absoluteTime !== null
+            this._absoluteTime
                 ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this._absoluteTime) }
-            : this._epochTime !== null
+            : this._epochTime
                 ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this._epochTime) }
-            : this._relativeTime !== null
+            : this._relativeTime
                 ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this._relativeTime) }
             : { type: TimingTypes.COMMAND_COMPLETE },
       },
