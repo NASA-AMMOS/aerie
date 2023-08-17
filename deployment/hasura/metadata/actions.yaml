@@ -114,6 +114,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: getSequenceSeqJsonBulk
     definition:
       kind: ""
@@ -122,6 +123,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: getUserSequenceSeqJson
     definition:
       kind: ""
@@ -130,6 +132,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: getUserSequenceSeqJsonBulk
     definition:
       kind: ""
@@ -138,6 +141,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: resourceTypes
     definition:
       kind: ""
@@ -146,6 +150,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: schedule
     definition:
       kind: ""
@@ -186,6 +191,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: constraintViolations
     definition:
       kind: ""
