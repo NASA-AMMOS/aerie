@@ -100,6 +100,7 @@ begin;
 
   -- Hasura Functions
   \ir functions/hasura/activity_preset_functions.sql
+  \ir functions/hasura/snapshot_functions.sql
   \ir functions/hasura/delete_anchor_functions.sql
   \ir functions/hasura/hasura_functions.sql
   \ir functions/hasura/plan_branching_functions.sql

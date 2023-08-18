@@ -1,3 +1,7 @@
+-- Hasura function
+drop function hasura_functions.restore_from_snapshot(_plan_id integer, _snapshot_id integer, hasura_session json);
+drop function hasura_functions.create_snapshot(_plan_id integer, _snapshot_name text, hasura_session json);
+drop table hasura_functions.create_snapshot_return_value;
 -- Remove restore_from_snapshot
 comment on procedure restore_from_snapshot(_plan_id integer, _snapshot_id integer) is null;
 drop procedure restore_from_snapshot(_plan_id integer, _snapshot_id integer);
