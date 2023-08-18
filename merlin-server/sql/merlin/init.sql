@@ -75,6 +75,7 @@ begin;
   \ir functions/public/begin_merge.sql
   \ir functions/public/commit_merge.sql
   \ir functions/public/create_snapshot.sql
+  \ir functions/public/restore_from_snapshot.sql
 
   -- Presets
   \ir tables/activity_presets.sql

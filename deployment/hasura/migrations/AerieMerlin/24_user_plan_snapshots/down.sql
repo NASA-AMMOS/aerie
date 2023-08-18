@@ -1,3 +1,7 @@
+-- Remove restore_from_snapshot
+comment on procedure restore_from_snapshot(_plan_id integer, _snapshot_id integer) is null;
+drop procedure restore_from_snapshot(_plan_id integer, _snapshot_id integer);
+
 -- Remove override for create_snapshot
 comment on function create_snapshot(integer, text, text) is null;
 comment on function create_snapshot(integer) is e''
