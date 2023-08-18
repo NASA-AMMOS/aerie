@@ -5,6 +5,7 @@ import com.google.common.truth.Correspondence;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -31,7 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
-    return new PrioritySolver(new Problem(null, h, null, null));
+    MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
+    return new PrioritySolver(
+            new Problem(
+                    bananaMissionModel,
+                    h,
+                    new SimulationFacade(h, bananaMissionModel),
+                    SimulationUtility.getBananaSchedulerModel()));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {

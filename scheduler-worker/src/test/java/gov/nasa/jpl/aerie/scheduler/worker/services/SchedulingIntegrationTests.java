@@ -1858,13 +1858,17 @@ public class SchedulingIntegrationTests {
     assertEquals(2, results.updatedPlan().size());
   }
 
+  /**
+   * Test that the scheduler can correctly place activities off of activities anchored to start at
+   * the end of another activity.
+   */
   @Test
-  void testRelativeActivityPlanSimpleCoexistenceGoalEnd() {
+  void testRelativeActivityPlanZeroStartOffsetEnd() {
     /*
-    Start with a plan with B -> A
+    Start with a plan with B anchored to end of A
     Goal: for each B, place a C
     And make sure that C ends up in the right place
-     */
+    */
     final var activityDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(
         BANANANATION,
@@ -1938,10 +1942,14 @@ public class SchedulingIntegrationTests {
     assertEquals(Duration.of(125, Duration.MINUTES), peelBanana.startOffset());
   }
 
+  /**
+   * Test that the scheduler can correctly place activities off of activities anchored to start
+   * at the same time of another activity.
+   */
   @Test
-  void testRelativeActivityPlanSimpleCoexistenceGoalStart() {
+  void testRelativeActivityPlanZeroStartOffsetStart() {
     /*
-    Start with a plan with B -> A
+    Start with a plan with B anchored to start of A
     Goal: for each B, place a C
     And make sure that C ends up in the right place
      */
@@ -2016,6 +2024,293 @@ public class SchedulingIntegrationTests {
     assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
     assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
     assertEquals(Duration.of(65, Duration.MINUTES), peelBanana.startOffset());
+  }
+
+  /**
+   * Test that the scheduler can correctly place activities off of activities anchored to start before another activity.
+   */
+  @Test
+  void testRelativeActivityPlanNegativeStartOffsetStart() {
+    /*
+    Start with a plan with B anchored to A
+    Goal: for each B, place a C
+    And make sure that C ends up in the right place
+     */
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var tenMinutes = Duration.of(10, MINUTES);
+    final var results = runScheduler(
+        BANANANATION,
+        Map.of(
+            new ActivityDirectiveId(1L),
+            new ActivityDirective(
+                tenMinutes,
+                "DurationParameterActivity",
+                Map.of(
+                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                true),
+            new ActivityDirectiveId(2L),
+            new ActivityDirective(
+                Duration.of(-5, MINUTES),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                new ActivityDirectiveId(1L),
+                true)),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBananas = planByActivityType.get("PeelBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    final var durationParamActivities = planByActivityType.get("DurationParameterActivity");
+
+    assertEquals(1, peelBananas.size());
+    assertEquals(1, growBananas.size());
+    assertEquals(1, durationParamActivities.size());
+    final var peelBanana = peelBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+    final var durationParamActivity = durationParamActivities.iterator().next();
+
+    assertEquals(tenMinutes, durationParamActivity.startOffset());
+    assertEquals(Duration.of(-5, MINUTES), growBanana.startOffset());
+    assertTrue(growBanana.anchoredToStart());
+
+    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
+    assertEquals(tenMinutes, peelBanana.startOffset());
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
+  }
+
+  /**
+   * Test that the scheduler can correctly place activities off of activities anchored to start after the start
+   * of another activity.
+   */
+  @Test
+  void testRelativeActivityPlanPositiveStartOffsetStart() {
+    /*
+    Start with a plan with B anchored to A
+    Goal: for each B, place a C
+    And make sure that C ends up in the right place
+     */
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var tenMinutes = Duration.of(10, MINUTES);
+    final var results = runScheduler(
+        BANANANATION,
+        Map.of(
+            new ActivityDirectiveId(1L),
+            new ActivityDirective(
+                Duration.ZERO,
+                "DurationParameterActivity",
+                Map.of(
+                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                true),
+            new ActivityDirectiveId(2L),
+            new ActivityDirective(
+                tenMinutes,
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                new ActivityDirectiveId(1L),
+                true)),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBananas = planByActivityType.get("PeelBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    final var durationParamActivities = planByActivityType.get("DurationParameterActivity");
+
+    assertEquals(1, peelBananas.size());
+    assertEquals(1, growBananas.size());
+    assertEquals(1, durationParamActivities.size());
+    final var peelBanana = peelBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+    final var durationParamActivity = durationParamActivities.iterator().next();
+
+    assertEquals(Duration.ZERO, durationParamActivity.startOffset());
+
+    assertEquals(tenMinutes, growBanana.startOffset());
+    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
+
+    assertEquals(Duration.of(15, Duration.MINUTES), peelBanana.startOffset());
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
+  }
+
+    /**
+   * Test that the scheduler can correctly place activities off of activities anchored to start after the start
+   * of another activity.
+   */
+  @Test
+  void testRelativeActivityPlanPositiveEndOffsetEnd() {
+    /*
+    Start with a plan with B anchored to A
+    Goal: for each B, place a C
+    And make sure that C ends up in the right place
+     */
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var tenMinutes = Duration.of(10, MINUTES);
+    final var results = runScheduler(
+        BANANANATION,
+        Map.of(
+            new ActivityDirectiveId(1L),
+            new ActivityDirective(
+                Duration.ZERO,
+                "DurationParameterActivity",
+                Map.of(
+                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                true),
+            new ActivityDirectiveId(2L),
+            new ActivityDirective(
+                tenMinutes,
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                new ActivityDirectiveId(1L),
+                false)),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBananas = planByActivityType.get("PeelBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    final var durationParamActivities = planByActivityType.get("DurationParameterActivity");
+
+    assertEquals(1, peelBananas.size());
+    assertEquals(1, growBananas.size());
+    assertEquals(1, durationParamActivities.size());
+    final var peelBanana = peelBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+    final var durationParamActivity = durationParamActivities.iterator().next();
+
+    assertEquals(Duration.ZERO, durationParamActivity.startOffset());
+
+    assertEquals(Duration.of(10, MINUTES), growBanana.startOffset());
+    assertFalse(growBanana.anchoredToStart());
+    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
+
+    assertEquals(Duration.of(75, Duration.MINUTES), peelBanana.startOffset());
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
+  }
+
+  /**
+   * Test that the scheduler does not schedule activities based on activities which are outside plan bounds
+   */
+  @Test
+  void testDontScheduleFromOutsidePlanBounds(){
+    final var activityDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        Map.of(
+            // Activity Before Plan Start
+            new ActivityDirectiveId(1L),
+            new ActivityDirective(
+                Duration.of(-10, MINUTES),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                true),
+            // Activity Anchored to run after Plan End
+            new ActivityDirectiveId(2L),
+            new ActivityDirective(
+                Duration.of(10, MINUTES),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(2),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                null,
+                false)),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    // The goal is satisfied, but placed no activities,
+    // because all activities it could've matched on are outside the plan bounds
+    assertTrue(goalResult.satisfied());
+    assertEquals(0, goalResult.createdActivities().size());
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var growBananas = planByActivityType.get("GrowBanana");
+    final var gbIterator = growBananas.iterator();
+
+    assertNull(planByActivityType.get("PeelBanana"));
+    assertEquals(2, growBananas.size());
+
+    final var growBanana1 = gbIterator.next();
+    assertEquals(Duration.of(-10, MINUTES), growBanana1.startOffset());
+    assertEquals(SerializedValue.of(1), growBanana1.serializedActivity().getArguments().get("quantity"));
+
+    final var growBanana2 = gbIterator.next();
+    assertEquals(Duration.of(10, MINUTES), growBanana2.startOffset());
+    assertEquals(SerializedValue.of(2), growBanana2.serializedActivity().getArguments().get("quantity"));
   }
 
   /**
