@@ -23,11 +23,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class PermissionsTest {
   private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private enum FunctionPermissionKey {
-      apply_preset, branch_plan, create_merge_rq, withdraw_merge_rq, begin_merge, cancel_merge,
-      commit_merge, deny_merge, get_conflicting_activities, get_non_conflicting_activities, set_resolution,
-      set_resolution_bulk, delete_activity_subtree, delete_activity_subtree_bulk, delete_activity_reanchor_plan,
-      delete_activity_reanchor_plan_bulk, delete_activity_reanchor, delete_activity_reanchor_bulk, get_plan_history,
-      restore_activity_changelog
+    apply_preset,
+    begin_merge,
+    branch_plan,
+    cancel_merge,
+    create_merge_rq,
+    create_snapshot,
+    commit_merge,
+    delete_activity_reanchor,
+    delete_activity_reanchor_bulk,
+    delete_activity_reanchor_plan,
+    delete_activity_reanchor_plan_bulk,
+    delete_activity_subtree,
+    delete_activity_subtree_bulk,
+    deny_merge,
+    get_conflicting_activities,
+    get_non_conflicting_activities,
+    get_plan_history,
+    restore_activity_changelog,
+    restore_snapshot,
+    set_resolution,
+    set_resolution_bulk,
+    withdraw_merge_rq
   }
   private enum GeneralPermission {
     OWNER, MISSION_MODEL_OWNER, PLAN_OWNER, PLAN_COLLABORATOR, PLAN_OWNER_COLLABORATOR
@@ -176,25 +193,27 @@ public class PermissionsTest {
     @Test
     void getFunctionReturnsAssignedValueUser() throws SQLException {
       assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("apply_preset", merlinHelper.user.session()));
-      assertEquals("NO_CHECK", getFunctionPermission("branch_plan", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_SOURCE", getFunctionPermission("create_merge_rq", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_SOURCE", getFunctionPermission("withdraw_merge_rq", merlinHelper.user.session()));
       assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("begin_merge", merlinHelper.user.session()));
+      assertEquals("NO_CHECK", getFunctionPermission("branch_plan", merlinHelper.user.session()));
       assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("cancel_merge", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_SOURCE", getFunctionPermission("create_merge_rq", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("create_snapshot", merlinHelper.user.session()));
       assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("commit_merge", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor_bulk", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor_plan", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor_plan_bulk", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_subtree", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_subtree_bulk", merlinHelper.user.session()));
       assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("deny_merge", merlinHelper.user.session()));
       assertEquals("NO_CHECK", getFunctionPermission("get_conflicting_activities", merlinHelper.user.session()));
       assertEquals("NO_CHECK", getFunctionPermission("get_non_conflicting_activities", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("set_resolution", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("set_resolution_bulk", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_subtree", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_subtree_bulk", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor_plan", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor_plan_bulk", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor", merlinHelper.user.session()));
-      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("delete_activity_reanchor_bulk", merlinHelper.user.session()));
       assertEquals("NO_CHECK", getFunctionPermission("get_plan_history", merlinHelper.user.session()));
       assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("restore_activity_changelog", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_COLLABORATOR", getFunctionPermission("restore_snapshot", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("set_resolution", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_TARGET", getFunctionPermission("set_resolution_bulk", merlinHelper.user.session()));
+      assertEquals("PLAN_OWNER_SOURCE", getFunctionPermission("withdraw_merge_rq", merlinHelper.user.session()));
     }
 
     @ParameterizedTest
@@ -425,7 +444,7 @@ public class PermissionsTest {
 
     // MISSION_MODEL_OWNER: The user must be Owner of the model
     @Test
-    void testMissionModel() throws SQLException {
+    void testMissionModelOwner() throws SQLException {
       // Setup
       final int missionModelId = merlinHelper.insertMissionModel(fileId, merlinHelper.user.name());
       final int basePlan = merlinHelper.insertPlan(missionModelId, merlinHelper.viewer.name());
