@@ -1,0 +1,12 @@
+table:
+  name: create_snapshot_return_value
+  schema: hasura_functions
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [snapshot_id]
+      filter: {}
+  - role: user
+    permission:
+      columns: [snapshot_id]
+      filter: {}
