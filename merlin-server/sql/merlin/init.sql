@@ -35,6 +35,7 @@ begin;
   \ir tables/plan.sql
   \ir tables/plan_collaborators.sql
   \ir tables/activity_directive.sql
+  \ir tables/activity_directive_changelog.sql
   \ir tables/activity_directive_validations.sql
   \ir tables/anchor_validation_status.sql
   \ir tables/simulation_template.sql

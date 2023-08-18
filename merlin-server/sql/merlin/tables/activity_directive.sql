@@ -6,6 +6,7 @@ create table activity_directive (
   source_scheduling_goal_id integer,
   created_at timestamptz not null default now(),
   last_modified_at timestamptz not null default now(),
+  last_modified_by text,
   start_offset interval not null,
   type text not null,
   arguments merlin_argument_set not null,
@@ -26,7 +27,12 @@ create table activity_directive (
     foreign key (anchor_id, plan_id)
       references activity_directive
       on update cascade
-      on delete restrict
+      on delete restrict,
+  constraint activity_directive_last_modified_by_exists
+    foreign key (last_modified_by)
+    references metadata.users
+    on update cascade
+    on delete set null
 );
 
 create index activity_directive_plan_id_index on activity_directive (plan_id);
@@ -48,6 +54,8 @@ comment on column activity_directive.created_at is e''
   'The time at which this activity_directive was created.';
 comment on column activity_directive.last_modified_at is e''
   'The time at which this activity_directive was last modified.';
+comment on column activity_directive.last_modified_by is e''
+  'The user who last modified this activity_directive.';
 comment on column activity_directive.last_modified_arguments_at is e''
   'The time at which this activity_directive.arguments was last modified.';
 comment on column activity_directive.start_offset is e''

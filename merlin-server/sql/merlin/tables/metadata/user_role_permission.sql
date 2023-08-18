@@ -54,7 +54,8 @@ values
       "delete_activity_reanchor_plan_bulk": "PLAN_OWNER_COLLABORATOR",
       "delete_activity_reanchor": "PLAN_OWNER_COLLABORATOR",
       "delete_activity_reanchor_bulk": "PLAN_OWNER_COLLABORATOR",
-      "get_plan_history": "NO_CHECK"
+      "get_plan_history": "NO_CHECK",
+      "restore_activity_changelog": "PLAN_OWNER_COLLABORATOR"
     }' ),
   ('viewer',
    '{

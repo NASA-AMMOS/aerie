@@ -104,6 +104,31 @@ public class PlanCollaborationTests {
     }
   }
 
+  private void updateActivityLastModifiedBy(String newModifier, int activityId, int planId) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      statement.execute(
+          """
+          update activity_directive
+          set last_modified_by = '%s'
+          where id = %d and plan_id = %d;
+          """.formatted(newModifier, activityId, planId));
+    }
+  }
+
+  private String getActivityLastModifiedBy(int activityId, int planId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          // language=sql
+          """
+          select last_modified_by
+          from activity_directive
+          where id = %d and plan_id = %d;
+          """.formatted(activityId, planId));
+      res.next();
+      return res.getString("last_modified_by");
+    }
+  }
+
   int duplicatePlan(final int planId, final String newPlanName) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
@@ -319,6 +344,7 @@ public class PlanCollaborationTests {
           res.getInt("source_scheduling_goal_id"),
           res.getString("created_at"),
           res.getString("last_modified_at"),
+          res.getString("last_modified_by"),
           res.getString("start_offset"),
           res.getString("type"),
           res.getString("arguments"),
@@ -348,6 +374,7 @@ public class PlanCollaborationTests {
             res.getInt("source_scheduling_goal_id"),
             res.getString("created_at"),
             res.getString("last_modified_at"),
+            res.getString("last_modified_by"),
             res.getString("start_offset"),
             res.getString("type"),
             res.getString("arguments"),
@@ -379,6 +406,7 @@ public class PlanCollaborationTests {
             res.getInt("source_scheduling_goal_id"),
             res.getString("created_at"),
             res.getString("last_modified_at"),
+            res.getString("last_modified_by"),
             res.getString("start_offset"),
             res.getString("type"),
             res.getString("arguments"),
@@ -422,7 +450,7 @@ public class PlanCollaborationTests {
     }
   }
 
-  private static void assertActivityEquals(final Activity expected, final Activity actual) {
+  public static void assertActivityEquals(final Activity expected, final Activity actual) {
     // validate all shared properties
     assertEquals(expected.name, actual.name);
     assertEquals(expected.sourceSchedulingGoalId, actual.sourceSchedulingGoalId);
@@ -437,13 +465,14 @@ public class PlanCollaborationTests {
   //endregion
 
   //region Records
-  private record Activity(
+  public record Activity(
       int activityId,
       int planId,
       String name,
       int sourceSchedulingGoalId,
       String createdAt,
       String lastModifiedAt,
+      String lastModifiedBy,
       String startOffset,
       String type,
       String arguments,
@@ -459,6 +488,7 @@ public class PlanCollaborationTests {
       int sourceSchedulingGoalId,
       String createdAt,
       String lastModifiedAt,
+      String lastModifiedBy,
       String startOffset,
       String type,
       String arguments,
@@ -504,6 +534,7 @@ public class PlanCollaborationTests {
         assertEquals(planActivities.get(i).sourceSchedulingGoalId, snapshotActivities.get(i).sourceSchedulingGoalId);
         assertEquals(planActivities.get(i).createdAt, snapshotActivities.get(i).createdAt);
         assertEquals(planActivities.get(i).lastModifiedAt, snapshotActivities.get(i).lastModifiedAt);
+        assertEquals(planActivities.get(i).lastModifiedBy, snapshotActivities.get(i).lastModifiedBy);
         assertEquals(planActivities.get(i).startOffset, snapshotActivities.get(i).startOffset);
         assertEquals(planActivities.get(i).type, snapshotActivities.get(i).type);
         assertEquals(planActivities.get(i).arguments, snapshotActivities.get(i).arguments);
@@ -1607,6 +1638,45 @@ public class PlanCollaborationTests {
       updateActivityName(newName, activityId, basePlan);
       updateActivityName("Different Revision Proof", activityId, childPlan);
       updateActivityName(newName, activityId, childPlan);
+
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(2, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("none", stagedActs.get(0).changeType);
+      assertEquals(noopDodger, stagedActs.get(1).activityId);
+      assertEquals("add", stagedActs.get(1).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void lastModifiedByModifyModifyResolvesAsNone() throws SQLException {
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
+      final String oldModifier = "PlanCollaborationTests";
+      final String newModifierBase = "PlanCollaborationTests Requester";
+      final String newModifierChild = "PlanCollaborationTests Reviewer";
+
+      // add non-null last_modified_by to base plan before branching
+      updateActivityLastModifiedBy(oldModifier, activityId, basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+
+      // verify last_modified_by changed as expected
+      assertEquals(oldModifier, getActivityLastModifiedBy(activityId, basePlan));
+      assertEquals(oldModifier, getActivityLastModifiedBy(activityId, childPlan));
+      updateActivityLastModifiedBy(newModifierBase, activityId, basePlan);
+      updateActivityLastModifiedBy(newModifierChild, activityId, childPlan);
+      assertEquals(newModifierBase, getActivityLastModifiedBy(activityId, basePlan));
+      assertEquals(newModifierChild, getActivityLastModifiedBy(activityId, childPlan));
 
       // Insert to avoid NO-OP case in begin_merge
       final int noopDodger = merlinHelper.insertActivity(childPlan);

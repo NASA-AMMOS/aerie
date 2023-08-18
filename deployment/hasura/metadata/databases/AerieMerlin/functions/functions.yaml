@@ -201,3 +201,12 @@
     - role: aerie_admin
     - role: user
     - role: viewer
+- function:
+    name: restore_activity_changelog
+    schema: hasura_functions
+  configuration:
+    custom_name: restoreActivityFromChangelog
+    session_argument: hasura_session
+  permissions:
+    - role: aerie_admin
+    - role: user

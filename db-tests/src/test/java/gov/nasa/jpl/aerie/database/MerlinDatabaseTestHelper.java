@@ -120,14 +120,17 @@ final class MerlinDatabaseTestHelper {
   }
 
   int insertActivity(final int planId, final String startOffset, final String arguments) throws SQLException {
+    return insertActivity(planId, startOffset, arguments, admin);
+  }
+  int insertActivity(final int planId, final String startOffset, final String arguments, User user) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
               """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
-                  VALUES ('test-activity', '%s', '%s', '%s')
+                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments, last_modified_by)
+                  VALUES ('test-activity', '%s', '%s', '%s', '%s')
                   RETURNING id;"""
-                  .formatted(planId, startOffset, arguments)
+                  .formatted(planId, startOffset, arguments, user.name)
           );
 
       res.next();
