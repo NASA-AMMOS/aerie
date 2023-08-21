@@ -55,6 +55,7 @@ describe('expansion', () => {
   let expansionId: number;
   let groundEventExpansion: number;
   let groundBlockExpansion: number;
+  let activateLoadExpansion: number;
 
   beforeEach(async () => {
     expansionId = await insertExpansion(
@@ -94,12 +95,27 @@ describe('expansion', () => {
     }
     `,
     );
+
+    activateLoadExpansion = await insertExpansion(
+        graphqlClient,
+        'BakeBananaBread',
+        `export default function MyExpansion(props: {
+          activityInstance: ActivityType
+        }): ExpansionReturn {
+          const { activityInstance } = props;
+          return [
+            A("2022-203T00:00:00").LOAD("BACKGROUND-A").ARGUMENTS(props.activityInstance.attributes.arguments.temperature),
+            A("2022-204T00:00:00").ACTIVATE("BACKGROUND-B"),];
+        }
+        `,
+    );
   });
 
   afterEach(async () => {
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansion(graphqlClient, groundEventExpansion);
     await removeExpansion(graphqlClient, groundBlockExpansion);
+    await removeExpansion(graphqlClient, activateLoadExpansion);
   });
 
   it('should fail when the user creates an expansion set with a ground block', async () => {
@@ -116,6 +132,88 @@ describe('expansion', () => {
         await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [groundEventExpansion]),
       ).toThrow();
     } catch (e) {}
+  }, 30000);
+
+  it('should expand load and activate steps ', async () => {
+    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [activateLoadExpansion]);
+
+    const activityId = await insertActivityDirective(graphqlClient, planId, 'BakeBananaBread',"30 seconds 0 milliseconds",{tbSugar : 1, glutenFree: false});
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+
+    // Expand Plan
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+
+    expect(expansionSetId).toBeGreaterThan(0);
+    expect(expansionRunPk).toBeGreaterThan(0);
+
+
+    const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId,
+    );
+
+    const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+
+    const { activity_instance_commands } = await graphqlClient.request<{
+      activity_instance_commands: { commands: ReturnType<CommandStem['toSeqJson']>; errors: string[] }[];
+    }>(
+        gql`
+        query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId: Int!) {
+          activity_instance_commands(
+            where: {
+              _and: { expansion_run_id: { _eq: $expansionRunId }, activity_instance_id: { _eq: $simulatedActivityId } }
+            }
+          ) {
+            commands
+            errors
+          }
+        }
+      `,
+        {
+          expansionRunId,
+          simulatedActivityId,
+        },
+    );
+
+    expect(activity_instance_commands.length).toBe(1);
+    if (activity_instance_commands[0]?.errors.length !== 0) {
+      throw new Error(activity_instance_commands[0]?.errors.join('\n'));
+    }
+    expect(activity_instance_commands[0]?.commands).toEqual([
+      {
+        args: [{
+          name: "arg_0",
+          type: "number",
+          value: 350
+        }],
+        metadata: { simulatedActivityId },
+        sequence: 'BACKGROUND-A',
+        time: {
+          tag: "2022-203T00:00:00.000",
+          type: "ABSOLUTE"
+        },
+        type: 'load',
+      },
+      {
+        metadata: { simulatedActivityId },
+        sequence: 'BACKGROUND-B',
+        time: {
+          tag: "2022-204T00:00:00.000",
+          type: "ABSOLUTE"
+        },
+        type: 'activate',
+      },
+    ]);
+
+
+    await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await removeActivityDirective(graphqlClient, activityId, planId);
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, expansionSetId);
   }, 30000);
 
   it('should allow an activity type and command to have the same name', async () => {

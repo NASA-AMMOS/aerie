@@ -62,6 +62,7 @@ describe('sequence generation', () => {
   let expansionId1: number;
   let expansionId2: number;
   let expansionId3: number;
+  let expansionId4: number;
 
   beforeEach(async () => {
     expansionId1 = await insertExpansion(
@@ -133,6 +134,23 @@ describe('sequence generation', () => {
     }
     `,
     );
+
+    expansionId4 = await insertExpansion(
+        graphqlClient,
+        'BakeBananaBread',
+        `
+      export default function MyExpansion(props: {
+        activityInstance: ActivityType
+      }): ExpansionReturn {
+        const { activityInstance } = props;
+        return [
+          A("2022-203T00:00:00").LOAD("BACKGROUND-A").ARGUMENTS(props.activityInstance.attributes.arguments.temperature),
+          A("2022-204T00:00:00").ACTIVATE("BACKGROUND-B"),
+          R("00:00:90").ADD_WATER
+          ];
+      }
+    `,
+    );
   });
 
   afterEach(async () => {
@@ -148,13 +166,15 @@ describe('sequence generation', () => {
       expansionId1,
       expansionId2,
       expansionId3,
+      expansionId4
     ]);
 
     // Create Activity Directives
-    const [activityId1, activityId2, activityId3] = await Promise.all([
+    const [activityId1, activityId2, activityId3, activityId4] = await Promise.all([
       insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
       insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes'),
       insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes'),
+      insertActivityDirective(graphqlClient, planId, 'BakeBananaBread', '90 minutes',{tbSugar : 1, glutenFree: false}),
     ]);
 
     // Simulate Plan
@@ -171,10 +191,11 @@ describe('sequence generation', () => {
       linkActivityInstance(graphqlClient, sequencePk, activityId1),
       linkActivityInstance(graphqlClient, sequencePk, activityId2),
       linkActivityInstance(graphqlClient, sequencePk, activityId3),
+      linkActivityInstance(graphqlClient, sequencePk, activityId4),
     ]);
 
     // Get the simulated activity ids
-    const [simulatedActivityId1, simulatedActivityId2, simulatedActivityId3] = await Promise.all([
+    const [simulatedActivityId1, simulatedActivityId2, simulatedActivityId3, simulatedActivityId4] = await Promise.all([
       convertActivityDirectiveIdToSimulatedActivityId(
         graphqlClient,
         simulationArtifactPk.simulationDatasetId,
@@ -189,6 +210,11 @@ describe('sequence generation', () => {
         graphqlClient,
         simulationArtifactPk.simulationDatasetId,
         activityId3,
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
+          graphqlClient,
+          simulationArtifactPk.simulationDatasetId,
+          activityId4,
       ),
     ]);
     /** End Setup */
@@ -441,6 +467,47 @@ describe('sequence generation', () => {
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
+      {
+        args: [
+          {
+            name: "arg_0",
+            type: "number",
+            value: 350
+          }
+        ],
+        metadata: {
+          simulatedActivityId: simulatedActivityId4
+        },
+        sequence: "BACKGROUND-A",
+        time: {
+          tag: "2022-203T00:00:00.000",
+          type: "ABSOLUTE"
+        },
+        type: "load"
+      },
+      {
+        metadata: {
+          simulatedActivityId: simulatedActivityId4
+        },
+        sequence: "BACKGROUND-B",
+        time: {
+          tag: "2022-204T00:00:00.000",
+          type: "ABSOLUTE"
+        },
+        type: "activate"
+      },
+      {
+        args: [],
+        metadata: {
+          simulatedActivityId: simulatedActivityId4
+        },
+        stem: "ADD_WATER",
+        time: {
+          tag: "00:01:30.000",
+          type: "COMMAND_RELATIVE"
+        },
+        type: "command"
+      }
     ]);
 
     /** Begin Cleanup */
@@ -451,6 +518,7 @@ describe('sequence generation', () => {
       removeActivityDirective(graphqlClient, activityId1, planId),
       removeActivityDirective(graphqlClient, activityId2, planId),
       removeActivityDirective(graphqlClient, activityId3, planId),
+      removeActivityDirective(graphqlClient, activityId4, planId),
     ]);
     await removeExpansionSet(graphqlClient, expansionSetId);
     /** End Cleanup */

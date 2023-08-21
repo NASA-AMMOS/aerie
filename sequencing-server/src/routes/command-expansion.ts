@@ -11,7 +11,7 @@ import getLogger from './../utils/logger.js';
 import { InheritedError } from '../utils/InheritedError.js';
 import { unwrapPromiseSettledResults } from '../lib/batchLoaders/index.js';
 import { defaultSeqBuilder } from '../defaultSeqBuilder.js';
-import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
+import { ActivateStep, CommandStem, LoadStep } from './../lib/codegen/CommandEDSLPreface.js';
 import { getUsername } from '../utils/hasura.js';
 
 const logger = getLogger('app');
@@ -380,7 +380,18 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
         return {
           ...ai,
-          commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
+          commands: row.commands?.map(c => {
+            switch (c.type) {
+              case 'command':
+                return CommandStem.fromSeqJson(c);
+              case 'load':
+                return LoadStep.fromSeqJson(c);
+              case 'activate':
+                return ActivateStep.fromSeqJson(c);
+              default:
+                throw new Error(`Unknown command type: ${c.type}`);
+            }
+          }) ?? null,
           errors: errors as { message: string; stack: string; location: { line: number; column: number } }[],
         };
       });
