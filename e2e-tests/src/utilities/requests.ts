@@ -152,6 +152,53 @@ const req = {
     return simulation_dataset[0] as SimulationDataset;
   },
 
+  async insertSpan(
+      request: APIRequestContext,
+      parentId: number,
+      duration: string,
+      simulationDatasetId: number,
+      type: string,
+      startOffset: string,
+      attributes: any){
+    //note the empty headers: required to act as hasura admin role to be able to insert in these tables
+    const data = await req.hasura(request, gql.INSERT_SPAN, {
+      parentId: parentId,
+      duration: duration,
+      datasetId: simulationDatasetId,
+      type: type,
+      startOffset: startOffset,
+      attributes: attributes},{});
+    const { insert_span_one } = data;
+    const { id } = insert_span_one;
+    return id;
+  },
+
+  async insertSimulationDataset(
+      request: APIRequestContext,
+      simulationId: number,
+      simulationStartTime: string,
+      simulationEndTime:string,
+      status:string,
+      simulationArguments:ArgumentsMap,
+      planRevision: number
+
+  ){
+    //note the empty headers: required to act as hasura admin role to be able to insert in these tables
+    const data = await req.hasura(request, gql.INSERT_SIMULATION_DATASET, {
+      simulationDatasetInsertInput : {
+        simulation_id: simulationId,
+        simulation_start_time:simulationStartTime,
+        simulation_end_time: simulationEndTime,
+        status:status,
+        arguments: simulationArguments,
+        plan_revision: planRevision
+      }
+    },{});
+    const { insert_simulation_dataset_one } = data;
+    const { dataset_id : datasetId } = insert_simulation_dataset_one;
+    return datasetId;
+  },
+
   async insertAndAssociateSimulationTemplate(
     request: APIRequestContext,
     template: InsertSimulationTemplateInput,
@@ -330,6 +377,22 @@ const req = {
     return id;
   },
 
+  async insertProfile(request: APIRequestContext, datasetId: number, duration:string, name: string, type:object): Promise<number> {
+    //note the empty headers: required to act as hasura admin role to be able to insert in these tables
+    const data = await req.hasura(request, gql.INSERT_PROFILE, { datasetId, duration, name, type }, {});
+    const { insert_profile_one } = data;
+    const { id } = insert_profile_one;
+    return id;
+  },
+
+  async insertProfileSegment(request: APIRequestContext, datasetId: number, dynamics:number, isGap: boolean, profileId:number, startOffset:string): Promise<number> {
+    //note the empty headers: required to act as hasura admin role to be able to insert in these tables
+    const data = await req.hasura(request, gql.INSERT_PROFILE_SEGMENT, { datasetId, dynamics, isGap, profileId, startOffset }, {});
+    const { insert_profile_segment_one } = data;
+    const { dataset_id } = insert_profile_segment_one;
+    return dataset_id;
+  },
+
   async updateConstraint(
     request: APIRequestContext,
     constraintId: number,
@@ -448,6 +511,27 @@ export async function awaitSimulation(request: APIRequestContext, plan_id: numbe
   }
 
   throw Error(`Simulation timed out after ${max_iter} iterations`);
+}
+
+export async function awaitScheduling(request: APIRequestContext, scheduling_specification_id: number): Promise<SchedulingResponse> {
+  const max_iter = 10;
+  for (let i = 0; i < max_iter; i++) {
+    const resp = await req.schedule(request, scheduling_specification_id);
+    const { reason, status } = resp;
+
+    switch (status) {
+      case 'pending':
+      case 'incomplete':
+        await time.delay(1000);
+        break;
+      case 'complete':
+        return resp;
+      default:
+        throw Error(`Scheduling returned bad status: ${status} with reason ${reason}`);
+    }
+  }
+
+  throw Error(`Scheduling timed out after ${max_iter} iterations`);
 }
 
 export default req;

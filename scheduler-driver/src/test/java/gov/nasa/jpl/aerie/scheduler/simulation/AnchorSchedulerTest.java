@@ -222,7 +222,7 @@ public class AnchorSchedulerTest {
       final var actualSimResults = driver.getSimulationResultsUpTo(planStart, tenDays);
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
-      assertEquals(2, driver.getCountSimulationRestarts());
+      assertEquals(1, driver.getCountSimulationRestarts());
     }
 
     @Test
@@ -578,7 +578,7 @@ public class AnchorSchedulerTest {
 
       // We have examined all the children
       assertTrue(childSimulatedActivities.isEmpty());
-      assertEquals(2, driver.getCountSimulationRestarts());
+      assertEquals(1, driver.getCountSimulationRestarts());
     }
 
     @Test
@@ -623,7 +623,7 @@ public class AnchorSchedulerTest {
 
       assertEquals(3906, expectedSimResults.simulatedActivities.size());
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
-      assertEquals(2, driver.getCountSimulationRestarts());
+      assertEquals(1, driver.getCountSimulationRestarts());
     }
   }
 

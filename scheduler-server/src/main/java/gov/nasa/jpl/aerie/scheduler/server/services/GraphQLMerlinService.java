@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers;
 import gov.nasa.jpl.aerie.scheduler.server.http.EventGraphFlattener;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
@@ -36,7 +37,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ProfileSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.postgresql.util.PGInterval;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -50,7 +50,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -60,19 +59,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.activityAttributesP;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.discreteProfileTypeP;
-import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.durationFromPGInterval;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.graphQLIntervalFromDuration;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.instantFromStart;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.realDynamicsP;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.realProfileTypeP;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.simulationArgumentsP;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.ProfileParsers.discreteValueSchemaTypeP;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.ProfileParsers.realValueSchemaTypeP;
 
 /**
  * {@inheritDoc}
@@ -217,7 +226,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final long planPK = plan.getJsonNumber("id").longValue();
       final long planRev = plan.getJsonNumber("revision").longValue();
       final var startTime = parseGraphQLTimestamp(plan.getString("start_time"));
-      final var duration = parseGraphQLInterval(plan.getString("duration"));
+      final var duration = durationFromPGInterval(plan.getString("duration"));
 
       final var model = plan.getJsonObject("mission_model");
       final var modelId = model.getJsonNumber("id").longValue();
@@ -289,7 +298,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           .getInputType()
           .getEffectiveArguments(deserializedArguments);
       final var merlinActivity = new ActivityDirective(
-          parseGraphQLInterval(start),
+          durationFromPGInterval(start),
           type,
           effectiveArguments,
           (anchorId != null) ? new ActivityDirectiveId(anchorId) : null,
@@ -766,6 +775,275 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
     return datasetIds.datasetId();
   }
 
+  private Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities(SimulationDatasetId datasetId, Instant startSimulation)
+  throws PlanServiceException, IOException, InvalidJsonException
+  {
+    final var request = """
+        query{
+          simulated_activity(where: {simulation_dataset_id: {_eq: %d}}) {
+            activity_directive {
+              id
+              arguments
+              type
+              anchored_to_start
+              anchor_id
+            }
+            activity_type_name
+            duration
+            id
+            parent_id
+            start_offset
+            attributes
+          }
+        }
+        """.formatted(datasetId.id());
+    final JsonObject response;
+    response = postRequest(request).get();
+    final var data = response.getJsonObject("data").getJsonArray("simulated_activity");
+    return parseSimulatedActivities(data, startSimulation);
+  }
+
+private Profiles getProfiles(DatasetId datasetId) throws PlanServiceException, IOException {
+    final var request = """
+        query{
+          profile(where: {dataset_id: {_eq: %d}}){
+            type
+            duration
+            profile_segments {
+              start_offset
+              dynamics
+            }
+            name
+          }
+        }
+        """.formatted(datasetId.id());
+    final JsonObject response;
+    response = postRequest(request).get();
+    final var data = response.getJsonObject("data").getJsonArray("profile");
+    return parseProfiles(data);
+}
+
+private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws PlanServiceException, IOException {
+    final var request = """
+       query{
+       span(where: {duration: {_is_null: true}, dataset_id: {_eq: %d}}) {
+              attributes
+              parent_id
+              type
+              start_offset
+              id
+            }
+            }
+        """.formatted(datasetId.id());
+  final JsonObject response;
+  response = postRequest(request).get();
+  final var data = response.getJsonObject("data").getJsonArray("span");
+  return parseUnfinishedActivities(data, startTime);
+}
+
+  @Override
+  public Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata)
+  throws PlanServiceException, IOException
+  {
+    final var simulationDatasetId = getSuitableSimulationResults(planMetadata);
+    if(simulationDatasetId.isEmpty()) return Optional.empty();
+    try(var executorService = Executors.newFixedThreadPool(3)) {
+      Future<Map<SimulatedActivityId, SimulatedActivity>> futureSimulatedActivities = executorService.submit(() -> getSimulatedActivities(
+          simulationDatasetId.get().simulationDatasetId(),
+          planMetadata.horizon().getStartInstant()));
+      Future<Map<SimulatedActivityId, UnfinishedActivity>> futureSpans = executorService.submit(() -> getSpans(
+          simulationDatasetId.get().datasetId(),
+          planMetadata.horizon().getStartInstant()));
+      Future<Profiles> futureProfiles = executorService.submit(() -> getProfiles(simulationDatasetId.get().datasetId()));
+      try {
+        final var simulatedActivities = futureSimulatedActivities.get();
+        final var unfinishedActivities = futureSpans.get();
+        final var profiles = futureProfiles.get();
+        final var simulationStartTime = planMetadata.horizon().getStartInstant();
+        final var simulationEndTime = planMetadata.horizon().getEndInstant();
+        final var micros = java.time.Duration.between(simulationStartTime, simulationEndTime).toNanos() / 1000;
+        final var duration = Duration.of(micros, MICROSECOND);
+        return Optional.of(new SimulationResults(
+            profiles.realProfiles,
+            profiles.discreteProfiles,
+            simulatedActivities,
+            unfinishedActivities,
+            simulationStartTime,
+            duration,
+            List.of(),
+            new TreeMap<>()
+        ));
+      } catch (InterruptedException | ExecutionException e) {
+        return Optional.empty();
+      }
+    }
+  }
+
+  private Map<SimulatedActivityId, UnfinishedActivity> parseUnfinishedActivities(JsonArray unfinishedActivitiesJson, Instant simulationStart){
+    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
+    for(final var unfinishedActivityJson: unfinishedActivitiesJson){
+      final var activityAttributes = activityAttributesP.parse(unfinishedActivityJson.asJsonObject().getJsonObject("attributes")).getSuccessOrThrow();
+      SimulatedActivityId parentId = null;
+      if(!unfinishedActivityJson.asJsonObject().isNull("parent_id")){
+        parentId = new SimulatedActivityId(unfinishedActivityJson.asJsonObject().getJsonNumber("parent_id").longValue());
+      }
+      final var activityType = unfinishedActivityJson.asJsonObject().getJsonString("type").getString();
+      final var start = instantFromStart(simulationStart,
+          durationFromPGInterval(unfinishedActivityJson.asJsonObject().getJsonString("start_offset").getString()));
+      final var id = new SimulatedActivityId(unfinishedActivityJson.asJsonObject().getJsonNumber("id").longValue());
+      Optional<ActivityDirectiveId> actDirectiveId = Optional.empty();
+      if(activityAttributes.directiveId().isPresent()){
+        actDirectiveId = Optional.of(new ActivityDirectiveId(activityAttributes.directiveId().get()));
+      }
+      final var unfinishedActivity = new UnfinishedActivity(
+          activityType,
+          activityAttributes.arguments(),
+          start,
+          parentId,
+          List.of(),
+          actDirectiveId
+      );
+      unfinishedActivities.put(id, unfinishedActivity);
+    }
+    return unfinishedActivities;
+  }
+
+  private record Profiles(
+      Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,
+      Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles
+  ){}
+
+  private Profiles parseProfiles(JsonArray dataset){
+    Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
+    Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
+    for(final var profile:dataset){
+      final var name = profile.asJsonObject().getString("name");
+      final var type = profile.asJsonObject().getJsonObject("type");
+      final var typetype = type.getString("type");
+      final boolean isReal = typetype.equals("real");
+      if(isReal){
+        final var realProfile = parseProfile(profile.asJsonObject(), realDynamicsP);
+        realProfiles.put(name, realProfile);
+      } else {
+        final var discreteProfile = parseProfile(profile.asJsonObject(), serializedValueP);
+        discreteProfiles.put(name, discreteProfile);
+      }
+    }
+    return new Profiles(realProfiles, discreteProfiles);
+  }
+
+  public <Dynamics> Pair<ValueSchema, List<ProfileSegment<Dynamics>>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
+    // Profile segments are stored with their start offset relative to simulation start
+    // We must convert these to durations describing how long each segment lasts
+    final var profileExtent = durationFromPGInterval(profile.asJsonObject().getString("duration"));
+    final var type = chooseP(discreteValueSchemaTypeP, realValueSchemaTypeP).parse(profile.getJsonObject("type")).getSuccessOrThrow();
+    final var resultSet = profile.getJsonArray("profile_segments").iterator();
+    JsonValue curProfileSegment = null;
+    final var segments = new ArrayList<ProfileSegment<Dynamics>>();
+    if (resultSet.hasNext()) {
+      curProfileSegment = resultSet.next();
+      var offset = durationFromPGInterval(curProfileSegment.asJsonObject().getString("start_offset"));
+      var dynamics = dynamicsParser.parse(curProfileSegment.asJsonObject().get("dynamics")).getSuccessOrThrow();
+
+      while (resultSet.hasNext()) {
+        curProfileSegment = resultSet.next();
+        final var nextOffset = durationFromPGInterval(curProfileSegment.asJsonObject().getString("start_offset"));
+        final var duration = nextOffset.minus(offset);
+        segments.add(new ProfileSegment<>(duration, dynamics));
+        offset = nextOffset;
+        dynamics = dynamicsParser.parse(curProfileSegment.asJsonObject().getJsonObject("dynamics")).getSuccessOrThrow();
+      }
+
+      final var duration = profileExtent.minus(offset);
+      segments.add(new ProfileSegment<Dynamics>(duration, dynamics));
+    }
+    return Pair.of(type, segments);
+  }
+
+  private Map<SimulatedActivityId, SimulatedActivity> parseSimulatedActivities(JsonArray simulatedActivitiesArray, Instant simulationStart)
+  throws InvalidJsonException
+  {
+    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+    for(final var simulatedActivityJson: simulatedActivitiesArray) {
+      //if no duration, this is an unfinished activity
+      if(simulatedActivityJson.asJsonObject().isNull("duration")) continue;
+      final var activityDuration = GraphQLParsers.durationP.parse(simulatedActivityJson.asJsonObject().get("duration")).getSuccessOrThrow();
+      final var activityId = simulatedActivityJson.asJsonObject().getJsonNumber("id").longValue();
+      SimulatedActivityId parentId = null;
+      if(!simulatedActivityJson.asJsonObject().isNull("parent_id")){
+        parentId = new SimulatedActivityId(simulatedActivityJson.asJsonObject().getJsonNumber("parent_id").longValue());
+      }
+      final var startOffset = instantFromStart(simulationStart,durationFromPGInterval(simulatedActivityJson.asJsonObject().getString("start_offset")));
+      final var computedAttributes = serializedValueP.parse(simulatedActivityJson.asJsonObject().get("attributes")).getSuccessOrThrow();
+      final var activityDirective = simulatedActivityJson.asJsonObject().getJsonObject("activity_directive");
+      final var activityDirectiveId = new ActivityDirectiveId(activityDirective.getInt("id"));
+      final var activityDirectiveArguments = activityDirective.getJsonObject("arguments");
+      final var deserializedArguments = BasicParsers
+          .mapP(serializedValueP)
+          .parse(activityDirectiveArguments)
+          .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
+      final var activityType = activityDirective.getString("type");
+      final var simulatedActivity = new SimulatedActivity(
+          activityType,
+          deserializedArguments,
+          startOffset,
+          activityDuration,
+          parentId,
+          List.of(),
+          Optional.of(activityDirectiveId),
+          computedAttributes
+      );
+      simulatedActivities.put(new SimulatedActivityId(activityId), simulatedActivity);
+    }
+    return simulatedActivities;
+  }
+
+  /**
+   * Returns the simulation dataset id if the simulation
+   * - covers the entire planning horizon
+   * - corresponds to the plan revision
+   * @param planMetadata the plan metadata containing the planning horizon and plan revision
+   * @return optionally a simulation dataset id
+   */
+  public Optional<DatasetIds> getSuitableSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException {
+    final var request =
+        """
+        {
+          simulation_dataset(
+            where: {
+              status: {_eq: "success"},
+              plan_revision: {_eq: %d},
+              simulation_start_time: {_eq: "%s"},
+              simulation_end_time: {_eq: "%s"},
+              simulation: {plan_id: {_eq: %d}}
+            }) {
+              id
+              dataset_id
+              arguments
+              simulation {
+                arguments
+              }
+            }
+        }""".formatted(
+            planMetadata.planRev(),
+            planMetadata.horizon().getStartInstant(),
+            planMetadata.horizon().getEndInstant(),
+            planMetadata.planId().id());
+    final JsonObject response;
+    response = postRequest(request).get();
+    final var data = response.getJsonObject("data");
+    final var simulationDatasets = data.getJsonArray("simulation_dataset");
+    for(final var simulationDataset  : simulationDatasets){
+      final var simulationDatasetId = simulationDataset.asJsonObject().getInt("id");
+      final var datasetId = simulationDataset.asJsonObject().getInt("dataset_id");
+      final var simulationDatasetArguments = simulationArgumentsP.parse(simulationDataset.asJsonObject().getJsonObject("arguments")).getSuccessOrThrow();
+      final var simulationArguments = simulationArgumentsP.parse(simulationDataset.asJsonObject().getJsonObject("simulation").getJsonObject("arguments")).getSuccessOrThrow();
+      if(!simulationDatasetArguments.equals(simulationArguments)) continue;
+      return Optional.of(new DatasetIds(new DatasetId(datasetId), new SimulationDatasetId(simulationDatasetId)));
+    }
+    return Optional.empty();
+  }
+
   private SimulationId createSimulation(final PlanId planId, final Map<String, SerializedValue> arguments)
   throws PlanServiceException, IOException
   {
@@ -924,23 +1202,7 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
     return profileRecords;
   }
 
-  public PGInterval graphQLIntervalFromDuration(final Duration duration) {
-    try {
-      final var micros = duration.in(MICROSECOND);
-      return new PGInterval("PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
-  public PGInterval graphQLIntervalFromDuration(final Instant instant1, final Instant instant2) {
-    try {
-      final var micros = java.time.Duration.between(instant1, instant2).toNanos() / 1000;
-      return new PGInterval("PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   private void postProfileSegments(
       final DatasetId datasetId,

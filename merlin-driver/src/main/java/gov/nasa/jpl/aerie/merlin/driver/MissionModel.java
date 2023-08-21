@@ -72,6 +72,10 @@ public final class MissionModel<Model> {
     return this.topics;
   }
 
+  public boolean hasDaemons(){
+    return !this.daemons.isEmpty();
+  }
+
   public record SerializableTopic<EventType> (
       String name,
       Topic<EventType> topic,

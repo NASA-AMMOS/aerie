@@ -1,16 +1,19 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * description of a planning problem to be solved
@@ -43,6 +46,11 @@ public class Problem {
   private Plan initialPlan;
 
   /**
+   * initial simulation results loaded from the DB
+   */
+  private Optional<SimulationData> initialSimulationResults;
+
+  /**
    * container of all goals in the problem, indexed by name
    */
   protected final List<Goal> goalsOrderedByPriority = new ArrayList<>();
@@ -73,10 +81,7 @@ public class Problem {
     if(this.simulationFacade != null) {
       this.simulationFacade.setActivityTypes(this.getActivityTypes());
     }
-  }
-
-  public Problem(PlanningHorizon planningHorizon){
-    this(null, planningHorizon, null, null);
+    this.initialSimulationResults = Optional.empty();
   }
 
   public SimulationFacade getSimulationFacade(){
@@ -120,12 +125,28 @@ public class Problem {
 
   /**
    * sets the initial seed plan that schedulers may start from
+   * @param initialSimulationResults optional initial simulation results associated to the initial plan
+   * @param plan the initial seed plan that schedulers may start from
+   */
+  public void setInitialPlan(final Plan plan, final Optional<SimulationResults> initialSimulationResults) {
+    initialPlan = plan;
+    this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
+        simulationResults,
+        SimulationResultsConverter.convertToConstraintModelResults(
+            simulationResults),
+        plan.getActivities()));
+  }
+
+  /**
+   * sets the initial seed plan that schedulers may start from
    *
    * @param plan the initial seed plan that schedulers may start from
    */
-  public void setInitialPlan(Plan plan) {
-    initialPlan = plan;
+  public void setInitialPlan(final Plan plan) {
+    setInitialPlan(plan, Optional.empty());
   }
+
+  public Optional<SimulationData> getInitialSimulationResults(){ return initialSimulationResults; }
 
   public void setGoals(List<Goal> goals){
     goalsOrderedByPriority.clear();

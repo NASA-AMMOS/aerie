@@ -20,17 +20,15 @@ public class SimulationResultsConverter {
    * convert a simulation driver SimulationResult to a constraint evaluation engine SimulationResult
    *
    * @param driverResults the recorded results of a simulation run from the simulation driver
-   * @param planDuration the duration of the plan
    * @return the same results rearranged to be suitable for use by the constraint evaluation engine
    */
-  public static gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(
-      SimulationResults driverResults, Duration planDuration){
+  public static gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(SimulationResults driverResults){
     final var activities =  driverResults.simulatedActivities.entrySet().stream()
                                                              .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
                                                              .collect(Collectors.toList());
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         driverResults.startTime,
-        Interval.between(Duration.ZERO, planDuration),
+        Interval.betweenClosedOpen(Duration.ZERO, driverResults.duration),
         activities,
         Maps.transformValues(driverResults.realProfiles, $ -> LinearProfile.fromSimulatedProfile($.getRight())),
         Maps.transformValues(driverResults.discreteProfiles, $ -> DiscreteProfile.fromSimulatedProfile($.getRight()))

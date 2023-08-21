@@ -273,6 +273,46 @@ const gql = {
     }
   `,
 
+  INSERT_SPAN:`#graphql
+  mutation InsertSpan(
+    $parentId: Int!,
+    $duration: interval,
+    $datasetId: Int!,
+    $type: String,
+    $startOffset: interval,
+    $attributes: jsonb
+  ){
+  insert_span_one(object: {parent_id: $parentId, duration: $duration, dataset_id: $datasetId, type: $type, start_offset: $startOffset, attributes: $attributes}) {
+    id
+  }
+}
+`,
+
+INSERT_SIMULATION_DATASET:`#graphql
+    mutation InsertSimulationDataset($simulationDatasetInsertInput:simulation_dataset_insert_input!
+      ){
+      insert_simulation_dataset_one(object: $simulationDatasetInsertInput) {
+        dataset_id
+      }
+    }
+  `,
+
+  INSERT_PROFILE: `#graphql
+  mutation insertProfile($datasetId: Int!, $duration:interval, $name:String, $type:jsonb){
+    insert_profile_one(object: {dataset_id: $datasetId, duration: $duration, name: $name, type: $type}) {
+      id
+    }
+  }
+  `,
+
+  INSERT_PROFILE_SEGMENT:`#graphql
+  mutation insertProfileSegment($datasetId: Int!, $dynamics:jsonb, $isGap: Boolean, $profileId:Int!, $startOffset:interval){
+    insert_profile_segment_one(object: {dataset_id: $datasetId, dynamics: $dynamics, is_gap: $isGap, profile_id: $profileId, start_offset: $startOffset}){
+      dataset_id
+    }
+  }
+  `,
+
   INSERT_SIMULATION_TEMPLATE: `#graphql
     mutation CreateSimulationTemplate($simulationTemplateInsertInput: simulation_template_insert_input!) {
       insert_simulation_template_one(object: $simulationTemplateInsertInput) {

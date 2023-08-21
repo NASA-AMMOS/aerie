@@ -272,7 +272,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
-          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults), temp, createEvaluationEnvironmentFromAnchor(window)));
+          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults), temp, createEvaluationEnvironmentFromAnchor(window), 1, Optional.empty()));
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }

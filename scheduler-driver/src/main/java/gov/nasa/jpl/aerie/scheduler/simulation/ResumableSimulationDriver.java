@@ -31,7 +31,9 @@ import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
-  private Duration curTime = Duration.ZERO;
+  /* The current real time. All the tasks before and at this time have been performed.
+ Simulation has not started so it is set to MIN_VALUE. */
+  private Duration curTime = Duration.MIN_VALUE;
   private SimulationEngine engine = new SimulationEngine();
   private LiveCells cells;
   private TemporalEventSource timeline = new TemporalEventSource();
@@ -62,7 +64,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     this.planDuration = planDuration;
     countSimulationRestarts = 0;
     initSimulation();
-    batch = null;
   }
 
   // This method is currently only used in one test.
@@ -75,27 +76,25 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     lastSimResultsEnd = Duration.ZERO;
     if (this.engine != null) this.engine.close();
     this.engine = new SimulationEngine();
-
+    batch = null;
     /* The top-level simulation timeline. */
     this.timeline = new TemporalEventSource();
     this.cells = new LiveCells(timeline, missionModel.getInitialCells());
-    /* The current real time. */
-    curTime = Duration.ZERO;
+    curTime = Duration.MIN_VALUE;
 
     // Begin tracking all resources.
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      engine.trackResource(name, resource, curTime);
+      engine.trackResource(name, resource, Duration.ZERO);
     }
 
     // Start daemon task(s) immediately, before anything else happens.
     {
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-
-      batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      if(missionModel.hasDaemons()) {
+        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+        batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      }
     }
     countSimulationRestarts++;
   }
@@ -120,7 +119,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       }
       // Increment real time, if necessary.
       while(!batch.offsetFromStart().longerThan(endTime) && !endTime.isEqualTo(Duration.MAX_VALUE)) {
-        final var delta = batch.offsetFromStart().minus(curTime);
+        //by default, curTime is negative to signal we have not started simulation yet. We set it to 0 when we start.
+        final var delta = batch.offsetFromStart().minus(curTime.isNegative() ? Duration.ZERO : curTime);
         curTime = batch.offsetFromStart();
         timeline.add(delta);
         // Run the jobs in this batch.
@@ -241,8 +241,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     if (batch == null) {
       batch = engine.extractNextJobs(Duration.MAX_VALUE);
     }
-    // Increment real time, if necessary.
-    Duration delta = batch.offsetFromStart().minus(curTime);
+    //by default, curTime is negative to signal we have not started simulation yet. We set it to 0 when we start.
+    Duration delta = batch.offsetFromStart().minus(curTime.isNegative() ? Duration.ZERO : curTime);
 
     //once all tasks are finished, we need to wait for events triggered at the same time
     while (!allTaskFinished || delta.isZero()) {

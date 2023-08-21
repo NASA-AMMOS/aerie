@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import req from '../utilities/requests.js';
+import req, {awaitScheduling} from '../utilities/requests.js';
 import time from '../utilities/time.js';
 
 const eqSet = (xs, ys) =>
@@ -173,34 +173,13 @@ test.describe.serial('Scheduling', () => {
   });
 
   test('Run scheduling', async ({ request }) => {
-    let status_local: string;
-    let analysisId_local: number;
-    const { reason, status, analysisId } = await req.schedule(request, specification_id);
-    expect(status).not.toBeNull();
-    expect(status).toBeDefined();
+    const schedulingResults = await awaitScheduling(request, specification_id);
+    const { analysisId, status, datasetId } = schedulingResults;
+    dataset_id = datasetId
+    expect(status).toEqual("complete")
     expect(analysisId).not.toBeNull();
-    expect(analysisId).toBeDefined();
+    expect(datasetId).not.toBeNull();
     expect(typeof analysisId).toEqual("number")
-    analysisId_local = analysisId;
-    const max_it = 10;
-    let it = 0;
-    let reason_local: string;
-    while (it++ < max_it && (status == 'pending' || status == 'incomplete')) {
-      const { reason, status, analysisId, datasetId } = await req.schedule(request, specification_id);
-      status_local = status;
-      reason_local = reason;
-      expect(status).not.toBeNull();
-      expect(status).toBeDefined();
-      dataset_id = datasetId
-      await delay(1000);
-    }
-    if (status_local == "failed") {
-      console.error(reason_local)
-      throw new Error(reason_local);
-    }
-    expect(status_local).toEqual("complete")
-    expect(analysisId_local).toEqual(analysisId)
-    expect(dataset_id).not.toBeNull();
   });
 
   test('Verify posting of simulation results', async ({ request }) => {

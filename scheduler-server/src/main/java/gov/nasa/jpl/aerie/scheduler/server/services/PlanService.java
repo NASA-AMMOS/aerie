@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 public interface PlanService {
   interface ReaderRole {
@@ -64,6 +65,14 @@ public interface PlanService {
     //TODO: (defensive) should combine such checks into the mutations they are guarding, but not possible in graphql?
     void ensurePlanExists(final PlanId planId)
     throws IOException, NoSuchPlanException, PlanServiceException;
+
+    /**
+     * Gets existing simulation results for current plan if they exist and are suitable for scheduling purposes (current revision, covers the entire planning horizon)
+     * These simulation results do not include events and topics.
+     * @param planMetadata the plan metadata
+     * @return simulation results, optionally
+     */
+    Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException, InvalidJsonException;
   }
 
   interface WriterRole {

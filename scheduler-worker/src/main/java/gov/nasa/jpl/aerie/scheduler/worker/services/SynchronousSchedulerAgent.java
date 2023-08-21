@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -42,6 +43,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
@@ -128,9 +130,10 @@ public record SynchronousSchedulerAgent(
             simulationFacade,
             schedulerMissionModel.schedulerModel()
         );
+        final var initialSimulationResults = loadSimulationResults(planMetadata);
         //seed the problem with the initial plan contents
         final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);
-        problem.setInitialPlan(loadedPlanComponents.schedulerPlan());
+        problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults);
 
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
@@ -226,7 +229,8 @@ public record SynchronousSchedulerAgent(
             solutionPlan,
             activityToGoalId
         );
-        final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadata, instancesToIds);
+        final var planMetadataAfterChanges = planService.getPlanMetadata(specification.planId());
+        final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
         //collect results and notify subscribers of success
         final var results = collectResults(solutionPlan, instancesToIds, goals);
         writer.succeedWith(results, datasetId);
@@ -264,6 +268,14 @@ public record SynchronousSchedulerAgent(
           .type("IO_EXCEPTION")
           .message(e.toString())
           .trace(e));
+    }
+  }
+
+  private Optional<SimulationResults> loadSimulationResults(final PlanMetadata planMetadata){
+    try {
+      return planService.getSimulationResults(planMetadata);
+    } catch (PlanServiceException | IOException | InvalidJsonException e) {
+      throw new ResultsProtocolFailure(e);
     }
   }
 
