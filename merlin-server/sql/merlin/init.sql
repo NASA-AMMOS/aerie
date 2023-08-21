@@ -75,6 +75,7 @@ begin;
   \ir functions/public/begin_merge.sql
   \ir functions/public/commit_merge.sql
   \ir functions/public/create_snapshot.sql
+  \ir functions/public/restore_from_snapshot.sql
 
   -- Presets
   \ir tables/activity_presets.sql
@@ -99,6 +100,7 @@ begin;
 
   -- Hasura Functions
   \ir functions/hasura/activity_preset_functions.sql
+  \ir functions/hasura/snapshot_functions.sql
   \ir functions/hasura/delete_anchor_functions.sql
   \ir functions/hasura/hasura_functions.sql
   \ir functions/hasura/plan_branching_functions.sql

@@ -10,3 +10,23 @@ object_relationships:
   - name: tag
     using:
       foreign_key_constraint_on: tag_id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [snapshot_id, directive_id, tag_id]
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: [snapshot_id, directive_id, tag_id]
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: [snapshot_id, directive_id, tag_id]
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
