@@ -97,11 +97,6 @@ public class JavadocParser {
           final var value = $.getValue();
           var property = $.getKey();
 
-          System.out.println(value);
-          System.out.println(property);
-          System.out.println();
-          System.out.println();
-
           if (StringUtils.containsIgnoreCase(value, UNITS_TAG) && !StringUtils.containsIgnoreCase(value, COMPUTED_ATTRIBUTE_TAG)) {
             parameterUnits.put(property, extractTagValue(value));
           }
@@ -151,15 +146,20 @@ public class JavadocParser {
    * @return The comment value after the found tag.
    */
   private static String extractTagValue(String comment) {
-    if (!StringUtils.containsIgnoreCase(comment, UNITS_TAG)) {
-      return "";
+    // The comment might be multiline, so split it before searching for the tag.
+    final var splitComment = comment.split("\n");
+
+    for (final var commentLine : splitComment) {
+      if (StringUtils.containsIgnoreCase(commentLine, UNITS_TAG)) {
+        return commentLine.substring(commentLine.indexOf(UNITS_TAG) + UNITS_TAG.length()).trim();
+      }
     }
 
-    return comment.substring(comment.indexOf(UNITS_TAG) + UNITS_TAG.length()).trim();
+    return "";
   }
 
   private static void parseComment(String comment, Map<String, String> parsedUnits, String tag) {
-    // Keep track of the last computed attribute that we came across.
+    // Keep track of the last parameter / computed attribute / resource type we came across.
     var lastItem = "";
 
     for (var splitComment : comment.split("\n")) {

@@ -312,18 +312,18 @@ public final class LocalMissionModelService implements MissionModelService {
       final var unitMap = new HashMap<String, String>();
 
       // Resource type units can be regex so go through our resources and apply the matching units.
-      for (final var resource : model.getResources().keySet()) {
-        for (final var unitString : model.getResourceTypeUnits().keySet()) {
+      for (final var unitString : model.getResourceTypeUnits().keySet()) {
+        try {
           // Check validity of the regex.
-          try {
-            Pattern.compile(unitString);
+          Pattern.compile(unitString);
 
+          for (final var resource : model.getResources().keySet()) {
             // Check for regex matches and assign them to the matching resource.
             if (Pattern.matches(unitString, resource)) {
               unitMap.put(resource, model.getResourceTypeUnits().get(unitString));
             }
-          } catch (PatternSyntaxException ignored) { }
-        }
+          }
+        } catch (PatternSyntaxException ignored) { }
       }
 
       this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources(), unitMap);

@@ -22,6 +22,8 @@ public final class BiteBananaActivity {
   /**
    * The amount by which to reduce /fruit
    * @aerie.unit number
+   *
+   * Some more text.
    */
   @Parameter
   public double biteSize = 1.0;
