@@ -6,7 +6,7 @@ let constraint_id: number;
 let jar_id: number;
 let mission_model_id: number;
 let plan_id: number;
-let violation: ConstraintViolation;
+let violation: ConstraintResult;
 let activity_id: number;
 let simulationDatasetId: number;
 let newSimulationDatasetId: number;
@@ -86,7 +86,7 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there are no violations yet', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -101,7 +101,7 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there is one violation', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -157,7 +157,7 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there are no violations anymore', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -232,7 +232,7 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there is one violation again', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();

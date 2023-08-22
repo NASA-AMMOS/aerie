@@ -395,7 +395,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   let first_simulation_dataset_id: number;
   let second_simulation_dataset_id: number;
   let constraint_id: number;
-  let violation: ConstraintViolation;
+  let violation: ConstraintResult;
   let activity_id: number;
 
   test('Create mission model and plan', async ({ request }) => {
@@ -470,7 +470,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test("Check there is one violation when simulationDatasetId isn't provided", async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
     violation = violations[0];
 
     expect(violations).not.toBeNull();
@@ -479,7 +479,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test('Check there is one violation when simulationDatasetId is provided', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
 
     expect(violation).toEqual(violations[0]); // should be the same as the violation from the prev test
     violation = violations[0];
@@ -527,7 +527,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test("Check there is still one violation when simulationDatasetId isn't provided", async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -546,7 +546,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test('Check there is still one violation when the first simulationDatasetId is provided', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -554,7 +554,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test('Check there are violations when second simulationDatasetId is provided', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(
+    const violations: ConstraintResult[] = await req.checkConstraints(
       request,
       plan_id,
       second_simulation_dataset_id,

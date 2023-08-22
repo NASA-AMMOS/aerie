@@ -418,7 +418,21 @@ INSERT_SIMULATION_DATASET:`#graphql
   CHECK_CONSTRAINTS: `#graphql
     query checkConstraints($planId: Int!, $simulationDatasetId: Int) {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
-        violations
+        constraintId
+        constraintName
+        type
+        resourceIds
+        violations {
+          activityInstanceIds
+          windows {
+            start
+            end
+          }
+        }
+        gaps {
+          start
+          end
+        }
       }
     }
   `,
