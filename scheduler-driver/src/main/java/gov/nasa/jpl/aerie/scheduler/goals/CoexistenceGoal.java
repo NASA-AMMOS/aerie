@@ -19,7 +19,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 /**
@@ -172,7 +172,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) { //TODO: check if interval gets split and if so, notify user?
+  @Override
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) { //TODO: check if interval gets split and if so, notify user?
 
     //NOTE: temporalContext IS A WINDOWS OVER WHICH THE GOAL APPLIES, USUALLY SOMETHING BROAD LIKE A MISSION PHASE
     //NOTE: expr IS A WINDOWS OVER WHICH A COEXISTENCEGOAL APPLIES, FOR EXAMPLE THE WINDOWS CORRESPONDING TO 5 SECONDS AFTER EVERY BASICACTIVITY IS SCHEDULED
@@ -182,7 +183,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     //        AN ACTIVITYEXPRESSION AND THEN ANALYZEWHEN WAS A MISSION PHASE, ALTHOUGH IT IS POSSIBLE TO JUST SPECIFY AN EXPRESSION<WINDOWS> THAT COMBINES THOSE.
 
     //unwrap temporalContext
-    final var windows = getTemporalContext().evaluate(simulationResults);
+    final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
 
     //make sure it hasn't changed
     if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
@@ -192,7 +193,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       this.initiallyEvaluatedTemporalContext = windows;
     }
 
-    final var anchors = expr.evaluate(simulationResults).intersectWith(windows);
+    final var anchors = expr.evaluate(simulationResults, evaluationEnvironment).intersectWith(windows);
 
     //make sure expr hasn't changed either as that could yield unexpected behavior
     if (this.evaluatedExpr != null && !anchors.isCollectionSubsetOf(this.evaluatedExpr)) {
@@ -242,7 +243,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         activityCreationTemplate.durationIn(durRange);
       }
 
-      final var existingActs = plan.find(activityFinder.build(), simulationResults, createEvaluationEnvironmentFromAnchor(window));
+      final var existingActs = plan.find(
+          activityFinder.build(),
+          simulationResults,
+          createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window));
 
       var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
       var planEvaluation = plan.getEvaluation();
@@ -272,7 +276,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
-          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults), temp, createEvaluationEnvironmentFromAnchor(window), 1, Optional.empty()));
+          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults, evaluationEnvironment), temp, createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window), 1, Optional.empty()));
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }
@@ -283,24 +287,28 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     return conflicts;
   }
 
-  private EvaluationEnvironment createEvaluationEnvironmentFromAnchor(Segment<Optional<Spans.Metadata>> span){
+  private EvaluationEnvironment createEvaluationEnvironmentFromAnchor(EvaluationEnvironment existingEnvironment, Segment<Optional<Spans.Metadata>> span){
     if(span.value().isPresent()){
       final var metadata = span.value().get();
+      final var activityInstances = new HashMap<>(existingEnvironment.activityInstances());
+      activityInstances.put(this.alias, metadata.activityInstance());
       return new EvaluationEnvironment(
-          Map.of(this.alias, metadata.activityInstance()),
-          Map.of(),
-          Map.of(),
-          Map.of(),
-          Map.of()
+          activityInstances,
+          existingEnvironment.spansInstances(),
+          existingEnvironment.intervals(),
+          existingEnvironment.realExternalProfiles(),
+          existingEnvironment.discreteExternalProfiles()
       );
     } else{
       assert this.alias != null;
+      final var intervals = new HashMap<>(existingEnvironment.intervals());
+      intervals.put(this.alias, span.interval());
       return new EvaluationEnvironment(
-          Map.of(),
-          Map.of(),
-          Map.of(this.alias, span.interval()),
-          Map.of(),
-          Map.of()
+          existingEnvironment.activityInstances(),
+          existingEnvironment.spansInstances(),
+          intervals,
+          existingEnvironment.realExternalProfiles(),
+          existingEnvironment.discreteExternalProfiles()
       );
     }
   }

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -283,7 +284,11 @@ public class Goal {
    * @param simulationResults
    * @return a list of issues in the plan that diminish goal satisfaction
    */
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  public java.util.Collection<Conflict> getConflicts(
+      Plan plan,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment
+  ) {
     return java.util.Collections.emptyList();
   }
 

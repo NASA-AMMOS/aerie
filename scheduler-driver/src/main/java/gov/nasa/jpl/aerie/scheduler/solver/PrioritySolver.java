@@ -613,7 +613,8 @@ public class PrioritySolver implements Solver {
     assert plan != null;
     //REVIEW: maybe should have way to request only certain kinds of conflicts
     final var lastSimulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie());
-    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults);
+    final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
+    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, evaluationEnvironment);
     assert rawConflicts != null;
     return rawConflicts;
   }
@@ -765,9 +766,10 @@ public class PrioritySolver implements Solver {
     final var latestSimulationResults = this.getLatestSimResultsUpTo(totalDomain.end);
     //iteratively narrow the windows from each constraint
     //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
+    final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
     for (final var constraint : constraints) {
       //REVIEW: loop through windows more efficient than enveloppe(windows) ?
-      final var validity = constraint.evaluate(latestSimulationResults, totalDomain);
+      final var validity = constraint.evaluate(latestSimulationResults, totalDomain, evaluationEnvironment);
       ret = ret.and(validity);
       //short-circuit if no possible windows left
       if (ret.stream().noneMatch(Segment::value)) {

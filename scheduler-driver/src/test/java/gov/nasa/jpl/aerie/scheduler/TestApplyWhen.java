@@ -1,13 +1,29 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.AssignGaps;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
+import gov.nasa.jpl.aerie.constraints.tree.SpansWrapperExpression;
+import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -30,6 +46,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -1151,6 +1169,68 @@ public class TestApplyWhen {
     }
     assertEquals(5, plan.get().getActivitiesByTime().size());
     assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
+  }
+
+
+
+  @Test
+  public void testCoexistenceExternalResource() {
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(25, Duration.SECONDS));
+
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+
+    final var r3Value = 6;
+    final var r1 = new LinearProfile(new Segment<>(Interval.between(Duration.ZERO, Duration.SECONDS.times(5)), new LinearEquation(Duration.ZERO, 5, 1)));
+    final var r2 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(5)));
+    final var r3 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(r3Value)));
+    final var externalRealProfiles = Map.of("/real/R1", r1);
+    final var externalDiscreteProfiles = Map.of(
+        "/discrete/R2", r2,
+        "/discrete/R3", r3
+    );
+    problem.setExternalProfile(
+        externalRealProfiles,
+        externalDiscreteProfiles
+    );
+
+    final var profEx = new ProfileExpression<>(new ValueAt<>(
+        new ProfileExpression<>(new DiscreteResource("/discrete/R3")),
+        new SpansWrapperExpression(new Spans(Interval.at(Duration.of(0, Duration.MICROSECONDS))))));
+    final var cond = new And(
+        new GreaterThanOrEqual(new RealResource("/real/R1"), new RealValue(6)),
+        new Equal<>(new DiscreteResource("/discrete/R2"), new DiscreteValue(SerializedValue.of(5))));
+    final var actTypeB = problem.getActivityType("ControllableDurationActivity");
+    CoexistenceGoal goal = new CoexistenceGoal.Builder()
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(period, true).assignGaps(new Windows(Interval.FOREVER, false))))
+        .forEach(new SpansFromWindows(new AssignGaps<>(cond, new WindowsWrapperExpression(new Windows(Interval.FOREVER, false)))))
+        .thereExistsOne(new ActivityCreationTemplate.Builder()
+                            .ofType(actTypeB)
+                            .withArgument("duration", profEx)
+                            .build())
+        .startsAt(TimeAnchor.START)
+        .withinPlanHorizon(planningHorizon)
+        .aliasForAnchors("a")
+        .build();
+
+    problem.setGoals(List.of(goal));
+
+    final var solver = new PrioritySolver(problem);
+    var plan = solver.getNextSolution();
+    for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
+    }
+    final var emptySimulationResults = new SimulationResults(null, null, List.of(), Map.of(), Map.of());
+    final var startOfActivity =   cond.evaluate(emptySimulationResults, Interval.FOREVER, new EvaluationEnvironment(externalRealProfiles, externalDiscreteProfiles)).iterateEqualTo(true).iterator().next().start;
+    assertEquals(1, plan.get().getActivitiesByTime().size());
+    final var act = plan.get().getActivitiesByTime().get(0);
+    assertEquals(act.duration(), Duration.of(r3Value, Duration.MICROSECONDS));
+    assertEquals(startOfActivity, Duration.of(1, Duration.SECONDS));
+    assertEquals(act.startOffset(), startOfActivity);
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test

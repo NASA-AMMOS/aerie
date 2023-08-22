@@ -121,10 +121,10 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @Override
-  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
 
     //unwrap temporalContext
-    final var windows = getTemporalContext().evaluate(simulationResults);
+    final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
 
     //make sure it hasn't changed
     if (this.initiallyEvaluatedTemporalContext != null && !windows.equals(this.initiallyEvaluatedTemporalContext)) {
@@ -142,7 +142,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       final var actTB =
           new ActivityExpression.Builder().basedOn(this.matchActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
-      final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
+      final var acts = new LinkedList<>(plan.find(actTB, simulationResults, evaluationEnvironment));
       acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       int nbActs = 0;
@@ -201,7 +201,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
             this,
             subIntervalWindows,
             this.desiredActTemplate,
-            new EvaluationEnvironment(),
+            evaluationEnvironment,
             nbToSchedule,
             durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
       }

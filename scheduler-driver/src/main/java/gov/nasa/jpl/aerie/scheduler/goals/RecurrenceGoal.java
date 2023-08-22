@@ -104,12 +104,13 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * exist over a timespan longer than the allowed range (and one should
    * probably be created!)
    */
-  public java.util.Collection<Conflict> getConflicts(@NotNull Plan plan, final SimulationResults simulationResults) {
+  @Override
+  public java.util.Collection<Conflict> getConflicts(@NotNull Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //unwrap temporalContext
     final var tempWindowPlanHorizon = new Windows(false).set(List.of(this.planHorizon.getHor()), true);
-    final var windows = tempWindowPlanHorizon.and(this.getTemporalContext().evaluate(simulationResults));
+    final var windows = tempWindowPlanHorizon.and(this.getTemporalContext().evaluate(simulationResults, evaluationEnvironment));
 
     //check repeat is larger than activity duration
     if(this.getActTemplate().getType().getDurationType() instanceof DurationType.Fixed act){
@@ -153,7 +154,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
         final var strideDur = actStartT.minus(prevStartT);
         if (strideDur.compareTo(this.recurrenceInterval.max) > 0) {
           //fill conflicts for all the missing activities in that long span
-          conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
+          conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT, evaluationEnvironment));
 
         } else {
           /*TODO: right now, we associate with all the activities that are satisfying but we should aim for the minimum
@@ -171,7 +172,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
 
       //fill in conflicts for all missing activities in the last span up to the
       //goal's own end time (also handles case of no matching acts at all)
-      conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT));
+      conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT, evaluationEnvironment));
     }
 
     return conflicts;
@@ -202,7 +203,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * @param start IN the start time of the span to fill with conflicts (inclusive)
    * @param end IN the end time of the span to fill with conflicts (exclusive)
    */
-  private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(Duration start, Duration end)
+  private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(Duration start, Duration end, final EvaluationEnvironment evaluationEnvironment)
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
@@ -212,7 +213,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
       if(windows.iterateEqualTo(true).iterator().hasNext()){
-        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment(), 1, Optional.empty()));
+        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), evaluationEnvironment, 1, Optional.empty()));
       }
       else{
         System.out.println();
