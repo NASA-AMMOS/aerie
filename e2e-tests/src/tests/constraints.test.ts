@@ -117,9 +117,9 @@ test.describe.serial('Constraints', () => {
   test('Check the violation is the expected one', async () => {
     expect(constraintResult.constraintName).toEqual(first_constraint_name);
     expect(constraintResult.constraintId).toEqual(constraint_id);
-    expect(constraintResult.resourceNames).toHaveLength(2);
-    expect(constraintResult.resourceNames).toContain('/fruit');
-    expect(constraintResult.resourceNames).toContain('/peel');
+    expect(constraintResult.resourceIds).toHaveLength(2);
+    expect(constraintResult.resourceIds).toContain('/fruit');
+    expect(constraintResult.resourceIds).toContain('/peel');
   });
 
   test('Check violation starts and ends as expected', async () => {

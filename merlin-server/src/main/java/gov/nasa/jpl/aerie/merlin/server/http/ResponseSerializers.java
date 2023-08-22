@@ -176,7 +176,7 @@ public final class ResponseSerializers {
         .add("violations", serializeIterable(ResponseSerializers::serializeConstraintViolation, list.violations))
         .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, list.gaps))
         .add("type", list.constraintType.name())
-        .add("resourceIds", serializeIterable(Json::createValue, list.resourceNames))
+        .add("resourceIds", serializeIterable(Json::createValue, list.resourceIds))
         .build();
   }
 

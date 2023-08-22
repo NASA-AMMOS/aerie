@@ -22,7 +22,7 @@ type ConstraintResult = {
   constraintId: Constraint['id'];
   constraintName: Constraint['name'];
   type: ConstraintType;
-  resourceNames: string[];
+  resourceIds: string[];
   gaps: TimeRange[];
   violations: Violation[];
 };

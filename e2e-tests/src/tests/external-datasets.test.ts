@@ -498,8 +498,8 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   test('Check the violation is the expected one', async () => {
     expect(constraintResult.constraintName).toEqual(constraint_name);
     expect(constraintResult.constraintId).toEqual(constraint_id);
-    expect(constraintResult.resourceNames).toHaveLength(1);
-    expect(constraintResult.resourceNames).toContain('/my_boolean');
+    expect(constraintResult.resourceIds).toHaveLength(1);
+    expect(constraintResult.resourceIds).toContain('/my_boolean');
   });
 
   test('Check violation starts and ends as expected', async () => {

@@ -304,7 +304,7 @@ public final class ConstraintParsers {
           .field("constraintName", stringP)
           .map(
               untuple((violations, gaps, constraintType, resourceNames, constraintId, constraintName) -> new ConstraintResult(violations, gaps, constraintType, resourceNames, constraintId, constraintName)),
-              $ -> tuple($.violations, $.gaps, $.constraintType, $.resourceNames, $.constraintId, $.constraintName)
+              $ -> tuple($.violations, $.gaps, $.constraintType, $.resourceIds, $.constraintId, $.constraintName)
           );
 
   static final JsonParser<IntervalDuration> intervalDurationP =

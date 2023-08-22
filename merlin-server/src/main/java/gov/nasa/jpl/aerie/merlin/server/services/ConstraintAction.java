@@ -202,7 +202,7 @@ public class ConstraintAction {
         constraintResult.constraintName = entry.getValue().name();
         constraintResult.constraintId = entry.getKey();
         constraintResult.constraintType = entry.getValue().type();
-        constraintResult.resourceNames = List.copyOf(names);
+        constraintResult.resourceIds = List.copyOf(names);
 
         violations.put(entry.getKey(), constraintResult);
       }
