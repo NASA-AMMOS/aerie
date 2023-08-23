@@ -164,7 +164,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
-        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.violationIntervals()))
+        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.windows()))
         .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds()))
         .build();
   }

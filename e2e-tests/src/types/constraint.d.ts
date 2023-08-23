@@ -28,7 +28,7 @@ type ConstraintResult = {
 };
 
 type Violation = {
-  violationIntervals: TimeRange[];
+  windows: TimeRange[];
   activityInstanceIds: number[];
 }
 

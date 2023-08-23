@@ -291,7 +291,7 @@ public final class ConstraintParsers {
           .field("activityInstanceIds", listP(longP))
           .map(
               untuple(Violation::new),
-              $ -> tuple($.violationIntervals(), $.activityInstanceIds())
+              $ -> tuple($.windows(), $.activityInstanceIds())
           );
 
   public static final JsonParser<ConstraintResult> constraintResultP =

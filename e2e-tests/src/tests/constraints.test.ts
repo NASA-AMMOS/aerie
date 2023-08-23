@@ -127,8 +127,8 @@ test.describe.serial('Constraints', () => {
     violation = constraintResult.violations[0];
     expect(violation).not.toBeNull();
     expect(violation).toBeDefined();
-    expect(violation.violationIntervals[0].start).toEqual(activity_offset_micro);
-    expect(violation.violationIntervals[0].end).toEqual(plan_duration_micro);
+    expect(violation.windows[0].start).toEqual(activity_offset_micro);
+    expect(violation.windows[0].end).toEqual(plan_duration_micro);
   });
 
   test('Check that there is a constraint_run with the violation', async ({ request }) => {
@@ -251,8 +251,8 @@ test.describe.serial('Constraints', () => {
     expect(violation).not.toBeNull();
     expect(violation).toBeDefined();
 
-    expect(violation.violationIntervals).toHaveLength(1);
-    expect(violation.violationIntervals[0]).toEqual({
+    expect(violation.windows).toHaveLength(1);
+    expect(violation.windows[0]).toEqual({
       start: 0,
       end: long_duration,
     });

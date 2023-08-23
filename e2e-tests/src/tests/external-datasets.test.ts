@@ -506,8 +506,8 @@ test.describe.serial('Simulation Associated External Datasets', () => {
     const plan_start_unix = 1000 * time.getUnixEpochTime(plan_start_timestamp);
     const dataset_start_unix = 1000 * time.getUnixEpochTime(dataset_start_timestamp);
 
-    expect(constraintResult.violations[0].violationIntervals[0].start).toEqual(dataset_start_unix - plan_start_unix + profile_duration);
-    expect(constraintResult.violations[0].violationIntervals[0].end).toEqual(dataset_start_unix - plan_start_unix + 2 * profile_duration);
+    expect(constraintResult.violations[0].windows[0].start).toEqual(dataset_start_unix - plan_start_unix + profile_duration);
+    expect(constraintResult.violations[0].windows[0].end).toEqual(dataset_start_unix - plan_start_unix + 2 * profile_duration);
   });
 
   test('Add activity to plan to make simulation out of date', async ({ request }) => {
