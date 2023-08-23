@@ -13,7 +13,7 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintRe
 
 /* package local */ class InsertConstraintRunsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into constraint_run (constraint_id, constraint_definition, simulation_dataset_id, violations)
+    insert into constraint_run (constraint_id, constraint_definition, simulation_dataset_id, results)
     values (?, ?, ?, ?::json)
   """;
 
@@ -25,15 +25,15 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintRe
 
   public void apply(
       Map<Long, Constraint> constraintMap,
-      Map<Long, ConstraintResult> violations,
+      Map<Long, ConstraintResult> results,
       Long simulationDatasetId) throws SQLException {
     for (Constraint constraint : constraintMap.values()) {
       statement.setLong(1, constraint.id());
       statement.setString(2, constraint.definition());
       statement.setLong(3, simulationDatasetId);
 
-      if (violations.get(constraint.id()) != null) {
-        statement.setString(4, constraintResultP.unparse(violations.get(constraint.id())).toString());
+      if (results.get(constraint.id()) != null) {
+        statement.setString(4, constraintResultP.unparse(results.get(constraint.id())).toString());
       } else {
         statement.setString(4, "{}");
       }

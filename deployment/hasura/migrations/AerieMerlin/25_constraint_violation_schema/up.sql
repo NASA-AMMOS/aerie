@@ -3,4 +3,6 @@
 -- programming is hard, ok
 delete from constraint_run;
 
+alter table constraint_run rename column violations TO results;
+
 call migrations.mark_migration_applied('25');

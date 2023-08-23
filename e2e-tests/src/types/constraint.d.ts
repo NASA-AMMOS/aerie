@@ -37,5 +37,5 @@ type ConstraintRun = {
   constraint_id: number;
   simulation_dataset_id: number;
   definition_outdated: boolean;
-  violations: ConstraintResult;
+  results: ConstraintResult;
 };

@@ -74,8 +74,8 @@ public class ConstraintAction {
       for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
         constraintCode.remove(constraintRun.constraintId());
 
-        if (constraintRun.violation() != null) {
-          violations.put(constraintRun.constraintId(), constraintRun.violation());
+        if (constraintRun.result() != null) {
+          violations.put(constraintRun.constraintId(), constraintRun.result());
         }
       }
     }

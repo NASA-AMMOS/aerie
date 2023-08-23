@@ -452,7 +452,7 @@ INSERT_SIMULATION_DATASET:`#graphql
         constraint_id
         simulation_dataset_id
         definition_outdated
-        violations
+        results
       }
     }
   `,

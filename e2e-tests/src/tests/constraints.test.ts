@@ -138,7 +138,7 @@ test.describe.serial('Constraints', () => {
     expect(constraintRuns).toBeDefined();
     expect(constraintRuns).toHaveLength(1);
     expect(constraintRuns[0].definition_outdated).toEqual(false);
-    expect(constraintRuns[0].violations).not.toBe({});
+    expect(constraintRuns[0].results).not.toBe({});
   });
 
   test('Check delete violating activity', async ({ request }) => {
@@ -171,7 +171,7 @@ test.describe.serial('Constraints', () => {
     expect(constraintRuns).toBeDefined();
     expect(constraintRuns).toHaveLength(1);
     expect(constraintRuns[0].definition_outdated).toEqual(false);
-    expect(constraintRuns[0].violations).toEqual({});
+    expect(constraintRuns[0].results).toEqual({});
   });
 
   test('Check that updating the constraint outdates the constraint_run', async ({ request }) => {
@@ -187,7 +187,7 @@ test.describe.serial('Constraints', () => {
     expect(constraintRuns).toHaveLength(1);
     expect(constraintRuns[0].definition_outdated).toEqual(true);
     expect(constraintRuns[0].constraint_definition).not.toBe(updatedDefinition);
-    expect(constraintRuns[0].violations).toEqual({});
+    expect(constraintRuns[0].results).toEqual({});
   });
 
   /*
