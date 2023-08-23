@@ -86,12 +86,8 @@ test.describe.serial('Constraints', () => {
     expect(constraint_id).toBeDefined();
   });
 
-  test('Check there are no violations yet', async ({ request }) => {
-    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
-
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(0);
+  test('Constraints fail without prior simulation data', async ({ request }) => {
+    await expect(req.checkConstraints(request, plan_id)).rejects.toThrow()
   });
 
   test('Run simulation', async ({ request }) => {

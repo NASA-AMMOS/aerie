@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
@@ -173,7 +174,7 @@ public class ConstraintAction {
         if (!newNames.isEmpty()) {
           final var newProfiles = resultsHandle$
               .map($ -> $.getProfiles(new ArrayList<>(newNames)))
-              .orElse(ProfileSet.of(Map.of(), Map.of()));
+              .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id " + planId));
 
           for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
             if (!realProfiles.containsKey(_entry.getKey())) {

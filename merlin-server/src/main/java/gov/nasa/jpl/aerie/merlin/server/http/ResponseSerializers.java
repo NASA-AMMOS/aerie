@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
@@ -458,6 +459,13 @@ public final class ResponseSerializers {
         .add("message", "no such activity type")
         .add("activity_type", ex.activityTypeId)
         .build();
+  }
+
+  public static JsonValue serializeInputMismatchException(final InputMismatchException ex) {
+    return Json.createObjectBuilder()
+               .add("message", "input mismatch exception")
+               .add("cause", ex.getMessage())
+               .build();
   }
 
   private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {

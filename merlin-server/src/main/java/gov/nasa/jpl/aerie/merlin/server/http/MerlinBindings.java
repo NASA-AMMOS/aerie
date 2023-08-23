@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -253,6 +254,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(403).result(ExceptionSerializers.serializeUnauthorizedException(ex).toString());
     } catch (final IOException ex) {
       ctx.status(500).result(ExceptionSerializers.serializeIOException(ex).toString());
+    } catch (final InputMismatchException ex) {
+      ctx.status(500).result(ResponseSerializers.serializeInputMismatchException(ex).toString());
     }
   }
 
