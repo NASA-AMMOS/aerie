@@ -197,7 +197,7 @@ test.describe('Merlin Bindings', () => {
         request_query: "",
         session_variables: admin.session}});
     expect(response.status()).toEqual(200);
-    expect((await response.json()).violations).toEqual([]);
+    expect((await response.json())).toEqual([]);
   });
   test('RefreshModelParameters', async ({request}) => {
     // Returns a 404 if the MissionModelId is invalid

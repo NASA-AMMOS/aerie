@@ -411,7 +411,7 @@ const req = {
   ): Promise<ConstraintResult[]> {
     const data = await req.hasura(request, gql.CHECK_CONSTRAINTS, { planId, simulationDatasetId });
     const { constraintViolations } = data;
-    return <ConstraintResult[]>constraintViolations;
+    return <ConstraintResult[]> constraintViolations;
   },
 
   async deleteConstraint(request: APIRequestContext, constraintId: number): Promise<number> {

@@ -6,7 +6,8 @@ let constraint_id: number;
 let jar_id: number;
 let mission_model_id: number;
 let plan_id: number;
-let violation: ConstraintResult;
+let constraintResult: ConstraintResult;
+let violation: Violation;
 let activity_id: number;
 let simulationDatasetId: number;
 let newSimulationDatasetId: number;
@@ -100,25 +101,25 @@ test.describe.serial('Constraints', () => {
     expect(resp.status).toEqual('complete');
   });
 
-  test('Check there is one violation', async ({ request }) => {
-    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
+  test('Check there is one constraint result', async ({ request }) => {
+    const constraintResults: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(1);
+    expect(constraintResults).not.toBeNull();
+    expect(constraintResults).toBeDefined();
+    expect(constraintResults).toHaveLength(1);
 
-    violation = violations[0];
+    constraintResult = constraintResults[0];
 
-    expect(violation).not.toBeNull();
-    expect(violation).toBeDefined();
+    expect(constraintResult).not.toBeNull();
+    expect(constraintResult).toBeDefined();
   });
 
   test('Check the violation is the expected one', async () => {
-    expect(violation.constraintName).toEqual(first_constraint_name);
-    expect(violation.constraintId).toEqual(constraint_id);
-    expect(violation.associations.resourceIds).toHaveLength(2);
-    expect(violation.associations.resourceIds).toContain('/fruit');
-    expect(violation.associations.resourceIds).toContain('/peel');
+    expect(constraintResult.constraintName).toEqual(first_constraint_name);
+    expect(constraintResult.constraintId).toEqual(constraint_id);
+    expect(constraintResult.resourceNames).toHaveLength(2);
+    expect(constraintResult.resourceNames).toContain('/fruit');
+    expect(constraintResult.resourceNames).toContain('/peel');
   });
 
   test('Check violation starts and ends as expected', async () => {
@@ -127,8 +128,11 @@ test.describe.serial('Constraints', () => {
     const plan_duration_micro = (plan_end_unix - plan_start_unix) * 1000;
     const activity_offset_micro = activity_offset_hours * 60 * 60 * 1000 * 1000;
 
-    expect(violation.windows[0].start).toEqual(activity_offset_micro);
-    expect(violation.windows[0].end).toEqual(plan_duration_micro);
+    violation = constraintResult.violations[0];
+    expect(violation).not.toBeNull();
+    expect(violation).toBeDefined();
+    expect(violation.violationIntervals[0].start).toEqual(activity_offset_micro);
+    expect(violation.violationIntervals[0].end).toEqual(plan_duration_micro);
   });
 
   test('Check that there is a constraint_run with the violation', async ({ request }) => {
@@ -232,22 +236,27 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there is one violation again', async ({ request }) => {
-    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
+    const constraintResults: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(1);
+    expect(constraintResults).not.toBeNull();
+    expect(constraintResults).toBeDefined();
+    expect(constraintResults).toHaveLength(1);
 
-    violation = violations[0];
+    constraintResult = constraintResults[0];
 
-    expect(violation).not.toBeNull();
-    expect(violation).toBeDefined();
+    expect(constraintResult).not.toBeNull();
+    expect(constraintResult).toBeDefined();
+    expect(constraintResult.constraintName).toEqual(second_constraint_name);
   });
 
   test('Check the violation window duration is correct', async () => {
-    expect(violation.constraintName).toEqual(second_constraint_name);
-    expect(violation.windows).toHaveLength(1);
-    expect(violation.windows[0]).toEqual({
+    violation = constraintResult.violations[0];
+
+    expect(violation).not.toBeNull();
+    expect(violation).toBeDefined();
+
+    expect(violation.violationIntervals).toHaveLength(1);
+    expect(violation.violationIntervals[0]).toEqual({
       start: 0,
       end: long_duration,
     });
