@@ -162,7 +162,6 @@ export interface RealProfileGreaterThanOrEqual {
   right: RealProfileExpression;
 }
 
-
 export interface RealProfileGreaterThan {
   kind: NodeKind.RealProfileGreaterThan;
   left: RealProfileExpression;
