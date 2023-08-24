@@ -4,7 +4,7 @@ create table command_dictionary (
   command_types_typescript_path text not null,
   mission text not null,
   version text not null,
-  parsed_json jsonb not null,
+  parsed_json jsonb not null default '{}',
 
   created_at timestamptz not null default now(),
 
