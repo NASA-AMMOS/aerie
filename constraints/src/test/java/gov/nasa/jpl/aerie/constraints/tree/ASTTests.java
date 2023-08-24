@@ -776,10 +776,9 @@ public class ASTTests {
     final var expected = new ConstraintResult(
         List.of(new Violation(List.of(Interval.between(5, 6, SECONDS)), List.of())),
         List.of(
-            Interval.between(Duration.MIN_VALUE, Inclusive, Duration.SECOND, Exclusive),
+            Interval.between(Duration.ZERO, Inclusive, Duration.SECOND, Exclusive),
             Interval.between(4, Exclusive, 5, Exclusive, SECONDS),
-            Interval.between(6, Exclusive, 7, Exclusive, SECONDS),
-            Interval.between(Duration.of(20, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive)
+            Interval.between(6, Exclusive, 7, Exclusive, SECONDS)
         )
     );
 

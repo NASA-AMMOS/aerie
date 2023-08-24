@@ -189,9 +189,10 @@ public class ConstraintAction {
           }
         }
 
+        final Interval bounds = Interval.betweenClosedOpen(Duration.ZERO, simDuration);
         final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
             simStartTime,
-            Interval.between(Duration.ZERO, simDuration),
+            bounds,
             activities,
             realProfiles,
             discreteProfiles);

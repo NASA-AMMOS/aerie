@@ -29,7 +29,7 @@ public final class ViolationsOfWindows implements Expression<ConstraintResult> {
         StreamSupport.stream(
             windows.notEqualTo(windows).assignGaps(new Windows(true)).iterateEqualTo(true).spliterator(),
             false
-        ).toList()
+        ).map($ -> Interval.intersect($, bounds)).filter($ -> !$.isEmpty()).toList()
     );
   }
 
