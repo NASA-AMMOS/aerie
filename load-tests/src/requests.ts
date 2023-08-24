@@ -69,7 +69,7 @@ export const req = {
     const resp = req.hasura(query, {}, token, username);
     const data = resp.json("data");
 
-    const mission_models: = data.mission_model;
+    const mission_models = data.mission_model;
     check(mission_models, {
       "mission model exists": (mission_models) => mission_models.length > 0
     });
