@@ -35,7 +35,6 @@ export enum NodeKind {
   RealProfileLessThanOrEqual = 'RealProfileLessThanOrEqual',
   RealProfileGreaterThan = 'RealProfileGreaterThan',
   RealProfileGreaterThanOrEqual = 'RealProfileGreaterThanOrEqual',
-  RealProfileIsWithin = 'RealProfileIsWithin',
   WindowsExpressionAnd = 'WindowsExpressionAnd',
   WindowsExpressionOr = 'WindowsExpressionOr',
   WindowsExpressionNot = 'WindowsExpressionNot',
@@ -89,7 +88,6 @@ export type WindowsExpression =
   | RealProfileLessThanOrEqual
   | RealProfileGreaterThan
   | RealProfileGreaterThanOrEqual
-  | RealProfileIsWithin
   | DiscreteProfileTransition
   | ExpressionEqual<RealProfileExpression>
   | ExpressionEqual<DiscreteProfileExpression>
@@ -164,12 +162,6 @@ export interface RealProfileGreaterThanOrEqual {
   right: RealProfileExpression;
 }
 
-export interface RealProfileIsWithin {
-  kind: NodeKind.RealProfileIsWithin;
-  left: RealProfileExpression;
-  right: RealProfileExpression;
-  margin: RealProfileExpression;
-}
 
 export interface RealProfileGreaterThan {
   kind: NodeKind.RealProfileGreaterThan;

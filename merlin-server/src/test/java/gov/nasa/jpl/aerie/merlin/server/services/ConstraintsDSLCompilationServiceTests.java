@@ -652,7 +652,7 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testReChanges() {
+  void testRealChanges() {
     checkSuccessfulCompilation(
         """
             export default () => {
