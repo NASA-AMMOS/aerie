@@ -30,6 +30,8 @@ export const ENDPOINTS_WHITELIST = new Set([
   '/seqjson/bulk-get-seqjson-for-sequence-standalone',
   '/seqjson/get-seqjson-for-sequence-standalone',
   '/seqjson/get-seqjson-for-seqid-and-simulation-dataset',
+  '/seqjson/bulk-get-edsl-for-seqjson',
+  '/seqjson/get-edsl-for-seqjson'
 ]);
 
 /**
