@@ -23,6 +23,7 @@ const HASURA_PLAN_PERMISSIONS = [
  * Endpoints that don't need any permission checking.
  */
 export const ENDPOINTS_WHITELIST = new Set([
+  '/',
   '/health',
   '/get-command-typescript',
   '/get-activity-typescript',
