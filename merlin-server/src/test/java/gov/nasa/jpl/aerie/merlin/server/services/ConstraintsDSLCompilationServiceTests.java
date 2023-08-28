@@ -633,6 +633,25 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
+  void testRealIsWithin() {
+    checkSuccessfulCompilation(
+        """
+        export default () => {
+          return Real.Resource("an integer").isWithin(Real.Value(10), Real.Value(1));
+        }
+        """,
+        new ViolationsOfWindows(
+            new And(
+                java.util.List.of(
+                    new LessThanOrEqual(new RealResource("an integer"), new Plus(new RealValue(10), new RealValue(1))),
+                    new GreaterThanOrEqual(new RealResource("an integer"), new Plus(new RealValue(10), new Times(new RealValue(1), -1)))
+                )
+            )
+        )
+    );
+  }
+
+  @Test
   void testRealChanges() {
     checkSuccessfulCompilation(
         """

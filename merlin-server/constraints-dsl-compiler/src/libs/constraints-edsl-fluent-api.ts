@@ -682,6 +682,20 @@ export class Real {
   }
 
   /**
+   * Produce a window whenever this profile is equal to another real profile plus or minus the tolerance
+   */
+  public isWithin(other: Real | number, tolerance: Real | number): Windows{
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
+    if (!(tolerance instanceof Real)) {
+      tolerance = Real.Value(tolerance);
+    }
+
+    return Windows.And(this.lessThanOrEqual(other.plus(tolerance)), this.greaterThanOrEqual(other.minus(tolerance)));
+  }
+
+  /**
    * Produce an instantaneous window whenever this profile changes.
    */
   public changes(): Windows {
@@ -1356,6 +1370,13 @@ declare global {
      * @param other
      */
     public notEqual(other: Real | number): Windows;
+
+    /**
+     * Produce a window whenever this profile is equal to another real profile plus or minus the tolerance
+     * @param other
+     * @param tolerance
+     */
+    public isWithin(other: Real | number, tolerance: Real | number): Windows;
 
     /**
      * Produce an instantaneous window whenever this profile changes.
