@@ -1,0 +1,110 @@
+name: Create x86 JNISpice Artifacts
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+# If GH ever gets M1 Mac/ARM Linux runners, more jobs can be added to automate SPICE compilation on those platforms
+jobs:
+  # The Windows build does not contain the problematic "-flat_namespace" flag in its build script for JNISpice.dll,
+  # so we do not need to recompile
+  retrieve_SPICE_windows:
+    runs-on: windows-latest
+    steps:
+      - name: Download and Unpack JNISpice ZIP
+        run: |
+          curl https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/PC_Windows_VisualC_Java1.8_64bit/packages/JNISpice.zip -o JNISpice.zip
+          7z x JNISpice.zip
+          echo "JNISpice unpacked"
+      - name: Upload DLL
+        uses: actions/upload-artifact@v3
+        with:
+          name: Windows Spice
+          path: JNISpice/lib/JNISpice.dll
+
+  # The Linux build does not contain the problematic "-flat_namespace" flag in its build script for libJNISpice.so,
+  # so we do not need to recompile
+  retrieve_SPICE_x86_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and Unpack JNISpice TAR
+        run: |
+          curl https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/PC_Linux_GCC_Java1.8_64bit/packages/JNISpice.tar.Z -o JNISpice.tar.Z
+          uncompress JNISpice.tar && tar -xf JNISpice.tar
+          echo "JNISpice unpacked"
+      - name: Rename .so
+        run: mv libJNISpice.so libJNISpice_Intel.so
+        working-directory: JNISpice/lib
+      - name: Upload .so
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86 Linux Spice
+          path: JNISpice/lib/libJNISpice_Intel.so
+
+  # The Mac build contains the problematic "-flat_namespace -undefined suppress" flags in its build script
+  # for libJNISpice.jnilib, so we must remove the flag and recompile
+  compile_SPICE_x86_mac:
+    runs-on: macos-latest
+    steps:
+      - name: Download and Unpack JNISpice TAR
+        run: |
+          curl https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/MacIntel_OSX_AppleC_Java1.8_64bit/packages/JNISpice.tar.Z -o JNISpice.tar.Z
+          uncompress JNISpice.tar && tar -xf JNISpice.tar
+          echo "JNISpice unpacked"
+      - name: Recompile Without Problematic Flags
+        run: |
+          setenv TKLINKOPTIONS "-m64 -bundle"
+          setenv LINKLIB "../../lib/tutils_c.a  ../../lib/csupport.a  ../../lib/cspice.a -lm"
+          csh mkprodct.csh
+          cd ../../lib
+          mv libJNISpice.jnilib libJNISpice_Intel.jnilib
+        working-directory: JNISpice/src/JNISpice
+        shell: csh {0}
+      - name: Upload Intel Mac .jnilib
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86 Mac Spice
+          path: JNISpice/lib/libJNISpice_Intel.jnilib
+
+  # Recompiles the Java code, then removes all unneeded files and creates a JAR
+  compile_JNI_JAR:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "19"
+      - name: Download and Unpack JNISpice TAR
+        run: |
+          curl https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/PC_Linux_GCC_Java1.8_64bit/packages/JNISpice.tar.Z -o JNISpice.tar.Z
+          uncompress JNISpice.tar && tar -xf JNISpice.tar
+      - name: Get SPICE Version
+        run: |
+          ls . | grep N
+          echo "SPICE_VERSION="`ls . | grep N` >> "$GITHUB_ENV"
+        working-directory: JNISpice
+      - name: Recompile Java
+        run: |
+          ls
+          javac *.java
+        working-directory: JNISpice/src/JNISpice/spice/basic
+      - name: Remove Unneeded Files
+        run: |
+          rm *.java
+          cd .. && rm -r testutils tspice
+          cd .. && rm -r resources
+          rm -f *.c *.h *.java *.class *.csh javadoc.args package-list
+        working-directory: JNISpice/src/JNISpice/spice/basic
+      - name: Create JAR
+        run: jar cf JNISpice-$SPICE_VERSION.jar .
+        working-directory: JNISpice/src/JNISpice
+      - name: Upload JAR
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: JNISpice Jar
+          path: JNISpice/src/JNISpice/JNISpice-*.jar
