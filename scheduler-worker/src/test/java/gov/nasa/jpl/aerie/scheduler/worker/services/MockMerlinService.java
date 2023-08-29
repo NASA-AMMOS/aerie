@@ -12,30 +12,35 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.PlanService;
-import gov.nasa.jpl.aerie.scheduler.server.services.PlanServiceException;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   private Optional<PlanningHorizon> planningHorizon;
+  private ExternalProfiles externalProfiles = new ExternalProfiles(Map.of(), Map.of(), List.of());
+
+  public void setExternalDataset(ExternalProfiles externalProfiles) {
+    this.externalProfiles = externalProfiles;
+  }
 
   record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
 
@@ -141,6 +146,17 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   public Optional<SimulationResults> getSimulationResults(final PlanMetadata planMetadata)
   {
     return Optional.empty();
+  }
+
+  @Override
+  public ExternalProfiles getExternalProfiles(final PlanId planId) {
+    return externalProfiles;
+  }
+
+  @Override
+  public Collection<ResourceType> getResourceTypes(final PlanId planId)
+  {
+    return null;
   }
 
   @Override

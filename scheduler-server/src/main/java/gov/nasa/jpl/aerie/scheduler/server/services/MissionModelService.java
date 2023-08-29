@@ -1,14 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 
 public interface MissionModelService {
   MissionModelTypes getMissionModelTypes(final PlanId planId)
@@ -26,10 +25,6 @@ public interface MissionModelService {
       super(message, cause);
     }
   }
-
-  record ActivityType(String name, Map<String, ValueSchema> parameters, Map<String, Map<String, SerializedValue>> presets) {}
-
-  record ResourceType(String name, ValueSchema schema) {}
 
   record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
 }

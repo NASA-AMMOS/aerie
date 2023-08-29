@@ -8,6 +8,8 @@ import java.util.Map;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import org.apache.commons.lang3.tuple.Pair;
 
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
@@ -49,7 +51,7 @@ public final class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
+  private static String generateResourceTypes(final Collection<ResourceType> resourceTypes) {
     final var result = new ArrayList<String>();
     result.add("export enum Resource {");
     for (final var resourceType : resourceTypes) {
@@ -216,11 +218,11 @@ return (<T>makeAllDiscreteProfile(args))
     }
   }
 
-  private static ActivityTypeCode getActivityTypeInformation(final MissionModelService.ActivityType activityType) {
+  private static ActivityTypeCode getActivityTypeInformation(final ActivityType activityType) {
     return new ActivityTypeCode(activityType.name(), generateActivityParameterTypes(activityType), activityType.presets());
   }
 
-  private static List<ActivityParameter> generateActivityParameterTypes(final MissionModelService.ActivityType activityType) {
+  private static List<ActivityParameter> generateActivityParameterTypes(final ActivityType activityType) {
     return activityType
         .parameters()
         .entrySet()

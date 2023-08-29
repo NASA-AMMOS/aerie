@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
@@ -28,13 +30,17 @@ import gov.nasa.jpl.aerie.scheduler.server.http.EventGraphFlattener;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.ActivityAttributesRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
+import gov.nasa.jpl.aerie.scheduler.server.models.UnwrappedProfileSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -67,7 +73,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
@@ -96,6 +101,31 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * timeout for http graphql requests issued to aerie
    */
   private static final java.time.Duration httpTimeout = java.time.Duration.ofSeconds(60);
+
+  public record DatasetMetadata(DatasetId datasetId, Duration offsetFromPlanStart){};
+
+  private record SimulationId(long id){}
+
+  private record ProfileRecord(
+      long id,
+      long datasetId,
+      String name,
+      Pair<String, ValueSchema> type,
+      Duration duration
+  ) {}
+
+  private record SpanRecord(
+      String type,
+      Instant start,
+      Optional<Duration> duration,
+      Optional<Long> parentId,
+      List<Long> childIds,
+      ActivityAttributesRecord attributes
+  ) {}
+
+  public record SimulationDatasetId(int id){}
+
+  public record DatasetIds(DatasetId datasetId, SimulationDatasetId simulationDatasetId){}
 
   /**
    * dispatch the given graphql request to aerie and collect the results
@@ -720,8 +750,33 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return resourceTypes;
   }
 
+  /**
+   * Gets resource types associated to a plan, those coming from the mission model as well as those coming from external dataset resources
+   * @param planId the plan id
+   * @return
+   * @throws IOException
+   * @throws MissionModelServiceException
+   * @throws PlanServiceException
+   * @throws NoSuchPlanException
+   */
+  @Override
+  public Collection<ResourceType> getResourceTypes(final PlanId planId)
+  throws IOException, MissionModelServiceException, PlanServiceException, NoSuchPlanException
+  {
+    final var missionModelId = this.getPlanMetadata(planId).modelId();
+    final var missionModelResourceTypes = getResourceTypes(new MissionModelId(missionModelId));
+    final var allResourceTypes = new ArrayList<>(missionModelResourceTypes);
+    final var associatedDataset = getExternalDatasets(planId);
+    if(associatedDataset.isPresent()) {
+      for(final var datasetMetada: associatedDataset.get()) {
+        final var profileSet = getProfileTypes(datasetMetada.datasetId());
+        allResourceTypes.addAll(extractResourceTypes(profileSet));
+      }
+    }
+    return allResourceTypes;
+  }
 
-public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, IOException {
+  public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, IOException {
     final var request = """
         query {
           simulation(where: {plan_id: {_eq: %d}}) {
@@ -735,25 +790,6 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
   final var simulationId = data.getJsonArray("simulation").get(0).asJsonObject().getInt("id");
   return new SimulationId(simulationId);
 }
-
-  private record SimulationId(long id){}
-
-  private record ProfileRecord(
-      long id,
-      long datasetId,
-      String name,
-      Pair<String, ValueSchema> type,
-      Duration duration
-  ) {}
-
-  private record SpanRecord(
-      String type,
-      Instant start,
-      Optional<Duration> duration,
-      Optional<Long> parentId,
-      List<Long> childIds,
-      ActivityAttributesRecord attributes
-  ) {}
 
   @Override
   public DatasetId storeSimulationResults(final PlanMetadata planMetadata,
@@ -803,7 +839,22 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
     return parseSimulatedActivities(data, startSimulation);
   }
 
-private Profiles getProfiles(DatasetId datasetId) throws PlanServiceException, IOException {
+  private ProfileSet getProfileTypes(DatasetId datasetId) throws PlanServiceException, IOException {
+    final var request = """
+        query{
+          profile(where: {dataset_id: {_eq: %d}}){
+            type
+            name
+          }
+        }
+        """.formatted(datasetId.id());
+    final JsonObject response;
+    response = postRequest(request).get();
+    final var data = response.getJsonObject("data").getJsonArray("profile");
+    return parseProfiles(data);
+  }
+
+  private ProfileSet getProfilesWithSegments(DatasetId datasetId) throws PlanServiceException, IOException {
     final var request = """
         query{
           profile(where: {dataset_id: {_eq: %d}}){
@@ -812,6 +863,7 @@ private Profiles getProfiles(DatasetId datasetId) throws PlanServiceException, I
             profile_segments {
               start_offset
               dynamics
+              is_gap
             }
             name
           }
@@ -821,9 +873,9 @@ private Profiles getProfiles(DatasetId datasetId) throws PlanServiceException, I
     response = postRequest(request).get();
     final var data = response.getJsonObject("data").getJsonArray("profile");
     return parseProfiles(data);
-}
+  }
 
-private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws PlanServiceException, IOException {
+  private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws PlanServiceException, IOException {
     final var request = """
        query{
        span(where: {duration: {_is_null: true}, dataset_id: {_eq: %d}}) {
@@ -839,7 +891,7 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
   response = postRequest(request).get();
   final var data = response.getJsonObject("data").getJsonArray("span");
   return parseUnfinishedActivities(data, startTime);
-}
+  }
 
   @Override
   public Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata)
@@ -854,18 +906,20 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
       Future<Map<SimulatedActivityId, UnfinishedActivity>> futureSpans = executorService.submit(() -> getSpans(
           simulationDatasetId.get().datasetId(),
           planMetadata.horizon().getStartInstant()));
-      Future<Profiles> futureProfiles = executorService.submit(() -> getProfiles(simulationDatasetId.get().datasetId()));
+      Future<ProfileSet> futureProfiles = executorService.submit(() -> getProfilesWithSegments(simulationDatasetId.get().datasetId()));
       try {
         final var simulatedActivities = futureSimulatedActivities.get();
         final var unfinishedActivities = futureSpans.get();
         final var profiles = futureProfiles.get();
+        //verify that there is no gap and convert
+        final var unwrappedProfiles = unwrapProfiles(profiles);
         final var simulationStartTime = planMetadata.horizon().getStartInstant();
         final var simulationEndTime = planMetadata.horizon().getEndInstant();
         final var micros = java.time.Duration.between(simulationStartTime, simulationEndTime).toNanos() / 1000;
         final var duration = Duration.of(micros, MICROSECOND);
         return Optional.of(new SimulationResults(
-            profiles.realProfiles,
-            profiles.discreteProfiles,
+            unwrappedProfiles.realProfiles(),
+            unwrappedProfiles.discreteProfiles(),
             simulatedActivities,
             unfinishedActivities,
             simulationStartTime,
@@ -877,6 +931,73 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
         return Optional.empty();
       }
     }
+  }
+
+  public Optional<List<DatasetMetadata>> getExternalDatasets(final PlanId planId)
+  throws PlanServiceException, IOException
+  {
+    final var datasets = new ArrayList<DatasetMetadata>();
+    final var request = """
+        query {
+          plan_dataset(where: {plan_id: {_eq: %d}, simulation_dataset_id: {_is_null: true}}, order_by: {dataset_id:asc}) {
+            dataset_id
+            offset_from_plan_start
+          }
+        }
+        """.formatted(planId.id());
+    final var response = postRequest(request).get();
+    final var data = response.getJsonObject("data").getJsonArray("plan_dataset");
+    if (data.size() == 0) {
+      return Optional.empty();
+    }
+    for(final var dataset:data){
+      final var datasetId = new DatasetId(dataset.asJsonObject().getInt("dataset_id"));
+      final var offsetFromPlanStart = durationFromPGInterval(dataset
+                                                                 .asJsonObject()
+                                                                 .getString("offset_from_plan_start"));
+      datasets.add(new DatasetMetadata(datasetId, offsetFromPlanStart));
+    }
+    return Optional.of(datasets);
+  }
+
+  @Override
+  public ExternalProfiles getExternalProfiles(final PlanId planId)
+  throws PlanServiceException, IOException
+  {
+    final Map<String, LinearProfile> realProfiles = new HashMap<>();
+    final Map<String, DiscreteProfile> discreteProfiles = new HashMap<>();
+    final var resourceTypes = new ArrayList<ResourceType>();
+    final var datasetMetadatas = getExternalDatasets(planId);
+    if(datasetMetadatas.isPresent()) {
+      for(final var datasetMetadata: datasetMetadatas.get()) {
+        final var profiles = getProfilesWithSegments(datasetMetadata.datasetId());
+        profiles.realProfiles().forEach((name, profile) -> {
+          realProfiles.put(name,
+                           LinearProfile.fromExternalProfile(
+                               datasetMetadata.offsetFromPlanStart,
+                               profile.getRight()));
+        });
+        profiles.discreteProfiles().forEach((name, profile) -> {
+          discreteProfiles.put(name,
+                               DiscreteProfile.fromExternalProfile(
+                                   datasetMetadata.offsetFromPlanStart,
+                                   profile.getRight()));
+        });
+        resourceTypes.addAll(extractResourceTypes(profiles));
+      }
+    }
+    return new ExternalProfiles(realProfiles, discreteProfiles, resourceTypes);
+}
+
+  private Collection<ResourceType> extractResourceTypes(final ProfileSet profileSet){
+    final var resourceTypes = new ArrayList<ResourceType>();
+    profileSet.realProfiles().forEach((name, profile) -> {
+      resourceTypes.add(new ResourceType(name, profile.getLeft()));
+    });
+    profileSet.discreteProfiles().forEach((name, profile) -> {
+      resourceTypes.add(new ResourceType(name, profile.getLeft()));
+    });
+    return resourceTypes;
   }
 
   private Map<SimulatedActivityId, UnfinishedActivity> parseUnfinishedActivities(JsonArray unfinishedActivitiesJson, Instant simulationStart){
@@ -908,15 +1029,30 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
     return unfinishedActivities;
   }
 
-  private record Profiles(
-      Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,
-      Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles
-  ){}
+  private UnwrappedProfileSet unwrapProfiles(final ProfileSet profileSet) throws PlanServiceException {
+    return new UnwrappedProfileSet(unwrapProfiles(profileSet.realProfiles()), unwrapProfiles(profileSet.discreteProfiles()));
+  }
 
-  private Profiles parseProfiles(JsonArray dataset){
-    Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
-    Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
-    for(final var profile:dataset){
+  private <Dynamics> HashMap<String, Pair<ValueSchema, List<ProfileSegment<Dynamics>>>> unwrapProfiles(Map<String, Pair<ValueSchema,List<ProfileSegment<Optional<Dynamics>>>>> profiles)
+  throws PlanServiceException
+  {
+    final var unwrapped = new HashMap<String,Pair<ValueSchema, List<ProfileSegment<Dynamics>>>>();
+    for(final var profile: profiles.entrySet()) {
+      final var unwrappedSegments = new ArrayList<ProfileSegment<Dynamics>>();
+      for (final var segment : profile.getValue().getRight()) {
+        if (segment.dynamics().isPresent()) {
+          unwrappedSegments.add(new ProfileSegment<>(segment.extent(), segment.dynamics().get()));
+        }
+      }
+      unwrapped.put(profile.getKey(), Pair.of(profile.getValue().getLeft(), unwrappedSegments));
+    }
+    return unwrapped;
+  }
+
+  private ProfileSet parseProfiles(JsonArray dataset){
+    Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles = new HashMap<>();
+    Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles = new HashMap<>();
+    for(final var profile :dataset){
       final var name = profile.asJsonObject().getString("name");
       final var type = profile.asJsonObject().getJsonObject("type");
       final var typetype = type.getString("type");
@@ -929,33 +1065,50 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
         discreteProfiles.put(name, discreteProfile);
       }
     }
-    return new Profiles(realProfiles, discreteProfiles);
+    return new ProfileSet(realProfiles, discreteProfiles);
   }
 
-  public <Dynamics> Pair<ValueSchema, List<ProfileSegment<Dynamics>>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
+  public <Dynamics> Pair<ValueSchema, List<ProfileSegment<Optional<Dynamics>>>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
     // Profile segments are stored with their start offset relative to simulation start
     // We must convert these to durations describing how long each segment lasts
-    final var profileExtent = durationFromPGInterval(profile.asJsonObject().getString("duration"));
     final var type = chooseP(discreteValueSchemaTypeP, realValueSchemaTypeP).parse(profile.getJsonObject("type")).getSuccessOrThrow();
-    final var resultSet = profile.getJsonArray("profile_segments").iterator();
-    JsonValue curProfileSegment = null;
-    final var segments = new ArrayList<ProfileSegment<Dynamics>>();
-    if (resultSet.hasNext()) {
-      curProfileSegment = resultSet.next();
-      var offset = durationFromPGInterval(curProfileSegment.asJsonObject().getString("start_offset"));
-      var dynamics = dynamicsParser.parse(curProfileSegment.asJsonObject().get("dynamics")).getSuccessOrThrow();
-
-      while (resultSet.hasNext()) {
+    final var segments = new ArrayList<ProfileSegment<Optional<Dynamics>>>();
+    if(profile.containsKey("profile_segments")) {
+      final var resultSet = profile.getJsonArray("profile_segments").iterator();
+      JsonValue curProfileSegment = null;
+      if (resultSet.hasNext()) {
+        final var profileExtent = durationFromPGInterval(profile.asJsonObject().getString("duration"));
         curProfileSegment = resultSet.next();
-        final var nextOffset = durationFromPGInterval(curProfileSegment.asJsonObject().getString("start_offset"));
-        final var duration = nextOffset.minus(offset);
-        segments.add(new ProfileSegment<>(duration, dynamics));
-        offset = nextOffset;
-        dynamics = dynamicsParser.parse(curProfileSegment.asJsonObject().getJsonObject("dynamics")).getSuccessOrThrow();
-      }
+        var offset = durationFromPGInterval(curProfileSegment.asJsonObject().getString("start_offset"));
+        var isGap = curProfileSegment.asJsonObject().getBoolean("is_gap");
+        Optional<Dynamics> dynamics;
+        if (!isGap) {
+          dynamics = Optional.of(dynamicsParser
+                                     .parse(curProfileSegment.asJsonObject().get("dynamics"))
+                                     .getSuccessOrThrow());
+        } else {
+          dynamics = Optional.empty();
+        }
 
-      final var duration = profileExtent.minus(offset);
-      segments.add(new ProfileSegment<Dynamics>(duration, dynamics));
+        while (resultSet.hasNext()) {
+          curProfileSegment = resultSet.next();
+          final var nextOffset = durationFromPGInterval(curProfileSegment.asJsonObject().getString("start_offset"));
+          final var duration = nextOffset.minus(offset);
+          segments.add(new ProfileSegment<>(duration, dynamics));
+          isGap = curProfileSegment.asJsonObject().getBoolean("is_gap");
+          offset = nextOffset;
+          if (!isGap) {
+            dynamics = Optional.of(dynamicsParser
+                                       .parse(curProfileSegment.asJsonObject().get("dynamics"))
+                                       .getSuccessOrThrow());
+          } else {
+            dynamics = Optional.empty();
+          }
+        }
+
+        final var duration = profileExtent.minus(offset);
+        segments.add(new ProfileSegment<>(duration, dynamics));
+      }
     }
     return Pair.of(type, segments);
   }
@@ -1087,10 +1240,6 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
     }
   }
 
-  public record SimulationDatasetId(int id){}
-
-  public record DatasetIds(DatasetId datasetId, SimulationDatasetId simulationDatasetId){}
-
   private DatasetIds createSimulationDataset(SimulationId simulationId, PlanMetadata planMetadata)
   throws PlanServiceException, IOException
   {
@@ -1201,8 +1350,6 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
     }
     return profileRecords;
   }
-
-
 
   private void postProfileSegments(
       final DatasetId datasetId,

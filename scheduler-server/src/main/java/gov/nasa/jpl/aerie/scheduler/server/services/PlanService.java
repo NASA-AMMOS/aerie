@@ -12,14 +12,17 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceExce
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -73,6 +76,27 @@ public interface PlanService {
      * @return simulation results, optionally
      */
     Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException, InvalidJsonException;
+
+
+    /**
+     * Gets external profiles associated to a plan, including segments
+     * @param planId the plan id
+     * @throws PlanServiceException
+     * @throws IOException
+     */
+    ExternalProfiles getExternalProfiles(final PlanId planId)
+    throws PlanServiceException, IOException;
+
+    /**
+     * Gets resource types associated to a plan, those coming from the mission model as well as those coming from external dataset resources
+     * @param planId the plan id
+     * @throws IOException
+     * @throws MissionModelService.MissionModelServiceException
+     * @throws PlanServiceException
+     * @throws NoSuchPlanException
+     */
+    Collection<ResourceType> getResourceTypes(final PlanId planId)
+    throws IOException, MissionModelService.MissionModelServiceException, PlanServiceException, NoSuchPlanException;
   }
 
   interface WriterRole {

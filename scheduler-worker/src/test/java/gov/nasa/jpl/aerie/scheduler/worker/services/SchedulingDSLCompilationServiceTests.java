@@ -85,7 +85,8 @@ class SchedulingDSLCompilationServiceTests {
                   export default function myCondition() {
                     return GlobalSchedulingCondition.mutex([ActivityTypes.SampleActivity2], [ActivityTypes.SampleActivity1])
                   }
-              """);
+              """,
+        List.of());
     final var expectedGoalDefinition = new SchedulingDSL.ConditionSpecifier.AndCondition(List.of(
         new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
             new Not(
@@ -865,7 +866,8 @@ class SchedulingDSLCompilationServiceTests {
           export default function() {
             return GlobalSchedulingCondition.scheduleOnlyWhen([], Real.Resource("/sample/resource/1").lessThan(5.0));
           }
-        """);
+        """,
+        List.of());
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(

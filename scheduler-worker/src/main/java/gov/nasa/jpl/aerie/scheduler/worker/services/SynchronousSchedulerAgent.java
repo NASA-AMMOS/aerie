@@ -10,6 +10,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +47,14 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
@@ -130,11 +133,12 @@ public record SynchronousSchedulerAgent(
             simulationFacade,
             schedulerMissionModel.schedulerModel()
         );
+        final var externalProfiles = loadExternalProfiles(planMetadata.planId());
         final var initialSimulationResults = loadSimulationResults(planMetadata);
         //seed the problem with the initial plan contents
         final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);
         problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults);
-
+        problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
         final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
@@ -143,7 +147,8 @@ public record SynchronousSchedulerAgent(
           final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
               missionModelService,
               planMetadata.planId(),
-              $.source().source());
+              $.source().source(),
+              externalProfiles.resourceTypes());
           if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
             compiledGlobalSchedulingConditions.addAll(conditionBuilder(r.value(), problem));
           } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
@@ -177,7 +182,8 @@ public record SynchronousSchedulerAgent(
               missionModelService,
               planMetadata.planId(),
               goalRecord.definition(),
-              schedulingDSLCompilationService);
+              schedulingDSLCompilationService,
+              externalProfiles.resourceTypes());
           if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
             compiledGoals.add(Pair.of(goalRecord, r.value()));
           } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
@@ -279,6 +285,12 @@ public record SynchronousSchedulerAgent(
     }
   }
 
+  private ExternalProfiles loadExternalProfiles(final PlanId planId)
+  throws PlanServiceException, IOException
+  {
+    return planService.getExternalProfiles(planId);
+  }
+
   private Optional<DatasetId> storeSimulationResults(PlanningHorizon planningHorizon, SimulationFacade simulationFacade, PlanMetadata planMetadata,
                                                      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
   throws PlanServiceException, IOException
@@ -313,12 +325,14 @@ public record SynchronousSchedulerAgent(
       final MissionModelService missionModelService,
       final PlanId planId,
       final GoalSource goalDefinition,
-      final SchedulingDSLCompilationService schedulingDSLCompilationService)
+      final SchedulingDSLCompilationService schedulingDSLCompilationService,
+      final Collection<ResourceType> additionalResourceTypes)
   {
     return schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         planId,
-        goalDefinition.source()
+        goalDefinition.source(),
+        additionalResourceTypes
     );
   }
 
