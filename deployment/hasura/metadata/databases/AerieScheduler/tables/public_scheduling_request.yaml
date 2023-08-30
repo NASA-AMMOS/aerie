@@ -21,9 +21,16 @@ select_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [requested_by]
+      columns: [requested_by, canceled]
+      filter: {}
+  - role: user
+    permission:
+      columns: [canceled]
       filter: {}
 delete_permissions:
   - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
     permission:
       filter: {}
