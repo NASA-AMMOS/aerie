@@ -46,7 +46,6 @@ dependencies {
 }
 
 processResources {
-  dependsOn ":scheduler-worker:copyConstraintsTypescript"
   // Copy in scheduling DSL compiler static libraries when processing resources
   from project(':scheduler-worker').projectDir.toPath().resolve(Path.of('scheduling-dsl-compiler', 'src', 'libs'))
 }
