@@ -248,14 +248,14 @@ public final class MerlinBindings implements Plugin {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final gov.nasa.jpl.aerie.permissions.exceptions.NoSuchPlanException ex) {
       ctx.status(404).result(ExceptionSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final InputMismatchException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeInputMismatchException(ex).toString());
     } catch (final PermissionsServiceException ex) {
       ctx.status(503).result(ExceptionSerializers.serializePermissionsServiceException(ex).toString());
     } catch (final Unauthorized ex) {
       ctx.status(403).result(ExceptionSerializers.serializeUnauthorizedException(ex).toString());
     } catch (final IOException ex) {
       ctx.status(500).result(ExceptionSerializers.serializeIOException(ex).toString());
-    } catch (final InputMismatchException ex) {
-      ctx.status(500).result(ResponseSerializers.serializeInputMismatchException(ex).toString());
     }
   }
 

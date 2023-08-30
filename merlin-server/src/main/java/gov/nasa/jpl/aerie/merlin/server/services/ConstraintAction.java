@@ -64,19 +64,17 @@ public class ConstraintAction {
     final var resultsHandle$ = this.simulationService.get(planId, revisionData);
     final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
         .map(SimulationResultsHandle::getSimulationDatasetId)
-        .orElse(null));
+        .orElseThrow(() -> new InputMismatchException("no simulation datasets found for plan id " + planId.id())));
     final var violations = new HashMap<Long, ConstraintResult>();
 
-    if (simDatasetId != null) {
-      final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
+    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
 
-      // Remove any constraints that we've already checked, so they aren't rechecked.
-      for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
-        constraintCode.remove(constraintRun.constraintId());
+    // Remove any constraints that we've already checked, so they aren't rechecked.
+    for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
+      constraintCode.remove(constraintRun.constraintId());
 
-        if (constraintRun.result() != null) {
-          violations.put(constraintRun.constraintId(), constraintRun.result());
-        }
+      if (constraintRun.result() != null) {
+        violations.put(constraintRun.constraintId(), constraintRun.result());
       }
     }
 
@@ -174,7 +172,8 @@ public class ConstraintAction {
         if (!newNames.isEmpty()) {
           final var newProfiles = resultsHandle$
               .map($ -> $.getProfiles(new ArrayList<>(newNames)))
-              .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id " + planId));
+              .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id " + planId.id()));
+
 
           for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
             if (!realProfiles.containsKey(_entry.getKey())) {
@@ -209,12 +208,10 @@ public class ConstraintAction {
         violations.put(entry.getKey(), constraintResult);
       }
 
-      if (simDatasetId != null) {
-        constraintService.createConstraintRuns(
-            constraintCode,
-            violations,
-            simDatasetId);
-      }
+      constraintService.createConstraintRuns(
+          constraintCode,
+          violations,
+          simDatasetId);
     }
 
     return violations.values().stream().toList();

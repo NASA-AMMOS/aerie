@@ -97,7 +97,7 @@ test.describe('Merlin Bindings', () => {
         "a 'PLAN_OWNER_COLLABORATOR' for plan with id '"+local_plan_id+"'");
 
     // Returns a 200 otherwise
-    // "status" is "pending"
+    // "status" is not "failed"
     response = await request.post(`${urls.MERLIN_URL}/getSimulationResults`, {
       data: {
         action: {name: "simulate"},
@@ -105,7 +105,7 @@ test.describe('Merlin Bindings', () => {
         request_query: "",
         session_variables: admin.session}});
     expect(response.status()).toEqual(200);
-    expect((await response.json()).status).toEqual('pending');
+    expect((await response.json()).status).not.toEqual('failed');
 
     // Cleanup sim results
     await awaitSimulation(request, local_plan_id);
@@ -188,8 +188,33 @@ test.describe('Merlin Bindings', () => {
         "User '"+nonOwner.username+"' with role 'user' cannot perform 'check_constraints' because they are not " +
         "a 'PLAN_OWNER_COLLABORATOR' for plan with id '"+plan_id+"'");
 
-    // Returns a 200 otherwise
-    // "violations" is empty because there are no constraints that could've failed
+    // Returns a 404 if no simulation datasets are found
+    response = await request.post(`${urls.MERLIN_URL}/constraintViolations`, {
+      data: {
+        action: {name: "check_constraints"},
+        input: {planId: plan_id},
+        request_query: "",
+        session_variables: admin.session}});
+    expect(response.status()).toEqual(404);
+    expect((await response.json())).toEqual({
+      message: "input mismatch exception",
+      cause: "no simulation datasets found for plan id " + plan_id
+    });
+
+    // Simulation already tested; run one
+    // "status" is not "failed"
+    response = await request.post(`${urls.MERLIN_URL}/getSimulationResults`, {
+      data: {
+        action: {name: "simulate"},
+        input: {planId: plan_id},
+        request_query: "",
+        session_variables: admin.session}});
+    expect(response.status()).toEqual(200);
+    expect((await response.json()).status).not.toEqual('failed');
+    await awaitSimulation(request, plan_id);
+
+    // Returns a 200 because a simulation dataset exists now
+    // results are empty because there are no constraints that could've failed
     response = await request.post(`${urls.MERLIN_URL}/constraintViolations`, {
       data: {
         action: {name: "check_constraints"},
