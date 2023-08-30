@@ -21,6 +21,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static org.junit.jupiter.api.Assertions.*;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -217,6 +218,76 @@ public class SchedulingIntegrationTests {
       assertTrue(setStartTimes.remove(growBanana.startOffset()));
       assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
     }
+  }
+
+  @Test
+  void testEmptyPlanOccurrenceUnitaryGoalTimeInstant() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: Temporal.Instant.from("2021-01-01T05:00:00.000Z"),
+            activityTemplate: (span) => ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START)
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var activitiesByType = partitionByActivityType(results.updatedPlan());
+
+    final var peelBananas = activitiesByType.get("PeelBanana");
+    assertEquals(1, peelBananas.size());
+
+    final var peelBanana = peelBananas.iterator().next();
+    assertEquals(Duration.of(5, Duration.HOUR), peelBanana.startOffset());
+  }
+
+  @Test
+  void testEmptyPlanOccurrenceUnitaryGoalTimeInterval() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: Interval.Between(Temporal.Instant.from("2021-01-01T05:00:00.000Z"), Temporal.Instant.from("2021-01-01T10:00:00.000Z"), Inclusivity.Inclusive, Inclusivity.Exclusive),
+            activityTemplate: (span) => ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START)
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var activitiesByType = partitionByActivityType(results.updatedPlan());
+
+    final var peelBananas = activitiesByType.get("PeelBanana");
+    assertEquals(1, peelBananas.size());
+
+    final var peelBanana = peelBananas.iterator().next();
+    assertEquals(Duration.of(5, Duration.HOUR), peelBanana.startOffset());
   }
 
 
