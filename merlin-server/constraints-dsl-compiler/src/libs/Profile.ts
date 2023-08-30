@@ -1,14 +1,16 @@
 import {Segment} from "./Segment";
-import {Interval} from "./interval";
+import {Inclusivity, Interval} from "./interval";
 import {Windows} from "./windows";
 import {
   CachedAsyncGenerator,
+  cacheGenerator,
   collect,
   GeneratorType,
   getGeneratorType,
-  cacheGenerator, preparePlainGenerator,
+  preparePlainGenerator,
   UncachedAsyncGenerator
 } from "./generators";
+import {BinaryOperation, OpMode} from "./BinaryOperation";
 
 export enum ProfileType {
   Real,
@@ -68,16 +70,150 @@ export class Profile<V> {
   public map_values(f: (v: Segment<V>) => V): ProfileSpecialization<V>;
   public map_values<W>(f: (v: Segment<V>) => W, type_tag: ProfileType): ProfileSpecialization<W>;
   public map_values<W>(f: (v: Segment<V>) => W, type_tag?: ProfileType): ProfileSpecialization<W> {
-    return this.map(
-        (s) => ({value: f(s), interval: s.interval}),
+    return this.map<W>(
+        s => new Segment(s.interval, f(s)),
         type_tag !== undefined ? type_tag : this.type_tag
     );
   }
 
   public map_intervals(f: (s: Segment<V>) => Interval): ProfileSpecialization<V> {
-    return this.map(
-        (s) => ({value: s.value, interval: f(s)})
-    )
+    return this.map<V>(
+        s => new Segment<V>(f(s), s.value),
+        this.type_tag
+    );
+  }
+
+  public static map2Values<Left, Right, Result>(
+      leftProfile: Profile<Left> ,
+      rightProfile: Profile<Right>,
+      op: BinaryOperation<Left, Right, Result>,
+      typeTag: ProfileType
+  ): ProfileSpecialization<Result> {
+    const segments = (async function* () {
+      let leftIterator = leftProfile.segments;
+      let rightIterator = rightProfile.segments;
+
+      let remainingLeftSegment: Segment<Left> | undefined = undefined;
+      let remainingRightSegment: Segment<Right> | undefined = undefined;
+
+      let left: Segment<Left> | undefined;
+      let right: Segment<Right> | undefined;
+
+      while (true) {
+        if (remainingLeftSegment !== undefined) {
+          left = remainingLeftSegment;
+          remainingLeftSegment = undefined;
+        } else {
+          let nextLeftResult = await leftIterator.next();
+          if (!nextLeftResult.done) left = nextLeftResult.value;
+          else left = undefined;
+        }
+        if (remainingRightSegment !== undefined) {
+          right = remainingRightSegment;
+          remainingRightSegment = undefined;
+        } else {
+          let nextRightResult = await rightIterator.next();
+          if (!nextRightResult.done) right = nextRightResult.value;
+          else right = undefined;
+        }
+
+        if (left === undefined) {
+          if (right === undefined) break;
+          let newSegment = right.mapValue(op.right).transpose();
+          if (newSegment !== undefined) yield newSegment;
+        } else if (right === undefined) {
+          let newSegment = left.mapValue(op.left).transpose();
+          if (newSegment !== undefined) yield newSegment;
+        } else {
+          let leftInterval = left.interval;
+          let rightInterval = right.interval;
+
+          let opMode: OpMode;
+
+          let comparison = Temporal.Duration.compare(leftInterval.start, rightInterval.start);
+          if (comparison < 0) opMode = OpMode.Left;
+          else if (comparison > 0) opMode = OpMode.Right;
+          else {
+            comparison = Inclusivity.compareRestrictiveness(leftInterval.startInclusivity, rightInterval.startInclusivity);
+            if (comparison < 0) opMode = OpMode.Left;
+            else if (comparison > 0) opMode = OpMode.Right;
+            else opMode = OpMode.Combine;
+          }
+
+          let intersection = Interval.intersect(leftInterval, rightInterval);
+
+          switch (opMode) {
+            case OpMode.Left: {
+              remainingRightSegment = right;
+              if (!intersection.isEmpty()) {
+                remainingLeftSegment =
+                    left.mapInterval($ => Interval.between(
+                        intersection.start,
+                        $.end,
+                        intersection.startInclusivity,
+                        $.endInclusivity));
+                let newSegment = left.mapInterval($ => Interval.between(
+                    $.start,
+                    intersection.start,
+                    $.startInclusivity,
+                    Inclusivity.opposite(intersection.startInclusivity)
+                )).mapValue(op.left).transpose();
+                if (newSegment !== undefined) yield newSegment;
+              } else {
+                let newSegment = left.mapValue(op.left).transpose();
+                if (newSegment !== undefined) yield newSegment;
+              }
+              break;
+            }
+            case OpMode.Right: {
+              remainingLeftSegment = left;
+              if (!intersection.isEmpty()) {
+                remainingRightSegment =
+                    right.mapInterval($ => Interval.between(
+                        intersection.start,
+                        $.end,
+                        intersection.startInclusivity,
+                        $.endInclusivity));
+                let newSegment = right.mapInterval($ => Interval.between(
+                    $.start,
+                    intersection.start,
+                    $.startInclusivity,
+                    Inclusivity.opposite(intersection.startInclusivity)
+                )).mapValue(op.right).transpose();
+                if (newSegment !== undefined) yield newSegment;
+              } else {
+                let newSegment = right.mapValue(op.right).transpose();
+                if (newSegment !== undefined) yield newSegment;
+              }
+              break;
+            }
+            default: {
+              if (Temporal.Duration.compare(leftInterval.end, intersection.end) > 0
+                  || Inclusivity.compareRestrictiveness(intersection.endInclusivity, leftInterval.endInclusivity) > 0) {
+                remainingLeftSegment =
+                    left.mapInterval($ => Interval.between(
+                        intersection.end,
+                        $.end,
+                        Inclusivity.opposite(intersection.endInclusivity),
+                        $.endInclusivity));
+              } else if (Temporal.Duration.compare(rightInterval.end, intersection.end) > 0
+                  || Inclusivity.compareRestrictiveness(intersection.endInclusivity, rightInterval.endInclusivity) > 0) {
+                remainingRightSegment =
+                    right.mapInterval($ => Interval.between(
+                        intersection.end,
+                        $.end,
+                        Inclusivity.opposite(intersection.endInclusivity),
+                        $.endInclusivity));
+              }
+
+              let newSegment = new Segment(intersection, op.combine(left.value, right.value)).transpose();
+              if (newSegment !== undefined) yield newSegment;
+            }
+          }
+        }
+      }
+    })();
+    return (new Profile(segments, typeTag)).specialize();
   }
 
   public filter(f: (s: Segment<V>) => boolean): ProfileSpecialization<V> {
