@@ -5,4 +5,7 @@ delete from constraint_run;
 
 alter table constraint_run rename column violations TO results;
 
+comment on column constraint_run.results is e''
+  'Results that were computed during the constraint check.';
+
 call migrations.mark_migration_applied('25');
