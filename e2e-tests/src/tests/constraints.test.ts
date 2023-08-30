@@ -110,12 +110,13 @@ test.describe.serial('Constraints', () => {
     expect(constraintResult).toBeDefined();
   });
 
-  test('Check the violation is the expected one', async () => {
+  test('Check the constraint is the expected one', async () => {
     expect(constraintResult.constraintName).toEqual(first_constraint_name);
     expect(constraintResult.constraintId).toEqual(constraint_id);
     expect(constraintResult.resourceIds).toHaveLength(2);
     expect(constraintResult.resourceIds).toContain('/fruit');
     expect(constraintResult.resourceIds).toContain('/peel');
+    expect(constraintResult.violations).toHaveLength(1);
   });
 
   test('Check violation starts and ends as expected', async () => {
@@ -131,7 +132,7 @@ test.describe.serial('Constraints', () => {
     expect(violation.windows[0].end).toEqual(plan_duration_micro);
   });
 
-  test('Check that there is a constraint_run with the violation', async ({ request }) => {
+  test('Check that there is a constraint_run with the result', async ({ request }) => {
     const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, simulationDatasetId);
 
     expect(constraintRuns).not.toBeNull();

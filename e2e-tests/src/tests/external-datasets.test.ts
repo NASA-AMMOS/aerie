@@ -489,7 +489,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
     expect(constraintResults).toBeDefined();
     expect(constraintResults).toHaveLength(1);
 
-    expect(constraintResult).toEqual(constraintResults[0]); // should be the same as the violation from the prev test
+    expect(constraintResult).toEqual(constraintResults[0]); // should be the same as the constraint result from the prev test
     constraintResult = constraintResults[0];
     expect(constraintResult).not.toBeNull();
     expect(constraintResult).toBeDefined();
