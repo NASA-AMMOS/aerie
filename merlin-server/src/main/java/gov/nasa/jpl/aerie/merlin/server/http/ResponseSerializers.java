@@ -91,16 +91,10 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeResourceTypeDefinition(final ValueSchema valueSchema, final String unitValue) {
-    if (unitValue != null) {
-      return Json.createObjectBuilder()
-         .add("schema", serializeValueSchema(valueSchema))
-         .add("unit", unitValue)
-         .build();
-    }
-
     return Json.createObjectBuilder()
-       .add("schema", serializeValueSchema(valueSchema))
-       .build();
+      .add("schema", serializeValueSchema(valueSchema))
+      .add("unit", unitValue.isEmpty() ? "" : unitValue)
+      .build();
   }
 
   public static JsonValue serializeValueSchemas(final Map<String, ValueSchema> schemas) {

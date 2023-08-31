@@ -36,8 +36,10 @@ import java.util.Map;
 
       statement.setInt(1, modelId);
       for(final var resource : resourceTypes.entrySet()){
+        final var unit = resourceTypeUnits.get(resource.getKey());
+
         statement.setString(2, resource.getKey());
-        statement.setString(3, ResponseSerializers.serializeResourceTypeDefinition(resource.getValue(), resourceTypeUnits.get(resource.getKey())).toString());
+        statement.setString(3, ResponseSerializers.serializeResourceTypeDefinition(resource.getValue(), unit == null ? "" : unit).toString());
 
         statement.addBatch();
       }
