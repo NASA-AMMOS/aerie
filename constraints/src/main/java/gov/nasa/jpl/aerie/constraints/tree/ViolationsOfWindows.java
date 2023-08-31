@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -24,7 +25,7 @@ public final class ViolationsOfWindows implements Expression<ConstraintResult> {
     final var windows = this.expression.evaluate(results, bounds, environment);
     return new ConstraintResult(
         StreamSupport.stream(windows.iterateEqualTo(false).spliterator(), false)
-                     .map(i -> new Violation(List.of(i), List.of()))
+                     .map(i -> new Violation(List.of(i), new ArrayList<>()))
                      .toList(),
         StreamSupport.stream(
             windows.notEqualTo(windows).assignGaps(new Windows(true)).iterateEqualTo(true).spliterator(),
