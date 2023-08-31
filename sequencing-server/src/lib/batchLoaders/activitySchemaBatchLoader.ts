@@ -24,8 +24,8 @@ export const activitySchemaBatchLoader: BatchLoader<
         ]
       }) {
         name
-        parameters
-        computed_attributes_value_schema
+        parameter_definitions
+        computed_attribute_definitions
         model_id
       }
     }
@@ -102,11 +102,17 @@ interface VariantSchema extends BaseSchema<SchemaTypes.Variant> {
 interface GraphQLActivityParameter {
   order: number;
   schema: Schema;
+  unit: string;
+}
+
+interface GraphQLComputedAttributeDefinition {
+  schema: Schema;
+  units: Record<string, string>;
 }
 
 export interface GraphQLActivitySchema {
   name: string;
-  parameters: { [key: string]: GraphQLActivityParameter };
+  parameter_definitions: { [key: string]: GraphQLActivityParameter };
   requiredParameters: string[];
-  computed_attributes_value_schema: Schema;
+  computed_attribute_definitions: GraphQLComputedAttributeDefinition;
 }

@@ -199,6 +199,8 @@ export function mapGraphQLActivityInstance(
   activityInstance: GraphQLSimulatedActivityInstance<any, any>,
   activitySchema: GraphQLActivitySchema,
 ): SimulatedActivity {
+  console.log(activitySchema);
+
   return {
     simulationDataset: {
       simulation: {
@@ -214,7 +216,7 @@ export function mapGraphQLActivityInstance(
     activityTypeName: activityInstance.activity_type_name,
     attributes: {
       arguments: Object.entries(activityInstance.attributes.arguments).reduce((acc, [key, value]) => {
-        const param = activitySchema.parameters[key];
+        const param = activitySchema.parameter_definitions[key];
         if (param !== undefined) {
           acc[key] = convertType(value, param.schema);
         }
@@ -222,7 +224,10 @@ export function mapGraphQLActivityInstance(
       }, {} as { [attributeName: string]: any }),
       directiveId: activityInstance.attributes.directiveId,
       computed: activityInstance.attributes.computedAttributes
-        ? convertType(activityInstance.attributes.computedAttributes, activitySchema.computed_attributes_value_schema)
+        ? convertType(
+            activityInstance.attributes.computedAttributes,
+            activitySchema.computed_attribute_definitions.schema,
+          )
         : null,
     },
   };

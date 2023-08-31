@@ -39,8 +39,8 @@ export const expansionSetBatchLoader: BatchLoader<
             id
             activity_types {
               name
-              parameters
-              computed_attributes_value_schema
+              parameter_definitions
+              computed_attribute_definitions
             }
           }
           expansion_rules {

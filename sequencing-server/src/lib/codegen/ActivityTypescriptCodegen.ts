@@ -11,13 +11,15 @@ export function generateTypescriptForGraphQLActivitySchema(activitySchema: Graph
 
   const activityTypeDeclaration = `readonly type: '${activitySchema.name}';`;
 
-  const argumentDeclarations = Object.entries(activitySchema.parameters)
+  const argumentDeclarations = Object.entries(activitySchema.parameter_definitions)
     .map(([parameterName, parameterValue]) => `readonly ${parameterName}: ${convertSchemaType(parameterValue.schema)};`)
     .join('\n');
 
+  console.log(activitySchema.computed_attribute_definitions);
+
   const argumentsDeclaration = `readonly arguments: {\n${indent(argumentDeclarations)}\n}`;
   const computedAttributesDeclaration = `readonly computed: ${convertSchemaType(
-    activitySchema.computed_attributes_value_schema,
+    activitySchema.computed_attribute_definitions.schema,
   )};`;
 
   const attributesDeclaration = `readonly attributes: {\n${indent(
