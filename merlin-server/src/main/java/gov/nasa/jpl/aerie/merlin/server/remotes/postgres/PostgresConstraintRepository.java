@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class PostgresConstraintRepository implements ConstraintRepository {
   private final DataSource dataSource;
@@ -22,12 +21,12 @@ public class PostgresConstraintRepository implements ConstraintRepository {
   @Override
   public void insertConstraintRuns(
       final Map<Long, Constraint> constraintMap,
-      final Map<Long, Violation> violations,
+      final Map<Long, ConstraintResult> results,
       final Long simulationDatasetId
   ) {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var insertConstraintRunsAction = new InsertConstraintRunsAction(connection)) {
-        insertConstraintRunsAction.apply(constraintMap, violations, simulationDatasetId);
+        insertConstraintRunsAction.apply(constraintMap, results, simulationDatasetId);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to save constraint run", ex);

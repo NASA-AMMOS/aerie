@@ -13,29 +13,29 @@ type ConstraintInsertInput = Omit<Constraint, 'id'> & {
 
 type ConstraintType = 'model' | 'plan';
 
-type ConstraintViolationAssociations = {
-  activityIds?: number[];
-  resourceIds?: string[];
-};
-
 type TimeRange = {
   start: number;
   end: number;
 };
 
-type ConstraintViolation = {
-  associations: ConstraintViolationAssociations;
+type ConstraintResult = {
   constraintId: Constraint['id'];
   constraintName: Constraint['name'];
   type: ConstraintType;
+  resourceIds: string[];
   gaps: TimeRange[];
-  windows: TimeRange[];
+  violations: Violation[];
 };
+
+type Violation = {
+  windows: TimeRange[];
+  activityInstanceIds: number[];
+}
 
 type ConstraintRun = {
   constraint_definition: string;
   constraint_id: number;
   simulation_dataset_id: number;
   definition_outdated: boolean;
-  violations: ConstraintViolation;
+  results: ConstraintResult;
 };

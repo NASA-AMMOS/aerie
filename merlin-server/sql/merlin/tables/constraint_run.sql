@@ -4,7 +4,7 @@ create table constraint_run (
   simulation_dataset_id integer not null,
 
   definition_outdated boolean default false not null,
-  violations jsonb not null default '{}',
+  results jsonb not null default '{}',
 
   -- Additional Metadata
   requested_by text,
@@ -41,8 +41,8 @@ comment on column constraint_run.simulation_dataset_id is e''
   'The simulation dataset id from when the constraint was checked.';
 comment on column constraint_run.definition_outdated is e''
   'Tracks if the constraint definition is outdated because the constraint has been changed.';
-comment on column constraint_run.violations is e''
-  'Any violations that were found during the constraint check.';
+comment on column constraint_run.results is e''
+  'Results that were computed during the constraint check.';
 comment on column constraint_run.requested_by is e''
   'The user who requested the constraint run.';
 comment on column constraint_run.requested_at is e''

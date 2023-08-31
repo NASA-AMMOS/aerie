@@ -395,7 +395,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   let first_simulation_dataset_id: number;
   let second_simulation_dataset_id: number;
   let constraint_id: number;
-  let violation: ConstraintViolation;
+  let constraintResult: ConstraintResult;
   let activity_id: number;
 
   test('Create mission model and plan', async ({ request }) => {
@@ -470,38 +470,44 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test("Check there is one violation when simulationDatasetId isn't provided", async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
-    violation = violations[0];
+    const constraintResults: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(1);
+    expect(constraintResults).not.toBeNull();
+    expect(constraintResults).toBeDefined();
+    expect(constraintResults).toHaveLength(1);
+
+    constraintResult = constraintResults[0];
+    expect(constraintResult).not.toBeNull();
+    expect(constraintResult).toBeDefined();
   });
 
   test('Check there is one violation when simulationDatasetId is provided', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
+    const constraintResults: ConstraintResult[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
 
-    expect(violation).toEqual(violations[0]); // should be the same as the violation from the prev test
-    violation = violations[0];
 
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(1);
+    expect(constraintResults).not.toBeNull();
+    expect(constraintResults).toBeDefined();
+    expect(constraintResults).toHaveLength(1);
+
+    expect(constraintResult).toEqual(constraintResults[0]); // should be the same as the constraint result from the prev test
+    constraintResult = constraintResults[0];
+    expect(constraintResult).not.toBeNull();
+    expect(constraintResult).toBeDefined();
   });
 
   test('Check the violation is the expected one', async () => {
-    expect(violation.constraintName).toEqual(constraint_name);
-    expect(violation.constraintId).toEqual(constraint_id);
-    expect(violation.associations.resourceIds).toHaveLength(1);
-    expect(violation.associations.resourceIds).toContain('/my_boolean');
+    expect(constraintResult.constraintName).toEqual(constraint_name);
+    expect(constraintResult.constraintId).toEqual(constraint_id);
+    expect(constraintResult.resourceIds).toHaveLength(1);
+    expect(constraintResult.resourceIds).toContain('/my_boolean');
   });
 
   test('Check violation starts and ends as expected', async () => {
     const plan_start_unix = 1000 * time.getUnixEpochTime(plan_start_timestamp);
     const dataset_start_unix = 1000 * time.getUnixEpochTime(dataset_start_timestamp);
 
-    expect(violation.windows[0].start).toEqual(dataset_start_unix - plan_start_unix + profile_duration);
-    expect(violation.windows[0].end).toEqual(dataset_start_unix - plan_start_unix + 2 * profile_duration);
+    expect(constraintResult.violations[0].windows[0].start).toEqual(dataset_start_unix - plan_start_unix + profile_duration);
+    expect(constraintResult.violations[0].windows[0].end).toEqual(dataset_start_unix - plan_start_unix + 2 * profile_duration);
   });
 
   test('Add activity to plan to make simulation out of date', async ({ request }) => {
@@ -527,7 +533,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test("Check there is still one violation when simulationDatasetId isn't provided", async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -546,7 +552,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test('Check there is still one violation when the first simulationDatasetId is provided', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id, first_simulation_dataset_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -554,7 +560,7 @@ test.describe.serial('Simulation Associated External Datasets', () => {
   });
 
   test('Check there are violations when second simulationDatasetId is provided', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(
+    const violations: ConstraintResult[] = await req.checkConstraints(
       request,
       plan_id,
       second_simulation_dataset_id,

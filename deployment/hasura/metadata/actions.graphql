@@ -105,7 +105,7 @@ type Query {
 }
 
 type Query {
-  constraintViolations(planId: Int!, simulationDatasetId: Int): ConstraintViolationsResponse
+  constraintViolations(planId: Int!, simulationDatasetId: Int): [ConstraintResult!]!
 }
 
 type Query {
@@ -278,8 +278,23 @@ type ResourceSamplesResponse {
   resourceSamples: ResourceSamples!
 }
 
-type ConstraintViolationsResponse {
-  violations: ConstraintViolations!
+type ConstraintResult {
+  violations: [ConstraintViolation!]!,
+  gaps: [Interval!]!
+  constraintId: Int!,
+  constraintName: String!,
+  type: String!,
+  resourceIds: [String!]!
+}
+
+type ConstraintViolation {
+  windows: [Interval!]!,
+  activityInstanceIds: [Int!]!
+}
+
+type Interval {
+  start: Int!,
+  end: Int!
 }
 
 input EffectiveArgumentsInput {
@@ -290,8 +305,6 @@ input EffectiveArgumentsInput {
 scalar ResourceSchema
 
 scalar ResourceSamples
-
-scalar ConstraintViolations
 
 scalar MerlinSimulationFailureReason
 

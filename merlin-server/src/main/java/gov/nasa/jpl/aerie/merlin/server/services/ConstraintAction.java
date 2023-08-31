@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -47,7 +47,7 @@ public class ConstraintAction {
     this.simulationService = simulationService;
   }
 
-  public List<Violation> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
+  public List<ConstraintResult> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlanForValidation(planId);
@@ -64,19 +64,17 @@ public class ConstraintAction {
     final var resultsHandle$ = this.simulationService.get(planId, revisionData);
     final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
         .map(SimulationResultsHandle::getSimulationDatasetId)
-        .orElse(null));
-    final var violations = new HashMap<Long, Violation>();
+        .orElseThrow(() -> new InputMismatchException("no simulation datasets found for plan id " + planId.id())));
+    final var violations = new HashMap<Long, ConstraintResult>();
 
-    if (simDatasetId != null) {
-      final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
+    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
 
-      // Remove any constraints that we've already checked, so they aren't rechecked.
-      for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
-        constraintCode.remove(constraintRun.constraintId());
+    // Remove any constraints that we've already checked, so they aren't rechecked.
+    for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
+      constraintCode.remove(constraintRun.constraintId());
 
-        if (constraintRun.violation() != null) {
-          violations.put(constraintRun.constraintId(), constraintRun.violation());
-        }
+      if (constraintRun.result() != null) {
+        violations.put(constraintRun.constraintId(), constraintRun.result());
       }
     }
 
@@ -144,7 +142,7 @@ public class ConstraintAction {
 
       for (final var entry : constraintCode.entrySet()) {
         final var constraint = entry.getValue();
-        final Expression<List<Violation>> expression;
+        final Expression<ConstraintResult> expression;
 
         // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
@@ -174,7 +172,8 @@ public class ConstraintAction {
         if (!newNames.isEmpty()) {
           final var newProfiles = resultsHandle$
               .map($ -> $.getProfiles(new ArrayList<>(newNames)))
-              .orElse(ProfileSet.of(Map.of(), Map.of()));
+              .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id " + planId.id()));
+
 
           for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
             if (!realProfiles.containsKey(_entry.getKey())) {
@@ -189,50 +188,30 @@ public class ConstraintAction {
           }
         }
 
+        final Interval bounds = Interval.betweenClosedOpen(Duration.ZERO, simDuration);
         final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
             simStartTime,
-            Interval.between(Duration.ZERO, simDuration),
+            bounds,
             activities,
             realProfiles,
             discreteProfiles);
 
-        final var violationEvents = new ArrayList<Violation>();
+        ConstraintResult constraintResult = expression.evaluate(preparedResults, environment);
 
-        try {
-          violationEvents.addAll(expression.evaluate(preparedResults, environment));
-        } catch (final InputMismatchException ex) {
-          // @TODO Need a better way to catch and propagate the exception to the
-          // front end and to log the evaluation failure. This is captured in AERIE-1285.
-        }
+        if (constraintResult.isEmpty()) continue;
 
+        constraintResult.constraintName = entry.getValue().name();
+        constraintResult.constraintId = entry.getKey();
+        constraintResult.constraintType = entry.getValue().type();
+        constraintResult.resourceIds = List.copyOf(names);
 
-        if (violationEvents.isEmpty()) continue;
-
-      /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
-          which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
-          created to account for refactoring and removing the need for this condition. */
-        if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
-
-        violationEvents.forEach(violation -> {
-          final var newViolation = new Violation(
-              entry.getValue().name(),
-              entry.getKey(),
-              entry.getValue().type(),
-              violation.activityInstanceIds,
-              new ArrayList<>(names),
-              violation.violationWindows,
-              violation.gaps);
-
-          violations.put(entry.getKey(), newViolation);
-        });
+        violations.put(entry.getKey(), constraintResult);
       }
 
-      if (simDatasetId != null) {
-        constraintService.createConstraintRuns(
-            constraintCode,
-            violations,
-            simDatasetId);
-      }
+      constraintService.createConstraintRuns(
+          constraintCode,
+          violations,
+          simDatasetId);
     }
 
     return violations.values().stream().toList();

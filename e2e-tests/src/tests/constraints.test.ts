@@ -6,7 +6,8 @@ let constraint_id: number;
 let jar_id: number;
 let mission_model_id: number;
 let plan_id: number;
-let violation: ConstraintViolation;
+let constraintResult: ConstraintResult;
+let violation: Violation;
 let activity_id: number;
 let simulationDatasetId: number;
 let newSimulationDatasetId: number;
@@ -85,12 +86,8 @@ test.describe.serial('Constraints', () => {
     expect(constraint_id).toBeDefined();
   });
 
-  test('Check there are no violations yet', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
-
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(0);
+  test('Constraints fail without prior simulation data', async ({ request }) => {
+    await expect(req.checkConstraints(request, plan_id)).rejects.toThrow()
   });
 
   test('Run simulation', async ({ request }) => {
@@ -100,25 +97,26 @@ test.describe.serial('Constraints', () => {
     expect(resp.status).toEqual('complete');
   });
 
-  test('Check there is one violation', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+  test('Check there is one constraint result', async ({ request }) => {
+    const constraintResults: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(1);
+    expect(constraintResults).not.toBeNull();
+    expect(constraintResults).toBeDefined();
+    expect(constraintResults).toHaveLength(1);
 
-    violation = violations[0];
+    constraintResult = constraintResults[0];
 
-    expect(violation).not.toBeNull();
-    expect(violation).toBeDefined();
+    expect(constraintResult).not.toBeNull();
+    expect(constraintResult).toBeDefined();
   });
 
-  test('Check the violation is the expected one', async () => {
-    expect(violation.constraintName).toEqual(first_constraint_name);
-    expect(violation.constraintId).toEqual(constraint_id);
-    expect(violation.associations.resourceIds).toHaveLength(2);
-    expect(violation.associations.resourceIds).toContain('/fruit');
-    expect(violation.associations.resourceIds).toContain('/peel');
+  test('Check the constraint is the expected one', async () => {
+    expect(constraintResult.constraintName).toEqual(first_constraint_name);
+    expect(constraintResult.constraintId).toEqual(constraint_id);
+    expect(constraintResult.resourceIds).toHaveLength(2);
+    expect(constraintResult.resourceIds).toContain('/fruit');
+    expect(constraintResult.resourceIds).toContain('/peel');
+    expect(constraintResult.violations).toHaveLength(1);
   });
 
   test('Check violation starts and ends as expected', async () => {
@@ -127,18 +125,21 @@ test.describe.serial('Constraints', () => {
     const plan_duration_micro = (plan_end_unix - plan_start_unix) * 1000;
     const activity_offset_micro = activity_offset_hours * 60 * 60 * 1000 * 1000;
 
+    violation = constraintResult.violations[0];
+    expect(violation).not.toBeNull();
+    expect(violation).toBeDefined();
     expect(violation.windows[0].start).toEqual(activity_offset_micro);
     expect(violation.windows[0].end).toEqual(plan_duration_micro);
   });
 
-  test('Check that there is a constraint_run with the violation', async ({ request }) => {
+  test('Check that there is a constraint_run with the result', async ({ request }) => {
     const constraintRuns: ConstraintRun[] = await req.getConstraintRuns(request, simulationDatasetId);
 
     expect(constraintRuns).not.toBeNull();
     expect(constraintRuns).toBeDefined();
     expect(constraintRuns).toHaveLength(1);
     expect(constraintRuns[0].definition_outdated).toEqual(false);
-    expect(constraintRuns[0].violations).not.toBe({});
+    expect(constraintRuns[0].results).not.toBe({});
   });
 
   test('Check delete violating activity', async ({ request }) => {
@@ -157,7 +158,7 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there are no violations anymore', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const violations: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
     expect(violations).not.toBeNull();
     expect(violations).toBeDefined();
@@ -171,7 +172,7 @@ test.describe.serial('Constraints', () => {
     expect(constraintRuns).toBeDefined();
     expect(constraintRuns).toHaveLength(1);
     expect(constraintRuns[0].definition_outdated).toEqual(false);
-    expect(constraintRuns[0].violations).toEqual({});
+    expect(constraintRuns[0].results).toEqual({});
   });
 
   test('Check that updating the constraint outdates the constraint_run', async ({ request }) => {
@@ -187,7 +188,7 @@ test.describe.serial('Constraints', () => {
     expect(constraintRuns).toHaveLength(1);
     expect(constraintRuns[0].definition_outdated).toEqual(true);
     expect(constraintRuns[0].constraint_definition).not.toBe(updatedDefinition);
-    expect(constraintRuns[0].violations).toEqual({});
+    expect(constraintRuns[0].results).toEqual({});
   });
 
   /*
@@ -232,20 +233,25 @@ test.describe.serial('Constraints', () => {
   });
 
   test('Check there is one violation again', async ({ request }) => {
-    const violations: ConstraintViolation[] = await req.checkConstraints(request, plan_id);
+    const constraintResults: ConstraintResult[] = await req.checkConstraints(request, plan_id);
 
-    expect(violations).not.toBeNull();
-    expect(violations).toBeDefined();
-    expect(violations).toHaveLength(1);
+    expect(constraintResults).not.toBeNull();
+    expect(constraintResults).toBeDefined();
+    expect(constraintResults).toHaveLength(1);
 
-    violation = violations[0];
+    constraintResult = constraintResults[0];
 
-    expect(violation).not.toBeNull();
-    expect(violation).toBeDefined();
+    expect(constraintResult).not.toBeNull();
+    expect(constraintResult).toBeDefined();
+    expect(constraintResult.constraintName).toEqual(second_constraint_name);
   });
 
   test('Check the violation window duration is correct', async () => {
-    expect(violation.constraintName).toEqual(second_constraint_name);
+    violation = constraintResult.violations[0];
+
+    expect(violation).not.toBeNull();
+    expect(violation).toBeDefined();
+
     expect(violation.windows).toHaveLength(1);
     expect(violation.windows[0]).toEqual({
       start: 0,

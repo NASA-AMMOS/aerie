@@ -11,17 +11,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [constraint_id, constraint_definition, simulation_dataset_id, definition_outdated, violations, requested_by, requested_at]
+      columns: [constraint_id, constraint_definition, simulation_dataset_id, definition_outdated, results, requested_by, requested_at]
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [constraint_id, constraint_definition, simulation_dataset_id, definition_outdated, violations, requested_by, requested_at]
+      columns: [constraint_id, constraint_definition, simulation_dataset_id, definition_outdated, results, requested_by, requested_at]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [constraint_id, constraint_definition, simulation_dataset_id, definition_outdated, violations, requested_by, requested_at]
+      columns: [constraint_id, constraint_definition, simulation_dataset_id, definition_outdated, results, requested_by, requested_at]
       filter: {}
       allow_aggregations: true
 delete_permissions:

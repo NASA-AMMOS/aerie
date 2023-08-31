@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintResultP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
 final class GetValidConstraintRunsAction implements AutoCloseable {
@@ -18,7 +18,7 @@ final class GetValidConstraintRunsAction implements AutoCloseable {
       cr.constraint_id,
       cr.simulation_dataset_id,
       cr.definition_outdated,
-      cr.violations
+      cr.results
     from constraint_run as cr
     where cr.definition_outdated = false
     and cr.constraint_id = any(?)
@@ -44,16 +44,16 @@ final class GetValidConstraintRunsAction implements AutoCloseable {
 
       while (results.next()) {
         final var constraintId = results.getLong("constraint_id");
-        final var violationString = results.getString("violations");
+        final var resultString = results.getString("results");
 
         // The constraint run didn't have any violations
-        if (violationString.equals("{}")) {
+        if (resultString.equals("{}")) {
           constraintRuns.add(new ConstraintRunRecord(constraintId, null));
         } else {
           constraintRuns.add(new ConstraintRunRecord(
               constraintId,
-              getJsonColumn(results, "violations", violationP)
-                  .getSuccessOrThrow($ -> new Error("Corrupt violations cannot be parsed: " + $.reason()))));
+              getJsonColumn(results, "results", constraintResultP)
+                  .getSuccessOrThrow($ -> new Error("Corrupt results cannot be parsed: " + $.reason()))));
         }
       }
 

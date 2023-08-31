@@ -3,11 +3,9 @@ package gov.nasa.jpl.aerie.constraints;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -36,8 +34,8 @@ public final class Assertions {
   public static void assertEquivalent(final Violation expected, final Violation actual) {
     assertEquals(expected, actual);
 
-    assertTrue(areEquivalent(expected.activityInstanceIds, actual.activityInstanceIds));
-    assertTrue(areEquivalent(expected.violationWindows, actual.violationWindows));
+    assertTrue(areEquivalent(expected.activityInstanceIds(), actual.activityInstanceIds()));
+    assertTrue(areEquivalent(expected.windows(), actual.windows()));
   }
 
   public static void assertEquivalent(final Windows expected, final Windows actual) {
