@@ -4,22 +4,22 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [model_id, revision, parameters]
+      columns: [model_id, revision, parameter_definitions]
       filter: {}
   - role: user
     permission:
-      columns: [model_id, revision, parameters]
+      columns: [model_id, revision, parameter_definitions]
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [model_id, revision, parameters]
+      columns: [model_id, revision, parameter_definitions]
       filter: {}
       allow_aggregations: true
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [parameters]
+      columns: [parameter_definitions]
       filter: {}
 delete_permissions:
   - role: aerie_admin

@@ -188,10 +188,11 @@ import java.util.stream.Collectors;
     final var declaration = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
     final var name = declaration.getSimpleName().toString();
     final var parameters = getExportParameters(declaration);
+    final var units = JavadocParser.parseParameterUnits(this.elementUtils(), declaration).getLeft();
     final var validations = this.getExportValidations(declaration, parameters);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
-    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
+    return Optional.of(new InputTypeRecord(name, declaration, parameters, units, validations, mapper, defaultsStyle));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -343,7 +344,7 @@ import java.util.stream.Collectors;
     return new ActivityTypeRecord(
         fullyQualifiedClassName.toString(),
         name,
-        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
+        new InputTypeRecord(name, activityTypeElement, parameters, javadoc.getRight().getLeft(), validations, mapper, defaultsStyle),
         effectModel,
         javadoc.getLeft(),
         javadoc.getMiddle(),
@@ -450,7 +451,7 @@ import java.util.stream.Collectors;
           paramComments.put($.getKey(), $.getValue());
         });
 
-    final var units = JavadocParser.parseActivityTypeUnits(this.elementUtils(), activityTypeElement);
+    final var units = JavadocParser.parseParameterUnits(this.elementUtils(), activityTypeElement);
 
     final var activityTypeDescription = Optional.ofNullable(this.elementUtils().getDocComment(activityTypeElement))
         .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
@@ -529,7 +530,6 @@ import java.util.stream.Collectors;
         .map(e -> new ParameterRecord(e.getSimpleName().toString(), e.asType(), e))
         .toList();
   }
-
   private Optional<EffectModelRecord> getActivityEffectModel(final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {

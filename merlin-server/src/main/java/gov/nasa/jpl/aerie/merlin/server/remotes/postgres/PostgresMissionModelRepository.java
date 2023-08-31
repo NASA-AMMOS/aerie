@@ -98,12 +98,12 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateModelParameters(final String missionModelId, final List<Parameter> modelParameters)
+  public void updateModelParameters(final String missionModelId, final List<Parameter> modelParameters, final Map<String, String> parameterUnits)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createModelParametersAction = new CreateModelParametersAction(connection)) {
         final var id = toMissionModelId(missionModelId);
-        createModelParametersAction.apply(id, modelParameters);
+        createModelParametersAction.apply(id, modelParameters, parameterUnits);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

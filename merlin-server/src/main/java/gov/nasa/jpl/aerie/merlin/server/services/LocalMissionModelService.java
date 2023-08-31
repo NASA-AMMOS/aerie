@@ -226,6 +226,13 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
+  public Map<String, String> getModelParameterUnits(final String missionModelId)
+  throws NoSuchMissionModelException, MissionModelLoadException
+  {
+    return this.loadMissionModelType(missionModelId).getConfigurationType().getParameterUnits();
+  }
+
+  @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
@@ -272,7 +279,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException
   {
     try {
-      this.missionModelRepository.updateModelParameters(missionModelId, getModelParameters(missionModelId));
+      this.missionModelRepository.updateModelParameters(missionModelId, getModelParameters(missionModelId), getModelParameterUnits(missionModelId));
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     }

@@ -641,6 +641,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .build())
         .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod())
         .addMethod(mapperMethodMaker.makeGetParametersMethod())
+        .addMethod(mapperMethodMaker.makeGetParameterUnitsMethod())
         .addMethod(mapperMethodMaker.makeGetArgumentsMethod())
         .addMethod(mapperMethodMaker.makeInstantiateMethod())
         .addMethod(mapperMethodMaker.makeGetValidationFailuresMethod())

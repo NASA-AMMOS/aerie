@@ -167,7 +167,7 @@ final class MerlinDatabaseTestHelper {
     try(final var statement = connection.createStatement()) {
       statement.execute(
           """
-          INSERT INTO activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema)
+          INSERT INTO activity_type (model_id, name, parameter_definitions, required_parameters, computed_attribute_definitions)
           VALUES (%d, '%s', '{}', '[]', '{}');
           """.formatted(modelId, name)
       );

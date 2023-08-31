@@ -71,6 +71,40 @@ public abstract sealed class MapperMethodMaker permits
         .build();
   }
 
+  public MethodSpec makeGetParameterUnitsMethod() {
+    return MethodSpec.methodBuilder("getParameterUnits")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(ParameterizedTypeName.get(
+            java.util.Map.class,
+            String.class,
+            String.class))
+        .addStatement(
+            "final var $L = new $T()",
+            "units",
+            ParameterizedTypeName.get(
+                java.util.HashMap.class,
+                String.class,
+                String.class))
+            .addCode(
+                inputType.parameterUnits()
+                    .keySet()
+                    .stream()
+                    .map(parameter -> CodeBlock
+                        .builder()
+                        .addStatement(
+                            "$L.put($S, \"$L\")",
+                            "units",
+                            parameter,
+                            inputType.parameterUnits().get(parameter)))
+                        .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                        .build())
+        .addStatement(
+            "return $L",
+            "units")
+        .build();
+  }
+
   public /*non-final*/ MethodSpec makeGetArgumentsMethod() {
     return MethodSpec
         .methodBuilder("getArguments")

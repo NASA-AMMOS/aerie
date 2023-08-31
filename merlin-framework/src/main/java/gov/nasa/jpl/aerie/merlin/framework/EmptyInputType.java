@@ -15,6 +15,9 @@ public final class EmptyInputType implements InputType<Unit> {
   }
 
   @Override
+  public Map<String, String> getParameterUnits() { return Map.of(); }
+
+  @Override
   public List<String> getRequiredParameters() {
     return List.of();
   }

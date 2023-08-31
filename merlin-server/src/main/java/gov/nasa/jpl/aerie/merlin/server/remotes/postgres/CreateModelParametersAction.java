@@ -7,12 +7,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /*package-local*/ final class CreateModelParametersAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into mission_model_parameters (model_id, parameters)
+    insert into mission_model_parameters (model_id, parameter_definitions)
     values (?, ?::json)
-    on conflict (model_id) do update set parameters = ?::json
+    on conflict (model_id) do update set parameter_definitions = ?::json
     returning model_id
     """;
 
@@ -22,10 +23,10 @@ import java.util.List;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public long apply(final long modelId, final List<Parameter> parameters) throws SQLException, FailedInsertException {
+  public long apply(final long modelId, final List<Parameter> parameters, Map<String, String> units) throws SQLException, FailedInsertException {
     this.statement.setLong(1, modelId);
-    PreparedStatements.setParameters(this.statement, 2, parameters);
-    PreparedStatements.setParameters(this.statement, 3, parameters);
+    PreparedStatements.setParameters(this.statement, 2, parameters, units);
+    PreparedStatements.setParameters(this.statement, 3, parameters, units);
 
     try (final var results = statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("mission_model_parameters");

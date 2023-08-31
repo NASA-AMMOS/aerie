@@ -16,12 +16,12 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
 
 /*package-local*/ final class InsertActivityTypesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema, parameter_units, computed_attribute_units)
-    values (?, ?, ?::json, ?::json, ?::json, ?::json, ?::json)
+    insert into activity_type (model_id, name, parameter_definitions, required_parameters, computed_attribute_definitions)
+    values (?, ?, ?::json, ?::json, ?::json)
     on conflict (model_id, name) do update
-      set parameters = excluded.parameters,
+      set parameter_definitions = excluded.parameter_definitions,
       required_parameters = excluded.required_parameters,
-      computed_attributes_value_schema = excluded.computed_attributes_value_schema
+      computed_attribute_definitions = excluded.computed_attribute_definitions
     """;
 
   private final PreparedStatement statement;
@@ -44,21 +44,9 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
         final var valueSchemaString = valueSchemaP.unparse(activityType.computedAttributesValueSchema()).toString();
 
         statement.setString(2, activityType.name());
-        PreparedStatements.setParameters(statement, 3, activityType.parameters());
+        PreparedStatements.setParameters(statement, 3, activityType.parameters(), activityType.parameterUnits());
         PreparedStatements.setRequiredParameters(this.statement, 4, activityType.requiredParameters());
-        this.statement.setString(5, valueSchemaString);
-
-        if (activityType.parameterUnits().isEmpty()) {
-          statement.setString(6, "{}");
-        } else {
-          statement.setString(6, mapP(stringP).unparse(activityType.parameterUnits()).toString());
-        }
-
-        if (activityType.computedAttributeUnits().isEmpty()) {
-          statement.setString(7, "{}");
-        } else {
-          statement.setString(7, mapP(stringP).unparse(activityType.computedAttributeUnits()).toString());
-        }
+        PreparedStatements.setComputedAttributes(statement, 5, activityType.computedAttributesValueSchema(), activityType.computedAttributeUnits());
 
         statement.addBatch();
       }

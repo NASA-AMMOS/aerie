@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -20,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public final class PreparedStatements {
@@ -73,9 +75,15 @@ public final class PreparedStatements {
     statement.setString(parameter, "PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
   }
 
-  public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters)
+  public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters, final Map<String, String> units)
   throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeParameters(parameters).toString());
+    statement.setString(parameter, ResponseSerializers.serializeParameters(parameters, units).toString());
+  }
+
+  public static void setComputedAttributes(final PreparedStatement statement, final int parameter,
+                                           final ValueSchema computedAttributeValueSchema, final Map<String, String> units)
+  throws SQLException {
+    statement.setString(parameter, ResponseSerializers.serializeSchemaDefinitions(computedAttributeValueSchema, units).toString());
   }
 
   public static void setRequiredParameters(final PreparedStatement statement, final int parameter, final List<String> requiredParameters)

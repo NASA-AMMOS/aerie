@@ -61,6 +61,9 @@ public interface MissionModelService {
   List<Parameter> getModelParameters(String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException;
 
+  Map<String, String> getModelParameterUnits(String missionModelId)
+  throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException;
+
   Map<String, SerializedValue> getModelEffectiveArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          LocalMissionModelService.MissionModelLoadException,

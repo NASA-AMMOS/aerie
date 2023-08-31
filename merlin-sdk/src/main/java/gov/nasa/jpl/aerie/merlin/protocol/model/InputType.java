@@ -80,6 +80,8 @@ public interface InputType<T> {
    */
   List<Parameter> getParameters();
 
+  Map<String, String> getParameterUnits();
+
   /**
    * Names a subset of parameters returned by {@link #getParameters()} whose absence on instantiation would
    * certainly result in an {@link InvalidArgumentsException}.

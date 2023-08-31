@@ -7,6 +7,13 @@ import java.nio.file.Path;
 
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Template;
 
+/**
+ * @param initialPlantCount
+ * @aerie.unit count
+ * @param initialProducer
+ * @param initialDataPath
+ * @param initialConditions
+ */
 public record Configuration(int initialPlantCount, String initialProducer, Path initialDataPath, InitialConditions initialConditions) {
 
   public static final int DEFAULT_PLANT_COUNT = 200;

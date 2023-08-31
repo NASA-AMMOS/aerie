@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
@@ -192,6 +193,10 @@ public final class StubMissionModelService implements MissionModelService {
   public List<Parameter> getModelParameters(final String missionModelId) {
     return List.of();
   }
+
+  @Override
+  public Map<String, String> getModelParameterUnits(final String missionModelId)
+  throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException { return Map.of(); }
 
   @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(

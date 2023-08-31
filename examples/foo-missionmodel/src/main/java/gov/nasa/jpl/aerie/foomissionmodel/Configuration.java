@@ -4,6 +4,9 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 
 public final class Configuration {
 
+  /**
+   * @aerie.unit double
+   */
   @Export.Parameter
   public Double sinkRate;
 

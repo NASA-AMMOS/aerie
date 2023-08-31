@@ -67,15 +67,40 @@ public final class ResponseSerializers {
     return schema.match(new ValueSchemaSerializer());
   }
 
-  public static JsonValue serializeParameters(final List<Parameter> parameters) {
+  public static JsonValue serializeParameters(final List<Parameter> parameters, final Map<String, String> units) {
     final var parameterMap = IntStream.range(0, parameters.size()).boxed()
-        .collect(Collectors.toMap(i -> parameters.get(i).name(), i -> Pair.of(i, parameters.get(i))));
+      .collect(Collectors.toMap(i -> parameters.get(i).name(), i -> Pair.of(i, parameters.get(i))));
 
     return serializeMap(pair -> Json.createObjectBuilder()
-            .add("schema", pair.getRight().schema().match(new ValueSchemaSerializer()))
-            .add("order", pair.getLeft())
-            .build(),
-        parameterMap);
+      .add("schema", pair.getRight().schema().match(new ValueSchemaSerializer()))
+      .add("order", pair.getLeft())
+      .add("unit", units.get(pair.getRight().name()) != null ? units.get(pair.getRight().name()) : "")
+      .build(),
+    parameterMap);
+  }
+
+  public static JsonValue serializeSchemaDefinitions(final ValueSchema computedAttributesValueSchema, final Map<String, String> units) {
+    final var builder = Json.createObjectBuilder();
+
+    units.forEach(builder::add);
+
+    return Json.createObjectBuilder()
+      .add("schema", serializeValueSchema(computedAttributesValueSchema))
+      .add("units", builder.build())
+      .build();
+  }
+
+  public static JsonValue serializeResourceTypeDefinition(final ValueSchema valueSchema, final String unitValue) {
+    if (unitValue != null) {
+      return Json.createObjectBuilder()
+         .add("schema", serializeValueSchema(valueSchema))
+         .add("unit", unitValue)
+         .build();
+    }
+
+    return Json.createObjectBuilder()
+       .add("schema", serializeValueSchema(valueSchema))
+       .build();
   }
 
   public static JsonValue serializeValueSchemas(final Map<String, ValueSchema> schemas) {

@@ -66,16 +66,16 @@ public class JavadocParser {
    * Parses javadocs searching for parameters + unit paris and computed attributes + unit pairs.
    * @param elementUtils Utility functions for file parsing.
    * @param element The element we're parsing the comments for.
-   * @return A pair of maps, one with the parameter units and one with the computed attribute units.
+   * @return A pair of maps, left is the parameter units and right is the computed attribute units.
    */
-  public static Pair<Map<String, String>, Map<String, String>> parseActivityTypeUnits(
+  public static Pair<Map<String, String>, Map<String, String>> parseParameterUnits(
       Elements elementUtils,
       TypeElement element
   ) {
     final var parameterUnits = new HashMap<String, String>();
     final var computedAttributeUnits = new HashMap<String, String>();
 
-    // Parse the activity type class javadoc.
+    // Parse the class javadoc.
     Optional.ofNullable(elementUtils.getDocComment(element))
           .map(JavadocParser::removeSingleLeadingSpaceFromEachLine)
           .map(comment -> {

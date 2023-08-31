@@ -1,7 +1,7 @@
 create table resource_type (
   model_id integer not null,
   name text not null,
-  schema jsonb not null,
+  definition jsonb not null,
   units jsonb not null default '{}',
 
   constraint resource_type_pkey
@@ -19,7 +19,7 @@ comment on column resource_type.name is e''
   'The name of this resource type, unique within a mission model.';
 comment on column resource_type.model_id is e''
   'The model defining this resource type.';
-comment on column resource_type.schema is e''
-  'The structure of this resource type.';
+comment on column resource_type.definition is e''
+  'The definition including the structure of this resource type.';
 comment on column resource_type.units is e''
   'The optionally defined units for the resource type';
