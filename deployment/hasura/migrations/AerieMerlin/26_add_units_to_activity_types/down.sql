@@ -11,4 +11,4 @@ comment on column resource_type.definition is e''
 alter table mission_model_parameters
   rename column parameter_definitions to parameters;
 
-call migrations.mark_migration_rolled_back('25');
+call migrations.mark_migration_rolled_back('26');
