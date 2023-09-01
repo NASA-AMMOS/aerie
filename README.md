@@ -40,6 +40,7 @@ To get started using Aerie for the first time please do our [fast track tutorial
 ├── e2e-tests                   # End-to-end tests
 ├── examples                    # Example mission models
 ├── gradle                      # Gradle Wrapper
+├── load-tests                  # Load testing code and configuration
 ├── merlin-driver               # Java library for discrete-event simulation
 ├── merlin-framework            # Java library for mission modeling
 ├── merlin-framework-junit      # Extension of JUnit to unit test mission models
