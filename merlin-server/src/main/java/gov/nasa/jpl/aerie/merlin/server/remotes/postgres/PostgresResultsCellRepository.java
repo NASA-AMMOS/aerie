@@ -44,7 +44,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
+  public ResultsProtocol.OwnerRole allocate(final PlanId planId, final String requestedBy) {
     try (final var connection = this.dataSource.getConnection()) {
       final SimulationRecord simulation = getSimulation(connection, planId);
       final SimulationTemplateRecord template;
@@ -73,7 +73,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           simulation,
           startTime,
           endTime,
-          arguments);
+          arguments,
+          requestedBy);
 
       return new PostgresResultsCell(
           this.dataSource,
@@ -169,7 +170,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final SimulationRecord simulation,
       final Timestamp simulationStart,
       final Timestamp simulationEnd,
-      final Map<String, SerializedValue> arguments
+      final Map<String, SerializedValue> arguments,
+      final String requestedBy
   ) throws SQLException
   {
     try (final var createSimulationDatasetAction = new CreateSimulationDatasetAction(connection)) {
@@ -177,7 +179,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           simulation.id(),
           simulationStart,
           simulationEnd,
-          arguments);
+          arguments,
+          requestedBy);
     }
   }
   /**

@@ -109,7 +109,7 @@ public final class MerlinParsersTest {
       final var expected = new HasuraAction<>(
           "testAction",
           new HasuraAction.MissionModelInput("1"),
-          new HasuraAction.Session("aerie_admin", ""));
+          new HasuraAction.Session("aerie_admin", null));
 
       assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
     }

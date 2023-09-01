@@ -179,7 +179,7 @@ public final class MerlinBindings implements Plugin {
 
       this.checkPermissions(Action.simulate, body.session(), planId);
 
-      final var response = this.simulationAction.run(planId);
+      final var response = this.simulationAction.run(planId, body.session());
       ctx.result(ResponseSerializers.serializeSimulationResultsResponse(response).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
