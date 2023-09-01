@@ -80,8 +80,6 @@ public interface InputType<T> {
    */
   List<Parameter> getParameters();
 
-  Map<String, String> getParameterUnits();
-
   /**
    * Names a subset of parameters returned by {@link #getParameters()} whose absence on instantiation would
    * certainly result in an {@link InvalidArgumentsException}.
@@ -172,7 +170,7 @@ public interface InputType<T> {
   List<ValidationNotice> getValidationFailures(T value);
 
   /** A named parameter to an {@link InputType} */
-  record Parameter(String name, ValueSchema schema) {}
+  record Parameter(String name, ValueSchema schema, String unit) {}
 
   /** A human-readable advisory concerning a subset of the arguments for an instance of an {@link InputType}. */
   record ValidationNotice(List<String> subjects, String message) { }

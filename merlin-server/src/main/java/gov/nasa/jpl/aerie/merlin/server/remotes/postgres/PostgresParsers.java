@@ -56,7 +56,7 @@ public final class PostgresParsers {
           final var instant = LocalDateTime.parse(s.result(), format).atZone(ZoneOffset.UTC);
           return JsonParseResult.success(new Timestamp(instant));
         } catch (final DateTimeParseException e) {
-          return JsonParseResult.failure("invalid timestamp format "+e);
+          return JsonParseResult.failure("invalid timestamp format " + e);
         }
       } else if (result instanceof final JsonParseResult.Failure<?> f) {
         return f.cast();
@@ -111,9 +111,11 @@ public final class PostgresParsers {
            (1_000_000L * 3600 * 24 * interval.getDays());
   }
 
-  public static Duration parseDurationISO8601(final String iso8601String){
+  public static Duration parseDurationISO8601(final String iso8601String) {
     final var javaDuration = java.time.Duration.parse(iso8601String);
-    return Duration.of((javaDuration.getSeconds() * 1_000_000L) + (javaDuration.getNano() / 1000L), Duration.MICROSECONDS);
+    return Duration.of(
+        (javaDuration.getSeconds() * 1_000_000L) + (javaDuration.getNano() / 1000L),
+        Duration.MICROSECONDS);
   }
 
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
@@ -124,14 +126,21 @@ public final class PostgresParsers {
       .optionalField("directiveId", longP)
       .field("arguments", activityArgumentsP)
       .optionalField("computedAttributes", serializedValueP)
-        .map(
-            untuple(ActivityAttributesRecord::new),
-            $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes()));
+      .map(
+          untuple(ActivityAttributesRecord::new),
+          $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes()));
 
-  public static final JsonParser<Map<String, Pair<Integer, ValueSchema>>> parameterRecordP =
+  public static final JsonParser<Map<String, Pair<Pair<Integer, ValueSchema>, String>>> parameterRecordP =
       mapP(
           productP
               .field("order", intP)
+              .field("schema", valueSchemaP)
+              .field("unit", stringP));
+
+  public static final JsonParser<Map<String, Pair<Map<String, String>, ValueSchema>>> computedAttributeDefinitionP =
+      mapP(
+          productP
+              .field("units", mapP(stringP))
               .field("schema", valueSchemaP));
 
   public static <V> JsonParseResult<V>

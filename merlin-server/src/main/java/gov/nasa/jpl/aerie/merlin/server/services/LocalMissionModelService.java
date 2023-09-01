@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
+import gov.nasa.jpl.aerie.merlin.server.models.ComputedAttributeDefinition;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
@@ -226,13 +227,6 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, String> getModelParameterUnits(final String missionModelId)
-  throws NoSuchMissionModelException, MissionModelLoadException
-  {
-    return this.loadMissionModelType(missionModelId).getConfigurationType().getParameterUnits();
-  }
-
-  @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
@@ -279,7 +273,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException
   {
     try {
-      this.missionModelRepository.updateModelParameters(missionModelId, getModelParameters(missionModelId), getModelParameterUnits(missionModelId));
+      this.missionModelRepository.updateModelParameters(missionModelId, getModelParameters(missionModelId));
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     }
@@ -297,13 +291,13 @@ public final class LocalMissionModelService implements MissionModelService {
         final var inputType = directiveType.getInputType();
         final var outputType = directiveType.getOutputType();
 
+        //directiveType.getParameterUnits()
+
         activityTypes.put(name, new ActivityType(
             name,
             inputType.getParameters(),
             inputType.getRequiredParameters(),
-            outputType.getSchema(),
-            directiveType.getParameterUnits(),
-            directiveType.getComputedAttributeUnits()));
+            new ComputedAttributeDefinition(outputType.getSchema(), directiveType.getComputedAttributeUnits())));
       });
       this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {

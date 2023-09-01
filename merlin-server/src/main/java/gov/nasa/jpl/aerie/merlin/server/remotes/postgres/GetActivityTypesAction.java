@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
+import gov.nasa.jpl.aerie.merlin.server.models.ComputedAttributeDefinition;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -10,12 +11,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.computedAttributeDefinitionP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parameterRecordP;
 
@@ -23,11 +26,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   private static final @Language("SQL") String sql = """
     select
       a.name,
-      a.parameters,
+      a.parameter_definitions,
       a.required_parameters,
-      a.computed_attributes_value_schema,
-      parameter_units,
-      computed_attribute_units
+      a.computed_attribute_definitions
     from activity_type as a
     where a.model_id = ?
     """;
@@ -53,31 +54,31 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
                 .stream()
                 .map(entry -> new ParameterRecord(
                     entry.getKey(),
-                    entry.getValue().getKey(),
+                    entry.getValue().getLeft().getLeft(),
+                    entry.getValue().getLeft().getRight(),
                     entry.getValue().getValue()))
                 .sorted(Comparator.comparingInt(ParameterRecord::order))
-                .map(parameterRecord -> new Parameter(parameterRecord.name(), parameterRecord.schema()))
+                .map(parameterRecord -> new Parameter(parameterRecord.name(), parameterRecord.schema(), parameterRecord.unit()))
                 .toList(),
             getJsonColumn(results, "required_parameters", listP(stringP))
                 .getSuccessOrThrow($ -> new Error("Corrupt activity type required parameters cannot be parsed: "
                                                   + $.reason())),
-            getJsonColumn(results, "computed_attributes_value_schema", valueSchemaP)
+            getJsonColumn(results, "computed_attribute_definitions", computedAttributeDefinitionP)
                 .getSuccessOrThrow($ -> new Error("Corrupt activity type computed attribute schema cannot be parsed: "
-                                                  + $.reason())),
-            getJsonColumn(results, "parameter_units", mapP(stringP))
-                .getSuccessOrThrow($ -> new Error("Corrupt activity type parameter units cannot be parsed: "
-                                                  + $.reason())),
-            getJsonColumn(results, "computed_attribute_units", mapP(stringP))
-                .getSuccessOrThrow($ -> new Error("Corrupt activity type computed attribute units cannot be parsed: "
                                                   + $.reason()))
+                .values()
+                .stream()
+                .map(mapValueSchemaPair -> new ComputedAttributeDefinition(
+                        mapValueSchemaPair.getRight(),
+                        mapValueSchemaPair.getLeft()))
+                .findFirst()
+                .get()
         ));
       }
     }
 
     return activityTypes;
   }
-
-  private record ParameterRecord(String name, int order, ValueSchema schema) {}
 
   @Override
   public void close() throws SQLException {

@@ -23,10 +23,10 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public long apply(final long modelId, final List<Parameter> parameters, Map<String, String> units) throws SQLException, FailedInsertException {
+  public long apply(final long modelId, final List<Parameter> parameters) throws SQLException, FailedInsertException {
     this.statement.setLong(1, modelId);
-    PreparedStatements.setParameters(this.statement, 2, parameters, units);
-    PreparedStatements.setParameters(this.statement, 3, parameters, units);
+    PreparedStatements.setParameters(this.statement, 2, parameters);
+    PreparedStatements.setParameters(this.statement, 3, parameters);
 
     try (final var results = statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("mission_model_parameters");

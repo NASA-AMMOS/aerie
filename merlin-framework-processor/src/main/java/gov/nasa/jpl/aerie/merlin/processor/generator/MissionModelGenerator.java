@@ -641,7 +641,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .build())
         .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod())
         .addMethod(mapperMethodMaker.makeGetParametersMethod())
-        .addMethod(mapperMethodMaker.makeGetParameterUnitsMethod())
         .addMethod(mapperMethodMaker.makeGetArgumentsMethod())
         .addMethod(mapperMethodMaker.makeInstantiateMethod())
         .addMethod(mapperMethodMaker.makeGetValidationFailuresMethod())
@@ -844,36 +843,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         ClassName.get(Map.class),
                         activityType
                             .computedAttributeUnits()
-                            .entrySet()
-                            .stream()
-                            .map(units -> CodeBlock
-                                .builder()
-                                .add(
-                                    "\n$T.entry($S, $S)",
-                                    ClassName.get(Map.class),
-                                    units.getKey(),
-                                    units.getValue()))
-                            .reduce((x, y) -> x.add(",").add(y.build()))
-                            .orElse(CodeBlock.builder())
-                            .build()))
-                .build()
-        )
-        .addMethod(
-            MethodSpec
-                .methodBuilder("getParameterUnits")
-                .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
-                .returns(ParameterizedTypeName.get(
-                    Map.class,
-                    String.class,
-                    String.class))
-                .addStatement(
-                    "return $L",
-                    CodeBlock.of(
-                        "$T.ofEntries($>$>$L$<$<)",
-                        ClassName.get(Map.class),
-                        activityType
-                            .parameterUnits()
                             .entrySet()
                             .stream()
                             .map(units -> CodeBlock

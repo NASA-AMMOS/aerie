@@ -41,12 +41,11 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
 
       statement.setInt(1, modelId);
       for(final var activityType : activityTypes){
-        final var valueSchemaString = valueSchemaP.unparse(activityType.computedAttributesValueSchema()).toString();
-
         statement.setString(2, activityType.name());
-        PreparedStatements.setParameters(statement, 3, activityType.parameters(), activityType.parameterUnits());
+        PreparedStatements.setParameters(statement, 3, activityType.parameters());
         PreparedStatements.setRequiredParameters(this.statement, 4, activityType.requiredParameters());
-        PreparedStatements.setComputedAttributes(statement, 5, activityType.computedAttributesValueSchema(), activityType.computedAttributeUnits());
+        PreparedStatements.setComputedAttributes(statement, 5,
+                   activityType.computedAttributeDefinition().schema(), activityType.computedAttributeDefinition().units());
 
         statement.addBatch();
       }

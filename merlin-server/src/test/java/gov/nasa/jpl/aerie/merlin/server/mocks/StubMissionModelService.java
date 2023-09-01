@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
+import gov.nasa.jpl.aerie.merlin.server.models.ComputedAttributeDefinition;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
@@ -20,6 +21,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,21 +38,17 @@ public final class StubMissionModelService implements MissionModelService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL), new Parameter("Duration", ValueSchema.DURATION)),
+      List.of(new Parameter("Param", ValueSchema.STRING, "Param units"), new Parameter("AnotherParam", ValueSchema.REAL, "AnotherParam units"), new Parameter("Duration", ValueSchema.DURATION, "")),
       List.of(),
-      ValueSchema.ofStruct(Map.of()),
-      Map.of("Param", "Param units", "AnotherParam", "AnotherParam units"),
-      Map.of());
+      new ComputedAttributeDefinition(ValueSchema.ofStruct(Map.of()), Map.of()));
   public static final String EXISTENT_ACTIVITY_TYPE_2 = "activity2";
   public static final ActivityType EXISTENT_ACTIVITY_2 = new ActivityType(
       EXISTENT_ACTIVITY_TYPE_2,
       List.of(new Parameter("Param", ValueSchema.ofVariant(List.of(
           new ValueSchema.Variant("hello", "hello"), new ValueSchema.Variant("there", "there")
-      )))),
+      )), "")),
       List.of(),
-      ValueSchema.ofStruct(Map.of()),
-      Map.of(),
-      Map.of()
+      new ComputedAttributeDefinition(ValueSchema.ofStruct(Map.of()), Map.of())
   );
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
@@ -193,10 +191,6 @@ public final class StubMissionModelService implements MissionModelService {
   public List<Parameter> getModelParameters(final String missionModelId) {
     return List.of();
   }
-
-  @Override
-  public Map<String, String> getModelParameterUnits(final String missionModelId)
-  throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException { return Map.of(); }
 
   @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(

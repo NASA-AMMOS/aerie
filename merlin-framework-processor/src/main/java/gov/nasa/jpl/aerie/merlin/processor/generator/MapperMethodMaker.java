@@ -58,50 +58,17 @@ public abstract sealed class MapperMethodMaker permits
                 .map(parameter -> CodeBlock
                     .builder()
                     .addStatement(
-                        "$L.add(new $T($S, this.mapper_$L.getValueSchema()))",
+                        "$L.add(new $T($S, this.mapper_$L.getValueSchema(), \"$L\"))",
                         "parameters",
                         Parameter.class,
                         parameter.name,
-                        parameter.name))
+                        parameter.name,
+                        inputType.parameterUnits().get(parameter.name) == null ? "" : inputType.parameterUnits().get(parameter.name)))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                 .build())
         .addStatement(
             "return $L",
             "parameters")
-        .build();
-  }
-
-  public MethodSpec makeGetParameterUnitsMethod() {
-    return MethodSpec.methodBuilder("getParameterUnits")
-        .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(Override.class)
-        .returns(ParameterizedTypeName.get(
-            java.util.Map.class,
-            String.class,
-            String.class))
-        .addStatement(
-            "final var $L = new $T()",
-            "units",
-            ParameterizedTypeName.get(
-                java.util.HashMap.class,
-                String.class,
-                String.class))
-            .addCode(
-                inputType.parameterUnits()
-                    .keySet()
-                    .stream()
-                    .map(parameter -> CodeBlock
-                        .builder()
-                        .addStatement(
-                            "$L.put($S, \"$L\")",
-                            "units",
-                            parameter,
-                            inputType.parameterUnits().get(parameter)))
-                        .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                        .build())
-        .addStatement(
-            "return $L",
-            "units")
         .build();
   }
 

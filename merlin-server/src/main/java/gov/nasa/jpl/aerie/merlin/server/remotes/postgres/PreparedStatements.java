@@ -75,9 +75,9 @@ public final class PreparedStatements {
     statement.setString(parameter, "PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
   }
 
-  public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters, final Map<String, String> units)
+  public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters)
   throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeParameters(parameters, units).toString());
+    statement.setString(parameter, ResponseSerializers.serializeParameters(parameters).toString());
   }
 
   public static void setComputedAttributes(final PreparedStatement statement, final int parameter,

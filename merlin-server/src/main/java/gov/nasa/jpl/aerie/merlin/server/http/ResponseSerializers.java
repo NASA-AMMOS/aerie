@@ -67,14 +67,14 @@ public final class ResponseSerializers {
     return schema.match(new ValueSchemaSerializer());
   }
 
-  public static JsonValue serializeParameters(final List<Parameter> parameters, final Map<String, String> units) {
+  public static JsonValue serializeParameters(final List<Parameter> parameters) {
     final var parameterMap = IntStream.range(0, parameters.size()).boxed()
       .collect(Collectors.toMap(i -> parameters.get(i).name(), i -> Pair.of(i, parameters.get(i))));
 
     return serializeMap(pair -> Json.createObjectBuilder()
       .add("schema", pair.getRight().schema().match(new ValueSchemaSerializer()))
       .add("order", pair.getLeft())
-      .add("unit", units.get(pair.getRight().name()) != null ? units.get(pair.getRight().name()) : "")
+      .add("unit", pair.getRight().unit().isEmpty() ? "" : pair.getRight().unit())
       .build(),
     parameterMap);
   }
