@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 /**
@@ -51,7 +52,7 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
    * @return a response object wrapping summary results of the run (either successful or not)
    * @throws NoSuchSpecificationException if the target specification could not be found
    */
-  public Response run(final SpecificationId specificationId)
+  public Response run(final SpecificationId specificationId, final HasuraAction.Session session)
   throws NoSuchSpecificationException, IOException
   {
     //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
@@ -59,7 +60,7 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
     final var specificationRev = this.specificationService.getSpecificationRevisionData(specificationId);
 
     //submit request to run scheduler (possibly asynchronously or even cached depending on service)
-    final var response = this.schedulerService.getScheduleResults(new ScheduleRequest(specificationId, specificationRev));
+    final var response = this.schedulerService.getScheduleResults(new ScheduleRequest(specificationId, specificationRev), session.hasuraUserId());
 
     return repackResponse(response);
   }

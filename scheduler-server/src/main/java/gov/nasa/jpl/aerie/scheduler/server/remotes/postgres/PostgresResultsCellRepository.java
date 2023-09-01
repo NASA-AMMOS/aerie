@@ -31,11 +31,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final SpecificationId specificationId)
+  public ResultsProtocol.OwnerRole allocate(final SpecificationId specificationId, final String requestedBy)
   {
     try (final var connection = this.dataSource.getConnection()) {
       final var spec = getSpecification(connection, specificationId);
-      final var request = createRequest(connection, spec);
+      final var request = createRequest(connection, spec, requestedBy);
 
       return new PostgresResultsCell(
           this.dataSource,
@@ -134,10 +134,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static RequestRecord createRequest(
       final Connection connection,
-      final SpecificationRecord specification
+      final SpecificationRecord specification,
+      final String requestedBy
   ) throws SQLException {
     try (final var createRequestAction = new CreateRequestAction(connection)) {
-      return createRequestAction.apply(specification);
+      return createRequestAction.apply(specification, requestedBy);
     }
   }
 

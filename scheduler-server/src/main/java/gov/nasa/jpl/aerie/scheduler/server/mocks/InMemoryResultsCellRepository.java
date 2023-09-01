@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 
 public record InMemoryResultsCellRepository(SpecificationRepository specificationRepository) implements ResultsCellRepository {
   @Override
-  public ResultsProtocol.OwnerRole allocate(final SpecificationId specificationId)
+  public ResultsProtocol.OwnerRole allocate(final SpecificationId specificationId, final String requestedBy)
   {
     throw new UnsupportedOperationException(); // TODO stubbed method must be implemented
   }

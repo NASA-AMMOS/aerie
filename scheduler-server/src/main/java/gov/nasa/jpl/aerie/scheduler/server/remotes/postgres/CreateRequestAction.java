@@ -1,19 +1,17 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedStatements.getDatasetId;
 
 /*package-local*/ final class CreateRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into scheduling_request (specification_id, specification_revision)
-      values (?, ?)
+      insert into scheduling_request (specification_id, specification_revision, requested_by)
+      values (?, ?, ?)
       returning
         analysis_id,
         status,
@@ -28,9 +26,10 @@ import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedState
     this.statement = connection.prepareStatement(sql);
   }
 
-  public RequestRecord apply(final SpecificationRecord specification) throws SQLException {
+  public RequestRecord apply(final SpecificationRecord specification, final String requestedBy) throws SQLException {
     this.statement.setLong(1, specification.id());
     this.statement.setLong(2, specification.revision());
+    this.statement.setString(3, requestedBy);
 
     final var result = this.statement.executeQuery();
     if (!result.next()) throw new FailedInsertException("scheduling_request");
