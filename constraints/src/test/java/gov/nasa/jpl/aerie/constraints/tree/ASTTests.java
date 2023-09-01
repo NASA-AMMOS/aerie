@@ -33,6 +33,7 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive
 import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -1124,6 +1125,43 @@ public class ASTTests {
     ).evaluate(simResults);
     final var expected4 = new Windows(false).set(Interval.between(9, 21, SECONDS), true).select(simResults.bounds);
     assertIterableEquals(expected2, result2);
+  }
+
+  @Test
+  public void testRollingThreshold() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans(
+        Interval.between(0, 1, SECONDS),
+        Interval.between(2, 3, SECONDS),
+        Interval.between(4, 5, SECONDS),
+
+        Interval.between(14, 15, SECONDS),
+        Interval.between(16, 17, SECONDS),
+        Interval.between(18, 19, SECONDS)
+    );
+
+    final var result1 = new RollingThreshold(
+        Supplier.of(spans),
+        Supplier.of(Duration.of(10, SECONDS)),
+        Supplier.of(Duration.of(2500, MILLISECOND)),
+        RollingThreshold.RollingThresholdAlgorithm.Hull
+    ).evaluate(simResults);
+
+    final var expected = new ConstraintResult(
+        List.of(
+            new Violation(List.of(Interval.between(0, 5, SECONDS)), List.of()),
+            new Violation(List.of(Interval.between(14, 19, SECONDS)), List.of())
+        ),
+        List.of()
+    );
+
+    assertEquals(expected, result1);
   }
 
   /**
