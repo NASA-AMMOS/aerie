@@ -2,7 +2,7 @@ type ActivityDirectiveId = number;
 
 type ActivityType = {
   name: string;
-  parameters: ParametersMap;
+  parameter_definitions: ParametersMap;
 };
 
 type ActivityTypesMap = Record<string, ActivityType>;

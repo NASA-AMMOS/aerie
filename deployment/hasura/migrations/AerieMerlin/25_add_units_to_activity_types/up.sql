@@ -11,4 +11,4 @@ comment on column resource_type.definition is e''
 alter table mission_model_parameters
   rename column parameters to parameter_definitions;
 
-call migrations.mark_migration_applied('23');
+call migrations.mark_migration_applied('25');

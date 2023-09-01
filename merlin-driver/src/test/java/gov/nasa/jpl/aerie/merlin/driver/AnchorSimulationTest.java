@@ -1077,11 +1077,6 @@ public final class AnchorSimulationTest {
       }
 
       @Override
-      public Map<String, String> getParameterUnits() {
-        return Map.of();
-      }
-
-      @Override
       public Map<String, String> getComputedAttributeUnits() {
         return Map.of();
       }
@@ -1118,11 +1113,6 @@ public final class AnchorSimulationTest {
 
       @Override
       public Map<String, String> getParameterDescriptions() {
-        return Map.of();
-      }
-
-      @Override
-      public Map<String, String> getParameterUnits() {
         return Map.of();
       }
 
@@ -1175,9 +1165,6 @@ public final class AnchorSimulationTest {
       public List<Parameter> getParameters() {
         return List.of();
       }
-
-      @Override
-      public Map<String, String> getParameterUnits() { return Map.of(); }
 
       @Override
       public List<String> getRequiredParameters() {

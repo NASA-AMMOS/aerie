@@ -9,5 +9,5 @@ type Model = {
   activityTypes: ActivityType[];
   constraints: Constraint[];
   id: number;
-  parameters: { parameters: ParametersMap };
+  parameter_definitions: { parameters: ParametersMap };
 };

@@ -7,10 +7,10 @@ type Simulation = {
 };
 
 type UpdateSimulationBoundsInput = {
-  plan_id: number,
-  simulation_start_time: string,
-  simulation_end_time: string
-}
+  plan_id: number;
+  simulation_start_time: string;
+  simulation_end_time: string;
+};
 
 type SimulationTemplate = {
   arguments: ArgumentsMap;
@@ -22,7 +22,7 @@ type InsertSimulationTemplateInput = {
   arguments: ArgumentsMap;
   description: string;
   model_id: number;
-}
+};
 
 type Resource = {
   name: string;
@@ -33,7 +33,7 @@ type Resource = {
 
 type ResourceType = {
   name: string;
-  schema: ValueSchema;
+  definition: { unit: string; schema: ValueSchema };
 };
 
 type ResourceValue = {
@@ -62,8 +62,8 @@ type SimulationDataset = {
 };
 
 type SimulatedActivity = {
-  activity_directive: {id: number} | null;
+  activity_directive: { id: number } | null;
   duration: string | null;
   start_time: string;
   start_offset: string;
-}
+};

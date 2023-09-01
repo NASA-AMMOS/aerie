@@ -41,14 +41,12 @@ public final class MissionModelTest {
           "foo", new ActivityType(
               "foo",
               List.of(
-                  new Parameter("x", ValueSchema.INT),
-                  new Parameter("y", ValueSchema.STRING),
-                  new Parameter("z", ValueSchema.INT),
-                  new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                  new Parameter("x", ValueSchema.INT, "x units"),
+                  new Parameter("y", ValueSchema.STRING, ""),
+                  new Parameter("z", ValueSchema.INT, ""),
+                  new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)), "")),
               List.of(),
-              ValueSchema.ofStruct(Map.of()),
-              Map.of("x", "x units"),
-              Map.of()
+              new ComputedAttributeDefinition(ValueSchema.ofStruct(Map.of()), Map.of())
           ));
 
     // WHEN
@@ -58,10 +56,7 @@ public final class MissionModelTest {
         new ActivityType(name,
                          specType.getInputType().getParameters(),
                          specType.getInputType().getRequiredParameters(),
-                         specType.getOutputType().getSchema(),
-                         specType.getParameterUnits(),
-                         specType.getComputedAttributeUnits())));
-
+                         new ComputedAttributeDefinition(specType.getOutputType().getSchema(), specType.getComputedAttributeUnits()))));
     // THEN
     assertThat(activityTypes).containsAllEntriesOf(expectedTypes);
   }
@@ -72,15 +67,12 @@ public final class MissionModelTest {
     final ActivityType expectedType = new ActivityType(
           "foo",
           List.of(
-              new Parameter("x", ValueSchema.INT),
-              new Parameter("y", ValueSchema.STRING),
-              new Parameter("z", ValueSchema.INT),
-              new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+              new Parameter("x", ValueSchema.INT, "x units"),
+              new Parameter("y", ValueSchema.STRING, ""),
+              new Parameter("z", ValueSchema.INT, ""),
+              new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)), "")),
           List.of(),
-          ValueSchema.ofStruct(Map.of()),
-          Map.of("x", "x units"),
-          Map.of()
-      );
+          new ComputedAttributeDefinition(ValueSchema.ofStruct(Map.of()), Map.of()));
 
     // WHEN
     final var typeName = expectedType.name();
@@ -92,9 +84,7 @@ public final class MissionModelTest {
         typeName,
         specType.getInputType().getParameters(),
         specType.getInputType().getRequiredParameters(),
-        specType.getOutputType().getSchema(),
-        specType.getParameterUnits(),
-        specType.getComputedAttributeUnits());
+        new ComputedAttributeDefinition(specType.getOutputType().getSchema(), specType.getComputedAttributeUnits()));
 
     // THEN
     assertThat(type).isEqualTo(expectedType);
@@ -107,15 +97,12 @@ public final class MissionModelTest {
     final ActivityType expectedType = new ActivityType(
         "foo",
         List.of(
-            new Parameter("x", ValueSchema.INT),
-            new Parameter("y", ValueSchema.STRING),
-            new Parameter("z", ValueSchema.INT),
-            new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+            new Parameter("x", ValueSchema.INT, "x units"),
+            new Parameter("y", ValueSchema.STRING, ""),
+            new Parameter("z", ValueSchema.INT, ""),
+            new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)), "")),
         List.of(),
-        ValueSchema.ofStruct(Map.of()),
-        Map.of("x", "x units"),
-        Map.of()
-    );
+        new ComputedAttributeDefinition(ValueSchema.ofStruct(Map.of()), Map.of()));
 
     // WHEN
     final var typeName = expectedType.name();
@@ -127,9 +114,7 @@ public final class MissionModelTest {
         typeName,
         specType.getInputType().getParameters(),
         specType.getInputType().getRequiredParameters(),
-        specType.getOutputType().getSchema(),
-        specType.getParameterUnits(),
-        specType.getComputedAttributeUnits());
+        new ComputedAttributeDefinition(specType.getOutputType().getSchema(), specType.getComputedAttributeUnits()));
 
     // THEN
     assertThat(type).isEqualTo(expectedType);
@@ -150,9 +135,7 @@ public final class MissionModelTest {
             activityId,
             specType.getInputType().getParameters(),
             specType.getInputType().getRequiredParameters(),
-            specType.getOutputType().getSchema(),
-            specType.getParameterUnits(),
-            specType.getComputedAttributeUnits());
+            new ComputedAttributeDefinition(specType.getOutputType().getSchema(), specType.getComputedAttributeUnits()));
     });
 
     // THEN

@@ -140,11 +140,6 @@ public class InstantiateArgumentsTest {
     }
 
     @Override
-    public Map<String, String> getParameterUnits() {
-      return Map.of();
-    }
-
-    @Override
     public Map<String, String> getComputedAttributeUnits() {
       return Map.of();
     }
@@ -175,17 +170,14 @@ public class InstantiateArgumentsTest {
     @Override
     public List<Parameter> getParameters() {
       return List.of(
-          new Parameter("variant", ValueSchema.ofVariant(List.of(new ValueSchema.Variant("option2", "2")))),
+          new Parameter("variant", ValueSchema.ofVariant(List.of(new ValueSchema.Variant("option2", "2"))), ""),
           new Parameter("struct", ValueSchema.ofStruct(
               Map.of("subfield", ValueSchema.STRING,
                      "subList", ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of("subListSubStruct", ValueSchema.INT))))
-          )),
-          new Parameter("valueAt", ValueSchema.REAL),
-          new Parameter("duration", ValueSchema.DURATION));
+          ), ""),
+          new Parameter("valueAt", ValueSchema.REAL, ""),
+          new Parameter("duration", ValueSchema.DURATION, ""));
     }
-
-    @Override
-    public Map<String, String> getParameterUnits() { return Map.of(); }
 
     @Override
     public List<String> getRequiredParameters() {

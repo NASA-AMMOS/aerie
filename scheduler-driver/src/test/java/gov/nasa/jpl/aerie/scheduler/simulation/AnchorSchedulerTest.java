@@ -648,11 +648,6 @@ public class AnchorSchedulerTest {
     }
 
     @Override
-    public Map<String, String> getParameterUnits() {
-      return Map.of();
-    }
-
-    @Override
     public Map<String, String> getComputedAttributeUnits() {
       return Map.of();
     }
@@ -689,11 +684,6 @@ public class AnchorSchedulerTest {
 
     @Override
     public Map<String, String> getParameterDescriptions() {
-      return Map.of();
-    }
-
-    @Override
-    public Map<String, String> getParameterUnits() {
       return Map.of();
     }
 
@@ -746,9 +736,6 @@ public class AnchorSchedulerTest {
     public List<Parameter> getParameters() {
       return List.of();
     }
-
-    @Override
-    public Map<String, String> getParameterUnits() { return Map.of(); }
 
     @Override
     public List<String> getRequiredParameters() {

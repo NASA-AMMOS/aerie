@@ -22,7 +22,7 @@ const gql = {
     query GetResourceTypes($missionModelId: Int!) {
       resource_type(where: {model_id: {_eq: $missionModelId}}, order_by: {name: asc}) {
         name
-        schema
+        definition
       }
     }
   `,
@@ -31,7 +31,7 @@ const gql = {
     query GetActivityTypes($missionModelId: Int!) {
       activity_type(where: {model_id: {_eq: $missionModelId}}, order_by: {name: asc}) {
         name
-        parameters
+        parameter_definitions
       }
     }
   `,
@@ -237,7 +237,7 @@ const gql = {
         model: mission_model {
           activityTypes: activity_types {
             name
-            parameters
+            parameter_definitions
           }
           constraints {
             definition
@@ -273,7 +273,7 @@ const gql = {
     }
   `,
 
-  INSERT_SPAN:`#graphql
+  INSERT_SPAN: `#graphql
   mutation InsertSpan(
     $parentId: Int!,
     $duration: interval,
@@ -288,7 +288,7 @@ const gql = {
 }
 `,
 
-INSERT_SIMULATION_DATASET:`#graphql
+  INSERT_SIMULATION_DATASET: `#graphql
     mutation InsertSimulationDataset($simulationDatasetInsertInput:simulation_dataset_insert_input!
       ){
       insert_simulation_dataset_one(object: $simulationDatasetInsertInput) {
@@ -305,7 +305,7 @@ INSERT_SIMULATION_DATASET:`#graphql
   }
   `,
 
-  INSERT_PROFILE_SEGMENT:`#graphql
+  INSERT_PROFILE_SEGMENT: `#graphql
   mutation insertProfileSegment($datasetId: Int!, $dynamics:jsonb, $isGap: Boolean, $profileId:Int!, $startOffset:interval){
     insert_profile_segment_one(object: {dataset_id: $datasetId, dynamics: $dynamics, is_gap: $isGap, profile_id: $profileId, start_offset: $startOffset}){
       dataset_id
@@ -535,7 +535,7 @@ INSERT_SIMULATION_DATASET:`#graphql
         action_permissions
       }
     }
-  `
+  `,
 };
 
 export default gql;

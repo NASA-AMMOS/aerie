@@ -14,7 +14,7 @@ type Argument = any;
 
 type ArgumentsMap = Record<ParameterName, Argument>;
 
-type Parameter = { order: number; schema: ValueSchema };
+type Parameter = { order: number; schema: ValueSchema; unit: string };
 
 type ParameterError = { message: string; schema: ValueSchema };
 
