@@ -641,6 +641,61 @@ test.describe.serial('Scheduler Bindings', () => {
       status: 'failure',
       reason: 'No mission model exists with id `MissionModelId[id=-1]`'
     });
+    // Returns a 200 with a failure status if a invalid plan id is passed
+    // reason is "No plan exists with id `PlanId[id=-1]`"
+    response = await request.post(`${urls.SCHEDULER_URL}/schedulingDslTypescript`, {
+      data: {
+        action: {name: "schedulingDslTypescript"},
+        input: {missionModelId: mission_model_id, planId:-1},
+        request_query: "",
+        session_variables: admin.session}});
+    expect(response.status()).toEqual(200);
+    expect(await response.json()).toEqual({
+      status: 'failure',
+      reason: 'No plan exists with id `PlanId[id=-1]`'
+    });
+
+    //verify that when inserting an external dataset, the resource is generated in the constraints edsl
+    await request.post(`${urls.MERLIN_URL}/addExternalDataset`, {
+      data: {
+        action: {name: "addExternalDataset"},
+        input: {
+          planId: plan_id,
+          datasetStart:'2021-001T06:00:00.000',
+          profileSet: {'/my_other_boolean':{schema:{type:'boolean'},segments:[{duration:3600000000,dynamics:true}],type:'discrete'}},
+          simulationDatasetId: null
+        },
+        request_query: "",
+        session_variables: admin.session}});
+
+    let resourceTypesWithExternalResource = `export type Resource = {
+  "/peel": number,
+  "/fruit": {initial: number, rate: number, },
+  "/data/line_count": number,
+  "/my_other_boolean": boolean,
+  "/flag/conflicted": boolean,
+  "/plant": number,
+  "/flag": ( | "A" | "B"),
+  "/producer": string,
+};`;
+    // Returns a 200 with a success status and the resource types containing the external type
+    response = await request.post(`${urls.SCHEDULER_URL}/schedulingDslTypescript`, {
+      data: {
+        action: {name: "schedulingDslTypescript"},
+        input: {missionModelId: mission_model_id, planId:plan_id},
+        request_query: "",
+        session_variables: admin.session}});
+    let respBody = await response.json();
+    let found = false;
+    for(let file of respBody.typescriptFiles){
+      if(file.filePath == "file:///mission-model-generated-code.ts"){
+        expect(file.content.includes(resourceTypesWithExternalResource)).toEqual(true);
+        found = true;
+      }
+    }
+    expect(found).toEqual(true);
+    expect(response.status()).toEqual(200);
+    expect(respBody.status).toEqual('success');
 
     // Returns a 200 with a success status if the ID is valid
     response = await request.post(`${urls.SCHEDULER_URL}/schedulingDslTypescript`, {
@@ -649,7 +704,7 @@ test.describe.serial('Scheduler Bindings', () => {
         input: {missionModelId: mission_model_id},
         request_query: "",
         session_variables: admin.session}});
-    let respBody = await response.json();
+    respBody = await response.json();
     expect(response.status()).toEqual(200);
     expect(respBody.status).toEqual('success');
     expect(respBody.typescriptFiles).not.toBeNull();

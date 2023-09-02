@@ -1717,6 +1717,42 @@ public class SchedulingIntegrationTests {
   }
 
   @Test
+  void testExternalResource() {
+
+    final var myBooleanResource = new DiscreteProfile(
+        List.of(
+            new Segment<>(Interval.between(HOUR.times(2), HOUR.times(4)), SerializedValue.of(true))
+        )
+    ).assignGaps(new DiscreteProfile(List.of(new Segment(Interval.FOREVER, SerializedValue.of(false)))));
+
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+         export default (): Goal => {
+          return Goal.CoexistenceGoal({
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            forEach: Discrete.Resource(Resources["/my_boolean"]).equal(true),
+            startsAt: TimingConstraint.singleton(WindowProperty.START)
+          })
+        }""", true)),
+        List.of(),
+        PLANNING_HORIZON,
+        Optional.of(
+            new ExternalProfiles(
+                Map.of(),
+                Map.of("/my_boolean", myBooleanResource),
+                List.of(new ResourceType("/my_boolean", new ValueSchema.BooleanSchema()))))
+    );
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(1, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    assertEquals(HOUR.times(2), peelBanana.startOffset());
+  }
+
+  @Test
   void testApplyWhen() {
     final var growBananaDuration = Duration.of(1, Duration.SECONDS);
 
