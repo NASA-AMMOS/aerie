@@ -1,7 +1,7 @@
-import {Segment} from "./Segment";
-import {ProfileType} from "./Profile";
-import type {CachedAsyncGenerator} from "./generators";
-import {cacheGenerator, cachePlainGenerator, preparePlainGenerator} from "./generators";
+import {Segment} from "./segment";
+import {ProfileType} from "./profile";
+import type {CachedAsyncGenerator} from "./timeline";
+import {cacheGenerator, cachePlainGenerator, preparePlainGenerator} from "./timeline";
 import {Interval} from "./interval";
 import {Client} from "ts-postgres";
 

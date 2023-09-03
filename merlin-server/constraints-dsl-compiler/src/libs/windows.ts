@@ -1,26 +1,21 @@
-import {Profile, ProfileType} from "./Profile";
-import type {Segment} from "./Segment";
+import {Profile, ProfileType} from "./profile";
+import {Segment} from "./segment";
 import database from "./database";
+import {BinaryOperation} from "./binary-operation";
+import {Interval} from "./interval";
+import type {Timeline} from "./timeline";
 
 export class Windows extends Profile<boolean> {
-  constructor(segments: AsyncGenerator<Segment<boolean>>) {
+  constructor(segments: Timeline<Segment<boolean>>) {
     super(segments, ProfileType.Windows);
   }
 
   public static empty(): Windows {
-    let segments = (async function* () {})();
-    return (new Profile<boolean>(segments, ProfileType.Windows)).specialize();
-  }
-
-  public static override from(data: Segment<boolean>[]): Windows;
-  public static override from(data: Segment<boolean>): Windows;
-  public static override from(data: boolean): Windows;
-  public static override from(data: any) {
-    return Profile.from(data, ProfileType.Windows).specialize();
+    return new Windows(_ => []);
   }
 
   public static Value(value: boolean): Windows {
-    return Windows.from(value);
+    return new Windows(bounds => [new Segment(bounds, value)]);
   }
 
   public static Resource(name: string): Windows {
@@ -28,6 +23,71 @@ export class Windows extends Profile<boolean> {
   }
 
   public not(): Windows {
-   return this.map_values($ => !$.value);
+   return this.mapValues($ => !$.value);
   }
+
+  public and(other: Windows): Windows {
+    return Profile.map2Values(this, other, BinaryOperation.cases(
+        l => l ? undefined : false,
+        r => r ? undefined : false,
+        (l, r) => l && r
+    ), ProfileType.Windows);
+  }
+
+  public or(other: Windows): Windows {
+    return Profile.map2Values(this, other, BinaryOperation.cases(
+        l => l ? true : undefined,
+        r => r ? true : undefined,
+        (l, r) => l || r
+    ), ProfileType.Windows);
+  }
+
+  public add(other: Windows): Windows {
+    return Profile.map2Values(this, other, BinaryOperation.combineOrIdentity(
+        (l, r) => l || r
+    ), ProfileType.Windows);
+  }
+
+  public filterByDuration(min?: Temporal.Duration, max?: Temporal.Duration): Windows {
+    return this.mapValues(s => {
+      if (s.value) {
+        const duration = s.interval.duration();
+        return !((min !== undefined && Temporal.Duration.compare(min, duration) > 0) || (max !== undefined && Temporal.Duration.compare(max, duration) < 0));
+      } else {
+        return false;
+      }
+    });
+  }
+
+  public shorterThan(max: Temporal.Duration): Windows {
+    return this.filterByDuration(undefined, max);
+  }
+
+  public longerThan(min: Temporal.Duration): Windows {
+    return this.filterByDuration(min, undefined);
+  }
+
+  public shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Windows {
+    if (shiftFalling === undefined) shiftFalling = shiftRising;
+    return this.mapIntervals($ => {
+      if ($.value) {
+        return Interval.between(
+          $.interval.start.add(shiftRising),
+          $.interval.end.add(shiftFalling!),
+          $.interval.startInclusivity,
+          $.interval.endInclusivity
+        );
+      } else {
+        return Interval.between(
+          $.interval.start.add(shiftFalling!),
+          $.interval.end.add(shiftRising),
+          $.interval.startInclusivity,
+          $.interval.endInclusivity
+        );
+      }
+    });
+  }
+
+  public starts = () => this.specificEdges(false, true);
+  public ends = () => this.specificEdges(true, false);
 }

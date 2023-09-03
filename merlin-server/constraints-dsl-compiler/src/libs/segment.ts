@@ -1,6 +1,6 @@
-import type {Interval} from "./interval";
+import type {HasInterval, Interval} from "./interval";
 
-export class Segment<V> {
+export class Segment<V> implements HasInterval {
   public readonly interval: Interval;
   public readonly value: V;
 
@@ -21,4 +21,8 @@ export class Segment<V> {
   public mapInterval(f: (i: Interval) => Interval): Segment<V> {
     return new Segment<V>(f(this.interval), this.value);
   }
+}
+
+export function coalesce<V>(segments: Segment<V>[], comparator: (l: V, r: V) => boolean): Segment<V>[] {
+  return segments;
 }
