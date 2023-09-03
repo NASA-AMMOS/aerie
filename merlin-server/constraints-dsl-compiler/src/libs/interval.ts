@@ -41,7 +41,9 @@ export class Interval {
   }
 
   public isEmpty(): boolean {
-
+    let comparison = Temporal.Duration.compare(this.start, this.end);
+    if (comparison === 1) return true;
+    return comparison === 0 && (this.startInclusivity === Inclusivity.Exclusive || this.endInclusivity === Inclusivity.Exclusive);
   }
 
   public duration(): Temporal.Duration {
@@ -55,8 +57,6 @@ export class Interval {
   public includesEnd(): boolean {
     return this.endInclusivity === Inclusivity.Inclusive;
   }
-
-  public static readonly Forever = new Interval(0, 1, Inclusivity.Inclusive, Inclusivity.Exclusive);
 
   public static intersect(left: Interval, right: Interval): Interval {
     let start: Temporal.Duration;
