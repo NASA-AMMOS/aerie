@@ -26,9 +26,9 @@ export class Profile<V> {
   }
 
   public inspect(f: (segments: readonly Segment<V>[]) => void) {
-    let innerSegments = this.segments;
+    const innerSegments = this.segments;
     this.segments = bounds => {
-      let segments = innerSegments(bounds);
+      const segments = innerSegments(bounds);
       f(segments);
       return segments;
     }
@@ -49,12 +49,12 @@ export class Profile<V> {
       op: BinaryOperation<V, W, Result>,
       typeTag: ProfileType
   ): ProfileSpecialization<Result> {
-    let leftProfile = this;
-    let segments = (bounds: Interval) => {
-      let left = leftProfile.segments(bounds);
-      let right = rightProfile.segments(bounds);
+    const leftProfile = this;
+    const segments = (bounds: Interval) => {
+      const left = leftProfile.segments(bounds);
+      const right = rightProfile.segments(bounds);
 
-      let result: Segment<Result>[] = [];
+      const result: Segment<Result>[] = [];
 
       let leftIndex = 0;
       let rightIndex = 0;
@@ -79,22 +79,22 @@ export class Profile<V> {
         }
 
         if (leftSegment === undefined) {
-          let resultingSegment = rightSegment!.mapValue(op.right).transpose();
+          const resultingSegment = rightSegment!.mapValue(op.right).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else if (rightSegment === undefined) {
-          let resultingSegment = leftSegment!.mapValue(op.left).transpose();
+          const resultingSegment = leftSegment!.mapValue(op.left).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          let startComparison = Interval.compareStarts(leftSegment.interval, rightSegment.interval);
+          const startComparison = Interval.compareStarts(leftSegment.interval, rightSegment.interval);
           if (startComparison === -1) {
             remainingRightSegment = rightSegment;
-            let endComparison = Interval.compareEndToStart(leftSegment.interval, rightSegment.interval);
+            const endComparison = Interval.compareEndToStart(leftSegment.interval, rightSegment.interval);
             if (endComparison < 1) {
-              let resultingSegment = leftSegment.mapValue(op.left).transpose();
+              const resultingSegment = leftSegment.mapValue(op.left).transpose();
               if (resultingSegment !== undefined) result.push(resultingSegment);
             } else {
               remainingLeftSegment = leftSegment.mapInterval(i => Interval.intersect(i, rightSegment!.interval));
-              let resultingSegment = new Segment(
+              const resultingSegment = new Segment(
                   Interval.between(leftSegment.interval.start, rightSegment!.interval.start, leftSegment.interval.startInclusivity, Inclusivity.opposite(rightSegment!.interval.startInclusivity)),
                   op.left(leftSegment.value)
               ).transpose();
@@ -102,30 +102,30 @@ export class Profile<V> {
             }
           } else if (startComparison === 1) {
             remainingLeftSegment = leftSegment;
-            let endComparison = Interval.compareEndToStart(rightSegment.interval, leftSegment.interval);
+            const endComparison = Interval.compareEndToStart(rightSegment.interval, leftSegment.interval);
             if (endComparison < 1) {
-              let resultingSegment = rightSegment.mapValue(op.right).transpose();
+              const resultingSegment = rightSegment.mapValue(op.right).transpose();
               if (resultingSegment !== undefined) result.push(resultingSegment);
             } else {
               remainingRightSegment = rightSegment.mapInterval(i => Interval.intersect(i, leftSegment!.interval));
-              let resultingSegment = new Segment(
+              const resultingSegment = new Segment(
                   Interval.between(rightSegment.interval.start, leftSegment!.interval.start, rightSegment.interval.startInclusivity, Inclusivity.opposite(leftSegment!.interval.startInclusivity)),
                   op.right(rightSegment.value)
               ).transpose();
               if (resultingSegment !== undefined) result.push(resultingSegment);
             }
           } else {
-            let endComparison = Interval.compareEnds(leftSegment.interval, rightSegment.interval);
+            const endComparison = Interval.compareEnds(leftSegment.interval, rightSegment.interval);
             if (endComparison === -1) {
               remainingRightSegment = rightSegment.mapInterval(i => Interval.between(leftSegment!.interval.end, i.end, Inclusivity.opposite(leftSegment!.interval.endInclusivity), i.endInclusivity));
-              let resultingSegment = leftSegment.mapValue(l => op.combine(l, rightSegment!.value)).transpose();
+              const resultingSegment = leftSegment.mapValue(l => op.combine(l, rightSegment!.value)).transpose();
               if (resultingSegment !== undefined) result.push(resultingSegment);
             } else if (endComparison === 1) {
               remainingLeftSegment = leftSegment.mapInterval(i => Interval.between(rightSegment!.interval.end, i.end, Inclusivity.opposite(rightSegment!.interval.endInclusivity), i.endInclusivity));
-              let resultingSegment = rightSegment.mapValue(r => op.combine(leftSegment!.value, r)).transpose();
+              const resultingSegment = rightSegment.mapValue(r => op.combine(leftSegment!.value, r)).transpose();
               if (resultingSegment !== undefined) result.push(resultingSegment);
             } else {
-              let resultingSegment = leftSegment.mapValue(l => op.combine(l, rightSegment!.value)).transpose();
+              const resultingSegment = leftSegment.mapValue(l => op.combine(l, rightSegment!.value)).transpose();
               if (resultingSegment !== undefined) result.push(resultingSegment);
             }
           }
@@ -142,22 +142,22 @@ export class Profile<V> {
   }
 
   public filter(f: (s: Segment<V>) => boolean): ProfileSpecialization<V> {
-    let segments = (bounds: Interval) => this.segments(bounds).filter(f);
+    const segments = (bounds: Interval) => this.segments(bounds).filter(f);
     return (new Profile<V>(segments, this.typeTag)).specialize();
   }
 
   public edges(edgeFilter: BinaryOperation<V, V, boolean>): Windows {
-    let newSegments = (bounds: Interval) => {
-      let result: Segment<boolean>[] = [];
+    const newSegments = (bounds: Interval) => {
+      const result: Segment<boolean>[] = [];
       let buffer: Segment<V> | undefined = undefined;
       return coalesce(this.segments(bounds).flatMap(
           currentSegment => {
             let leftEdge: boolean | undefined;
             let rightEdge: boolean | undefined;
 
-            let previous = buffer;
+            const previous = buffer;
             buffer = currentSegment;
-            let currentInterval = currentSegment.interval;
+            const currentInterval = currentSegment.interval;
 
             if (currentInterval.end === bounds.end && currentInterval.endInclusivity === bounds.endInclusivity) {
               if (bounds.includesEnd()) rightEdge = false;
@@ -214,7 +214,7 @@ export class Profile<V> {
   }
 
   public select(selection: Interval): ProfileSpecialization<V> {
-    let segments = (bounds: Interval) => this.segments(Interval.intersect(selection, bounds));
+    const segments = (bounds: Interval) => this.segments(Interval.intersect(selection, bounds));
     return (new Profile(segments, this.typeTag)).specialize();
   }
 

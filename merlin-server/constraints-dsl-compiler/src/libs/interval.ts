@@ -41,7 +41,7 @@ export class Interval {
   }
 
   public isEmpty(): boolean {
-    let comparison = Temporal.Duration.compare(this.start, this.end);
+    const comparison = Temporal.Duration.compare(this.start, this.end);
     if (comparison === 1) return true;
     return comparison === 0 && (this.startInclusivity === Inclusivity.Exclusive || this.endInclusivity === Inclusivity.Exclusive);
   }
@@ -62,7 +62,7 @@ export class Interval {
     let start: Temporal.Duration;
     let startInclusivity: Inclusivity;
 
-    let startComparison = Temporal.Duration.compare(left.start, right.start);
+    const startComparison = Temporal.Duration.compare(left.start, right.start);
     if (startComparison > 0) {
       start = left.start;
       startInclusivity = left.startInclusivity;
@@ -77,7 +77,7 @@ export class Interval {
     let end: Temporal.Duration;
     let endInclusivity: Inclusivity;
 
-    let endComparison = Temporal.Duration.compare(left.end, right.end);
+    const endComparison = Temporal.Duration.compare(left.end, right.end);
     if (endComparison < 0) {
       end = left.end;
       endInclusivity = left.endInclusivity;
@@ -93,16 +93,16 @@ export class Interval {
   }
 
   public static compareStarts(left: Interval, right: Interval): Temporal.ComparisonResult {
-    let timeComparison = Temporal.Duration.compare(left.start, right.start);
+    const timeComparison = Temporal.Duration.compare(left.start, right.start);
     if (timeComparison === 0) {
       return Inclusivity.compareRestrictiveness(left.startInclusivity, right.startInclusivity);
     } else return timeComparison;
   }
 
   public static compareEndToStart(left: Interval, right: Interval): Temporal.ComparisonResult {
-    let timeComparison = Temporal.Duration.compare(left.end, right.start);
+    const timeComparison = Temporal.Duration.compare(left.end, right.start);
     if (timeComparison === 0) {
-      let incComparison = Inclusivity.compareRestrictiveness(left.endInclusivity, right.startInclusivity);
+      const incComparison = Inclusivity.compareRestrictiveness(left.endInclusivity, right.startInclusivity);
       if (incComparison !== 0) return 0;
       else {
         if (left.endInclusivity === Inclusivity.Exclusive) return -1;
@@ -112,7 +112,7 @@ export class Interval {
   }
 
   public static compareEnds(left: Interval, right: Interval): Temporal.ComparisonResult {
-    let timeComparison = Temporal.Duration.compare(left.end, right.end);
+    const timeComparison = Temporal.Duration.compare(left.end, right.end);
     if (timeComparison === 0) {
       return <-1 | 0 | 1>-Inclusivity.compareRestrictiveness(left.startInclusivity, right.startInclusivity);
     } else return timeComparison;

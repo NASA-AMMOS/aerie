@@ -10,7 +10,7 @@ export function bound<V extends HasInterval>(data: IterableIterator<V>): Timelin
 export function bound<V extends HasInterval>(data: any): Timeline<V> {
   if (Array.isArray(data)) {}
   else if ('next' in data) {
-    let iterable = makeIterable(data);
+    const iterable = makeIterable(data);
     data = [];
     for (const v in iterable) {
       data.push(v);
@@ -30,7 +30,7 @@ export function coalesce<V>(segments: Segment<V>[], equals?: (l: V, r: V) => boo
   let shortIndex = 0;
   let buffer = segments[0]!;
   for (const segment of segments.slice(1)) {
-    let comparison = Interval.compareEndToStart(buffer.interval, segment.interval);
+    const comparison = Interval.compareEndToStart(buffer.interval, segment.interval);
     if (comparison === -1) {
       segments[shortIndex++] = buffer;
       buffer = segment;

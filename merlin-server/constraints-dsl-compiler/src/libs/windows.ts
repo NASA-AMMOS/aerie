@@ -69,7 +69,7 @@ export class Windows extends Profile<boolean> {
 
   public shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Windows {
     if (shiftFalling === undefined) shiftFalling = shiftRising;
-    let boundsMap = (bounds: Interval) => {
+    const boundsMap = (bounds: Interval) => {
       let start: Temporal.Duration;
       let end: Temporal.Duration;
       if (Temporal.Duration.compare(shiftRising, shiftFalling!) === 1) {
