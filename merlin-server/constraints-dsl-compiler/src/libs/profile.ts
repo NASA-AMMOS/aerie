@@ -1,7 +1,7 @@
-import {coalesce, Segment} from "./segment";
+import {Segment} from "./segment";
 import {Inclusivity, Interval} from "./interval";
 import {Windows} from "./windows";
-import {Timeline,} from "./timeline";
+import {coalesce, Timeline,} from "./timeline";
 import {BinaryOperation} from "./binary-operation";
 import {LinearEquation, Real} from "./real";
 
@@ -21,33 +21,26 @@ export class Profile<V> {
     this.typeTag = typeTag;
   }
 
-  public map(f: (v: Segment<V>) => Segment<V>, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V>;
-  public map<W>(f: (v: Segment<V>) => Segment<W>, boundsMap: (b: Interval) => Interval, type_tag: ProfileType): ProfileSpecialization<W>;
-  public map<W>(f: (v: Segment<V>) => Segment<W>, boundsMap: (b: Interval) => Interval, type_tag?: ProfileType): ProfileSpecialization<W> {
-    if (type_tag === undefined) {
-      type_tag = this.typeTag;
-    }
-    let result = (new Profile<W>(bounds => this.segments(boundsMap(bounds)).map(f), type_tag)).specialize();
-    result.coalesce();
+  public async collect(bounds: Interval): Promise<Segment<V>[]> {
+    return this.segments(bounds);
+  }
 
-    return result;
+  public inspect(f: (segments: readonly Segment<V>[]) => void) {
+    let innerSegments = this.segments;
+    this.segments = bounds => {
+      let segments = innerSegments(bounds);
+      f(segments);
+      return segments;
+    }
   }
 
   public mapValues(f: (v: Segment<V>) => V): ProfileSpecialization<V>;
   public mapValues<W>(f: (v: Segment<V>) => W, type_tag: ProfileType): ProfileSpecialization<W>;
   public mapValues<W>(f: (v: Segment<V>) => W, type_tag?: ProfileType): ProfileSpecialization<W> {
-    return this.map<W>(
+    return this.unsafe.map<W>(
         s => new Segment(s.interval, f(s)),
         $ => $,
         type_tag !== undefined ? type_tag : this.typeTag
-    );
-  }
-
-  public mapIntervals(map: (s: Segment<V>) => Interval, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V> {
-    return this.map<V>(
-        s => new Segment<V>(f(s), s.value),
-        boundsMap,
-        this.typeTag
     );
   }
 
@@ -66,10 +59,10 @@ export class Profile<V> {
       let leftIndex = 0;
       let rightIndex = 0;
 
-      let leftSegment: Segment<Left> | undefined = undefined;
-      let rightSegment: Segment<Right> | undefined = undefined;
-      let remainingLeftSegment: Segment<Left> | undefined = undefined;
-      let remainingRightSegment: Segment<Right> | undefined = undefined;
+      let leftSegment: Segment<V> | undefined = undefined;
+      let rightSegment: Segment<W> | undefined = undefined;
+      let remainingLeftSegment: Segment<V> | undefined = undefined;
+      let remainingRightSegment: Segment<W> | undefined = undefined;
 
       while (leftIndex < left.length && rightIndex < right.length && remainingLeftSegment !== undefined && remainingRightSegment !== undefined) {
         if (remainingLeftSegment !== undefined) {
@@ -138,7 +131,7 @@ export class Profile<V> {
           }
         }
       }
-      return result;
+      return coalesce(result);
     }
 
     return (new Profile(segments, typeTag)).specialize();
@@ -157,7 +150,7 @@ export class Profile<V> {
     let newSegments = (bounds: Interval) => {
       let result: Segment<boolean>[] = [];
       let buffer: Segment<V> | undefined = undefined;
-      return this.segments(bounds).flatMap(
+      return coalesce(this.segments(bounds).flatMap(
           currentSegment => {
             let leftEdge: boolean | undefined;
             let rightEdge: boolean | undefined;
@@ -203,7 +196,7 @@ export class Profile<V> {
               )).transpose()
             ];
           }
-      ).filter($ => $ !== undefined) as Segment<boolean>[];
+      ).filter($ => $ !== undefined) as Segment<boolean>[]);
     };
     return new Windows(newSegments);
   }
@@ -218,10 +211,6 @@ export class Profile<V> {
         r => r === to ? undefined : false,
         (l, r) => l === from && r === to
     ));
-  }
-
-  public async collect(bounds: Interval): Promise<Segment<V>[]> {
-    return this.segments(bounds);
   }
 
   public select(selection: Interval): ProfileSpecialization<V> {
@@ -242,9 +231,26 @@ export class Profile<V> {
     return this;
   }
 
-  public coalesce() {
-    this.segments = bounds => coalesce<V>(this.segments(bounds), (l, r) => l === r);
-  }
+  public unsafe = new class {
+    constructor(public outerThis: Profile<V>) {}
+
+    public map(f: (v: Segment<V>) => Segment<V>, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V>;
+    public map<W>(f: (v: Segment<V>) => Segment<W>, boundsMap: (b: Interval) => Interval, type_tag: ProfileType): ProfileSpecialization<W>;
+    public map<W>(f: (v: Segment<V>) => Segment<W>, boundsMap: (b: Interval) => Interval, type_tag?: ProfileType): ProfileSpecialization<W> {
+      if (type_tag === undefined) {
+        type_tag = this.outerThis.typeTag;
+      }
+      return (new Profile<W>(bounds => coalesce(this.outerThis.segments(boundsMap(bounds)).map(f)), type_tag)).specialize();
+    }
+
+    public mapIntervals(map: (s: Segment<V>) => Interval, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V> {
+      return this.map<V>(
+          s => new Segment<V>(map(s), s.value),
+          boundsMap,
+          this.outerThis.typeTag
+      );
+    }
+  }(this);
 }
 
 type ProfileSpecialization<V> =

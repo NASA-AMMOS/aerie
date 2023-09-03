@@ -46,7 +46,8 @@ export function coalesce<V>(segments: Segment<V>[], equals?: (l: V, r: V) => boo
       }
     }
   }
-  segments[shortIndex] = buffer;
+  segments[shortIndex++] = buffer;
+  segments.splice(shortIndex);
   return segments;
 }
 

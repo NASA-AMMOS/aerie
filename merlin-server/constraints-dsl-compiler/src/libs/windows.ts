@@ -27,7 +27,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public and(other: Windows): Windows {
-    return Profile.map2Values(this, other, BinaryOperation.cases(
+    return this.map2Values(other, BinaryOperation.cases(
         l => l ? undefined : false,
         r => r ? undefined : false,
         (l, r) => l && r
@@ -35,7 +35,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public or(other: Windows): Windows {
-    return Profile.map2Values(this, other, BinaryOperation.cases(
+    return this.map2Values(other, BinaryOperation.cases(
         l => l ? true : undefined,
         r => r ? true : undefined,
         (l, r) => l || r
@@ -43,7 +43,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public add(other: Windows): Windows {
-    return Profile.map2Values(this, other, BinaryOperation.combineOrIdentity(
+    return this.map2Values(other, BinaryOperation.combineOrIdentity(
         (l, r) => l || r
     ), ProfileType.Windows);
   }
@@ -102,7 +102,7 @@ export class Windows extends Profile<boolean> {
           $.interval.endInclusivity
         );
       }
-    });
+    }, boundsMap);
   }
 
   public starts = () => this.specificEdges(false, true);
