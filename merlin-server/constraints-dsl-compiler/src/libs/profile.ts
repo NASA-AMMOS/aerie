@@ -1,7 +1,7 @@
 import {Segment} from "./segment";
 import {Inclusivity, Interval} from "./interval";
 import {Windows} from "./windows";
-import {coalesce, Timeline,} from "./timeline";
+import {coalesce, Timeline, bound} from "./timeline";
 import {BinaryOperation} from "./binary-operation";
 import {LinearEquation, Real} from "./real";
 
@@ -32,6 +32,29 @@ export class Profile<V> {
       f(segments);
       return segments;
     }
+  }
+
+  public set(interval: Interval, value: V): ProfileSpecialization<V>;
+  public set(newProfile: Profile<V>): ProfileSpecialization<V>;
+  public set(intervalOrProfile: Profile<V> | Interval, value?: V): ProfileSpecialization<V> {
+    let profile: Profile<V>;
+    if (value !== undefined) profile = new Profile(bound([new Segment(intervalOrProfile as Interval, value)]), this.typeTag);
+    else profile = intervalOrProfile as Profile<V>;
+    return this.map2Values(profile, BinaryOperation.combineOrIdentity((l, r) => r), this.typeTag);
+  }
+
+  public assignGaps(defaultProfile: Profile<V>): ProfileSpecialization<V> {
+    return defaultProfile.set(this);
+  }
+
+  public unset(unsetInterval: Interval): ProfileSpecialization<V> {
+    return (new Profile<V>(bounds => this.segments(bounds)
+        .flatMap(seg => {
+          let currentInterval = seg.interval;
+          let currentValue = seg.value;
+          return Interval.subtract(currentInterval, unsetInterval)
+              .map($ => new Segment($, currentValue));
+        }), this.typeTag)).specialize();
   }
 
   public mapValues(f: (v: Segment<V>) => V): ProfileSpecialization<V>;

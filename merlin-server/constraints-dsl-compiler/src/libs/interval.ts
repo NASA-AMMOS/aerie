@@ -92,6 +92,19 @@ export class Interval {
     return Interval.between(start, end, startInclusivity, endInclusivity);
   }
 
+  public static subtract(left: Interval, right: Interval) {
+    const intersection = Interval.intersect(left, right);
+    if (intersection.isEmpty()) return [left];
+    else if (Interval.equals(intersection, left)) return [];
+    else {
+      const result = [
+        Interval.between(left.start, right.start, left.startInclusivity, Inclusivity.opposite(right.startInclusivity)),
+        Interval.between(right.end, left.end, Inclusivity.opposite(right.startInclusivity), left.endInclusivity)
+      ];
+      return result.filter($ => !$.isEmpty());
+    }
+  }
+
   public static compareStarts(left: Interval, right: Interval): Temporal.ComparisonResult {
     const timeComparison = Temporal.Duration.compare(left.start, right.start);
     if (timeComparison === 0) {
