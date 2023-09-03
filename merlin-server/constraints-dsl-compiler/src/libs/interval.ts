@@ -117,8 +117,11 @@ export class Interval {
       return <-1 | 0 | 1>-Inclusivity.compareRestrictiveness(left.startInclusivity, right.startInclusivity);
     } else return timeComparison;
   }
-}
 
-export interface HasInterval {
-  readonly interval: Interval
+  public static equals(left: Interval, right: Interval): boolean {
+    return Temporal.Duration.compare(left.start, right.start) === 0 &&
+        Temporal.Duration.compare(left.end, right.end) === 0 &&
+        left.startInclusivity === right.startInclusivity &&
+        left.endInclusivity === right.endInclusivity;
+  }
 }

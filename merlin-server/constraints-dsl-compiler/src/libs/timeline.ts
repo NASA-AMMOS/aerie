@@ -1,13 +1,17 @@
-import {HasInterval, Inclusivity, Interval} from "./interval";
+import {Inclusivity, Interval} from "./interval";
 import type {Segment} from "./segment";
 
-export type Timeline<V extends HasInterval> = (bounds: Interval) => V[];
+export type Timeline<V extends Boundable<V>> = (bounds: Interval) => V[];
 
-export function bound<V extends HasInterval>(data: V[]): Timeline<V>;
-export function bound<V extends HasInterval>(data: Iterator<V>): Timeline<V>;
-export function bound<V extends HasInterval>(data: Iterable<V>): Timeline<V>;
-export function bound<V extends HasInterval>(data: IterableIterator<V>): Timeline<V>;
-export function bound<V extends HasInterval>(data: any): Timeline<V> {
+export interface Boundable<This> {
+  bound(bounds: Interval): This | undefined;
+}
+
+export function bound<V extends Boundable<V>>(data: V[]): Timeline<V>;
+export function bound<V extends Boundable<V>>(data: Iterator<V>): Timeline<V>;
+export function bound<V extends Boundable<V>>(data: Iterable<V>): Timeline<V>;
+export function bound<V extends Boundable<V>>(data: IterableIterator<V>): Timeline<V>;
+export function bound<V extends Boundable<V>>(data: any): Timeline<V> {
   if (Array.isArray(data)) {}
   else if ('next' in data) {
     const iterable = makeIterable(data);
@@ -18,8 +22,7 @@ export function bound<V extends HasInterval>(data: any): Timeline<V> {
   }
   else data = [data];
 
-  // TODO
-  return bounds => data;
+  return bounds => (data as V[]).map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
 }
 
 export function coalesce<V>(segments: Segment<V>[], equals?: (l: V, r: V) => boolean): Segment<V>[] {
@@ -49,6 +52,20 @@ export function coalesce<V>(segments: Segment<V>[], equals?: (l: V, r: V) => boo
   segments[shortIndex++] = buffer;
   segments.splice(shortIndex);
   return segments;
+}
+
+function cache<V extends Boundable<V>>(t: Timeline<V>): Timeline<V> {
+  // Stored as a list of tuples that we must search through because Intervals contain Durations,
+  // which have an inaccurate equality check.
+  let history: [Interval, V[]][] = [];
+  return bounds => {
+    for (const [i, t] of history) {
+      if (Interval.equals(i, bounds)) return [...t];
+    }
+    const result = t(bounds);
+    history.push([bounds, result]);
+    return result;
+  }
 }
 
 export function makeIterable<V>(iter: Iterator<V>): IterableIterator<V> {
