@@ -69,7 +69,24 @@ export class Windows extends Profile<boolean> {
 
   public shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Windows {
     if (shiftFalling === undefined) shiftFalling = shiftRising;
-    return this.mapIntervals($ => {
+    let boundsMap = (bounds: Interval) => {
+      let start: Temporal.Duration;
+      let end: Temporal.Duration;
+      if (Temporal.Duration.compare(shiftRising, shiftFalling!) === 1) {
+        start = bounds.start.subtract(shiftRising);
+        end = bounds.end.subtract(shiftFalling!);
+      } else {
+        start = bounds.start.subtract(shiftFalling!);
+        end = bounds.end.subtract(shiftRising);
+      }
+      return Interval.between(
+          start,
+          end,
+          bounds.startInclusivity,
+          bounds.endInclusivity
+      );
+    }
+    return this.unsafe.mapIntervals($ => {
       if ($.value) {
         return Interval.between(
           $.interval.start.add(shiftRising),
