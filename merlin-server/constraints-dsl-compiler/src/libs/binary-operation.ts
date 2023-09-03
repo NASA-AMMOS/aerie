@@ -41,9 +41,9 @@ export class BinaryOperation<Left, Right, Out> {
     );
   }
 
-  public static combineOrIdentity<Left, Right, Out>(
-      func: (l: Left, r: Right) => Out | undefined
-  ): BinaryOperation<Left, Right, Out> {
+  public static combineOrIdentity<V>(
+      func: (l: V, r: V) => V
+  ): BinaryOperation<V, V, V> {
     return BinaryOperation.cases(
         l => l,
         r => r,
