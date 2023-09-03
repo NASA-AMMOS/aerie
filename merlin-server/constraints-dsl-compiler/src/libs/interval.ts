@@ -103,10 +103,11 @@ export class Interval {
     let timeComparison = Temporal.Duration.compare(left.end, right.start);
     if (timeComparison === 0) {
       let incComparison = Inclusivity.compareRestrictiveness(left.endInclusivity, right.startInclusivity);
-      if (incComparison === 0) {
+      if (incComparison !== 0) return 0;
+      else {
         if (left.endInclusivity === Inclusivity.Exclusive) return -1;
-        else return 0;
-      } else return <-1 | 0 | 1>-incComparison
+        else return 1;
+      }
     } else return timeComparison;
   }
 
