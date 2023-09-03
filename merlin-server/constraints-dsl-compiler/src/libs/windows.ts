@@ -48,7 +48,7 @@ export class Windows extends Profile<boolean> {
     ), ProfileType.Windows);
   }
 
-  public filterByDuration(min?: Temporal.Duration, max?: Temporal.Duration): Windows {
+  public falsifyByDuration(min?: Temporal.Duration, max?: Temporal.Duration): Windows {
     return this.mapValues(s => {
       if (s.value) {
         const duration = s.interval.duration();
@@ -60,11 +60,11 @@ export class Windows extends Profile<boolean> {
   }
 
   public shorterThan(max: Temporal.Duration): Windows {
-    return this.filterByDuration(undefined, max);
+    return this.falsifyByDuration(undefined, max);
   }
 
   public longerThan(min: Temporal.Duration): Windows {
-    return this.filterByDuration(min, undefined);
+    return this.falsifyByDuration(min, undefined);
   }
 
   public shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Windows {
