@@ -1,11 +1,11 @@
-import {Profile, ProfileSpecialization} from "./profile";
-import {Segment} from "../segment";
-import database from "../database";
-import {BinaryOperation} from "../binary-operation";
-import {Interval} from "../interval";
-import type {Timeline} from "../timeline";
-import {ProfileType} from "./profile-type";
-import {LinearEquation, Real} from "./real";
+import { Profile, ProfileSpecialization } from './profile';
+import { Segment } from '../segment';
+import database from '../database';
+import { BinaryOperation } from '../binary-operation';
+import { Interval } from '../interval';
+import type { Timeline } from '../timeline';
+import { ProfileType } from './profile-type';
+import { LinearEquation, Real } from './real';
 
 // @ts-ignore
 export class Windows extends Profile<boolean> {
@@ -18,10 +18,9 @@ export class Windows extends Profile<boolean> {
   }
 
   public static override Value(value: boolean, interval?: Interval): Windows {
-    return new Windows(bounds => [new Segment(
-        value,
-        interval === undefined ? bounds : Interval.intersect(bounds, interval)
-    )]);
+    return new Windows(bounds => [
+      new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))
+    ]);
   }
 
   public static override Resource(name: string): Windows {
@@ -29,36 +28,49 @@ export class Windows extends Profile<boolean> {
   }
 
   public not(): Windows {
-   return this.mapValues($ => !$);
+    return this.mapValues($ => !$);
   }
 
   public and(other: Windows): Windows {
-    return this.map2Values(other, BinaryOperation.cases(
-        l => l ? undefined : false,
-        r => r ? undefined : false,
+    return this.map2Values(
+      other,
+      BinaryOperation.cases(
+        l => (l ? undefined : false),
+        r => (r ? undefined : false),
         (l, r) => l && r
-    ), ProfileType.Windows);
+      ),
+      ProfileType.Windows
+    );
   }
 
   public or(other: Windows): Windows {
-    return this.map2Values(other, BinaryOperation.cases(
-        l => l ? true : undefined,
-        r => r ? true : undefined,
+    return this.map2Values(
+      other,
+      BinaryOperation.cases(
+        l => (l ? true : undefined),
+        r => (r ? true : undefined),
         (l, r) => l || r
-    ), ProfileType.Windows);
+      ),
+      ProfileType.Windows
+    );
   }
 
   public add(other: Windows): Windows {
-    return this.map2Values(other, BinaryOperation.combineOrIdentity(
-        (l, r) => l || r
-    ), ProfileType.Windows);
+    return this.map2Values(
+      other,
+      BinaryOperation.combineOrIdentity((l, r) => l || r),
+      ProfileType.Windows
+    );
   }
 
   public falsifyByDuration(min?: Temporal.Duration, max?: Temporal.Duration): Windows {
     return this.mapValues((v, i) => {
       if (v) {
         const duration = i.duration();
-        return !((min !== undefined && Temporal.Duration.compare(min, duration) > 0) || (max !== undefined && Temporal.Duration.compare(max, duration) < 0));
+        return !(
+          (min !== undefined && Temporal.Duration.compare(min, duration) > 0) ||
+          (max !== undefined && Temporal.Duration.compare(max, duration) < 0)
+        );
       } else {
         return false;
       }
@@ -85,12 +97,7 @@ export class Windows extends Profile<boolean> {
         start = bounds.start.subtract(shiftFalling!);
         end = bounds.end.subtract(shiftRising);
       }
-      return Interval.between(
-          start,
-          end,
-          bounds.startInclusivity,
-          bounds.endInclusivity
-      );
+      return Interval.between(start, end, bounds.startInclusivity, bounds.endInclusivity);
     };
     return this.unsafe.mapIntervals((v, i) => {
       if (v) {

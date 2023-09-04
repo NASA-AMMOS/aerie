@@ -1,4 +1,4 @@
-import {LinearEquation} from "./real";
+import { LinearEquation } from './real';
 
 export enum ProfileType {
   Real,

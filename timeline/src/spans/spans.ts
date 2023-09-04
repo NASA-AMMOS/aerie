@@ -1,12 +1,12 @@
-import type {Timeline} from "../timeline";
-import {bound, coalesce, merge, sortSegments} from "../timeline";
-import {Segment} from "../segment";
-import type {Windows} from "../profiles/windows";
-import {Intervallic, Inclusivity, Interval} from "../interval";
-import {ProfileType} from "../profiles/profile-type";
-import {map2Arrays, Profile, ProfileSpecialization} from "../profiles/profile";
-import {LinearEquation, Real} from "../profiles/real";
-import {BinaryOperation} from "../binary-operation";
+import type { Timeline } from '../timeline';
+import { bound, coalesce, merge, sortSegments } from '../timeline';
+import { Segment } from '../segment';
+import type { Windows } from '../profiles/windows';
+import { Intervallic, Inclusivity, Interval } from '../interval';
+import { ProfileType } from '../profiles/profile-type';
+import { map2Arrays, Profile, ProfileSpecialization } from '../profiles/profile';
+import { LinearEquation, Real } from '../profiles/real';
+import { BinaryOperation } from '../binary-operation';
 
 export class Spans<S extends Intervallic> {
   private spans: Timeline<S>;
@@ -25,7 +25,7 @@ export class Spans<S extends Intervallic> {
       const spans = innerSpans(bounds);
       f(spans);
       return spans;
-    }
+    };
   }
 
   public add<T extends Intervallic>(span: T): Spans<S | T> {
@@ -49,11 +49,14 @@ export class Spans<S extends Intervallic> {
       sortSegments(result, profileType);
       coalesce(result, profileType);
       return result;
-    }
-    return (new Profile(segments, profileType)).specialize();
+    };
+    return new Profile(segments, profileType).specialize();
   }
 
-  public combineIntoProfile<Result>(op: BinaryOperation<S, Result, Result>, profileType: ProfileType): ProfileSpecialization<Result> {
+  public combineIntoProfile<Result>(
+    op: BinaryOperation<S, Result, Result>,
+    profileType: ProfileType
+  ): ProfileSpecialization<Result> {
     const segments = (bounds: Interval) => {
       let acc: Segment<Result>[] = [];
       const remaining = this.spans(bounds);
@@ -63,7 +66,10 @@ export class Spans<S extends Intervallic> {
         let previousInclusivity = Inclusivity.opposite(bounds.startInclusivity);
         for (const span of remaining) {
           const startComparison = Temporal.Duration.compare(span.interval.start, previousTime);
-          if (startComparison > 0 || (startComparison === 0 && previousInclusivity !== span.interval.startInclusivity)) {
+          if (
+            startComparison > 0 ||
+            (startComparison === 0 && previousInclusivity !== span.interval.startInclusivity)
+          ) {
             batch.push(new Segment(span, span.interval));
             previousTime = span.interval.end;
             previousInclusivity = span.interval.endInclusivity;
@@ -72,8 +78,8 @@ export class Spans<S extends Intervallic> {
         acc = map2Arrays(batch, acc, op);
       }
       return coalesce(acc, profileType);
-    }
-    return (new Profile(segments, profileType)).specialize();
+    };
+    return new Profile(segments, profileType).specialize();
   }
 
   public intoWindows(): Windows {
@@ -91,25 +97,20 @@ export class Spans<S extends Intervallic> {
         start = bounds.start.subtract(shiftFalling!);
         end = bounds.end.subtract(shiftRising);
       }
-      return Interval.between(
-          start,
-          end,
-          bounds.startInclusivity,
-          bounds.endInclusivity
-      );
+      return Interval.between(start, end, bounds.startInclusivity, bounds.endInclusivity);
     };
-    return this.unsafe.map(
-        s => s.mapInterval(i => i.interval.shiftBy(shiftRising, shiftFalling)),
-        boundsMap
-    );
+    return this.unsafe.map(s => s.mapInterval(i => i.interval.shiftBy(shiftRising, shiftFalling)), boundsMap);
   }
 
   public countActive(): Real {
-    return this.combineIntoProfile<LinearEquation>(BinaryOperation.cases(
+    return this.combineIntoProfile<LinearEquation>(
+      BinaryOperation.cases(
         () => LinearEquation.Constant(1),
         r => r,
         (l, r) => r.plus(1)
-    ), ProfileType.Real).assignGaps(0);
+      ),
+      ProfileType.Real
+    ).assignGaps(0);
   }
 
   public accumulatedDuration(unit: Temporal.Duration): Real {
@@ -120,7 +121,7 @@ export class Spans<S extends Intervallic> {
     const timeline = (bounds: Interval) => {
       const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.at(s.interval.start)));
       return spans.filter(s => bounds.contains(s.interval));
-    }
+    };
     return new Spans(timeline);
   }
 
@@ -128,45 +129,60 @@ export class Spans<S extends Intervallic> {
     const timeline = (bounds: Interval) => {
       const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.at(s.interval.end)));
       return spans.filter(s => bounds.contains(s.interval));
-    }
+    };
     return new Spans(timeline);
   }
 
-  public split(numberOfSubSpans: number, internalStartInclusivity: Inclusivity, internalEndInclusivity: Inclusivity, strict: boolean = true): Spans<S> {
+  public split(
+    numberOfSubSpans: number,
+    internalStartInclusivity: Inclusivity,
+    internalEndInclusivity: Inclusivity,
+    strict: boolean = true
+  ): Spans<S> {
     if (numberOfSubSpans === 1) return this;
-    const timeline = (bounds: Interval) => this.spans(bounds).flatMap(s => {
-      const i = s.interval;
+    const timeline = (bounds: Interval) =>
+      this.spans(bounds).flatMap(s => {
+        const i = s.interval;
 
-      const fullWidth = i.duration().total('microsecond');
-      const subWidth = Math.floor(fullWidth / numberOfSubSpans);
+        const fullWidth = i.duration().total('microsecond');
+        const subWidth = Math.floor(fullWidth / numberOfSubSpans);
 
-      if (i.isSingleton()) throw new Error("Cannot split an instantaneous span into sub-spans.");
-      else if (subWidth === 0) throw new Error(`Cannot split a span only ${subWidth} microseconds long in to ${numberOfSubSpans} sub-spans.`);
+        if (i.isSingleton()) throw new Error('Cannot split an instantaneous span into sub-spans.');
+        else if (subWidth === 0)
+          throw new Error(
+            `Cannot split a span only ${subWidth} microseconds long in to ${numberOfSubSpans} sub-spans.`
+          );
 
-      if (strict) {
-        if (Interval.compareStarts(i, bounds) === 0)
-          throw new Error("Cannot split a span that starts at or before the bounds start. Consider setting the `strict` arg to `false`.");
-        if (Interval.compareEnds(i, bounds) === 0)
-          throw new Error("Cannot split a span that ends at or before the bounds end. Consider setting the `strict` arg to `false`.");
-      }
+        if (strict) {
+          if (Interval.compareStarts(i, bounds) === 0)
+            throw new Error(
+              'Cannot split a span that starts at or before the bounds start. Consider setting the `strict` arg to `false`.'
+            );
+          if (Interval.compareEnds(i, bounds) === 0)
+            throw new Error(
+              'Cannot split a span that ends at or before the bounds end. Consider setting the `strict` arg to `false`.'
+            );
+        }
 
-      let acc = i.start.add({microseconds: subWidth});
-      let result: S[] = [];
-      result.push(s.mapInterval(() => Interval.between(i.start, acc, i.startInclusivity, internalEndInclusivity)));
-      for (let index = 0; index < numberOfSubSpans - 1; index++) {
-        let nextAcc = acc.add({microseconds: subWidth});
-        result.push(s.mapInterval(() => Interval.between(acc, nextAcc, internalStartInclusivity, internalEndInclusivity)));
-        acc = nextAcc;
-      }
-      result.push(s.mapInterval(() => Interval.between(acc, i.end, internalStartInclusivity, i.endInclusivity)));
+        let acc = i.start.add({ microseconds: subWidth });
+        let result: S[] = [];
+        result.push(s.mapInterval(() => Interval.between(i.start, acc, i.startInclusivity, internalEndInclusivity)));
+        for (let index = 0; index < numberOfSubSpans - 1; index++) {
+          let nextAcc = acc.add({ microseconds: subWidth });
+          result.push(
+            s.mapInterval(() => Interval.between(acc, nextAcc, internalStartInclusivity, internalEndInclusivity))
+          );
+          acc = nextAcc;
+        }
+        result.push(s.mapInterval(() => Interval.between(acc, i.end, internalStartInclusivity, i.endInclusivity)));
 
-      return result;
-    });
+        return result;
+      });
 
     return new Spans(timeline);
   }
 
-  public unsafe = new class {
+  public unsafe = new (class {
     constructor(private outerThis: Spans<S>) {}
 
     public map<T extends Intervallic>(f: (span: S) => T, boundsMap: (b: Interval) => Interval): Spans<T> {
@@ -176,5 +192,5 @@ export class Spans<S extends Intervallic> {
     public flatMap<T extends Intervallic>(f: (span: S) => T[], boundsMap: (b: Interval) => Interval): Spans<T> {
       return new Spans<T>(bounds => this.outerThis.spans(boundsMap(bounds)).flatMap(s => f(s)));
     }
-  }(this);
+  })(this);
 }

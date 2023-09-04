@@ -1,6 +1,6 @@
-import {Inclusivity, Interval, Intervallic} from "./interval";
-import {Segment} from "./segment";
-import {ProfileType} from "./profiles/profile-type";
+import { Inclusivity, Interval, Intervallic } from './interval';
+import { Segment } from './segment';
+import { ProfileType } from './profiles/profile-type';
 
 export type Timeline<V extends Intervallic> = (bounds: Interval) => V[];
 
@@ -17,8 +17,7 @@ export function bound<V extends Intervallic>(data: any): Timeline<V> {
     for (const v of iterable) {
       array.push(v);
     }
-  }
-  else array = [data];
+  } else array = [data];
 
   if (array.length > 0) {
     if (array[0] instanceof Segment) {
@@ -41,7 +40,9 @@ export function sortSegments<V>(segments: Segment<V>[], profileType: ProfileType
       return startComparison;
     } else {
       if (valueComparator(l.value, r.value)) return startComparison;
-      throw new Error("Segments should be sortable into an order in which both start and end times are strictly increasing, unless segment values are equal.");
+      throw new Error(
+        'Segments should be sortable into an order in which both start and end times are strictly increasing, unless segment values are equal.'
+      );
     }
   });
 }
@@ -93,16 +94,21 @@ export function cache<V extends Intervallic>(t: Timeline<V>): Timeline<V> {
     const result = t(bounds);
     history.push([bounds, result]);
     return result;
-  }
+  };
 }
 
-export function merge<V extends Intervallic, W extends Intervallic>(left: Timeline<V>, right: Timeline<W>): Timeline<V | W> {
-  return bounds => (left(bounds) as (V|W)[]).concat(right(bounds));
+export function merge<V extends Intervallic, W extends Intervallic>(
+  left: Timeline<V>,
+  right: Timeline<W>
+): Timeline<V | W> {
+  return bounds => (left(bounds) as (V | W)[]).concat(right(bounds));
 }
 
 export function makeIterable<V>(iter: Iterator<V>): IterableIterator<V> {
   return {
-    [Symbol.iterator]() {return this},
+    [Symbol.iterator]() {
+      return this;
+    },
     ...iter
   };
 }

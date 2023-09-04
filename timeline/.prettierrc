@@ -1,9 +1,22 @@
 {
-  "trailingComma": "all",
+  "trailingComma": "none",
   "singleQuote": true,
   "arrowParens": "avoid",
   "semi": true,
   "printWidth": 120,
   "tabWidth": 2,
-  "parser": "typescript"
+  "overrides": [
+    {
+      "files": ["*.mts", "*.cts", "*.ts"],
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
+      "files": ["*.json", "*.jsonc", ".prettierrc"],
+      "options": {
+        "parser": "json"
+      }
+    }
+  ]
 }

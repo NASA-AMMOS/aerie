@@ -1,8 +1,8 @@
-import {Interval} from "../interval";
-import {Segment} from "../segment";
-import database from "../database";
-import {Profile} from "./profile";
-import {ProfileType} from "./profile-type";
+import { Interval } from '../interval';
+import { Segment } from '../segment';
+import database from '../database';
+import { Profile } from './profile';
+import { ProfileType } from './profile-type';
 
 export class Discrete {
   /**
@@ -13,10 +13,10 @@ export class Discrete {
    * @constructor
    */
   public static Value<V>(value: V, interval?: Interval): Profile<V> {
-    return new Profile<V>(bounds => [new Segment(
-        value,
-        interval === undefined ? bounds : Interval.intersect(bounds, interval)
-    )], ProfileType.Other);
+    return new Profile<V>(
+      bounds => [new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))],
+      ProfileType.Other
+    );
   }
 
   /**

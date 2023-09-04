@@ -1,4 +1,4 @@
-import {Interval, Intervallic} from "./interval";
+import { Interval, Intervallic } from './interval';
 
 export class Segment<V> implements Intervallic {
   public readonly interval: Interval;
@@ -26,7 +26,8 @@ export class Segment<V> implements Intervallic {
   bound(bounds: Interval): this | undefined {
     const intersection = Interval.intersect(bounds, this.interval);
     if (intersection.isEmpty()) return undefined;
-    else { // @ts-ignore
+    else {
+      // @ts-ignore
       return new Segment<V>(this.value, intersection);
     }
   }

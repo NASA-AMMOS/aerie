@@ -1,5 +1,5 @@
-import type {Windows} from "./profiles/windows";
-import type {Interval} from "./interval";
+import type { Windows } from './profiles/windows';
+import type { Interval } from './interval';
 
 type Constraint = ConstraintResult | Windows;
 

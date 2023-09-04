@@ -30,14 +30,24 @@ export class Interval implements Intervallic {
 
   public readonly interval = this;
 
-  private constructor(start: Temporal.Duration, end: Temporal.Duration, startInclusivity: Inclusivity, endInclusivity: Inclusivity) {
+  private constructor(
+    start: Temporal.Duration,
+    end: Temporal.Duration,
+    startInclusivity: Inclusivity,
+    endInclusivity: Inclusivity
+  ) {
     this.start = start;
     this.end = end;
     this.startInclusivity = startInclusivity;
     this.endInclusivity = endInclusivity;
   }
 
-  public static between(start: Temporal.Duration, end: Temporal.Duration, startInclusivity?: Inclusivity, endInclusivity?: Inclusivity): Interval {
+  public static between(
+    start: Temporal.Duration,
+    end: Temporal.Duration,
+    startInclusivity?: Inclusivity,
+    endInclusivity?: Inclusivity
+  ): Interval {
     if (startInclusivity === undefined) startInclusivity = Inclusivity.Inclusive;
     if (endInclusivity === undefined) endInclusivity = startInclusivity;
 
@@ -51,7 +61,10 @@ export class Interval implements Intervallic {
   public isEmpty(): boolean {
     const comparison = Temporal.Duration.compare(this.start, this.end);
     if (comparison === 1) return true;
-    return comparison === 0 && (this.startInclusivity === Inclusivity.Exclusive || this.endInclusivity === Inclusivity.Exclusive);
+    return (
+      comparison === 0 &&
+      (this.startInclusivity === Inclusivity.Exclusive || this.endInclusivity === Inclusivity.Exclusive)
+    );
   }
 
   public isSingleton(): boolean {
@@ -83,7 +96,7 @@ export class Interval implements Intervallic {
       startInclusivity = right.startInclusivity;
     } else {
       start = left.start;
-      startInclusivity = (left.includesStart() && right.includesStart()) ? Inclusivity.Inclusive : Inclusivity.Exclusive;
+      startInclusivity = left.includesStart() && right.includesStart() ? Inclusivity.Inclusive : Inclusivity.Exclusive;
     }
 
     let end: Temporal.Duration;
@@ -98,7 +111,7 @@ export class Interval implements Intervallic {
       endInclusivity = right.endInclusivity;
     } else {
       end = left.end;
-      endInclusivity = (left.includesEnd() && right.includesEnd()) ? Inclusivity.Inclusive : Inclusivity.Exclusive;
+      endInclusivity = left.includesEnd() && right.includesEnd() ? Inclusivity.Inclusive : Inclusivity.Exclusive;
     }
 
     return Interval.between(start, end, startInclusivity, endInclusivity);
@@ -131,12 +144,7 @@ export class Interval implements Intervallic {
       endInclusivity = right.endInclusivity;
     }
 
-    return Interval.between(
-        start,
-        end,
-        startInclusivity,
-        endInclusivity
-    );
+    return Interval.between(start, end, startInclusivity, endInclusivity);
   }
 
   public static subtract(left: Interval, right: Interval) {
@@ -179,10 +187,12 @@ export class Interval implements Intervallic {
   }
 
   public static equals(left: Interval, right: Interval): boolean {
-    return Temporal.Duration.compare(left.start, right.start) === 0 &&
-        Temporal.Duration.compare(left.end, right.end) === 0 &&
-        left.startInclusivity === right.startInclusivity &&
-        left.endInclusivity === right.endInclusivity;
+    return (
+      Temporal.Duration.compare(left.start, right.start) === 0 &&
+      Temporal.Duration.compare(left.end, right.end) === 0 &&
+      left.startInclusivity === right.startInclusivity &&
+      left.endInclusivity === right.endInclusivity
+    );
   }
 
   public contains(time: Temporal.Duration): boolean;
@@ -195,10 +205,10 @@ export class Interval implements Intervallic {
   public shiftBy(fromStart: Temporal.Duration, fromEnd?: Temporal.Duration): Interval {
     if (fromEnd === undefined) fromEnd = fromStart;
     return Interval.between(
-        this.start.add(fromStart),
-        this.end.add(fromEnd),
-        this.startInclusivity,
-        this.endInclusivity
+      this.start.add(fromStart),
+      this.end.add(fromEnd),
+      this.startInclusivity,
+      this.endInclusivity
     );
   }
 

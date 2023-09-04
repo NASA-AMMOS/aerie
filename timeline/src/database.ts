@@ -1,10 +1,10 @@
-import {Segment} from "./segment";
-import {Client} from "ts-postgres";
-import {Timeline} from "./timeline";
+import { Segment } from './segment';
+import { Client } from 'ts-postgres';
+import { Timeline } from './timeline';
 
 class DatabaseFacade {
   private sharedClient: SharedClient;
-  private resources: Map<string, Timeline<Segment<any>>>
+  private resources: Map<string, Timeline<Segment<any>>>;
 
   constructor() {
     this.sharedClient = {
@@ -16,7 +16,7 @@ class DatabaseFacade {
   }
 
   public getResource(resourceId: string): Timeline<Segment<any>> {
-    throw new Error("unimplemented");
+    throw new Error('unimplemented');
     // if (this.resources.has(resourceId)) {
     //   // @ts-ignore
     //   return this.resources.get(resourceId).clone();
@@ -44,8 +44,8 @@ class DatabaseFacade {
 }
 
 type SharedClient = {
-  client: Client,
-  connected: boolean
+  client: Client;
+  connected: boolean;
 };
 
 export default new DatabaseFacade();

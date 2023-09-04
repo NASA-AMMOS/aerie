@@ -508,7 +508,7 @@ declare global {
       static compare(
         one: Temporal.Duration | DurationLike | string,
         two: Temporal.Duration | DurationLike | string,
-        options?: DurationArithmeticOptions,
+        options?: DurationArithmeticOptions
       ): ComparisonResult;
 
       constructor(
@@ -521,7 +521,7 @@ declare global {
         seconds?: number,
         milliseconds?: number,
         microseconds?: number,
-        nanoseconds?: number,
+        nanoseconds?: number
       );
 
       readonly sign: -1 | 0 | 1;
@@ -547,7 +547,7 @@ declare global {
 
       subtract(
         other: Temporal.Duration | DurationLike | string,
-        options?: DurationArithmeticOptions,
+        options?: DurationArithmeticOptions
       ): Temporal.Duration;
 
       round(roundTo: DurationRoundTo): Temporal.Duration;
@@ -602,25 +602,25 @@ declare global {
       equals(other: Temporal.Instant | string): boolean;
 
       add(
-        durationLike: Omit<Temporal.Duration | DurationLike, 'years' | 'months' | 'weeks' | 'days'> | string,
+        durationLike: Omit<Temporal.Duration | DurationLike, 'years' | 'months' | 'weeks' | 'days'> | string
       ): Temporal.Instant;
 
       subtract(
-        durationLike: Omit<Temporal.Duration | DurationLike, 'years' | 'months' | 'weeks' | 'days'> | string,
+        durationLike: Omit<Temporal.Duration | DurationLike, 'years' | 'months' | 'weeks' | 'days'> | string
       ): Temporal.Instant;
 
       until(
         other: Temporal.Instant | string,
-        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.Duration;
 
       since(
         other: Temporal.Instant | string,
-        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.Duration;
 
       round(
-        roundTo: RoundTo<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        roundTo: RoundTo<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.Instant;
 
       toZonedDateTime(calendarAndTimeZone: { timeZone: TimeZoneLike; calendar: CalendarLike }): Temporal.ZonedDateTime;
@@ -647,7 +647,7 @@ declare global {
       calendar?: never;
 
       year(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       month(
@@ -657,7 +657,7 @@ declare global {
           | Temporal.PlainYearMonth
           | Temporal.PlainMonthDay
           | PlainDateLike
-          | string,
+          | string
       ): number;
 
       monthCode(
@@ -667,7 +667,7 @@ declare global {
           | Temporal.PlainYearMonth
           | Temporal.PlainMonthDay
           | PlainDateLike
-          | string,
+          | string
       ): string;
 
       day(date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainMonthDay | PlainDateLike | string): number;
@@ -685,46 +685,46 @@ declare global {
       daysInWeek(date: Temporal.PlainDate | Temporal.PlainDateTime | PlainDateLike | string): number;
 
       daysInMonth(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       daysInYear(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       monthsInYear(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       inLeapYear(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): boolean;
 
       dateFromFields(
         fields: YearOrEraAndEraYear & MonthOrMonthCode & { day: number },
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainDate;
 
       yearMonthFromFields(
         fields: YearOrEraAndEraYear & MonthOrMonthCode,
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainYearMonth;
 
       monthDayFromFields(
         fields: MonthCodeOrMonthAndYear & { day: number },
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainMonthDay;
 
       dateAdd(
         date: Temporal.PlainDate | PlainDateLike | string,
         duration: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainDate;
 
       dateUntil(
         one: Temporal.PlainDate | PlainDateLike | string,
         two: Temporal.PlainDate | PlainDateLike | string,
-        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>,
+        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>
       ): Temporal.Duration;
 
       fields?(fields: Iterable<string>): Iterable<string>;
@@ -754,7 +754,7 @@ declare global {
       readonly id: string;
 
       year(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       month(
@@ -764,7 +764,7 @@ declare global {
           | Temporal.PlainYearMonth
           | Temporal.PlainMonthDay
           | PlainDateLike
-          | string,
+          | string
       ): number;
 
       monthCode(
@@ -774,7 +774,7 @@ declare global {
           | Temporal.PlainYearMonth
           | Temporal.PlainMonthDay
           | PlainDateLike
-          | string,
+          | string
       ): string;
 
       day(date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainMonthDay | PlainDateLike | string): number;
@@ -792,46 +792,46 @@ declare global {
       daysInWeek(date: Temporal.PlainDate | Temporal.PlainDateTime | PlainDateLike | string): number;
 
       daysInMonth(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       daysInYear(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       monthsInYear(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): number;
 
       inLeapYear(
-        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string,
+        date: Temporal.PlainDate | Temporal.PlainDateTime | Temporal.PlainYearMonth | PlainDateLike | string
       ): boolean;
 
       dateFromFields(
         fields: YearOrEraAndEraYear & MonthOrMonthCode & { day: number },
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainDate;
 
       yearMonthFromFields(
         fields: YearOrEraAndEraYear & MonthOrMonthCode,
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainYearMonth;
 
       monthDayFromFields(
         fields: MonthCodeOrMonthAndYear & { day: number },
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainMonthDay;
 
       dateAdd(
         date: Temporal.PlainDate | PlainDateLike | string,
         duration: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainDate;
 
       dateUntil(
         one: Temporal.PlainDate | PlainDateLike | string,
         two: Temporal.PlainDate | PlainDateLike | string,
-        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>,
+        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>
       ): Temporal.Duration;
 
       fields(fields: Iterable<string>): string[];
@@ -876,7 +876,7 @@ declare global {
 
       static compare(
         one: Temporal.PlainDate | PlainDateLike | string,
-        two: Temporal.PlainDate | PlainDateLike | string,
+        two: Temporal.PlainDate | PlainDateLike | string
       ): ComparisonResult;
 
       constructor(isoYear: number, isoMonth: number, isoDay: number, calendar?: CalendarLike);
@@ -907,17 +907,17 @@ declare global {
 
       subtract(
         durationLike: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainDate;
 
       until(
         other: Temporal.PlainDate | PlainDateLike | string,
-        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>,
+        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>
       ): Temporal.Duration;
 
       since(
         other: Temporal.PlainDate | PlainDateLike | string,
-        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>,
+        options?: DifferenceOptions<'year' | 'month' | 'week' | 'day'>
       ): Temporal.Duration;
 
       toPlainDateTime(temporalTime?: Temporal.PlainTime | PlainTimeLike | string): Temporal.PlainDateTime;
@@ -929,7 +929,7 @@ declare global {
           | {
               timeZone: TimeZoneLike;
               plainTime?: Temporal.PlainTime | PlainTimeLike | string;
-            },
+            }
       ): Temporal.ZonedDateTime;
 
       toPlainYearMonth(): Temporal.PlainYearMonth;
@@ -991,12 +991,12 @@ declare global {
     export class PlainDateTime {
       static from(
         item: Temporal.PlainDateTime | PlainDateTimeLike | string,
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainDateTime;
 
       static compare(
         one: Temporal.PlainDateTime | PlainDateTimeLike | string,
-        two: Temporal.PlainDateTime | PlainDateTimeLike | string,
+        two: Temporal.PlainDateTime | PlainDateTimeLike | string
       ): ComparisonResult;
 
       constructor(
@@ -1009,7 +1009,7 @@ declare global {
         millisecond?: number,
         microsecond?: number,
         nanosecond?: number,
-        calendar?: CalendarLike,
+        calendar?: CalendarLike
       );
 
       readonly era: string | undefined;
@@ -1048,7 +1048,7 @@ declare global {
 
       subtract(
         durationLike: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainDateTime;
 
       until(
@@ -1064,7 +1064,7 @@ declare global {
           | 'millisecond'
           | 'microsecond'
           | 'nanosecond'
-        >,
+        >
       ): Temporal.Duration;
 
       since(
@@ -1080,11 +1080,11 @@ declare global {
           | 'millisecond'
           | 'microsecond'
           | 'nanosecond'
-        >,
+        >
       ): Temporal.Duration;
 
       round(
-        roundTo: RoundTo<'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        roundTo: RoundTo<'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.PlainDateTime;
 
       toZonedDateTime(tzLike: TimeZoneLike, options?: ToInstantOptions): Temporal.ZonedDateTime;
@@ -1130,7 +1130,7 @@ declare global {
     export class PlainMonthDay {
       static from(
         item: Temporal.PlainMonthDay | PlainMonthDayLike | string,
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainMonthDay;
 
       constructor(isoMonth: number, isoDay: number, calendar?: CalendarLike, referenceISOYear?: number);
@@ -1207,7 +1207,7 @@ declare global {
 
       static compare(
         one: Temporal.PlainTime | PlainTimeLike | string,
-        two: Temporal.PlainTime | PlainTimeLike | string,
+        two: Temporal.PlainTime | PlainTimeLike | string
       ): ComparisonResult;
 
       constructor(
@@ -1216,7 +1216,7 @@ declare global {
         second?: number,
         millisecond?: number,
         microsecond?: number,
-        nanosecond?: number,
+        nanosecond?: number
       );
 
       readonly hour: number;
@@ -1235,21 +1235,21 @@ declare global {
 
       subtract(
         durationLike: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainTime;
 
       until(
         other: Temporal.PlainTime | PlainTimeLike | string,
-        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.Duration;
 
       since(
         other: Temporal.PlainTime | PlainTimeLike | string,
-        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        options?: DifferenceOptions<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.Duration;
 
       round(
-        roundTo: RoundTo<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        roundTo: RoundTo<'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.PlainTime;
 
       toPlainDateTime(temporalDate: Temporal.PlainDate | PlainDateLike | string): Temporal.PlainDateTime;
@@ -1287,7 +1287,7 @@ declare global {
 
       getInstantFor?(
         dateTime: Temporal.PlainDateTime | PlainDateTimeLike | string,
-        options?: ToInstantOptions,
+        options?: ToInstantOptions
       ): Temporal.Instant;
 
       getNextTransition?(startingPoint: Temporal.Instant | string): Temporal.Instant | null;
@@ -1331,7 +1331,7 @@ declare global {
 
       getInstantFor(
         dateTime: Temporal.PlainDateTime | PlainDateTimeLike | string,
-        options?: ToInstantOptions,
+        options?: ToInstantOptions
       ): Temporal.Instant;
 
       getNextTransition(startingPoint: Temporal.Instant | string): Temporal.Instant | null;
@@ -1366,12 +1366,12 @@ declare global {
     export class PlainYearMonth {
       static from(
         item: Temporal.PlainYearMonth | PlainYearMonthLike | string,
-        options?: AssignmentOptions,
+        options?: AssignmentOptions
       ): Temporal.PlainYearMonth;
 
       static compare(
         one: Temporal.PlainYearMonth | PlainYearMonthLike | string,
-        two: Temporal.PlainYearMonth | PlainYearMonthLike | string,
+        two: Temporal.PlainYearMonth | PlainYearMonthLike | string
       ): ComparisonResult;
 
       constructor(isoYear: number, isoMonth: number, calendar?: CalendarLike, referenceISODay?: number);
@@ -1393,22 +1393,22 @@ declare global {
 
       add(
         durationLike: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainYearMonth;
 
       subtract(
         durationLike: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.PlainYearMonth;
 
       until(
         other: Temporal.PlainYearMonth | PlainYearMonthLike | string,
-        options?: DifferenceOptions<'year' | 'month'>,
+        options?: DifferenceOptions<'year' | 'month'>
       ): Temporal.Duration;
 
       since(
         other: Temporal.PlainYearMonth | PlainYearMonthLike | string,
-        options?: DifferenceOptions<'year' | 'month'>,
+        options?: DifferenceOptions<'year' | 'month'>
       ): Temporal.Duration;
 
       toPlainDate(day: { day: number }): Temporal.PlainDate;
@@ -1462,12 +1462,12 @@ declare global {
     export class ZonedDateTime {
       static from(
         item: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
-        options?: ZonedDateTimeAssignmentOptions,
+        options?: ZonedDateTimeAssignmentOptions
       ): ZonedDateTime;
 
       static compare(
         one: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
-        two: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
+        two: Temporal.ZonedDateTime | ZonedDateTimeLike | string
       ): ComparisonResult;
 
       constructor(epochNanoseconds: bigint, timeZone: TimeZoneLike, calendar?: CalendarLike);
@@ -1518,7 +1518,7 @@ declare global {
 
       subtract(
         durationLike: Temporal.Duration | DurationLike | string,
-        options?: ArithmeticOptions,
+        options?: ArithmeticOptions
       ): Temporal.ZonedDateTime;
 
       until(
@@ -1534,7 +1534,7 @@ declare global {
           | 'millisecond'
           | 'microsecond'
           | 'nanosecond'
-        >,
+        >
       ): Temporal.Duration;
 
       since(
@@ -1550,11 +1550,11 @@ declare global {
           | 'millisecond'
           | 'microsecond'
           | 'nanosecond'
-        >,
+        >
       ): Temporal.Duration;
 
       round(
-        roundTo: RoundTo<'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>,
+        roundTo: RoundTo<'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'>
       ): Temporal.ZonedDateTime;
 
       startOfDay(): Temporal.ZonedDateTime;
