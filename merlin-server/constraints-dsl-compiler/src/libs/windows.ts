@@ -1,9 +1,10 @@
-import {Profile, ProfileType} from "./profile";
+import {Profile} from "./profile";
 import {Segment} from "./segment";
 import database from "./database";
 import {BinaryOperation} from "./binary-operation";
 import {Interval} from "./interval";
 import type {Timeline} from "./timeline";
+import {ProfileType} from "./profile-type";
 
 export class Windows extends Profile<boolean> {
   constructor(segments: Timeline<Segment<boolean>>) {
@@ -14,14 +15,14 @@ export class Windows extends Profile<boolean> {
     return new Windows(_ => []);
   }
 
-  public static Value(value: boolean, interval?: Interval): Windows {
+  public static override Value(value: boolean, interval?: Interval): Windows {
     return new Windows(bounds => [new Segment(
         value,
         interval === undefined ? bounds : Interval.intersect(bounds, interval)
     )]);
   }
 
-  public static Resource(name: string): Windows {
+  public static override Resource(name: string): Windows {
     return new Windows(database.getResource(name));
   }
 

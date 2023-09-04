@@ -5,12 +5,7 @@ import {coalesce, Timeline, bound} from "./timeline";
 import {BinaryOperation} from "./binary-operation";
 import {LinearEquation, Real} from "./real";
 import database from "./database";
-
-export enum ProfileType {
-  Real,
-  Windows,
-  Other
-}
+import {ProfileType} from "./profile-type";
 
 export class Profile<V> {
   protected segments: Timeline<Segment<V>>;
@@ -93,7 +88,7 @@ export class Profile<V> {
 
       const result = map2Arrays(left, right, op);
 
-      return coalesce(result);
+      return coalesce(result, typeTag!);
     }
 
     return (new Profile(segments, typeTag)).specialize();
@@ -168,7 +163,7 @@ export class Profile<V> {
               )).transpose()
             ];
           }
-      ).filter($ => $ !== undefined) as Segment<boolean>[]);
+      ).filter($ => $ !== undefined) as Segment<boolean>[], ProfileType.Windows);
     };
     return new Windows(newSegments);
   }
@@ -207,12 +202,12 @@ export class Profile<V> {
     constructor(public outerThis: Profile<V>) {}
 
     public map(f: (v: V, i: Interval) => Segment<V>, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V>;
-    public map<W>(f: (v: V, i: Interval) => Segment<W>, boundsMap: (b: Interval) => Interval, type_tag: ProfileType): ProfileSpecialization<W>;
-    public map<W>(f: (v: V, i: Interval) => Segment<W>, boundsMap: (b: Interval) => Interval, type_tag?: ProfileType): ProfileSpecialization<W> {
-      if (type_tag === undefined) {
-        type_tag = this.outerThis.typeTag;
+    public map<W>(f: (v: V, i: Interval) => Segment<W>, boundsMap: (b: Interval) => Interval, typeTag: ProfileType): ProfileSpecialization<W>;
+    public map<W>(f: (v: V, i: Interval) => Segment<W>, boundsMap: (b: Interval) => Interval, typeTag?: ProfileType): ProfileSpecialization<W> {
+      if (typeTag === undefined) {
+        typeTag = this.outerThis.typeTag;
       }
-      return (new Profile<W>(bounds => coalesce(this.outerThis.segments(boundsMap(bounds)).map(s => f(s.value, s.interval))), type_tag)).specialize();
+      return (new Profile<W>(bounds => coalesce(this.outerThis.segments(boundsMap(bounds)).map(s => f(s.value, s.interval)), typeTag!), typeTag)).specialize();
     }
 
     public mapIntervals(map: (v: V, i: Interval) => Interval, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V> {
@@ -238,17 +233,17 @@ export class Profile<V> {
 
         const result = map2Arrays(left, right, op).map($ => $.value);
 
-        return coalesce(result);
+        return coalesce(result, typeTag!);
       }
 
       return (new Profile(segments, typeTag)).specialize();
     }
 
     public flatMap(f: (v: V, i: Interval) => Segment<V>[], boundsMap: (b: Interval) => Interval): ProfileSpecialization<V>;
-    public flatMap<W>(f: (v: V, i: Interval) => Segment<W>[], boundsMap: (b: Interval) => Interval, type_tag: ProfileType): ProfileSpecialization<W>;
-    public flatMap<W>(f: (v: V, i: Interval) => Segment<W>[], boundsMap: (b: Interval) => Interval, type_tag?: ProfileType): ProfileSpecialization<W> {
-      if (type_tag === undefined) type_tag = this.outerThis.typeTag;
-      return (new Profile<W>(bounds => coalesce(this.outerThis.segments(boundsMap(bounds)).flatMap(s => f(s.value, s.interval))), type_tag)).specialize();
+    public flatMap<W>(f: (v: V, i: Interval) => Segment<W>[], boundsMap: (b: Interval) => Interval, typeTag: ProfileType): ProfileSpecialization<W>;
+    public flatMap<W>(f: (v: V, i: Interval) => Segment<W>[], boundsMap: (b: Interval) => Interval, typeTag?: ProfileType): ProfileSpecialization<W> {
+      if (typeTag === undefined) typeTag = this.outerThis.typeTag;
+      return (new Profile<W>(bounds => coalesce(this.outerThis.segments(boundsMap(bounds)).flatMap(s => f(s.value, s.interval)), typeTag!), typeTag)).specialize();
     }
 
     public flatMap2<W>(rightProfile: Profile<W>, op: BinaryOperation<V, W, Segment<V>[]>): ProfileSpecialization<V>;
@@ -266,7 +261,7 @@ export class Profile<V> {
 
         const result = map2Arrays(left, right, op).flatMap(s => s.value);
 
-        return coalesce(result);
+        return coalesce(result, typeTag!);
       }
 
       return (new Profile(segments, typeTag)).specialize();

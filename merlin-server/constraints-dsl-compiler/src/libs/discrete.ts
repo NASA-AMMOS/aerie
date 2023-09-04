@@ -1,7 +1,8 @@
 import {Interval} from "./interval";
 import {Segment} from "./segment";
 import database from "./database";
-import {Profile, ProfileType} from "./profile";
+import {Profile} from "./profile";
+import {ProfileType} from "./profile-type";
 
 export class Discrete {
   /**

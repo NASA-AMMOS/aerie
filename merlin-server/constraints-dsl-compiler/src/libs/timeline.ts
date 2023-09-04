@@ -1,10 +1,12 @@
 import {Inclusivity, Interval} from "./interval";
 import type {Segment} from "./segment";
+import {ProfileType} from "./profile-type";
 
 export type Timeline<V extends Boundable<V>> = (bounds: Interval) => V[];
 
 export interface Boundable<This> {
   bound(bounds: Interval): This | undefined;
+  compareStarts(other: This): Temporal.ComparisonResult;
 }
 
 export function bound<V extends Boundable<V>>(data: V[]): Timeline<V>;
@@ -25,11 +27,9 @@ export function bound<V extends Boundable<V>>(data: any): Timeline<V> {
   return bounds => (data as V[]).map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
 }
 
-export function coalesce<V>(segments: Segment<V>[], equals?: (l: V, r: V) => boolean): Segment<V>[] {
+export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segment<V>[] {
+  const equals = ProfileType.getSegmentComparator(typeTag);
   if (segments.length === 0) return segments;
-  if (equals === undefined) {
-    equals = (l, r) => l === r;
-  }
   let shortIndex = 0;
   let buffer = segments[0]!;
   for (const segment of segments.slice(1)) {

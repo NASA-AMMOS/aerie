@@ -1,4 +1,4 @@
-import {Profile, ProfileType} from "./profile";
+import {Profile} from "./profile";
 import {Segment} from "./segment";
 import database from "./database";
 import type {Timeline} from "./timeline";
@@ -6,6 +6,7 @@ import {Inclusivity, Interval} from "./interval";
 import {BinaryOperation} from "./binary-operation";
 import {Windows} from "./windows";
 import {coalesce} from "./timeline";
+import {ProfileType} from "./profile-type";
 
 export class Real extends Profile<LinearEquation> {
   constructor(segments: Timeline<Segment<LinearEquation>>) {
@@ -16,14 +17,14 @@ export class Real extends Profile<LinearEquation> {
     return new Real(_ => []);
   }
 
-  public static Value(value: number, interval?: Interval): Real {
+  public static override Value(value: number, interval?: Interval): Real {
     return new Real(bounds => [new Segment(
         LinearEquation.Constant(value),
         interval === undefined ? bounds : Interval.intersect(bounds, interval)
     )]);
   }
 
-  public static Resource(name: string): Real {
+  public static override Resource(name: string): Real {
     return new Real(database.getResource(name));
   }
 
@@ -102,7 +103,7 @@ export class Real extends Profile<LinearEquation> {
             new Segment(currentSegment.value.rate !== 0, Interval.between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive))
           ].filter($ => $ !== undefined) as Segment<boolean>[];
         }
-      ));
+      ), ProfileType.Real);
     }
     return new Windows(segments);
   }
