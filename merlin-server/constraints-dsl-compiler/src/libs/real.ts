@@ -2,10 +2,10 @@ import {Profile} from "./profile";
 import {Segment} from "./segment";
 import database from "./database";
 import type {Timeline} from "./timeline";
+import {coalesce} from "./timeline";
 import {Inclusivity, Interval} from "./interval";
 import {BinaryOperation} from "./binary-operation";
 import {Windows} from "./windows";
-import {coalesce} from "./timeline";
 import {ProfileType} from "./profile-type";
 
 export class Real extends Profile<LinearEquation> {
@@ -17,15 +17,18 @@ export class Real extends Profile<LinearEquation> {
     return new Real(_ => []);
   }
 
-  public static override Value(value: number, interval?: Interval): Real {
+  public static override Value(value: number, interval?: Interval): Real;
+  public static override Value(value: LinearEquation, interval?: Interval): Real;
+  public static override Value(value: number | LinearEquation, interval?: Interval): Real {
+    if (typeof value === 'number') value = LinearEquation.Constant(value);
     return new Real(bounds => [new Segment(
-        LinearEquation.Constant(value),
+        value as LinearEquation,
         interval === undefined ? bounds : Interval.intersect(bounds, interval)
     )]);
   }
 
   public static override Resource(name: string): Real {
-    return new Real(database.getResource(name));
+    return Profile.Resource<LinearEquation>(database.getResource(name), ProfileType.Real);
   }
 
   public override assignGaps(def: Profile<LinearEquation> | LinearEquation | number): Real {
@@ -33,16 +36,71 @@ export class Real extends Profile<LinearEquation> {
     return super.assignGaps(def);
   }
 
-  public times(coefficient: number): Real {
-    return this.mapValues(eq => eq.times(coefficient));
+  public negate(): Real {
+    return this.mapValues(v => v.negate());
   }
 
-  public plus(other: Profile<LinearEquation>): Real {
+  public abs(): Real {
+    return this.unsafe.flatMap((eq, i) => eq.abs(i), b => b);
+  }
+
+  public plus(other: number | Profile<LinearEquation>): Real {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.map2Values(other, BinaryOperation.combineOrUndefined((l, r) => l.plus(r)));
   }
 
-  public minus(other: Profile<LinearEquation>): Real {
+  public minus(other: number | Profile<LinearEquation>): Real {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.map2Values(other, BinaryOperation.combineOrUndefined((l, r) => l.minus(r)));
+  }
+
+  public times(other: number | Profile<LinearEquation>): Real {
+    if (typeof other === 'number') return this.mapValues(eq => eq.times(other));
+    else return this.map2Values(other, BinaryOperation.combineOrUndefined(
+        (l, r, i) => {
+          if (l.rate === 0) {
+            return new LinearEquation(r.initialTime, l.initialValue * r.initialValue, l.initialValue * r.rate);
+          } else if (r.rate === 0) {
+            return new LinearEquation(l.initialTime, r.initialValue * l.initialValue, r.initialValue * l.rate);
+          }
+          throw new Error(`Cannot multiply two non-constant real profiles, rates were ${l.rate} and ${r.rate}. Interval: ${i}`);
+        }
+    ), ProfileType.Real);
+  }
+
+  public dividedBy(other: number | Profile<LinearEquation>): Real {
+    if (typeof other === 'number') return this.mapValues(eq => eq.dividedBy(other));
+    else return this.map2Values(other, BinaryOperation.combineOrUndefined(
+        (l, r, i) => {
+          if (r.rate !== 0) throw new Error(`Denominator of real profile division must be piece-wise constant. Segment: ${new Segment(r, i)}`);
+          return l.dividedBy(r.initialValue);
+        }
+    ), ProfileType.Real);
+  }
+
+  public pow(exp: number | Profile<LinearEquation>): Real {
+    if (typeof exp === 'number') {
+      if (exp === 1) return this;
+      if (exp === 0) return Real.Value(1);
+      exp = Real.Value(exp);
+    }
+    return this.map2Values(exp, BinaryOperation.combineOrUndefined(
+        (eq,e, i) => {
+          if (e.rate !== 0) throw new Error(`Cannot raise to an exponent that is not piece-wise constant. Segment: ${new Segment(e, i)}`);
+          if (eq.rate !== 0) throw new Error(`Cannot exponentiate a real profile that is not piece-wise constant. Segment: ${new Segment(eq, i)}`);
+          const newValue = Math.pow(eq.initialValue, e.initialValue);
+          if (isNaN(newValue)) throw new Error(`Exponentiation returned NaN on numbers ${eq.initialValue} ^ ${e.initialValue}; see Math.pow documentation for possible reasons why. Interval: ${i}`);
+          return new LinearEquation(eq.initialTime, newValue, 0);
+        }
+    ))
+  }
+
+  public root(n: number): Real {
+    return this.pow(1 / n);
+  }
+
+  public sqrt(): Real {
+    return this.pow(0.5);
   }
 
   public rate(unit?: Temporal.Duration): Real {
@@ -59,9 +117,9 @@ export class Real extends Profile<LinearEquation> {
       let acc = 0;
       for (const segment of segments) {
         if (Temporal.Duration.compare(previousTime, segment.interval.start) !== 0)
-          throw new Error("Cannot integrate a real profile with gaps.");
+          throw new Error(`Cannot integrate a real profile with gaps. Gap: ${Interval.between(previousTime, segment.interval.start)}`);
         if (segment.value.rate !== 0)
-          throw new Error("Cannot integrate real profiles that aren't piecewise constant.");
+          throw new Error(`Cannot integrate real profiles that aren't piecewise constant. Segment: ${segment}.`);
         let rate = segment.value.initialValue * baseRate;
         let nextAcc = acc + rate * segment.interval.duration().total('second');
         result.push(new Segment(new LinearEquation(previousTime, acc, rate), segment.interval));
@@ -79,27 +137,33 @@ export class Real extends Profile<LinearEquation> {
     ), ProfileType.Windows);
   }
 
-  public override equalTo(other: Profile<LinearEquation>): Windows {
+  public override equalTo(other: number | Profile<LinearEquation>): Windows {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.compare(other, (l, r) => l === r);
   }
 
-  public override notEqualTo(other: Profile<LinearEquation>): Windows {
+  public override notEqualTo(other: number | Profile<LinearEquation>): Windows {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.compare(other, (l, r) => l !== r);
   }
 
-  public lessThan(other: Profile<LinearEquation>): Windows {
+  public lessThan(other: number | Profile<LinearEquation>): Windows {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.compare(other, (l, r) => l < r);
   }
 
-  public lessThanOrEqual(other: Profile<LinearEquation>): Windows {
+  public lessThanOrEqual(other: number | Profile<LinearEquation>): Windows {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.compare(other, (l, r) => l <= r);
   }
 
-  public greaterThan(other: Profile<LinearEquation>): Windows {
+  public greaterThan(other: number | Profile<LinearEquation>): Windows {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.compare(other, (l, r) => l > r);
   }
 
-  public greaterThanOrEqual(other: Profile<LinearEquation>): Windows {
+  public greaterThanOrEqual(other: number | Profile<LinearEquation>): Windows {
+    if (typeof other === 'number') other = Real.Value(other);
     return this.compare(other, (l, r) => l >= r);
   }
 
@@ -136,11 +200,14 @@ export class Real extends Profile<LinearEquation> {
     return new Windows(segments);
   }
 
-  // @ts-ignore
-  public override transitions(from: number, to: number): Windows {
-    return this.edges(BinaryOperation.combineOrUndefined(
-        (l, r, i) => l.valueAt(i.start) === from && r.valueAt(i.start) === to
-    ));
+  public override transitions(from: number, to: number): Windows;
+  public override transitions(from: LinearEquation, to: LinearEquation): Windows;
+  public override transitions(from: number | LinearEquation, to: number | LinearEquation): Windows {
+    if (typeof from === 'number') {
+      return this.edges(BinaryOperation.combineOrUndefined(
+          (l, r, i) => l.valueAt(i.start) === from && r.valueAt(i.start) === to
+      ));
+    } else return super.transitions(from, to as LinearEquation);
   }
 }
 
@@ -163,17 +230,36 @@ export class LinearEquation {
     return new LinearEquation(this.initialTime, -this.initialValue, -this.rate);
   }
 
+  public abs(bounds: Interval): Segment<LinearEquation>[] {
+    const root = this.intersectionPointWith(LinearEquation.Constant(0));
+    if (root === undefined || !bounds.contains(root)) {
+      if (this.valueAt(bounds.start) > 0)
+        return [new Segment(new LinearEquation(this.initialTime, this.initialValue, this.rate), bounds)];
+      else
+        return [new Segment(new LinearEquation(this.initialTime, -this.initialValue, -this.rate), bounds)];
+    }
+    return [
+      new Segment(new LinearEquation(root, 0, -Math.abs(this.rate)), Interval.between(bounds.start, root, bounds.startInclusivity, Inclusivity.Exclusive)),
+      new Segment(new LinearEquation(root, 0, Math.abs(this.rate)), Interval.between(root, bounds.end, Inclusivity.Inclusive, bounds.endInclusivity))
+    ];
+  }
+
   public times(c: number): LinearEquation {
     return new LinearEquation(this.initialTime, c * this.initialValue, c * this.rate);
+  }
+
+  public dividedBy(c: number): LinearEquation {
+    return this.times(1 / c);
   }
 
   public plus(other: LinearEquation | number): LinearEquation {
     if (typeof other === 'number') other = LinearEquation.Constant(other);
     const shifted = other.shiftInitialTime(this.initialTime);
-    return new LinearEquation(this.initialTime, this.initialValue + other.initialValue, this.rate + other.rate);
+    return new LinearEquation(this.initialTime, this.initialValue + shifted.initialValue, this.rate + other.rate);
   }
 
-  public minus(other: LinearEquation): LinearEquation {
+  public minus(other: LinearEquation | number): LinearEquation {
+    if (typeof other === 'number') return this.plus(-other);
     return this.plus(other.negate());
   }
 

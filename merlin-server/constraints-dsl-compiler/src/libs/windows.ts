@@ -1,4 +1,4 @@
-import {Profile} from "./profile";
+import {Profile, ProfileSpecialization} from "./profile";
 import {Segment} from "./segment";
 import database from "./database";
 import {BinaryOperation} from "./binary-operation";
@@ -24,7 +24,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public static override Resource(name: string): Windows {
-    return new Windows(database.getResource(name));
+    return Profile.Resource<boolean>(database.getResource(name), ProfileType.Windows);
   }
 
   public not(): Windows {

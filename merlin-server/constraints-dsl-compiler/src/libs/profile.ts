@@ -1,7 +1,7 @@
 import {Segment} from "./segment";
 import {Inclusivity, Interval} from "./interval";
 import {Windows} from "./windows";
-import {coalesce, Timeline, bound} from "./timeline";
+import {bound, coalesce, Timeline} from "./timeline";
 import {BinaryOperation} from "./binary-operation";
 import {LinearEquation, Real} from "./real";
 import database from "./database";
@@ -27,8 +27,8 @@ export class Profile<V> {
     )], ProfileType.Other);
   }
 
-  public static Resource<V>(name: string): Profile<V> {
-    return new Profile<V>(database.getResource(name), ProfileType.Other);
+  public static Resource<V>(name: string, profileType: ProfileType = ProfileType.Other): ProfileSpecialization<V> {
+    return (new Profile<V>(database.getResource(name), profileType)).specialize();
   }
 
   public async collect(bounds: Interval): Promise<Segment<V>[]> {
