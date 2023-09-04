@@ -16,6 +16,10 @@ export class Profile<V> {
     this.typeTag = typeTag;
   }
 
+  public static Empty<V>(): Profile<V> {
+    return new Profile(bounds => [], ProfileType.Other);
+  }
+
   public static Value<V>(value: V, interval?: Interval): Profile<V> {
     return new Profile<V>(bounds => [new Segment(
         value,
@@ -49,8 +53,9 @@ export class Profile<V> {
     return this.map2Values(profile, BinaryOperation.combineOrIdentity((l, r) => r), this.typeTag);
   }
 
-  public assignGaps(defaultProfile: Profile<V>): ProfileSpecialization<V> {
-    return defaultProfile.set(this);
+  public assignGaps(def: Profile<V> | V): ProfileSpecialization<V> {
+    if (def !instanceof Profile) def = Profile.Value(def as V);
+    return (def as Profile<V>).set(this);
   }
 
   public unset(unsetInterval: Interval): ProfileSpecialization<V> {
@@ -94,8 +99,8 @@ export class Profile<V> {
     return (new Profile(segments, typeTag)).specialize();
   }
 
-  public filter(f: (v: V, i: Interval) => boolean): ProfileSpecialization<V> {
-    const segments = (bounds: Interval) => this.segments(bounds).filter(s => f(s.value, s.interval));
+  public filter(predicate: (v: V, i: Interval) => boolean): ProfileSpecialization<V> {
+    const segments = (bounds: Interval) => this.segments(bounds).filter(s => predicate(s.value, s.interval));
     return (new Profile<V>(segments, this.typeTag)).specialize();
   }
 
@@ -199,7 +204,7 @@ export class Profile<V> {
   }
 
   public unsafe = new class {
-    constructor(public outerThis: Profile<V>) {}
+    constructor(private outerThis: Profile<V>) {}
 
     public map(f: (v: V, i: Interval) => Segment<V>, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V>;
     public map<W>(f: (v: V, i: Interval) => Segment<W>, boundsMap: (b: Interval) => Interval, typeTag: ProfileType): ProfileSpecialization<W>;
@@ -269,7 +274,7 @@ export class Profile<V> {
   }(this);
 }
 
-function map2Arrays<V, W, Result>(
+export function map2Arrays<V, W, Result>(
     left: Segment<V>[],
     right: Segment<W>[],
     op: BinaryOperation<V, W, Result>,
@@ -299,10 +304,10 @@ function map2Arrays<V, W, Result>(
     }
 
     if (leftSegment === undefined) {
-      const resultingSegment = rightSegment!.mapValue(op.right).transpose();
+      const resultingSegment = rightSegment!.mapValue(s => op.right(s.value, s.interval)).transpose();
       if (resultingSegment !== undefined) result.push(resultingSegment);
     } else if (rightSegment === undefined) {
-      const resultingSegment = leftSegment!.mapValue(op.left).transpose();
+      const resultingSegment = leftSegment!.mapValue(s => op.left(s.value, s.interval)).transpose();
       if (resultingSegment !== undefined) result.push(resultingSegment);
     } else {
       const startComparison = Interval.compareStarts(leftSegment.interval, rightSegment.interval);
@@ -310,42 +315,42 @@ function map2Arrays<V, W, Result>(
         remainingRightSegment = rightSegment;
         const endComparison = Interval.compareEndToStart(leftSegment.interval, rightSegment.interval);
         if (endComparison < 1) {
-          const resultingSegment = leftSegment.mapValue(op.left).transpose();
+          const resultingSegment = leftSegment.mapValue(s => op.left(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          remainingLeftSegment = leftSegment.mapInterval((_, i) => Interval.intersect(i, rightSegment!.interval));
+          remainingLeftSegment = leftSegment.mapInterval(s => Interval.intersect(s.interval, rightSegment!.interval));
           const resultingSegment = new Segment(
               leftSegment.value,
               Interval.between(leftSegment.interval.start, rightSegment!.interval.start, leftSegment.interval.startInclusivity, Inclusivity.opposite(rightSegment!.interval.startInclusivity))
-          ).mapValue(op.left).transpose();
+          ).mapValue(s => op.left(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         }
       } else if (startComparison === 1) {
         remainingLeftSegment = leftSegment;
         const endComparison = Interval.compareEndToStart(rightSegment.interval, leftSegment.interval);
         if (endComparison < 1) {
-          const resultingSegment = rightSegment.mapValue(op.right).transpose();
+          const resultingSegment = rightSegment.mapValue(s => op.right(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          remainingRightSegment = rightSegment.mapInterval((_, i) => Interval.intersect(i, leftSegment!.interval));
+          remainingRightSegment = rightSegment.mapInterval(s => Interval.intersect(s.interval, leftSegment!.interval));
           const resultingSegment = new Segment(
               rightSegment.value,
               Interval.between(rightSegment.interval.start, leftSegment!.interval.start, rightSegment.interval.startInclusivity, Inclusivity.opposite(leftSegment!.interval.startInclusivity))
-          ).mapValue(op.right).transpose();
+          ).mapValue(s => op.right(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         }
       } else {
         const endComparison = Interval.compareEnds(leftSegment.interval, rightSegment.interval);
         if (endComparison === -1) {
-          remainingRightSegment = rightSegment.mapInterval((_, i) => Interval.between(leftSegment!.interval.end, i.end, Inclusivity.opposite(leftSegment!.interval.endInclusivity), i.endInclusivity));
-          const resultingSegment = leftSegment.mapValue((l, i) => op.combine(l, rightSegment!.value, i)).transpose();
+          remainingRightSegment = rightSegment.mapInterval(r => Interval.between(leftSegment!.interval.end, r.interval.end, Inclusivity.opposite(leftSegment!.interval.endInclusivity), r.interval.endInclusivity));
+          const resultingSegment = leftSegment.mapValue(l => op.combine(l.value, rightSegment!.value, l.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else if (endComparison === 1) {
-          remainingLeftSegment = leftSegment.mapInterval((_, i) => Interval.between(rightSegment!.interval.end, i.end, Inclusivity.opposite(rightSegment!.interval.endInclusivity), i.endInclusivity));
-          const resultingSegment = rightSegment.mapValue((r, i) => op.combine(leftSegment!.value, r, i)).transpose();
+          remainingLeftSegment = leftSegment.mapInterval(l => Interval.between(rightSegment!.interval.end, l.interval.end, Inclusivity.opposite(rightSegment!.interval.endInclusivity), l.interval.endInclusivity));
+          const resultingSegment = rightSegment.mapValue(r => op.combine(leftSegment!.value, r.value, r.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          const resultingSegment = leftSegment.mapValue((l, i) => op.combine(l, rightSegment!.value, i)).transpose();
+          const resultingSegment = leftSegment.mapValue(l => op.combine(l.value, rightSegment!.value, l.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         }
       }
@@ -355,7 +360,7 @@ function map2Arrays<V, W, Result>(
   return result;
 }
 
-type ProfileSpecialization<V> =
+export type ProfileSpecialization<V> =
   V extends boolean ? Windows
   : V extends LinearEquation ? Real
   : Profile<V>;

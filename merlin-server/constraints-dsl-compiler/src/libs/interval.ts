@@ -1,3 +1,5 @@
+import type {Intervallic} from "./timeline";
+
 export enum Inclusivity {
   Inclusive,
   Exclusive
@@ -16,11 +18,13 @@ export namespace Inclusivity {
   }
 }
 
-export class Interval {
+export class Interval implements Intervallic {
   public start: Temporal.Duration;
   public end: Temporal.Duration;
   public startInclusivity: Inclusivity;
   public endInclusivity: Inclusivity;
+
+  public readonly interval = this;
 
   private constructor(start: Temporal.Duration, end: Temporal.Duration, startInclusivity: Inclusivity, endInclusivity: Inclusivity) {
     this.start = start;
@@ -44,6 +48,10 @@ export class Interval {
     const comparison = Temporal.Duration.compare(this.start, this.end);
     if (comparison === 1) return true;
     return comparison === 0 && (this.startInclusivity === Inclusivity.Exclusive || this.endInclusivity === Inclusivity.Exclusive);
+  }
+
+  public isSingleton(): boolean {
+    return Temporal.Duration.compare(this.start, this.end) === 0;
   }
 
   public duration(): Temporal.Duration {
@@ -92,6 +100,41 @@ export class Interval {
     return Interval.between(start, end, startInclusivity, endInclusivity);
   }
 
+  public static union(left: Interval, right: Interval): Interval | undefined {
+    if (Interval.intersect(left, right).isEmpty()) return undefined;
+
+    const startComparison = Interval.compareStarts(left, right);
+    const endComparison = Interval.compareEnds(left, right);
+
+    let start: Temporal.Duration;
+    let startInclusivity: Inclusivity;
+    let end: Temporal.Duration;
+    let endInclusivity: Inclusivity;
+
+    if (startComparison <= 0) {
+      start = left.start;
+      startInclusivity = left.startInclusivity;
+    } else {
+      start = right.start;
+      startInclusivity = right.startInclusivity;
+    }
+
+    if (endComparison >= 0) {
+      end = left.end;
+      endInclusivity = left.endInclusivity;
+    } else {
+      end = right.end;
+      endInclusivity = right.endInclusivity;
+    }
+
+    return Interval.between(
+        start,
+        end,
+        startInclusivity,
+        endInclusivity
+    );
+  }
+
   public static subtract(left: Interval, right: Interval) {
     const intersection = Interval.intersect(left, right);
     if (intersection.isEmpty()) return [left];
@@ -136,5 +179,24 @@ export class Interval {
         Temporal.Duration.compare(left.end, right.end) === 0 &&
         left.startInclusivity === right.startInclusivity &&
         left.endInclusivity === right.endInclusivity;
+  }
+
+  public contains(time: Temporal.Duration): boolean;
+  public contains(time: Interval): boolean;
+  public contains(other: Interval | Temporal.Duration): boolean {
+    if (other instanceof Temporal.Duration) other = Interval.at(other);
+    return Interval.compareStarts(this, other) <= 0 && Interval.compareEnds(this, other) >= 0;
+  }
+
+  // @ts-ignore
+  public bound(bounds: Interval): Interval | undefined {
+    const intersection = Interval.intersect(bounds, this);
+    if (intersection.isEmpty()) return undefined;
+    return intersection;
+  }
+
+  // @ts-ignore
+  public mapInterval(map: (i: this) => Interval): Interval {
+    return map(this);
   }
 }

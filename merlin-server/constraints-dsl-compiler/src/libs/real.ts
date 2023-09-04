@@ -28,6 +28,11 @@ export class Real extends Profile<LinearEquation> {
     return new Real(database.getResource(name));
   }
 
+  public override assignGaps(def: Profile<LinearEquation> | LinearEquation | number): Real {
+    if (typeof def === 'number') def = LinearEquation.Constant(def);
+    return super.assignGaps(def);
+  }
+
   public times(coefficient: number): Real {
     return this.mapValues(eq => eq.times(coefficient));
   }
@@ -43,6 +48,29 @@ export class Real extends Profile<LinearEquation> {
   public rate(unit?: Temporal.Duration): Real {
     if (unit !== undefined) return this.mapValues(v => LinearEquation.Constant(v.rate));
     else return this.mapValues(v => LinearEquation.Constant(v.rate * unit!.total('microsecond') / 1_000_000));
+  }
+
+  public integrate(unit: Temporal.Duration): Real {
+    const timeline = (bounds: Interval) => {
+      const baseRate = 1 / unit.total('second');
+      const segments = this.segments(bounds);
+      const result: Segment<LinearEquation>[] = [];
+      let previousTime  = bounds.start;
+      let acc = 0;
+      for (const segment of segments) {
+        if (Temporal.Duration.compare(previousTime, segment.interval.start) !== 0)
+          throw new Error("Cannot integrate a real profile with gaps.");
+        if (segment.value.rate !== 0)
+          throw new Error("Cannot integrate real profiles that aren't piecewise constant.");
+        let rate = segment.value.initialValue * baseRate;
+        let nextAcc = acc + rate * segment.interval.duration().total('second');
+        result.push(new Segment(new LinearEquation(previousTime, acc, rate), segment.interval));
+        previousTime = segment.interval.end;
+        acc = nextAcc;
+      }
+      return result;
+    }
+    return new Real(timeline);
   }
 
   public compare(other: Profile<LinearEquation>, comparator: (l: number, r: number) => boolean): Windows {
@@ -139,7 +167,8 @@ export class LinearEquation {
     return new LinearEquation(this.initialTime, c * this.initialValue, c * this.rate);
   }
 
-  public plus(other: LinearEquation): LinearEquation {
+  public plus(other: LinearEquation | number): LinearEquation {
+    if (typeof other === 'number') other = LinearEquation.Constant(other);
     const shifted = other.shiftInitialTime(this.initialTime);
     return new LinearEquation(this.initialTime, this.initialValue + other.initialValue, this.rate + other.rate);
   }

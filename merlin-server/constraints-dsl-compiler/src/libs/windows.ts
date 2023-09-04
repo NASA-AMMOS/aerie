@@ -5,6 +5,7 @@ import {BinaryOperation} from "./binary-operation";
 import {Interval} from "./interval";
 import type {Timeline} from "./timeline";
 import {ProfileType} from "./profile-type";
+import {LinearEquation, Real} from "./real";
 
 export class Windows extends Profile<boolean> {
   constructor(segments: Timeline<Segment<boolean>>) {
@@ -111,4 +112,8 @@ export class Windows extends Profile<boolean> {
 
   public starts = () => this.transitions(false, true);
   public ends = () => this.transitions(true, false);
+
+  public accumulatedDuration(unit: Temporal.Duration): Real {
+    return this.mapValues(b => LinearEquation.Constant(b ? 1 : 0), ProfileType.Real).integrate(unit);
+  }
 }

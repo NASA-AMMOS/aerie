@@ -1,7 +1,7 @@
 import {Interval} from "./interval";
-import type {Boundable} from "./timeline";
+import type {Intervallic} from "./timeline";
 
-export class Segment<V> implements Boundable<Segment<V>> {
+export class Segment<V> implements Intervallic {
   public readonly interval: Interval;
   public readonly value: V;
 
@@ -15,19 +15,20 @@ export class Segment<V> implements Boundable<Segment<V>> {
     else return new Segment<NonNullable<V>>(this.value, this.interval);
   }
 
-  public mapValue<W>(f: (v: V, i: Interval) => W): Segment<W> {
-    return new Segment<W>(f(this.value, this.interval), this.interval);
+  public mapValue<W>(f: (s: Segment<V>) => W): Segment<W> {
+    return new Segment<W>(f(this), this.interval);
   }
 
-  public mapInterval(f: (v: V, i: Interval) => Interval): Segment<V> {
-    return new Segment<V>(this.value, f(this.value, this.interval));
+  // @ts-ignore
+  public mapInterval(f: (s: Segment<V>) => Interval): Segment<V> {
+    return new Segment<V>(this.value, f(this));
   }
 
-  bound(bounds: Interval): Segment<V> | undefined {
+  bound(bounds: Interval): this | undefined {
     const intersection = Interval.intersect(bounds, this.interval);
     if (intersection.isEmpty()) return undefined;
-    else return new Segment(this.value, intersection);
+    else { // @ts-ignore
+      return new Segment<V>(this.value, intersection);
+    }
   }
-
-
 }

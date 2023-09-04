@@ -1,32 +1,64 @@
 import {Inclusivity, Interval} from "./interval";
-import type {Segment} from "./segment";
+import {Segment} from "./segment";
 import {ProfileType} from "./profile-type";
 
-export type Timeline<V extends Boundable<V>> = (bounds: Interval) => V[];
+export type Timeline<V extends Intervallic> = (bounds: Interval) => V[];
 
-export interface Boundable<This> {
-  bound(bounds: Interval): This | undefined;
-  compareStarts(other: This): Temporal.ComparisonResult;
+export interface Intervallic {
+  readonly interval: Interval;
+  bound(bounds: Interval): this | undefined;
+  mapInterval(map: (i: this) => Interval): this;
 }
 
-export function bound<V extends Boundable<V>>(data: V[]): Timeline<V>;
-export function bound<V extends Boundable<V>>(data: Iterator<V>): Timeline<V>;
-export function bound<V extends Boundable<V>>(data: Iterable<V>): Timeline<V>;
-export function bound<V extends Boundable<V>>(data: IterableIterator<V>): Timeline<V>;
-export function bound<V extends Boundable<V>>(data: any): Timeline<V> {
-  if (Array.isArray(data)) {}
+export function bound<V extends Intervallic>(data: V[]): Timeline<V>;
+export function bound<V extends Intervallic>(data: Iterator<V>): Timeline<V>;
+export function bound<V extends Intervallic>(data: Iterable<V>): Timeline<V>;
+export function bound<V extends Intervallic>(data: IterableIterator<V>): Timeline<V>;
+export function bound<V extends Intervallic>(data: any): Timeline<V> {
+  let array: V[];
+  if (Array.isArray(data)) array = data;
   else if ('next' in data) {
-    const iterable = makeIterable(data);
-    data = [];
-    for (const v in iterable) {
-      data.push(v);
+    const iterable = makeIterable<V>(data);
+    array = [];
+    for (const v of iterable) {
+      array.push(v);
     }
   }
-  else data = [data];
+  else array = [data];
+
+  if (array.length > 0) {
+    if (array[0] instanceof Segment) {
+      const guessedType = ProfileType.guessType(array[0].value);
+      const valueComparator = ProfileType.getSegmentComparator(guessedType);
+      sortSegments(array as unknown as Segment<any>[], guessedType);
+      coalesce(array as unknown as Segment<any>[], guessedType);
+    }
+  }
 
   return bounds => (data as V[]).map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
 }
 
+export function sortSegments<V>(segments: Segment<V>[], profileType: ProfileType): Segment<V>[] {
+  const valueComparator = ProfileType.getSegmentComparator(profileType);
+  return segments.sort((l: Segment<any>, r: Segment<any>) => {
+    const startComparison = Interval.compareStarts(l.interval, r.interval);
+    const endComparison = Interval.compareEnds(l.interval, r.interval);
+    if (startComparison === endComparison && startComparison !== 0) {
+      return startComparison;
+    } else {
+      if (valueComparator(l.value, r.value)) return startComparison;
+      throw new Error("Segments should be sortable into an order in which both start and end times are strictly increasing, unless segment values are equal.");
+    }
+  });
+}
+
+/**
+ * input condition: segments must be sorted such that between each pair of consecutive elements, one of the following is true:
+ * - if the values are unequal, the start and end times (including inclusivity) must be strictly increasing
+ * - if the values are equal, the start time must be non-decreasing.
+ * @param segments
+ * @param typeTag
+ */
 export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segment<V>[] {
   const equals = ProfileType.getSegmentComparator(typeTag);
   if (segments.length === 0) return segments;
@@ -39,8 +71,10 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
       buffer = segment;
     } else {
       if (equals(buffer.value, segment.value)) {
-        buffer.interval.end = segment.interval.end;
-        buffer.interval.endInclusivity = segment.interval.endInclusivity;
+        if (Interval.compareEnds(buffer.interval, segment.interval) < 0) {
+          buffer.interval.end = segment.interval.end;
+          buffer.interval.endInclusivity = segment.interval.endInclusivity;
+        }
       } else {
         buffer.interval.end = segment.interval.end;
         buffer.interval.endInclusivity = Inclusivity.opposite(segment.interval.endInclusivity);
@@ -54,7 +88,7 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
   return segments;
 }
 
-function cache<V extends Boundable<V>>(t: Timeline<V>): Timeline<V> {
+export function cache<V extends Intervallic>(t: Timeline<V>): Timeline<V> {
   // Stored as a list of tuples that we must search through because Intervals contain Durations,
   // which have an inaccurate equality check.
   let history: [Interval, V[]][] = [];
@@ -66,6 +100,10 @@ function cache<V extends Boundable<V>>(t: Timeline<V>): Timeline<V> {
     history.push([bounds, result]);
     return result;
   }
+}
+
+export function merge<V extends Intervallic, W extends Intervallic>(left: Timeline<V>, right: Timeline<W>): Timeline<V | W> {
+  return bounds => (left(bounds) as (V|W)[]).concat(right(bounds));
 }
 
 export function makeIterable<V>(iter: Iterator<V>): IterableIterator<V> {
