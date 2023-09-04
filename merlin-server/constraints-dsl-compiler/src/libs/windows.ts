@@ -14,8 +14,11 @@ export class Windows extends Profile<boolean> {
     return new Windows(_ => []);
   }
 
-  public static Value(value: boolean): Windows {
-    return new Windows(bounds => [new Segment(bounds, value)]);
+  public static Value(value: boolean, interval?: Interval): Windows {
+    return new Windows(bounds => [new Segment(
+        value,
+        interval === undefined ? bounds : Interval.intersect(bounds, interval)
+    )]);
   }
 
   public static Resource(name: string): Windows {
@@ -23,7 +26,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public not(): Windows {
-   return this.mapValues($ => !$.value);
+   return this.mapValues($ => !$);
   }
 
   public and(other: Windows): Windows {
@@ -49,9 +52,9 @@ export class Windows extends Profile<boolean> {
   }
 
   public falsifyByDuration(min?: Temporal.Duration, max?: Temporal.Duration): Windows {
-    return this.mapValues(s => {
-      if (s.value) {
-        const duration = s.interval.duration();
+    return this.mapValues((v, i) => {
+      if (v) {
+        const duration = i.duration();
         return !((min !== undefined && Temporal.Duration.compare(min, duration) > 0) || (max !== undefined && Temporal.Duration.compare(max, duration) < 0));
       } else {
         return false;
@@ -86,25 +89,25 @@ export class Windows extends Profile<boolean> {
           bounds.endInclusivity
       );
     }
-    return this.unsafe.mapIntervals($ => {
-      if ($.value) {
+    return this.unsafe.mapIntervals((v, i) => {
+      if (v) {
         return Interval.between(
-          $.interval.start.add(shiftRising),
-          $.interval.end.add(shiftFalling!),
-          $.interval.startInclusivity,
-          $.interval.endInclusivity
+          i.start.add(shiftRising),
+          i.end.add(shiftFalling!),
+          i.startInclusivity,
+          i.endInclusivity
         );
       } else {
         return Interval.between(
-          $.interval.start.add(shiftFalling!),
-          $.interval.end.add(shiftRising),
-          $.interval.startInclusivity,
-          $.interval.endInclusivity
+          i.start.add(shiftFalling!),
+          i.end.add(shiftRising),
+          i.startInclusivity,
+          i.endInclusivity
         );
       }
     }, boundsMap);
   }
 
-  public starts = () => this.specificEdges(false, true);
-  public ends = () => this.specificEdges(true, false);
+  public starts = () => this.transitions(false, true);
+  public ends = () => this.transitions(true, false);
 }
