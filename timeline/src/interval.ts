@@ -1,4 +1,8 @@
-import type {Intervallic} from "./timeline";
+export interface Intervallic {
+  readonly interval: Interval;
+  bound(bounds: Interval): this | undefined;
+  mapInterval(map: (i: this) => Interval): this;
+}
 
 export enum Inclusivity {
   Inclusive,

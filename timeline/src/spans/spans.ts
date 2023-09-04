@@ -1,12 +1,12 @@
-import type {Intervallic, Timeline} from "./timeline";
-import {bound, coalesce, merge, sortSegments} from "./timeline";
-import {Segment} from "./segment";
-import type {Windows} from "./windows";
-import {Inclusivity, Interval} from "./interval";
-import {ProfileType} from "./profile-type";
-import {map2Arrays, Profile, ProfileSpecialization} from "./profile";
-import {LinearEquation, Real} from "./real";
-import {BinaryOperation} from "./binary-operation";
+import type {Timeline} from "../timeline";
+import {bound, coalesce, merge, sortSegments} from "../timeline";
+import {Segment} from "../segment";
+import type {Windows} from "../profiles/windows";
+import {Intervallic, Inclusivity, Interval} from "../interval";
+import {ProfileType} from "../profiles/profile-type";
+import {map2Arrays, Profile, ProfileSpecialization} from "../profiles/profile";
+import {LinearEquation, Real} from "../profiles/real";
+import {BinaryOperation} from "../binary-operation";
 
 export class Spans<S extends Intervallic> {
   private spans: Timeline<S>;
@@ -80,7 +80,7 @@ export class Spans<S extends Intervallic> {
     return this.flattenIntoProfile(() => true, ProfileType.Windows).assignGaps(false);
   }
 
-  public shiftBy(fromStart: Temporal.Duration, fromEnd?: Temporal.Duration): Spans<S> {
+  public shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Spans<S> {
     const boundsMap = (bounds: Interval) => {
       let start: Temporal.Duration;
       let end: Temporal.Duration;
@@ -99,7 +99,7 @@ export class Spans<S extends Intervallic> {
       );
     };
     return this.unsafe.map(
-        s => s.mapInterval(i => i.interval.shiftBy(fromStart, fromEnd)),
+        s => s.mapInterval(i => i.interval.shiftBy(shiftRising, shiftFalling)),
         boundsMap
     );
   }

@@ -1,12 +1,12 @@
-import {Segment} from "./segment";
-import {Inclusivity, Interval} from "./interval";
+import {Segment} from "../segment";
+import {Inclusivity, Interval} from "../interval";
 import {Windows} from "./windows";
-import {bound, coalesce, Timeline} from "./timeline";
-import {BinaryOperation} from "./binary-operation";
+import {bound, coalesce, Timeline} from "../timeline";
+import {BinaryOperation} from "../binary-operation";
 import {LinearEquation, Real} from "./real";
-import database from "./database";
+import database from "../database";
 import {ProfileType} from "./profile-type";
-import {Spans} from "./spans";
+import {Spans} from "../spans/spans";
 
 export class Profile<V> {
   protected segments: Timeline<Segment<V>>;

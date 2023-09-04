@@ -1,5 +1,4 @@
-import {Interval} from "./interval";
-import type {Intervallic} from "./timeline";
+import {Interval, Intervallic} from "./interval";
 
 export class Segment<V> implements Intervallic {
   public readonly interval: Interval;

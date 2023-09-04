@@ -1,12 +1,13 @@
 import {Profile, ProfileSpecialization} from "./profile";
-import {Segment} from "./segment";
-import database from "./database";
-import {BinaryOperation} from "./binary-operation";
-import {Interval} from "./interval";
-import type {Timeline} from "./timeline";
+import {Segment} from "../segment";
+import database from "../database";
+import {BinaryOperation} from "../binary-operation";
+import {Interval} from "../interval";
+import type {Timeline} from "../timeline";
 import {ProfileType} from "./profile-type";
 import {LinearEquation, Real} from "./real";
 
+// @ts-ignore
 export class Windows extends Profile<boolean> {
   constructor(segments: Timeline<Segment<boolean>>) {
     super(segments, ProfileType.Windows);
@@ -24,7 +25,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public static override Resource(name: string): Windows {
-    return Profile.Resource<boolean>(database.getResource(name), ProfileType.Windows);
+    return Profile.Resource<boolean>(name, ProfileType.Windows);
   }
 
   public not(): Windows {

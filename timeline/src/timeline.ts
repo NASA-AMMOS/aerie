@@ -1,14 +1,8 @@
-import {Inclusivity, Interval} from "./interval";
+import {Inclusivity, Interval, Intervallic} from "./interval";
 import {Segment} from "./segment";
-import {ProfileType} from "./profile-type";
+import {ProfileType} from "./profiles/profile-type";
 
 export type Timeline<V extends Intervallic> = (bounds: Interval) => V[];
-
-export interface Intervallic {
-  readonly interval: Interval;
-  bound(bounds: Interval): this | undefined;
-  mapInterval(map: (i: this) => Interval): this;
-}
 
 export function bound<V extends Intervallic>(data: V[]): Timeline<V>;
 export function bound<V extends Intervallic>(data: Iterator<V>): Timeline<V>;

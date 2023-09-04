@@ -1,13 +1,14 @@
 import {Profile} from "./profile";
-import {Segment} from "./segment";
-import database from "./database";
-import type {Timeline} from "./timeline";
-import {coalesce} from "./timeline";
-import {Inclusivity, Interval} from "./interval";
-import {BinaryOperation} from "./binary-operation";
+import {Segment} from "../segment";
+import database from "../database";
+import type {Timeline} from "../timeline";
+import {coalesce} from "../timeline";
+import {Inclusivity, Interval} from "../interval";
+import {BinaryOperation} from "../binary-operation";
 import {Windows} from "./windows";
 import {ProfileType} from "./profile-type";
 
+// @ts-ignore
 export class Real extends Profile<LinearEquation> {
   constructor(segments: Timeline<Segment<LinearEquation>>) {
     super(segments, ProfileType.Real);
@@ -28,7 +29,7 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public static override Resource(name: string): Real {
-    return Profile.Resource<LinearEquation>(database.getResource(name), ProfileType.Real);
+    return Profile.Resource<LinearEquation>(name, ProfileType.Real);
   }
 
   public override assignGaps(def: Profile<LinearEquation> | LinearEquation | number): Real {
