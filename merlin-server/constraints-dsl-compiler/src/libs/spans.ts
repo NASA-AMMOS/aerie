@@ -56,9 +56,20 @@ export class Spans<S extends Intervallic> {
   public combineIntoProfile<Result>(op: BinaryOperation<S, Result, Result>, profileType: ProfileType): ProfileSpecialization<Result> {
     const segments = (bounds: Interval) => {
       let acc: Segment<Result>[] = [];
-      for (const span of this.spans(bounds)) {
-        const newSegment = [new Segment(span, span.interval)];
-        acc = map2Arrays(newSegment, acc, op);
+      const remaining = this.spans(bounds);
+      while (remaining.length > 0) {
+        const batch: Segment<S>[] = [];
+        let previousTime = bounds.start;
+        let previousInclusivity = Inclusivity.opposite(bounds.startInclusivity);
+        for (const span of remaining) {
+          const startComparison = Temporal.Duration.compare(span.interval.start, previousTime);
+          if (startComparison > 0 || (startComparison === 0 && previousInclusivity !== span.interval.startInclusivity)) {
+            batch.push(new Segment(span, span.interval));
+            previousTime = span.interval.end;
+            previousInclusivity = span.interval.endInclusivity;
+          }
+        }
+        acc = map2Arrays(batch, acc, op);
       }
       return coalesce(acc, profileType);
     }
