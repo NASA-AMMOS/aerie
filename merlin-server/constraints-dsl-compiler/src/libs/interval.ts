@@ -188,6 +188,16 @@ export class Interval implements Intervallic {
     return Interval.compareStarts(this, other) <= 0 && Interval.compareEnds(this, other) >= 0;
   }
 
+  public shiftBy(fromStart: Temporal.Duration, fromEnd?: Temporal.Duration): Interval {
+    if (fromEnd === undefined) fromEnd = fromStart;
+    return Interval.between(
+        this.start.add(fromStart),
+        this.end.add(fromEnd),
+        this.startInclusivity,
+        this.endInclusivity
+    );
+  }
+
   // @ts-ignore
   public bound(bounds: Interval): Interval | undefined {
     const intersection = Interval.intersect(bounds, this);

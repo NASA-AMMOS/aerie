@@ -69,6 +69,30 @@ export class Spans<S extends Intervallic> {
     return this.flattenIntoProfile(() => true, ProfileType.Windows).assignGaps(false);
   }
 
+  public shiftBy(fromStart: Temporal.Duration, fromEnd?: Temporal.Duration): Spans<S> {
+    const boundsMap = (bounds: Interval) => {
+      let start: Temporal.Duration;
+      let end: Temporal.Duration;
+      if (Temporal.Duration.compare(shiftRising, shiftFalling!) === 1) {
+        start = bounds.start.subtract(shiftRising);
+        end = bounds.end.subtract(shiftFalling!);
+      } else {
+        start = bounds.start.subtract(shiftFalling!);
+        end = bounds.end.subtract(shiftRising);
+      }
+      return Interval.between(
+          start,
+          end,
+          bounds.startInclusivity,
+          bounds.endInclusivity
+      );
+    };
+    return this.unsafe.map(
+        s => s.mapInterval(i => i.interval.shiftBy(fromStart, fromEnd)),
+        boundsMap
+    );
+  }
+
   public countActive(): Real {
     return this.combineIntoProfile<LinearEquation>(BinaryOperation.cases(
         () => LinearEquation.Constant(1),

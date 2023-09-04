@@ -6,6 +6,7 @@ import {BinaryOperation} from "./binary-operation";
 import {LinearEquation, Real} from "./real";
 import database from "./database";
 import {ProfileType} from "./profile-type";
+import {Spans} from "./spans";
 
 export class Profile<V> {
   protected segments: Timeline<Segment<V>>;
@@ -185,9 +186,20 @@ export class Profile<V> {
     ));
   }
 
+  public shiftBy(shift: Temporal.Duration): ProfileSpecialization<V> {
+    return this.unsafe.mapIntervals(
+      (v, i) => i.shiftBy(shift),
+       b => b.shiftBy(shift.negated())
+    );
+  }
+
   public select(selection: Interval): ProfileSpecialization<V> {
     const segments = (bounds: Interval) => this.segments(Interval.intersect(selection, bounds));
     return (new Profile(segments, this.typeTag)).specialize();
+  }
+
+  public intoSpans(): Spans<Segment<V>> {
+    return new Spans(this.segments);
   }
 
   public specialize(): ProfileSpecialization<V> {
