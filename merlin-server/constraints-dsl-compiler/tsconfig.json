@@ -5,6 +5,9 @@
     "outDir": "./build",
 
     "noUnusedParameters": false,
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+
+    "declaration": true,
+    "importsNotUsedAsValues": "preserve"
   }
 }

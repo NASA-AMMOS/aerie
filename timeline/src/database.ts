@@ -1,6 +1,8 @@
-import { Segment } from './segment';
-import { Client } from 'ts-postgres';
-import { Timeline } from './timeline';
+import { Segment } from './segment.js';
+import {bound, Timeline} from './timeline.js';
+import {Interval} from "./interval.js";
+import {Temporal} from "@js-temporal/polyfill";
+import Duration = Temporal.Duration;
 
 class DatabaseFacade {
   private sharedClient: SharedClient;
@@ -8,7 +10,7 @@ class DatabaseFacade {
 
   constructor() {
     this.sharedClient = {
-      client: new Client(),
+      client: 5,
       connected: false
     };
 
@@ -16,7 +18,7 @@ class DatabaseFacade {
   }
 
   public getResource(resourceId: string): Timeline<Segment<any>> {
-    throw new Error('unimplemented');
+    return bound([new Segment(1, Interval.At(Duration.from({minutes: 5})))]);
     // if (this.resources.has(resourceId)) {
     //   // @ts-ignore
     //   return this.resources.get(resourceId).clone();
@@ -44,7 +46,7 @@ class DatabaseFacade {
 }
 
 type SharedClient = {
-  client: Client;
+  client: number;
   connected: boolean;
 };
 

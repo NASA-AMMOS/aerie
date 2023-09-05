@@ -1,6 +1,6 @@
-import { Inclusivity, Interval, Intervallic } from './interval';
-import { Segment } from './segment';
-import { ProfileType } from './profiles/profile-type';
+import { Inclusivity, Interval, Intervallic } from './interval.js';
+import { Segment } from './segment.js';
+import { ProfileType } from './profiles/profile-type.js';
 
 export type Timeline<V extends Intervallic> = (bounds: Interval) => Promise<V[]>;
 

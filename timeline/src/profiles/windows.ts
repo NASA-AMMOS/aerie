@@ -1,10 +1,10 @@
-import { Profile } from './profile';
-import { Segment } from '../segment';
-import { BinaryOperation } from '../binary-operation';
-import { Interval } from '../interval';
-import type { Timeline } from '../timeline';
-import { ProfileType } from './profile-type';
-import { LinearEquation, Real } from './real';
+import { Profile } from './profile.js';
+import { Segment } from '../segment.js';
+import { BinaryOperation } from '../binary-operation.js';
+import { Interval } from '../interval.js';
+import type { Timeline } from '../timeline.js';
+import { ProfileType } from './profile-type.js';
+import { LinearEquation, Real } from './real.js';
 import { Temporal } from '@js-temporal/polyfill';
 
 // @ts-ignore

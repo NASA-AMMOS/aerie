@@ -1,5 +1,5 @@
-import { Segment } from '../src/segment';
-import { Interval } from '../src/interval';
+import { Segment } from '../src/segment.js';
+import { Interval } from '../src/interval.js';
 import { Temporal } from '@js-temporal/polyfill';
 import Duration = Temporal.Duration;
 

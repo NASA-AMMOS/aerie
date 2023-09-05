@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "Tools for representing and manipulating aerie simulation results",
   "type": "module",
+  "exports": "./build/src/index.js",
+  "types": "build/src/index.d.ts",
   "scripts": {
     "build": "rm -rf build; tsc",
     "reformat": "npx prettier -w .",
     "test": "jest"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "^0.4.4",
-    "ts-postgres": "1.3.0",
-    "typescript": "^5.2.2"
+    "@js-temporal/polyfill": "^0.4.4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
@@ -20,6 +20,10 @@
     "jest": "^29.6.4",
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
-    "typedoc": "^0.25.1"
+    "ts-loader": "^9.4.4",
+    "typedoc": "^0.25.1",
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   }
 }

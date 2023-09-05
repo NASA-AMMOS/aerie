@@ -25,27 +25,27 @@ task assembleConstraintsDSLCompiler(type: NpmTask) {
   inputs.dir('src')
 }
 
-task generateDocumentation(type: NpmTask) {
-  dependsOn npmInstall
-  dependsOn processResources
-  dependsOn assembleConstraintsDSLCompiler
-  args = ['run', 'generate-doc']
-  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
-  inputs.dir('src')
-}
+//task generateDocumentation(type: NpmTask) {
+//  dependsOn npmInstall
+//  dependsOn processResources
+//  dependsOn assembleConstraintsDSLCompiler
+//  args = ['run', 'generate-doc']
+//  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
+//  inputs.dir('src')
+//}
 
 task cleanDocsFromDocsDir(type: Delete) {
   delete rootDir.toPath().resolve('docs/edsl-api-docs/constraints-edsl-api/develop')
 }
 
-task publishDocs {
-  dependsOn cleanDocsFromDocsDir
-  dependsOn generateDocumentation
-}
+//task publishDocs {
+//  dependsOn cleanDocsFromDocsDir
+//  dependsOn generateDocumentation
+//}
 
 assemble {
   dependsOn assembleConstraintsDSLCompiler
-  dependsOn generateDocumentation
+//  dependsOn generateDocumentation
 }
 
 test {

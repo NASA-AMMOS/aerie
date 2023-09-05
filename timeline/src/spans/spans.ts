@@ -1,12 +1,12 @@
-import type { Timeline } from '../timeline';
-import { bound, coalesce, merge, sortSegments } from '../timeline';
-import { Segment } from '../segment';
-import type { Windows } from '../profiles/windows';
-import { Intervallic, Inclusivity, Interval } from '../interval';
-import { ProfileType } from '../profiles/profile-type';
-import { map2Arrays, Profile, ProfileSpecialization } from '../profiles/profile';
-import { LinearEquation, Real } from '../profiles/real';
-import { BinaryOperation } from '../binary-operation';
+import type { Timeline } from '../timeline.js';
+import { bound, coalesce, merge, sortSegments } from '../timeline.js';
+import { Segment } from '../segment.js';
+import type { Windows } from '../profiles/windows.js';
+import { Intervallic, Inclusivity, Interval } from '../interval.js';
+import {ProfileSpecialization, ProfileType} from '../profiles/profile-type.js';
+import { map2Arrays, Profile } from '../profiles/profile.js';
+import { LinearEquation, Real } from '../profiles/real.js';
+import { BinaryOperation } from '../binary-operation.js';
 import { Temporal } from '@js-temporal/polyfill';
 
 export class Spans<S extends Intervallic> {
@@ -183,8 +183,9 @@ export class Spans<S extends Intervallic> {
     return new Spans(timeline);
   }
 
+  // @ts-ignore
   public unsafe = new (class {
-    constructor(private outerThis: Spans<S>) {}
+    constructor(public outerThis: Spans<S>) {}
 
     public map<T extends Intervallic>(f: (span: S) => T, boundsMap: (b: Interval) => Interval): Spans<T> {
       return new Spans<T>(async bounds => (await this.outerThis.spans(boundsMap(bounds))).map(s => f(s)));

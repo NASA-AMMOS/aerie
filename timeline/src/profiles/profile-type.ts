@@ -1,4 +1,6 @@
-import { LinearEquation } from './real';
+import {LinearEquation, Real} from './real.js';
+import {Profile} from "./profile.js";
+import {Windows} from "./windows.js";
 
 export enum ProfileType {
   Real,
@@ -6,7 +8,21 @@ export enum ProfileType {
   Other
 }
 
+export type ProfileSpecialization<V> = V extends boolean ? Windows : V extends LinearEquation ? Real : Profile<V>;
+
 export namespace ProfileType {
+  export function specialize<V>(p: Profile<V>, t: ProfileType): ProfileSpecialization<V> {
+    if (t === ProfileType.Windows) {
+      // @ts-ignore
+      return new Windows(p);
+    } else if (t === ProfileType.Real) {
+      // @ts-ignore
+      return new Real(p);
+    }
+
+    // @ts-ignore
+    return p;
+  }
   export function getSegmentComparator(t: ProfileType): (l: any, r: any) => boolean {
     if (t === ProfileType.Real) return (l: LinearEquation, r: LinearEquation) => l.equals(r);
     return (l: any, r: any) => l === r;

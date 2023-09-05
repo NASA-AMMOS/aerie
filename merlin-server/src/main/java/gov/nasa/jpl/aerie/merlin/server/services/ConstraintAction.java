@@ -135,11 +135,6 @@ public class ConstraintAction {
         }
       }
 
-      final var environment = new EvaluationEnvironment(realExternalProfiles, discreteExternalProfiles);
-
-      final var realProfiles = new HashMap<String, LinearProfile>();
-      final var discreteProfiles = new HashMap<String, DiscreteProfile>();
-
       for (final var entry : constraintCode.entrySet()) {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
@@ -152,60 +147,16 @@ public class ConstraintAction {
         );
 
         if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
-          expression = success.constraintExpression();
+          ConstraintResult constraintResult = success.constraintResult();
+
+          if (constraintResult.isEmpty()) continue;
+
+          violations.put(entry.getKey(), constraintResult);
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
           throw new Error("Constraint compilation failed: " + error);
         } else {
           throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
         }
-
-        final var names = new HashSet<String>();
-        expression.extractResources(names);
-
-        final var newNames = new HashSet<String>();
-        for (final var name : names) {
-          if (!realProfiles.containsKey(name) && !discreteProfiles.containsKey(name)) {
-            newNames.add(name);
-          }
-        }
-
-        if (!newNames.isEmpty()) {
-          final var newProfiles = resultsHandle$
-              .map($ -> $.getProfiles(new ArrayList<>(newNames)))
-              .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id " + planId.id()));
-
-
-          for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
-            if (!realProfiles.containsKey(_entry.getKey())) {
-              realProfiles.put(_entry.getKey(), LinearProfile.fromSimulatedProfile(_entry.getValue().getRight()));
-            }
-          }
-
-          for (final var _entry : ProfileSet.unwrapOptional(newProfiles.discreteProfiles()).entrySet()) {
-            if (!discreteProfiles.containsKey(_entry.getKey())) {
-              discreteProfiles.put(_entry.getKey(), DiscreteProfile.fromSimulatedProfile(_entry.getValue().getRight()));
-            }
-          }
-        }
-
-        final Interval bounds = Interval.betweenClosedOpen(Duration.ZERO, simDuration);
-        final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-            simStartTime,
-            bounds,
-            activities,
-            realProfiles,
-            discreteProfiles);
-
-        ConstraintResult constraintResult = expression.evaluate(preparedResults, environment);
-
-        if (constraintResult.isEmpty()) continue;
-
-        constraintResult.constraintName = entry.getValue().name();
-        constraintResult.constraintId = entry.getKey();
-        constraintResult.constraintType = entry.getValue().type();
-        constraintResult.resourceIds = List.copyOf(names);
-
-        violations.put(entry.getKey(), constraintResult);
       }
 
       constraintService.createConstraintRuns(

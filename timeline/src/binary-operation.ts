@@ -1,4 +1,4 @@
-import type { Interval } from './interval';
+import type { Interval } from './interval.js';
 
 export class BinaryOperation<Left, Right, Out> {
   public readonly left: (l: Left, i: Interval) => Out | undefined;

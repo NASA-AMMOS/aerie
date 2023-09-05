@@ -88,7 +88,7 @@ public class ConstraintsDSLCompilationService {
         case "success" -> {
           final var output = outputReader.readLine();
           try {
-            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintParsers.constraintP));
+            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintParsers.constraintResultP));
           } catch (InvalidJsonException | InvalidEntityException e) {
             throw new Error("Could not parse success JSON returned from typescript: " + output, e);
           }
@@ -113,7 +113,7 @@ public class ConstraintsDSLCompilationService {
   }
 
   public sealed interface ConstraintsDSLCompilationResult {
-    record Success(Expression<ConstraintResult> constraintExpression) implements ConstraintsDSLCompilationResult {}
+    record Success(ConstraintResult constraintResult) implements ConstraintsDSLCompilationResult {}
     record Error(List<ConstraintsCompilationError.UserCodeError> errors) implements ConstraintsDSLCompilationResult {}
   }
 }

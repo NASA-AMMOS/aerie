@@ -1,4 +1,4 @@
-import { Inclusivity, Interval } from '../src/interval';
+import { Inclusivity, Interval } from '../src/interval.js';
 import { Temporal } from '@js-temporal/polyfill';
 import Duration = Temporal.Duration;
 

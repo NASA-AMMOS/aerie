@@ -1,8 +1,8 @@
-import { Interval } from '../interval';
-import { Segment } from '../segment';
-import database from '../database';
-import { Profile } from './profile';
-import { ProfileType } from './profile-type';
+import { Interval } from '../interval.js';
+import { Segment } from '../segment.js';
+import database from '../database.js';
+import { Profile } from './profile.js';
+import { ProfileType } from './profile-type.js';
 
 export class Discrete {
   /**

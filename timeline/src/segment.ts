@@ -1,4 +1,4 @@
-import { Interval, Intervallic } from './interval';
+import { Interval, Intervallic } from './interval.js';
 
 export class Segment<V> implements Intervallic {
   public readonly interval: Interval;

@@ -1,12 +1,12 @@
-import { Segment } from '../segment';
-import { Inclusivity, Interval } from '../interval';
-import { Windows } from './windows';
-import { bound, coalesce, Timeline } from '../timeline';
-import { BinaryOperation } from '../binary-operation';
-import { LinearEquation, Real } from './real';
-import database from '../database';
-import { ProfileType } from './profile-type';
-import { Spans } from '../spans/spans';
+import { Segment } from '../segment.js';
+import { Inclusivity, Interval } from '../interval.js';
+import { Windows } from './windows.js';
+import { bound, coalesce, Timeline } from '../timeline.js';
+import { BinaryOperation } from '../binary-operation.js';
+import { LinearEquation, Real } from './real.js';
+import database from '../database.js';
+import {ProfileSpecialization, ProfileType} from './profile-type.js';
+import { Spans } from '../spans/spans.js';
 import { Temporal } from '@js-temporal/polyfill';
 
 export class Profile<V> {
@@ -221,20 +221,11 @@ export class Profile<V> {
   }
 
   public specialize(): ProfileSpecialization<V> {
-    if (this.typeTag === ProfileType.Windows) {
-      // @ts-ignore
-      return new Windows(this);
-    } else if (this.typeTag === ProfileType.Real) {
-      // @ts-ignore
-      return new Real(this);
-    }
-
-    // @ts-ignore
-    return this;
+    return ProfileType.specialize(this, this.typeTag);
   }
 
   public unsafe = new (class {
-    constructor(private outerThis: Profile<V>) {}
+    constructor(public outerThis: Profile<V>) {}
 
     public map(f: (v: V, i: Interval) => Segment<V>, boundsMap: (b: Interval) => Interval): ProfileSpecialization<V>;
     public map<W>(
@@ -481,4 +472,5 @@ export function map2Arrays<V, W, Result>(
   return result;
 }
 
-export type ProfileSpecialization<V> = V extends boolean ? Windows : V extends LinearEquation ? Real : Profile<V>;
+
+

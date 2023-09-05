@@ -1,24 +1,13 @@
-import './libs/polyfills.js'
 import fs from 'fs';
 import ts from 'typescript';
-import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import type { Constraint } from './libs/constraints-edsl-fluent-api.js';
 import * as readline from 'readline';
-import vm from "node:vm";
+// @ts-ignore
+import { Temporal } from '@js-temporal/polyfill';
+import * as vm from "vm";
+import {UserCodeRunner} from "@nasa-jpl/aerie-ts-user-code-runner";
+import {Profile} from 'aerie-timeline';
 
 const codeRunner = new UserCodeRunner();
-const constraintsEDSL = fs.readFileSync(
-  `${process.env['CONSTRAINTS_DSL_COMPILER_ROOT']}/src/libs/constraints-edsl-fluent-api.ts`,
-  'utf8',
-);
-const constraintsAST = fs.readFileSync(
-  `${process.env['CONSTRAINTS_DSL_COMPILER_ROOT']}/src/libs/constraints-ast.ts`,
-  'utf8',
-);
-const temporalPolyfillTypes = fs.readFileSync(
-    `${process.env['CONSTRAINTS_DSL_COMPILER_ROOT']}/src/libs/TemporalPolyfillTypes.ts`,
-    'utf8',
-);
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
 const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
@@ -34,10 +23,6 @@ const lineReader = readline.createInterface({
   input: process.stdin,
 });
 lineReader.once('line', handleRequest);
-
-interface AstNode {
-  __astNode: object
-}
 
 function toJson(unwrappedErr: any){
   var completeStackValue = "";
@@ -67,13 +52,10 @@ async function handleRequest(data: Buffer) {
     };
 
     const additionalSourceFiles: { 'filename': string, 'contents': string}[] = [
-      { 'filename': 'constraints-ast.ts', 'contents': constraintsAST },
-      { 'filename': 'constraints-edsl-fluent-api.ts', 'contents': constraintsEDSL },
       { 'filename': 'mission-model-generated-code.ts', 'contents': missionModelGeneratedCode },
-      { 'filename': 'TemporalPolyfillTypes.ts', 'contents': temporalPolyfillTypes }
     ];
 
-    const result = await codeRunner.executeUserCode<[], AstNode>(
+    const result = await codeRunner.executeUserCode<[], Profile<any>>(
         constraintCode,
         [],
         expectedReturnType,
@@ -82,6 +64,7 @@ async function handleRequest(data: Buffer) {
         additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget)),
         vm.createContext({
           Temporal,
+          Profile: Profile
         }),
     );
 
@@ -94,7 +77,7 @@ async function handleRequest(data: Buffer) {
     }
 
     const stringified = JSON.stringify(
-        result.unwrap().__astNode,
+        result.unwrap(),
         function replacer(key, value) {
           if (this[key] instanceof Temporal.Duration) {
             return this[key].total({ unit: "microseconds" });

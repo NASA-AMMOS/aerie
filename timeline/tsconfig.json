@@ -3,7 +3,14 @@
   "compilerOptions": {
     "rootDirs": ["./src", "./test"],
     "outDir": "./build",
+    "target": "es6",
 
-    "strict": true
+
+    "strict": true,
+    "sourceMap": false,
+
+    "declaration": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   }
 }
