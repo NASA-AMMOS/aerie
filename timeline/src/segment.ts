@@ -9,6 +9,10 @@ export class Segment<V> implements Intervallic {
     this.value = value;
   }
 
+  public static Of<V>(value: V, interval: Interval): Segment<V> {
+    return new Segment(value, interval);
+  }
+
   public transpose(): Segment<NonNullable<V>> | undefined {
     if (this.value === undefined || this.value === null) return undefined;
     else return new Segment<NonNullable<V>>(this.value, this.interval);
