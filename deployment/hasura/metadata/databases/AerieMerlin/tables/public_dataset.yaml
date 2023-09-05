@@ -28,17 +28,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, revision]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, revision]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

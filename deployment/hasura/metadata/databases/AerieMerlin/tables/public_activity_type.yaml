@@ -30,17 +30,17 @@ remote_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

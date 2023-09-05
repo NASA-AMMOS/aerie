@@ -80,20 +80,17 @@ remote_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
-                 created_at, updated_at, owner, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
-                 created_at, updated_at, owner, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision, name, model_id, duration, start_time, parent_id, is_locked,
-                 created_at, updated_at, owner, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

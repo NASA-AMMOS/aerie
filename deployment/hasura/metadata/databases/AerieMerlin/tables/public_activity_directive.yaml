@@ -76,21 +76,17 @@ remote_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, last_modified_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      # Need to specify all columns manually
-      columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, last_modified_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [ id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, last_modified_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 update_permissions:

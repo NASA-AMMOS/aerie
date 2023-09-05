@@ -19,20 +19,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [snapshot_id, id, name, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by,
-                start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [snapshot_id, id, name, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by,
-                start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [snapshot_id, id, name, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by,
-                start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:

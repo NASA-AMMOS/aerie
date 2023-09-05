@@ -4,17 +4,17 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [directive_id, plan_id, last_modified_at, validations]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [directive_id, plan_id, last_modified_at, validations]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [directive_id, plan_id, last_modified_at, validations]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:

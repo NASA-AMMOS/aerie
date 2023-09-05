@@ -6,17 +6,17 @@ configuration:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, name, color, owner, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, name, color, owner, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, name, color, owner, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

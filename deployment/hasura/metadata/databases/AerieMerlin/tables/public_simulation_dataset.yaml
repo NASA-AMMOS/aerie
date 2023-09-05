@@ -39,23 +39,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
-                simulation_template_revision, simulation_revision, dataset_revision, arguments, simulation_start_time,
-                simulation_end_time, status, reason, canceled, requested_by, requested_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
-                simulation_template_revision, simulation_revision, dataset_revision, arguments, simulation_start_time,
-                simulation_end_time, status, reason, canceled, requested_by, requested_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, simulation_id, dataset_id, offset_from_plan_start, plan_revision, model_revision,
-                simulation_template_revision, simulation_revision, dataset_revision, arguments, simulation_start_time,
-                simulation_end_time, status, reason, canceled, requested_by, requested_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 update_permissions:

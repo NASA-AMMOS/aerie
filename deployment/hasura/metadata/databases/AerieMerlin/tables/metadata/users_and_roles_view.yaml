@@ -6,16 +6,16 @@ configuration:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [username, hasura_default_role, hasura_allowed_roles]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [username, hasura_default_role, hasura_allowed_roles]
+      columns: '*'
       filter: {"username":{"_eq":"X-Hasura-User-Id"}}
       allow_aggregations: false
   - role: viewer
     permission:
-      columns: [ username, hasura_default_role, hasura_allowed_roles ]
+      columns: '*'
       filter: { "username": { "_eq": "X-Hasura-User-Id" } }
       allow_aggregations: false

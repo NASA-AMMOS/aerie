@@ -47,17 +47,21 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id, status, requester_username, reviewer_username]
+      columns: '*'
       filter: {}
       allow_aggregations: true
-# Insert, Update, and Delete Permissions are not included because these actions are only allowed via SQL functions
+# Insert/Update Permissions are not included because these actions are controlled via SQL functions
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {"status":{"_neq":"in-progress"}}

@@ -23,22 +23,16 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, approximate_start_time,
-                 preset_id, preset_arguments]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, approximate_start_time,
-                 preset_id, preset_arguments]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by, start_offset, type,
-                 arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start, approximate_start_time,
-                 preset_id, preset_arguments]
+      columns: '*'
       filter: {}
       allow_aggregations: true

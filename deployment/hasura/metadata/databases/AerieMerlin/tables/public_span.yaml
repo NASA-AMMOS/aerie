@@ -26,17 +26,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, duration, dataset_id, parent_id, start_offset, type, attributes]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, duration, dataset_id, parent_id, start_offset, type, attributes]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, duration, dataset_id, parent_id, start_offset, type, attributes]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:

@@ -7,17 +7,17 @@ is_enum: true
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [role, description]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [role, description]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [role, description]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

@@ -4,17 +4,17 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, path, name, created_date, modified_date, deleted_date]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, path, name, created_date, modified_date, deleted_date]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, path, name, created_date, modified_date, deleted_date]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:
