@@ -4,9 +4,9 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [new_plan_id]
+      columns: '*'
       filter: {}
   - role: user
     permission:
-      columns: [new_plan_id]
+      columns: '*'
       filter: {}
