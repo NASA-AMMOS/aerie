@@ -14,16 +14,16 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [rule_id, id, name, owner, description, command_dict_id, mission_model_id, created_at, updated_at, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [rule_id, id, name, owner, description, command_dict_id, mission_model_id, created_at, updated_at, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [rule_id, id, name, owner, description, command_dict_id, mission_model_id, created_at, updated_at, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true

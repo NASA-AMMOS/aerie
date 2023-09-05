@@ -21,17 +21,17 @@ remote_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [rule_id, tag_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [rule_id, tag_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [rule_id, tag_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:
