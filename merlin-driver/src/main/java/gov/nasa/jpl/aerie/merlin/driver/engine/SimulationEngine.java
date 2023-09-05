@@ -218,6 +218,7 @@ public final class SimulationEngine implements AutoCloseable {
       progress.caller().ifPresent($ -> {
         if (this.subtasks.get($).decrementAndGet() == 0) {
           this.subtasks.remove($);
+          this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
         }
       });
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
@@ -234,7 +235,6 @@ public final class SimulationEngine implements AutoCloseable {
       frame.signal(JobId.forTask(target));
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
-      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
