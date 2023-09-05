@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -65,6 +66,8 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  /** The number of subtasks remaining to complete before a task may resume. */
+  private final Map<TaskId, MutableInt> subtasks = new HashMap<>();
 
   /** The task that spawned a given task (if any). */
   private final Map<TaskId, TaskId> taskParent = new HashMap<>();
@@ -80,7 +83,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
+    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
@@ -200,7 +203,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(currentTime, task, frame);
+    final var scheduler = new EngineScheduler(currentTime, task, progress.caller(), frame);
     final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
@@ -212,6 +215,11 @@ public final class SimulationEngine implements AutoCloseable {
 
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
+      progress.caller().ifPresent($ -> {
+        if (this.subtasks.get($).decrementAndGet() == 0) {
+          this.subtasks.remove($);
+        }
+      });
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
       if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
@@ -219,9 +227,10 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
       final var target = TaskId.generate();
-      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
+      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, Optional.of(task), s.child().create(this.executor)));
       SimulationEngine.this.taskParent.put(target, task);
       SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
+      SimulationEngine.this.subtasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
@@ -681,11 +690,18 @@ public final class SimulationEngine implements AutoCloseable {
   private final class EngineScheduler implements Scheduler {
     private final Duration currentTime;
     private final TaskId activeTask;
+    private final Optional<TaskId> caller;
     private final TaskFrame<JobId> frame;
 
-    public EngineScheduler(final Duration currentTime, final TaskId activeTask, final TaskFrame<JobId> frame) {
+    public EngineScheduler(
+        final Duration currentTime,
+        final TaskId activeTask,
+        final Optional<TaskId> caller,
+        final TaskFrame<JobId> frame)
+    {
       this.currentTime = Objects.requireNonNull(currentTime);
       this.activeTask = Objects.requireNonNull(activeTask);
+      this.caller = Objects.requireNonNull(caller);
       this.frame = Objects.requireNonNull(frame);
     }
 
@@ -712,9 +728,10 @@ public final class SimulationEngine implements AutoCloseable {
     @Override
     public void spawn(final TaskFactory<?> state) {
       final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, this.caller, state.create(SimulationEngine.this.executor)));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
+      this.caller.ifPresent($ -> SimulationEngine.this.subtasks.get($).increment());
       this.frame.signal(JobId.forTask(task));
     }
   }
@@ -753,7 +770,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
     /** The task is in its primary operational phase. */
-    record InProgress<Return>(Duration startOffset, Task<Return> state)
+    record InProgress<Return>(Duration startOffset, Optional<TaskId> caller, Task<Return> state)
         implements ExecutionState<Return>
     {
       public AwaitingChildren<Return> completedAt(
@@ -763,7 +780,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       public InProgress<Return> continueWith(final Task<Return> newState) {
-        return new InProgress<>(this.startOffset, newState);
+        return new InProgress<>(this.startOffset, this.caller, newState);
       }
     }
 
