@@ -69,6 +69,40 @@ export class Constraint {
       expression: expression(new ActivityInstance(activityType, alias)).__astNode,
     });
   }
+
+  /**
+   * Detect when a spans object's cumulative duration exceeds a threshold within any interval of a given width.
+   *
+   * Violations can be reported in two different ways by setting the `algorithm` argument:
+   * - `RollingThresholdAlgorithm.Spans` highlights the individual spans that contributed to the threshold violation.
+   * - `RollingThresholdAlgorithm.Hull` highlights the single interval that contains all the violating spans.
+   *
+   * @param spans spans object to detect threshold events on
+   * @param width width of the rolling interval
+   * @param threshold maximum allowable duration within any `width` interval
+   * @param algorithm algorithm for reporting violations
+   * @constructor
+   */
+  public static RollingThreshold(
+      spans: Spans,
+      width: AST.Duration,
+      threshold: AST.Duration,
+      algorithm: RollingThresholdAlgorithm
+  ): Constraint {
+    return new Constraint({
+      kind: AST.NodeKind.RollingThreshold,
+      spans: spans.__astNode,
+      width,
+      threshold,
+      algorithm
+    });
+  }
+}
+
+/** Algorithm to use when reporting violations from rolling threshold */
+export enum RollingThresholdAlgorithm {
+  Spans = 'Spans',
+  Hull = 'Hull'
 }
 
 /** A boolean profile; a function from time to truth values. */
@@ -105,7 +139,7 @@ export class Windows {
   public static During(...activityTypes: Gen.ActivityType[]) : Windows {
     return Windows.Or(
         ...activityTypes.map<Windows>((activityType) =>
-            Spans.ForEachActivity(activityType, (activity) => activity.span()).windows())
+            Spans.ForEachActivity(activityType).windows())
     );
   }
 
@@ -464,13 +498,14 @@ export class Spans {
    * Check a constraint for each instance of an activity type.
    *
    * @param activityType activity type to check
-   * @param expression function of an activity instance that returns a Constraint
+   * @param expression function of an activity instance that returns a Constraint; default returns the instance's span.
    * @constructor
    */
   public static ForEachActivity<A extends Gen.ActivityType>(
       activityType: A,
-      expression: (instance: ActivityInstance<A>) => Spans,
+      expression?: (instance: ActivityInstance<A>) => Spans,
   ): Spans {
+    if (expression === undefined) expression = instance => instance.span();
     let alias = 'span activity alias ' + Spans.__numGeneratedAliases;
     Spans.__numGeneratedAliases += 1;
     return new Spans({
@@ -1039,8 +1074,8 @@ declare global {
      * @constructor
      */
     public static ForbiddenActivityOverlap(
-      activityType1: Gen.ActivityType,
-      activityType2: Gen.ActivityType,
+        activityType1: Gen.ActivityType,
+        activityType2: Gen.ActivityType,
     ): Constraint;
 
     /**
@@ -1054,6 +1089,32 @@ declare global {
         activityType: A,
         expression: (instance: ActivityInstance<A>) => Constraint,
     ): Constraint;
+
+    /**
+     * Detect when a spans object's cumulative duration exceeds a threshold within any interval of a given width.
+     *
+     * Violations can be reported in two different ways by setting the `algorithm` argument:
+     * - `RollingThresholdAlgorithm.Spans` highlights the individual spans that contributed to the threshold violation.
+     * - `RollingThresholdAlgorithm.Hull` highlights the single interval that contains all the violating spans.
+     *
+     * @param spans spans object to detect threshold events on
+     * @param width width of the rolling interval
+     * @param threshold maximum allowable duration within any `width` interval
+     * @param algorithm algorithm for reporting violations
+     * @constructor
+     */
+    public static RollingThreshold(
+        spans: Spans,
+        width: AST.Duration,
+        threshold: AST.Duration,
+        algorithm: RollingThresholdAlgorithm
+    ): Constraint;
+  }
+
+  /** Algorithm to use when reporting violations from rolling threshold */
+  export enum RollingThresholdAlgorithm {
+    Spans = 'Spans',
+    Hull = 'Hull'
   }
 
   /** A boolean profile; a function from time to truth values. */
@@ -1261,12 +1322,12 @@ declare global {
      * Applies an expression producing spans for each instance of an activity type and returns the aggregated set of spans.
      *
      * @param activityType activity type to check
-     * @param expression function of an activity instance that returns a Spans
+     * @param expression function of an activity instance that returns a Spans; default returns the instance's span.
      * @constructor
      */
     public static ForEachActivity<A extends Gen.ActivityType>(
         activityType: A,
-        expression: (instance: ActivityInstance<A>) => Spans,
+        expression?: (instance: ActivityInstance<A>) => Spans,
     ): Spans;
 
     /**
@@ -1523,4 +1584,4 @@ declare global {
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity, Interval });
+Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity, Interval, RollingThresholdAlgorithm });

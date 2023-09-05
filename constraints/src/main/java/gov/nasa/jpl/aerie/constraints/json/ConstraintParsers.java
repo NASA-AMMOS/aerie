@@ -617,9 +617,26 @@ public final class ConstraintParsers {
               untuple((kind, expression) -> new ViolationsOfWindows(expression)),
               $ -> tuple(Unit.UNIT, $.expression));
 
+  public static final JsonParser<RollingThreshold.RollingThresholdAlgorithm> rollingThresholdAlgorithmP =
+      enumP(RollingThreshold.RollingThresholdAlgorithm.class, Enum::name);
+
+  static final JsonParser<RollingThreshold> rollingThresholdP =
+      productP
+          .field("kind", literalP("RollingThreshold"))
+          .field("spans", spansExpressionP)
+          .field("width", durationExprP)
+          .field("threshold", durationExprP)
+          .field("algorithm", rollingThresholdAlgorithmP)
+          .map(
+              untuple((kind, spans, width, threshold, alg) -> new RollingThreshold(spans, width, threshold, alg)),
+              $ -> tuple(Unit.UNIT, $.spans(), $.width(), $.threshold(), $.algorithm())
+          );
+
+
   public static final JsonParser<Expression<ConstraintResult>> constraintP =
       recursiveP(selfP -> chooseP(
           forEachActivityViolationsF(selfP),
           windowsExpressionP.map(ViolationsOfWindows::new, $ -> $.expression),
-          violationsOfP));
+          violationsOfP,
+          rollingThresholdP));
 }

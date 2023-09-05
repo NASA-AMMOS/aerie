@@ -31,6 +31,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftWindowsEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
@@ -1271,6 +1272,32 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new Equal<>(new ShiftBy<>(new DiscreteResource("mode"), new DurationLiteral(Duration.of(2, Duration.MINUTE))), new DiscreteValue(SerializedValue.of("Option1")))
+        )
+    );
+  }
+
+  @Test
+  void testRollingThreshold() {
+    checkSuccessfulCompilation(
+        """
+        export default () => {
+          return Constraint.RollingThreshold(
+            Spans.ForEachActivity(ActivityType.activity),
+            Temporal.Duration.from({hours: 1}),
+            Temporal.Duration.from({minutes: 5}),
+            RollingThresholdAlgorithm.Hull
+          );
+        }
+        """,
+        new RollingThreshold(
+            new ForEachActivitySpans(
+                "activity",
+                "span activity alias 0",
+                new ActivitySpan("span activity alias 0")
+            ),
+            new DurationLiteral(Duration.of(1, Duration.HOUR)),
+            new DurationLiteral(Duration.of(5, Duration.MINUTE)),
+            RollingThreshold.RollingThresholdAlgorithm.Hull
         )
     );
   }

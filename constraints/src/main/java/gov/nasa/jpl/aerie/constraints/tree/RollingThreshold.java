@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public record RollingThreshold(Expression<Spans> expression, Expression<Duration> width, Expression<Duration> threshold, RollingThresholdAlgorithm algorithm) implements Expression<ConstraintResult> {
+public record RollingThreshold(Expression<Spans> spans, Expression<Duration> width, Expression<Duration> threshold, RollingThresholdAlgorithm algorithm) implements Expression<ConstraintResult> {
 
   public enum RollingThresholdAlgorithm {
     InputSpans,
@@ -25,7 +25,7 @@ public record RollingThreshold(Expression<Spans> expression, Expression<Duration
   @Override
   public ConstraintResult evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
     final var width = this.width.evaluate(results, bounds, environment);
-    var spans = this.expression.evaluate(results, bounds, environment);
+    var spans = this.spans.evaluate(results, bounds, environment);
     final var threshold = this.threshold.evaluate(results, bounds, environment);
 
     final var accDuration = spans.accumulatedDuration(threshold);
@@ -65,7 +65,7 @@ public record RollingThreshold(Expression<Spans> expression, Expression<Duration
 
   @Override
   public void extractResources(final Set<String> names) {
-    this.expression.extractResources(names);
+    this.spans.extractResources(names);
     this.width.extractResources(names);
     this.threshold.extractResources(names);
   }
@@ -75,7 +75,7 @@ public record RollingThreshold(Expression<Spans> expression, Expression<Duration
     return String.format(
         "\n%s(rolling-threshold on %s, width %s, threshold %s, algorithm %s)",
         prefix,
-        this.expression.prettyPrint(prefix + "  "),
+        this.spans.prettyPrint(prefix + "  "),
         this.width.prettyPrint(prefix + "  "),
         this.threshold.prettyPrint(prefix + "  "),
         this.algorithm
