@@ -1,6 +1,5 @@
 import { Inclusivity, Interval } from '../src/interval';
 import { Temporal } from '@js-temporal/polyfill';
-import './jest.setup';
 import Duration = Temporal.Duration;
 
 const dur = (m: number) => Duration.from({ minutes: m });
