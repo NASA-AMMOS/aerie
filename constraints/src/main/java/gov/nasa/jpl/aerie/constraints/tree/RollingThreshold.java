@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
@@ -18,14 +19,24 @@ import java.util.Set;
 public record RollingThreshold(Expression<Spans> spans, Expression<Duration> width, Expression<Duration> threshold, RollingThresholdAlgorithm algorithm) implements Expression<ConstraintResult> {
 
   public enum RollingThresholdAlgorithm {
-    InputSpans,
-    Hull
+    ExcessSpans,
+    ExcessHull,
+    DeficitSpans,
+    DeficitHull
   }
 
   @Override
   public ConstraintResult evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
     final var width = this.width.evaluate(results, bounds, environment);
     var spans = this.spans.evaluate(results, bounds, environment);
+
+    final Spans reportedSpans;
+    if (algorithm == RollingThresholdAlgorithm.ExcessHull || algorithm == RollingThresholdAlgorithm.ExcessSpans) {
+      reportedSpans = spans;
+    } else {
+      reportedSpans = spans.intoWindows().not().intoSpans(bounds);
+    }
+
     final var threshold = this.threshold.evaluate(results, bounds, environment);
 
     final var accDuration = spans.accumulatedDuration(threshold);
@@ -33,25 +44,51 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
 
     final var localAccDuration = shiftedBack.plus(accDuration.times(-1));
 
-    final var leftViolatingBounds = localAccDuration.greaterThan(new LinearProfile(Segment.of(Interval.FOREVER, new LinearEquation(Duration.ZERO, 1, 0))));
-
+    final Windows leftViolatingBounds;
     final var violations = new ArrayList<Violation>();
-    for (final var leftViolatingBound: leftViolatingBounds.iterateEqualTo(true)) {
-      final var expandedInterval = Interval.between(leftViolatingBound.start, leftViolatingBound.startInclusivity, leftViolatingBound.end.plus(width), leftViolatingBound.endInclusivity);
+
+    final var thresholdEq = new LinearProfile(Segment.of(
+        Interval.FOREVER,
+        new LinearEquation(
+            Duration.ZERO,
+            1,
+            0
+        )
+    ));
+
+    if (algorithm == RollingThresholdAlgorithm.ExcessHull || algorithm == RollingThresholdAlgorithm.ExcessSpans) {
+      leftViolatingBounds = localAccDuration.greaterThan(thresholdEq);
+    } else {
+      leftViolatingBounds = localAccDuration.lessThan(thresholdEq).select(
+          Interval.between(
+              bounds.start,
+              bounds.startInclusivity,
+              bounds.end.minus(width),
+              bounds.endInclusivity
+          )
+      );
+    }
+
+    for (final var leftViolatingBound : leftViolatingBounds.iterateEqualTo(true)) {
+      final var expandedInterval = Interval.between(
+          leftViolatingBound.start,
+          leftViolatingBound.startInclusivity,
+          leftViolatingBound.end.plus(width),
+          leftViolatingBound.endInclusivity);
       final var violationIntervals = new ArrayList<Interval>();
       final var violationActivityIds = new ArrayList<Long>();
-      for (final var span: spans) {
+      for (final var span : reportedSpans) {
         if (!Interval.intersect(span.interval(), expandedInterval).isEmpty()) {
           violationIntervals.add(span.interval());
           span.value().ifPresent(m -> violationActivityIds.add(m.activityInstance().id));
         }
       }
-      if (this.algorithm == RollingThresholdAlgorithm.Hull) {
+      if (this.algorithm == RollingThresholdAlgorithm.ExcessHull || this.algorithm == RollingThresholdAlgorithm.DeficitHull) {
         final var hull = Interval.between(
             violationIntervals.get(0).start,
             violationIntervals.get(0).startInclusivity,
-            violationIntervals.get(violationIntervals.size()-1).end,
-            violationIntervals.get(violationIntervals.size()-1).endInclusivity
+            violationIntervals.get(violationIntervals.size() - 1).end,
+            violationIntervals.get(violationIntervals.size() - 1).endInclusivity
         );
         violationIntervals.clear();
         violationIntervals.add(hull);
@@ -59,7 +96,6 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
       final var violation = new Violation(violationIntervals, violationActivityIds);
       violations.add(violation);
     }
-
     return new ConstraintResult(violations, List.of());
   }
 

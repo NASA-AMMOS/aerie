@@ -1128,7 +1128,7 @@ public class ASTTests {
   }
 
   @Test
-  public void testRollingThreshold() {
+  public void testRollingThresholdExcess() {
     final var simResults = new SimulationResults(
         Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
@@ -1150,10 +1150,10 @@ public class ASTTests {
         Supplier.of(spans),
         Supplier.of(Duration.of(10, SECONDS)),
         Supplier.of(Duration.of(2500, MILLISECOND)),
-        RollingThreshold.RollingThresholdAlgorithm.Hull
+        RollingThreshold.RollingThresholdAlgorithm.ExcessHull
     ).evaluate(simResults);
 
-    final var expected = new ConstraintResult(
+    final var expected1 = new ConstraintResult(
         List.of(
             new Violation(List.of(Interval.between(0, 5, SECONDS)), List.of()),
             new Violation(List.of(Interval.between(14, 19, SECONDS)), List.of())
@@ -1161,7 +1161,93 @@ public class ASTTests {
         List.of()
     );
 
-    assertEquals(expected, result1);
+    assertEquals(expected1, result1);
+
+    final var result2 = new RollingThreshold(
+        Supplier.of(spans),
+        Supplier.of(Duration.of(10, SECONDS)),
+        Supplier.of(Duration.of(2500, MILLISECOND)),
+        RollingThreshold.RollingThresholdAlgorithm.ExcessSpans
+    ).evaluate(simResults);
+
+    final var expected2 = new ConstraintResult(
+        List.of(
+            new Violation(
+                List.of(
+                    Interval.between(0, 1, SECONDS),
+                    Interval.between(2, 3, SECONDS),
+                    Interval.between(4, 5, SECONDS)
+                ), List.of()
+            ),
+            new Violation(
+                List.of(
+                    Interval.between(14, 15, SECONDS),
+                    Interval.between(16, 17, SECONDS),
+                    Interval.between(18, 19, SECONDS)
+                ), List.of()
+            )
+        ), List.of()
+    );
+
+    assertEquals(expected2, result2);
+  }
+
+  @Test
+  public void tesRollingThresholdDeficit() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans(
+        Interval.between(0, 1, SECONDS),
+        Interval.between(2, 3, SECONDS),
+        Interval.between(4, 5, SECONDS),
+
+        Interval.between(14, 15, SECONDS),
+        Interval.between(16, 17, SECONDS),
+        Interval.between(18, 19, SECONDS)
+    );
+
+    final var result1 = new RollingThreshold(
+        Supplier.of(spans),
+        Supplier.of(Duration.of(10, SECONDS)),
+        Supplier.of(Duration.of(2500, MILLISECOND)),
+        RollingThreshold.RollingThresholdAlgorithm.DeficitHull
+    ).evaluate(simResults);
+
+    final var expected1 = new ConstraintResult(
+        List.of(
+            new Violation(List.of(Interval.between(1, Exclusive, 18, Exclusive, SECONDS)), List.of())
+        ),
+        List.of()
+    );
+
+    assertEquals(expected1, result1);
+
+    final var result2 = new RollingThreshold(
+        Supplier.of(spans),
+        Supplier.of(Duration.of(10, SECONDS)),
+        Supplier.of(Duration.of(2500, MILLISECOND)),
+        RollingThreshold.RollingThresholdAlgorithm.DeficitSpans
+    ).evaluate(simResults);
+
+    final var expected2 = new ConstraintResult(
+        List.of(
+            new Violation(List.of(
+                Interval.between(1, Exclusive, 2, Exclusive, SECONDS),
+                Interval.between(3, Exclusive, 4, Exclusive, SECONDS),
+                Interval.between(5, Exclusive, 14, Exclusive, SECONDS),
+                Interval.between(15, Exclusive, 16, Exclusive, SECONDS),
+                Interval.between(17, Exclusive, 18, Exclusive, SECONDS)
+            ), List.of())
+        ),
+        List.of()
+    );
+
+    assertEquals(expected2, result2);
   }
 
   /**

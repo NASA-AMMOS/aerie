@@ -71,11 +71,17 @@ export class Constraint {
   }
 
   /**
-   * Detect when a spans object's cumulative duration exceeds a threshold within any interval of a given width.
+   * Detect when a spans object's cumulative duration either exceeds or falls short of a threshold within any interval of a given width.
    *
-   * Violations can be reported in two different ways by setting the `algorithm` argument:
-   * - `RollingThresholdAlgorithm.Spans` highlights the individual spans that contributed to the threshold violation.
-   * - `RollingThresholdAlgorithm.Hull` highlights the single interval that contains all the violating spans.
+   * Violations can be reported in various ways by setting the `algorithm` argument:
+   * - `ExcessSpans` detects times when the duration exceeds the threshold and highlights the individual spans that
+   *    contributed to the threshold violation.
+   * - `ExcessHull` detects times when the duration exceeds the threshold and highlights the whole group of spans that
+   *    contributed to the threshold violation in one interval.
+   * - `DeficitSpans` detects times when the duration falls short of the threshold and highlights the individual gaps between spans
+   *    that contributed to the threshold violation.
+   * - `ExcessHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
+   *    spans that contributed to the threshold violation in one interval.
    *
    * @param spans spans object to detect threshold events on
    * @param width width of the rolling interval
@@ -101,8 +107,10 @@ export class Constraint {
 
 /** Algorithm to use when reporting violations from rolling threshold */
 export enum RollingThresholdAlgorithm {
-  Spans = 'Spans',
-  Hull = 'Hull'
+  ExcessSpans = 'ExcessSpans',
+  ExcessHull = 'ExcessHull',
+  DeficitSpans = 'DeficitSpans',
+  DeficitHull = 'DeficitHull'
 }
 
 /** A boolean profile; a function from time to truth values. */
@@ -1091,11 +1099,17 @@ declare global {
     ): Constraint;
 
     /**
-     * Detect when a spans object's cumulative duration exceeds a threshold within any interval of a given width.
+     * Detect when a spans object's cumulative duration either exceeds or falls short of a threshold within any interval of a given width.
      *
-     * Violations can be reported in two different ways by setting the `algorithm` argument:
-     * - `RollingThresholdAlgorithm.Spans` highlights the individual spans that contributed to the threshold violation.
-     * - `RollingThresholdAlgorithm.Hull` highlights the single interval that contains all the violating spans.
+     * Violations can be reported in various ways by setting the `algorithm` argument:
+     * - `ExcessSpans` detects times when the duration exceeds the threshold and highlights the individual spans that
+     *    contributed to the threshold violation.
+     * - `ExcessHull` detects times when the duration exceeds the threshold and highlights the whole group of spans that
+     *    contributed to the threshold violation in one interval.
+     * - `DeficitSpans` detects times when the duration falls short of the threshold and highlights the individual gaps between spans
+     *    that contributed to the threshold violation.
+     * - `ExcessHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
+     *    spans that contributed to the threshold violation in one interval.
      *
      * @param spans spans object to detect threshold events on
      * @param width width of the rolling interval
@@ -1113,9 +1127,11 @@ declare global {
 
   /** Algorithm to use when reporting violations from rolling threshold */
   export enum RollingThresholdAlgorithm {
-    Spans = 'Spans',
-    Hull = 'Hull'
-  }
+    ExcessSpans = 'ExcessSpans',
+    ExcessHull = 'ExcessHull',
+    DeficitSpans = 'DeficitSpans',
+    DeficitHull = 'DeficitHull'
+}
 
   /** A boolean profile; a function from time to truth values. */
   export class Windows {
