@@ -14,7 +14,7 @@ export class Discrete {
    */
   public static Value<V>(value: V, interval?: Interval): Profile<V> {
     return new Profile<V>(
-      bounds => [new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))],
+      async bounds => [new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))],
       ProfileType.Other
     );
   }

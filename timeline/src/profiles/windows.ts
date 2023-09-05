@@ -1,6 +1,5 @@
-import { Profile, ProfileSpecialization } from './profile';
+import { Profile } from './profile';
 import { Segment } from '../segment';
-import database from '../database';
 import { BinaryOperation } from '../binary-operation';
 import { Interval } from '../interval';
 import type { Timeline } from '../timeline';
@@ -15,11 +14,11 @@ export class Windows extends Profile<boolean> {
   }
 
   public static empty(): Windows {
-    return new Windows(_ => []);
+    return new Windows(async _ => []);
   }
 
   public static override Value(value: boolean, interval?: Interval): Windows {
-    return new Windows(bounds => [
+    return new Windows(async bounds => [
       new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))
     ]);
   }

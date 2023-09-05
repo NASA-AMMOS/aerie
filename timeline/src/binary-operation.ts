@@ -51,9 +51,3 @@ export class BinaryOperation<Left, Right, Out> {
     );
   }
 }
-
-export enum OpMode {
-  Left,
-  Right,
-  Combine
-}

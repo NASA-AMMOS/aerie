@@ -19,12 +19,12 @@ export class Profile<V> {
   }
 
   public static Empty<V>(): Profile<V> {
-    return new Profile(bounds => [], ProfileType.Other);
+    return new Profile(async _ => [], ProfileType.Other);
   }
 
   public static Value<V>(value: V, interval?: Interval): Profile<V> {
     return new Profile<V>(
-      bounds => [new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))],
+      async bounds => [new Segment(value, interval === undefined ? bounds : Interval.intersect(bounds, interval))],
       ProfileType.Other
     );
   }
@@ -39,8 +39,8 @@ export class Profile<V> {
 
   public inspect(f: (segments: readonly Segment<V>[]) => void) {
     const innerSegments = this.segments;
-    this.segments = bounds => {
-      const segments = innerSegments(bounds);
+    this.segments = async bounds => {
+      const segments = await innerSegments(bounds);
       f(segments);
       return segments;
     };
@@ -55,7 +55,7 @@ export class Profile<V> {
     else profile = intervalOrProfile as Profile<V>;
     return this.map2Values(
       profile,
-      BinaryOperation.combineOrIdentity((l, r) => r),
+      BinaryOperation.combineOrIdentity((_, r) => r),
       this.typeTag
     );
   }
@@ -67,8 +67,8 @@ export class Profile<V> {
 
   public unset(unsetInterval: Interval): ProfileSpecialization<V> {
     return new Profile<V>(
-      bounds =>
-        this.segments(bounds).flatMap(seg => {
+      async bounds =>
+        (await this.segments(bounds)).flatMap(seg => {
           let currentInterval = seg.interval;
           let currentValue = seg.value;
           return Interval.subtract(currentInterval, unsetInterval).map($ => new Segment(currentValue, $));
@@ -100,21 +100,21 @@ export class Profile<V> {
   ): ProfileSpecialization<Result> {
     if (typeTag === undefined) typeTag = this.typeTag;
     const leftProfile = this;
-    const segments = (bounds: Interval) => {
-      const left = leftProfile.segments(bounds);
-      const right = rightProfile.segments(bounds);
+    const timeline = async (bounds: Interval) => {
+      const [left, right] = await Promise.all([leftProfile.segments(bounds), rightProfile.segments(bounds)]);
 
       const result = map2Arrays(left, right, op);
 
       return coalesce(result, typeTag!);
     };
 
-    return new Profile(segments, typeTag).specialize();
+    return new Profile(timeline, typeTag).specialize();
   }
 
   public filter(predicate: (v: V, i: Interval) => boolean): ProfileSpecialization<V> {
-    const segments = (bounds: Interval) => this.segments(bounds).filter(s => predicate(s.value, s.interval));
-    return new Profile<V>(segments, this.typeTag).specialize();
+    const timeline = async (bounds: Interval) =>
+      (await this.segments(bounds)).filter(s => predicate(s.value, s.interval));
+    return new Profile<V>(timeline, this.typeTag).specialize();
   }
 
   public equalTo(other: Profile<V>): Windows {
@@ -134,11 +134,10 @@ export class Profile<V> {
   }
 
   public edges(edgeFilter: BinaryOperation<V, V, boolean>): Windows {
-    const newSegments = (bounds: Interval) => {
-      const result: Segment<boolean>[] = [];
+    const timeline = async (bounds: Interval) => {
       let buffer: Segment<V> | undefined = undefined;
       return coalesce(
-        this.segments(bounds)
+        (await this.segments(bounds))
           .flatMap(currentSegment => {
             let leftEdge: boolean | undefined;
             let rightEdge: boolean | undefined;
@@ -188,7 +187,7 @@ export class Profile<V> {
         ProfileType.Windows
       );
     };
-    return new Windows(newSegments);
+    return new Windows(timeline);
   }
 
   public changes(): Windows {
@@ -207,7 +206,7 @@ export class Profile<V> {
 
   public shiftBy(shift: Temporal.Duration): ProfileSpecialization<V> {
     return this.unsafe.mapIntervals(
-      (v, i) => i.shiftBy(shift),
+      (_, i) => i.shiftBy(shift),
       b => b.shiftBy(shift.negated())
     );
   }
@@ -252,9 +251,9 @@ export class Profile<V> {
         typeTag = this.outerThis.typeTag;
       }
       return new Profile<W>(
-        bounds =>
+        async bounds =>
           coalesce(
-            this.outerThis.segments(boundsMap(bounds)).map(s => f(s.value, s.interval)),
+            (await this.outerThis.segments(boundsMap(bounds))).map(s => f(s.value, s.interval)),
             typeTag!
           ),
         typeTag
@@ -268,29 +267,35 @@ export class Profile<V> {
       return this.map<V>((v, i) => new Segment<V>(v, map(v, i)), boundsMap, this.outerThis.typeTag);
     }
 
-    public map2<W>(rightProfile: Profile<W>, op: BinaryOperation<V, W, Segment<V>>): ProfileSpecialization<V>;
+    public map2<W>(
+      rightProfile: Profile<W>,
+      op: BinaryOperation<V, W, Segment<V>>,
+      boundsMap: (b: Interval) => Interval
+    ): ProfileSpecialization<V>;
     public map2<W, Result>(
       rightProfile: Profile<W>,
       op: BinaryOperation<V, W, Segment<Result>>,
+      boundsMap: (b: Interval) => Interval,
       typeTag: ProfileType
     ): ProfileSpecialization<Result>;
     public map2<W, Result>(
       rightProfile: Profile<W>,
       op: BinaryOperation<V, W, Segment<Result>>,
+      boundsMap: (b: Interval) => Interval,
       typeTag?: ProfileType
     ): ProfileSpecialization<Result> {
       if (typeTag === undefined) typeTag = this.outerThis.typeTag;
       const leftProfile = this.outerThis;
-      const segments = (bounds: Interval) => {
-        const left = leftProfile.segments(bounds);
-        const right = rightProfile.segments(bounds);
+      const timeline = async (bounds: Interval) => {
+        const newBounds = boundsMap(bounds);
+        const [left, right] = await Promise.all([leftProfile.segments(newBounds), rightProfile.segments(newBounds)]);
 
         const result = map2Arrays(left, right, op).map($ => $.value);
 
         return coalesce(result, typeTag!);
       };
 
-      return new Profile(segments, typeTag).specialize();
+      return new Profile(timeline, typeTag).specialize();
     }
 
     public flatMap(
@@ -309,38 +314,44 @@ export class Profile<V> {
     ): ProfileSpecialization<W> {
       if (typeTag === undefined) typeTag = this.outerThis.typeTag;
       return new Profile<W>(
-        bounds =>
+        async bounds =>
           coalesce(
-            this.outerThis.segments(boundsMap(bounds)).flatMap(s => f(s.value, s.interval)),
+            (await this.outerThis.segments(boundsMap(bounds))).flatMap(s => f(s.value, s.interval)),
             typeTag!
           ),
         typeTag
       ).specialize();
     }
 
-    public flatMap2<W>(rightProfile: Profile<W>, op: BinaryOperation<V, W, Segment<V>[]>): ProfileSpecialization<V>;
+    public flatMap2<W>(
+      rightProfile: Profile<W>,
+      op: BinaryOperation<V, W, Segment<V>[]>,
+      boundsMap: (b: Interval) => Interval
+    ): ProfileSpecialization<V>;
     public flatMap2<W, Result>(
       rightProfile: Profile<W>,
       op: BinaryOperation<V, W, Segment<Result>[]>,
+      boundsMap: (b: Interval) => Interval,
       typeTag: ProfileType
     ): ProfileSpecialization<Result>;
     public flatMap2<W, Result>(
       rightProfile: Profile<W>,
       op: BinaryOperation<V, W, Segment<Result>[]>,
+      boundsMap: (b: Interval) => Interval,
       typeTag?: ProfileType
     ): ProfileSpecialization<Result> {
       if (typeTag === undefined) typeTag = this.outerThis.typeTag;
       const leftProfile = this.outerThis;
-      const segments = (bounds: Interval) => {
-        const left = leftProfile.segments(bounds);
-        const right = rightProfile.segments(bounds);
+      const timeline = async (bounds: Interval) => {
+        const newBounds = boundsMap(bounds);
+        const [left, right] = await Promise.all([leftProfile.segments(newBounds), rightProfile.segments(newBounds)]);
 
         const result = map2Arrays(left, right, op).flatMap(s => s.value);
 
         return coalesce(result, typeTag!);
       };
 
-      return new Profile(segments, typeTag).specialize();
+      return new Profile(timeline, typeTag).specialize();
     }
   })(this);
 }

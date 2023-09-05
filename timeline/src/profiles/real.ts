@@ -1,6 +1,5 @@
 import { Profile } from './profile';
 import { Segment } from '../segment';
-import database from '../database';
 import type { Timeline } from '../timeline';
 import { coalesce } from '../timeline';
 import { Inclusivity, Interval } from '../interval';
@@ -16,14 +15,14 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public static empty(): Real {
-    return new Real(_ => []);
+    return new Real(async _ => []);
   }
 
   public static override Value(value: number, interval?: Interval): Real;
   public static override Value(value: LinearEquation, interval?: Interval): Real;
   public static override Value(value: number | LinearEquation, interval?: Interval): Real {
     if (typeof value === 'number') value = LinearEquation.Constant(value);
-    return new Real(bounds => [
+    return new Real(async bounds => [
       new Segment(value as LinearEquation, interval === undefined ? bounds : Interval.intersect(bounds, interval))
     ]);
   }
@@ -138,9 +137,9 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public integrate(unit: Temporal.Duration): Real {
-    const timeline = (bounds: Interval) => {
+    const timeline = async (bounds: Interval) => {
       const baseRate = 1 / unit.total('second');
-      const segments = this.segments(bounds);
+      const segments = await this.segments(bounds);
       const result: Segment<LinearEquation>[] = [];
       let previousTime = bounds.start;
       let acc = 0;
@@ -166,6 +165,7 @@ export class Real extends Profile<LinearEquation> {
     return this.unsafe.flatMap2(
       other,
       BinaryOperation.combineOrUndefined((l, r, interval) => l.compare(r, comparator, interval)),
+      b => b,
       ProfileType.Windows
     );
   }
@@ -201,10 +201,10 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public override changes(): Windows {
-    const segments = (bounds: Interval) => {
+    const segments = async (bounds: Interval) => {
       let previous: Segment<LinearEquation> | undefined = undefined;
       return coalesce(
-        this.segments(bounds).flatMap(currentSegment => {
+        (await this.segments(bounds)).flatMap(currentSegment => {
           let leftEdge: boolean | undefined;
 
           const currentInterval = currentSegment.interval;

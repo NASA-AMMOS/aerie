@@ -22,8 +22,8 @@ export class Spans<S extends Intervallic> {
 
   public inspect(f: (spans: readonly S[]) => void) {
     const innerSpans = this.spans;
-    this.spans = bounds => {
-      const spans = innerSpans(bounds);
+    this.spans = async bounds => {
+      const spans = await innerSpans(bounds);
       f(spans);
       return spans;
     };
@@ -40,13 +40,13 @@ export class Spans<S extends Intervallic> {
   }
 
   public filter(predicate: (s: S) => boolean): Spans<S> {
-    const timeline = (bounds: Interval) => this.spans(bounds).filter(predicate);
+    const timeline = async (bounds: Interval) => (await this.spans(bounds)).filter(predicate);
     return new Spans(timeline);
   }
 
   public flattenIntoProfile<Result>(map: (v: S) => Result, profileType: ProfileType): ProfileSpecialization<Result> {
-    const segments = (bounds: Interval) => {
-      const result = this.spans(bounds).map($ => new Segment(map($), $.interval));
+    const segments = async (bounds: Interval) => {
+      const result = (await this.spans(bounds)).map($ => new Segment(map($), $.interval));
       sortSegments(result, profileType);
       coalesce(result, profileType);
       return result;
@@ -58,9 +58,9 @@ export class Spans<S extends Intervallic> {
     op: BinaryOperation<S, Result, Result>,
     profileType: ProfileType
   ): ProfileSpecialization<Result> {
-    const segments = (bounds: Interval) => {
+    const segments = async (bounds: Interval) => {
       let acc: Segment<Result>[] = [];
-      const remaining = this.spans(bounds);
+      const remaining = await this.spans(bounds);
       while (remaining.length > 0) {
         const batch: Segment<S>[] = [];
         let previousTime = bounds.start;
@@ -108,7 +108,7 @@ export class Spans<S extends Intervallic> {
       BinaryOperation.cases(
         () => LinearEquation.Constant(1),
         r => r,
-        (l, r) => r.plus(1)
+        (_, r) => r.plus(1)
       ),
       ProfileType.Real
     ).assignGaps(0);
@@ -119,16 +119,16 @@ export class Spans<S extends Intervallic> {
   }
 
   public starts(): Spans<S> {
-    const timeline = (bounds: Interval) => {
-      const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.At(s.interval.start)));
+    const timeline = async (bounds: Interval) => {
+      const spans = (await this.spans(bounds)).map(i => i.mapInterval(s => Interval.At(s.interval.start)));
       return spans.filter(s => bounds.contains(s.interval));
     };
     return new Spans(timeline);
   }
 
   public ends(): Spans<S> {
-    const timeline = (bounds: Interval) => {
-      const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.At(s.interval.end)));
+    const timeline = async (bounds: Interval) => {
+      const spans = (await this.spans(bounds)).map(i => i.mapInterval(s => Interval.At(s.interval.end)));
       return spans.filter(s => bounds.contains(s.interval));
     };
     return new Spans(timeline);
@@ -141,8 +141,8 @@ export class Spans<S extends Intervallic> {
     strict: boolean = true
   ): Spans<S> {
     if (numberOfSubSpans === 1) return this;
-    const timeline = (bounds: Interval) =>
-      this.spans(bounds).flatMap(s => {
+    const timeline = async (bounds: Interval) =>
+      (await this.spans(bounds)).flatMap(s => {
         const i = s.interval;
 
         const fullWidth = i.duration().total('microsecond');
@@ -187,11 +187,11 @@ export class Spans<S extends Intervallic> {
     constructor(private outerThis: Spans<S>) {}
 
     public map<T extends Intervallic>(f: (span: S) => T, boundsMap: (b: Interval) => Interval): Spans<T> {
-      return new Spans<T>(bounds => this.outerThis.spans(boundsMap(bounds)).map(s => f(s)));
+      return new Spans<T>(async bounds => (await this.outerThis.spans(boundsMap(bounds))).map(s => f(s)));
     }
 
     public flatMap<T extends Intervallic>(f: (span: S) => T[], boundsMap: (b: Interval) => Interval): Spans<T> {
-      return new Spans<T>(bounds => this.outerThis.spans(boundsMap(bounds)).flatMap(s => f(s)));
+      return new Spans<T>(async bounds => (await this.outerThis.spans(boundsMap(bounds))).flatMap(s => f(s)));
     }
   })(this);
 }

@@ -2,7 +2,7 @@ import { Inclusivity, Interval, Intervallic } from './interval';
 import { Segment } from './segment';
 import { ProfileType } from './profiles/profile-type';
 
-export type Timeline<V extends Intervallic> = (bounds: Interval) => V[];
+export type Timeline<V extends Intervallic> = (bounds: Interval) => Promise<V[]>;
 
 export function bound<V extends Intervallic>(data: V[]): Timeline<V>;
 export function bound<V extends Intervallic>(data: Iterator<V>): Timeline<V>;
@@ -22,13 +22,12 @@ export function bound<V extends Intervallic>(data: any): Timeline<V> {
   if (array.length > 0) {
     if (array[0] instanceof Segment) {
       const guessedType = ProfileType.guessType(array[0].value);
-      const valueComparator = ProfileType.getSegmentComparator(guessedType);
       sortSegments(array as unknown as Segment<any>[], guessedType);
       coalesce(array as unknown as Segment<any>[], guessedType);
     }
   }
 
-  return bounds => (data as V[]).map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
+  return async bounds => (data as V[]).map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
 }
 
 export function sortSegments<V>(segments: Segment<V>[], profileType: ProfileType): Segment<V>[] {
@@ -87,11 +86,11 @@ export function cache<V extends Intervallic>(t: Timeline<V>): Timeline<V> {
   // Stored as a list of tuples that we must search through because Intervals contain Durations,
   // which have an inaccurate equality check.
   let history: [Interval, V[]][] = [];
-  return bounds => {
+  return async bounds => {
     for (const [i, t] of history) {
       if (Interval.equals(i, bounds)) return [...t];
     }
-    const result = t(bounds);
+    const result = await t(bounds);
     history.push([bounds, result]);
     return result;
   };
@@ -101,7 +100,7 @@ export function merge<V extends Intervallic, W extends Intervallic>(
   left: Timeline<V>,
   right: Timeline<W>
 ): Timeline<V | W> {
-  return bounds => (left(bounds) as (V | W)[]).concat(right(bounds));
+  return async bounds => (await Promise.all([left(bounds), right(bounds)])).flat();
 }
 
 export function makeIterable<V>(iter: Iterator<V>): IterableIterator<V> {
