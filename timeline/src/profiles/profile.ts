@@ -7,6 +7,7 @@ import { LinearEquation, Real } from './real';
 import database from '../database';
 import { ProfileType } from './profile-type';
 import { Spans } from '../spans/spans';
+import { Temporal } from '@js-temporal/polyfill';
 
 export class Profile<V> {
   protected segments: Timeline<Segment<V>>;
@@ -146,8 +147,8 @@ export class Profile<V> {
             buffer = currentSegment;
             const currentInterval = currentSegment.interval;
 
-            const leftEdgeInterval = Interval.at(currentInterval.start);
-            const rightEdgeInterval = Interval.at(currentInterval.end);
+            const leftEdgeInterval = Interval.At(currentInterval.start);
+            const rightEdgeInterval = Interval.At(currentInterval.end);
 
             if (currentInterval.end === bounds.end && currentInterval.endInclusivity === bounds.endInclusivity) {
               if (bounds.includesEnd()) rightEdge = false;
@@ -178,7 +179,7 @@ export class Profile<V> {
               new Segment(leftEdge, leftEdgeInterval).transpose(),
               new Segment(
                 false,
-                Interval.between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
+                Interval.Between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
               ).transpose(),
               new Segment(rightEdge, rightEdgeInterval).transpose()
             ];
@@ -396,7 +397,7 @@ export function map2Arrays<V, W, Result>(
           remainingLeftSegment = leftSegment.mapInterval(s => Interval.intersect(s.interval, rightSegment!.interval));
           const resultingSegment = new Segment(
             leftSegment.value,
-            Interval.between(
+            Interval.Between(
               leftSegment.interval.start,
               rightSegment!.interval.start,
               leftSegment.interval.startInclusivity,
@@ -417,7 +418,7 @@ export function map2Arrays<V, W, Result>(
           remainingRightSegment = rightSegment.mapInterval(s => Interval.intersect(s.interval, leftSegment!.interval));
           const resultingSegment = new Segment(
             rightSegment.value,
-            Interval.between(
+            Interval.Between(
               rightSegment.interval.start,
               leftSegment!.interval.start,
               rightSegment.interval.startInclusivity,
@@ -432,7 +433,7 @@ export function map2Arrays<V, W, Result>(
         const endComparison = Interval.compareEnds(leftSegment.interval, rightSegment.interval);
         if (endComparison === -1) {
           remainingRightSegment = rightSegment.mapInterval(r =>
-            Interval.between(
+            Interval.Between(
               leftSegment!.interval.end,
               r.interval.end,
               Inclusivity.opposite(leftSegment!.interval.endInclusivity),
@@ -445,7 +446,7 @@ export function map2Arrays<V, W, Result>(
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else if (endComparison === 1) {
           remainingLeftSegment = leftSegment.mapInterval(l =>
-            Interval.between(
+            Interval.Between(
               rightSegment!.interval.end,
               l.interval.end,
               Inclusivity.opposite(rightSegment!.interval.endInclusivity),

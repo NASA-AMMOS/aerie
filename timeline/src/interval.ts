@@ -1,3 +1,5 @@
+import { Temporal } from '@js-temporal/polyfill';
+
 export interface Intervallic {
   readonly interval: Interval;
   bound(bounds: Interval): this | undefined;
@@ -42,7 +44,7 @@ export class Interval implements Intervallic {
     this.endInclusivity = endInclusivity;
   }
 
-  public static between(
+  public static Between(
     start: Temporal.Duration,
     end: Temporal.Duration,
     startInclusivity?: Inclusivity,
@@ -54,7 +56,7 @@ export class Interval implements Intervallic {
     return new Interval(start, end, startInclusivity, endInclusivity);
   }
 
-  public static at(time: Temporal.Duration): Interval {
+  public static At(time: Temporal.Duration): Interval {
     return new Interval(time, time, Inclusivity.Inclusive, Inclusivity.Inclusive);
   }
 
@@ -114,11 +116,16 @@ export class Interval implements Intervallic {
       endInclusivity = left.includesEnd() && right.includesEnd() ? Inclusivity.Inclusive : Inclusivity.Exclusive;
     }
 
-    return Interval.between(start, end, startInclusivity, endInclusivity);
+    return Interval.Between(start, end, startInclusivity, endInclusivity);
   }
 
   public static union(left: Interval, right: Interval): Interval | undefined {
-    if (Interval.intersect(left, right).isEmpty()) return undefined;
+    if (Interval.compareStarts(left, right) > 0) {
+      const hold = right;
+      right = left;
+      left = hold;
+    }
+    if (Interval.intersect(left, right).isEmpty() && this.compareEndToStart(left, right) !== 0) return undefined;
 
     const startComparison = Interval.compareStarts(left, right);
     const endComparison = Interval.compareEnds(left, right);
@@ -144,17 +151,17 @@ export class Interval implements Intervallic {
       endInclusivity = right.endInclusivity;
     }
 
-    return Interval.between(start, end, startInclusivity, endInclusivity);
+    return Interval.Between(start, end, startInclusivity, endInclusivity);
   }
 
-  public static subtract(left: Interval, right: Interval) {
+  public static subtract(left: Interval, right: Interval): Interval[] {
     const intersection = Interval.intersect(left, right);
     if (intersection.isEmpty()) return [left];
     else if (Interval.equals(intersection, left)) return [];
     else {
       const result = [
-        Interval.between(left.start, right.start, left.startInclusivity, Inclusivity.opposite(right.startInclusivity)),
-        Interval.between(right.end, left.end, Inclusivity.opposite(right.startInclusivity), left.endInclusivity)
+        Interval.Between(left.start, right.start, left.startInclusivity, Inclusivity.opposite(right.startInclusivity)),
+        Interval.Between(right.end, left.end, Inclusivity.opposite(right.startInclusivity), left.endInclusivity)
       ];
       return result.filter($ => !$.isEmpty());
     }
@@ -164,6 +171,13 @@ export class Interval implements Intervallic {
     const timeComparison = Temporal.Duration.compare(left.start, right.start);
     if (timeComparison === 0) {
       return Inclusivity.compareRestrictiveness(left.startInclusivity, right.startInclusivity);
+    } else return timeComparison;
+  }
+
+  public static compareEnds(left: Interval, right: Interval): Temporal.ComparisonResult {
+    const timeComparison = Temporal.Duration.compare(left.end, right.end);
+    if (timeComparison === 0) {
+      return Inclusivity.compareRestrictiveness(right.startInclusivity, left.startInclusivity);
     } else return timeComparison;
   }
 
@@ -179,13 +193,6 @@ export class Interval implements Intervallic {
     } else return timeComparison;
   }
 
-  public static compareEnds(left: Interval, right: Interval): Temporal.ComparisonResult {
-    const timeComparison = Temporal.Duration.compare(left.end, right.end);
-    if (timeComparison === 0) {
-      return <-1 | 0 | 1>-Inclusivity.compareRestrictiveness(left.startInclusivity, right.startInclusivity);
-    } else return timeComparison;
-  }
-
   public static equals(left: Interval, right: Interval): boolean {
     return (
       Temporal.Duration.compare(left.start, right.start) === 0 &&
@@ -198,13 +205,13 @@ export class Interval implements Intervallic {
   public contains(time: Temporal.Duration): boolean;
   public contains(time: Interval): boolean;
   public contains(other: Interval | Temporal.Duration): boolean {
-    if (other instanceof Temporal.Duration) other = Interval.at(other);
+    if (other instanceof Temporal.Duration) other = Interval.At(other);
     return Interval.compareStarts(this, other) <= 0 && Interval.compareEnds(this, other) >= 0;
   }
 
   public shiftBy(fromStart: Temporal.Duration, fromEnd?: Temporal.Duration): Interval {
     if (fromEnd === undefined) fromEnd = fromStart;
-    return Interval.between(
+    return Interval.Between(
       this.start.add(fromStart),
       this.end.add(fromEnd),
       this.startInclusivity,

@@ -6,6 +6,7 @@ import { Interval } from '../interval';
 import type { Timeline } from '../timeline';
 import { ProfileType } from './profile-type';
 import { LinearEquation, Real } from './real';
+import { Temporal } from '@js-temporal/polyfill';
 
 // @ts-ignore
 export class Windows extends Profile<boolean> {
@@ -97,7 +98,7 @@ export class Windows extends Profile<boolean> {
         start = bounds.start.subtract(shiftFalling!);
         end = bounds.end.subtract(shiftRising);
       }
-      return Interval.between(start, end, bounds.startInclusivity, bounds.endInclusivity);
+      return Interval.Between(start, end, bounds.startInclusivity, bounds.endInclusivity);
     };
     return this.unsafe.mapIntervals((v, i) => {
       if (v) {

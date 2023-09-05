@@ -7,6 +7,7 @@ import { Inclusivity, Interval } from '../interval';
 import { BinaryOperation } from '../binary-operation';
 import { Windows } from './windows';
 import { ProfileType } from './profile-type';
+import { Temporal } from '@js-temporal/polyfill';
 
 // @ts-ignore
 export class Real extends Profile<LinearEquation> {
@@ -146,7 +147,7 @@ export class Real extends Profile<LinearEquation> {
       for (const segment of segments) {
         if (Temporal.Duration.compare(previousTime, segment.interval.start) !== 0)
           throw new Error(
-            `Cannot integrate a real profile with gaps. Gap: ${Interval.between(previousTime, segment.interval.start)}`
+            `Cannot integrate a real profile with gaps. Gap: ${Interval.Between(previousTime, segment.interval.start)}`
           );
         if (segment.value.rate !== 0)
           throw new Error(`Cannot integrate real profiles that aren't piecewise constant. Segment: ${segment}.`);
@@ -227,10 +228,10 @@ export class Real extends Profile<LinearEquation> {
           }
 
           return [
-            new Segment(leftEdge, Interval.at(currentInterval.start)).transpose(),
+            new Segment(leftEdge, Interval.At(currentInterval.start)).transpose(),
             new Segment(
               currentSegment.value.rate !== 0,
-              Interval.between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
+              Interval.Between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
             )
           ].filter($ => $ !== undefined) as Segment<boolean>[];
         }),
@@ -280,11 +281,11 @@ export class LinearEquation {
     return [
       new Segment(
         new LinearEquation(root, 0, -Math.abs(this.rate)),
-        Interval.between(bounds.start, root, bounds.startInclusivity, Inclusivity.Exclusive)
+        Interval.Between(bounds.start, root, bounds.startInclusivity, Inclusivity.Exclusive)
       ),
       new Segment(
         new LinearEquation(root, 0, Math.abs(this.rate)),
-        Interval.between(root, bounds.end, Inclusivity.Inclusive, bounds.endInclusivity)
+        Interval.Between(root, bounds.end, Inclusivity.Inclusive, bounds.endInclusivity)
       )
     ];
   }
@@ -348,12 +349,12 @@ export class LinearEquation {
       return [
         new Segment(
           comparator(this.valueAt(bounds.start), other.valueAt(bounds.start)),
-          Interval.between(bounds.start, intersection, bounds.startInclusivity, Inclusivity.Exclusive)
+          Interval.Between(bounds.start, intersection, bounds.startInclusivity, Inclusivity.Exclusive)
         ),
-        new Segment(comparator(this.valueAt(intersection), other.valueAt(intersection)), Interval.at(intersection)),
+        new Segment(comparator(this.valueAt(intersection), other.valueAt(intersection)), Interval.At(intersection)),
         new Segment(
           comparator(this.valueAt(bounds.end), other.valueAt(bounds.end)),
-          Interval.between(intersection, bounds.end, Inclusivity.Exclusive, bounds.endInclusivity)
+          Interval.Between(intersection, bounds.end, Inclusivity.Exclusive, bounds.endInclusivity)
         )
       ].filter($ => !$.interval.isEmpty());
     }

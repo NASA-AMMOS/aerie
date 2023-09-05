@@ -7,6 +7,7 @@ import { ProfileType } from '../profiles/profile-type';
 import { map2Arrays, Profile, ProfileSpecialization } from '../profiles/profile';
 import { LinearEquation, Real } from '../profiles/real';
 import { BinaryOperation } from '../binary-operation';
+import { Temporal } from '@js-temporal/polyfill';
 
 export class Spans<S extends Intervallic> {
   private spans: Timeline<S>;
@@ -97,7 +98,7 @@ export class Spans<S extends Intervallic> {
         start = bounds.start.subtract(shiftFalling!);
         end = bounds.end.subtract(shiftRising);
       }
-      return Interval.between(start, end, bounds.startInclusivity, bounds.endInclusivity);
+      return Interval.Between(start, end, bounds.startInclusivity, bounds.endInclusivity);
     };
     return this.unsafe.map(s => s.mapInterval(i => i.interval.shiftBy(shiftRising, shiftFalling)), boundsMap);
   }
@@ -119,7 +120,7 @@ export class Spans<S extends Intervallic> {
 
   public starts(): Spans<S> {
     const timeline = (bounds: Interval) => {
-      const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.at(s.interval.start)));
+      const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.At(s.interval.start)));
       return spans.filter(s => bounds.contains(s.interval));
     };
     return new Spans(timeline);
@@ -127,7 +128,7 @@ export class Spans<S extends Intervallic> {
 
   public ends(): Spans<S> {
     const timeline = (bounds: Interval) => {
-      const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.at(s.interval.end)));
+      const spans = this.spans(bounds).map(i => i.mapInterval(s => Interval.At(s.interval.end)));
       return spans.filter(s => bounds.contains(s.interval));
     };
     return new Spans(timeline);
@@ -166,15 +167,15 @@ export class Spans<S extends Intervallic> {
 
         let acc = i.start.add({ microseconds: subWidth });
         let result: S[] = [];
-        result.push(s.mapInterval(() => Interval.between(i.start, acc, i.startInclusivity, internalEndInclusivity)));
+        result.push(s.mapInterval(() => Interval.Between(i.start, acc, i.startInclusivity, internalEndInclusivity)));
         for (let index = 0; index < numberOfSubSpans - 1; index++) {
           let nextAcc = acc.add({ microseconds: subWidth });
           result.push(
-            s.mapInterval(() => Interval.between(acc, nextAcc, internalStartInclusivity, internalEndInclusivity))
+            s.mapInterval(() => Interval.Between(acc, nextAcc, internalStartInclusivity, internalEndInclusivity))
           );
           acc = nextAcc;
         }
-        result.push(s.mapInterval(() => Interval.between(acc, i.end, internalStartInclusivity, i.endInclusivity)));
+        result.push(s.mapInterval(() => Interval.Between(acc, i.end, internalStartInclusivity, i.endInclusivity)));
 
         return result;
       });
