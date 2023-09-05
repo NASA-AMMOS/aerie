@@ -4,17 +4,17 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, analysis_id, requested_by, requested_at, status, reason, canceled, dataset_id, specification_revision]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [specification_id, analysis_id, requested_by, requested_at, status, reason, canceled, dataset_id, specification_revision]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [specification_id, analysis_id, requested_by, requested_at, status, reason, canceled, dataset_id, specification_revision]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 # Inserting/Updating is handled via the AerieScheduler

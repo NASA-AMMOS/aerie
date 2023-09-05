@@ -4,16 +4,16 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [analysis_id, goal_id, activity_id]
+      columns: '*'
       filter: {}
   - role: user
     permission:
-      columns: [analysis_id, goal_id, activity_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [analysis_id, goal_id, activity_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:

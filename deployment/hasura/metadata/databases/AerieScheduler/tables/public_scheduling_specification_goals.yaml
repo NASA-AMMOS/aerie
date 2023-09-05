@@ -11,17 +11,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
