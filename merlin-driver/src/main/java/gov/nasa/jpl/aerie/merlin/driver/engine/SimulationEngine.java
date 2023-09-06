@@ -53,8 +53,8 @@ import java.util.function.Consumer;
 public final class SimulationEngine implements AutoCloseable {
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
-  /** The set of all jobs waiting on a given signal. */
-  private final Subscriptions<SignalId, TaskId> waitingTasks = new Subscriptions<>();
+  /** The set of all jobs waiting on a condition. */
+  private final Map<ConditionId, TaskId> waitingTasks = new HashMap<>();
   /** The set of conditions depending on a given set of topics. */
   private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
   /** The set of queries depending on a given set of topics. */
@@ -124,7 +124,7 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var condition : conditions) {
       // If we were going to signal tasks on this condition, well, don't do that.
       // Schedule the condition to be rechecked ASAP.
-      this.scheduledJobs.unschedule(JobId.forSignal(SignalId.forCondition(condition)));
+      this.scheduledJobs.unschedule(JobId.forSignal(condition));
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(invalidationTime));
     }
   }
@@ -138,8 +138,7 @@ public final class SimulationEngine implements AutoCloseable {
     // that the condition depends on, in which case we might accidentally schedule an update for a condition
     // that no longer exists.
     for (final var job : batch.jobs()) {
-      if (!(job instanceof JobId.SignalJobId j)) continue;
-      if (!(j.id() instanceof SignalId.ConditionSignalId s)) continue;
+      if (!(job instanceof JobId.SignalJobId s)) continue;
 
       this.conditions.remove(s.id());
       this.waitingConditions.unsubscribeQuery(s.id());
@@ -175,7 +174,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime);
     } else if (job instanceof JobId.SignalJobId j) {
-      this.stepSignalledTasks(j.id(), frame);
+      this.stepTask(this.waitingTasks.remove(j.id()), frame, currentTime);
     } else if (job instanceof JobId.ConditionJobId j) {
       this.updateCondition(j.id(), frame, currentTime, maximumTime);
     } else if (job instanceof JobId.ResourceJobId j) {
@@ -256,16 +255,10 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
-      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forCondition(condition)));
+      this.waitingTasks.put(condition, task);
     } else {
       throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
     }
-  }
-
-  /** Cause any tasks waiting on the given signal to be resumed concurrently with other jobs in the current frame. */
-  public void stepSignalledTasks(final SignalId signal, final TaskFrame<JobId> frame) {
-    final var tasks = this.waitingTasks.invalidateTopic(signal);
-    for (final var task : tasks) frame.signal(JobId.forTask(task));
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */
@@ -285,7 +278,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var expiry = querier.expiry.map(currentTime::plus);
     if (prediction.isPresent() && (expiry.isEmpty() || prediction.get().shorterThan(expiry.get()))) {
-      this.scheduledJobs.schedule(JobId.forSignal(SignalId.forCondition(condition)), SubInstant.Tasks.at(prediction.get()));
+      this.scheduledJobs.schedule(JobId.forSignal(condition), SubInstant.Tasks.at(prediction.get()));
     } else {
       // Try checking again later -- where "later" is in some non-zero amount of time!
       final var nextCheckTime = Duration.max(expiry.orElse(horizonTime), currentTime.plus(Duration.EPSILON));
@@ -719,8 +712,8 @@ public final class SimulationEngine implements AutoCloseable {
     /** A job to step a task. */
     record TaskJobId(TaskId id) implements JobId {}
 
-    /** A job to step all tasks waiting on a signal. */
-    record SignalJobId(SignalId id) implements JobId {}
+    /** A job to resume a task blocked on a condition. */
+    record SignalJobId(ConditionId id) implements JobId {}
 
     /** A job to query a resource. */
     record ResourceJobId(ResourceId id) implements JobId {}
@@ -732,7 +725,7 @@ public final class SimulationEngine implements AutoCloseable {
       return new TaskJobId(task);
     }
 
-    static SignalJobId forSignal(final SignalId signal) {
+    static SignalJobId forSignal(final ConditionId signal) {
       return new SignalJobId(signal);
     }
 
