@@ -86,12 +86,6 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  /** The task that spawned a given task (if any). */
-  private final Map<TaskId, TaskId> taskParent = new HashMap<>();
-  /** The set of children for each task (if any). */
-  @DerivedFrom("taskParent")
-  private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
-
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -104,7 +98,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var task = TaskId.generate();
     this.spanTasks.put(span, new MutableInt(1));
-    this.tasks.put(task, new ExecutionState.InProgress<>(span, startTime, Optional.empty(), state.create(this.executor)));
+    this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
     return span;
@@ -193,39 +187,22 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Perform the next step of a modeled task. */
   public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) {
-    // The handler for each individual task stage is responsible
-    //   for putting an updated lifecycle back into the task set.
-    var lifecycle = this.tasks.remove(task);
+    // The handler for the next status of the task is responsible
+    //   for putting an updated state back into the task set.
+    var state = this.tasks.remove(task);
 
-    stepTaskHelper(task, frame, currentTime, lifecycle);
-  }
-
-  private <Return> void stepTaskHelper(
-      final TaskId task,
-      final TaskFrame<JobId> frame,
-      final Duration currentTime,
-      final ExecutionState<Return> lifecycle)
-  {
-    // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
-      stepEffectModel(task, e, frame, currentTime);
-    } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
-      stepWaitingTask(task, e, frame, currentTime);
-    } else {
-      // TODO: Log this issue to somewhere more general than stderr.
-      System.err.println("Task %s is ready but in unexpected execution state %s".formatted(task, lifecycle));
-    }
+    stepEffectModel(task, state, frame, currentTime);
   }
 
   /** Make progress in a task by stepping its associated effect model forward. */
   private <Return> void stepEffectModel(
       final TaskId task,
-      final ExecutionState.InProgress<Return> progress,
+      final ExecutionState<Return> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(currentTime, task, progress.span(), progress.caller(), frame);
+    final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame);
     final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
@@ -233,8 +210,6 @@ public final class SimulationEngine implements AutoCloseable {
 
     // Based on the task's return status, update its execution state and schedule its resumption.
     if (status instanceof TaskStatus.Completed<Return>) {
-      final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
-
       // Propagate completion up the span hierarchy.
       // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
       var span = progress.span();
@@ -250,8 +225,7 @@ public final class SimulationEngine implements AutoCloseable {
         span = span$.get();
       }
 
-      this.tasks.put(task, progress.completedAt(currentTime, children));
-      this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
+      // Notify any blocked caller of our completion.
       progress.caller().ifPresent($ -> {
         if (this.subtasks.get($).decrementAndGet() == 0) {
           this.subtasks.remove($);
@@ -271,9 +245,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var target = TaskId.generate();
       SimulationEngine.this.spanTasks.put(targetSpan, new MutableInt(1));
-      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(targetSpan, currentTime, Optional.of(task), s.child().create(this.executor)));
-      SimulationEngine.this.taskParent.put(target, task);
-      SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
+      SimulationEngine.this.tasks.put(target, new ExecutionState<>(targetSpan, Optional.of(task), s.child().create(this.executor)));
       SimulationEngine.this.subtasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
 
@@ -287,34 +259,6 @@ public final class SimulationEngine implements AutoCloseable {
       this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forCondition(condition)));
     } else {
       throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
-    }
-  }
-
-  /** Make progress in a task by checking if all of the tasks it's waiting on have completed. */
-  private <Return> void stepWaitingTask(
-      final TaskId task,
-      final ExecutionState.AwaitingChildren<Return> awaiting,
-      final TaskFrame<JobId> frame,
-      final Duration currentTime
-  ) {
-    // TERMINATION: We break when there are no remaining children,
-    //   and we always remove one if we don't break for other reasons.
-    while (true) {
-      if (awaiting.remainingChildren().isEmpty()) {
-        this.tasks.put(task, awaiting.joinedAt(currentTime));
-        frame.signal(JobId.forSignal(SignalId.forTask(task)));
-        break;
-      }
-
-      final var nextChild = awaiting.remainingChildren().getFirst();
-      if (!(this.tasks.get(nextChild) instanceof ExecutionState.Terminated<?>)) {
-        this.tasks.put(task, awaiting);
-        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(nextChild)));
-        break;
-      }
-
-      // This child is complete, so skip checking it next time; move to the next one.
-      awaiting.remainingChildren().removeFirst();
     }
   }
 
@@ -370,9 +314,7 @@ public final class SimulationEngine implements AutoCloseable {
   @Override
   public void close() {
     for (final var task : this.tasks.values()) {
-      if (task instanceof ExecutionState.InProgress r) {
-        r.state.release();
-      }
+      task.state().release();
     }
 
     this.executor.shutdownNow();
@@ -721,20 +663,17 @@ public final class SimulationEngine implements AutoCloseable {
   /** A handle for processing requests and effects from a modeled task. */
   private final class EngineScheduler implements Scheduler {
     private final Duration currentTime;
-    private final TaskId activeTask;
     private final SpanId span;
     private final Optional<TaskId> caller;
     private final TaskFrame<JobId> frame;
 
     public EngineScheduler(
         final Duration currentTime,
-        final TaskId activeTask,
         final SpanId span,
         final Optional<TaskId> caller,
         final TaskFrame<JobId> frame)
     {
       this.currentTime = Objects.requireNonNull(currentTime);
-      this.activeTask = Objects.requireNonNull(activeTask);
       this.span = Objects.requireNonNull(span);
       this.caller = Objects.requireNonNull(caller);
       this.frame = Objects.requireNonNull(frame);
@@ -769,9 +708,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var task = TaskId.generate();
       SimulationEngine.this.spanTasks.put(taskSpan, new MutableInt(1));
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(taskSpan, this.currentTime, this.caller, state.create(SimulationEngine.this.executor)));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
+      SimulationEngine.this.tasks.put(task, new ExecutionState<>(taskSpan, this.caller, state.create(SimulationEngine.this.executor)));
       this.caller.ifPresent($ -> SimulationEngine.this.subtasks.get($).increment());
       this.frame.signal(JobId.forTask(task));
     }
@@ -808,42 +745,10 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  /** The lifecycle stages every task passes through. */
-  private sealed interface ExecutionState<Return> {
-    /** The task is in its primary operational phase. */
-    record InProgress<Return>(SpanId span, Duration startOffset, Optional<TaskId> caller, Task<Return> state)
-        implements ExecutionState<Return>
-    {
-      public AwaitingChildren<Return> completedAt(
-          final Duration endOffset,
-          final LinkedList<TaskId> remainingChildren) {
-        return new AwaitingChildren<>(this.span, this.startOffset, endOffset, remainingChildren);
-      }
-
-      public InProgress<Return> continueWith(final Task<Return> newState) {
-        return new InProgress<>(this.span, this.startOffset, this.caller, newState);
-      }
+  /** The state of an executing task. */
+  private record ExecutionState<Return>(SpanId span, Optional<TaskId> caller, Task<Return> state) {
+    public ExecutionState<Return> continueWith(final Task<Return> newState) {
+      return new ExecutionState<>(this.span, this.caller, newState);
     }
-
-    /** The task has completed its primary operation, but has unfinished children. */
-    record AwaitingChildren<Return>(
-        SpanId span,
-        Duration startOffset,
-        Duration endOffset,
-        LinkedList<TaskId> remainingChildren
-    ) implements ExecutionState<Return>
-    {
-      public Terminated<Return> joinedAt(final Duration joinOffset) {
-        return new Terminated<>(this.span, this.startOffset, this.endOffset, joinOffset);
-      }
-    }
-
-    /** The task and all its delegated children have completed. */
-    record Terminated<Return>(
-        SpanId span,
-        Duration startOffset,
-        Duration endOffset,
-        Duration joinOffset
-    ) implements ExecutionState<Return> {}
   }
 }
