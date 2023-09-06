@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node16-strictest-esm/tsconfig.json",
+  "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./build",
@@ -7,7 +7,8 @@
     "noUnusedParameters": false,
     "noUnusedLocals": false,
 
-    "declaration": true,
-    "importsNotUsedAsValues": "preserve"
+
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   }
 }

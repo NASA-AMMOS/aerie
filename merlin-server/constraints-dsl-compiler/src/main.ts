@@ -5,7 +5,6 @@ import * as readline from 'readline';
 import { Temporal } from '@js-temporal/polyfill';
 import * as vm from "vm";
 import {UserCodeRunner} from "@nasa-jpl/aerie-ts-user-code-runner";
-import {Profile} from 'aerie-timeline';
 
 const timelinePath = `/Users/Joelco/repos/aerie/timeline/src`;
 
@@ -17,9 +16,23 @@ function* readDir(root: string, path: string = ""): IterableIterator<{filename: 
     const entryPath = `${path}/${entry.name}`;
 
     if (entry.isFile()) {
+      let contents = fs.readFileSync(`${root}/${entryPath}`, 'utf-8');
+      const lastSlash = entryPath.lastIndexOf('/');
+      const filename = entryPath.slice(1).slice(lastSlash === -1 ? 0 : lastSlash);
+
+      // deal with it
+      for (let i = 0; i < 15; i++) {
+        contents = contents
+            .replace("from '../", "from './")
+            .replace('from "../', 'from "./')
+            .replace("from './profiles/", "from './")
+            .replace('from "./profiles/', 'from "./')
+            .replace("from './spans/", "from './")
+            .replace('from "./spans/', 'from "./');
+      }
       yield {
-        filename: entryPath.slice(1),
-        contents: fs.readFileSync(`${root}/${entryPath}`, 'utf-8')
+        filename,
+        contents
       };
     }
 
@@ -36,7 +49,7 @@ console.log(timelineSourceFiles.map($ => $.filename));
 const codeRunner = new UserCodeRunner();
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
-const compilerTarget = options.target ?? ts.ScriptTarget.ESNext;
+const compilerTarget = options.target ?? ts.ScriptTarget.Latest;
 
 process.on('uncaughtException', err => {
   console.error('uncaughtException');
@@ -81,7 +94,7 @@ async function handleRequest(data: Buffer) {
       { 'filename': 'mission-model-generated-code.ts', 'contents': missionModelGeneratedCode },
     ]);
 
-    const result = await codeRunner.executeUserCode<[], Profile<any>>(
+    const result = await codeRunner.executeUserCode<[], any>(
         constraintCode,
         [],
         expectedReturnType,
@@ -94,7 +107,6 @@ async function handleRequest(data: Buffer) {
         )),
         vm.createContext({
           Temporal,
-          Profile: Profile
         }),
     );
 
