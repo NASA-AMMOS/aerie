@@ -80,6 +80,10 @@ public final class SimulationEngine implements AutoCloseable {
       if (this.endOffset.isPresent()) throw new Error("Attempt to close an already-closed span");
       return new Span(this.parent, this.startOffset, Optional.of(endOffset));
     }
+
+    public Optional<Duration> duration() {
+      return this.endOffset.map($ -> $.minus(this.startOffset));
+    }
   }
 
   /** The task that spawned a given task (if any). */
@@ -92,7 +96,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
   /** Schedule a new task to be performed at the given time. */
-  public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
+  public <Return> SpanId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var span = SpanId.generate();
@@ -102,7 +106,8 @@ public final class SimulationEngine implements AutoCloseable {
     this.spanTasks.put(span, new MutableInt(1));
     this.tasks.put(task, new ExecutionState.InProgress<>(span, startTime, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
-    return task;
+
+    return span;
   }
 
   /** Register a resource whose profile should be accumulated over time. */
@@ -373,9 +378,9 @@ public final class SimulationEngine implements AutoCloseable {
     this.executor.shutdownNow();
   }
 
-  /** Determine if a given task has fully completed. */
-  public boolean isTaskComplete(final TaskId task) {
-    return (this.tasks.get(task) instanceof ExecutionState.Terminated);
+  /** Determine if a given span has fully completed. */
+  public boolean isSpanComplete(final SpanId span) {
+    return this.spans.get(span).endOffset().isPresent();
   }
 
   private record SpanInfo(
@@ -625,12 +630,8 @@ public final class SimulationEngine implements AutoCloseable {
                                  serializedTimeline);
   }
 
-  public Optional<Duration> getTaskDuration(TaskId taskId){
-    final var state = tasks.get(taskId);
-    if (state instanceof ExecutionState.Terminated e) {
-      return Optional.of(e.joinOffset().minus(e.startOffset()));
-    }
-    return Optional.empty();
+  public Span getSpan(SpanId spanId) {
+    return this.spans.get(spanId);
   }
 
 
