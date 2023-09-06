@@ -378,12 +378,12 @@ public final class SimulationEngine implements AutoCloseable {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
   }
 
-  private record TaskInfo(
-      Map<SpanId, ActivityDirectiveId> taskToPlannedDirective,
+  private record SpanInfo(
+      Map<SpanId, ActivityDirectiveId> spanToPlannedDirective,
       Map<SpanId, SerializedActivity> input,
       Map<SpanId, SerializedValue> output
   ) {
-    public TaskInfo() {
+    public SpanInfo() {
       this(new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
 
@@ -391,58 +391,63 @@ public final class SimulationEngine implements AutoCloseable {
       return this.input.containsKey(id);
     }
 
-    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
+    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<SpanInfo>> {
       @Override
-      public Consumer<TaskInfo> empty() {
-        return taskInfo -> {};
+      public Consumer<SpanInfo> empty() {
+        return spanInfo -> {};
       }
 
       @Override
-      public Consumer<TaskInfo> sequentially(final Consumer<TaskInfo> prefix, final Consumer<TaskInfo> suffix) {
-        return taskInfo -> { prefix.accept(taskInfo); suffix.accept(taskInfo); };
+      public Consumer<SpanInfo> sequentially(final Consumer<SpanInfo> prefix, final Consumer<SpanInfo> suffix) {
+        return spanInfo -> { prefix.accept(spanInfo); suffix.accept(spanInfo); };
       }
 
       @Override
-      public Consumer<TaskInfo> concurrently(final Consumer<TaskInfo> left, final Consumer<TaskInfo> right) {
-        // SAFETY: For each task, `left` commutes with `right`, because no task runs concurrently with itself.
-        return taskInfo -> { left.accept(taskInfo); right.accept(taskInfo); };
+      public Consumer<SpanInfo> concurrently(final Consumer<SpanInfo> left, final Consumer<SpanInfo> right) {
+        // SAFETY: `left` and `right` should commute. HOWEVER, if a span happens to directly contain two activities
+        //   -- that is, two activities both contribute events under the same span's provenance -- then this
+        //   does not actually commute.
+        //   Arguably, this is a model-specific analysis anyway, since we're looking for specific events
+        //   and inferring model structure from them, and at this time we're only working with models
+        //   for which every activity has a span to itself.
+        return spanInfo -> { left.accept(spanInfo); right.accept(spanInfo); };
       }
 
-      public Consumer<TaskInfo> atom(final Event ev) {
-        return taskInfo -> {
+      public Consumer<SpanInfo> atom(final Event ev) {
+        return spanInfo -> {
           // Identify activities.
           ev.extract(this.activityTopic)
-            .ifPresent(directiveId -> taskInfo.taskToPlannedDirective.put(ev.provenance(), directiveId));
+            .ifPresent(directiveId -> spanInfo.spanToPlannedDirective.put(ev.provenance(), directiveId));
 
           for (final var topic : this.topics) {
             // Identify activity inputs.
-            extractInput(topic, ev, taskInfo);
+            extractInput(topic, ev, spanInfo);
 
             // Identify activity outputs.
-            extractOutput(topic, ev, taskInfo);
+            extractOutput(topic, ev, spanInfo);
           }
         };
       }
 
       private static <T>
-      void extractInput(final SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+      void extractInput(final SerializableTopic<T> topic, final Event ev, final SpanInfo spanInfo) {
         if (!topic.name().startsWith("ActivityType.Input.")) return;
 
         ev.extract(topic.topic()).ifPresent(input -> {
           final var activityType = topic.name().substring("ActivityType.Input.".length());
 
-          taskInfo.input.put(
+          spanInfo.input.put(
               ev.provenance(),
               new SerializedActivity(activityType, topic.outputType().serialize(input).asMap().orElseThrow()));
         });
       }
 
       private static <T>
-      void extractOutput(final SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+      void extractOutput(final SerializableTopic<T> topic, final Event ev, final SpanInfo spanInfo) {
         if (!topic.name().startsWith("ActivityType.Output.")) return;
 
         ev.extract(topic.topic()).ifPresent(output -> {
-          taskInfo.output.put(
+          spanInfo.output.put(
               ev.provenance(),
               topic.outputType().serialize(output));
         });
@@ -465,14 +470,14 @@ public final class SimulationEngine implements AutoCloseable {
       final TemporalEventSource timeline,
       final Iterable<SerializableTopic<?>> serializableTopics
   ) {
-    // Collect per-task information from the event graph.
-    final var taskInfo = new TaskInfo();
+    // Collect per-span information from the event graph.
+    final var spanInfo = new SpanInfo();
 
     for (final var point : timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
 
-      final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
-      p.events().evaluate(trait, trait::atom).accept(taskInfo);
+      final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
+      p.events().evaluate(trait, trait::atom).accept(spanInfo);
     }
 
     // Extract profiles for every resource.
@@ -507,52 +512,52 @@ public final class SimulationEngine implements AutoCloseable {
 
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var taskToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(taskInfo.taskToPlannedDirective.size());
+    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(spanInfo.spanToPlannedDirective.size());
     final var usedSimulatedActivityIds = new HashSet<>();
-    for (final var entry : taskInfo.taskToPlannedDirective.entrySet()) {
-      taskToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
+    for (final var entry : spanInfo.spanToPlannedDirective.entrySet()) {
+      spanToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
       usedSimulatedActivityIds.add(entry.getValue().id());
     }
     long counter = 1L;
-    for (final var task : engine.spans.keySet()) {
-      if (!taskInfo.isActivity(task)) continue;
-      if (taskToSimulatedActivityId.containsKey(task)) continue;
+    for (final var span : engine.spans.keySet()) {
+      if (!spanInfo.isActivity(span)) continue;
+      if (spanToSimulatedActivityId.containsKey(span)) continue;
 
       while (usedSimulatedActivityIds.contains(counter)) counter++;
-      taskToSimulatedActivityId.put(task, new SimulatedActivityId(counter++));
+      spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
     }
 
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<SimulatedActivityId, SimulatedActivityId>();
-    engine.spans.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
+    engine.spans.forEach((span, state) -> {
+      if (!spanInfo.isActivity(span)) return;
 
       var parent = state.parent();
-      while (parent.isPresent() && !taskInfo.isActivity(parent.get())) {
+      while (parent.isPresent() && !spanInfo.isActivity(parent.get())) {
         parent = engine.spans.get(parent.get()).parent();
       }
 
       if (parent.isPresent()) {
-        activityParents.put(taskToSimulatedActivityId.get(task), taskToSimulatedActivityId.get(parent.get()));
+        activityParents.put(spanToSimulatedActivityId.get(span), spanToSimulatedActivityId.get(parent.get()));
       }
     });
 
     final var activityChildren = new HashMap<SimulatedActivityId, List<SimulatedActivityId>>();
-    activityParents.forEach((task, parent) -> {
-      activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(task);
+    activityParents.forEach((activity, parent) -> {
+      activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(activity);
     });
 
     final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
-    engine.spans.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
+    engine.spans.forEach((span, state) -> {
+      if (!spanInfo.isActivity(span)) return;
 
-      final var activityId = taskToSimulatedActivityId.get(task);
-      final var directiveId = taskInfo.taskToPlannedDirective.get(task); // will be null for non-directives
+      final var activityId = spanToSimulatedActivityId.get(span);
+      final var directiveId = spanInfo.spanToPlannedDirective.get(span); // will be null for non-directives
 
       if (state.endOffset().isPresent()) {
-        final var inputAttributes = taskInfo.input().get(task);
-        final var outputAttributes = taskInfo.output().get(task);
+        final var inputAttributes = spanInfo.input().get(span);
+        final var outputAttributes = spanInfo.output().get(span);
 
         simulatedActivities.put(activityId, new SimulatedActivity(
             inputAttributes.getTypeName(),
@@ -565,7 +570,7 @@ public final class SimulationEngine implements AutoCloseable {
             outputAttributes
         ));
       } else {
-        final var inputAttributes = taskInfo.input().get(task);
+        final var inputAttributes = spanInfo.input().get(span);
         unfinishedActivities.put(activityId, new UnfinishedActivity(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
