@@ -1,7 +1,7 @@
 import { Temporal } from '@js-temporal/polyfill';
 
 export interface Intervallic {
-  readonly interval: Interval;
+  get interval(): Interval;
   bound(bounds: Interval): this | undefined;
   mapInterval(map: (i: this) => Interval): this;
 }
@@ -30,7 +30,9 @@ export class Interval implements Intervallic {
   public startInclusivity: Inclusivity;
   public endInclusivity: Inclusivity;
 
-  public readonly interval = this;
+  public get interval(): Interval {
+    return this;
+  }
 
   private constructor(
     start: Temporal.Duration,
@@ -229,5 +231,30 @@ export class Interval implements Intervallic {
   // @ts-ignore
   public mapInterval(map: (i: this) => Interval): Interval {
     return map(this);
+  }
+
+  public toString(): string {
+    let result = '';
+    if (this.startInclusivity === Inclusivity.Inclusive) {
+      result += '[';
+    } else {
+      result += '(';
+    }
+    result += this.start.toString() + ", " + this.end.toString();
+    if (this.endInclusivity === Inclusivity.Inclusive) {
+      result += ']';
+    } else {
+      result += ')';
+    }
+    return result;
+  }
+
+  public toJSON(): any {
+    return {
+      start: this.start.toString(),
+      end: this.end.toString(),
+      startInclusivity: this.startInclusivity,
+      endInclusivity: this.endInclusivity
+    };
   }
 }
