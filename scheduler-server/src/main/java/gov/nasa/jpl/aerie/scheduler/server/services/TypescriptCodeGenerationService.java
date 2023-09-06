@@ -26,7 +26,7 @@ public final class TypescriptCodeGenerationService {
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
     result.add("import type { Windows } from './constraints-edsl-fluent-api.js';");
-    result.add("import type * as ConstraintEDSL from './constraints-edsl-fluent-api.js'");
+    result.add("import type { ActivityTypeParameterMap } from './mission-model-generated-code.js';");
 
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate<ActivityType.%s> {}".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
@@ -115,7 +115,19 @@ return (<T>makeAllDiscreteProfile(args))
         result.add(indent(indent("return { activityType: ActivityType.%s, args: {} };".formatted(activityTypeCode.activityTypeName()))));
         result.add(indent("},"));
       } else {
-        result.add(indent("%s: function %sConstructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
+        final StringBuilder parameters = new StringBuilder();
+        activityTypeCode.parameterTypes.stream().forEach((activityParameter -> parameters.append(activityParameter.name+", ")));
+        if (parameters.length() > 0) {
+          parameters.setLength(parameters.length() - 2); // Remove the last comma and space
+        }
+        result.add(indent("""
+            /**
+            * Creates a %s instance
+            * @param {Object} args - {%s}.
+            * @return A %s instance.
+            */
+        """.formatted(activityTypeCode.activityTypeName,parameters.toString(),activityTypeCode.activityTypeName)));
+        result.add(indent("%s: function %sConstructor(args:  ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
         result.add(indent("): %s {".formatted(activityTypeCode.activityTypeName())));
         result.add(indent("// @ts-ignore"));
         result.add(indent(indent("return { activityType: ActivityType.%s, args: makeArgumentsDiscreteProfiles(args) };".formatted(activityTypeCode.activityTypeName()))));
