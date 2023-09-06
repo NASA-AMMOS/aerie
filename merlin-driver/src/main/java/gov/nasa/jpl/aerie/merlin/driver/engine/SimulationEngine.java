@@ -56,7 +56,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The set of all jobs waiting on a condition. */
   private final Map<ConditionId, TaskId> waitingTasks = new HashMap<>();
   /** The set of all tasks blocked on some number of subtasks. */
-  private final Map<TaskId, MutableInt> subtasks = new HashMap<>();
+  private final Map<TaskId, MutableInt> blockedTasks = new HashMap<>();
   /** The set of conditions depending on a given set of topics. */
   private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
   /** The set of queries depending on a given set of topics. */
@@ -214,8 +214,8 @@ public final class SimulationEngine implements AutoCloseable {
 
       // Notify any blocked caller of our completion.
       progress.caller().ifPresent($ -> {
-        if (this.subtasks.get($).decrementAndGet() == 0) {
-          this.subtasks.remove($);
+        if (this.blockedTasks.get($).decrementAndGet() == 0) {
+          this.blockedTasks.remove($);
           this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
         }
       });
@@ -233,7 +233,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var target = TaskId.generate();
       SimulationEngine.this.spanTasks.put(targetSpan, new MutableInt(1));
       SimulationEngine.this.tasks.put(target, new ExecutionState<>(targetSpan, Optional.of(task), s.child().create(this.executor)));
-      SimulationEngine.this.subtasks.put(task, new MutableInt(1));
+      SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
@@ -685,7 +685,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var task = TaskId.generate();
       SimulationEngine.this.spanTasks.put(taskSpan, new MutableInt(1));
       SimulationEngine.this.tasks.put(task, new ExecutionState<>(taskSpan, this.caller, state.create(SimulationEngine.this.executor)));
-      this.caller.ifPresent($ -> SimulationEngine.this.subtasks.get($).increment());
+      this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
       this.frame.signal(JobId.forTask(task));
     }
   }
