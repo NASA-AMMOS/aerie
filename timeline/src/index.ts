@@ -1,1 +1,1 @@
-export { Profile } from './internal.js';
+export { Profile, Windows } from './internal.js';
