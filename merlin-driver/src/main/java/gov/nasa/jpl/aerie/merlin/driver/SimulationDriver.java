@@ -165,11 +165,11 @@ public final class SimulationDriver {
       }
 
       // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task);
+      final var spanId = engine.scheduleTask(elapsedTime, task);
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (!engine.isTaskComplete(taskId)) {
+      while (!engine.isSpanComplete(spanId)) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
 
         // Increment real time, if necessary.
