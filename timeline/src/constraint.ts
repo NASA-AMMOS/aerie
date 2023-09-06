@@ -1,4 +1,4 @@
-import type { Windows } from './profiles/windows.js';
+import type { Windows } from './internal.js';
 import type { Interval } from './interval.js';
 
 type Constraint = ConstraintResult | Windows;

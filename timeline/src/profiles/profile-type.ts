@@ -1,6 +1,4 @@
-import {LinearEquation, Real} from './real.js';
-import {Profile} from "./profile.js";
-import {Windows} from "./windows.js";
+import {Profile, Windows, Real, LinearEquation} from "../internal.js";
 
 export enum ProfileType {
   Real,

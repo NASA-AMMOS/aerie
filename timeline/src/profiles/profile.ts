@@ -1,12 +1,9 @@
 import { Segment } from '../segment.js';
 import { Inclusivity, Interval } from '../interval.js';
-import { Windows } from './windows.js';
+import {ProfileSpecialization, ProfileType, Windows, Spans} from '../internal.js';
 import { bound, coalesce, Timeline } from '../timeline.js';
 import { BinaryOperation } from '../binary-operation.js';
-import { LinearEquation, Real } from './real.js';
 import database from '../database.js';
-import {ProfileSpecialization, ProfileType} from './profile-type.js';
-import { Spans } from '../spans/spans.js';
 import { Temporal } from '@js-temporal/polyfill';
 
 export class Profile<V> {

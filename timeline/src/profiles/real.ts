@@ -1,11 +1,9 @@
-import { Profile } from './profile.js';
+import { Profile, Windows, ProfileType } from '../internal.js';
 import { Segment } from '../segment.js';
 import type { Timeline } from '../timeline.js';
 import { coalesce } from '../timeline.js';
 import { Inclusivity, Interval } from '../interval.js';
 import { BinaryOperation } from '../binary-operation.js';
-import { Windows } from './windows.js';
-import { ProfileType } from './profile-type.js';
 import { Temporal } from '@js-temporal/polyfill';
 
 // @ts-ignore

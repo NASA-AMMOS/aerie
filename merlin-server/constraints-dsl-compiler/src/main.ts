@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, {Dirent} from 'fs';
 import ts from 'typescript';
 import * as readline from 'readline';
 // @ts-ignore
@@ -7,10 +7,36 @@ import * as vm from "vm";
 import {UserCodeRunner} from "@nasa-jpl/aerie-ts-user-code-runner";
 import {Profile} from 'aerie-timeline';
 
+const timelinePath = `/Users/Joelco/repos/aerie/timeline/src`;
+
+function* readDir(root: string, path: string = ""): IterableIterator<{filename: string, contents: string}> {
+
+  const entries:Dirent[] = fs.readdirSync(`${root}/${path}`, {withFileTypes: true});
+
+  for (const entry of entries) {
+    const entryPath = `${path}/${entry.name}`;
+
+    if (entry.isFile()) {
+      yield {
+        filename: entryPath.slice(1),
+        contents: fs.readFileSync(`${root}/${entryPath}`, 'utf-8')
+      };
+    }
+
+    if (entry.isDirectory()) {
+      yield* readDir(root, entryPath);
+    }
+  }
+}
+
+const timelineSourceFiles = [...readDir(timelinePath)];
+
+console.log(timelineSourceFiles.map($ => $.filename));
+
 const codeRunner = new UserCodeRunner();
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
-const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
+const compilerTarget = options.target ?? ts.ScriptTarget.ESNext;
 
 process.on('uncaughtException', err => {
   console.error('uncaughtException');
@@ -51,9 +77,9 @@ async function handleRequest(data: Buffer) {
       expectedReturnType: string;
     };
 
-    const additionalSourceFiles: { 'filename': string, 'contents': string}[] = [
+    const additionalSourceFiles: { 'filename': string, 'contents': string}[] = timelineSourceFiles.concat([
       { 'filename': 'mission-model-generated-code.ts', 'contents': missionModelGeneratedCode },
-    ];
+    ]);
 
     const result = await codeRunner.executeUserCode<[], Profile<any>>(
         constraintCode,
@@ -61,7 +87,11 @@ async function handleRequest(data: Buffer) {
         expectedReturnType,
         [],
         10000,
-        additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget)),
+        additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(
+            filename,
+            contents,
+            compilerTarget
+        )),
         vm.createContext({
           Temporal,
           Profile: Profile

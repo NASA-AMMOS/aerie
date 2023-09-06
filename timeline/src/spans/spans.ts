@@ -1,11 +1,9 @@
 import type { Timeline } from '../timeline.js';
 import { bound, coalesce, merge, sortSegments } from '../timeline.js';
 import { Segment } from '../segment.js';
-import type { Windows } from '../profiles/windows.js';
 import { Intervallic, Inclusivity, Interval } from '../interval.js';
 import {ProfileSpecialization, ProfileType} from '../profiles/profile-type.js';
-import { map2Arrays, Profile } from '../profiles/profile.js';
-import { LinearEquation, Real } from '../profiles/real.js';
+import { LinearEquation, Real, map2Arrays, Windows, Profile} from '../internal.js';
 import { BinaryOperation } from '../binary-operation.js';
 import { Temporal } from '@js-temporal/polyfill';
 

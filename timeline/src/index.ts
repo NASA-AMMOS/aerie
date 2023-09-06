@@ -1,4 +1,1 @@
-import { Profile} from './profiles/profile.js';
-export {
-  Profile
-};
+export { Profile } from './internal.js';
