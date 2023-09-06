@@ -808,12 +808,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .map(effectModel -> CodeBlock
                             .builder()
                             .add(
-                                "return $T.$L(() -> {$>\n$L$<});\n",
+                                "return $T.$L(() -> $T.$L(() -> {$>\n$L$<}));\n",
                                 ModelActions.class,
                                 switch (effectModel.executor()) {
                                   case Threaded -> "threaded";
                                   case Replaying -> "replaying";
                                 },
+                                ModelActions.class,
+                                "scoped",
                                 effectModel.returnType()
                                     .map(returnType -> CodeBlock
                                         .builder()
@@ -835,6 +837,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .add(
                                 "return executor -> scheduler -> {$>\n$L$<};\n",
                                 CodeBlock.builder()
+                                    .addStatement("scheduler.pushSpan()")
                                     .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
                                     .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
