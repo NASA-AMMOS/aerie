@@ -86,7 +86,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var task = TaskId.generate();
     this.spanTasks.put(span, new MutableInt(1));
-    this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor)));
+    this.tasks.put(task, new ExecutionState<>(span, 0, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
     return span;
@@ -189,7 +189,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame);
+    final var scheduler = new EngineScheduler(currentTime, progress.shadowedSpans(), progress.span(), progress.caller(), frame);
     final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
@@ -222,7 +222,7 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
       if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
-      this.tasks.put(task, progress.continueWith(s.continuation()));
+      this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
       // TODO: Not *every* task should get a new span. Allow the model to decide where spans go.
@@ -232,17 +232,17 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var target = TaskId.generate();
       SimulationEngine.this.spanTasks.put(targetSpan, new MutableInt(1));
-      SimulationEngine.this.tasks.put(target, new ExecutionState<>(targetSpan, Optional.of(task), s.child().create(this.executor)));
+      SimulationEngine.this.tasks.put(target, new ExecutionState<>(targetSpan, 0, Optional.of(task), s.child().create(this.executor)));
       SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
 
-      this.tasks.put(task, progress.continueWith(s.continuation()));
+      this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
-      this.tasks.put(task, progress.continueWith(s.continuation()));
+      this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
       this.waitingTasks.put(condition, task);
     } else {
       throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
@@ -639,17 +639,20 @@ public final class SimulationEngine implements AutoCloseable {
   /** A handle for processing requests and effects from a modeled task. */
   private final class EngineScheduler implements Scheduler {
     private final Duration currentTime;
-    private final SpanId span;
+    private int shadowedSpans;
+    private SpanId span;
     private final Optional<TaskId> caller;
     private final TaskFrame<JobId> frame;
 
     public EngineScheduler(
         final Duration currentTime,
+        final int shadowedSpans,
         final SpanId span,
         final Optional<TaskId> caller,
         final TaskFrame<JobId> frame)
     {
       this.currentTime = Objects.requireNonNull(currentTime);
+      this.shadowedSpans = shadowedSpans;
       this.span = Objects.requireNonNull(span);
       this.caller = Objects.requireNonNull(caller);
       this.frame = Objects.requireNonNull(frame);
@@ -680,13 +683,42 @@ public final class SimulationEngine implements AutoCloseable {
       // TODO: Not *every* task should get a new span. Allow the model to decide where spans go.
       final var taskSpan = SpanId.generate();
       SimulationEngine.this.spans.put(taskSpan, new Span(Optional.of(this.span), this.currentTime, Optional.empty()));
-      SimulationEngine.this.spanTasks.get(this.span).increment();
+      SimulationEngine.this.spanTasks.put(taskSpan, new MutableInt(1));
 
       final var task = TaskId.generate();
-      SimulationEngine.this.spanTasks.put(taskSpan, new MutableInt(1));
-      SimulationEngine.this.tasks.put(task, new ExecutionState<>(taskSpan, this.caller, state.create(SimulationEngine.this.executor)));
+      SimulationEngine.this.spanTasks.get(this.span).increment();
+      SimulationEngine.this.tasks.put(task, new ExecutionState<>(taskSpan, 0, this.caller, state.create(SimulationEngine.this.executor)));
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
       this.frame.signal(JobId.forTask(task));
+    }
+
+    @Override
+    public void pushSpan() {
+      final var parentSpan = this.span;
+      this.shadowedSpans += 1;
+      this.span = SpanId.generate();
+
+      SimulationEngine.this.spans.put(this.span, new Span(Optional.of(parentSpan), this.currentTime, Optional.empty()));
+      SimulationEngine.this.spanTasks.put(this.span, new MutableInt(1));
+
+      SimulationEngine.this.spanTasks.get(parentSpan).increment();
+    }
+
+    @Override
+    public void popSpan() {
+      // TODO: Do we want to throw an error instead?
+      if (this.shadowedSpans == 0) return;
+
+      if (SimulationEngine.this.spanTasks.get(this.span).decrementAndGet() == 0) {
+        SimulationEngine.this.spanTasks.remove(this.span);
+        SimulationEngine.this.spans.compute(this.span, (_id, $) -> $.close(currentTime));
+      }
+      // NOTE: We don't need to propagate completion any further, because the next shadowed span
+      // has by definition not been completed: this task may still contribute to it, and this task
+      // has not terminated.
+
+      this.shadowedSpans -= 1;
+      this.span = SimulationEngine.this.spans.get(this.span).parent().orElseThrow();
     }
   }
 
@@ -722,9 +754,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** The state of an executing task. */
-  private record ExecutionState<Return>(SpanId span, Optional<TaskId> caller, Task<Return> state) {
-    public ExecutionState<Return> continueWith(final Task<Return> newState) {
-      return new ExecutionState<>(this.span, this.caller, newState);
+  private record ExecutionState<Return>(SpanId span, int shadowedSpans, Optional<TaskId> caller, Task<Return> state) {
+    public ExecutionState<Return> continueWith(final SpanId span, final int shadowedSpans, final Task<Return> newState) {
+      return new ExecutionState<>(span, shadowedSpans, this.caller, newState);
     }
   }
 
