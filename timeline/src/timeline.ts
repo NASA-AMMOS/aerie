@@ -60,7 +60,7 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
   let buffer = segments[0]!;
   for (const segment of segments.slice(1)) {
     const comparison = Interval.compareEndToStart(buffer.interval, segment.interval);
-    if (comparison === -1) {
+    if (comparison < 1) {
       segments[shortIndex++] = buffer;
       buffer = segment;
     } else {

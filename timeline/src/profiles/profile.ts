@@ -1,10 +1,10 @@
-import { Segment } from '../segment.js';
-import { Inclusivity, Interval } from '../interval.js';
-import {ProfileSpecialization, ProfileType, Windows, Spans} from '../internal.js';
-import { bound, coalesce, Timeline } from '../timeline.js';
-import { BinaryOperation } from '../binary-operation.js';
+import {Segment} from '../segment.js';
+import {Inclusivity, Interval} from '../interval.js';
+import {ProfileSpecialization, ProfileType, Spans, Windows} from '../internal.js';
+import {bound, coalesce, Timeline} from '../timeline.js';
+import {BinaryOperation} from '../binary-operation.js';
 import database from '../database.js';
-import { Temporal } from '@js-temporal/polyfill';
+import {Temporal} from '@js-temporal/polyfill';
 
 export class Profile<V> {
   protected segments: Timeline<Segment<V>>;
@@ -100,9 +100,7 @@ export class Profile<V> {
     const timeline = async (bounds: Interval) => {
       const [left, right] = await Promise.all([leftProfile.segments(bounds), rightProfile.segments(bounds)]);
 
-      const result = map2Arrays(left, right, op);
-
-      return coalesce(result, typeTag!);
+      return map2Arrays(left, right, op);
     };
 
     return new Profile(timeline, typeTag).specialize();
@@ -344,6 +342,7 @@ export class Profile<V> {
   })(this);
 }
 
+// output should already be coalesced.
 export function map2Arrays<V, W, Result>(
   left: Segment<V>[],
   right: Segment<W>[],
@@ -397,7 +396,7 @@ export function map2Arrays<V, W, Result>(
           const resultingSegment = leftSegment.mapValue(s => op.left(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          remainingLeftSegment = leftSegment.mapInterval(s => Interval.intersect(s.interval, rightSegment!.interval));
+          remainingLeftSegment = leftSegment.mapInterval(s => Interval.Between(rightSegment!.interval.start, s.interval.end, rightSegment!.interval.startInclusivity, s.interval.endInclusivity));
           const resultingSegment = new Segment(
             leftSegment.value,
             Interval.Between(
@@ -418,7 +417,7 @@ export function map2Arrays<V, W, Result>(
           const resultingSegment = rightSegment.mapValue(s => op.right(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          remainingRightSegment = rightSegment.mapInterval(s => Interval.intersect(s.interval, leftSegment!.interval));
+          remainingRightSegment = rightSegment.mapInterval(s => Interval.Between(leftSegment!.interval.start, s.interval.end, leftSegment!.interval.startInclusivity, s.interval.endInclusivity));
           const resultingSegment = new Segment(
             rightSegment.value,
             Interval.Between(
