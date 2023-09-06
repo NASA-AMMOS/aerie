@@ -55,6 +55,8 @@ public final class SimulationEngine implements AutoCloseable {
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
   /** The set of all jobs waiting on a condition. */
   private final Map<ConditionId, TaskId> waitingTasks = new HashMap<>();
+  /** The set of all tasks blocked on some number of subtasks. */
+  private final Map<TaskId, MutableInt> subtasks = new HashMap<>();
   /** The set of conditions depending on a given set of topics. */
   private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
   /** The set of queries depending on a given set of topics. */
@@ -66,25 +68,11 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
-  /** The number of subtasks remaining to complete before a task may resume. */
-  private final Map<TaskId, MutableInt> subtasks = new HashMap<>();
+
   /** The set of all spans of work contributed to by modeled tasks. */
   private final Map<SpanId, Span> spans = new HashMap<>();
   /** A count of the remaining live tasks (and other spans) under each span. */
   private final Map<SpanId, MutableInt> spanTasks = new HashMap<>();
-
-  /** The span of time over which a subtree of tasks has acted. */
-  public record Span(Optional<SpanId> parent, Duration startOffset, Optional<Duration> endOffset) {
-    /** Close out a span, marking it as inactive past the given time. */
-    public Span close(final Duration endOffset) {
-      if (this.endOffset.isPresent()) throw new Error("Attempt to close an already-closed span");
-      return new Span(this.parent, this.startOffset, Optional.of(endOffset));
-    }
-
-    public Optional<Duration> duration() {
-      return this.endOffset.map($ -> $.minus(this.startOffset));
-    }
-  }
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -742,6 +730,19 @@ public final class SimulationEngine implements AutoCloseable {
   private record ExecutionState<Return>(SpanId span, Optional<TaskId> caller, Task<Return> state) {
     public ExecutionState<Return> continueWith(final Task<Return> newState) {
       return new ExecutionState<>(this.span, this.caller, newState);
+    }
+  }
+
+  /** The span of time over which a subtree of tasks has acted. */
+  public record Span(Optional<SpanId> parent, Duration startOffset, Optional<Duration> endOffset) {
+    /** Close out a span, marking it as inactive past the given time. */
+    public Span close(final Duration endOffset) {
+      if (this.endOffset.isPresent()) throw new Error("Attempt to close an already-closed span");
+      return new Span(this.parent, this.startOffset, Optional.of(endOffset));
+    }
+
+    public Optional<Duration> duration() {
+      return this.endOffset.map($ -> $.minus(this.startOffset));
     }
   }
 }
