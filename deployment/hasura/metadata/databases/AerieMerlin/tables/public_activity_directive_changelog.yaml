@@ -14,59 +14,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns:
-       - revision
-       - plan_id
-       - activity_directive_id
-       - name
-       - source_scheduling_goal_id
-       - changed_at
-       - changed_by
-       - start_offset
-       - type
-       - arguments
-       - changed_arguments_at
-       - metadata
-       - anchor_id
-       - anchored_to_start
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns:
-       - revision
-       - plan_id
-       - activity_directive_id
-       - name
-       - source_scheduling_goal_id
-       - changed_at
-       - changed_by
-       - start_offset
-       - type
-       - arguments
-       - changed_arguments_at
-       - metadata
-       - anchor_id
-       - anchored_to_start
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns:
-       - revision
-       - plan_id
-       - activity_directive_id
-       - name
-       - source_scheduling_goal_id
-       - changed_at
-       - changed_by
-       - start_offset
-       - type
-       - arguments
-       - changed_arguments_at
-       - metadata
-       - anchor_id
-       - anchored_to_start
+      columns: '*'
       filter: {}
       allow_aggregations: true
 update_permissions:

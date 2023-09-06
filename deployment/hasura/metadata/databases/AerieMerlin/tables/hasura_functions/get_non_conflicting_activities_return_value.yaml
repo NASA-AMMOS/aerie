@@ -4,9 +4,9 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [activity_id, change_type, source, target, source_tags, target_tags]
+      columns: '*'
       filter: {}
   - role: user
     permission:
-      columns: [activity_id, change_type, source, target, source_tags, target_tags]
+      columns: '*'
       filter: {}

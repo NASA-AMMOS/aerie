@@ -4,9 +4,9 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [dataset_id, id, name, type, start_offset, dynamics, is_gap]
+      columns: '*'
       filter: {}
   - role: user
     permission:
-      columns: [dataset_id, id, name, type, start_offset, dynamics, is_gap]
+      columns: '*'
       filter: {}

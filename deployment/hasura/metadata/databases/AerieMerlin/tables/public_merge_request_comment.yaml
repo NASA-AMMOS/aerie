@@ -8,17 +8,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [comment_id, merge_request_id, commenter_username, comment_text]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

@@ -36,17 +36,17 @@ remote_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, name, description, command_dict_id, mission_model_id, created_at, updated_at, owner, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, name, description, command_dict_id, mission_model_id, created_at, updated_at, owner, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, name, description, command_dict_id, mission_model_id, created_at, updated_at, owner, updated_by]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 update_permissions:

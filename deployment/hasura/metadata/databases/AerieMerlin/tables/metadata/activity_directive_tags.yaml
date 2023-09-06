@@ -13,17 +13,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, directive_id, tag_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [plan_id, directive_id, tag_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [plan_id, directive_id, tag_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

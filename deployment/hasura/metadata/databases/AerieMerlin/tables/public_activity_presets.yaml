@@ -4,17 +4,17 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, model_id, name, associated_activity_type, arguments, owner]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, model_id, name, associated_activity_type, arguments, owner]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, model_id, name, associated_activity_type, arguments, owner]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

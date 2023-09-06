@@ -18,23 +18,23 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [preset_id, activity_id, plan_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [preset_id, activity_id, plan_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [preset_id, activity_id, plan_id]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [preset_id, activity_id, plan_id]
+      columns: '*'
       check: {}
 delete_permissions:
   - role: aerie_admin

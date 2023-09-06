@@ -6,7 +6,7 @@ configuration:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [username, default_role]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user

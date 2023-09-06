@@ -23,20 +23,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id,
-                 created_at, updated_at, owner, updated_by, description]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id,
-                created_at, updated_at, owner, updated_by, description]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id,
-                created_at, updated_at, owner, updated_by, description]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

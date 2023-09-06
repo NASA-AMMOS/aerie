@@ -14,17 +14,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [authoring_command_dict_id, created_at, definition, id, name, owner, updated_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 insert_permissions:

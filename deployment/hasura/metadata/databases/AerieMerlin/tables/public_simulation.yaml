@@ -26,17 +26,17 @@ array_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, revision, simulation_template_id, plan_id, arguments, simulation_start_time, simulation_end_time]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, revision, simulation_template_id, plan_id, arguments, simulation_start_time, simulation_end_time]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision, simulation_template_id, plan_id, arguments, simulation_start_time, simulation_end_time]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 update_permissions:

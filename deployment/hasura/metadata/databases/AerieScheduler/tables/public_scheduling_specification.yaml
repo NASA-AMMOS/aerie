@@ -4,17 +4,17 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 # TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)

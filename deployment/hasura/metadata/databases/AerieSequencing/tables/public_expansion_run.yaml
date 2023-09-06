@@ -34,17 +34,17 @@ remote_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, simulation_dataset_id, expansion_set_id, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, simulation_dataset_id, expansion_set_id, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, simulation_dataset_id, expansion_set_id, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:

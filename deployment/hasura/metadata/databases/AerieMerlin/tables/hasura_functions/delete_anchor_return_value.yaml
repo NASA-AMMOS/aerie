@@ -4,9 +4,9 @@ table:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [affected_row, change_type]
+      columns: '*'
       filter: {}
   - role: user
     permission:
-      columns: [affected_row, change_type]
+      columns: '*'
       filter: {}

@@ -18,17 +18,17 @@ object_relationships:
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: [id, expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: [id, expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: [id, expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string, created_at]
+      columns: '*'
       filter: {}
       allow_aggregations: true
 delete_permissions:
