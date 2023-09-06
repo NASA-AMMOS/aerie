@@ -301,11 +301,6 @@ public final class SimulationEngine implements AutoCloseable {
     this.executor.shutdownNow();
   }
 
-  /** Determine if a given span has fully completed. */
-  public boolean isSpanComplete(final SpanId span) {
-    return this.spans.get(span).endOffset().isPresent();
-  }
-
   private record SpanInfo(
       Map<SpanId, ActivityDirectiveId> spanToPlannedDirective,
       Map<SpanId, SerializedActivity> input,
@@ -743,6 +738,10 @@ public final class SimulationEngine implements AutoCloseable {
 
     public Optional<Duration> duration() {
       return this.endOffset.map($ -> $.minus(this.startOffset));
+    }
+
+    public boolean isComplete() {
+      return this.endOffset.isPresent();
     }
   }
 }
