@@ -43,13 +43,13 @@ export class Profile<V> {
     };
   }
 
-  public set(interval: Interval, value: V): ProfileSpecialization<V>;
+  public set(value: V, interval: Interval): ProfileSpecialization<V>;
   public set(newProfile: Profile<V>): ProfileSpecialization<V>;
-  public set(intervalOrProfile: Profile<V> | Interval, value?: V): ProfileSpecialization<V> {
+  public set(valueOrProfile: Profile<V> | V, interval?: Interval): ProfileSpecialization<V> {
     let profile: Profile<V>;
-    if (value !== undefined)
-      profile = new Profile<V>(bound([new Segment(value, intervalOrProfile as Interval)]), this.typeTag);
-    else profile = intervalOrProfile as Profile<V>;
+    if (interval !== undefined)
+      profile = new Profile<V>(bound([new Segment(valueOrProfile as V, interval)]), this.typeTag);
+    else profile = valueOrProfile as Profile<V>;
     return this.map2Values(
       profile,
       BinaryOperation.combineOrIdentity((_, r) => r),
@@ -360,9 +360,9 @@ export function map2Arrays<V, W, Result>(
   let remainingRightSegment: Segment<W> | undefined = undefined;
 
   while (
-    leftIndex < left.length &&
-    rightIndex < right.length &&
-    remainingLeftSegment !== undefined &&
+    leftIndex < left.length ||
+    rightIndex < right.length ||
+    remainingLeftSegment !== undefined ||
     remainingRightSegment !== undefined
   ) {
     if (remainingLeftSegment !== undefined) {
@@ -370,12 +370,16 @@ export function map2Arrays<V, W, Result>(
       remainingLeftSegment = undefined;
     } else if (leftIndex < left.length) {
       leftSegment = left[leftIndex++];
+    } else {
+      leftSegment = undefined;
     }
     if (remainingRightSegment !== undefined) {
       rightSegment = remainingRightSegment;
       remainingRightSegment = undefined;
     } else if (rightIndex < right.length) {
       rightSegment = right[rightIndex++];
+    } else {
+      rightSegment = undefined;
     }
 
     if (leftSegment === undefined) {
