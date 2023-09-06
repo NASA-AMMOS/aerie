@@ -169,7 +169,7 @@ public final class SimulationDriver {
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (!engine.isSpanComplete(spanId)) {
+      while (!engine.getSpan(spanId).isComplete()) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
 
         // Increment real time, if necessary.
