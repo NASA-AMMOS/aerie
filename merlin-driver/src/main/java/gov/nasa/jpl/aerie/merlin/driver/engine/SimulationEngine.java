@@ -225,14 +225,9 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
-      // TODO: Not *every* task should get a new span. Allow the model to decide where spans go.
-      final var targetSpan = SpanId.generate();
-      SimulationEngine.this.spans.put(targetSpan, new Span(Optional.of(progress.span()), currentTime, Optional.empty()));
-      SimulationEngine.this.spanTasks.get(progress.span()).increment();
-
       final var target = TaskId.generate();
-      SimulationEngine.this.spanTasks.put(targetSpan, new MutableInt(1));
-      SimulationEngine.this.tasks.put(target, new ExecutionState<>(targetSpan, 0, Optional.of(task), s.child().create(this.executor)));
+      SimulationEngine.this.spanTasks.put(scheduler.span, new MutableInt(1));
+      SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor)));
       SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
 
@@ -680,14 +675,9 @@ public final class SimulationEngine implements AutoCloseable {
 
     @Override
     public void spawn(final TaskFactory<?> state) {
-      // TODO: Not *every* task should get a new span. Allow the model to decide where spans go.
-      final var taskSpan = SpanId.generate();
-      SimulationEngine.this.spans.put(taskSpan, new Span(Optional.of(this.span), this.currentTime, Optional.empty()));
-      SimulationEngine.this.spanTasks.put(taskSpan, new MutableInt(1));
-
       final var task = TaskId.generate();
       SimulationEngine.this.spanTasks.get(this.span).increment();
-      SimulationEngine.this.tasks.put(task, new ExecutionState<>(taskSpan, 0, this.caller, state.create(SimulationEngine.this.executor)));
+      SimulationEngine.this.tasks.put(task, new ExecutionState<>(this.span, 0, this.caller, state.create(SimulationEngine.this.executor)));
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
       this.frame.signal(JobId.forTask(task));
     }
