@@ -30,7 +30,7 @@ public abstract class HasuraParsers {
       .field("x-hasura-role", stringP)
       .optionalField("x-hasura-user-id", stringP)
       .map(
-          untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(""))),
+          untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(null))),
           $ -> tuple($.hasuraRole(), Optional.ofNullable($.hasuraUserId())));
 
   private static <I extends HasuraAction.Input> JsonParser<HasuraAction<I>> hasuraActionF(final JsonParser<I> inputP) {

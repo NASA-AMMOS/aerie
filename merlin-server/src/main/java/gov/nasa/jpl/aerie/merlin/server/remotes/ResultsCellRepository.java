@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import java.util.Optional;
 
 public interface ResultsCellRepository {
-  ResultsProtocol.OwnerRole allocate(PlanId planId);
+  ResultsProtocol.OwnerRole allocate(PlanId planId, String requestedBy);
 
   Optional<ResultsProtocol.OwnerRole> claim(PlanId planId, Long datasetId);
 

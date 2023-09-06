@@ -53,7 +53,7 @@ public final class SchedulerParsers {
       .field("x-hasura-role", stringP)
       .optionalField("x-hasura-user-id", stringP)
       .map(
-          untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(""))),
+          untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(null))),
           session -> tuple(session.hasuraRole(), Optional.ofNullable(session.hasuraUserId())));
 
   /**

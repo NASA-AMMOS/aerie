@@ -16,5 +16,5 @@ public interface SchedulerService {
    * @param request details of the scheduling request, including the target plan and goals to operate on
    * @return summary of the scheduling run, including goal satisfaction metrics and changes made
    */
-  ResultsProtocol.State getScheduleResults(final ScheduleRequest request);
+  ResultsProtocol.State getScheduleResults(final ScheduleRequest request, final String requestedBy);
 }

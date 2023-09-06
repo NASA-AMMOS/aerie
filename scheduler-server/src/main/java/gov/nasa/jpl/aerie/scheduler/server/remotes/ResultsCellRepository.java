@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 public interface ResultsCellRepository {
-  ResultsProtocol.OwnerRole allocate(SpecificationId specificationId);
+  ResultsProtocol.OwnerRole allocate(SpecificationId specificationId, final String requestedBy);
 
   Optional<ResultsProtocol.OwnerRole> claim(SpecificationId specificationId);
 

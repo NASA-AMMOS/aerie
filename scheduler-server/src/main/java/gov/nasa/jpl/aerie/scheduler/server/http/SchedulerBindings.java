@@ -87,7 +87,7 @@ public record SchedulerBindings(
         ctx.status(500).result(ExceptionSerializers.serializeIOException(ex).toString());
       }
 
-      final var response = this.scheduleAction.run(specificationId);
+      final var response = this.scheduleAction.run(specificationId, session);
       ctx.result(serializeScheduleResultsResponse(response).toString());
     } catch (final IOException e) {
       log.error("low level input/output problem during scheduling", e);

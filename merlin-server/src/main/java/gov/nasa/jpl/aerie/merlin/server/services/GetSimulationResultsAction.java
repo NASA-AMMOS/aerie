@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -34,10 +35,11 @@ public final class GetSimulationResultsAction {
     this.simulationService = Objects.requireNonNull(simulationService);
   }
 
-  public Response run(final PlanId planId) throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException {
+  public Response run(final PlanId planId, final HasuraAction.Session session)
+  throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException {
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
-    final var response = this.simulationService.getSimulationResults(planId, revisionData);
+    final var response = this.simulationService.getSimulationResults(planId, revisionData, session.hasuraUserId());
 
     if (response instanceof ResultsProtocol.State.Pending r) {
       return new Response.Pending(r.simulationDatasetId());

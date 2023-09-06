@@ -35,7 +35,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
+  public ResultsProtocol.OwnerRole allocate(final PlanId planId, final String requestedBy) {
     try {
       final var planRevision = planRepository.getPlanRevision(planId);
       final var cell = new InMemoryCell(planId, planRevision);
