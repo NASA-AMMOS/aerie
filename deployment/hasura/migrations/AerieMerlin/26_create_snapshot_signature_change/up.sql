@@ -1,12 +1,4 @@
--- Captures the state of a plan and all of its activities
-create function create_snapshot(_plan_id integer)
-	returns integer
-	language plpgsql as $$
-begin
-	return create_snapshot(_plan_id, null, null);
-end
-$$;
-
+drop function create_snapshot(integer, text, text);
 create function create_snapshot(_plan_id integer, _snapshot_name text, _user text)
   returns integer -- snapshot id inserted into the table
   language plpgsql as $$
@@ -54,10 +46,6 @@ begin
   return inserted_snapshot_id;
   end;
 $$;
-
-comment on function create_snapshot(integer) is e''
-	'See comment on create_snapshot(integer, text, text)';
-
 comment on function create_snapshot(integer, text, text) is e''
   'Create a snapshot of the specified plan. A snapshot consists of:'
   '  - The plan''s id and revision'
