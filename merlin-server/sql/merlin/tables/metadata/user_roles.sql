@@ -3,7 +3,6 @@ create table metadata.user_roles(
   role text primary key,
   description text null
 );
-insert into metadata.user_roles(role) values ('aerie_admin'), ('user'), ('viewer');
 
 comment on table metadata.user_roles is e''
   'A list of all the allowed Hasura roles, with an optional description per role';
