@@ -1,6 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill';
 
-export interface Intervallic {
+/**
+ * An interface for objects that have an interval-like
+ */
+export interface IntervalLike {
   get interval(): Interval;
   bound(bounds: Interval): this | undefined;
   mapInterval(map: (i: this) => Interval): this;
@@ -24,7 +27,10 @@ export namespace Inclusivity {
   }
 }
 
-export class Interval implements Intervallic {
+/**
+ * A contiguous range of time.
+ */
+export class Interval implements IntervalLike {
   public start: Temporal.Duration;
   public end: Temporal.Duration;
   public startInclusivity: Inclusivity;

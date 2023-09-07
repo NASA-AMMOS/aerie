@@ -1,13 +1,13 @@
 import type { Timeline } from '../timeline.js';
 import { bound, coalesce, merge, sortSegments } from '../timeline.js';
 import { Segment } from '../segment.js';
-import { Intervallic, Inclusivity, Interval } from '../interval.js';
+import { IntervalLike, Inclusivity, Interval } from '../interval.js';
 import {ProfileSpecialization, ProfileType} from '../profiles/profile-type.js';
 import { LinearEquation, Real, map2Arrays, Windows, Profile} from '../internal.js';
 import { BinaryOperation } from '../binary-operation.js';
 import { Temporal } from '@js-temporal/polyfill';
 
-export class Spans<S extends Intervallic> {
+export class Spans<S extends IntervalLike> {
   private spans: Timeline<S>;
 
   constructor(spans: Timeline<S>) {
@@ -27,12 +27,12 @@ export class Spans<S extends Intervallic> {
     };
   }
 
-  public add<T extends Intervallic>(span: T): Spans<S | T> {
+  public add<T extends IntervalLike>(span: T): Spans<S | T> {
     const timeline = merge(this.spans, bound([span]));
     return new Spans(timeline);
   }
 
-  public addAll<T extends Intervallic>(other: Spans<T>): Spans<S | T> {
+  public addAll<T extends IntervalLike>(other: Spans<T>): Spans<S | T> {
     const timeline = merge(this.spans, other.spans);
     return new Spans(timeline);
   }
@@ -185,11 +185,11 @@ export class Spans<S extends Intervallic> {
   public unsafe = new (class {
     constructor(public outerThis: Spans<S>) {}
 
-    public map<T extends Intervallic>(f: (span: S) => T, boundsMap: (b: Interval) => Interval): Spans<T> {
+    public map<T extends IntervalLike>(f: (span: S) => T, boundsMap: (b: Interval) => Interval): Spans<T> {
       return new Spans<T>(async bounds => (await this.outerThis.spans(boundsMap(bounds))).map(s => f(s)));
     }
 
-    public flatMap<T extends Intervallic>(f: (span: S) => T[], boundsMap: (b: Interval) => Interval): Spans<T> {
+    public flatMap<T extends IntervalLike>(f: (span: S) => T[], boundsMap: (b: Interval) => Interval): Spans<T> {
       return new Spans<T>(async bounds => (await this.outerThis.spans(boundsMap(bounds))).flatMap(s => f(s)));
     }
   })(this);

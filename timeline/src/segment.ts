@@ -1,6 +1,6 @@
-import { Interval, Intervallic } from './interval.js';
+import { Interval, IntervalLike } from './interval.js';
 
-export class Segment<V> implements Intervallic {
+export class Segment<V> implements IntervalLike {
   public readonly interval: Interval;
   public readonly value: V;
 

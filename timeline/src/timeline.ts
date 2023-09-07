@@ -1,14 +1,14 @@
-import { Inclusivity, Interval, Intervallic } from './interval.js';
+import { Inclusivity, Interval, IntervalLike } from './interval.js';
 import { Segment } from './segment.js';
 import { ProfileType } from './profiles/profile-type.js';
 
-export type Timeline<V extends Intervallic> = (bounds: Interval) => Promise<V[]>;
+export type Timeline<V extends IntervalLike> = (bounds: Interval) => Promise<V[]>;
 
-export function bound<V extends Intervallic>(data: V[]): Timeline<V>;
-export function bound<V extends Intervallic>(data: Iterator<V>): Timeline<V>;
-export function bound<V extends Intervallic>(data: Iterable<V>): Timeline<V>;
-export function bound<V extends Intervallic>(data: IterableIterator<V>): Timeline<V>;
-export function bound<V extends Intervallic>(data: any): Timeline<V> {
+export function bound<V extends IntervalLike>(data: V[]): Timeline<V>;
+export function bound<V extends IntervalLike>(data: Iterator<V>): Timeline<V>;
+export function bound<V extends IntervalLike>(data: Iterable<V>): Timeline<V>;
+export function bound<V extends IntervalLike>(data: IterableIterator<V>): Timeline<V>;
+export function bound<V extends IntervalLike>(data: any): Timeline<V> {
   let array: V[];
   if (Array.isArray(data)) array = data;
   else if ('next' in data) {
@@ -30,7 +30,7 @@ export function bound<V extends Intervallic>(data: any): Timeline<V> {
   return async bounds => truncate(data as V[], bounds);
 }
 
-export function truncate<V extends Intervallic>(data: V[], bounds: Interval): V[] {
+export function truncate<V extends IntervalLike>(data: V[], bounds: Interval): V[] {
   return data.map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[]
 }
 
@@ -96,7 +96,7 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
   return segments;
 }
 
-export function cache<V extends Intervallic>(t: Timeline<V>): Timeline<V> {
+export function cache<V extends IntervalLike>(t: Timeline<V>): Timeline<V> {
   // Stored as a list of tuples that we must search through because Intervals contain Durations,
   // which have an inaccurate equality check.
   let history: [Interval, V[]][] = [];
@@ -110,7 +110,7 @@ export function cache<V extends Intervallic>(t: Timeline<V>): Timeline<V> {
   };
 }
 
-export function merge<V extends Intervallic, W extends Intervallic>(
+export function merge<V extends IntervalLike, W extends IntervalLike>(
   left: Timeline<V>,
   right: Timeline<W>
 ): Timeline<V | W> {
