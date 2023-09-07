@@ -3,7 +3,7 @@ import {Inclusivity, Interval} from '../interval.js';
 import {ProfileSpecialization, ProfileType, Spans, Windows} from '../internal.js';
 import {bound, coalesce, Timeline} from '../timeline.js';
 import {BinaryOperation} from '../binary-operation.js';
-import database from '../database.js';
+import { fetcher } from '../data-fetcher.js';
 import {Temporal} from '@js-temporal/polyfill';
 
 export class Profile<V> {
@@ -26,12 +26,12 @@ export class Profile<V> {
     );
   }
 
-  public static Resource<V>(name: string, profileType: ProfileType = ProfileType.Other): ProfileSpecialization<V> {
-    return new Profile<V>(database.getResource(name), profileType).specialize();
+  public static Resource<V>(name: string): Profile<V> {
+    return new Profile<V>(fetcher.resource(name, $ => $ as V, ProfileType.Other), ProfileType.Other);
   }
 
   public async collect(bounds: Interval): Promise<Segment<V>[]> {
-    return this.segments(bounds);
+    return await this.segments(bounds);
   }
 
   public inspect(f: (segments: readonly Segment<V>[]) => void) {

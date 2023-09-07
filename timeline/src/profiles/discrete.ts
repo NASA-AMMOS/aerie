@@ -1,6 +1,6 @@
 import { Interval } from '../interval.js';
 import { Segment } from '../segment.js';
-import database from '../database.js';
+import { fetcher } from '../data-fetcher.js';
 import { Profile } from '../internal.js';
 import { ProfileType } from './profile-type.js';
 
@@ -26,6 +26,6 @@ export class Discrete {
    * @constructor
    */
   public static Resource<V>(name: string): Profile<V> {
-    return new Profile<V>(database.getResource(name), ProfileType.Other);
+    return new Profile<V>(fetcher.resource<V>(name, $ => $ as V, ProfileType.Other), ProfileType.Other);
   }
 }

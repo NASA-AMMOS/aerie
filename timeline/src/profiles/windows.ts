@@ -1,8 +1,9 @@
-import { Profile, Real, ProfileType, LinearEquation, Timeline } from '../internal.js';
-import { Segment } from '../segment.js';
-import { BinaryOperation } from '../binary-operation.js';
-import { Interval } from '../interval.js';
-import { Temporal } from '@js-temporal/polyfill';
+import {LinearEquation, Profile, ProfileType, Real, Timeline} from '../internal.js';
+import {Segment} from '../segment.js';
+import {BinaryOperation} from '../binary-operation.js';
+import {Interval} from '../interval.js';
+import {Temporal} from '@js-temporal/polyfill';
+import { fetcher } from "../data-fetcher.js";
 
 // @ts-ignore
 export class Windows extends Profile<boolean> {
@@ -21,7 +22,7 @@ export class Windows extends Profile<boolean> {
   }
 
   public static override Resource(name: string): Windows {
-    return Profile.Resource<boolean>(name, ProfileType.Windows);
+    return new Windows(fetcher.resource(name, $ => $ as boolean, ProfileType.Windows));
   }
 
   public not(): Windows {

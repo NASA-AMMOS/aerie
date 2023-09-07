@@ -27,7 +27,11 @@ export function bound<V extends Intervallic>(data: any): Timeline<V> {
     }
   }
 
-  return async bounds => (data as V[]).map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
+  return async bounds => truncate(data as V[], bounds);
+}
+
+export function truncate<V extends Intervallic>(data: V[], bounds: Interval): V[] {
+  return data.map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[]
 }
 
 export function sortSegments<V>(segments: Segment<V>[], profileType: ProfileType): Segment<V>[] {
@@ -60,9 +64,19 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
   let buffer = segments[0]!;
   for (const segment of segments.slice(1)) {
     const comparison = Interval.compareEndToStart(buffer.interval, segment.interval);
-    if (comparison < 1) {
+    if (comparison === -1) {
       segments[shortIndex++] = buffer;
       buffer = segment;
+    } else if (comparison === 0) {
+      if (equals(buffer.value, segment.value)) {
+        if (Interval.compareEnds(buffer.interval, segment.interval) < 0) {
+          buffer.interval.end = segment.interval.end;
+          buffer.interval.endInclusivity = segment.interval.endInclusivity;
+        }
+      } else {
+        segments[shortIndex++] = buffer;
+        buffer = segment;
+      }
     } else {
       if (equals(buffer.value, segment.value)) {
         if (Interval.compareEnds(buffer.interval, segment.interval) < 0) {
@@ -70,8 +84,8 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
           buffer.interval.endInclusivity = segment.interval.endInclusivity;
         }
       } else {
-        buffer.interval.end = segment.interval.end;
-        buffer.interval.endInclusivity = Inclusivity.opposite(segment.interval.endInclusivity);
+        buffer.interval.end = segment.interval.start;
+        buffer.interval.endInclusivity = Inclusivity.opposite(segment.interval.startInclusivity);
         segments[shortIndex++] = buffer;
         buffer = segment;
       }

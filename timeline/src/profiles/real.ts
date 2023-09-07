@@ -1,10 +1,11 @@
-import { Profile, Windows, ProfileType } from '../internal.js';
-import { Segment } from '../segment.js';
-import type { Timeline } from '../timeline.js';
-import { coalesce } from '../timeline.js';
-import { Inclusivity, Interval } from '../interval.js';
-import { BinaryOperation } from '../binary-operation.js';
-import { Temporal } from '@js-temporal/polyfill';
+import {Profile, ProfileType, Windows} from '../internal.js';
+import {Segment} from '../segment.js';
+import type {Timeline} from '../timeline.js';
+import {coalesce} from '../timeline.js';
+import {Inclusivity, Interval} from '../interval.js';
+import {BinaryOperation} from '../binary-operation.js';
+import {Temporal} from '@js-temporal/polyfill';
+import { fetcher } from "../data-fetcher.js";
 
 // @ts-ignore
 export class Real extends Profile<LinearEquation> {
@@ -26,7 +27,7 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public static override Resource(name: string): Real {
-    return Profile.Resource<LinearEquation>(name, ProfileType.Real);
+    return new Real(fetcher.resource(name, (v, t) => new LinearEquation(t, v.initial as number, v.rate as number), ProfileType.Real));
   }
 
   public override assignGaps(def: Profile<LinearEquation> | LinearEquation | number): Real {

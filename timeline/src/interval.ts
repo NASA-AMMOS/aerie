@@ -240,7 +240,7 @@ export class Interval implements Intervallic {
     } else {
       result += '(';
     }
-    result += this.start.toString() + ", " + this.end.toString();
+    result += this.start.toString() + "," + this.end.toString();
     if (this.endInclusivity === Inclusivity.Inclusive) {
       result += ']';
     } else {
@@ -250,11 +250,6 @@ export class Interval implements Intervallic {
   }
 
   public toJSON(): any {
-    return {
-      start: this.start.toString(),
-      end: this.end.toString(),
-      startInclusivity: this.startInclusivity,
-      endInclusivity: this.endInclusivity
-    };
+    return this.toString();
   }
 }

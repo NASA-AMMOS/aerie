@@ -9,7 +9,7 @@ export * from './spans/activity-instance.js';
 
 export * from './binary-operation.js';
 export * from './constraint.js';
-export * from './database.js';
+export * from './data-fetcher.js';
 export * from './interval.js';
 export * from './segment.js';
 export * from './timeline.js';

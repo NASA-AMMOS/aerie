@@ -1,4 +1,4 @@
-import {Profile, Windows, Real, LinearEquation} from "../internal.js";
+import {Profile, Windows, Real, LinearEquation, Timeline, Segment} from "../internal.js";
 
 export enum ProfileType {
   Real,
@@ -12,10 +12,10 @@ export namespace ProfileType {
   export function specialize<V>(p: Profile<V>, t: ProfileType): ProfileSpecialization<V> {
     if (t === ProfileType.Windows) {
       // @ts-ignore
-      return new Windows(p);
+      return new Windows(p.segments as Timeline<Segment<boolean>>);
     } else if (t === ProfileType.Real) {
       // @ts-ignore
-      return new Real(p);
+      return new Real(p.segments as Timeline<Segment<LinearEquation>>);
     }
 
     // @ts-ignore
