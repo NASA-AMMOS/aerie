@@ -34,6 +34,13 @@ export class Profile<V> {
     return await this.segments(bounds);
   }
 
+  public async valueAt(time: Temporal.Duration): Promise<any | undefined> {
+    const segment = await this.collect(Interval.At(time));
+    if (segment.length > 0) throw new Error("multiple segments exist at the same time");
+    if (segment.length === 0) return undefined;
+    return segment[0].value;
+  }
+
   public inspect(f: (segments: readonly Segment<V>[]) => void) {
     const innerSegments = this.segments;
     this.segments = async bounds => {

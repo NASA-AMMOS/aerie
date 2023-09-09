@@ -13,7 +13,7 @@ export class Real extends Profile<LinearEquation> {
     super(segments, ProfileType.Real);
   }
 
-  public static empty(): Real {
+  public static Empty(): Real {
     return new Real(async _ => []);
   }
 
@@ -28,6 +28,10 @@ export class Real extends Profile<LinearEquation> {
 
   public static override Resource(name: string): Real {
     return new Real(fetcher.resource(name, (v, t) => new LinearEquation(t, v.initial as number, v.rate as number), ProfileType.Real));
+  }
+
+  public override async valueAt(time: Temporal.Duration): Promise<number | undefined> {
+    return (await super.valueAt(time))?.valueAt(time);
   }
 
   public override assignGaps(def: Profile<LinearEquation> | LinearEquation | number): Real {
