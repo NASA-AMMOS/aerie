@@ -149,6 +149,39 @@ public class PlanCollaborationTests {
     }
   }
 
+  int createSnapshot(final int planId, final String snapshot_name, final MerlinDatabaseTestHelper.User user) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          select * from hasura_functions.create_snapshot(%s, '%s', '%s'::json);
+          """.formatted(planId, snapshot_name, user.session()));
+      res.next();
+      return res.getInt(1);
+    }
+  }
+
+  private SnapshotMetadata getSnapshotMetadata(final int snapshotId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+      //language=sql
+      """
+        SELECT *
+        FROM plan_snapshot
+        WHERE snapshot_id = %d;
+      """.formatted(snapshotId));
+      res.next();
+      return new SnapshotMetadata(
+          res.getInt("snapshot_id"),
+          res.getInt("plan_id"),
+          res.getInt("revision"),
+          res.getString("snapshot_name"),
+          res.getString("taken_by"),
+          res.getString("taken_at")
+      );
+    }
+  }
+
   void restoreFromSnapshot(final int planId, final int snapshotId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
@@ -491,6 +524,13 @@ public class PlanCollaborationTests {
       String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
       boolean anchoredToStart
   ) {}
+  private record SnapshotMetadata(
+      int snapshot_id,
+      int plan_id,
+      int revision,
+      String snapshot_name,
+      String taken_by,
+      String taken_at) {}
   private record SnapshotActivity(
       int activityId,
       int snapshotId,
@@ -638,6 +678,48 @@ public class PlanCollaborationTests {
         if(!sqlEx.getMessage().contains("Plan 1000 does not exist."))
           throw sqlEx;
       }
+    }
+
+    @Test
+    void createNamedSnapshot() throws SQLException {
+      final var planId = merlinHelper.insertPlan(missionModelId);
+      final SnapshotMetadata snapshot = getSnapshotMetadata(createSnapshot(planId, "Snapshot", merlinHelper.admin));
+      assertEquals(merlinHelper.admin.name(), snapshot.taken_by);
+      assertEquals("Snapshot", snapshot.snapshot_name);
+      assertEquals(planId, snapshot.plan_id);
+      assertEquals(0, snapshot.revision);
+    }
+
+    @Test
+    void namedSnapshotsMustBeUnique() throws SQLException{
+      final var planId = merlinHelper.insertPlan(missionModelId);
+      createSnapshot(planId, "Snapshot", merlinHelper.admin);
+      try {
+        createSnapshot(planId, "Snapshot", merlinHelper.admin);
+      } catch (SQLException ex) {
+        if (!ex.getMessage().contains("duplicate key value violates unique constraint \"snapshot_name_unique_per_plan\"")) {
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void canCreateMultipleNamedSnapshots() throws SQLException{
+      final var planId = merlinHelper.insertPlan(missionModelId, merlinHelper.user.name());
+      final var firstSnapshotId = createSnapshot(planId, "First Snapshot", merlinHelper.admin);
+      final var secondSnapshotId = createSnapshot(planId, "Second Snapshot", merlinHelper.user);
+      final var firstSnapshot = getSnapshotMetadata(firstSnapshotId);
+      final var secondSnapshot = getSnapshotMetadata(secondSnapshotId);
+
+      assertEquals(firstSnapshotId, firstSnapshot.snapshot_id);
+      assertEquals(secondSnapshotId, secondSnapshot.snapshot_id);
+      assertNotEquals(firstSnapshotId, secondSnapshotId);
+
+      assertEquals("First Snapshot", firstSnapshot.snapshot_name);
+      assertEquals("Second Snapshot", secondSnapshot.snapshot_name);
+
+      assertEquals(merlinHelper.admin.name(), firstSnapshot.taken_by);
+      assertEquals(merlinHelper.user.name(), secondSnapshot.taken_by);
     }
   }
 
