@@ -36,7 +36,18 @@ public final class Subscriptions<TopicRef, QueryRef> {
     }
   }
 
-  public Set<QueryRef> invalidateTopic(final TopicRef topic) {
+  /**
+   * Get an unmodifiable set of topics for the specified query
+   * @param query the query whose subscribed topics are returned
+   * @return the topics to which the specified query is subscribed as an unmodifiable Set
+   */
+  public Set<TopicRef> getTopics(final QueryRef query) {
+    var topics = topicsByQuery.get(query);
+    if (topics == null) return Collections.emptySet();
+    return Collections.unmodifiableSet(topics);
+  }
+
+  private Set<QueryRef> removeTopic(final TopicRef topic) {
     final var queries = Optional
         .ofNullable(this.queriesByTopic.remove(topic))
         .orElseGet(Collections::emptySet);
@@ -46,8 +57,22 @@ public final class Subscriptions<TopicRef, QueryRef> {
     return queries;
   }
 
+  public Set<QueryRef> invalidateTopic(final TopicRef topic) {
+    //final var queries = this.queriesByTopic.get(topic);
+    final var queries = removeTopic(topic);
+    return queries;
+  }
+
   public void clear() {
     this.topicsByQuery.clear();
     this.queriesByTopic.clear();
+  }
+
+  @Override
+  public String toString() {
+    return "Subscriptions{" +
+           "topicsByQuery=" + topicsByQuery +
+           ", queriesByTopic=" + queriesByTopic +
+           '}';
   }
 }

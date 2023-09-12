@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ResumableSimulationTest {
+  public static boolean useResourceTracker = false;
+
   ResumableSimulationDriver<?> resumableSimulationDriver;
   Duration endOfLastAct;
 
@@ -31,7 +34,7 @@ public class ResumableSimulationTest {
   public void init() {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours, useResourceTracker);
     for (var act : acts) {
       resumableSimulationDriver.simulateActivity(act.start, act.activity, null, true, act.id);
     }
@@ -41,7 +44,7 @@ public class ResumableSimulationTest {
     final var now = Instant.now();
     //ensures that simulation results are generated until the end of the last act;
     var simResults = resumableSimulationDriver.getSimulationResults(now);
-    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
+    assert(simResults.getRealProfiles().get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     /* ensures that when current simulation results cover more than the asked period and that nothing has happened
     between two requests, the same results are returned */
     var simResults2 = resumableSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
@@ -52,7 +55,7 @@ public class ResumableSimulationTest {
   public void simulationResultsTest2(){
     /* ensures that when the passed start epoch is not equal to the one used for previously computed results, the results are re-computed */
     var simResults = resumableSimulationDriver.getSimulationResults(Instant.now());
-    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
+    assert(simResults.getRealProfiles().get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     var simResults2 = resumableSimulationDriver.getSimulationResultsUpTo(Instant.now(), Duration.of(7, SECONDS));
     assertNotEquals(simResults, simResults2);
   }
@@ -64,7 +67,7 @@ public class ResumableSimulationTest {
     final var now = Instant.now();
     var simResults2 = resumableSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
     var simResults = resumableSimulationDriver.getSimulationResults(now);
-    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
+    assert(simResults.getRealProfiles().get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     assertNotEquals(simResults, simResults2);
   }
 
@@ -85,12 +88,12 @@ public class ResumableSimulationTest {
         new SerializedActivity("ControllableDurationActivity", Map.of("duration", SerializedValue.of(tenHours.in(MICROSECOND)))),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours, useResourceTracker);
     resumableSimulationDriver.initSimulation();
     resumableSimulationDriver.clearActivitiesInserted();
     resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
     assertEquals(fiveHours, resumableSimulationDriver.getCurrentSimulationEndTime());
-    assert(resumableSimulationDriver.getSimulationResults(Instant.now()).unfinishedActivities.size() == 1);
+    assert(resumableSimulationDriver.getSimulationResults(Instant.now()).getUnfinishedActivities().size() == 1);
   }
 
   @Test
@@ -100,7 +103,7 @@ public class ResumableSimulationTest {
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, useResourceTracker);
     try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
       for (var i = 0; i < 20000; i++) {
         resumableSimulationDriver.initSimulation();

@@ -86,16 +86,34 @@ public record SynchronousSchedulerAgent(
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode,
-    SchedulingDSLCompilationService schedulingDSLCompilationService
+    SchedulingDSLCompilationService schedulingDSLCompilationService,
+    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades,
+    boolean useResourceTracker
 )
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
+    Objects.requireNonNull(specificationService);
     Objects.requireNonNull(planService);
     Objects.requireNonNull(missionModelService);
     Objects.requireNonNull(modelJarsDir);
     Objects.requireNonNull(goalsJarPath);
+    Objects.requireNonNull(outputMode);
     Objects.requireNonNull(schedulingDSLCompilationService);
+    Objects.requireNonNull(simulationFacades);
+  }
+
+  public SynchronousSchedulerAgent(
+      SpecificationService specificationService,
+      PlanService.OwnerRole planService,
+      MissionModelService missionModelService,
+      Path modelJarsDir,
+      Path goalsJarPath,
+      PlanOutputMode outputMode,
+      SchedulingDSLCompilationService schedulingDSLCompilationService,
+      boolean useResourceTracker) {
+    this(specificationService, planService, missionModelService, modelJarsDir, goalsJarPath, outputMode,
+         schedulingDSLCompilationService, new HashMap<>(), useResourceTracker);
   }
 
   /**
@@ -114,6 +132,7 @@ public record SynchronousSchedulerAgent(
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
       final var specification = specificationService.getSpecification(request.specificationId());
+      //TODO: consider caching planMetadata, schedulerMissionModel, Problem, etc. in addition to SimulationFacade
       final var planMetadata = planService.getPlanMetadata(specification.planId());
       ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
@@ -123,7 +142,9 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
-      try(final var simulationFacade = new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel())) {
+      //TODO: planningHorizon may be different from planMetadata.horizon(); could we reuse a facade with a different horizon?
+      try(final var simulationFacade = getSimulationFacade(specification.planId(), planningHorizon,
+                                                           schedulerMissionModel.missionModel(), useResourceTracker)) {
         final var problem = new Problem(
             schedulerMissionModel.missionModel(),
             planningHorizon,
@@ -278,6 +299,18 @@ public record SynchronousSchedulerAgent(
       throw new ResultsProtocolFailure(e);
     }
   }
+
+  private SimulationFacade getSimulationFacade(PlanId planId, PlanningHorizon planningHorizon,
+                                               final MissionModel<?> missionModel, boolean useResourceTracker) {
+    var key = Pair.of(planId, planningHorizon);
+    SimulationFacade f = this.simulationFacades.get(key);
+    if (f == null) {
+      f = new SimulationFacade(planningHorizon, missionModel, useResourceTracker);
+      this.simulationFacades.put(key, f);
+    }
+    return f;
+  }
+
 
   private Optional<DatasetId> storeSimulationResults(PlanningHorizon planningHorizon, SimulationFacade simulationFacade, PlanMetadata planMetadata,
                                                      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)

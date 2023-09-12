@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -17,7 +18,8 @@ import java.util.stream.Collectors;
 public record SynchronousSimulationAgent (
     PlanService planService,
     MissionModelService missionModelService,
-    long simulationProgressPollPeriod
+    long simulationProgressPollPeriod,
+    boolean useResourceTracker
 ) implements SimulationAgent {
   public sealed interface Response {
     record Failed(String reason) implements Response {}
@@ -55,7 +57,7 @@ public record SynchronousSimulationAgent (
         plan.simulationStartTimestamp.toInstant().until(plan.simulationEndTimestamp.toInstant(), ChronoUnit.MICROS),
         Duration.MICROSECONDS);
 
-    final SimulationResults results;
+    final SimulationResultsInterface results;
     try {
       // Validate plan activity construction
       final var failures = this.missionModelService.validateActivityInstantiations(
@@ -84,7 +86,8 @@ public record SynchronousSimulationAgent (
             plan.startTimestamp.toInstant(),
             planDuration,
             plan.activityDirectives,
-            plan.configuration), extentListener::updateValue);
+            plan.configuration,
+            this.useResourceTracker), extentListener::updateValue);
       }
     } catch (SimulationException ex) {
       writer.failWith(b -> b

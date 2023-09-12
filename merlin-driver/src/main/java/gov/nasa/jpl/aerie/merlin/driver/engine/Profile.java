@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Iterator;
 
-/*package-local*/ record Profile<Dynamics>(SlabList<Segment<Dynamics>> segments)
+public record Profile<Dynamics>(SlabList<Segment<Dynamics>> segments)
 implements Iterable<Profile.Segment<Dynamics>> {
   public record Segment<Dynamics>(Duration startOffset, Dynamics dynamics) {}
 
@@ -13,6 +13,7 @@ implements Iterable<Profile.Segment<Dynamics>> {
   }
 
   public void append(final Duration currentTime, final Dynamics dynamics) {
+    //System.out.println("Profile append at " + currentTime + ": " + dynamics);
     this.segments.append(new Segment<>(currentTime, dynamics));
   }
 

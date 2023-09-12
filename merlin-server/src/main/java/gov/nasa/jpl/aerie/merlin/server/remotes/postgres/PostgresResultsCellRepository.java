@@ -1,11 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -27,6 +22,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +41,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final PlanId planId, final String requestedBy) {
+  public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
       final SimulationRecord simulation = getSimulation(connection, planId);
       final SimulationTemplateRecord template;
@@ -312,15 +309,17 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postSimulationResults(
       final Connection connection,
       final long datasetId,
-      final SimulationResults results
+      final SimulationResultsInterface results
   ) throws SQLException, NoSuchSimulationDatasetException
   {
-    final var simulationStart = new Timestamp(results.startTime);
-    final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
+    final var simulationStart = new Timestamp(results.getStartTime());
+    final var profileSet = ProfileSet.of(results.getRealProfiles(), results.getDiscreteProfiles());
     ProfileRepository.postResourceProfiles(connection, datasetId, profileSet);
-    postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
-    insertSimulationTopics(connection, datasetId, results.topics);
-    insertSimulationEvents(connection, datasetId, results.events, simulationStart);
+    postActivities(connection, datasetId,
+                   results.getSimulatedActivities(),
+                   results.getUnfinishedActivities(), simulationStart);
+    insertSimulationTopics(connection, datasetId, results.getTopics());
+    insertSimulationEvents(connection, datasetId, results.getEvents(), simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
       setSimulationStateAction.apply(datasetId, SimulationStateRecord.success());
@@ -483,7 +482,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void succeedWith(final SimulationResults results) {
+    public void succeedWith(final SimulationResultsInterface results) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
         postSimulationResults(connection, datasetId, results);

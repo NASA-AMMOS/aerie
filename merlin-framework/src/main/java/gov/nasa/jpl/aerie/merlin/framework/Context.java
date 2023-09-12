@@ -30,6 +30,10 @@ public interface Context {
   <Event> void emit(Event event, Topic<Event> topic);
 
   void spawn(TaskFactory<?> task);
+  default void spawn(String taskName, TaskFactory<?> task) {
+    spawn(task);
+  }
+
   <Return> void call(TaskFactory<Return> task);
 
   void delay(Duration duration);

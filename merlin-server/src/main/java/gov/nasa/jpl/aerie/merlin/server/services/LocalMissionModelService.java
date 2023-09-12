@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -19,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,11 @@ public final class LocalMissionModelService implements MissionModelService {
   private final Path missionModelDataPath;
   private final MissionModelRepository missionModelRepository;
   private final Instant untruePlanStart;
+
+  private boolean doingIncrementalSim = true;
+
+  private final Map<Triple<String, Instant, Duration>, SimulationDriver>
+      simulationDrivers = new HashMap<Triple<String, Instant, Duration>, SimulationDriver>();
 
   public LocalMissionModelService(
       final Path missionModelDataPath,
@@ -242,7 +249,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
+  public SimulationResultsInterface runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
   throws NoSuchMissionModelException
   {
     final var config = message.configuration();
@@ -251,18 +258,44 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
-    // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(
-            message.missionModelId(),
-            message.simulationStartTime(),
-            SerializedValue.of(config)),
-        message.activityDirectives(),
-        message.simulationStartTime(),
-        message.simulationDuration(),
-        message.planStartTime(),
-        message.planDuration(),
-        simulationExtentConsumer);
+    final MissionModel<?> missionModel = loadAndInstantiateMissionModel(message.missionModelId(),
+                                                                        message.simulationStartTime(),
+                                                                        SerializedValue.of(config));
+
+    var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
+    SimulationDriver driver = simulationDrivers.get(planInfo);
+
+    if (driver == null || !doingIncrementalSim) {
+      driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration(),
+                                    message.useResourceTracker());
+      simulationDrivers.put(planInfo, driver);
+      // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
+//      return driver.simulate(message.activityDirectives(),
+//                             message.simulationStartTime(),
+//                             message.simulationDuration(),
+//                             message.planStartTime(),
+//                             message.planDuration());
+      return SimulationDriver.simulate(
+          loadAndInstantiateMissionModel(
+              message.missionModelId(),
+              message.simulationStartTime(),
+              SerializedValue.of(config)),
+          message.activityDirectives(),
+          message.simulationStartTime(),
+          message.simulationDuration(),
+          message.planStartTime(),
+          message.planDuration(),
+          simulationExtentConsumer);
+    } else {
+      // Try to reuse past simulation.
+      driver.initSimulation(message.simulationDuration());
+      return driver.diffAndSimulate(message.activityDirectives(),
+                                    message.simulationStartTime(),
+                                    message.simulationDuration(),
+                                    message.planStartTime(),
+                                    message.planDuration());
+    }
+
   }
 
   @Override

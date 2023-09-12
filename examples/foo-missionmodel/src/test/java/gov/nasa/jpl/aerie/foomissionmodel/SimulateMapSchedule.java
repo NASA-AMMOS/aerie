@@ -4,9 +4,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import java.time.Instant;
@@ -46,17 +44,17 @@ public class SimulateMapSchedule {
         startTime,
         simulationDuration);
 
-      simulationResults.realProfiles.forEach((name, samples) -> {
+      simulationResults.getRealProfiles().forEach((name, samples) -> {
         System.out.println(name + ":");
         samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.extent(), point.dynamics()));
       });
 
-      simulationResults.discreteProfiles.forEach((name, samples) -> {
+      simulationResults.getDiscreteProfiles().forEach((name, samples) -> {
         System.out.println(name + ":");
         samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.extent(), point.dynamics()));
       });
 
-    simulationResults.simulatedActivities.forEach((name, activity) -> {
+    simulationResults.getSimulatedActivities().forEach((name, activity) -> {
       System.out.println(name + ": " + activity.start() + " for " + activity.duration());
     });
   }

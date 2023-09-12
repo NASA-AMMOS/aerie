@@ -53,7 +53,10 @@ public final class InitializationContext implements Context {
 
   @Override
   public void spawn(final TaskFactory<?> task) {
-    this.builder.daemon(task);
+    this.builder.daemon(null, task);
+  }
+  public void spawn(final String taskName, final TaskFactory<?> task) {
+    this.builder.daemon(taskName, task);
   }
 
   @Override

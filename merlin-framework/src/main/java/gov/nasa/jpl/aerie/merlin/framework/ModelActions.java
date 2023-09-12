@@ -57,6 +57,10 @@ public /*non-final*/ class ModelActions {
     context.get().spawn(task);
   }
 
+  public static <T> void spawn(final String taskName, final TaskFactory<T> task) {
+    context.get().spawn(taskName, task);
+  }
+
   public static void call(final Runnable task) {
     call(threaded(task));
   }

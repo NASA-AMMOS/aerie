@@ -483,21 +483,21 @@ public final class AnchorSimulationTest {
      *  - topics
      *  Any resource profiles and events are not checked.
      */
-    private static void assertEqualsSimulationResults(SimulationResults expected, SimulationResults actual){
-      assertEquals(expected.startTime, actual.startTime);
-      assertEquals(expected.duration, actual.duration);
-      assertEquals(expected.simulatedActivities.size(), actual.simulatedActivities.size());
-      for(final var entry : expected.simulatedActivities.entrySet()){
+    private static void assertEqualsSimulationResults(SimulationResultsInterface expected, SimulationResultsInterface actual){
+      assertEquals(expected.getStartTime(), actual.getStartTime());
+      assertEquals(expected.getDuration(), actual.getDuration());
+      assertEquals(expected.getSimulatedActivities().entrySet().size(), actual.getSimulatedActivities().size());
+      for(final var entry : expected.getSimulatedActivities().entrySet()){
         final var key = entry.getKey();
         final var expectedValue = entry.getValue();
-        final var actualValue = actual.simulatedActivities.get(key);
+        final var actualValue = actual.getSimulatedActivities().get(key);
         assertNotNull(actualValue);
         assertEquals(expectedValue, actualValue);
       }
-      assertTrue(actual.unfinishedActivities.isEmpty());
-      assertEquals(expected.topics.size(), actual.topics.size());
-      for(int i = 0; i < expected.topics.size(); ++i){
-        assertEquals(expected.topics.get(i), actual.topics.get(i));
+      assertTrue(actual.getUnfinishedActivities().isEmpty());
+      assertEquals(expected.getTopics().size(), actual.getTopics().size());
+      for(int i = 0; i < expected.getTopics().size(); ++i){
+        assertEquals(expected.getTopics().get(i), actual.getTopics().get(i));
       }
     }
 
@@ -915,18 +915,18 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays);
 
-      assertEquals(planStart, actualSimResults.startTime);
-      assertTrue(actualSimResults.unfinishedActivities.isEmpty());
-      assertEquals(modelTopicList.size(), actualSimResults.topics.size());
+      assertEquals(planStart, actualSimResults.getStartTime());
+      assertTrue(actualSimResults.getUnfinishedActivities().isEmpty());
+      assertEquals(modelTopicList.size(), actualSimResults.getTopics().size());
       for(int i = 0; i < modelTopicList.size(); ++i){
-        assertEquals(modelTopicList.get(i), actualSimResults.topics.get(i));
+        assertEquals(modelTopicList.get(i), actualSimResults.getTopics().get(i));
       }
 
       final var childSimulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(28);
       final var otherSimulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(23);
-      assertEquals(51, actualSimResults.simulatedActivities.size()); // 23 + 2*(14 Decomposing activities)
+      assertEquals(51, actualSimResults.getSimulatedActivities().size()); // 23 + 2*(14 Decomposing activities)
 
-      for(final var entry : actualSimResults.simulatedActivities.entrySet()) {
+      for(final var entry : actualSimResults.getSimulatedActivities().entrySet()) {
         if(entry.getValue().parentId()==null){
           otherSimulatedActivities.put(entry.getKey(), entry.getValue());
         }
@@ -1051,8 +1051,9 @@ public final class AnchorSimulationTest {
           tenDays,
           planStart,
           tenDays);
+//          defaultUseResourceTracker);
 
-      assertEquals(3906, expectedSimResults.simulatedActivities.size());
+      assertEquals(3906, expectedSimResults.getSimulatedActivities().size());
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
     }
 
@@ -1190,7 +1191,7 @@ public final class AnchorSimulationTest {
                 "ActivityType.Output.DecomposingActivityDirective",
                 decomposingActivityDirectiveOutputTopic,
                 testModelOutputType)),
-        List.of(),
+        Map.of(),
         DirectiveTypeRegistry.extract(
             new ModelType<>() {
 

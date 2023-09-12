@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import java.util.Optional;
+
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;

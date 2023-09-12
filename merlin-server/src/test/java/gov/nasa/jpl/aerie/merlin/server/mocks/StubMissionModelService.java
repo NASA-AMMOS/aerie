@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -199,7 +200,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message, Consumer<Duration> simulationExtentConsumer) throws NoSuchMissionModelException {
+  public SimulationResultsInterface runSimulation(final CreateSimulationMessage message, Consumer<Duration> simulationExtentConsumer) throws NoSuchMissionModelException {
     if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(message.missionModelId());
     }

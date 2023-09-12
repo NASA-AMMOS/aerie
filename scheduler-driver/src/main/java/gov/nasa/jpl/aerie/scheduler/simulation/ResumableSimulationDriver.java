@@ -3,14 +3,12 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.ResourceTracker;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
-import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -18,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,36 +30,63 @@ import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
-  /* The current real time. All the tasks before and at this time have been performed.
- Simulation has not started so it is set to MIN_VALUE. */
-  private Duration curTime = Duration.MIN_VALUE;
-  private SimulationEngine engine = new SimulationEngine();
-  private LiveCells cells;
-  private TemporalEventSource timeline = new TemporalEventSource();
-  private final MissionModel<Model> missionModel;
-  private final Duration planDuration;
-  private JobSchedule.Batch<SimulationEngine.JobId> batch;
 
-  private final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
+  private static boolean debug = false;
+
+  public Duration curTime() {
+    if (engine == null) {
+      return Duration.ZERO;
+    }
+    return engine.curTime();
+  }
+
+  public void setCurTime(Duration time) {
+    this.engine.setCurTime(time);
+  }
+
+
+  private SimulationEngine engine;
+  private final boolean useResourceTracker;
+  private final MissionModel<Model> missionModel;
+  private Instant startTime;
+  private final Duration planDuration;
+
+  private static final Topic<ActivityDirectiveId> activityTopic = SimulationEngine.defaultActivityTopic;
 
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
 
   //simulation results so far
-  private SimulationResults lastSimResults;
+  private SimulationResultsInterface lastSimResults;
   //cached simulation results cover the period [Duration.ZERO, lastSimResultsEnd]
   private Duration lastSimResultsEnd = Duration.ZERO;
 
   //List of activities simulated since the last reset
   private final Map<ActivityDirectiveId, ActivityDirective> activitiesInserted = new HashMap<>();
+  private Topic<Topic<?>> queryTopic = new Topic<>();
 
   //counts the number of simulation restarts, used as performance metric in the scheduler
   //effectively counting the number of calls to initSimulation()
   private int countSimulationRestarts;
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
+  // Whether we're rerunning the simulation, in which case we can be lazy about starting up stuff, like daemons
+  private boolean rerunning = false;
+
+  public ResumableSimulationDriver(MissionModel<Model> missionModel, PlanningHorizon horizon, boolean useResourceTracker){
+    this(missionModel, horizon.getStartInstant(), horizon.getAerieHorizonDuration(), useResourceTracker);
+  }
+
+  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration, boolean useResourceTracker){
+    this(missionModel, Instant.now(), planDuration, useResourceTracker);
+  }
+
+  private ResourceTracker resourceTracker = null;
+
+  public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration, boolean useResourceTracker){
+    this.useResourceTracker = useResourceTracker;
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
+    this.startTime = startTime;
     this.planDuration = planDuration;
     countSimulationRestarts = 0;
     initSimulation();
@@ -71,29 +97,44 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   /*package-private*/ void initSimulation(){
     logger.warn("Reinitialization of the scheduling simulation");
+    if (debug) System.out.println("ResumableSimulationDriver.initSimulation()");
     plannedDirectiveToTask.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
+    // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
+    this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
-    this.engine = new SimulationEngine();
-    batch = null;
-    /* The top-level simulation timeline. */
-    this.timeline = new TemporalEventSource();
-    this.cells = new LiveCells(timeline, missionModel.getInitialCells());
-    curTime = Duration.MIN_VALUE;
+    SimulationEngine oldEngine = rerunning ? this.engine : null;
+    this.engine = new SimulationEngine(startTime, missionModel, oldEngine, resourceTracker);
+    if (useResourceTracker) {
+      this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
+      engine.resourceTracker = this.resourceTracker;
+    }
+    //assert useResourceTracker;
+    // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
+    /* The current real time. */
+    setCurTime(Duration.ZERO);
+
+    // Begin tracking any resources that have not already been simulated.
+    trackResources();
+
+    // Start daemon task(s) immediately, before anything else happens.
+    startDaemons(curTime());
+
+    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
+    engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
+  }
+
+  private void trackResources() {
     // Begin tracking all resources.
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      engine.trackResource(name, resource, Duration.ZERO);
-    }
-
-    // Start daemon task(s) immediately, before anything else happens.
-    {
-      if(missionModel.hasDaemons()) {
-        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-        batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      if (useResourceTracker) {
+        resourceTracker.track(name, resource);
+      } else {
+        engine.trackResource(name, resource, Duration.ZERO);
       }
     }
     countSimulationRestarts++;
@@ -107,34 +148,39 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     return countSimulationRestarts;
   }
 
+  private void startDaemons(Duration time) {
+    if (missionModel.hasDaemons()) {
+      engine.scheduleTask(time, missionModel.getDaemon(), null);
+      engine.step(Duration.MAX_VALUE, queryTopic);
+    }
+  }
+
   @Override
   public void close() {
     this.engine.close();
   }
 
   private void simulateUntil(Duration endTime){
-    assert(endTime.noShorterThan(curTime));
-      if(batch == null){
-        batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      }
-      // Increment real time, if necessary.
-      while(!batch.offsetFromStart().longerThan(endTime) && !endTime.isEqualTo(Duration.MAX_VALUE)) {
-        //by default, curTime is negative to signal we have not started simulation yet. We set it to 0 when we start.
-        final var delta = batch.offsetFromStart().minus(curTime.isNegative() ? Duration.ZERO : curTime);
-        curTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-        timeline.add(commit);
-
-        batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      }
+    if (debug) System.out.println("simulateUntil(" + endTime + ")");
+    assert(endTime.noShorterThan(curTime()));
+    if (endTime.isEqualTo(Duration.MAX_VALUE)) return;
+    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the endTime.
+    engine.scheduleTask(endTime, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
+    while(engine.hasJobsScheduledThrough(endTime)) {
+      // Run the jobs in this batch.
+      engine.step(Duration.MAX_VALUE, queryTopic);
+    }
+    if (useResourceTracker) {
+      // Replay the timeline to collect resource profiles
+      engine.generateResourceProfiles(endTime);
+    }
     lastSimResults = null;
   }
 
 
   /**
-   * Simulate an activity directive.
+   * Simulate an activity directive.  We assume that the original plan activities have
+   * been scheduled in the SimulationEngine and may be partially simulated.
    * @param activity the serialized type and arguments of the activity directive to be simulated
    * @param startOffset the start offset from the activity's anchor
    * @param anchorId the activity id of the anchor (or null if the activity is anchored to the plan)
@@ -152,7 +198,13 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    */
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
-    simulateActivities(Map.of(activityId, activityToSimulate));
+    activitiesInserted.put(activityId, activityToSimulate);
+    if(activityToSimulate.startOffset().noLongerThan(curTime())){
+      initSimulation();
+      simulateSchedule(Map.of(activityId, activityToSimulate));
+    } else {
+      simulateSchedule(Map.of(activityId, activityToSimulate));
+    }
   }
 
   public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate) {
@@ -164,7 +216,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     resolved.get(null).sort(Comparator.comparing(Pair::getRight));
     final var earliestStartOffset = resolved.get(null).get(0);
 
-    if(earliestStartOffset.getRight().noLongerThan(curTime)){
+    if(earliestStartOffset.getRight().noLongerThan(curTime())){
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -178,12 +230,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResults(Instant startTimestamp){
-    return getSimulationResultsUpTo(startTimestamp, curTime);
+  public SimulationResultsInterface getSimulationResults(Instant startTimestamp){
+    return getSimulationResultsUpTo(startTimestamp, curTime());
   }
 
   public Duration getCurrentSimulationEndTime(){
-    return curTime;
+    return curTime();
   }
 
   /**
@@ -193,28 +245,33 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param endTime the end timepoint. The simulation results will be computed up to this point.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
+  public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
+    if (debug) System.out.println("getSimulationResultsUpTo(startTimestamp=" + startTimestamp + ", endTime=" + endTime + ")");
     //if previous results cover a bigger period, we return do not regenerate
-    if(endTime.longerThan(curTime)){
+    if(endTime.longerThan(curTime())){
       simulateUntil(endTime);
     }
 
-    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
-      lastSimResults = SimulationEngine.computeResults(
-          engine,
-          startTimestamp,
-          endTime,
-          activityTopic,
-          timeline,
-          missionModel.getTopics());
+    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.getStartTime()) != 0) {
+      lastSimResults = engine.computeResults(
+            startTimestamp,
+            endTime,
+            activityTopic);
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
     return lastSimResults;
   }
 
+  /**
+   * Simulate the input activities.  We assume that the original plan activities have
+   * been scheduled in the SimulationEngine and may be partially simulated.
+   * @param schedule the activities to schedule with the times to schedule them
+   */
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
+    if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
+
     if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
     }
@@ -238,37 +295,28 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
     var allTaskFinished = false;
 
-    if (batch == null) {
-      batch = engine.extractNextJobs(Duration.MAX_VALUE);
-    }
-    //by default, curTime is negative to signal we have not started simulation yet. We set it to 0 when we start.
-    Duration delta = batch.offsetFromStart().minus(curTime.isNegative() ? Duration.ZERO : curTime);
+    // Increment real time, if necessary.
 
     //once all tasks are finished, we need to wait for events triggered at the same time
-    while (!allTaskFinished || delta.isZero()) {
-      curTime = batch.offsetFromStart();
-      timeline.add(delta);
+    while (!allTaskFinished) {
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
       //   even if they occur at the same real time.
 
       // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      engine.step(Duration.MAX_VALUE, queryTopic);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask
+      if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime()) &&
+          plannedDirectiveToTask
           .values()
           .stream()
           .allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
-
-      // Update batch and increment real time, if necessary.
-      batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      delta = batch.offsetFromStart().minus(curTime);
-      if(batch.offsetFromStart().longerThan(planDuration)){
-        break;
-      }
+    }
+    if (useResourceTracker) {
+      // Replay the timeline to collect resource profiles
+      engine.generateResourceProfiles(curTime());
     }
     lastSimResults = null;
   }
@@ -313,7 +361,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
           resolved,
           missionModel,
           activityTopic
-      ));
+      ), null);
       plannedDirectiveToTask.put(directiveId,taskId);
     }
   }

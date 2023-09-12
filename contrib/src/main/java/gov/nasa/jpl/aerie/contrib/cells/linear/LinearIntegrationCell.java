@@ -42,6 +42,15 @@ public final class LinearIntegrationCell {
     return RealDynamics.constant(this.rate);
   }
 
+  @Override
+  public String toString() {
+    return "LinearIntegrationCell{" +
+           "initialVolume=" + initialVolume +
+           ", accumulatedVolume=" + accumulatedVolume +
+           ", rate=" + rate +
+           '}';
+  }
+
   public static final class LinearIntegrationCellType
       implements CellType<LinearAccumulationEffect, LinearIntegrationCell>
   {

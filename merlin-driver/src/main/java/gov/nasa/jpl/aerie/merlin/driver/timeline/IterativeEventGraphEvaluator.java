@@ -7,7 +7,9 @@ import java.util.Optional;
 public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
   @Override
   public <Effect> Optional<Effect>
-  evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, EventGraph<Event> graph) {
+  evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, EventGraph<Event> graph,
+           final Event lastEvent, boolean includeLast) {
+    // TODO: HERE!! Need to implement for last 2 arguments.  One approach is to extract the sub-graph of Events.
     Continuation<Event, Effect> andThen = new Continuation.Empty<>();
 
     while (true) {

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -110,7 +111,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void succeedWith(final SimulationResults results) {
+    public void succeedWith(final SimulationResultsInterface results) {
       if (!(this.state instanceof ResultsProtocol.State.Incomplete)) {
         throw new IllegalStateException("Cannot transition to success state from state %s".formatted(
             this.state.getClass().getCanonicalName()));

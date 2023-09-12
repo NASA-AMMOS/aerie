@@ -12,6 +12,7 @@ java {
 
 test {
   useJUnitPlatform()
+  maxHeapSize = "3333m"
 }
 
 jacocoTestReport {
