@@ -88,12 +88,10 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
         }
       }
       if (this.algorithm == RollingThresholdAlgorithm.ExcessHull || this.algorithm == RollingThresholdAlgorithm.DeficitHull) {
-        final var hull = Interval.between(
-            violationIntervals.get(0).start,
-            violationIntervals.get(0).startInclusivity,
-            violationIntervals.get(violationIntervals.size() - 1).end,
-            violationIntervals.get(violationIntervals.size() - 1).endInclusivity
-        );
+        var hull = violationIntervals.get(0);
+        for (final var interval: violationIntervals.subList(1, violationIntervals.size())) {
+          hull = Interval.unify(hull, interval);
+        }
         violationIntervals.clear();
         violationIntervals.add(hull);
       }

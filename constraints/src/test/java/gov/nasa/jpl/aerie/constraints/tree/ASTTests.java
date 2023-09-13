@@ -1137,9 +1137,10 @@ public class ASTTests {
     );
 
     final var spans = new Spans(
+        // These two are out of order to make sure RollingThreshold's hull operation correctly handles unsorted spans.
+        Interval.between(4, 5, SECONDS),
         Interval.between(0, 1, SECONDS),
         Interval.between(2, 3, SECONDS),
-        Interval.between(4, 5, SECONDS),
 
         Interval.between(14, 15, SECONDS),
         Interval.between(16, 17, SECONDS),
@@ -1174,9 +1175,9 @@ public class ASTTests {
         List.of(
             new Violation(
                 List.of(
+                    Interval.between(4, 5, SECONDS),
                     Interval.between(0, 1, SECONDS),
-                    Interval.between(2, 3, SECONDS),
-                    Interval.between(4, 5, SECONDS)
+                    Interval.between(2, 3, SECONDS)
                 ), List.of()
             ),
             new Violation(
