@@ -22,6 +22,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static org.junit.jupiter.api.Assertions.*;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -2656,5 +2657,35 @@ public class SchedulingIntegrationTests {
     final var peels = planByActivityType.get("PeelBanana");
     assertEquals(1, peels.size());
     assertEquals(peels.iterator().next().startOffset(), Duration.of(5, MINUTE).plus(Duration.of(2, activityDuration)));
+  }
+
+  @Test
+  void testListOfListParam() {
+    final var results = runScheduler(FOO, List.of(), List.of(new SchedulingGoal(new GoalId(0L), """
+        export default function myGoal() {
+                          return Goal.CardinalityGoal({
+                            activityTemplate: ActivityTemplates.foo({
+                              x: 1,
+                              y:"test2",
+                              z:3,
+                              vecs: [[1, 2, 3], [4, 5, 6]]
+                            }),
+                            specification : {occurrence: 1}
+                          })
+        }
+          """, true)),List.of(), PLANNING_HORIZON);
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+
+    final var activitiesByType = partitionByActivityType(results.updatedPlan());
+
+    final var foos = activitiesByType.get("foo");
+    assertEquals(1, foos.size());
+    final var insertedFoo = foos.iterator().next();
+    final var vecs = insertedFoo.serializedActivity().getArguments().get("vecs").asList();
+    assertTrue(vecs.isPresent());
+    assertEquals(2, vecs.get().size());
   }
 }

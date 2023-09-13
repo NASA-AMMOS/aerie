@@ -39,7 +39,7 @@ export function makeAllDiscreteProfile (argument: any) : any{
      }
   else if(Array.isArray(argument)){
    const arr: any[] = [];
-   argument.every((element) => { arr.push(makeAllDiscreteProfile(element))});
+   argument.forEach((element) => { arr.push(makeAllDiscreteProfile(element))});
    return Discrete.List(arr).__astNode;
  } else if (typeof argument === "object" ){
    const obj: { [k: string]: any } = {};
