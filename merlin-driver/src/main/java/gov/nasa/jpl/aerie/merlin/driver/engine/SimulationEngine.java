@@ -539,7 +539,8 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic) {
+  public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic,
+                   final Consumer<Duration> simulationExtentConsumer) {
     if (debug) System.out.println("step(): begin -- time = " + curTime() + ", step " + stepIndexAtTime);
     var timeOfNextJobs = timeOfNextJobs();
     var nextTime = timeOfNextJobs;

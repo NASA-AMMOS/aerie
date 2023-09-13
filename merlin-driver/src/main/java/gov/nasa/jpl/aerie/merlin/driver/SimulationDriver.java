@@ -107,8 +107,8 @@ public final class SimulationDriver<Model> {
       final Instant planStartTime,
       final Duration planDuration)
   {
-    return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, $ -> {},
-                    defaultUseResourceTracker);
+    return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration,
+                    defaultUseResourceTracker, $ -> {});
   }
 
   public static <Model> SimulationResultsInterface simulate(
@@ -118,11 +118,12 @@ public final class SimulationDriver<Model> {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration,
-      final boolean useResourceTracker
+      final boolean useResourceTracker,
+      final Consumer<Duration> simulationExtentConsumer
   )
   {
     var driver = new SimulationDriver<>(missionModel, simulationStartTime, simulationDuration, useResourceTracker);
-    return driver.simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration);
+    return driver.simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, simulationExtentConsumer);
   }
 
   public SimulationResultsInterface simulate(
@@ -134,6 +135,18 @@ public final class SimulationDriver<Model> {
   )
   {
     return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true, $ -> {});
+  }
+
+  public SimulationResultsInterface simulate(
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration,
+      final Consumer<Duration> simulationExtentConsumer
+  )
+  {
+    return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true, simulationExtentConsumer);
   }
 
   public SimulationResultsInterface simulate(
@@ -185,7 +198,7 @@ public final class SimulationDriver<Model> {
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
       while (engine.hasJobsScheduledThrough(simulationDuration)) {
-        engine.step(simulationDuration, queryTopic);
+        engine.step(simulationDuration, queryTopic, simulationExtentConsumer);
       }
     } catch (Throwable ex) {
       throw new SimulationException(curTime(), simulationStartTime, ex);
@@ -211,7 +224,7 @@ public final class SimulationDriver<Model> {
 
   private void startDaemons(Duration time) {
     engine.scheduleTask(time, missionModel.getDaemon(), null);
-    engine.step(Duration.MAX_VALUE, queryTopic);
+    engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
   }
 
   private void trackResources() {
@@ -269,7 +282,7 @@ public final class SimulationDriver<Model> {
     // Drive the engine until we're out of time.
     // TERMINATION: Actually, we might never break if real time never progresses forward.
     while (!engine.isTaskComplete(taskId)) {
-      engine.step(Duration.MAX_VALUE, queryTopic);
+      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
     }
     if (useResourceTracker) {
       engine.generateResourceProfiles(curTime());  // REVIEW: Is this necessary?

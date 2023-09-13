@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
@@ -16,7 +16,7 @@ public interface SimulationResultsHandle {
 
   Duration duration();
 
-  SimulationResults getSimulationResults();
+  SimulationResultsInterface getSimulationResults();
 
   ProfileSet getProfiles(final List<String> profileNames);
 

@@ -263,28 +263,20 @@ public final class LocalMissionModelService implements MissionModelService {
                                                                         SerializedValue.of(config));
 
     var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
-    SimulationDriver driver = simulationDrivers.get(planInfo);
+    SimulationDriver<?> driver = simulationDrivers.get(planInfo);
 
     if (driver == null || !doingIncrementalSim) {
       driver = new SimulationDriver(missionModel, message.planStartTime(), message.planDuration(),
                                     message.useResourceTracker());
       simulationDrivers.put(planInfo, driver);
       // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-//      return driver.simulate(message.activityDirectives(),
-//                             message.simulationStartTime(),
-//                             message.simulationDuration(),
-//                             message.planStartTime(),
-//                             message.planDuration());
-      return SimulationDriver.simulate(
-          loadAndInstantiateMissionModel(
-              message.missionModelId(),
-              message.simulationStartTime(),
-              SerializedValue.of(config)),
+      return driver.simulate(
           message.activityDirectives(),
           message.simulationStartTime(),
           message.simulationDuration(),
           message.planStartTime(),
           message.planDuration(),
+          true,
           simulationExtentConsumer);
     } else {
       // Try to reuse past simulation.

@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -68,12 +67,14 @@ public interface PlanService {
     throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
-     * Gets existing simulation results for current plan if they exist and are suitable for scheduling purposes (current revision, covers the entire planning horizon)
+     * Gets existing simulation results for current plan if they exist and are suitable for scheduling purposes (current
+     * revision, covers the entire planning horizon)
      * These simulation results do not include events and topics.
+     *
      * @param planMetadata the plan metadata
      * @return simulation results, optionally
      */
-    Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException, InvalidJsonException;
+    Optional<SimulationResultsInterface> getSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException, InvalidJsonException;
   }
 
   interface WriterRole {

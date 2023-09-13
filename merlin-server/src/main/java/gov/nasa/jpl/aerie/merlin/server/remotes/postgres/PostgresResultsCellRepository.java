@@ -22,8 +22,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +39,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
+  public ResultsProtocol.OwnerRole allocate(final PlanId planId, final String requestedBy) {
     try (final var connection = this.dataSource.getConnection()) {
       final SimulationRecord simulation = getSimulation(connection, planId);
       final SimulationTemplateRecord template;
@@ -543,7 +541,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public SimulationResults getSimulationResults() {
+    public SimulationResultsInterface getSimulationResults() {
       try (final var connection = this.dataSource.getConnection()) {
         final var startTimestamp = record.simulationStartTime();
         final var simulationStart = startTimestamp.toInstant();

@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -155,9 +154,9 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
   public static class InMemorySimulationResultsHandle implements SimulationResultsHandle {
 
-    private final SimulationResults simulationResults;
+    private final SimulationResultsInterface simulationResults;
 
-    public InMemorySimulationResultsHandle(final SimulationResults simulationResults) {
+    public InMemorySimulationResultsHandle(final SimulationResultsInterface simulationResults) {
       this.simulationResults = simulationResults;
     }
 
@@ -167,7 +166,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public SimulationResults getSimulationResults() {
+    public SimulationResultsInterface getSimulationResults() {
       return this.simulationResults;
     }
 
@@ -176,10 +175,10 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
       final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
       final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
       for (final var profileName : profileNames) {
-        if (this.simulationResults.realProfiles.containsKey(profileName)) {
-          realProfiles.put(profileName, this.simulationResults.realProfiles.get(profileName));
-        } else if (this.simulationResults.discreteProfiles.containsKey(profileName)) {
-          discreteProfiles.put(profileName, this.simulationResults.discreteProfiles.get(profileName));
+        if (this.simulationResults.getRealProfiles().containsKey(profileName)) {
+          realProfiles.put(profileName, this.simulationResults.getRealProfiles().get(profileName));
+        } else if (this.simulationResults.getDiscreteProfiles().containsKey(profileName)) {
+          discreteProfiles.put(profileName, this.simulationResults.getDiscreteProfiles().get(profileName));
         }
       }
       return ProfileSet.of(realProfiles, discreteProfiles);
@@ -187,17 +186,17 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
-      return this.simulationResults.simulatedActivities;
+      return this.simulationResults.getSimulatedActivities();
     }
 
     @Override
     public Instant startTime() {
-      return this.simulationResults.startTime;
+      return this.simulationResults.getStartTime();
     }
 
     @Override
     public Duration duration() {
-      return this.simulationResults.duration;
+      return this.simulationResults.getDuration();
     }
   }
 }

@@ -68,7 +68,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
@@ -843,7 +842,7 @@ private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetI
 }
 
   @Override
-  public Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata)
+  public Optional<SimulationResultsInterface> getSimulationResults(PlanMetadata planMetadata)
   throws PlanServiceException, IOException
   {
     final var simulationDatasetId = getSuitableSimulationResults(planMetadata);

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -292,7 +292,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  private Optional<SimulationResults> loadSimulationResults(final PlanMetadata planMetadata){
+  private Optional<SimulationResultsInterface> loadSimulationResults(final PlanMetadata planMetadata){
     try {
       return planService.getSimulationResults(planMetadata);
     } catch (PlanServiceException | IOException | InvalidJsonException e) {

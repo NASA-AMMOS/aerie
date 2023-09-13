@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -128,7 +128,7 @@ public class Problem {
    * @param initialSimulationResults optional initial simulation results associated to the initial plan
    * @param plan the initial seed plan that schedulers may start from
    */
-  public void setInitialPlan(final Plan plan, final Optional<SimulationResults> initialSimulationResults) {
+  public void setInitialPlan(final Plan plan, final Optional<SimulationResultsInterface> initialSimulationResults) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
         simulationResults,
