@@ -80,7 +80,7 @@ export class Constraint {
    *    contributed to the threshold violation in one interval.
    * - `DeficitSpans` detects times when the duration falls short of the threshold and highlights the individual gaps between spans
    *    that contributed to the threshold violation.
-   * - `ExcessHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
+   * - `DeficitHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
    *    spans that contributed to the threshold violation in one interval.
    *
    * @param spans spans object to detect threshold events on
@@ -1108,7 +1108,7 @@ declare global {
      *    contributed to the threshold violation in one interval.
      * - `DeficitSpans` detects times when the duration falls short of the threshold and highlights the individual gaps between spans
      *    that contributed to the threshold violation.
-     * - `ExcessHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
+     * - `DeficitHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
      *    spans that contributed to the threshold violation in one interval.
      *
      * @param spans spans object to detect threshold events on

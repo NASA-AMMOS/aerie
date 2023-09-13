@@ -28,13 +28,15 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
   @Override
   public ConstraintResult evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
     final var width = this.width.evaluate(results, bounds, environment);
-    var spans = this.spans.evaluate(results, bounds, environment);
+    final var spans = this.spans.evaluate(results, bounds, environment);
 
     final Spans reportedSpans;
     if (algorithm == RollingThresholdAlgorithm.ExcessHull || algorithm == RollingThresholdAlgorithm.ExcessSpans) {
       reportedSpans = spans;
-    } else {
+    } else if (algorithm == RollingThresholdAlgorithm.DeficitHull || algorithm == RollingThresholdAlgorithm.DeficitSpans) {
       reportedSpans = spans.intoWindows().not().intoSpans(bounds);
+    } else {
+      throw new IllegalArgumentException("Algorithm not supported: " + algorithm);
     }
 
     final var threshold = this.threshold.evaluate(results, bounds, environment);
@@ -58,7 +60,7 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
 
     if (algorithm == RollingThresholdAlgorithm.ExcessHull || algorithm == RollingThresholdAlgorithm.ExcessSpans) {
       leftViolatingBounds = localAccDuration.greaterThan(thresholdEq);
-    } else {
+    } else if (algorithm == RollingThresholdAlgorithm.DeficitHull || algorithm == RollingThresholdAlgorithm.DeficitSpans) {
       leftViolatingBounds = localAccDuration.lessThan(thresholdEq).select(
           Interval.between(
               bounds.start,
@@ -67,6 +69,8 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
               bounds.endInclusivity
           )
       );
+    } else {
+      throw new IllegalArgumentException("Algorithm not supported: " + algorithm);
     }
 
     for (final var leftViolatingBound : leftViolatingBounds.iterateEqualTo(true)) {
