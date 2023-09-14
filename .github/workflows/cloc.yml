@@ -1,0 +1,33 @@
+name: Count Lines of Code
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+    tags:
+      - v*
+
+jobs:
+  cloc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Install cloc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes cloc
+      - name: Run cloc
+        run: |
+          for f in $(ls -D); do
+            echo "======================="
+            echo "$f"
+            echo "======================="
+            cloc \
+              --include-lang "TypeScript,SQL,Java" \
+              --by-percent cmb \
+              $(git ls-files "$f")
+          done
