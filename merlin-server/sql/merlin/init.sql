@@ -83,6 +83,7 @@ begin;
   -- Table-specific Metadata
   \ir tables/metadata/activity_directive_tags.sql
   \ir tables/metadata/constraint_tags.sql
+  \ir tables/metadata/plan_snapshot_tags.sql
   \ir tables/metadata/plan_tags.sql
   \ir tables/metadata/snapshot_activity_tags.sql
 

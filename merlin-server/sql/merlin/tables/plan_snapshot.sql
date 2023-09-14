@@ -11,6 +11,7 @@ create table plan_snapshot(
   revision integer not null,
 
   snapshot_name text,
+  description text,
   taken_by text,
   taken_at timestamptz not null default now(),
   constraint snapshot_name_unique_per_plan
@@ -27,6 +28,8 @@ comment on column plan_snapshot.revision is e''
 	'The revision of the plan at the time the snapshot was taken.';
 comment on column plan_snapshot.snapshot_name is e''
 	'A human-readable name for the snapshot.';
+comment on column plan_snapshot.description is e''
+	'A human-readable description of the snapshot and its contents.';
 comment on column plan_snapshot.taken_by is e''
 	'The user who took the snapshot.';
 comment on column plan_snapshot.taken_at is e''
