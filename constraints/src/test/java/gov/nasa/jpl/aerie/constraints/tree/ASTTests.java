@@ -1251,6 +1251,91 @@ public class ASTTests {
     assertEquals(expected2, result2);
   }
 
+  @Test
+  void testSpansShiftEdges() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var result1 = new ShiftEdges<>(
+        Supplier.of(new Spans(
+            Interval.between(0, 1, SECONDS),
+            Interval.between(0, 2, SECONDS),
+            Interval.between(0, Inclusive, 2, Exclusive, SECONDS),
+            Interval.between(0, 3, SECONDS)
+        )),
+        Supplier.of(Duration.of(1, SECONDS)),
+        Supplier.of(Duration.of(-1, SECONDS))
+    ).evaluate(simResults);
+
+    final var expected1 = new Spans(
+        Interval.at(1, SECONDS),
+        Interval.between(1, 2, SECONDS)
+    );
+
+    assertIterableEquals(expected1, result1);
+
+    final var result2 = new ShiftEdges<>(
+        Supplier.of(new Spans(
+            Interval.between(0, 1, SECONDS),
+            Interval.between(0, 2, SECONDS),
+            Interval.between(0, Inclusive, 2, Exclusive, SECONDS),
+            Interval.between(0, 3, SECONDS)
+        )),
+        Supplier.of(Duration.of(3, SECONDS)),
+        Supplier.of(Duration.of(4, SECONDS))
+    ).evaluate(simResults);
+
+    final var expected2 = new Spans(
+        Interval.between(3, 5, SECONDS),
+        Interval.between(3, 6, SECONDS),
+        Interval.between(3, Inclusive, 6, Exclusive, SECONDS),
+        Interval.between(3, 7, SECONDS)
+    );
+
+    assertIterableEquals(expected2, result2);
+  }
+
+  @Test
+  void testSpansSelectWhenTrue() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var result = new SpansSelectWhenTrue(
+        Supplier.of(new Spans(
+            Interval.between(0, 1, SECONDS), // fully inside
+            Interval.between(3, 4, SECONDS), // fully outside
+            Interval.between(5, 7, SECONDS), // half outside
+            Interval.between(10, 14, SECONDS) // split across multiple
+        )),
+        Supplier.of(new Windows(false).set(
+            List.of(
+                Interval.between(0, 1, SECONDS),
+                Interval.between(6, 8, SECONDS),
+                Interval.between(9, 11, SECONDS),
+                Interval.between(13, 15, SECONDS)
+            ),
+            true
+        ))
+    ).evaluate(simResults);
+
+    final var expected = new Spans(
+        Interval.between(0, 1, SECONDS),
+        Interval.between(6, 7, SECONDS),
+        Interval.between(10, 11, SECONDS),
+        Interval.between(13, 14, SECONDS)
+    );
+
+    assertIterableEquals(expected, result);
+  }
+
   /**
    * An expression that yields the same aliased object every time it is evaluated.
    */
