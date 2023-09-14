@@ -260,6 +260,18 @@ public final class ConstraintParsers {
           .map(
               untuple((kind, alias) -> new ActivitySpan(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias));
+
+  static JsonParser<SpansSelectWhenTrue> spansSelectWhenTrueF(JsonParser<Expression<Spans>> spansP, JsonParser<Expression<Windows>> windowsP) {
+    return productP
+        .field("kind", literalP("SpansSelectWhenTrue"))
+        .field("spansExpression", spansP)
+        .field("windowsExpression", windowsP)
+        .map(
+            untuple((kind, spans, windows) -> new SpansSelectWhenTrue(spans, windows)),
+            $ -> tuple(Unit.UNIT, $.spans(), $.windows())
+        );
+  }
+
   static final JsonParser<StartOf> startOfP =
       productP
           .field("kind", literalP("WindowsExpressionStartOf"))
@@ -600,7 +612,8 @@ public final class ConstraintParsers {
           splitF(windowsP),
           spansFromWindowsF(windowsP),
           forEachActivitySpansF(selfP),
-          activitySpanP
+          activitySpanP,
+          spansSelectWhenTrueF(selfP, windowsP)
           ));
   }
 

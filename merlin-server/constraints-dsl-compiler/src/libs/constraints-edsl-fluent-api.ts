@@ -538,6 +538,22 @@ export class Spans {
       expression: expression(new ActivityInstance(activityType, alias)).__astNode,
     });
   }
+
+  /**
+   * Selects only spans that occur during a true segment, removing those that don't.
+   *
+   * Spans that only partially overlap with a true segment will be truncated, and spans
+   * that overlap with multiple true segments will be split.
+   *
+   * @param windows
+   */
+  public selectWhenTrue(windows: Windows): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansSelectWhenTrue,
+      spansExpression: this.__astNode,
+      windowsExpression: windows.__astNode
+    });
+  }
 }
 
 /**
@@ -1379,6 +1395,16 @@ declare global {
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
     public accumulatedDuration(unit: AST.Duration): Real;
+
+    /**
+     * Selects only spans that occur during a true segment, removing those that don't.
+     *
+     * Spans that only partially overlap with a true segment will be truncated, and spans
+     * that overlap with multiple true segments will be split.
+     *
+     * @param windows
+     */
+    public selectWhenTrue(windows: Windows): Spans;
   }
 
   /**
