@@ -36,6 +36,7 @@ import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
+import gov.nasa.jpl.aerie.constraints.tree.SpansConnectTo;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansSelectWhenTrue;
 import gov.nasa.jpl.aerie.constraints.tree.Split;
@@ -1378,4 +1379,25 @@ class ConstraintsDSLCompilationServiceTests {
         )
     );
   }
+  @Test
+  void testSpansConnectTo() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Windows.Value(true).spans().connectTo(
+              Windows.Value(false).spans()
+            ).windows();
+          }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(
+                new SpansConnectTo(
+                    new SpansFromWindows(new WindowsValue(true)),
+                    new SpansFromWindows(new WindowsValue(false))
+                )
+            )
+        )
+    );
+  }
+
 }
