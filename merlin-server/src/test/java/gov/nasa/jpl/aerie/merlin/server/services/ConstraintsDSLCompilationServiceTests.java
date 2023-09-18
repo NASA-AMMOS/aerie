@@ -31,6 +31,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftWindowsEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
@@ -55,8 +56,13 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.DeficitHull;
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.DeficitSpans;
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.ExcessHull;
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.ExcessSpans;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -1273,6 +1279,40 @@ class ConstraintsDSLCompilationServiceTests {
             new Equal<>(new ShiftBy<>(new DiscreteResource("mode"), new DurationLiteral(Duration.of(2, Duration.MINUTE))), new DiscreteValue(SerializedValue.of("Option1")))
         )
     );
+  }
+
+  @Test
+  void testRollingThreshold() {
+    final var algs = Map.of(
+        "ExcessHull", ExcessHull,
+        "ExcessSpans", ExcessSpans,
+        "DeficitHull", DeficitHull,
+        "DeficitSpans", DeficitSpans
+    );
+    for (final var entry: algs.entrySet()) {
+      checkSuccessfulCompilation(
+          """
+              export default () => {
+                return Constraint.RollingThreshold(
+                  Spans.ForEachActivity(ActivityType.activity),
+                  Temporal.Duration.from({hours: 1}),
+                  Temporal.Duration.from({minutes: 5}),
+                  RollingThresholdAlgorithm.%s
+                );
+              }
+              """.formatted(entry.getKey()),
+          new RollingThreshold(
+              new ForEachActivitySpans(
+                  "activity",
+                  "span activity alias 0",
+                  new ActivitySpan("span activity alias 0")
+              ),
+              new DurationLiteral(Duration.of(1, Duration.HOUR)),
+              new DurationLiteral(Duration.of(5, Duration.MINUTE)),
+              entry.getValue()
+          )
+      );
+    }
   }
 
 }

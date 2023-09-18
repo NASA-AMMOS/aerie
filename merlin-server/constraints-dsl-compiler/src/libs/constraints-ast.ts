@@ -47,10 +47,11 @@ export enum NodeKind {
   ViolationsOf = 'ViolationsOf',
   AbsoluteInterval = 'AbsoluteInterval',
   IntervalAlias = 'IntervalAlias',
-  IntervalDuration = 'IntervalDuration'
+  IntervalDuration = 'IntervalDuration',
+  RollingThreshold = 'RollingThreshold'
 }
 
-export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints;
+export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints | RollingThreshold;
 
 export interface ViolationsOf {
   kind: NodeKind.ViolationsOf;
@@ -69,6 +70,14 @@ export interface ForEachActivitySpans {
   activityType: string;
   alias: string;
   expression: SpansExpression;
+}
+
+export interface RollingThreshold {
+  kind: NodeKind.RollingThreshold;
+  spans: SpansExpression,
+  width: Duration,
+  threshold: Duration,
+  algorithm: API.RollingThresholdAlgorithm
 }
 
 export interface AssignGapsExpression<P extends ProfileExpression> {
