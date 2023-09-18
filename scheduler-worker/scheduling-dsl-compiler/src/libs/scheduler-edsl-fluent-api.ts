@@ -620,6 +620,12 @@ export class TimingConstraint {
     })
   }
 
+  /**
+   * The bound timing constraint is used to represent time intervals used to define temporal constraints between goals (e.g. A before[lowerbound, upperbound] B)
+   * .
+   * @param lowerBound represents the (inclusive) lower bound of the time interval
+   * @param upperBound represents the (inclusive) upper bound of the time interval
+   */
   public static bounds(lowerBound: SingletonTimingConstraint, upperBound: SingletonTimingConstraint): FlexibleRangeTimingConstraint {
     return FlexibleRangeTimingConstraint.new({
       lowerBound: lowerBound.__astNode,
@@ -849,6 +855,12 @@ declare global {
      */
     public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Temporal.Duration): RangeTimingConstraint
 
+    /**
+     * The bound timing constraint is used to represent time intervals used to define temporal constraints between goals (e.g. A before[lowerbound, upperbound] B)
+     * .
+     * @param lowerBound represents the (inclusive) lower bound of the time interval
+     * @param upperBound represents the (inclusive) upper bound of the time interval
+     */
     public static bounds(lowerBound: SingletonTimingConstraint, upperBound: SingletonTimingConstraint): FlexibleRangeTimingConstraint
   }
   var WindowProperty: typeof AST.WindowProperty

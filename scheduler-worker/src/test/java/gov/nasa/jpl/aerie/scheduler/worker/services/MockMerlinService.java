@@ -91,7 +91,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
         this.missionModelInfo.get().config());
   }
 
-    @Override
+  @Override
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
   {
     // TODO this gets the planMetadata from above
