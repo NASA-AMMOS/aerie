@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
@@ -33,9 +34,10 @@ import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
-import gov.nasa.jpl.aerie.constraints.tree.ShiftWindowsEdges;
+import gov.nasa.jpl.aerie.constraints.tree.ShiftEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
+import gov.nasa.jpl.aerie.constraints.tree.SpansSelectWhenTrue;
 import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
@@ -501,7 +503,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(minute(2), minute(-20))
             }
         """,
-        new ViolationsOfWindows(new ShiftWindowsEdges(
+        new ViolationsOfWindows(new ShiftEdges<>(
             new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
             new DurationLiteral(Duration.of(2, Duration.MINUTE)),
             new DurationLiteral(Duration.of(-20, Duration.MINUTE)))
@@ -1315,4 +1317,65 @@ class ConstraintsDSLCompilationServiceTests {
     }
   }
 
+  @Test
+  void testSpansShiftBy() {
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Spans.ForEachActivity(ActivityType.activity, i => i.span()).shiftBy(minute(2)).windows();
+        }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(new ShiftEdges<>(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE))))
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Spans.ForEachActivity(ActivityType.activity, i => i.span()).shiftBy(minute(2), minute(3)).windows();
+        }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(new ShiftEdges<>(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
+                new DurationLiteral(Duration.of(3, Duration.MINUTE))
+            ))
+        )
+    );
+  }
+
+  @Test
+  void testSpansSelectWhenTrue() {
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Spans.ForEachActivity(ActivityType.activity, i => i.span()).selectWhenTrue(Windows.Value(true)).windows()
+        }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(new SpansSelectWhenTrue(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")
+                ),
+                new WindowsValue(true)
+            ))
+        )
+    );
+  }
 }

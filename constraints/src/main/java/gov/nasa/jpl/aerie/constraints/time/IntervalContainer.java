@@ -9,4 +9,6 @@ public interface IntervalContainer<T extends IntervalContainer<T>> {
   LinearProfile accumulatedDuration(final Duration unit);
   T starts();
   T ends();
+  T shiftEdges(final Duration fromStart, final Duration fromEnd);
+  T select(final Interval... intervals);
 }

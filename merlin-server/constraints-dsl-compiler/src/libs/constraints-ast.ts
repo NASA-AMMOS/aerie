@@ -24,11 +24,11 @@ export enum NodeKind {
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
   WindowsExpressionShorterThan = 'WindowsExpressionShorterThan',
-  WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
   SpansExpressionSplit = 'SpansExpressionSplit',
   SpansExpressionInterval = 'SpansExpressionInterval',
+  SpansSelectWhenTrue = 'SpansSelectWhenTrue',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -40,6 +40,7 @@ export enum NodeKind {
   WindowsExpressionNot = 'WindowsExpressionNot',
   IntervalsExpressionStarts = 'IntervalsExpressionStarts',
   IntervalsExpressionEnds = 'IntervalsExpressionEnds',
+  IntervalsExpressionShiftEdges = 'IntervalsExpressionShiftEdges',
   ForEachActivitySpans = 'ForEachActivitySpans',
   ForEachActivityViolations = 'ForEachActivityViolations',
   ProfileChanges = 'ProfileChanges',
@@ -107,7 +108,7 @@ export type WindowsExpression =
   | WindowsExpressionLongerThan
   | WindowsExpressionShorterThan
   | WindowsExpressionNot
-  | WindowsExpressionShiftBy
+  | IntervalsExpressionShiftEdges
   | WindowsExpressionFromSpans
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
@@ -118,9 +119,17 @@ export type SpansExpression =
   | SpansExpressionSplit
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
+  | IntervalsExpressionShiftEdges
   | SpansExpressionFromWindows
   | ForEachActivitySpans
-  | SpansExpressionInterval;
+  | SpansExpressionInterval
+  | SpansSelectWhenTrue;
+
+export interface SpansSelectWhenTrue {
+  kind: NodeKind.SpansSelectWhenTrue,
+  spansExpression: SpansExpression
+  windowsExpression: WindowsExpression
+}
 
 export type IntervalsExpression =
   | WindowsExpression
@@ -148,9 +157,9 @@ export interface WindowsExpressionNot {
   expression: WindowsExpression;
 }
 
-export interface WindowsExpressionShiftBy {
-  kind: NodeKind.WindowsExpressionShiftBy,
-  windowExpression: WindowsExpression,
+export interface IntervalsExpressionShiftEdges {
+  kind: NodeKind.IntervalsExpressionShiftEdges,
+  expression: IntervalsExpression,
   fromStart: Duration,
   fromEnd: Duration,
 }

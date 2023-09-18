@@ -280,8 +280,8 @@ export class Windows {
       });
     } else {
       return new Windows({
-        kind: AST.NodeKind.WindowsExpressionShiftBy,
-        windowExpression: this.__astNode,
+        kind: AST.NodeKind.IntervalsExpressionShiftEdges,
+        expression: this.__astNode,
         fromStart,
         fromEnd
       })
@@ -472,6 +472,21 @@ export class Spans {
   }
 
   /**
+   * Shifts the start and end of each Span by a duration.
+   *
+   * @param fromStart duration to shift start by
+   * @param fromEnd duration to shift end by (defaults is `fromStart` if omitted)
+   */
+  public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Spans {
+    return new Spans({
+      kind: AST.NodeKind.IntervalsExpressionShiftEdges,
+      expression: this.__astNode,
+      fromStart,
+      fromEnd: fromEnd !== undefined ? fromEnd : fromStart
+    })
+  }
+
+  /**
    * Convert this into a set of Windows. Each span is a true segment, and everything else is false.
    *
    * This is a lossy operation.
@@ -521,6 +536,22 @@ export class Spans {
       activityType: activityType,
       alias: alias,
       expression: expression(new ActivityInstance(activityType, alias)).__astNode,
+    });
+  }
+
+  /**
+   * Selects only spans that occur during a true segment, removing those that don't.
+   *
+   * Spans that only partially overlap with a true segment will be truncated, and spans
+   * that overlap with multiple true segments will be split.
+   *
+   * @param windows
+   */
+  public selectWhenTrue(windows: Windows): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansSelectWhenTrue,
+      spansExpression: this.__astNode,
+      windowsExpression: windows.__astNode
     });
   }
 }
@@ -1315,6 +1346,14 @@ declare global {
     public ends(): Spans;
 
     /**
+     * Shifts the start and end of each Span by a duration.
+     *
+     * @param fromStart duration to shift start by
+     * @param fromEnd duration to shift end by (defaults is `fromStart` if omitted)
+     */
+    public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Spans;
+
+    /**
      * Splits each span into equal sized sub-spans.
      *
      * For `.split(N)`, N sub-spans will be created by removing N-1 points in the middle.
@@ -1356,6 +1395,16 @@ declare global {
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
     public accumulatedDuration(unit: AST.Duration): Real;
+
+    /**
+     * Selects only spans that occur during a true segment, removing those that don't.
+     *
+     * Spans that only partially overlap with a true segment will be truncated, and spans
+     * that overlap with multiple true segments will be split.
+     *
+     * @param windows
+     */
+    public selectWhenTrue(windows: Windows): Spans;
   }
 
   /**
