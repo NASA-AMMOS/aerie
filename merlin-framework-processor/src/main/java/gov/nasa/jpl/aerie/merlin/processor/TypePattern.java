@@ -26,20 +26,14 @@ import java.util.Objects;
 import java.util.Optional;
 
 public abstract class TypePattern {
-  public final Optional<String> unit;
+  public Optional<String> unit;
 
   private TypePattern(final Optional<String> unit) {
     this.unit = unit;
   }
 
   public static TypePattern from(final Elements elementUtils, final Types typeUtils, final TypeMirror mirror) {
-    final var unit = getAnnotationMirrorByType(
-        elementUtils,
-        typeUtils,
-        mirror,
-        Unit.class)
-        .flatMap($ -> getAnnotationAttribute($, "value"))
-        .map($ -> (String) $.getValue());
+    final var unit = getUnit(elementUtils, typeUtils, mirror);
     final TypePattern result;
     switch (mirror.getKind()) {
       case BOOLEAN -> result = new PrimitivePattern(Primitive.BOOLEAN, unit);
@@ -423,5 +417,15 @@ public abstract class TypePattern {
     }
 
     return Optional.empty();
+  }
+
+  public static Optional<String> getUnit(Elements elementUtils, Types typeUtils, TypeMirror mirror) {
+    return getAnnotationMirrorByType(
+        elementUtils,
+        typeUtils,
+        mirror,
+        Unit.class)
+        .flatMap($ -> getAnnotationAttribute($, "value"))
+        .map($ -> (String) $.getValue());
   }
 }

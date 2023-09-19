@@ -4,20 +4,14 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import gov.nasa.jpl.aerie.merlin.framework.LabeledValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern.ClassPattern;
-import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-import org.apache.commons.lang3.tuple.Pair;
 
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +57,12 @@ public final class Resolver {
   private TypePattern createInitialGoal(final TypeMirror mirror) {
     final List<TypePattern> mapperArguments;
     if (mirror.getKind().isPrimitive()) {
-      // TODO handle annotation on this mirror. The boxing on the line below loses this information.
-      mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, typeUtils.boxedClass((PrimitiveType)mirror).asType()));
+      final var typePattern = TypePattern.from(
+          elementUtils,
+          typeUtils,
+          typeUtils.boxedClass((PrimitiveType) mirror).asType());
+      typePattern.unit = TypePattern.getUnit(elementUtils, typeUtils, mirror);
+      mapperArguments = List.of(typePattern);
     } else {
       mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, mirror));
     }
