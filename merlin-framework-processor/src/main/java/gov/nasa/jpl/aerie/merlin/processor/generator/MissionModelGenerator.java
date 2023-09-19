@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
@@ -41,11 +42,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.lang.annotation.Annotation;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -556,7 +561,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     if (mapperBlocks$.isEmpty()) return Optional.empty();
     final var mapperBlocks = mapperBlocks$.get();
 
-    final var mapperMethodMaker = MapperMethodMaker.make(inputType);
+    final var mapperMethodMaker = MapperMethodMaker.make(elementUtils, typeUtils, inputType);
 
     return Optional.of(TypeSpec
         .classBuilder(name)
@@ -644,7 +649,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       effectModelReturnMapperBlock = new Resolver(
           this.typeUtils, this.elementUtils, missionModel.typeRules).applyRules(
           new TypePattern.ClassPattern(ClassName.get(ValueMapper.class),
-                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of()))));
+                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of(), Optional.empty())), Optional.empty()));
       computedAttributesTypeName = TypeName.get(Unit.class);
     }
     return Optional.of(new ComputedAttributesCodeBlocks(

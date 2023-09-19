@@ -5,51 +5,71 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
+import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public abstract class TypePattern {
-  private TypePattern() {}
+  public final Optional<String> unit;
 
-  public static TypePattern from(final TypeMirror mirror) {
+  private TypePattern(final Optional<String> unit) {
+    this.unit = unit;
+  }
+
+  public static TypePattern from(final Elements elementUtils, final Types typeUtils, final TypeMirror mirror) {
+    final var unit = getAnnotationMirrorByType(
+        elementUtils,
+        typeUtils,
+        mirror,
+        Unit.class)
+        .flatMap($ -> getAnnotationAttribute($, "value"))
+        .map($ -> (String) $.getValue());
+    final TypePattern result;
     switch (mirror.getKind()) {
-      case BOOLEAN: return new PrimitivePattern(Primitive.BOOLEAN);
-      case BYTE: return new PrimitivePattern(Primitive.BYTE);
-      case SHORT: return new PrimitivePattern(Primitive.SHORT);
-      case INT: return new PrimitivePattern(Primitive.INT);
-      case LONG: return new PrimitivePattern(Primitive.LONG);
-      case CHAR: return new PrimitivePattern(Primitive.CHAR);
-      case FLOAT: return new PrimitivePattern(Primitive.FLOAT);
-      case DOUBLE: return new PrimitivePattern(Primitive.DOUBLE);
-      case ARRAY: return new ArrayPattern(TypePattern.from(((ArrayType) mirror).getComponentType()));
-      case TYPEVAR: return new TypeVariablePattern(mirror.toString());
-      case DECLARED: {
+      case BOOLEAN -> result = new PrimitivePattern(Primitive.BOOLEAN, unit);
+      case BYTE -> result = new PrimitivePattern(Primitive.BYTE, unit);
+      case SHORT -> result = new PrimitivePattern(Primitive.SHORT, unit);
+      case INT -> result = new PrimitivePattern(Primitive.INT, unit);
+      case LONG -> result = new PrimitivePattern(Primitive.LONG, unit);
+      case CHAR -> result = new PrimitivePattern(Primitive.CHAR, unit);
+      case FLOAT -> result = new PrimitivePattern(Primitive.FLOAT, unit);
+      case DOUBLE -> result = new PrimitivePattern(Primitive.DOUBLE, unit);
+      case ARRAY -> result = new ArrayPattern(TypePattern.from(elementUtils, typeUtils, ((ArrayType) mirror).getComponentType()), unit);
+      case TYPEVAR -> result = new TypeVariablePattern(mirror.toString());
+      case DECLARED -> {
         // DeclaredType element can be cast as TypeElement because it's a Type
         final var className = ClassName.get((TypeElement) ((DeclaredType) mirror).asElement());
         final var typeArguments = ((DeclaredType) mirror).getTypeArguments();
         final var argumentPatterns = new ArrayList<TypePattern>(typeArguments.size());
         for (final var typeArgument : typeArguments) {
-          argumentPatterns.add(TypePattern.from(typeArgument));
+          argumentPatterns.add(TypePattern.from(elementUtils, typeUtils, typeArgument));
         }
-        return new ClassPattern(className, argumentPatterns);
+        result = new ClassPattern(className, argumentPatterns, unit);
       }
 
-      default:
-        throw new Error("Cannot construct a pattern for type " + mirror);
+      default -> throw new Error("Cannot construct a pattern for type " + mirror);
     }
+    return result;
   }
 
-  public static TypePattern from(final VariableElement element) {
-    return from(element.asType());
+  public static TypePattern from(final Elements elementUtils, final Types typeUtils, final VariableElement element) {
+    return from(elementUtils, typeUtils, element.asType());
   }
 
   public abstract TypePattern substitute(Map<String, TypePattern> substitution);
@@ -66,17 +86,13 @@ public abstract class TypePattern {
 
   public abstract TypePattern box();
 
-  @Override
-  public final String toString() {
-    return this.render().toString();
-  }
-
   public static class UnificationException extends Exception {}
 
   public static final class TypeVariablePattern extends TypePattern {
     public final String name;
 
     public TypeVariablePattern(final String name) {
+      super(Optional.empty());
       this.name = Objects.requireNonNull(name);
     }
 
@@ -89,7 +105,7 @@ public abstract class TypePattern {
     public Map<String, TypePattern> match(final TypePattern other) {
       assert other.isGround();
 
-      return Map.of(this.name, other);
+      return Map.of(this.name, other); // TODO add unit information from...?
     }
 
     @Override
@@ -119,12 +135,18 @@ public abstract class TypePattern {
     public TypePattern box() {
       return this;
     }
+
+    @Override
+    public String toString() {
+      return this.render().toString() + this.unit.map($ -> " (" + $ + ")").orElse("");
+    }
   }
 
   public static final class PrimitivePattern extends TypePattern {
     public final Primitive primitive;
 
-    public PrimitivePattern(final Primitive primitive) {
+    public PrimitivePattern(final Primitive primitive, final Optional<String> unit) {
+      super(unit);
       this.primitive = Objects.requireNonNull(primitive);
     }
 
@@ -165,7 +187,12 @@ public abstract class TypePattern {
 
     @Override
     public TypePattern box() {
-      return new ClassPattern((ClassName) this.render().box(), List.of());
+      return new ClassPattern((ClassName) this.render().box(), List.of(), this.unit);
+    }
+
+    @Override
+    public String toString() {
+      return this.primitive.toString() + this.unit.map($ -> " (" + $ + ")").orElse("");
     }
   }
 
@@ -193,7 +220,8 @@ public abstract class TypePattern {
   public static final class ArrayPattern extends TypePattern {
     public final TypePattern element;
 
-    public ArrayPattern(final TypePattern element) {
+    public ArrayPattern(final TypePattern element, final Optional<String> unit) {
+      super(unit);
       this.element = Objects.requireNonNull(element);
     }
 
@@ -202,7 +230,7 @@ public abstract class TypePattern {
       final var child = this.element.substitute(substitution);
       if (child == this.element) return this;
 
-      return new ArrayPattern(child);
+      return new ArrayPattern(child, this.unit);
     }
 
     @Override
@@ -240,13 +268,19 @@ public abstract class TypePattern {
     public TypePattern box() {
       return this;
     }
+
+    @Override
+    public String toString() {
+      return this.element.toString() + "[]"  + this.unit.map($ -> " (" + $ + ")").orElse("");
+    }
   }
 
   public static final class ClassPattern extends TypePattern {
     public final ClassName name;
     public final List<TypePattern> arguments;
 
-    public ClassPattern(final ClassName name, final List<TypePattern> arguments) {
+    public ClassPattern(final ClassName name, final List<TypePattern> arguments, final Optional<String> unit) {
+      super(unit);
       this.name = Objects.requireNonNull(name);
       this.arguments = Objects.requireNonNull(arguments);
     }
@@ -269,7 +303,7 @@ public abstract class TypePattern {
       }
       if (allUnchanged) return this;
 
-      return new ClassPattern(this.name, substitutedArguments);
+      return new ClassPattern(this.name, substitutedArguments, this.unit);
     }
 
     @Override
@@ -350,5 +384,44 @@ public abstract class TypePattern {
     public TypePattern box() {
       return this;
     }
+
+    @Override
+    public String toString() {
+      if (this.arguments.size() == 0) {
+        return this.name.simpleName() + this.unit.map($ -> " (" + $ + ")").orElse("");
+      } else {
+        var res = this.name.simpleName() + "<";
+        for (var arg : this.arguments) {
+          res = res + arg.toString();
+        }
+        return res + ">" + this.unit.map($ -> " (" + $ + ")").orElse("");
+      }
+    }
+  }
+
+  private static Optional<AnnotationMirror> getAnnotationMirrorByType(final Elements elementUtils, final Types typeUtils, final TypeMirror element, final Class<? extends Annotation> annotationClass)
+  {
+    final var annotationType = elementUtils
+        .getTypeElement(annotationClass.getCanonicalName())
+        .asType();
+
+    for (final var x : element.getAnnotationMirrors()) {
+      if (typeUtils.isSameType(annotationType, x.getAnnotationType())) {
+        return Optional.of(x);
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  private static Optional<AnnotationValue> getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName)
+  {
+    for (final var entry : annotationMirror.getElementValues().entrySet()) {
+      if (Objects.equals(attributeName, entry.getKey().getSimpleName().toString())) {
+        return Optional.of(entry.getValue());
+      }
+    }
+
+    return Optional.empty();
   }
 }

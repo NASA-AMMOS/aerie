@@ -56,6 +56,9 @@ public sealed interface ValueSchema {
     T onSeries(ValueSchema value);
     T onStruct(Map<String, ValueSchema> value);
     T onVariant(List<Variant> variants);
+    default T onLabel(ValueSchema target) {
+      return target.match(this);
+    }
   }
 
   record RealSchema() implements ValueSchema {
@@ -115,8 +118,16 @@ public sealed interface ValueSchema {
   }
 
   record VariantSchema(List<Variant> variants) implements ValueSchema {
+    @Override
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onVariant(variants);
+    }
+  }
+
+  record LabelSchema(String label, ValueSchema target) implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onLabel(target);
     }
   }
 
@@ -153,6 +164,15 @@ public sealed interface ValueSchema {
   static ValueSchema ofVariant(final List<Variant> variants) {
     Objects.requireNonNull(variants);
     return new VariantSchema(variants);
+  }
+
+  /**
+   * Labels a {@link ValueSchema} with the given String.
+   *
+   * @return A new {@link ValueSchema} wrapping the labeled schema.
+   */
+  static ValueSchema withLabel(final String label, final ValueSchema target) {
+    return new LabelSchema(label, target);
   }
 
   ValueSchema REAL = new RealSchema();

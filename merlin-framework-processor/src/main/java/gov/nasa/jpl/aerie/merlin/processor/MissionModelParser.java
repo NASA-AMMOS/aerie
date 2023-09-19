@@ -229,12 +229,12 @@ import java.util.stream.Collectors;
       );
     }
 
-    final var head = TypePattern.from(element.getReturnType());
+    final var head = TypePattern.from(elementUtils, typeUtils, element.getReturnType());
     final var enumBoundedTypeParameters = getEnumBoundedTypeParameters(element);
     final var method = element.getSimpleName().toString();
     final var parameters = new ArrayList<TypePattern>();
     for (final var parameter : element.getParameters()) {
-      parameters.add(TypePattern.from(parameter));
+      parameters.add(TypePattern.from(elementUtils, typeUtils, parameter));
     }
 
     return new TypeRule(head, enumBoundedTypeParameters, parameters, factory, method);

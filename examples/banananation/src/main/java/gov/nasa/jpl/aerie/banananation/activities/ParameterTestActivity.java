@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
@@ -57,7 +58,7 @@ public final class ParameterTestActivity {
   @Parameter public boolean[] primBooleanArray;
 
   // List parameters
-  @Parameter public List<Double> doubleList;
+  @Parameter public List<@Unit("m") Double> doubleList;
   @Parameter public List<Float> floatList;
   @Parameter public List<Byte> byteList;
   @Parameter public List<Short> shortList;
@@ -68,7 +69,7 @@ public final class ParameterTestActivity {
   @Parameter public List<String> stringList;
 
   // Map Parameters
-  @Parameter public Map<Double, Double> doubleMap;
+  @Parameter public Map<@Unit("m") Double, @Unit("m") Double> doubleMap;
   @Parameter public Map<Float, Float> floatMap;
   @Parameter public Map<Byte, Byte> byteMap;
   @Parameter public Map<Short, Short> shortMap;

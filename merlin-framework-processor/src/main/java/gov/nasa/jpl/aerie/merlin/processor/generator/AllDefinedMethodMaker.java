@@ -11,14 +11,16 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Optional;
 
 /** Method maker for defaults style where all default arguments are provided within @Parameter annotations. */
 /*package-private*/ final class AllDefinedMethodMaker extends MapperMethodMaker {
 
-  public AllDefinedMethodMaker(final InputTypeRecord inputType) {
-    super(inputType);
+  public AllDefinedMethodMaker(final Elements elementUtils, final Types typeUtils, final InputTypeRecord inputType) {
+    super(elementUtils, typeUtils, inputType);
   }
 
   @Override
@@ -50,7 +52,8 @@ import java.util.Optional;
                     "$T $L = $T$L",
                     new TypePattern.ClassPattern(
                         ClassName.get(Optional.class),
-                        List.of(TypePattern.from(parameter.type))).render(),
+                        List.of(TypePattern.from(this.elementUtils, this.typeUtils, parameter.type)),
+                        Optional.empty()).render(),
                     parameter.name,
                     Optional.class,
                     ".ofNullable(template." + parameter.name + ")"

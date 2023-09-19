@@ -23,17 +23,20 @@ import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class AutoValueMappers {
-  private static final Pattern JAVA_IDENTIFIER_ILLEGAL_CHARACTERS = Pattern.compile("[.><,\\[\\]]");
+  private static final Pattern JAVA_IDENTIFIER_ILLEGAL_CHARACTERS = Pattern.compile("[.><,\\[\\]()\"@ ]");
 
-  static TypeRule typeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
+  static TypeRule typeRule(final Elements elementUtils, final Types typeUtils, final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
     if (!autoValueMapperElement.getKind().equals(ElementKind.RECORD)) {
       throw new InvalidMissionModelException(
           "@%s.%s is only allowed on records".formatted(
@@ -52,13 +55,15 @@ public class AutoValueMappers {
     return new TypeRule(
         new TypePattern.ClassPattern(
             ClassName.get(ValueMapper.class),
-            List.of(TypePattern.from(autoValueMapperElement.asType()))),
+            List.of(TypePattern.from(elementUtils, typeUtils, autoValueMapperElement.asType())),
+            Optional.empty()),
         Set.of(),
         typeMirrors
             .stream()
             .map(component -> (TypePattern) new TypePattern.ClassPattern(
                 ClassName.get(ValueMapper.class),
-                List.of(TypePattern.from(component).box())))
+                List.of(TypePattern.from(elementUtils, typeUtils, component).box()),
+                Optional.empty()))
             .toList(),
         generatedClassName,
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));

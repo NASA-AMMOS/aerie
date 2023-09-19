@@ -12,6 +12,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -28,9 +30,13 @@ public abstract sealed class MapperMethodMaker permits
     SomeStaticallyDefinedMethodMaker
 {
   /*package-private*/ final InputTypeRecord inputType;
+  /*package-private*/ final Elements elementUtils;
+  /*package-private*/ final Types typeUtils;
 
-  public MapperMethodMaker(final InputTypeRecord inputType) {
+  public MapperMethodMaker(final Elements elementUtils, final Types typeUtils, final InputTypeRecord inputType) {
     this.inputType = inputType;
+    this.elementUtils = elementUtils;
+    this.typeUtils = typeUtils;
   }
 
   public abstract MethodSpec makeInstantiateMethod();
@@ -273,12 +279,12 @@ public abstract sealed class MapperMethodMaker permits
             "instantiationExBuilder");
   }
 
-  static MapperMethodMaker make(final InputTypeRecord inputType) {
+  static MapperMethodMaker make(final Elements elementUtils, final Types typeUtils, final InputTypeRecord inputType) {
     return switch (inputType.defaultsStyle()) {
-      case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker(inputType);
-      case NoneDefined -> new NoneDefinedMethodMaker(inputType);
-      case AllDefined -> new AllDefinedMethodMaker(inputType);
-      case SomeStaticallyDefined -> new SomeStaticallyDefinedMethodMaker(inputType);
+      case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker(elementUtils, typeUtils, inputType);
+      case NoneDefined -> new NoneDefinedMethodMaker(elementUtils, typeUtils, inputType);
+      case AllDefined -> new AllDefinedMethodMaker(elementUtils, typeUtils, inputType);
+      case SomeStaticallyDefined -> new SomeStaticallyDefinedMethodMaker(elementUtils, typeUtils, inputType);
     };
   }
 }

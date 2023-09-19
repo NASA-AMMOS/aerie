@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 
 /**
  * Bite a banana.
@@ -19,7 +20,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity {
   @Parameter
-  public double biteSize = 1.0;
+  public @Unit("m") double biteSize = 1.0;
 
   @Validation("bite size must be positive")
   @Validation.Subject("biteSize")

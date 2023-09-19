@@ -2,15 +2,22 @@ package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import gov.nasa.jpl.aerie.merlin.framework.LabeledValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern.ClassPattern;
+import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +47,9 @@ public final class Resolver {
   }
 
   public Optional<CodeBlock> instantiateNullableMapperFor(final TypeMirror mirror) {
-    final var mapperCode = applyRules(createInitialGoal(mirror));
+    final TypePattern initialGoal = createInitialGoal(mirror);
+    final var mapperCode = applyRules(initialGoal);
+
 
     // TODO: Do away with this null-checking stuff, somehow.
     if (mirror.getKind() == TypeKind.DECLARED || mirror.getKind() == TypeKind.ARRAY) {
@@ -56,12 +65,12 @@ public final class Resolver {
   private TypePattern createInitialGoal(final TypeMirror mirror) {
     final List<TypePattern> mapperArguments;
     if (mirror.getKind().isPrimitive()) {
-      mapperArguments = List.of(TypePattern.from(typeUtils.boxedClass((PrimitiveType)mirror).asType()));
+      mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, typeUtils.boxedClass((PrimitiveType)mirror).asType()));
     } else {
-      mapperArguments = List.of(TypePattern.from(mirror));
+      mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, mirror));
     }
 
-    return new ClassPattern(ClassName.get(ValueMapper.class), mapperArguments);
+    return new ClassPattern(ClassName.get(ValueMapper.class), mapperArguments, Optional.empty());
   }
 
   public Optional<CodeBlock> applyRules(final TypePattern goal) {
@@ -125,6 +134,14 @@ public final class Resolver {
     }
     builder.add(")");
 
-    return Optional.of(builder.build());
+    final Optional<String> unit;
+    if (goal instanceof ClassPattern g && g.name.simpleName().equals("ValueMapper")) {
+      unit = g.arguments.get(0).unit;
+    } else {
+      unit = Optional.empty();
+    }
+    return unit
+        .map(s -> CodeBlock.of("new $T<>($S, $L)", LabeledValueMapper.class, s, builder.build()))
+        .or(() -> Optional.of(builder.build()));
   }
 }

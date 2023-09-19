@@ -98,7 +98,7 @@ public final class MissionModelProcessor implements Processor {
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
         for (final var request : autoValueMapperRequests) {
-          concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
+          concatenatedTypeRules.add(AutoValueMappers.typeRule(elementUtils, typeUtils, request, missionModelRecord$.getAutoValueMappersName()));
         }
 
         final var missionModelRecord = new MissionModelRecord(
