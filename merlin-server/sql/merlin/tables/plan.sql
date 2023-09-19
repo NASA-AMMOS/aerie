@@ -18,6 +18,7 @@ create table plan (
 
   owner text,
   updated_by text,
+  description text,
 
   constraint plan_synthetic_key
     primary key (id),
@@ -72,6 +73,8 @@ comment on column plan.owner is e''
   'The user who owns the plan.';
 comment on column plan.updated_by is e''
   'The user who last updated the plan.';
+comment on column plan.description is e''
+  'A human-readable description for this plan and its contents.';
 
 
 create function increment_revision_on_update_plan()
