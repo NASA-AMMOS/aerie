@@ -47,9 +47,7 @@ public final class Resolver {
   }
 
   public Optional<CodeBlock> instantiateNullableMapperFor(final TypeMirror mirror) {
-    final TypePattern initialGoal = createInitialGoal(mirror);
-    final var mapperCode = applyRules(initialGoal);
-
+    final var mapperCode = applyRules(createInitialGoal(mirror));
 
     // TODO: Do away with this null-checking stuff, somehow.
     if (mirror.getKind() == TypeKind.DECLARED || mirror.getKind() == TypeKind.ARRAY) {
