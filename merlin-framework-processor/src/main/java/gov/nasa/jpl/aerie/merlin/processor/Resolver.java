@@ -63,6 +63,7 @@ public final class Resolver {
   private TypePattern createInitialGoal(final TypeMirror mirror) {
     final List<TypePattern> mapperArguments;
     if (mirror.getKind().isPrimitive()) {
+      // TODO handle annotation on this mirror. The boxing on the line below loses this information.
       mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, typeUtils.boxedClass((PrimitiveType)mirror).asType()));
     } else {
       mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, mirror));
