@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -56,14 +56,14 @@ public class AutoValueMappers {
         new TypePattern.ClassPattern(
             ClassName.get(ValueMapper.class),
             List.of(TypePattern.from(elementUtils, typeUtils, autoValueMapperElement.asType())),
-            Optional.empty()),
+            Map.of()),
         Set.of(),
         typeMirrors
             .stream()
             .map(component -> (TypePattern) new TypePattern.ClassPattern(
                 ClassName.get(ValueMapper.class),
                 List.of(TypePattern.from(elementUtils, typeUtils, component).box()),
-                Optional.empty()))
+                Map.of()))
             .toList(),
         generatedClassName,
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));

@@ -289,6 +289,12 @@ return (<T>makeAllDiscreteProfile(args))
                 .map(ValueSchema.Variant::label)
                 .toList());
       }
+
+      // TODO Elevate annotation information
+      @Override
+      public TypescriptType onLabel(final String label, final ValueSchema target) {
+        return target.match(this);
+      }
     });
   }
 

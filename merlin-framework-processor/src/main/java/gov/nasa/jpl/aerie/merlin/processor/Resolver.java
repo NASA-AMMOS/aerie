@@ -135,7 +135,7 @@ public final class Resolver {
     if (goal instanceof ClassPattern g && g.name.simpleName().equals("ValueMapper")) {
       final Map<String, AnnotationMirror> annotations = g.arguments.get(0).annotations;
       // TODO use these annotations
-      return Optional.of(CodeBlock.of("new $T<>($S, $L)", LabeledValueMapper.class, Map.of(), builder.build()));
+      return Optional.of(CodeBlock.of("new $T<>($S, $L)", LabeledValueMapper.class, "placeholder_label", builder.build()));
     }
     return Optional.of(builder.build());
   }

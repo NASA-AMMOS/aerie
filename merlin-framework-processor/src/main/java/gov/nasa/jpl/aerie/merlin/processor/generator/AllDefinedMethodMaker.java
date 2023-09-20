@@ -14,6 +14,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /** Method maker for defaults style where all default arguments are provided within @Parameter annotations. */
@@ -53,7 +54,7 @@ import java.util.Optional;
                     new TypePattern.ClassPattern(
                         ClassName.get(Optional.class),
                         List.of(TypePattern.from(this.elementUtils, this.typeUtils, parameter.type)),
-                        Optional.empty()).render(),
+                        Map.of()).render(),
                     parameter.name,
                     Optional.class,
                     ".ofNullable(template." + parameter.name + ")"

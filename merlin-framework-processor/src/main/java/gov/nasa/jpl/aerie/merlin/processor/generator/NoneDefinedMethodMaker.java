@@ -14,6 +14,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
                     new TypePattern.ClassPattern(
                         ClassName.get(Optional.class),
                         List.of(TypePattern.from(elementUtils, typeUtils, parameter.type)),
-                        Optional.empty()).render(),
+                        Map.of()).render(),
                     parameter.name,
                     Optional.class,
                     ".empty()"

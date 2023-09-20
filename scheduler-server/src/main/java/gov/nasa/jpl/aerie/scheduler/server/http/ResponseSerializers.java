@@ -280,5 +280,23 @@ public class ResponseSerializers {
               variants))
           .build();
     }
+
+    /**
+     * Desired schema: {
+     *    "type": "labeled" (annotated?)
+     *    "labels": [ {"labelName": labelContents}, ...]
+     *    "schema": {nested thing}
+     * }
+     */
+    @Override
+    public JsonValue onLabel(final String label, final ValueSchema target) {
+      // TODO consider squashing adjacent label nodes
+      return Json
+          .createObjectBuilder()
+          .add("type", "label")
+          .add("label", label)
+          .add("schema", target.match(this))
+          .build();
+    }
   }
 }
