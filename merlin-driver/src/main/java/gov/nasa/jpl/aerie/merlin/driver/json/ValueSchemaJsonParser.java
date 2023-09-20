@@ -176,6 +176,12 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
                 variants))
             .build();
       }
+
+      @Override
+      public JsonValue onLabel(final String label, final ValueSchema target) {
+        // TODO Fix this
+        return Json.createObjectBuilder().build();
+      }
     });
   }
 

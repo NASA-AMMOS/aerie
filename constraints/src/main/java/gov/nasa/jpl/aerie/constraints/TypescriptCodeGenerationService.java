@@ -220,6 +220,12 @@ public final class TypescriptCodeGenerationService {
         final var res = valueSchemaToTypescript(valueSchema);
         return "(%s | Discrete<%s>)".formatted(res, res);
       }
+
+      // TODO: Elevate annotation information
+      @Override
+      public String onLabel(final String label, final ValueSchema value) {
+        return value.match(this);
+      }
     });
   }
 
@@ -287,6 +293,12 @@ public final class TypescriptCodeGenerationService {
       public String onVariant(final List<ValueSchema.Variant> variants) {
         final var res = valueSchemaToTypescript(valueSchema);
         return "(%s | Discrete<%s> | undefined)".formatted(res, res);
+      }
+
+      // TODO Elevate annotation information
+      @Override
+      public String onLabel(final String label, final ValueSchema target) {
+        return target.match(this);
       }
     });
   }
@@ -357,6 +369,12 @@ public final class TypescriptCodeGenerationService {
 
         result.append(")");
         return result.toString();
+      }
+
+      // TODO Elevate annotation information
+      @Override
+      public String onLabel(final String label, final ValueSchema target) {
+        return target.match(this);
       }
     });
   }

@@ -649,7 +649,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       effectModelReturnMapperBlock = new Resolver(
           this.typeUtils, this.elementUtils, missionModel.typeRules).applyRules(
           new TypePattern.ClassPattern(ClassName.get(ValueMapper.class),
-                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of(), Optional.empty())), Optional.empty()));
+                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of(), Map.of())), Map.of()));
       computedAttributesTypeName = TypeName.get(Unit.class);
     }
     return Optional.of(new ComputedAttributesCodeBlocks(

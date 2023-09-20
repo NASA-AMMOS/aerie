@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern.ClassPattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -61,13 +62,13 @@ public final class Resolver {
           elementUtils,
           typeUtils,
           typeUtils.boxedClass((PrimitiveType) mirror).asType());
-      typePattern.unit = TypePattern.getUnit(elementUtils, typeUtils, mirror);
+      typePattern.annotations = TypePattern.getAnnotations(elementUtils, typeUtils, mirror);
       mapperArguments = List.of(typePattern);
     } else {
       mapperArguments = List.of(TypePattern.from(elementUtils, typeUtils, mirror));
     }
 
-    return new ClassPattern(ClassName.get(ValueMapper.class), mapperArguments, Optional.empty());
+    return new ClassPattern(ClassName.get(ValueMapper.class), mapperArguments, Map.of());
   }
 
   public Optional<CodeBlock> applyRules(final TypePattern goal) {
@@ -131,14 +132,11 @@ public final class Resolver {
     }
     builder.add(")");
 
-    final Optional<String> unit;
     if (goal instanceof ClassPattern g && g.name.simpleName().equals("ValueMapper")) {
-      unit = g.arguments.get(0).unit;
-    } else {
-      unit = Optional.empty();
+      final Map<String, AnnotationMirror> annotations = g.arguments.get(0).annotations;
+      // TODO use these annotations
+      return Optional.of(CodeBlock.of("new $T<>($S, $L)", LabeledValueMapper.class, Map.of(), builder.build()));
     }
-    return unit
-        .map(s -> CodeBlock.of("new $T<>($S, $L)", LabeledValueMapper.class, s, builder.build()))
-        .or(() -> Optional.of(builder.build()));
+    return Optional.of(builder.build());
   }
 }
