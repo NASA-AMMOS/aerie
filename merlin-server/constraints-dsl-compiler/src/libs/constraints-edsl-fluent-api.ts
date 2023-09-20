@@ -164,6 +164,18 @@ export class Windows {
   }
 
   /**
+   * Selects the ith true window and falsifies the other true segments.
+   * @param i the index of the true segment in the sequence of windows. index(0) will point to the first element, index(-1) to the last element.
+   */
+  public keepTrueSegment(i: number): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionKeepTrueSegment,
+      expression: this.__astNode,
+      index: i
+    })
+  }
+
+  /**
    * Performs the boolean Or operation on any number of Windows.
    *
    * @param windows any number of windows expressions
@@ -1192,6 +1204,12 @@ declare global {
     public readonly __astNode: AST.WindowsExpression;
 
     /**
+     * Selects the ith true window and falsifies the other true segments.
+     * @param i the index of the true segment in the sequence of windows. index(0) will point to the first element, index(-1) to the last element.
+     */
+    public keepTrueSegment(i: number): Windows;
+
+      /**
      * Creates a single window.
      *
      * @param value value for the window segment.

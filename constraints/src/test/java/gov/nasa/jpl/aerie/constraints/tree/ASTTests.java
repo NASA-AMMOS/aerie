@@ -1397,6 +1397,41 @@ public class ASTTests {
 
     assertIterableEquals(expected, result);
   }
+  @Test
+  public void testKeepTrueSegment(){
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false)
+        .set(interval(24, 30, SECONDS), false);
+
+    final var result = new KeepTrueSegment(Supplier.of(windows), 2).evaluate(simResults, new EvaluationEnvironment());
+    final var result2 = new KeepTrueSegment(Supplier.of(windows), -2).evaluate(simResults, new EvaluationEnvironment());
+    final var result3 = new KeepTrueSegment(Supplier.of(windows), 5).evaluate(simResults, new EvaluationEnvironment());
+
+    final var expected = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), false)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), false)
+        .set(interval(22, 23, SECONDS), false)
+        .set(interval(24, 30, SECONDS), false);
+
+    assertEquivalent(expected, result);
+    assertEquivalent(expected, result2);
+    assertEquivalent(expected.set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false), result3);
+  }
 
   /**
    * An expression that yields the same aliased object every time it is evaluated.
