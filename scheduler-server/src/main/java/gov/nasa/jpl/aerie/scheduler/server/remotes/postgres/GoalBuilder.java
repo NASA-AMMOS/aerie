@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionBetween;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
@@ -25,6 +26,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -65,21 +67,23 @@ public class GoalBuilder {
           .aliasForAnchors(g.alias());
       if (g.startConstraint().isPresent()) {
         final var startConstraint = g.startConstraint().get();
-        final var timeExpression = new TimeExpressionRelativeFixed(
-            startConstraint.windowProperty(),
-            startConstraint.singleton()
-        );
-        timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
-        builder.startsAt(timeExpression);
+        if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
+          builder.startsAt(makeTimeExpressionRelativeFixed(s));
+        } else if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange s) {
+          builder.startsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(s.lowerBound()), makeTimeExpressionRelativeFixed(s.upperBound())));
+        } else {
+          throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, startConstraint);
+        }
       }
       if (g.endConstraint().isPresent()) {
-        final var startConstraint = g.endConstraint().get();
-        final var timeExpression = new TimeExpressionRelativeFixed(
-            startConstraint.windowProperty(),
-            startConstraint.singleton()
-        );
-        timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
-        builder.endsAt(timeExpression);
+        final var endConstraint = g.endConstraint().get();
+        if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint e) {
+          builder.endsAt(makeTimeExpressionRelativeFixed(e));
+        } else if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange e) {
+          builder.endsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
+        } else {
+          throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, endConstraint);
+        }
       }
       if (g.startConstraint().isEmpty() && g.endConstraint().isEmpty()) {
         throw new Error("Both start and end constraints were empty. This should have been disallowed at the type level.");
@@ -144,6 +148,16 @@ public class GoalBuilder {
     } else {
       throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
     }
+  }
+
+  @NotNull
+  private static TimeExpressionRelativeFixed makeTimeExpressionRelativeFixed(final SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
+    final var timeExpression = new TimeExpressionRelativeFixed(
+        s.windowProperty(),
+        s.singleton()
+    );
+    timeExpression.addOperation(s.operator(), s.operand());
+    return timeExpression;
   }
 
   private static ActivityExpression buildActivityExpression(SchedulingDSL.ConstraintExpression.ActivityExpression activityExpr,
