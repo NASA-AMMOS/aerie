@@ -59,8 +59,7 @@ import java.util.stream.Collectors;
                       "$T $L = $T$L",
                       new TypePattern.ClassPattern(
                           ClassName.get(Optional.class),
-                          List.of(TypePattern.from(elementUtils, typeUtils, parameter.type)),
-                          Map.of()).render(),
+                          List.of(TypePattern.from(elementUtils, typeUtils, parameter.type))).render(),
                       parameter.name,
                       Optional.class,
                       ".ofNullable(template." + parameter.name + "())"

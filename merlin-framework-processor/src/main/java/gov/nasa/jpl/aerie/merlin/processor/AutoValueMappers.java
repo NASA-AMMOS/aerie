@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.RecordComponentElement;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
 public class AutoValueMappers {
   private static final Pattern JAVA_IDENTIFIER_ILLEGAL_CHARACTERS = Pattern.compile("[.><,\\[\\]()\"@ ]");
 
-  static TypeRule typeRule(final Elements elementUtils, final Types typeUtils, final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
+  static TypeRule recordTypeRule(final Elements elementUtils, final Types typeUtils, final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
     if (!autoValueMapperElement.getKind().equals(ElementKind.RECORD)) {
       throw new InvalidMissionModelException(
           "@%s.%s is only allowed on records".formatted(
@@ -55,21 +56,53 @@ public class AutoValueMappers {
     return new TypeRule(
         new TypePattern.ClassPattern(
             ClassName.get(ValueMapper.class),
-            List.of(TypePattern.from(elementUtils, typeUtils, autoValueMapperElement.asType())),
-            Map.of()),
+            List.of(TypePattern.from(elementUtils, typeUtils, autoValueMapperElement.asType()))),
         Set.of(),
         typeMirrors
             .stream()
             .map(component -> (TypePattern) new TypePattern.ClassPattern(
                 ClassName.get(ValueMapper.class),
-                List.of(TypePattern.from(elementUtils, typeUtils, component).box()),
-                Map.of()))
+                List.of(TypePattern.from(elementUtils, typeUtils, component).box())))
             .toList(),
         generatedClassName,
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
   }
 
-  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<? extends Element> recordTypes) {
+  static TypeRule annotationTypeRule(final Elements elementUtils, final Types typeUtils, final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
+    if (!autoValueMapperElement.getKind().equals(ElementKind.ANNOTATION_TYPE)) {
+      throw new InvalidMissionModelException(
+          "@%s.%s is only allowed on annotations".formatted(
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.Annotation.class.getSimpleName()),
+          autoValueMapperElement);
+    }
+
+    final var typeMirrors = new HashSet<TypeMirror>();
+
+    for (final var enclosedElement : autoValueMapperElement.getEnclosedElements()) {
+      if (!(enclosedElement instanceof ExecutableElement el)) continue;
+      final var typeMirror = el.getReturnType();
+      typeMirrors.add(typeMirror);
+    }
+
+    final TypeRule result = new TypeRule(
+        new TypePattern.ClassPattern(
+            ClassName.get(ValueMapper.class),
+            List.of(TypePattern.from(elementUtils, typeUtils, autoValueMapperElement.asType()))),
+        Set.of(),
+        typeMirrors
+            .stream()
+            .map(component -> (TypePattern) new TypePattern.ClassPattern(
+                ClassName.get(ValueMapper.class),
+                List.of(TypePattern.from(elementUtils, typeUtils, component).box())))
+            .toList(),
+        generatedClassName,
+        ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
+    return result;
+  }
+
+  record ComponentMapperNamePair(String componentName, String mapperName) {}
+  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<? extends Element> recordTypes, final Iterable<? extends Element> annotationTypes) {
     final var typeName = missionModel.getAutoValueMappersName();
 
     final var builder =
@@ -87,7 +120,16 @@ public class AutoValueMappers {
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-    record ComponentMapperNamePair(String componentName, String mapperName) {}
+    generateRecordValueMapperMethods(recordTypes, builder);
+    generateAnnotationValueMapperMethods(annotationTypes, builder);
+
+    return JavaFile
+        .builder(typeName.packageName(), builder.build())
+        .skipJavaLangImports(true)
+        .build();
+  }
+
+  private static void generateRecordValueMapperMethods(Iterable<? extends Element> recordTypes, TypeSpec.Builder builder) {
     for (final var record : recordTypes) {
       final var methodName = ClassName.get((TypeElement) record).canonicalName().replace(".", "_");
       final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
@@ -157,11 +199,78 @@ public class AutoValueMappers {
                       .build())
               .build());
     }
+  }
 
-    return JavaFile
-        .builder(typeName.packageName(), builder.build())
-        .skipJavaLangImports(true)
-        .build();
+  private static void generateAnnotationValueMapperMethods(Iterable<? extends Element> recordTypes, TypeSpec.Builder builder) {
+    for (final var record : recordTypes) {
+      final var methodName = ClassName.get((TypeElement) record).canonicalName().replace(".", "_");
+      final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
+      final var necessaryMappers = new HashMap<TypeMirror, String>();
+      for (final var element : record.getEnclosedElements()) {
+        if (!(element instanceof ExecutableElement el)) continue;
+        final var typeMirror = el.getReturnType();
+        final var elementName = element.getSimpleName().toString();
+        final var valueMapperIdentifier = JAVA_IDENTIFIER_ILLEGAL_CHARACTERS
+                                              .matcher(typeMirror.toString())
+                                              .replaceAll("_")
+                                          + "ValueMapper";
+        componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
+        necessaryMappers.put(typeMirror, valueMapperIdentifier);
+      }
+
+      builder.addMethod(
+          MethodSpec
+              .methodBuilder(methodName)
+              .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+              .addTypeVariables(((TypeElement) record).getTypeParameters().stream().map(TypeVariableName::get).toList())
+              .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
+              .addParameters(
+                  necessaryMappers
+                      .entrySet()
+                      .stream()
+                      .map(mapperRequest -> ParameterSpec
+                          .builder(
+                              ParameterizedTypeName.get(
+                                  ClassName.get(ValueMapper.class),
+                                  ClassName.get(mapperRequest.getKey()).box()),
+                              mapperRequest.getValue(),
+                              Modifier.FINAL)
+                          .build())
+                      .toList())
+              .addCode(
+                  CodeBlock
+                      .builder()
+                      .add("return new $T<>($>\n", ClassName.get(RecordValueMapper.class))
+                      .add("$L$T.class,\n",
+                           // SAFETY: This cast cannot fail - it merely exists to compensate for an inability
+                           // to express a MyRecord<T>.class. Instead, we use MyRecord.class, and cast it, via
+                           // Object, to a `Class<MyRecord<T>>`. We need to go via Object because Java generics
+                           // do not allow casting a Foo<Bar> to a Foo<Bar<Baz>> - since Bar may be a container
+                           // that already contains non-Baz objects. In this case, since MyRecord.class is not
+                           // a container, the Java type checker is being overly conservative
+                           castIfGeneric(record),
+                           ClassName.get((TypeElement) record))
+                      .add("$T.of($>\n", List.class)
+                      .add(CodeBlock.join(
+                          componentToMapperName
+                              .stream()
+                              .map(recordComponent ->
+                                       CodeBlock
+                                           .builder()
+                                           .add(
+                                               "new $T<>($>\n" + "$S,\n" + "$T::$L,\n" + "$L" + "$<)",
+                                               RecordValueMapper.Component.class,
+                                               recordComponent.componentName(),
+                                               ClassName.get((TypeElement) record),
+                                               recordComponent.componentName(),
+                                               recordComponent.mapperName())
+                                           .build())
+                              .toList(),
+                          ",\n"))
+                      .add("$<)$<);")
+                      .build())
+              .build());
+    }
   }
 
   private static CodeBlock castIfGeneric(final Element record) {

@@ -292,7 +292,7 @@ return (<T>makeAllDiscreteProfile(args))
 
       // TODO Elevate annotation information
       @Override
-      public TypescriptType onLabel(final String label, final ValueSchema target) {
+      public TypescriptType onMeta(final String label, SerializedValue metadata, final ValueSchema target) {
         return target.match(this);
       }
     });

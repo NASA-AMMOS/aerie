@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
@@ -289,7 +290,7 @@ public class ResponseSerializers {
      * }
      */
     @Override
-    public JsonValue onLabel(final String label, final ValueSchema target) {
+    public JsonValue onMeta(final String label, SerializedValue metadata, final ValueSchema target) {
       // TODO consider squashing adjacent label nodes
       return Json
           .createObjectBuilder()

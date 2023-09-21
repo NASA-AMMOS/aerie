@@ -649,7 +649,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       effectModelReturnMapperBlock = new Resolver(
           this.typeUtils, this.elementUtils, missionModel.typeRules).applyRules(
           new TypePattern.ClassPattern(ClassName.get(ValueMapper.class),
-                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of(), Map.of())), Map.of()));
+                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of()))));
       computedAttributesTypeName = TypeName.get(Unit.class);
     }
     return Optional.of(new ComputedAttributesCodeBlocks(
@@ -852,6 +852,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                      .build();
   }
 
+  public static boolean interesting = false;
   private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final InputTypeRecord inputType)
   {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
@@ -859,6 +860,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     final var mapperBlocks = new HashMap<String, CodeBlock>();
 
     for (final var parameter : inputType.parameters()) {
+      interesting = false;
+      if (parameter.name.equals("biteSize")) {
+        interesting = true;
+      }
       final var mapperBlock = resolver.instantiateNullableMapperFor(parameter.type);
       if (mapperBlock.isPresent()) {
         mapperBlocks.put(parameter.name, mapperBlock.get());
@@ -870,6 +875,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             parameter.element);
       }
     }
+    interesting = false;
 
     return failed ? Optional.empty() : Optional.of(mapperBlocks);
   }

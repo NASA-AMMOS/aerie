@@ -3,10 +3,10 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
-public record LabeledValueMapper<T>(String label, ValueMapper<T> target) implements ValueMapper<T> {
+public record MetadataValueMapper<T>(String label, SerializedValue metadata, ValueMapper<T> target) implements ValueMapper<T> {
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.withLabel(label, target.getValueSchema());
+    return ValueSchema.withMeta(label, metadata, target.getValueSchema());
   }
 
   @Override

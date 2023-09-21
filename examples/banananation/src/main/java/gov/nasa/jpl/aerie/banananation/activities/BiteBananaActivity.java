@@ -2,12 +2,13 @@ package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
+import gov.nasa.jpl.aerie.banananation.Range;
+import gov.nasa.jpl.aerie.banananation.Unit;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 
 /**
  * Bite a banana.
@@ -20,7 +21,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity {
   @Parameter
-  public @Unit("m") double biteSize = 1.0;
+  public @Unit("m") @Range(min=0, max=100) double biteSize = 1.0;
 
   @Validation("bite size must be positive")
   @Validation.Subject("biteSize")

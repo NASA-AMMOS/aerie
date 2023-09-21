@@ -558,7 +558,7 @@ public final class ResponseSerializers {
      * }
      */
     @Override
-    public JsonValue onLabel(final String label, final ValueSchema target) {
+    public JsonValue onMeta(final String label, SerializedValue metadata, final ValueSchema target) {
       // TODO consider squashing adjacent label nodes
       return Json
           .createObjectBuilder()

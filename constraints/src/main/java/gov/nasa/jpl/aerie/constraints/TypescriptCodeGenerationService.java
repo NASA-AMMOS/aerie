@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
@@ -223,7 +224,7 @@ public final class TypescriptCodeGenerationService {
 
       // TODO: Elevate annotation information
       @Override
-      public String onLabel(final String label, final ValueSchema value) {
+      public String onMeta(final String label, SerializedValue metadata, final ValueSchema value) {
         return value.match(this);
       }
     });
@@ -297,7 +298,7 @@ public final class TypescriptCodeGenerationService {
 
       // TODO Elevate annotation information
       @Override
-      public String onLabel(final String label, final ValueSchema target) {
+      public String onMeta(final String label, SerializedValue metadata, final ValueSchema target) {
         return target.match(this);
       }
     });
@@ -373,7 +374,7 @@ public final class TypescriptCodeGenerationService {
 
       // TODO Elevate annotation information
       @Override
-      public String onLabel(final String label, final ValueSchema target) {
+      public String onMeta(final String label, SerializedValue metadata, final ValueSchema target) {
         return target.match(this);
       }
     });

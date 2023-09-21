@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
+import gov.nasa.jpl.aerie.banananation.Unit;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;

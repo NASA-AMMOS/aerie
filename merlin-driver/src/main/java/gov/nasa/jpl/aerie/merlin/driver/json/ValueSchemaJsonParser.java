@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.json.Json;
@@ -178,7 +179,7 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
       }
 
       @Override
-      public JsonValue onLabel(final String label, final ValueSchema target) {
+      public JsonValue onMeta(final String label, SerializedValue metadata, final ValueSchema target) {
         // TODO Fix this
         return Json.createObjectBuilder().build();
       }

@@ -5,6 +5,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
+import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
@@ -20,27 +21,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class TypePattern {
-  public Map<String, AnnotationMirror> annotations;
-
-  private TypePattern(final Map<String, AnnotationMirror> annotations) {
-    this.annotations = annotations;
-  }
-
-  public static TypePattern from(final Elements elementUtils, final Types typeUtils, final TypeMirror mirror) {
-    final var annotations = getAnnotations(elementUtils, typeUtils, mirror);
-    final TypePattern result;
+public sealed interface TypePattern {
+  static TypePattern from(final Elements elementUtils, final Types typeUtils, final TypeMirror mirror) {
+    TypePattern result;
     switch (mirror.getKind()) {
-      case BOOLEAN -> result = new PrimitivePattern(Primitive.BOOLEAN, annotations);
-      case BYTE -> result = new PrimitivePattern(Primitive.BYTE, annotations);
-      case SHORT -> result = new PrimitivePattern(Primitive.SHORT, annotations);
-      case INT -> result = new PrimitivePattern(Primitive.INT, annotations);
-      case LONG -> result = new PrimitivePattern(Primitive.LONG, annotations);
-      case CHAR -> result = new PrimitivePattern(Primitive.CHAR, annotations);
-      case FLOAT -> result = new PrimitivePattern(Primitive.FLOAT, annotations);
-      case DOUBLE -> result = new PrimitivePattern(Primitive.DOUBLE, annotations);
-      case ARRAY -> result = new ArrayPattern(TypePattern.from(elementUtils, typeUtils, ((ArrayType) mirror).getComponentType()), annotations);
-      case TYPEVAR -> result = new TypeVariablePattern(mirror.toString());
+      case BOOLEAN -> result = new PrimitivePattern(Primitive.BOOLEAN);
+      case BYTE -> result = new PrimitivePattern(Primitive.BYTE);
+      case SHORT -> result = new PrimitivePattern(Primitive.SHORT);
+      case INT -> result = new PrimitivePattern(Primitive.INT);
+      case LONG -> result = new PrimitivePattern(Primitive.LONG);
+      case CHAR -> result = new PrimitivePattern(Primitive.CHAR);
+      case FLOAT -> result = new PrimitivePattern(Primitive.FLOAT);
+      case DOUBLE -> result = new PrimitivePattern(Primitive.DOUBLE);
+      case ARRAY -> result = new ArrayPattern(TypePattern.from(elementUtils, typeUtils, ((ArrayType) mirror).getComponentType()));
+      case TYPEVAR -> {
+        var typeVarName = mirror.toString();
+        if (typeVarName.contains(" ")) {
+          typeVarName = typeVarName.substring(typeVarName.lastIndexOf(' ') + 1);
+        }
+        result = new TypeVariablePattern(typeVarName);
+      }
       case DECLARED -> {
         // DeclaredType element can be cast as TypeElement because it's a Type
         final var className = ClassName.get((TypeElement) ((DeclaredType) mirror).asElement());
@@ -49,42 +49,45 @@ public abstract class TypePattern {
         for (final var typeArgument : typeArguments) {
           argumentPatterns.add(TypePattern.from(elementUtils, typeUtils, typeArgument));
         }
-        result = new ClassPattern(className, argumentPatterns, annotations);
+        result = new ClassPattern(className, argumentPatterns);
       }
 
       default -> throw new Error("Cannot construct a pattern for type " + mirror);
     }
-    return result;
+
+    final var annotations = mirror.getAnnotationMirrors();
+    for (int i = annotations.size() - 1; i >= 0; i--) {
+      final var annotation = annotations.get(i);
+      result = new AnnotationPattern(List.of(annotation), result);
+    }
+    if (!annotations.isEmpty()) {
+      return new AnnotationPattern(annotations, result);
+    } else {
+      return result;
+    }
   }
 
-  public static TypePattern from(final Elements elementUtils, final Types typeUtils, final VariableElement element) {
+  static TypePattern from(final Elements elementUtils, final Types typeUtils, final VariableElement element) {
     return from(elementUtils, typeUtils, element.asType());
   }
 
-  public abstract TypePattern substitute(Map<String, TypePattern> substitution);
+  TypePattern substitute(Map<String, TypePattern> substitution);
 
-  public abstract Map<String, TypePattern> match(TypePattern other) throws UnificationException;
+  Map<String, TypePattern> match(TypePattern other) throws UnificationException;
 
-  public abstract boolean isGround();
+  boolean isGround();
 
-  public abstract boolean isSyntacticallyEqualTo(TypePattern other);
+  boolean isSyntacticallyEqualTo(TypePattern other);
 
-  public abstract TypeName render();
+  TypeName render();
 
-  public abstract TypeName erasure();
+  TypeName erasure();
 
-  public abstract TypePattern box();
+  TypePattern box();
 
-  public static class UnificationException extends Exception {}
+  class UnificationException extends Exception {}
 
-  public static final class TypeVariablePattern extends TypePattern {
-    public final String name;
-
-    public TypeVariablePattern(final String name) {
-      super(Map.of());
-      this.name = Objects.requireNonNull(name);
-    }
-
+  record TypeVariablePattern(String name) implements TypePattern {
     @Override
     public TypePattern substitute(final Map<String, TypePattern> substitution) {
       return substitution.getOrDefault(this.name, this);
@@ -126,14 +129,7 @@ public abstract class TypePattern {
     }
   }
 
-  public static final class PrimitivePattern extends TypePattern {
-    public final Primitive primitive;
-
-    public PrimitivePattern(final Primitive primitive, final Map<String, AnnotationMirror> annotations) {
-      super(annotations);
-      this.primitive = Objects.requireNonNull(primitive);
-    }
-
+  record PrimitivePattern(Primitive primitive) implements TypePattern {
     @Override
     public PrimitivePattern substitute(final Map<String, TypePattern> substitution) {
       return this;
@@ -171,11 +167,11 @@ public abstract class TypePattern {
 
     @Override
     public TypePattern box() {
-      return new ClassPattern((ClassName) this.render().box(), List.of(), this.annotations);
+      return new ClassPattern((ClassName) this.render().box(), List.of());
     }
   }
 
-  public enum Primitive {
+  enum Primitive {
     BOOLEAN(TypeName.BOOLEAN),
     BYTE(TypeName.BYTE),
     SHORT(TypeName.SHORT),
@@ -196,11 +192,8 @@ public abstract class TypePattern {
     }
   }
 
-  public static final class ArrayPattern extends TypePattern {
-    public final TypePattern element;
-
-    public ArrayPattern(final TypePattern element, final Map<String, AnnotationMirror> annotations) {
-      super(annotations);
+  record ArrayPattern(TypePattern element) implements TypePattern {
+    public ArrayPattern(final TypePattern element) {
       this.element = Objects.requireNonNull(element);
     }
 
@@ -209,7 +202,7 @@ public abstract class TypePattern {
       final var child = this.element.substitute(substitution);
       if (child == this.element) return this;
 
-      return new ArrayPattern(child, this.annotations);
+      return new ArrayPattern(child);
     }
 
     @Override
@@ -249,20 +242,7 @@ public abstract class TypePattern {
     }
   }
 
-  public static final class ClassPattern extends TypePattern {
-    public final ClassName name;
-    public final List<TypePattern> arguments;
-
-    public ClassPattern(
-        final ClassName name,
-        final List<TypePattern> arguments,
-        final Map<String, AnnotationMirror> annotations)
-    {
-      super(annotations);
-      this.name = Objects.requireNonNull(name);
-      this.arguments = Objects.requireNonNull(arguments);
-    }
-
+  record ClassPattern(ClassName name, List<TypePattern> arguments) implements TypePattern {
     @Override
     public ClassPattern substitute(final Map<String, TypePattern> substitution) {
       final var substitutedArguments = new ArrayList<TypePattern>(this.arguments.size());
@@ -281,7 +261,7 @@ public abstract class TypePattern {
       }
       if (allUnchanged) return this;
 
-      return new ClassPattern(this.name, substitutedArguments, this.annotations);
+      return new ClassPattern(this.name, substitutedArguments);
     }
 
     @Override
@@ -364,20 +344,80 @@ public abstract class TypePattern {
     }
   }
 
-  @Override
-  public String toString() {
-    return this.render().toString();
-  }
-
-  /**
-   * @return Map<Name of the Annotation Class, Annotation Contents>
-   *   TODO: We may be able to reduce to specifically the getElementValues map of the AnnotationMirror
-   */
-  public static Map<String, AnnotationMirror> getAnnotations(Elements elementUtils, Types typeUtils, TypeMirror mirror) {
-    final var result = new HashMap<String, AnnotationMirror>();
-    for (var m : mirror.getAnnotationMirrors()) {
-      result.put(m.getAnnotationType().toString(), m);
+  record AnnotationPattern(List<? extends AnnotationMirror> annotations, TypePattern target) implements TypePattern {
+    @Override
+    public AnnotationPattern substitute(final Map<String, TypePattern> substitution) {
+      return new AnnotationPattern(this.annotations, target.substitute(substitution));
     }
-    return result;
+
+    @Override
+    public Map<String, TypePattern> match(final TypePattern o) throws UnificationException {
+      if (!(o instanceof final AnnotationPattern other)) throw new UnificationException();
+      final var myCounts = new HashMap<String, Integer>();
+      for (final var annotation : this.annotations) {
+        if (MissionModelGenerator.interesting) {
+          final String annotationName = annotation.getAnnotationType().toString();
+          myCounts.putIfAbsent(annotationName, 0);
+          myCounts.put(annotationName, myCounts.get(annotationName) + 1);
+        }
+      }
+      final var otherCounts = new HashMap<String, Integer>();
+      for (final var annotation : other.annotations) {
+        if (MissionModelGenerator.interesting) {
+          final String annotationName = annotation.getAnnotationType().toString();
+          otherCounts.putIfAbsent(annotationName, 0);
+          otherCounts.put(annotationName, otherCounts.get(annotationName) + 1);
+        }
+      }
+      if (!myCounts.equals(otherCounts)) throw new UnificationException();
+
+      return this.target.match(other.target);
+    }
+
+    @Override
+    public boolean isGround() {
+      return this.target.isGround();
+    }
+
+    @Override
+    public boolean isSyntacticallyEqualTo(final TypePattern o) {
+      if (!(o instanceof AnnotationPattern)) return false;
+      final var other = (AnnotationPattern) o;
+
+      final var myCounts = new HashMap<String, Integer>();
+      for (final var annotation : this.annotations) {
+        if (MissionModelGenerator.interesting) {
+          final String annotationName = annotation.getAnnotationType().toString();
+          myCounts.putIfAbsent(annotationName, 0);
+          myCounts.put(annotationName, myCounts.get(annotationName) + 1);
+        }
+      }
+
+      final var otherCounts = new HashMap<String, Integer>();
+      for (final var annotation : other.annotations) {
+        if (MissionModelGenerator.interesting) {
+          final String annotationName = annotation.getAnnotationType().toString();
+          otherCounts.putIfAbsent(annotationName, 0);
+          otherCounts.put(annotationName, otherCounts.get(annotationName) + 1);
+        }
+      }
+
+      return myCounts.equals(otherCounts) && this.target.isSyntacticallyEqualTo(other.target);
+    }
+
+    @Override
+    public TypeName render() {
+      return this.target.render();
+    }
+
+    @Override
+    public TypeName erasure() {
+      return this.render();
+    }
+
+    @Override
+    public TypePattern box() {
+      return new AnnotationPattern(this.annotations, this.target.box());
+    }
   }
 }

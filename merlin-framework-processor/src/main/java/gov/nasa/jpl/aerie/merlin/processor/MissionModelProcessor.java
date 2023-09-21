@@ -15,7 +15,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -91,14 +90,19 @@ public final class MissionModelProcessor implements Processor {
 
     // Iterate over all elements annotated with @MissionModel
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
-      final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
+      final var recordAutoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
+      final var annotationAutoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Annotation.class);
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
-        for (final var request : autoValueMapperRequests) {
-          concatenatedTypeRules.add(AutoValueMappers.typeRule(elementUtils, typeUtils, request, missionModelRecord$.getAutoValueMappersName()));
+        for (final var request : recordAutoValueMapperRequests) {
+          concatenatedTypeRules.add(AutoValueMappers.recordTypeRule(elementUtils, typeUtils, request, missionModelRecord$.getAutoValueMappersName()));
+        }
+
+        for (final var request : annotationAutoValueMapperRequests) {
+          concatenatedTypeRules.add(AutoValueMappers.annotationTypeRule(elementUtils, typeUtils, request, missionModelRecord$.getAutoValueMappersName()));
         }
 
         final var missionModelRecord = new MissionModelRecord(
@@ -125,9 +129,11 @@ public final class MissionModelProcessor implements Processor {
             missionModelGen.generateActivityTypes(missionModelRecord)
         ));
 
+
         final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
             missionModelRecord,
-            autoValueMapperRequests);
+            recordAutoValueMapperRequests,
+            annotationAutoValueMapperRequests);
         generatedFiles.add(autoValueMappers);
 
         for (final var activityRecord : missionModelRecord.activityTypes) {

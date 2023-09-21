@@ -1,6 +1,7 @@
 @MissionModel(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
+@WithMappers(CustomValueMappers.class)
 
 @WithConfiguration(Configuration.class)
 
@@ -31,6 +32,7 @@ import gov.nasa.jpl.aerie.banananation.activities.BananaNapActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ChangeProducerActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ControllableDurationActivity;
+import gov.nasa.jpl.aerie.banananation.activities.CustomValueMappers;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingSpawnActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DownloadBananaActivity;
