@@ -22,20 +22,31 @@ import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
 import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
+import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,17 +62,60 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingDSLCompilationServiceTests {
   private static final PlanId PLAN_ID = new PlanId(1L);
-  private static final MissionModelService missionModelService = new MissionModelService() {
+  private static final MerlinService.ReaderRole merlinService = new MerlinService.ReaderRole() {
     @Override
-    public MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+    public MerlinService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
     {
       return MISSION_MODEL_TYPES;
     }
 
     @Override
-    public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+    public MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
     {
       return MISSION_MODEL_TYPES;
+    }
+
+    @Override
+    public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+      return 0;
+    }
+
+    @Override
+    public PlanMetadata getPlanMetadata(final PlanId planId)
+    throws IOException, NoSuchPlanException, MerlinServiceException
+    {
+      return null;
+    }
+
+    @Override
+    public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
+    throws IOException, NoSuchPlanException, MerlinServiceException, InvalidJsonException, InstantiationException
+    {
+      return null;
+    }
+
+    @Override
+    public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+
+    }
+
+    @Override
+    public Optional<SimulationResults> getSimulationResults(final PlanMetadata planMetadata)
+    throws MerlinServiceException, IOException, InvalidJsonException
+    {
+      return Optional.empty();
+    }
+
+    @Override
+    public ExternalProfiles getExternalProfiles(final PlanId planId) throws MerlinServiceException, IOException {
+      return null;
+    }
+
+    @Override
+    public Collection<ResourceType> getResourceTypes(final PlanId planId)
+    throws IOException, MerlinServiceException, NoSuchPlanException
+    {
+      return null;
     }
   };
   SchedulingDSLCompilationService schedulingDSLCompilationService;
@@ -80,7 +134,7 @@ class SchedulingDSLCompilationServiceTests {
   void  testSchedulingDSL_mutex()
   {
     final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                   export default function myCondition() {
                     return GlobalSchedulingCondition.mutex([ActivityTypes.SampleActivity2], [ActivityTypes.SampleActivity1])
@@ -165,7 +219,7 @@ class SchedulingDSLCompilationServiceTests {
   void  testSchedulingDSL_basic()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -197,7 +251,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_recurrence_activityFinder()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -232,7 +286,7 @@ class SchedulingDSLCompilationServiceTests {
   void  testSchedulingDSL_partial()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -264,7 +318,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_helper_function()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return myHelper(ActivityTemplates.SampleActivity1({
@@ -299,7 +353,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_variable_not_defined() {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> actualErrors;
     actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier>) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
           PLAN_ID, """
                 export default function myGoal() {
                   const x = 4 - 2
@@ -327,7 +381,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_applyWhen()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
         export default function myGoal() {
           return Goal.ActivityRecurrenceGoal({
@@ -366,7 +420,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_wrong_return_type() {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> actualErrors;
     actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier>) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
           PLAN_ID, """
                 export default function myGoal() {
                   return 5
@@ -383,7 +437,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_temporal() {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult<?> result;
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID,
         """
                     export default () => Goal.ActivityRecurrenceGoal({
@@ -416,7 +470,7 @@ class SchedulingDSLCompilationServiceTests {
   void testHugeGoal() {
     // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -448,7 +502,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalActivityExpression() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -486,7 +540,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalFlexibleTimingConstraint() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -530,7 +584,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalActivityFinder() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -571,7 +625,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalParameterReference() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -618,7 +672,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalParameterReferenceValueAt() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -665,7 +719,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void strictTypeCheckingTest_astNode() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID,
         """
           interface FakeGoal {
@@ -698,7 +752,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void strictTypeCheckingTest_transition() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID,
         """
           export default function() {
@@ -727,7 +781,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_emptyActivityCorrect()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -756,7 +810,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_emptyActivityBogus()
   {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -780,7 +834,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalStateConstraint() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID,
         """
           const micro = (m: number) => Temporal.Duration.from({microseconds: m});
@@ -820,7 +874,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testCoexistenceGoalReferenceWindowDuration() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID,
         """
           const micro = (m: number) => Temporal.Duration.from({microseconds: m});
@@ -860,7 +914,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testWindowsExpression() {
     final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
-        missionModelService,
+        merlinService,
         PLAN_ID,
         """
           export default function() {
@@ -884,7 +938,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testAndGoal(){
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -929,7 +983,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testOrGoal(){
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -974,7 +1028,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void  testActivityPreset() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default (): Goal => {
                   return Goal.ActivityRecurrenceGoal({
@@ -1002,7 +1056,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSLMutatingPreset() {
 
     final var result1 = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default (): Goal => {
                   let preset = ActivityPresets.SampleActivity2["my preset"];
@@ -1028,7 +1082,7 @@ class SchedulingDSLCompilationServiceTests {
     }
 
     final var result2 = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default (): Goal => {
                   let preset = {
@@ -1061,7 +1115,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testPresetWithEnum() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
+        merlinService,
         PLAN_ID, """
                 export default (): Goal => {
                   return Goal.ActivityRecurrenceGoal({

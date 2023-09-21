@@ -20,8 +20,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
-import gov.nasa.jpl.aerie.scheduler.server.services.PlanService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
@@ -33,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
+class MockMerlinService implements MerlinService.OwnerRole {
 
   private Optional<PlanningHorizon> planningHorizon;
   private ExternalProfiles externalProfiles = new ExternalProfiles(Map.of(), Map.of(), List.of());
@@ -42,7 +41,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
     this.externalProfiles = externalProfiles;
   }
 
-  record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
+  record MissionModelInfo(Path libPath, Path modelPath, String modelName, MerlinService.MissionModelTypes types, Map<String, SerializedValue> config) {}
 
   private Optional<MissionModelInfo> missionModelInfo = Optional.empty();
   private MerlinPlan initialPlan;
@@ -185,14 +184,14 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public MissionModelTypes getMissionModelTypes(final PlanId planId)
+  public MerlinService.MissionModelTypes getMissionModelTypes(final PlanId planId)
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     return this.missionModelInfo.get().types();
   }
 
   @Override
-  public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  public MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     return this.missionModelInfo.get().types();

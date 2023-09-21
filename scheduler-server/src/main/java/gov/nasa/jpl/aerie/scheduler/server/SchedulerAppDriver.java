@@ -61,7 +61,7 @@ public final class SchedulerAppDriver {
     final var schedulerService = new CachedSchedulerService(stores.results());
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
-    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService, merlinService);
+    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
 
     //establish bindings to the service layers
     final var bindings = new SchedulerBindings(

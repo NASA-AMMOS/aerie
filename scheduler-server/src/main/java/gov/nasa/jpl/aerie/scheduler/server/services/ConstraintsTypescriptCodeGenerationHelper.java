@@ -9,7 +9,7 @@ public final class ConstraintsTypescriptCodeGenerationHelper
 {
     private ConstraintsTypescriptCodeGenerationHelper() { }
 
-    public static Map<String, TypescriptCodeGenerationService.ActivityType> activityTypes(final MissionModelService.MissionModelTypes missionModelTypes) {
+    public static Map<String, TypescriptCodeGenerationService.ActivityType> activityTypes(final MerlinService.MissionModelTypes missionModelTypes) {
         return missionModelTypes
             .activityTypes()
             .stream()
@@ -27,7 +27,7 @@ public final class ConstraintsTypescriptCodeGenerationHelper
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public static Map<String, ValueSchema> resources(final MissionModelService.MissionModelTypes missionModelTypes) {
+    public static Map<String, ValueSchema> resources(final MerlinService.MissionModelTypes missionModelTypes) {
         return missionModelTypes
             .resourceTypes()
             .stream()

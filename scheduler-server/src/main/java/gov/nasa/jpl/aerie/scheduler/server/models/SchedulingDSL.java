@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -57,7 +57,7 @@ public class SchedulingDSL {
               $ -> tuple($.duration(), $.occurrence()));
 
   private static JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP(
-      MissionModelService.MissionModelTypes activityTypes)
+      MerlinService.MissionModelTypes activityTypes)
   {
     return productP
         .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
@@ -112,7 +112,7 @@ public class SchedulingDSL {
               (TimingConstraint.ActivityTimingConstraintFlexibleRange $) -> tuple($.lowerBound(), $.upperBound(), $.singleton()));
 
   private static final JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP(
-  MissionModelService.MissionModelTypes activityTypes)
+  MerlinService.MissionModelTypes activityTypes)
   {
     return
         productP
@@ -146,7 +146,7 @@ public class SchedulingDSL {
   }
 
   private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
-      MissionModelService.MissionModelTypes activityTypes) {
+      MerlinService.MissionModelTypes activityTypes) {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
@@ -195,7 +195,7 @@ public class SchedulingDSL {
   }
 
 
-  private static JsonParser<GoalSpecifier> goalSpecifierF(MissionModelService.MissionModelTypes missionModelTypes) {
+  private static JsonParser<GoalSpecifier> goalSpecifierF(MerlinService.MissionModelTypes missionModelTypes) {
     return recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
         SumParsers.variant(
             "ActivityRecurrenceGoal",
@@ -243,7 +243,7 @@ public class SchedulingDSL {
             globalSchedulingConditionP)
   )));
 
-  public static final JsonParser<GoalSpecifier> schedulingJsonP(MissionModelService.MissionModelTypes missionModelTypes){
+  public static final JsonParser<GoalSpecifier> schedulingJsonP(MerlinService.MissionModelTypes missionModelTypes){
     return goalSpecifierF(missionModelTypes);
   }
 

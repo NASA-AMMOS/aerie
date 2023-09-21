@@ -93,9 +93,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.graphql.ProfileParsers.realVal
  *
  * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to access all plan data
  */
-public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdminSecret) implements PlanService.OwnerRole,
-    MissionModelService
-{
+public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdminSecret) implements MerlinService.OwnerRole {
 
   /**
    * timeout for http graphql requests issued to aerie
@@ -136,7 +134,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @param gqlStr the graphQL query or mutation to send to aerie
    * @return the json response returned by aerie, or an empty optional in case of io errors
    */
-  protected Optional<JsonObject> postRequest(final String gqlStr) throws IOException, PlanServiceException {
+  protected Optional<JsonObject> postRequest(final String gqlStr) throws IOException, MerlinServiceException {
     try {
       //TODO: (mem optimization) use streams here to avoid several copies of strings
       final var reqBody = Json.createObjectBuilder().add("query", gqlStr).build();
@@ -157,7 +155,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       }
       final var respBody = Json.createReader(httpResp.body()).readObject();
       if (respBody.containsKey("errors")) {
-        throw new PlanServiceException(respBody.toString());
+        throw new MerlinServiceException(respBody.toString());
       }
       return Optional.of(respBody);
     } catch (final InterruptedException e) {
@@ -168,7 +166,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     }
   }
 
-  protected Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException, PlanServiceException {
+  protected Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException,
+                                                                                                    MerlinServiceException
+  {
     try {
       //TODO: (mem optimization) use streams here to avoid several copies of strings
       final var reqBody = Json
@@ -193,7 +193,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       }
       final var respBody = Json.createReader(httpResp.body()).readObject();
       if (respBody.containsKey("errors")) {
-        throw new PlanServiceException(respBody.toString());
+        throw new MerlinServiceException(respBody.toString());
       }
       return Optional.of(respBody);
     } catch (final InterruptedException e) {
@@ -211,7 +211,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * {@inheritDoc}
    */
   @Override
-  public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
+  public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
     final var query = """
         query GetPlanRevision($id: Int!) {
           plan_by_pk(id: $id) {
@@ -236,7 +236,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    */
   @Override
   public PlanMetadata getPlanMetadata(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
+  throws IOException, NoSuchPlanException, MerlinServiceException
   {
     final var request = (
         "query getPlanMetadata { "
@@ -302,7 +302,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    */
   @Override
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem problem)
-  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InstantiationException
+  throws IOException, NoSuchPlanException, MerlinServiceException, InvalidJsonException, InstantiationException
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
@@ -362,7 +362,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, PlanServiceException
+  throws IOException, NoSuchPlanException, MerlinServiceException
   {
     final var planName = getNextPlanName();
     final var planId = createEmptyPlan(
@@ -378,7 +378,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    */
   @Override
   public PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-  throws IOException, NoSuchPlanException, PlanServiceException
+  throws IOException, NoSuchPlanException, MerlinServiceException
   {
     final var requestFormat = (
         "mutation createEmptyPlan { insert_plan_one( object: { "
@@ -415,7 +415,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, PlanServiceException
+  throws IOException, NoSuchPlanException, MerlinServiceException
   {
     final var ids = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
     //creation are done in batch as that's what the scheduler does the most
@@ -441,7 +441,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         );
         final var activityDirectiveId = idsFromInitialPlan.get(activity.getId());
         if (!activityDirectiveFromSchedulingDirective.equals(actFromInitialPlan.get())) {
-          throw new PlanServiceException("The scheduler should not be updating activity instances");
+          throw new MerlinServiceException("The scheduler should not be updating activity instances");
           //updateActivityDirective(planId, schedulerActIntoMerlinAct, activityDirectiveId, activityToGoalId.get(activity));
         }
         ids.put(activity, activityDirectiveId);
@@ -453,7 +453,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var actsFromNewPlan = plan.getActivitiesById();
     for (final var idActInInitialPlan : idsFromInitialPlan.entrySet()) {
       if (!actsFromNewPlan.containsKey(idActInInitialPlan.getKey())) {
-        throw new PlanServiceException("The scheduler should not be deleting activity instances");
+        throw new MerlinServiceException("The scheduler should not be deleting activity instances");
         //deleteActivityDirective(idActInInitialPlan.getValue());
       }
     }
@@ -468,7 +468,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * {@inheritDoc}
    */
   @Override
-  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
+  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
     final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(planId);
     final var request = "query ensurePlanExists { plan_by_pk( id: %s ) { id } }"
         .formatted(planId.id());
@@ -495,7 +495,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    */
   //TODO: (error cleanup) more diverse exceptions for failed operations
   @Override
-  public void clearPlanActivityDirectives(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
+  public void clearPlanActivityDirectives(final PlanId planId) throws IOException, NoSuchPlanException,
+                                                                      MerlinServiceException
+  {
     ensurePlanExists(planId);
     final var request = (
         "mutation clearPlanActivities {"
@@ -522,7 +524,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, PlanServiceException
+  throws IOException, NoSuchPlanException, MerlinServiceException
   {
     return createActivityDirectives(planId, plan.getActivitiesByTime(), activityToGoalId);
   }
@@ -532,7 +534,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final List<SchedulingActivityDirective> orderedActivities,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, PlanServiceException
+  throws IOException, NoSuchPlanException, MerlinServiceException
   {
     ensurePlanExists(planId);
     final var query = """
@@ -605,8 +607,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   @Override
-  public MissionModelTypes getMissionModelTypes(final PlanId planId)
-  throws IOException, MissionModelServiceException
+  public MerlinService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+  throws IOException, MerlinServiceException
   {
     final var request = """
         query GetActivityTypesForPlan {
@@ -626,11 +628,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         }
         """.formatted(planId.id());
     final JsonObject response;
-    try {
-      response = postRequest(request).get();
-    } catch (PlanServiceException e) {
-      throw new MissionModelServiceException("Failed to get mission model types for plan id %s".formatted(planId), e);
-    }
+    response = postRequest(request).get();
+
     final var activityTypesJsonArray =
         response.getJsonObject("data")
                 .getJsonObject("plan_by_pk")
@@ -643,7 +642,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
                                        .getJsonObject("mission_model")
                                        .getInt("id"));
 
-    return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
+    return new MerlinService.MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
   private static List<ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
@@ -684,8 +683,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   @Override
-  public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-  throws IOException, MissionModelServiceException, NoSuchMissionModelException
+  public MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  throws IOException, NoSuchMissionModelException, MerlinServiceException
   {
     final var request = """
         query GetActivityTypesFromMissionModel{
@@ -702,11 +701,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         }
         """.formatted(missionModelId.id());
     final JsonObject response;
-    try {
-      response = postRequest(request).get();
-    } catch (PlanServiceException e) {
-      throw new MissionModelServiceException("Failed to get mission model types for model id %s".formatted(missionModelId), e);
-    }
+    response = postRequest(request).get();
     final var data = response.getJsonObject("data");
     if (data.get("mission_model_by_pk").getValueType().equals(JsonValue.ValueType.NULL)) throw new NoSuchMissionModelException(missionModelId);
     final var activityTypesJsonArray = data
@@ -714,11 +709,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
 
-    return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
+    return new MerlinService.MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
   public Collection<ResourceType> getResourceTypes(final MissionModelId missionModelId)
-  throws IOException, MissionModelServiceException
+  throws IOException, MerlinServiceException
   {
     final var request = """
         query GetResourceTypes {
@@ -729,11 +724,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
          }
         """.formatted(missionModelId.id());
     final JsonObject response;
-    try {
-      response = postRequest(request).get();
-    } catch (PlanServiceException e) {
-      throw new MissionModelServiceException("Failed to get mission model types for model id %s".formatted(missionModelId), e);
-    }
+    response = postRequest(request).get();
     final var data = response.getJsonObject("data");
     final var resourceTypesJsonArray = data.getJsonArray("resourceTypes");
 
@@ -756,12 +747,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @return
    * @throws IOException
    * @throws MissionModelServiceException
-   * @throws PlanServiceException
+   * @throws MerlinServiceException
    * @throws NoSuchPlanException
    */
   @Override
   public Collection<ResourceType> getResourceTypes(final PlanId planId)
-  throws IOException, MissionModelServiceException, PlanServiceException, NoSuchPlanException
+  throws IOException, MerlinServiceException, NoSuchPlanException
   {
     final var missionModelId = this.getPlanMetadata(planId).modelId();
     final var missionModelResourceTypes = getResourceTypes(new MissionModelId(missionModelId));
@@ -776,7 +767,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return allResourceTypes;
   }
 
-  public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, IOException {
+  public SimulationId getSimulationId(PlanId planId) throws MerlinServiceException, IOException {
     final var request = """
         query {
           simulation(where: {plan_id: {_eq: %d}}) {
@@ -794,7 +785,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   @Override
   public DatasetId storeSimulationResults(final PlanMetadata planMetadata,
                                           final SimulationResults results,
-                                          final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws PlanServiceException, IOException
+                                          final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws
+                                                                                                                                                        MerlinServiceException, IOException
   {
     final var simulationId = getSimulationId(planMetadata.planId());
     final var datasetIds = createSimulationDataset(simulationId, planMetadata);
@@ -812,7 +804,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   private Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities(SimulationDatasetId datasetId, Instant startSimulation)
-  throws PlanServiceException, IOException, InvalidJsonException
+  throws MerlinServiceException, IOException, InvalidJsonException
   {
     final var request = """
         query{
@@ -839,7 +831,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return parseSimulatedActivities(data, startSimulation);
   }
 
-  private ProfileSet getProfileTypes(DatasetId datasetId) throws PlanServiceException, IOException {
+  private ProfileSet getProfileTypes(DatasetId datasetId) throws MerlinServiceException, IOException {
     final var request = """
         query{
           profile(where: {dataset_id: {_eq: %d}}){
@@ -854,7 +846,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return parseProfiles(data);
   }
 
-  private ProfileSet getProfilesWithSegments(DatasetId datasetId) throws PlanServiceException, IOException {
+  private ProfileSet getProfilesWithSegments(DatasetId datasetId) throws MerlinServiceException, IOException {
     final var request = """
         query{
           profile(where: {dataset_id: {_eq: %d}}){
@@ -875,7 +867,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return parseProfiles(data);
   }
 
-  private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws PlanServiceException, IOException {
+  private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws
+                                                                                                        MerlinServiceException, IOException {
     final var request = """
        query{
        span(where: {duration: {_is_null: true}, dataset_id: {_eq: %d}}) {
@@ -895,7 +888,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
   @Override
   public Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final var simulationDatasetId = getSuitableSimulationResults(planMetadata);
     if(simulationDatasetId.isEmpty()) return Optional.empty();
@@ -934,7 +927,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   public Optional<List<DatasetMetadata>> getExternalDatasets(final PlanId planId)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final var datasets = new ArrayList<DatasetMetadata>();
     final var request = """
@@ -962,7 +955,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
   @Override
   public ExternalProfiles getExternalProfiles(final PlanId planId)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final Map<String, LinearProfile> realProfiles = new HashMap<>();
     final Map<String, DiscreteProfile> discreteProfiles = new HashMap<>();
@@ -1029,12 +1022,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return unfinishedActivities;
   }
 
-  private UnwrappedProfileSet unwrapProfiles(final ProfileSet profileSet) throws PlanServiceException {
+  private UnwrappedProfileSet unwrapProfiles(final ProfileSet profileSet) throws MerlinServiceException {
     return new UnwrappedProfileSet(unwrapProfiles(profileSet.realProfiles()), unwrapProfiles(profileSet.discreteProfiles()));
   }
 
   private <Dynamics> HashMap<String, Pair<ValueSchema, List<ProfileSegment<Dynamics>>>> unwrapProfiles(Map<String, Pair<ValueSchema,List<ProfileSegment<Optional<Dynamics>>>>> profiles)
-  throws PlanServiceException
+  throws MerlinServiceException
   {
     final var unwrapped = new HashMap<String,Pair<ValueSchema, List<ProfileSegment<Dynamics>>>>();
     for(final var profile: profiles.entrySet()) {
@@ -1158,7 +1151,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @param planMetadata the plan metadata containing the planning horizon and plan revision
    * @return optionally a simulation dataset id
    */
-  public Optional<DatasetIds> getSuitableSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException {
+  public Optional<DatasetIds> getSuitableSimulationResults(PlanMetadata planMetadata) throws MerlinServiceException, IOException {
     final var request =
         """
         {
@@ -1198,7 +1191,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   private SimulationId createSimulation(final PlanId planId, final Map<String, SerializedValue> arguments)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final var request = """
         mutation {
@@ -1219,7 +1212,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
 
   private void setSimulationDatasetStatus(SimulationDatasetId id, SimulationStateRecord state)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final var request = """
         mutation {
@@ -1236,12 +1229,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var data = response.getJsonObject("data");
     final var affected = data.getJsonObject("update_simulation_dataset").getInt("affected_rows");
     if(affected != 1){
-      throw new PlanServiceException("Unable to modify the status of simulation dataset with id %d".formatted(id.id()));
+      throw new MerlinServiceException("Unable to modify the status of simulation dataset with id %d".formatted(id.id()));
     }
   }
 
   private DatasetIds createSimulationDataset(SimulationId simulationId, PlanMetadata planMetadata)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final var request = """
         mutation {
@@ -1274,7 +1267,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   private HashMap<String, ProfileRecord> postResourceProfiles(DatasetId datasetId,
                                                               final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
                                                               final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     final var req = """
         mutation($profiles: [profile_insert_input!]!) {
@@ -1338,7 +1331,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final var id = dataReturned.asJsonObject().getInt("id");
       final var nameResourceReturned = dataReturned.asJsonObject().getString("name");
       if(!nameResourceReturned.equals(resource)){
-        throw new PlanServiceException("Resource do not match");
+        throw new MerlinServiceException("Resource do not match");
       }
       profileRecords.put(resource, new ProfileRecord(
           id,
@@ -1355,7 +1348,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final DatasetId datasetId,
       final Map<String, ProfileRecord> records,
       final ProfileSet profileSet
-  ) throws PlanServiceException, IOException
+  ) throws MerlinServiceException, IOException
   {
     final var realProfiles = profileSet.realProfiles();
     final var discreteProfiles = profileSet.discreteProfiles();
@@ -1381,7 +1374,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final ProfileRecord profileRecord,
       final List<ProfileSegment<Optional<Dynamics>>> segments,
       final JsonParser<Dynamics> dynamicsP
-  ) throws PlanServiceException, IOException
+  ) throws MerlinServiceException, IOException
   {
     final var req = """
         mutation($profileSegments:[profile_segment_insert_input!]!) {
@@ -1422,19 +1415,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final JsonObject response;
     try {
       response = postRequest(req, arguments).get();
-    } catch (PlanServiceException e) {
-      throw new PlanServiceException(e.toString());
+    } catch (MerlinServiceException e) {
+      throw new MerlinServiceException(e.toString());
     }
     final var affected_rows = response.getJsonObject("data").getJsonObject("insert_profile_segment").getInt("affected_rows");
     if(affected_rows!=segments.size()) {
-      throw new PlanServiceException("not the same size");
+      throw new MerlinServiceException("not the same size");
     }
   }
 
   private void postRealProfileSegments(final DatasetId datasetId,
                                               final ProfileRecord profileRecord,
                                               final List<ProfileSegment<Optional<RealDynamics>>> segments)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     postProfileSegment(datasetId, profileRecord, segments, realDynamicsP);
   }
@@ -1442,14 +1435,14 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   private void postDiscreteProfileSegments(final DatasetId datasetId,
                                                   final ProfileRecord profileRecord,
                                                   final List<ProfileSegment<Optional<SerializedValue>>> segments)
-  throws PlanServiceException, IOException
+  throws MerlinServiceException, IOException
   {
     postProfileSegment(datasetId, profileRecord, segments, serializedValueP);
   }
 
   private void insertSimulationTopics(
       DatasetId datasetId,
-      final List<Triple<Integer, String, ValueSchema>> topics) throws PlanServiceException, IOException
+      final List<Triple<Integer, String, ValueSchema>> topics) throws MerlinServiceException, IOException
   {
     final var req = """
         mutation($topics:[topic_insert_input!]!) {
@@ -1477,7 +1470,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
   private void insertSimulationEvents(
       DatasetId datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints) throws PlanServiceException, IOException
+      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints) throws MerlinServiceException, IOException
   {
     final var req = """
             mutation($events:[event_insert_input!]!){
@@ -1532,7 +1525,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
       final Instant simulationStart,
       final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId
-  ) throws PlanServiceException, IOException
+  ) throws MerlinServiceException, IOException
   {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
                                                               .collect(Collectors.toMap(
@@ -1557,7 +1550,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final DatasetId datasetId,
     final Map<Long, SpanRecord> simulatedActivities,
     final Map<Long, Long> simIdToPgId
-) throws PlanServiceException, IOException
+) throws MerlinServiceException, IOException
   {
   final var req = """
       mutation($updates:[span_updates!]!) {
@@ -1596,7 +1589,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       affected_rows = response.getJsonObject("data").getJsonObject("update_span_many").getInt("affected_rows");
     }
     if(affected_rows != updateCounter) {
-      throw new PlanServiceException("not the same size");
+      throw new MerlinServiceException("not the same size");
     }
 }
 
@@ -1631,7 +1624,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   public HashMap<Long, Long> postSpans(final DatasetId datasetId,
                                        final Map<Long, SpanRecord> spans,
                                        final Instant simulationStart
-  ) throws PlanServiceException, IOException
+  ) throws MerlinServiceException, IOException
   {
     final var req = """
                         mutation($spans:[span_insert_input!]!) {

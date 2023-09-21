@@ -14,11 +14,10 @@ import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 
 public record GenerateSchedulingLibAction(
-    MissionModelService missionModelService,
-    PlanService.ReaderRole planService
+    MerlinService.ReaderRole merlinService
 ) {
   public GenerateSchedulingLibAction {
-    Objects.requireNonNull(planService);
+    Objects.requireNonNull(merlinService);
   }
 
   /**
@@ -46,10 +45,10 @@ public record GenerateSchedulingLibAction(
       final var temporalPolyfillTypes = getTypescriptResource("constraints/TemporalPolyfillTypes.ts");
 
 
-      var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
+      var missionModelTypes = merlinService.getMissionModelTypes(missionModelId);
       if(planId.isPresent()) {
-        final var allResourceTypes = planService.getResourceTypes(planId.get());
-        missionModelTypes = new MissionModelService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
+        final var allResourceTypes = merlinService.getResourceTypes(planId.get());
+        missionModelTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
       }
 
       final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
@@ -66,7 +65,7 @@ public record GenerateSchedulingLibAction(
                  "file:///mission-model-generated-code.ts", generatedConstraintsCode,
                  "file:///%s".formatted(temporalPolyfillTypes.basename), temporalPolyfillTypes.source
                  ));
-    } catch (final IOException | MissionModelService.MissionModelServiceException | PlanServiceException |
+    } catch (final IOException | MerlinServiceException |
                    NoSuchPlanException | NoSuchMissionModelException e) {
       return new Response.Failure(e.getMessage());
     }

@@ -10,8 +10,8 @@ import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 
 public final class TypescriptCodeGenerationServiceTestFixtures {
 
-  public static final MissionModelService.MissionModelTypes MISSION_MODEL_TYPES =
-      new MissionModelService.MissionModelTypes(
+  public static final MerlinService.MissionModelTypes MISSION_MODEL_TYPES =
+      new MerlinService.MissionModelTypes(
           List.of(
               new ActivityType(
                   "SampleActivity1",

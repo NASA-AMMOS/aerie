@@ -1171,8 +1171,6 @@ public class TestApplyWhen {
     assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
-
-
   @Test
   public void testCoexistenceExternalResource() {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(25, Duration.SECONDS));
