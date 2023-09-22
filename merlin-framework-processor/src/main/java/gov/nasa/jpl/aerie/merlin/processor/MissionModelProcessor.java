@@ -96,25 +96,25 @@ public final class MissionModelProcessor implements Processor {
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
 
-        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
+        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules());
         for (final var request : autoValueMapperRequests) {
           concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
         }
 
         final var missionModelRecord = new MissionModelRecord(
-            missionModelRecord$.$package,
-            missionModelRecord$.topLevelModel,
-            missionModelRecord$.expectsPlanStart,
-            missionModelRecord$.modelConfigurationType,
+            missionModelRecord$.$package(),
+            missionModelRecord$.topLevelModel(),
+            missionModelRecord$.expectsPlanStart(),
+            missionModelRecord$.modelConfigurationType(),
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes
+            missionModelRecord$.activityTypes()
         );
 
         final var generatedFiles = new ArrayList<>(List.of(
             missionModelGen.generateMerlinPlugin(missionModelRecord),
             missionModelGen.generateSchedulerPlugin(missionModelRecord)));
 
-        missionModelRecord.modelConfigurationType
+        missionModelRecord.modelConfigurationType()
             .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
             .ifPresent(generatedFiles::add);
 
@@ -130,7 +130,7 @@ public final class MissionModelProcessor implements Processor {
             autoValueMapperRequests);
         generatedFiles.add(autoValueMappers);
 
-        for (final var activityRecord : missionModelRecord.activityTypes) {
+        for (final var activityRecord : missionModelRecord.activityTypes()) {
           this.ownedActivityTypes.add(activityRecord.inputType().declaration());
           if (!activityRecord.inputType().mapper().isCustom) {
             missionModelGen.generateActivityMapper(missionModelRecord, activityRecord).ifPresent(generatedFiles::add);

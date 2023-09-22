@@ -146,10 +146,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(ModelType.class),
-                    missionModel.modelConfigurationType
+                    missionModel.modelConfigurationType()
                         .map($ -> ClassName.get($.declaration()))
                         .orElse(ClassName.get(Unit.class)),
-                    ClassName.get(missionModel.topLevelModel)))
+                    ClassName.get(missionModel.topLevelModel())))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getDirectiveTypes")
@@ -161,7 +161,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(String.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
-                                ClassName.get(missionModel.topLevelModel),
+                                ClassName.get(missionModel.topLevelModel()),
                                 WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement(
@@ -175,12 +175,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(
-                        missionModel.modelConfigurationType
+                        missionModel.modelConfigurationType()
                             .map(configType -> configType.mapper().name)
                             .orElse(ClassName.get(EmptyInputType.class)))
                     .addStatement(
                         "return new $T()",
-                        missionModel.modelConfigurationType
+                        missionModel.modelConfigurationType()
                             .map(configType -> configType.mapper().name)
                             .orElse(ClassName.get(EmptyInputType.class)))
                 .build())
@@ -194,7 +194,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "planStart",
                         Modifier.FINAL)
                     .addParameter(
-                        missionModel.modelConfigurationType
+                        missionModel.modelConfigurationType()
                             .map($ -> ClassName.get($.declaration()))
                             .orElse(ClassName.get(Unit.class)),
                         "configuration",
@@ -203,7 +203,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer.class),
                         "builder",
                         Modifier.FINAL)
-                    .returns(ClassName.get(missionModel.topLevelModel))
+                    .returns(ClassName.get(missionModel.topLevelModel()))
                     .addStatement(
                         "$T.registerTopics($L)",
                         missionModel.getTypesName(),
@@ -230,9 +230,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   }
 
   private static CodeBlock generateMissionModelInstantiation(final MissionModelRecord missionModel) {
-    final var modelClassName = ClassName.get(missionModel.topLevelModel);
-    return missionModel.modelConfigurationType
-        .map(configType -> missionModel.expectsPlanStart ?
+    final var modelClassName = ClassName.get(missionModel.topLevelModel());
+    return missionModel.modelConfigurationType()
+        .map(configType -> missionModel.expectsPlanStart() ?
             CodeBlock.of(
                 "new $T($L, $L, $L)",
                 modelClassName,
@@ -244,7 +244,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 modelClassName,
                 "registrar",
                 "configuration"))
-        .orElseGet(() -> missionModel.expectsPlanStart ?
+        .orElseGet(() -> missionModel.expectsPlanStart() ?
             CodeBlock.of(
                 "new $T($L, $L)",
                 modelClassName,
@@ -279,7 +279,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addStatement("final var result = new $T()", ParameterizedTypeName.get(HashMap.class, String.class, DurationType.class))
                     .addCode(
                         missionModel
-                            .activityTypes
+                            .activityTypes()
                             .stream()
                             .map(
                                 activityTypeRecord ->
@@ -317,7 +317,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         TypeSpec
             .classBuilder(typeName)
             // The location of the mission model package determines where to put this class.
-            .addOriginatingElement(missionModel.$package)
+            .addOriginatingElement(missionModel.$package())
             // TODO: List found task spec types as dependencies of this generated file.
             .addAnnotation(
                 AnnotationSpec
@@ -328,7 +328,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .superclass(gov.nasa.jpl.aerie.merlin.framework.ModelActions.class)
             .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build())
             .addMethods(
-                missionModel.activityTypes
+                missionModel.activityTypes()
                     .stream()
                     .flatMap(entry -> Stream
                         .of(
@@ -336,7 +336,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .methodBuilder("spawn")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .addParameter(
-                                    ClassName.get(missionModel.topLevelModel),
+                                    ClassName.get(missionModel.topLevelModel()),
                                     "model",
                                     Modifier.FINAL)
                                 .addParameter(
@@ -363,7 +363,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "duration",
                                     Modifier.FINAL)
                                 .addParameter(
-                                    ClassName.get(missionModel.topLevelModel),
+                                    ClassName.get(missionModel.topLevelModel()),
                                     "model",
                                     Modifier.FINAL)
                                 .addParameter(
@@ -401,7 +401,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         .addModifiers(Modifier.FINAL)
                                         .build())
                                 .addParameter(
-                                    ClassName.get(missionModel.topLevelModel),
+                                    ClassName.get(missionModel.topLevelModel()),
                                     "model",
                                     Modifier.FINAL)
                                 .addParameter(
@@ -419,7 +419,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .methodBuilder("call")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .addParameter(
-                                    ClassName.get(missionModel.topLevelModel),
+                                    ClassName.get(missionModel.topLevelModel()),
                                     "model",
                                     Modifier.FINAL)
                                 .addParameter(
@@ -461,7 +461,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addFields(
-                missionModel.activityTypes
+                missionModel.activityTypes()
                     .stream()
                     .map(activityType -> FieldSpec
                         .builder(
@@ -479,7 +479,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(String.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
-                                ClassName.get(missionModel.topLevelModel),
+                                ClassName.get(missionModel.topLevelModel()),
                                 WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "directiveTypes",
@@ -487,7 +487,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .initializer(
                         "$T.ofEntries($>$>$L$<$<)",
                         ClassName.get(Map.class),
-                        missionModel.activityTypes
+                        missionModel.activityTypes()
                             .stream()
                             .map(activityType -> CodeBlock
                                 .builder()
@@ -521,7 +521,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addParameter(
                         ParameterizedTypeName.get(
                             ClassName.get(ActivityMapper.class),
-                            ClassName.get(missionModel.topLevelModel),
+                            ClassName.get(missionModel.topLevelModel()),
                             TypeVariableName.get("Input"),
                             TypeVariableName.get("Output")),
                         "mapper",
@@ -561,7 +561,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     return Optional.of(TypeSpec
         .classBuilder(name)
         // The location of the missionModel package determines where to put this class.
-        .addOriginatingElement(missionModel.$package)
+        .addOriginatingElement(missionModel.$package())
         // The fields and methods of the activity determines the overall behavior of this class.
         .addOriginatingElement(inputType.declaration())
         // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
@@ -628,7 +628,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     effectModel = activityType.effectModel();
     final var typeMirror = effectModel.flatMap(EffectModelRecord::returnType);
     if (typeMirror.isPresent()) {
-      effectModelReturnMapperBlock = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules)
+      effectModelReturnMapperBlock = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules())
                   .instantiateNullableMapperFor(typeMirror.get());
       if (effectModelReturnMapperBlock.isEmpty()) {
         this.messager.printMessage(
@@ -642,7 +642,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       computedAttributesTypeName = TypeName.get(typeMirror.get());
     } else {
       effectModelReturnMapperBlock = new Resolver(
-          this.typeUtils, this.elementUtils, missionModel.typeRules).applyRules(
+          this.typeUtils, this.elementUtils, missionModel.typeRules()).applyRules(
           new TypePattern.ClassPattern(ClassName.get(ValueMapper.class),
                                        List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of()))));
       computedAttributesTypeName = TypeName.get(Unit.class);
@@ -673,7 +673,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     final var typeSpec = TypeSpec
         .classBuilder(activityType.inputType().mapper().name)
         // The location of the missionModel package determines where to put this class.
-        .addOriginatingElement(missionModel.$package)
+        .addOriginatingElement(missionModel.$package())
         // The fields and methods of the activity determines the overall behavior of this class.
         .addOriginatingElement(activityType.inputType().declaration())
         // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
@@ -684,7 +684,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .build())
         .addSuperinterface(ParameterizedTypeName.get(
             ClassName.get(ActivityMapper.class),
-            ClassName.get(missionModel.topLevelModel),
+            ClassName.get(missionModel.topLevelModel()),
             ClassName.get(activityType.inputType().declaration()),
             computedAttributesCodeBlocks.typeName().box()))
         .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -768,7 +768,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     ClassName.get(TaskFactory.class),
                     activityType.getOutputTypeName()))
                 .addParameter(
-                    ClassName.get(missionModel.topLevelModel),
+                    ClassName.get(missionModel.topLevelModel()),
                     "model",
                     Modifier.FINAL)
                 .addParameter(
@@ -849,7 +849,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
   private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final InputTypeRecord inputType)
   {
-    final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
+    final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules());
     var failed = false;
     final var mapperBlocks = new HashMap<String, CodeBlock>();
 
