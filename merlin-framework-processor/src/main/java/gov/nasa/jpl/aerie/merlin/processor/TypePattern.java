@@ -15,12 +15,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-public abstract class TypePattern {
-  private TypePattern() {}
-
-  public static TypePattern from(final TypeMirror mirror) {
+public sealed interface TypePattern {
+  static TypePattern from(final TypeMirror mirror) {
     switch (mirror.getKind()) {
       case BOOLEAN: return new PrimitivePattern(Primitive.BOOLEAN);
       case BYTE: return new PrimitivePattern(Primitive.BYTE);
@@ -48,38 +45,27 @@ public abstract class TypePattern {
     }
   }
 
-  public static TypePattern from(final VariableElement element) {
+  static TypePattern from(final VariableElement element) {
     return from(element.asType());
   }
 
-  public abstract TypePattern substitute(Map<String, TypePattern> substitution);
+  TypePattern substitute(Map<String, TypePattern> substitution);
 
-  public abstract Map<String, TypePattern> match(TypePattern other) throws UnificationException;
+  Map<String, TypePattern> match(TypePattern other) throws UnificationException;
 
-  public abstract boolean isGround();
+  boolean isGround();
 
-  public abstract boolean isSyntacticallyEqualTo(TypePattern other);
+  boolean isSyntacticallyEqualTo(TypePattern other);
 
-  public abstract TypeName render();
+  TypeName render();
 
-  public abstract TypeName erasure();
+  TypeName erasure();
 
-  public abstract TypePattern box();
+  TypePattern box();
 
-  @Override
-  public final String toString() {
-    return this.render().toString();
-  }
+  class UnificationException extends Exception {}
 
-  public static class UnificationException extends Exception {}
-
-  public static final class TypeVariablePattern extends TypePattern {
-    public final String name;
-
-    public TypeVariablePattern(final String name) {
-      this.name = Objects.requireNonNull(name);
-    }
-
+  record TypeVariablePattern(String name) implements TypePattern {
     @Override
     public TypePattern substitute(final Map<String, TypePattern> substitution) {
       return substitution.getOrDefault(this.name, this);
@@ -121,13 +107,7 @@ public abstract class TypePattern {
     }
   }
 
-  public static final class PrimitivePattern extends TypePattern {
-    public final Primitive primitive;
-
-    public PrimitivePattern(final Primitive primitive) {
-      this.primitive = Objects.requireNonNull(primitive);
-    }
-
+  record PrimitivePattern(Primitive primitive) implements TypePattern {
     @Override
     public PrimitivePattern substitute(final Map<String, TypePattern> substitution) {
       return this;
@@ -190,13 +170,7 @@ public abstract class TypePattern {
     }
   }
 
-  public static final class ArrayPattern extends TypePattern {
-    public final TypePattern element;
-
-    public ArrayPattern(final TypePattern element) {
-      this.element = Objects.requireNonNull(element);
-    }
-
+  record ArrayPattern(TypePattern element) implements TypePattern {
     @Override
     public ArrayPattern substitute(final Map<String, TypePattern> substitution) {
       final var child = this.element.substitute(substitution);
@@ -242,15 +216,7 @@ public abstract class TypePattern {
     }
   }
 
-  public static final class ClassPattern extends TypePattern {
-    public final ClassName name;
-    public final List<TypePattern> arguments;
-
-    public ClassPattern(final ClassName name, final List<TypePattern> arguments) {
-      this.name = Objects.requireNonNull(name);
-      this.arguments = Objects.requireNonNull(arguments);
-    }
-
+  record ClassPattern(ClassName name, List<TypePattern> arguments) implements TypePattern {
     @Override
     public ClassPattern substitute(final Map<String, TypePattern> substitution) {
       final var substitutedArguments = new ArrayList<TypePattern>(this.arguments.size());

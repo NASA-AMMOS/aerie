@@ -65,8 +65,8 @@ public final class Resolver {
   }
 
   public Optional<CodeBlock> applyRules(final TypePattern goal) {
-    if (goal instanceof ClassPattern && ((ClassPattern)goal).name.equals(ClassName.get(Class.class))) {
-      final var pattern = ((ClassPattern)goal).arguments.get(0);
+    if (goal instanceof ClassPattern && ((ClassPattern)goal).name().equals(ClassName.get(Class.class))) {
+      final var pattern = ((ClassPattern)goal).arguments().get(0);
       return Optional.of(
           (pattern.render().equals(pattern.erasure()))
               ? CodeBlock.of("$T.class", pattern.erasure())
