@@ -239,7 +239,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         activityFinder.durationIn(durRange);
         activityCreationTemplate.durationIn(durRange);
       }
-
+      //jd check if anchor is already in the plan
       final var existingActs = plan.find(
           activityFinder.build(),
           simulationResults,
@@ -263,6 +263,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           }
         }
       }
+      //jd add to template information about activity A.
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {

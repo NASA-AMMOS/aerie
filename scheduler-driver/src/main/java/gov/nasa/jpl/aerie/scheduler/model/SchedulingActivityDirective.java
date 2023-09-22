@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @param duration the length of time this activity instances lasts for after its start
  * @param arguments arguments are stored in a String/SerializedValue hashmap.
  * @param topParent the parent activity if any
+ * @param createNewAnchoredActivity the boolean indicating whether a new activity should be created to satisfy the anchoring constraint
  */
 public record SchedulingActivityDirective(
     SchedulingActivityDirectiveId id,
@@ -34,7 +35,8 @@ public record SchedulingActivityDirective(
     Map<String, SerializedValue> arguments,
     SchedulingActivityDirectiveId topParent,
     SchedulingActivityDirectiveId anchorId,
-    boolean anchoredToStart
+    boolean anchoredToStart,
+    boolean createNewAnchoredActivity
     ){
 
   private static final AtomicLong uniqueId = new AtomicLong();
@@ -47,12 +49,12 @@ public record SchedulingActivityDirective(
    *     by this activity instance
    */
   //TODO: reconsider unscheduled activity instances
-  public static SchedulingActivityDirective of(ActivityType type, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  public static SchedulingActivityDirective of(ActivityType type, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, boolean createNewAnchoredActivity) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 Duration.ZERO,
                                 Duration.ZERO,
                                 Map.of(), null,
-                                anchorId, anchoredToStart);
+                                anchorId, anchoredToStart, createNewAnchoredActivity);
   }
 
   /**
@@ -62,12 +64,12 @@ public record SchedulingActivityDirective(
    *     by this activity instance
    * @param startOffset IN the time at which the activity is scheduled
    */
-  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, boolean createNewAnchoredActivity) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 startOffset,
                                 Duration.ZERO,
                                 Map.of(), null,
-                                anchorId, anchoredToStart);
+                                anchorId, anchoredToStart, createNewAnchoredActivity);
   }
 
   /**
@@ -78,29 +80,29 @@ public record SchedulingActivityDirective(
    * @param startOffset IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, boolean createNewAnchoredActivity) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 startOffset,
                                 duration,
-                                Map.of(), null, anchorId, anchoredToStart);
+                                Map.of(), null, anchorId, anchoredToStart, createNewAnchoredActivity);
 
   }
 
-  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, boolean createNewAnchoredActivity) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 startOffset,
                                 duration,
-                                parameters, null, anchorId, anchoredToStart);
+                                parameters, null, anchorId, anchoredToStart, createNewAnchoredActivity);
   }
 
-  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, boolean createNewAnchoredActivity) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 startOffset,
                                 duration,
-                                parameters, topParent, anchorId, anchoredToStart);
+                                parameters, topParent, anchorId, anchoredToStart, createNewAnchoredActivity);
   }
 
-  private static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  private static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, boolean createNewAnchoredActivity) {
     return new SchedulingActivityDirective(
         id,
         type,
@@ -109,7 +111,7 @@ public record SchedulingActivityDirective(
         parameters,
         topParent,
         anchorId,
-        anchoredToStart);
+        anchoredToStart, createNewAnchoredActivity);
   }
 
   public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, Duration duration){
@@ -121,13 +123,14 @@ public record SchedulingActivityDirective(
         new HashMap<>(activityInstance.arguments),
         activityInstance.topParent,
         activityInstance.anchorId,
-        activityInstance.anchoredToStart);
+        activityInstance.anchoredToStart,
+        activityInstance.createNewAnchoredActivity);
   }
 
   /**
    * Scheduler Activity Directives generated from the Plan have their ID set to the negative of the ActivityDirectiveId
    */
-  public static SchedulingActivityDirective fromActivityDirective(ActivityDirectiveId id, ActivityDirective activity, ActivityType type, Duration duration){
+  public static SchedulingActivityDirective fromActivityDirective(ActivityDirectiveId id, ActivityDirective activity, ActivityType type, Duration duration, boolean createNewAnchoredActivity){
     return SchedulingActivityDirective.of(
         new SchedulingActivityDirectiveId(-id.id()),
         type,
@@ -136,7 +139,7 @@ public record SchedulingActivityDirective(
         activity.serializedActivity().getArguments(),
         null,
         (activity.anchorId() != null ? new SchedulingActivityDirectiveId(-activity.anchorId().id()) : null),
-        activity.anchoredToStart());
+        activity.anchoredToStart(), createNewAnchoredActivity);
   }
 
   /**
@@ -152,7 +155,8 @@ public record SchedulingActivityDirective(
         Map.copyOf(o.arguments),
         o.topParent,
         o.anchorId,
-        o.anchoredToStart
+        o.anchoredToStart,
+        o.createNewAnchoredActivity
     );
   }
 

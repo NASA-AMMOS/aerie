@@ -353,6 +353,13 @@ public record ActivityExpression(
         match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
       }
     }
+    if (match && createNewAnchoredActivity == True)
+      match = (act.anchorId() == this.id);
+    else if (createNewAnchoredActivity == False) {
+      match = False;
+    }
+
+    //jd new paragraph storing activity thatt matches the anchor
     return match;
   }
 

@@ -73,6 +73,7 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate<any>,
+  createNewAnchoredActivity: boolean,
   activityFinder: ActivityExpression<any> | undefined,
   alias: string,
   forEach: WindowsExpressions.WindowsExpression | ActivityExpression<any>,
