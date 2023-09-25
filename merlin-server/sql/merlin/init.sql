@@ -107,4 +107,7 @@ begin;
   \ir functions/hasura/plan_branching_functions.sql
   \ir functions/hasura/plan_merge_functions.sql
 
+  -- Preload Data
+  \ir default_user_roles.sql;
+
 end;

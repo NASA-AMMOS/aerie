@@ -4,11 +4,6 @@ create table metadata.users(
     on update cascade
     on delete restrict
 );
--- Insert the default roles into the table, then change the generated status to "Always"
--- This can be changed back if we need to add more default users in the future
-insert into metadata.users(username, default_role)
-  values ('Mission Model', 'viewer'),
-         ('Aerie Legacy', 'viewer');
 
 comment on table metadata.users is e''
 'All users recognized by this deployment.';

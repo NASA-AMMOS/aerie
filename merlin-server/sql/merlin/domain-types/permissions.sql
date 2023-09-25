@@ -1,3 +1,5 @@
+-- User Role Permissions Validation assumes that the Plan Merge Permissions
+-- are covered by the range [PLAN_OWNER_SOURCE - PLAN_OWNER_COLLABORATOR_TARGET]
 create type metadata.permission
   as enum (
     'NO_CHECK',
