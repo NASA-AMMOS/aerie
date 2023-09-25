@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionBetween;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
@@ -195,17 +194,17 @@ public class GoalBuilder {
     }
   }
 
-  private static ActivityCreationTemplate makeActivityTemplate(
+  private static ActivityExpression makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {
-    var builder = new ActivityCreationTemplate.Builder();
+    var builder = new ActivityExpression.Builder();
     final var type = lookupActivityType.apply(activityTemplate.activityType());
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
       if(activityTemplate.arguments().fields().containsKey(durationType.parameterName())){
         final var argument = activityTemplate.arguments().fields().get(durationType.parameterName());
         if(argument != null){
-          builder.duration(argument.expression);
+          builder.durationIn(argument.expression);
           activityTemplate.arguments().fields().remove(durationType.parameterName());
         } else {
           //nothing, other cases will be handled by below section

@@ -9,8 +9,6 @@ import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplateDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -210,16 +208,11 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     //the rest is the same if no such bisection has happened
     final var conflicts = new java.util.LinkedList<Conflict>();
     for (var window : anchors) {
-      boolean disj = false;
-      ActivityExpression.AbstractBuilder activityFinder = null;
-      ActivityExpression.AbstractBuilder activityCreationTemplate = null;
-      if (this.desiredActTemplate instanceof ActivityCreationTemplateDisjunction) {
-        disj = true;
-        activityFinder = new ActivityCreationTemplateDisjunction.OrBuilder();
-        activityCreationTemplate = new ActivityCreationTemplateDisjunction.OrBuilder();
-      } else if (this.desiredActTemplate != null) {
+      ActivityExpression.Builder activityFinder = null;
+      ActivityExpression.Builder activityCreationTemplate = null;
+      if (this.desiredActTemplate != null) {
         activityFinder = new ActivityExpression.Builder();
-        activityCreationTemplate = new ActivityCreationTemplate.Builder();
+        activityCreationTemplate = new ActivityExpression.Builder();
       }
       assert activityFinder != null;
       activityFinder.basedOn(this.matchActTemplate);
@@ -266,17 +259,16 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           }
         }
       }
-
-      ActivityCreationTemplate temp;
-      if (disj) {
-        temp = (ActivityCreationTemplateDisjunction) activityCreationTemplate.build();
-      } else {
-        temp = (ActivityCreationTemplate) activityCreationTemplate.build();
-      }
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
-          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults, evaluationEnvironment), temp, createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window), 1, Optional.empty()));
+          conflicts.add(new MissingActivityTemplateConflict(
+              this,
+              this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
+              activityCreationTemplate.build(),
+              createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+              1,
+              Optional.empty()));
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }

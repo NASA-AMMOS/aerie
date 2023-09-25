@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -31,8 +31,8 @@ public class TestRecurrenceGoal {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -68,8 +68,8 @@ public class TestRecurrenceGoal {
           .named("Test recurrence goal")
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS),
                                                  Duration.of(20, Duration.SECONDS)), true)))
-          .thereExistsOne(new ActivityCreationTemplate.Builder()
-                              .duration(Duration.of(2, Duration.SECONDS))
+          .thereExistsOne(new ActivityExpression.Builder()
+                              .durationIn(Duration.of(2, Duration.SECONDS))
                               .ofType(activityType)
                               .build())
           .repeatingEvery(Duration.of(-1, Duration.SECONDS))

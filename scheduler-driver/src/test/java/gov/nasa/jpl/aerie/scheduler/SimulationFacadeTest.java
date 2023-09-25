@@ -20,7 +20,6 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionConstant;
@@ -153,7 +152,7 @@ public class SimulationFacadeTest {
     final var goal = new CoexistenceGoal.Builder()
         .forEach(ActivityExpression.ofType(actTypePeel))
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder().
+        .thereExistsOne(new ActivityExpression.Builder().
                            ofType(actTypeBite)
                            .withArgument("biteSize", SerializedValue.of(0.1))
                            .build())
@@ -283,7 +282,7 @@ public class SimulationFacadeTest {
 
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypePeel)
                             .withArgument("peelDirection", SerializedValue.of("fromStem"))
                             .build())

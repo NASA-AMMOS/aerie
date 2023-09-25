@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
@@ -192,9 +191,9 @@ public class PrioritySolverTest {
         .startingAt(t0)
         .endingAt(t2hr.plus(Duration.of(10, Duration.MINUTE)))
         .repeatingEvery(d1hr)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(d1min)
+                            .durationIn(d1min)
                             .build())
         .withinPlanHorizon(h)
         .build();
@@ -227,9 +226,9 @@ public class PrioritySolverTest {
         .forEach(new ActivityExpression.Builder()
                      .ofType(actTypeA)
                      .build())
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeB)
-                            .duration(d1min)
+                            .durationIn(d1min)
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -273,9 +272,9 @@ public class PrioritySolverTest {
         .forEach(new ActivityExpression.Builder()
                      .ofType(actTypeA)
                      .build())
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeB)
-                            .duration(d1min)
+                            .durationIn(d1min)
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -312,9 +311,9 @@ public class PrioritySolverTest {
     CardinalityGoal cardGoal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(2, Duration.SECONDS), Duration.of(65, Duration.HOUR)))
         .occurences(new Range<>(1, 3))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(d1min)
+                            .durationIn(d1min)
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))

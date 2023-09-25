@@ -7,11 +7,16 @@ import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
+import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
@@ -22,6 +27,8 @@ import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
+import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +87,23 @@ public class PrioritySolver implements Solver {
   Evaluation evaluation;
 
   private final SimulationFacade simulationFacade;
+
+  public record EventWithActivity(Duration start, Duration end, SchedulingActivityDirective activity){}
+
+  public static class HistoryWithActivity{
+    List<EventWithActivity> events;
+
+    public HistoryWithActivity(){
+      events = new ArrayList<>();
+    }
+    public void add(EventWithActivity event){
+      this.events.add(event);
+    }
+    public Optional<EventWithActivity> getLastEvent(){
+      if(!events.isEmpty()) return Optional.of(events.get(events.size()-1));
+      return Optional.empty();
+    }
+  }
 
   /**
    * create a new greedy solver for the specified input planning problem
@@ -733,12 +757,10 @@ public class PrioritySolver implements Solver {
         startWindows = startWindows.and(missing.getTemporalContext());
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
-        final var act = missingTemplate.getActTemplate().createActivity(
+        final var act = createOneActivity(
+            missingTemplate.getActTemplate(),
             goal.getName() + "_" + java.util.UUID.randomUUID(),
             startWindows,
-            simulationFacade,
-            plan,
-            this.problem.getPlanningHorizon(),
             missing.getEvaluationEnvironment());
         act.ifPresent(newActs::add);
       }
@@ -835,6 +857,265 @@ public class PrioritySolver implements Solver {
     }
 
   return tmp;
+  }
+
+  /**
+   * creates one activity if possible
+   *
+   * @param name the activity name
+   * @param windows the windows in which the activity can be instantiated
+   * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
+   */
+  public @NotNull Optional<SchedulingActivityDirective> createOneActivity(
+      final ActivityExpression activityExpression,
+      final String name,
+      final Windows windows,
+      final EvaluationEnvironment evaluationEnvironment) {
+    //REVIEW: how to properly export any flexibility to instance?
+    for (var window : windows.iterateEqualTo(true)) {
+      var activity = instantiateActivity(activityExpression, name, window, evaluationEnvironment);
+      if (activity.isPresent()) {
+        return activity;
+      }
+    }
+    return Optional.empty();
+  }
+  private Optional<SchedulingActivityDirective> instantiateActivity(
+      final ActivityExpression activityExpression,
+      final String name,
+      final Interval interval,
+      final EvaluationEnvironment evaluationEnvironment) {
+    final var planningHorizon = this.problem.getPlanningHorizon();
+    final var taskNetwork = new TaskNetworkAdapter(new TaskNetwork());
+    taskNetwork.addAct(name);
+    if (interval != null) {
+      taskNetwork.addEnveloppe(name, "interval", interval.start, interval.end);
+    }
+    taskNetwork.addEnveloppe(name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
+    if (activityExpression.startRange() != null) {
+      taskNetwork.addStartInterval(name, activityExpression.startRange().start, activityExpression.startRange().end);
+    }
+    if (activityExpression.endRange() != null) {
+      taskNetwork.addEndInterval(name, activityExpression.endRange().start, activityExpression.endRange().end);
+    }
+    if (activityExpression.durationRange() != null) {
+      final Optional<Duration> durRequirementLower;
+      final Optional<Duration> durRequirementUpper;
+      try {
+        durRequirementLower = activityExpression.durationRange().getLeft()
+                                                                         .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
+                                                                         .valueAt(Duration.ZERO)
+                                                                         .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+        durRequirementUpper = activityExpression.durationRange().getRight()
+                                                                         .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
+                                                                         .valueAt(Duration.ZERO)
+                                                                         .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+
+      } catch (NullPointerException e) {
+        throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
+      }
+      if(durRequirementLower.isPresent() && durRequirementUpper.isPresent()) {
+        taskNetwork.addDurationInterval(name, durRequirementLower.get(), durRequirementUpper.get());
+      }
+    }
+    final var success = taskNetwork.solveConstraints();
+    if (!success) {
+      logger.warn("Inconsistent temporal constraints, will try next opportunity for activity placement if it exists");
+      return Optional.empty();
+    }
+    final var solved = taskNetwork.getAllData(name);
+
+    //the domain of user/scheduling temporal constraints have been reduced with the STN,
+    //now it is time to find an assignment compatible
+    //CASE 1: activity has an uncontrollable duration
+    if(activityExpression.type().getDurationType() instanceof DurationType.Uncontrollable){
+      final var history = new HistoryWithActivity();
+      final var f = new EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity>(){
+        @Override
+        public Duration valueAt(Duration start, HistoryWithActivity history) {
+          final var latestConstraintsSimulationResults = getLatestSimResultsUpTo(start);
+          final var actToSim = SchedulingActivityDirective.of(
+              activityExpression.type(),
+              start,
+              null,
+              SchedulingActivityDirective.instantiateArguments(
+                  activityExpression.arguments(),
+                  start,
+                  latestConstraintsSimulationResults,
+                  evaluationEnvironment,
+                  activityExpression.type()),
+              null,
+              null,
+              true);
+          final var lastInsertion = history.getLastEvent();
+          Optional<Duration> computedDuration = Optional.empty();
+          final var toRemove = new ArrayList<SchedulingActivityDirective>();
+          lastInsertion.ifPresent(eventWithActivity -> toRemove.add(eventWithActivity.activity()));
+          try {
+            simulationFacade.removeAndInsertActivitiesFromSimulation(toRemove, List.of(actToSim));
+            computedDuration = simulationFacade.getActivityDuration(actToSim);
+            if(computedDuration.isPresent()) {
+              history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
+            } else{
+              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
+              history.add(new EventWithActivity(start, null, actToSim));
+            }
+          } catch (SimulationFacade.SimulationException e) {
+            logger.debug("Simulation error while trying to simulate activities: " + e);
+            history.add(new EventWithActivity(start, null, actToSim));
+          }
+          return computedDuration.map(start::plus).orElse(Duration.MAX_VALUE);
+        }
+
+      };
+      return rootFindingHelper(f, history, solved);
+      //CASE 2: activity has a controllable duration
+    } else if (activityExpression.type().getDurationType() instanceof DurationType.Controllable dt) {
+      //select earliest start time, STN guarantees satisfiability
+      final var earliestStart = solved.start().start;
+      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(
+          activityExpression.arguments(),
+          earliestStart,
+          getLatestSimResultsUpTo(earliestStart),
+          evaluationEnvironment,
+          activityExpression.type());
+
+      final var durationParameterName = dt.parameterName();
+      //handle variable duration parameter here
+      final Duration setActivityDuration;
+      if (instantiatedArguments.containsKey(durationParameterName)) {
+        final var argumentDuration = Duration.of(
+            instantiatedArguments.get(durationParameterName).asInt().get(),
+            Duration.MICROSECOND);
+        if (solved.duration().contains(argumentDuration)) {
+          setActivityDuration = argumentDuration;
+        } else {
+          logger.debug(
+              "Controllable duration set by user is incompatible with temporal constraints associated to the activity template");
+          return Optional.empty();
+        }
+      } else {
+        //REVIEW: should take default duration of activity type maybe ?
+        setActivityDuration = solved.end().start.minus(solved.start().start);
+      }
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
+      return Optional.of(SchedulingActivityDirective.of(
+          activityExpression.type(),
+          earliestStart,
+          setActivityDuration,
+          SchedulingActivityDirective.instantiateArguments(
+              activityExpression.arguments(),
+              earliestStart,
+              getLatestSimResultsUpTo(earliestStart),
+              evaluationEnvironment,
+              activityExpression.type()),
+          null,
+          null,
+          true));
+    } else if (activityExpression.type().getDurationType() instanceof DurationType.Fixed dt) {
+      if (!solved.duration().contains(dt.duration())) {
+        logger.debug("Interval is too small");
+        return Optional.empty();
+      }
+
+      final var earliestStart = solved.start().start;
+
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
+      return Optional.of(SchedulingActivityDirective.of(
+          activityExpression.type(),
+          earliestStart,
+          dt.duration(),
+          SchedulingActivityDirective.instantiateArguments(
+              activityExpression.arguments(),
+              earliestStart,
+              getLatestSimResultsUpTo(earliestStart),
+              evaluationEnvironment,
+              activityExpression.type()),
+          null,
+          null,
+          true));
+    } else if (activityExpression.type().getDurationType() instanceof DurationType.Parametric dt) {
+      final var history = new HistoryWithActivity();
+      final var f = new EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity>() {
+        @Override
+        public Duration valueAt(final Duration start, final HistoryWithActivity history) {
+          final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
+              activityExpression.arguments(),
+              start,
+              getLatestSimResultsUpTo(start),
+              evaluationEnvironment,
+              activityExpression.type()
+          );
+
+          try {
+            final var duration = dt.durationFunction().apply(instantiatedArgs);
+            final var activity = SchedulingActivityDirective.of(activityExpression.type(),start,
+                                                                duration,
+                                                                instantiatedArgs,
+                                                                null,
+                                                                null,
+                                                                true);
+            history.add(new EventWithActivity(start, start.plus(duration), activity));
+            return duration.plus(start);
+          } catch (InstantiationException e) {
+            logger.error("Cannot instantiate parameterized duration activity type: " + activityExpression.type().getName());
+            throw new RuntimeException(e);
+          }
+        }
+      };
+
+      return rootFindingHelper(f, history, solved);
+    } else {
+      throw new UnsupportedOperationException("Unsupported duration type found: " + activityExpression.type().getDurationType());
+    }
+  }
+
+  private  Optional<SchedulingActivityDirective> rootFindingHelper(
+      final EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity> f,
+      final HistoryWithActivity history,
+      final TaskNetworkAdapter.TNActData solved) {
+    try {
+      var endInterval = solved.end();
+      var startInterval = solved.start();
+
+      final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
+
+      final var result = new EquationSolvingAlgorithms
+          .SecantDurationAlgorithm<HistoryWithActivity>()
+          .findRoot(
+              f,
+              history,
+              startInterval.start,
+              startInterval.end,
+              endInterval.start.plus(durationHalfEndInterval),
+              durationHalfEndInterval,
+              durationHalfEndInterval,
+              startInterval.start,
+              startInterval.end,
+              20);
+
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
+      final var lastActivityTested = result.history().getLastEvent();
+      return Optional.of(lastActivityTested.get().activity);
+    } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
+      logger.debug("Rootfinding encountered a zero-derivative");
+    } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
+      logger.debug("Rootfinding encountered an infinite-derivative");
+    } catch (EquationSolvingAlgorithms.DivergenceException e) {
+      logger.debug("Rootfinding diverged");
+    } catch (EquationSolvingAlgorithms.ExceededMaxIterationException e) {
+      logger.debug("Too many iterations");
+    } catch (EquationSolvingAlgorithms.NoSolutionException e) {
+      logger.debug("No solution");
+    }
+    if(!history.events.isEmpty()) {
+      try {
+        simulationFacade.removeActivitiesFromSimulation(List.of(history.getLastEvent().get().activity()));
+      } catch (SimulationFacade.SimulationException e) {
+        throw new RuntimeException("Exception while simulating original plan after activity insertion failure" ,e);
+      }
+    }
+    return Optional.empty();
   }
 
   public void printEvaluation() {

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
@@ -35,9 +35,9 @@ public class TestCardinalityGoal {
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(12, Duration.SECONDS), Duration.of(15, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))

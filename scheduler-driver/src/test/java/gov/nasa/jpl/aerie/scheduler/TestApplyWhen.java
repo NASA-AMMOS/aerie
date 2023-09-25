@@ -25,7 +25,6 @@ import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
@@ -69,8 +68,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(12, Duration.SECONDS)), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -105,8 +104,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(17, Duration.SECONDS)), true))) //add colorful tests that make use of windows capability
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -141,8 +140,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(19, Duration.SECONDS)), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -177,8 +176,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(21, Duration.SECONDS)), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -226,8 +225,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(2, Duration.SECONDS)), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(1, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(1, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -272,8 +271,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -318,8 +317,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -366,8 +365,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(3, Duration.SECONDS))
@@ -414,8 +413,8 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .duration(Duration.of(2, Duration.SECONDS))
+        .thereExistsOne(new ActivityExpression.Builder()
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -450,7 +449,7 @@ public class TestApplyWhen {
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(12, Duration.SECONDS)), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
@@ -493,9 +492,9 @@ public class TestApplyWhen {
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
@@ -540,9 +539,9 @@ public class TestApplyWhen {
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
@@ -591,9 +590,9 @@ public class TestApplyWhen {
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
@@ -639,7 +638,7 @@ public class TestApplyWhen {
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityType)
                             .build())
         .named("TestCardGoal")
@@ -691,7 +690,7 @@ public class TestApplyWhen {
     problem.setInitialPlan(partialPlan);
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -699,9 +698,9 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeA)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -746,7 +745,7 @@ public class TestApplyWhen {
     problem.setInitialPlan(partialPlan);
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -754,9 +753,9 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeA)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -808,7 +807,7 @@ public class TestApplyWhen {
     problem.setInitialPlan(partialPlan);
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -817,7 +816,7 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeB)
                             .build())
         .startsAt(TimeAnchor.START)
@@ -874,7 +873,7 @@ public class TestApplyWhen {
 
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -882,9 +881,9 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeA)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -946,7 +945,7 @@ public class TestApplyWhen {
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -954,9 +953,9 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeB)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -1019,7 +1018,7 @@ public class TestApplyWhen {
 
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -1027,9 +1026,9 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeA)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -1086,7 +1085,7 @@ public class TestApplyWhen {
 
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -1094,9 +1093,9 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeA)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
         .aliasForAnchors("Bond. James Bond")
@@ -1145,7 +1144,7 @@ public class TestApplyWhen {
     problem.setInitialPlan(partialPlan);
     //want to create another activity for each of the already present activities
     //  foreach with activityexpression
-    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+    ActivityExpression framework = new ActivityExpression.Builder()
         .ofType(actTypeA)
         .build();
 
@@ -1154,7 +1153,7 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .forEach(framework)
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeB)
                             .build())
         .startsAt(TimeAnchor.START)
@@ -1207,7 +1206,7 @@ public class TestApplyWhen {
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(period, true).assignGaps(new Windows(Interval.FOREVER, false))))
         .forEach(new SpansFromWindows(new AssignGaps<>(cond, new WindowsWrapperExpression(new Windows(Interval.FOREVER, false)))))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(actTypeB)
                             .withArgument("duration", profEx)
                             .build())
@@ -1262,9 +1261,9 @@ public class TestApplyWhen {
     CardinalityGoal whenActivitiesGreaterThan2 = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityTypeDependent)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(gte)
@@ -1278,9 +1277,9 @@ public class TestApplyWhen {
     RecurrenceGoal addRecurringActivityModifyingResource = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor.getHor(), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityTypeIndependent)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .withinPlanHorizon(hor)
@@ -1340,9 +1339,9 @@ public class TestApplyWhen {
     CardinalityGoal whenActivitiesGreaterThan2 = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityTypeDependent)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(gte)
@@ -1356,9 +1355,9 @@ public class TestApplyWhen {
     RecurrenceGoal addRecurringActivityModifyingResource = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor.getHor(), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityTypeIndependent)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .withinPlanHorizon(hor)
@@ -1425,9 +1424,9 @@ public class TestApplyWhen {
     CardinalityGoal whenActivitiesGreaterThan2 = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityTypeDependent)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(gte)
@@ -1441,9 +1440,9 @@ public class TestApplyWhen {
     RecurrenceGoal addRecurringActivityModifyingResource = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor.getHor(), true)))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(activityTypeIndependent)
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .withinPlanHorizon(hor)

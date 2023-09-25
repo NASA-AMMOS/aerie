@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
@@ -18,6 +19,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -43,24 +45,23 @@ import java.util.Set;
  *
  * templates may be fluently constructed via builders that parse like first
  * order logic predicate clauses, used in building up scheduling rules
+ * @param startRange Range of allowed values for matching activity scheduled start times. Activities with null start time do not match any non-null range
+ * The range itself determines if endpoints are inclusive or exclusive.
+ * @param endRange Range of allowed values for matching activity scheduled end times. Activities with null start time do not match any non-null range.
+ * @param durationRange Range of allowed values for duration of matching activities.
+ * @param type activity type
+ * @param nameRe regular expression of matching activity instance names
+ * @param arguments arguments of matching activities.
  */
-public class ActivityExpression implements Expression<Spans> {
+public record ActivityExpression(
+    Interval startRange,
+    Interval endRange,
+    Pair<Expression<? extends Profile<?>>, Expression<? extends Profile<?>>> durationRange,
+    ActivityType type,
+    java.util.regex.Pattern nameRe,
+    Map<String, ProfileExpression<?>> arguments
+) implements Expression<Spans> {
 
-  private Windows startOrEndRangeW;
-
-  @SuppressWarnings("unchecked")
-  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
-    return (AbstractBuilder<B, AT>) new Builder();
-  }
-
-  /**
-   * ctor is private to prevent inconsistent construction
-   *
-   * please use the enclosed fluent Builder class instead
-   *
-   * leaves all criteria elements unspecified
-   */
-  protected ActivityExpression() { }
 
   /**
    * a fluent builder class for constructing consistent template queries
@@ -77,29 +78,27 @@ public class ActivityExpression implements Expression<Spans> {
    * the builder checks for consistency among all specified terms at least by
    * the final build() call
    *
-   * @param <B> concrete builder type, used to ensure right builder returned
-   *     by each chained operation (ref curiously recuring template
-   *     pattern)
-   * @param <AT> concrete activity template type constructed by the builder
    */
-  public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
-
+  public static class Builder {
     protected Duration acceptableAbsoluteTimingError = Duration.of(0, Duration.MILLISECOND);
-
     Map<String, ProfileExpression<?>> arguments = new HashMap<>();
+    protected @Nullable ActivityType type;
+    protected @Nullable Interval startsIn;
+    protected @Nullable Interval endsIn;
+    protected @Nullable Pair<Expression<? extends Profile<?>>, Expression<? extends Profile<?>>> durationIn;
+    protected java.util.regex.Pattern nameRe;
 
-
-    public B withArgument(String argument, SerializedValue val) {
+    public Builder withArgument(String argument, SerializedValue val) {
       arguments.put(argument, new ProfileExpression<>(new DiscreteValue(val)));
       return getThis();
     }
 
-    public B withArgument(String argument, ProfileExpression<?> val) {
+    public Builder withArgument(String argument, ProfileExpression<?> val) {
       arguments.put(argument, val);
       return getThis();
     }
 
-    public B withTimingPrecision(Duration acceptableAbsoluteTimingError){
+    public Builder withTimingPrecision(Duration acceptableAbsoluteTimingError){
       this.acceptableAbsoluteTimingError = acceptableAbsoluteTimingError;
       return getThis();
     }
@@ -115,14 +114,10 @@ public class ActivityExpression implements Expression<Spans> {
      *     if no specific type is required
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B ofType(@Nullable ActivityType type) {
+    public @NotNull Builder ofType(@Nullable ActivityType type) {
       this.type = type;
       return getThis();
     }
-
-    protected @Nullable
-    ActivityType type;
 
     /**
      * requires activities have a scheduled start time in a specified range
@@ -135,56 +130,10 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B startsIn(@Nullable Interval range) {
+    public @NotNull Builder startsIn(@Nullable Interval range) {
       this.startsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
-
-    protected @Nullable Interval startsIn;
-
-    /**
-     * requires activities have a scheduled start or end time in a specified range
-     *
-     * activities without a concrete scheduled start time will not match
-     *
-     * @param range IN STORED the range of allowed values for start time, or
-     *     null if no specific start time is required. should not change
-     *     while the template exists. the range itself determines if
-     *     inclusive or exclusive at its end points
-     * @return the same builder object updated with new criteria
-     */
-    public @NotNull
-    B startsOrEndsIn(@Nullable Interval range) {
-      this.startsOrEndsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
-      return getThis();
-    }
-
-    protected @Nullable Interval startsOrEndsIn;
-
-    /**
-     * requires activities have a scheduled start or end time in a specified range
-     *
-     * activities without a concrete scheduled start time will not match
-     *
-     * @param windows IN STORED the range of allowed values for start time, or
-     *     null if no specific start time is required. should not change
-     *     while the template exists. the range itself determines if
-     *     inclusive or exclusive at its end points
-     * @return the same builder object updated with new criteria
-     */
-    public @NotNull
-    B startsOrEndsIn(@Nullable Windows windows) {
-      Windows wins = new Windows(false);
-      for(final var win : windows.iterateEqualTo(true)){
-        wins = wins.set(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError), true);
-      }
-      this.startsOrEndsInW = wins;
-      return getThis();
-    }
-
-    protected @Nullable
-    Windows startsOrEndsInW;
 
     /**
      * requires activities have a scheduled end time in a specified range
@@ -197,28 +146,13 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B endsIn(@Nullable Interval range) {
+    public @NotNull Builder endsIn(@Nullable Interval range) {
       this.endsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
-    protected @Nullable Interval endsIn;
-
-    public @NotNull
-    B startsIn(Windows ranges) {
-      Windows wins = new Windows(false);
-      for(final var win : ranges.iterateEqualTo(true)) {
-        wins = wins.set(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError), true);
-      }
-      this.startsInR = wins;
-      return getThis();
-    }
-
-    protected Windows startsInR;
-
     /**
-     * requires activities have a simulated duration in a specified range
+     * requires activities have a simulated duration in a specified value
      *
      * activities without a concrete simulated duration will not match
      *
@@ -228,30 +162,26 @@ public class ActivityExpression implements Expression<Spans> {
      *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B durationIn(@Nullable Duration duration) {
+    public @NotNull Builder durationIn(@Nullable Duration duration) {
       if (duration == null) {
-        this.durationIn = Expression.of(() -> new DiscreteProfile());
+        this.durationIn = Pair.of(Expression.of(() -> new DiscreteProfile()), Expression.of(() -> new DiscreteProfile()));
       }
-      this.durationIn = new DiscreteProfileFromDuration(new DurationLiteral(duration));
+      this.durationIn = Pair.of(new DiscreteProfileFromDuration(new DurationLiteral(duration)), new DiscreteProfileFromDuration(new DurationLiteral(duration)));
       return getThis();
     }
 
-    protected @Nullable Expression<? extends Profile<?>> durationIn;
-
     /**
-     * bootstraps a new query builder based on existing template
+     * requires activities have a simulated duration at a specified value
      *
-     * the new builder may then be modified without impacting the existing
-     * template criteria, eg by adding additional new terms or replacing
-     * existing terms
+     * activities without a concrete simulated duration will not match
      *
-     * @param template IN the template whose criteria should be duplicated
-     *     into this builder. must not be null.
+     * @param durationExpression IN STORED the allowed duration.
      * @return the same builder object updated with new criteria
      */
-    public abstract @NotNull
-    B basedOn(@NotNull AT template);
+    public @NotNull Builder durationIn(Expression<? extends Profile<?>> durationExpression) {
+      this.durationIn = Pair.of(durationExpression, durationExpression);
+      return getThis();
+    }
 
     /**
      * bootstraps a new query builder based on an existing activity instance
@@ -264,28 +194,45 @@ public class ActivityExpression implements Expression<Spans> {
      *     prototype for the new search criteria. must not be null.
      * @return the same builder object updated with new criteria
      */
-    public @NotNull
-    B basedOn(@NotNull SchedulingActivityDirective existingAct) {
+    public @NotNull Builder basedOn(@NotNull SchedulingActivityDirective existingAct) {
       type = existingAct.getType();
 
       if (existingAct.startOffset() != null) {
-        startsIn = Interval.at(existingAct.startOffset());
+        this.startsIn(Interval.at(existingAct.startOffset()));
       }
 
       durationIn(existingAct.duration());
 
       return getThis();
+    }
 
-      //FINISH: extract all param values as == criteria
+    private Interval extendUpToAbsoluteError(final Interval interval, final Duration absoluteError){
+      final var diff = absoluteError.times(2).minus(interval.duration());
+      if(diff.isPositive()){
+        final var toApply = diff.dividedBy(2);
+        return Interval.between(interval.start.minus(toApply), interval.startInclusivity, interval.end.plus(toApply), interval.endInclusivity);
+      } else {
+        return interval;
+      }
     }
 
     /**
-     * returns this builder object for further chaining, typed at concrete level
-     *
-     * @return the concrete builder type object for further method chaining
+     * {@inheritDoc}
      */
-    public abstract @NotNull
-    B getThis();
+    public @NotNull
+    Builder getThis() {
+      return this;
+    }
+
+    public @NotNull
+    Builder basedOn(@NotNull ActivityExpression template) {
+      type = template.type;
+      startsIn = template.startRange;
+      endsIn = template.endRange;
+      durationIn = template.durationRange;
+      arguments = template.arguments;
+      return getThis();
+    }
 
     /**
      * collect and cross-check all specified terms and construct the template
@@ -302,154 +249,17 @@ public class ActivityExpression implements Expression<Spans> {
      * @return a newly constructed template that matches activities meeting
      *     the conjunction of all criteria specified to the builder
      */
-    public abstract @NotNull
-    AT build();
-
-    private Interval extendUpToAbsoluteError(final Interval interval, final Duration absoluteError){
-      final var diff = absoluteError.times(2).minus(interval.duration());
-      if(diff.isPositive()){
-        final var toApply = diff.dividedBy(2);
-        return Interval.between(interval.start.minus(toApply), interval.startInclusivity, interval.end.plus(toApply), interval.endInclusivity);
-      } else {
-        return interval;
-      }
-    }
-
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * concrete builder used to create instances of ActivityTemplate (and not a more
-   * specific type like ActivityCreationTemplate)
-   */
-  public static class Builder extends AbstractBuilder<Builder, ActivityExpression> {
-
-    /**
-     * {@inheritDoc}
-     */
-    public @NotNull
-    Builder getThis() {
-      return this;
-    }
-
-    @Override
-    public @NotNull
-    Builder basedOn(@NotNull ActivityExpression template) {
-      type = template.type;
-      startsIn = template.startRange;
-      endsIn = template.endRange;
-      durationIn = template.duration;
-      startsOrEndsIn = template.startOrEndRange;
-      startsOrEndsInW = template.startOrEndRangeW;
-      arguments = template.arguments;
-      return getThis();
-    }
-
-
-    protected ActivityExpression fill(ActivityExpression template) {
-      template.type = type;
-      template.startRange = startsIn;
-      template.endRange = endsIn;
-      template.duration = durationIn;
-      template.startOrEndRange = startsOrEndsIn;
-      template.startOrEndRangeW = startsOrEndsInW;
-      template.arguments = arguments;
-      return template;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public @NotNull
-    ActivityExpression build() {
-      final var template = new ActivityExpression();
-      fill(template);
-      return template;
+    public @NotNull ActivityExpression build() {
+      return new ActivityExpression(
+          startsIn,
+          endsIn,
+          durationIn,
+          type,
+          nameRe,
+          arguments
+      );
     }
   }
-
-
-  /**
-   * range of allowed values for matching activity scheduled start times
-   *
-   * activities with null start time do not match any non-null range
-   *
-   * null if no limit on start time
-   *
-   * the range itself determines if endpoints are inclusive or exclusive
-   */
-  protected @Nullable Interval startRange;
-
-  /**
-   * range of allowed values for matching activity scheduled end times
-   *
-   * activities with null start time do not match any non-null range
-   *
-   * null if no limit on start time
-   *
-   * the range itself determines if endpoints are inclusive or exclusive
-   */
-  protected @Nullable Interval endRange;
-  /**
-   * range of allowed values for matching activity scheduled end times
-   *
-   * activities with null start time do not match any non-null range
-   *
-   * null if no limit on start time
-   *
-   * the range itself determines if endpoints are inclusive or exclusive
-   */
-  protected @Nullable Interval startOrEndRange;
-
-
-  /**
-   * range of allowed values for matching activity simulated durations
-   *
-   * activities with null duration do not match any non-null range
-   *
-   * null if no limit on duration
-   *
-   * the range itself determines if endpoints are inclusive or exclusive
-   */
-  protected @Nullable Expression<? extends Profile<?>> duration;
-
-  /**
-   * the bounding super-type for matching activities
-   *
-   * activities with types derived from target type also match
-   *
-   * null if no limit on activity type
-   */
-  protected @Nullable
-  ActivityType type;
-
-  /**
-   * regular expression of matching activity instance names
-   *
-   * activities with null names do not match any non-null regular expression
-   *
-   * null if no limit on activity instance name
-   */
-  protected @Nullable java.util.regex.Pattern nameRE;
-
-  /**
-   * fetch the range of allowed starting times matched by this template
-   *
-   * @return the allowed range of start times for matching activities, or null
-   *     if no limit on start time
-   */
-  public @Nullable
-  Interval getStartRange() { return startRange; }
-
-  /**
-   * fetch the bounding super type of activities matched by this template
-   *
-   * @return the super type for matching activities, or null if no limit on
-   *     activity type
-   */
-  public @Nullable
-  ActivityType getType() { return type; }
 
   /**
    * creates a template matching a given activity type (or its subtypes)
@@ -463,14 +273,9 @@ public class ActivityExpression implements Expression<Spans> {
    * @return an activity template that matches only activities with the
    *     specified super type
    */
-  public static @NotNull
-  ActivityExpression ofType(@NotNull ActivityType type) {
+  public static @NotNull ActivityExpression ofType(@NotNull ActivityType type) {
     return new Builder().ofType(type).build();
   }
-
-
-  Map<String, ProfileExpression<?>> arguments = new HashMap<>();
-
 
   /**
    * determines if the given activity matches all criteria of this template
@@ -483,98 +288,51 @@ public class ActivityExpression implements Expression<Spans> {
    *     by this template, or false if it does not meet one or more of
    *     the template criteria
    */
-  public boolean matches(@NotNull SchedulingActivityDirective act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
-    boolean match = true;
-
-    //REVIEW: literal object equality is probably correct for type
-    match = match && (type == null || type == act.getType());
-
-    if (match && startRange != null) {
-      final var startT = act.startOffset();
-      match = (startT != null) && startRange.contains(startT);
-    }
-
-    if (match && startOrEndRange != null) {
-      final var startT = act.startOffset();
-      final var endT = act.getEndTime();
-      match =
-          ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
-    }
-
-    if (match && startOrEndRangeW != null) {
-      final var startT = act.startOffset();
-      final var endT = act.getEndTime();
-      match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
-              || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
-    }
-
-    if (match && endRange != null) {
-      final var endT = act.getEndTime();
-      match = (endT != null) && endRange.contains(endT);
-    }
-
-    if (match && duration != null) {
-      final var dur = act.duration();
-      final Optional<Duration> durRequirement = this.duration
-          .evaluate(simulationResults, evaluationEnvironment)
-          .valueAt(Duration.ZERO)
-          .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
-      match = durRequirement.isEmpty() || (dur != null && durRequirement.get().isEqualTo(dur));
-    }
-
-    //activity must have all instantiated arguments of template to be compatible
-    if (match && arguments != null) {
-      Map<String, SerializedValue> actInstanceArguments = act.arguments();
-      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
-      for (var param : instantiatedArguments.entrySet()) {
-        if (actInstanceArguments.containsKey(param.getKey())) {
-          match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
-        }
-        if (!match) {
-          break;
-        }
-      }
-    }
-    return match;
+  public boolean matches(
+      final @NotNull SchedulingActivityDirective act,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final boolean matchArgumentsExactly) {
+    final var activityInstance = new ActivityInstance(-1, act.type().getName(), act.arguments(), Interval.between(act.startOffset(), act.getEndTime()));
+    return matches(activityInstance, simulationResults, evaluationEnvironment, matchArgumentsExactly);
   }
 
-  public boolean matches(@NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
-    boolean match = true;
-
-    //REVIEW: literal object equality is probably correct for type
-    match = match && (type == null || Objects.equals(type.getName(), act.type));
+  public boolean matches(
+      final @NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final boolean matchArgumentsExactly) {
+    boolean match = (type == null || type.getName().equals(act.type));
 
     if (match && startRange != null) {
       final var startT = act.interval.start;
       match = (startT != null) && startRange.contains(startT);
     }
 
-    if (match && startOrEndRange != null) {
-      final var startT = act.interval.start;
-      final var endT = act.interval.end;
-      match =
-          ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
-    }
-
-    if (match && startOrEndRangeW != null) {
-      final var startT = act.interval.start;
-      final var endT = act.interval.end;
-      match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
-               || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
-    }
-
     if (match && endRange != null) {
-      final var endT = act.interval.end;;
+      final var endT = act.interval.end;
       match = (endT != null) && endRange.contains(endT);
     }
 
-    if (match && duration != null) {
+    if (match && durationRange != null) {
       final var dur = act.interval.duration();
-      final Optional<Duration> durRequirement = this.duration
+      final Optional<Duration> durRequirementLower = this.durationRange.getLeft()
           .evaluate(simulationResults, evaluationEnvironment)
           .valueAt(Duration.ZERO)
           .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
-      match = durRequirement.isEmpty() || (dur != null && durRequirement.get() == dur);
+      final Optional<Duration> durRequirementUpper = this.durationRange.getRight()
+          .evaluate(simulationResults, evaluationEnvironment)
+          .valueAt(Duration.ZERO)
+          .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      if(durRequirementLower.isEmpty() && durRequirementUpper.isEmpty()){
+        throw new RuntimeException("ActivityExpression is malformed, duration bounds are absent but the range is not null");
+      }
+      if(durRequirementLower.isPresent()){
+        match = dur.noShorterThan(durRequirementLower.get());
+      }
+      if(durRequirementUpper.isPresent()){
+        match = match && dur.noLongerThan(durRequirementUpper.get());
+      }
     }
 
     //activity must have all instantiated arguments of template to be compatible
@@ -582,7 +340,18 @@ public class ActivityExpression implements Expression<Spans> {
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
       final var instantiatedArguments = SchedulingActivityDirective
                 .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
-      match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
+      if(matchArgumentsExactly){
+        for (var param : instantiatedArguments.entrySet()) {
+          if (actInstanceArguments.containsKey(param.getKey())) {
+            match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
+          }
+          if (!match) {
+            break;
+          }
+        }
+      } else {
+        match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
+      }
     }
     return match;
   }
@@ -594,7 +363,7 @@ public class ActivityExpression implements Expression<Spans> {
       final EvaluationEnvironment environment)
   {
     final var spans = new Spans();
-    results.activities.stream().filter(x -> matches(x, results, environment)).forEach(x -> spans.add(x.interval));
+    results.activities.stream().filter(x -> matches(x, results, environment, false)).forEach(x -> spans.add(x.interval));
     return spans;
   }
 
@@ -608,7 +377,6 @@ public class ActivityExpression implements Expression<Spans> {
 
   @Override
   public void extractResources(final Set<String> names) { }
-
 
   /**
    * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not
@@ -628,28 +396,19 @@ public class ActivityExpression implements Expression<Spans> {
       @Override
       public Boolean onNumeric(final BigDecimal value) {
         final var argumentsAsNumeric = superset.asNumeric();
-        if(argumentsAsNumeric.isEmpty()){
-          return false;
-        }
-        return argumentsAsNumeric.get().equals(value);
+        return argumentsAsNumeric.map(bigDecimal -> bigDecimal.equals(value)).orElse(false);
       }
 
       @Override
       public Boolean onBoolean(final boolean value) {
         final var argumentsAsBoolean = superset.asBoolean();
-        if(argumentsAsBoolean.isEmpty()){
-          return false;
-        }
-        return argumentsAsBoolean.get().equals(value);
+        return argumentsAsBoolean.map(boolValue -> boolValue.equals(value)).orElse(false);
       }
 
       @Override
       public Boolean onString(final String value) {
         final var argumentsAsString = superset.asString();
-        if(argumentsAsString.isEmpty()){
-          return false;
-        }
-        return argumentsAsString.get().equals(value);
+        return argumentsAsString.map(stringValue -> stringValue.equals(value)).orElse(false);
       }
 
       @Override
@@ -690,5 +449,4 @@ public class ActivityExpression implements Expression<Spans> {
     };
     return subset.match(visitor);
   }
-
 }

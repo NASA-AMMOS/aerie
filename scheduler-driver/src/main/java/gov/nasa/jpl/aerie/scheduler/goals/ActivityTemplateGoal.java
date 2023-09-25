@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -31,7 +30,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
      *     with the ability to create new instances if necessary
      * @return this builder, ready for additional specification
      */
-    public T thereExistsOne(ActivityCreationTemplate template) {
+    public T thereExistsOne(ActivityExpression template) {
       thereExists = template;
       return getThis();
     }
@@ -41,7 +40,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
       return getThis();
     }
 
-    protected ActivityCreationTemplate thereExists;
+    protected ActivityExpression thereExists;
     protected ActivityExpression matchingActTemplate;
 
     /**
@@ -83,7 +82,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
 
   }//Builder
 
-  public ActivityCreationTemplate getActTemplate() {
+  public ActivityExpression getActTemplate() {
     return desiredActTemplate;
   }
 
@@ -97,23 +96,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    *     the goal's created activity type
    */
   public Expression<Windows> getActivityStateConstraints() {
-    return desiredActTemplate.getType().getStateConstraints();
-  }
-
-  /**
-   * creates a new activity instance that will increase this goal's satisfaction
-   *
-   * the activity is labeled as being created for this goal
-   *
-   * the activity is not inserted into any plan yet
-   *
-   * @return a new activity instance that will improve the satisfaction of
-   *     this goal if it were inserted into a plan
-   */
-  public Optional<SchedulingActivityDirective> createActivity(SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
-    //REVIEW: uuid probably overkill. random is especially bad for repeatability.
-    final var actName = getName() + "_" + java.util.UUID.randomUUID();
-    return desiredActTemplate.createActivity(actName, facade, plan, planningHorizon, evaluationEnvironment);
+    return desiredActTemplate.type().getStateConstraints();
   }
 
   /**
@@ -126,7 +109,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
   /**
    * the pattern used to create new instances if none already exist
    */
-  protected ActivityCreationTemplate desiredActTemplate;
+  protected ActivityExpression desiredActTemplate;
 
   /**
    * the pattern used to match with satisfying activity instances
