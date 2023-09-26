@@ -1059,6 +1059,24 @@ public class ASTTests {
   }
 
   @Test
+  public void testHorizonInterval() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, Inclusive, 20, Exclusive, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var interval = new AbsoluteInterval(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+
+    final var result = interval.evaluate(simResults);
+
+    final var expected = Interval.between(0, Inclusive, 20, Exclusive, SECONDS);
+
+    assertEquals(expected, result);
+  }
+
+  @Test
   public void testShiftByBoundsAdjustment() {
     final var simResults = new SimulationResults(
         Instant.EPOCH, Interval.between(0, 20, SECONDS),
