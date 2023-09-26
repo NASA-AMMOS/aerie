@@ -593,6 +593,17 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression()));
   }
 
+  static JsonParser<SpansConnectTo> connectTo(JsonParser<Expression<Spans>> spansExpressionP) {
+    return productP
+        .field("kind", literalP("SpansExpressionConnectTo"))
+        .field("from", spansExpressionP)
+        .field("to", spansExpressionP)
+        .map(
+            untuple((kind, from, to) -> new SpansConnectTo(from, to)),
+            $ -> tuple(Unit.UNIT, $.from(), $.to())
+        );
+  }
+
   private static final JsonParser<SpansInterval> spansIntervalP =
       productP
           .field("kind", literalP("SpansExpressionInterval"))
@@ -607,6 +618,7 @@ public final class ConstraintParsers {
           spansIntervalP,
           startsF(selfP),
           endsF(selfP),
+          connectTo(selfP),
           shiftEdgesF(selfP),
           splitF(selfP),
           splitF(windowsP),

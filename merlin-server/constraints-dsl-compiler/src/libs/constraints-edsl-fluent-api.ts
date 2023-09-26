@@ -452,6 +452,28 @@ export class Spans {
   }
 
   /**
+   * Connects the end of each of these spans to the start of the nearest span in the argument.
+   *
+   * This operation creates a new spans object. For each span `s` in `this`, it produces a span from
+   * the end of `s` to the start of the first span in `other` that occurs after the end of `s`.
+   *
+   * If `s` and the nearest subsequent span in `other` meet exactly, with no intersection and no
+   * space between them, a singleton span (containing exactly one time) is still created at the meeting point.
+   *
+   * If there are no spans in `other` that occur after `s`, a span is still created from the end of `s` until the
+   * end of the plan.
+   *
+   * @param other
+   */
+  public connectTo(other: Spans): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionConnectTo,
+      from: this.__astNode,
+      to: other.__astNode
+    })
+  }
+
+  /**
    * Replaces each Span with its start point.
    */
   public starts(): Spans {
@@ -1334,6 +1356,22 @@ declare global {
      * @constructor
      */
     public static FromInterval(interval: Interval): Spans;
+
+    /**
+     * Connects the end of each of these spans to the start of the nearest span in the argument.
+     *
+     * This operation creates a new spans object. For each span `s` in `this`, it produces a span from
+     * the end of `s` to the start of the first span in `other` that occurs after the end of `s`.
+     *
+     * If `s` and the nearest subsequent span in `other` meet exactly, with no intersection and no
+     * space between them, a singleton span (containing exactly one time) is still created at the meeting point.
+     *
+     * If there are no spans in `other` that occur after `s`, a span is still created from the end of `s` until the
+     * end of the plan.
+     *
+     * @param other
+     */
+    public connectTo(other: Spans): Spans;
 
     /**
      * Returns the instantaneous start points of the these spans.

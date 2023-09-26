@@ -27,6 +27,7 @@ export enum NodeKind {
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
   SpansExpressionSplit = 'SpansExpressionSplit',
+  SpansExpressionConnectTo = 'SpansExpressionConnectTo',
   SpansExpressionInterval = 'SpansExpressionInterval',
   SpansSelectWhenTrue = 'SpansSelectWhenTrue',
   ExpressionEqual = 'ExpressionEqual',
@@ -122,8 +123,9 @@ export type SpansExpression =
   | IntervalsExpressionShiftEdges
   | SpansExpressionFromWindows
   | ForEachActivitySpans
-  | SpansExpressionInterval
-  | SpansSelectWhenTrue;
+  | SpansSelectWhenTrue
+  | SpansExpressionConnectTo
+  | SpansExpressionInterval;
 
 export interface SpansSelectWhenTrue {
   kind: NodeKind.SpansSelectWhenTrue,
@@ -248,6 +250,12 @@ export interface SpansExpressionSplit {
   numberOfSubIntervals: number,
   internalStartInclusivity: API.Inclusivity,
   internalEndInclusivity: API.Inclusivity
+}
+
+export interface SpansExpressionConnectTo {
+  kind: NodeKind.SpansExpressionConnectTo,
+  from: SpansExpression,
+  to: SpansExpression
 }
 
 export interface SpansExpressionInterval {

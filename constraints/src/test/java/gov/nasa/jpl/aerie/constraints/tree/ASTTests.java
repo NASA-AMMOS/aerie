@@ -1128,6 +1128,68 @@ public class ASTTests {
   }
 
   @Test
+  void testSpansConnectTo() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, Inclusive, 20, Exclusive, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var result = new SpansConnectTo(
+        Supplier.of(new Spans(
+            Interval.between(0, 1, SECONDS),
+            Interval.between(5, 7, SECONDS),
+            Interval.between(10, Inclusive, 11, Exclusive, SECONDS),
+            Interval.between(13, 14, SECONDS)
+        )),
+        Supplier.of(new Spans(
+            Interval.between(2, 3, SECONDS),
+            Interval.between(4, 6, SECONDS),
+            Interval.between(8, 9, SECONDS),
+            Interval.between(11, 12, SECONDS)
+        ))
+    ).evaluate(simResults);
+
+    final var expected = new Spans(
+        Interval.between(1, 2, SECONDS),
+        Interval.between(7, 8, SECONDS),
+        Interval.at(11, SECONDS),
+        Interval.between(14, Inclusive, 20, Exclusive, SECONDS)
+    );
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
+  void testSpansConnectToMetadata() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, Inclusive, 20, Exclusive, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var result = new SpansConnectTo(
+        Supplier.of(new Spans(
+            Segment.of(Interval.between(0, 1, SECONDS), Optional.of(new Spans.Metadata(new ActivityInstance(2, "2", Map.of(), FOREVER)))),
+            Segment.of(Interval.between(5, 7, SECONDS), Optional.empty())
+        )),
+        Supplier.of(new Spans(
+            Interval.between(2, 3, SECONDS),
+            Interval.between(8, 9, SECONDS)
+        ))
+    ).evaluate(simResults);
+
+    final var expected = new Spans(
+        Segment.of(Interval.between(1, 2, SECONDS), Optional.of(new Spans.Metadata(new ActivityInstance(2, "2", Map.of(), FOREVER)))),
+        Segment.of(Interval.between(7, 8, SECONDS), Optional.empty())
+    );
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
   public void testRollingThresholdExcess() {
     final var simResults = new SimulationResults(
         Instant.EPOCH, Interval.between(0, 20, SECONDS),
