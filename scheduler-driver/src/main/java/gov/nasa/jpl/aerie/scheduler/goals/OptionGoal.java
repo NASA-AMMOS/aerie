@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -28,7 +29,9 @@ public class OptionGoal extends Goal {
   }
 
   @Override
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  public java.util.Collection<Conflict> getConflicts(Plan plan,
+                                                     final SimulationResults simulationResults,
+                                                     final EvaluationEnvironment evaluationEnvironment) {
     throw new NotImplementedException("Conflict detection is performed at solver level");
   }
 

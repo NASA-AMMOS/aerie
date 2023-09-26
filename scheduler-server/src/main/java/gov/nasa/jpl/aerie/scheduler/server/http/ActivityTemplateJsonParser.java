@@ -9,17 +9,18 @@ import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.structExpressionF;
 
 public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.ActivityTemplate> {
 
-  private final Map<String, MissionModelService.ActivityType> activityTypesByName = new HashMap<>();
+  private final Map<String, ActivityType> activityTypesByName = new HashMap<>();
 
-  public ActivityTemplateJsonParser(MissionModelService.MissionModelTypes activityTypes){
+  public ActivityTemplateJsonParser(MerlinService.MissionModelTypes activityTypes){
     activityTypes.activityTypes().forEach((actType)-> activityTypesByName.put(actType.name(), actType));
   }
 

@@ -118,8 +118,8 @@ public record SchedulerBindings(
     try {
       final var body = parseJson(ctx.body(), hasuraMissionModelIdActionP);
       final var missionModelId = body.input().missionModelId();
-
-      final var response = this.generateSchedulingLibAction.run(missionModelId);
+      final var planId = body.input().planId();
+      final var response = this.generateSchedulingLibAction.run(missionModelId, planId);
       final String resultString;
       if (response instanceof GenerateSchedulingLibAction.Response.Success r) {
         var files = Json.createArrayBuilder();

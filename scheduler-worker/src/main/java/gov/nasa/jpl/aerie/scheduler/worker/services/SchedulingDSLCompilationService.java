@@ -1,25 +1,27 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
+import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
+import gov.nasa.jpl.aerie.scheduler.server.services.ConstraintsTypescriptCodeGenerationHelper;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
+import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.stream.JsonParsingException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
-import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
-import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import gov.nasa.jpl.aerie.scheduler.server.services.ConstraintsTypescriptCodeGenerationHelper;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
-import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
 
 public class SchedulingDSLCompilationService {
 
@@ -48,30 +50,48 @@ public class SchedulingDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
-  public SchedulingDSLCompilationResult<SchedulingDSL.ConditionSpecifier> compileGlobalSchedulingCondition(final MissionModelService missionModelService, final PlanId planId, final String conditionTypescript) {
+  public SchedulingDSLCompilationResult<SchedulingDSL.ConditionSpecifier> compileGlobalSchedulingCondition(final MerlinService.ReaderRole merlinService, final PlanId planId, final String conditionTypescript, final
+                                                                                                           Collection<ResourceType> additionalResourceTypes) {
     try{
-      final var missionModelTypes = missionModelService.getMissionModelTypes(planId);
-      return compile(missionModelTypes,  conditionTypescript, SchedulingDSL.conditionSpecifierP, "GlobalSchedulingCondition");
-    } catch (IOException | MissionModelService.MissionModelServiceException e) {
+      final var missionModelTypes = merlinService.getMissionModelTypes(planId);
+      final var aggregatedResourceTypes = new ArrayList<>(missionModelTypes.resourceTypes());
+      aggregatedResourceTypes.addAll(additionalResourceTypes);
+      final var planTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), aggregatedResourceTypes);
+      return compile(planTypes,  conditionTypescript, SchedulingDSL.conditionSpecifierP, "GlobalSchedulingCondition");
+    } catch (IOException | MerlinServiceException e) {
         throw new Error(e);
     }
+  }
+
+  public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(
+      final MerlinService.ReaderRole merlinService,
+      final PlanId planId,
+      final String goalTypescript){
+    return compileSchedulingGoalDSL(merlinService, planId, goalTypescript, List.of());
   }
 
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(final MissionModelService missionModelService, final PlanId planId, final String goalTypescript)
+  public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(
+      final MerlinService.ReaderRole merlinService,
+      final PlanId planId,
+      final String goalTypescript,
+      final Collection<ResourceType> additionalResourceTypes)
   {
     try {
-      final var missionModelTypes = missionModelService.getMissionModelTypes(planId);
-      return compile(missionModelTypes, goalTypescript, SchedulingDSL.schedulingJsonP(missionModelTypes), "Goal");
-    } catch (IOException | MissionModelService.MissionModelServiceException e) {
+      final var missionModelTypes = merlinService.getMissionModelTypes(planId);
+      final var aggregatedResourceTypes = new ArrayList<>(missionModelTypes.resourceTypes());
+      aggregatedResourceTypes.addAll(additionalResourceTypes);
+      final var augmentedMissionModelTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), aggregatedResourceTypes);
+      return compile(augmentedMissionModelTypes, goalTypescript, SchedulingDSL.schedulingJsonP(augmentedMissionModelTypes), "Goal");
+    } catch (IOException | MerlinServiceException e) {
       throw new Error(e);
     }
   }
 
   private <T> SchedulingDSLCompilationResult<T> compile(
-      final MissionModelService.MissionModelTypes missionModelTypes,
+      final MerlinService.MissionModelTypes missionModelTypes,
       final String goalTypescript,
       final JsonParser<T> parser,
       final String expectedReturnType)

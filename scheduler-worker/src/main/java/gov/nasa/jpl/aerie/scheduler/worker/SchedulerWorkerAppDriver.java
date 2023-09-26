@@ -64,7 +64,6 @@ public final class SchedulerWorkerAppDriver {
     final var specificationService = new LocalSpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
         merlinService,
-        merlinService,
         config.merlinFileStore(),
         config.missionRuleJarPath(),
         config.outputMode(),

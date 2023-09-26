@@ -5,15 +5,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 
 public record GenerateSchedulingLibAction(
-    MissionModelService missionModelService
+    MerlinService.ReaderRole merlinService
 ) {
   public GenerateSchedulingLibAction {
-    Objects.requireNonNull(missionModelService);
+    Objects.requireNonNull(merlinService);
   }
 
   /**
@@ -25,12 +29,14 @@ public record GenerateSchedulingLibAction(
   }
 
   /**
-   * execute the scheduling operation on the target plan (or retrieve existing scheduling results)
+   * generates the scheduling typescript files
    *
    * @param missionModelId the id of the mission model for which to generate a scheduling library
+   * @param planId the optional id of the plan concerned by this code generation, if plan id is provided, code will be generated for external resources
+   * associated with the plan
    * @return a response object wrapping the results of generating the code (either successful or not)
    */
-  public Response run(final MissionModelId missionModelId) {
+  public Response run(final MissionModelId missionModelId, final Optional<PlanId> planId) {
     try {
       final var schedulingDsl         = getTypescriptResource("scheduler-edsl-fluent-api.ts");
       final var schedulerAst          = getTypescriptResource("scheduler-ast.ts");
@@ -38,7 +44,12 @@ public record GenerateSchedulingLibAction(
       final var windowsAst            = getTypescriptResource("constraints/constraints-ast.ts");
       final var temporalPolyfillTypes = getTypescriptResource("constraints/TemporalPolyfillTypes.ts");
 
-      final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
+
+      var missionModelTypes = merlinService.getMissionModelTypes(missionModelId);
+      if(planId.isPresent()) {
+        final var allResourceTypes = merlinService.getResourceTypes(planId.get());
+        missionModelTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
+      }
 
       final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
       final var generatedConstraintsCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService
@@ -54,7 +65,8 @@ public record GenerateSchedulingLibAction(
                  "file:///mission-model-generated-code.ts", generatedConstraintsCode,
                  "file:///%s".formatted(temporalPolyfillTypes.basename), temporalPolyfillTypes.source
                  ));
-    } catch (final NoSuchMissionModelException | IOException | MissionModelService.MissionModelServiceException e) {
+    } catch (final IOException | MerlinServiceException |
+                   NoSuchPlanException | NoSuchMissionModelException e) {
       return new Response.Failure(e.getMessage());
     }
   }

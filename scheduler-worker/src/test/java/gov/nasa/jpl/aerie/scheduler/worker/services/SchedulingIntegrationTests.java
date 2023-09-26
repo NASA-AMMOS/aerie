@@ -12,8 +12,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
@@ -21,8 +24,9 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static org.junit.jupiter.api.Assertions.*;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -31,20 +35,23 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
@@ -1706,6 +1713,42 @@ public class SchedulingIntegrationTests {
   }
 
   @Test
+  void testExternalResource() {
+
+    final var myBooleanResource = new DiscreteProfile(
+        List.of(
+            new Segment<>(Interval.between(HOUR.times(2), HOUR.times(4)), SerializedValue.of(true))
+        )
+    ).assignGaps(new DiscreteProfile(List.of(new Segment(Interval.FOREVER, SerializedValue.of(false)))));
+
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+         export default (): Goal => {
+          return Goal.CoexistenceGoal({
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            forEach: Discrete.Resource(Resources["/my_boolean"]).equal(true),
+            startsAt: TimingConstraint.singleton(WindowProperty.START)
+          })
+        }""", true)),
+        List.of(),
+        PLANNING_HORIZON,
+        Optional.of(
+            new ExternalProfiles(
+                Map.of(),
+                Map.of("/my_boolean", myBooleanResource),
+                List.of(new ResourceType("/my_boolean", new ValueSchema.BooleanSchema()))))
+    );
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(1, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    assertEquals(HOUR.times(2), peelBanana.startOffset());
+  }
+
+  @Test
   void testApplyWhen() {
     final var growBananaDuration = Duration.of(1, Duration.SECONDS);
 
@@ -1908,7 +1951,7 @@ public class SchedulingIntegrationTests {
     for (final var activityDirective : plannedActivities) {
       activities.put(new ActivityDirectiveId(id++), activityDirective);
     }
-    return runScheduler(desc, activities, goals, List.of(), planningHorizon);
+    return runScheduler(desc, activities, goals, List.of(), planningHorizon, Optional.empty());
   }
 
   private SchedulingRunResults runScheduler(
@@ -1918,9 +1961,8 @@ public class SchedulingIntegrationTests {
       final PlanningHorizon planningHorizon
   )
   {
-    return runScheduler(desc, plannedActivities, goals, List.of(), planningHorizon);
+    return runScheduler(desc, plannedActivities, goals, List.of(), planningHorizon, Optional.empty());
   }
-
 
   private SchedulingRunResults runScheduler(
       final MissionModelDescription desc,
@@ -1929,12 +1971,23 @@ public class SchedulingIntegrationTests {
       final List<GlobalSchedulingConditionRecord> globalSchedulingConditions,
       final PlanningHorizon planningHorizon
   ){
+    return runScheduler(desc, plannedActivities, goals, globalSchedulingConditions, planningHorizon, Optional.empty());
+  }
+
+  private SchedulingRunResults runScheduler(
+      final MissionModelDescription desc,
+      final List<ActivityDirective> plannedActivities,
+      final Iterable<SchedulingGoal> goals,
+      final List<GlobalSchedulingConditionRecord> globalSchedulingConditions,
+      final PlanningHorizon planningHorizon,
+      final Optional<ExternalProfiles> externalProfiles
+  ){
     final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
     long id = 1;
     for (final var activityDirective : plannedActivities) {
       activities.put(new ActivityDirectiveId(id++), activityDirective);
     }
-    return runScheduler(desc, activities, goals, globalSchedulingConditions, planningHorizon);
+    return runScheduler(desc, activities, goals, globalSchedulingConditions, planningHorizon, externalProfiles);
   }
 
   private SchedulingRunResults runScheduler(
@@ -1942,12 +1995,16 @@ public class SchedulingIntegrationTests {
       final Map<ActivityDirectiveId, ActivityDirective> plannedActivities,
       final Iterable<SchedulingGoal> goals,
       final List<GlobalSchedulingConditionRecord> globalSchedulingConditions,
-      final PlanningHorizon planningHorizon
+      final PlanningHorizon planningHorizon,
+      final Optional<ExternalProfiles> externalProfiles
   ) {
     final var mockMerlinService = new MockMerlinService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
     mockMerlinService.setPlanningHorizon(planningHorizon);
+    if(externalProfiles.isPresent()) {
+      mockMerlinService.setExternalDataset(externalProfiles.get());
+    }
     final var planId = new PlanId(1L);
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
@@ -1965,7 +2022,6 @@ public class SchedulingIntegrationTests {
         globalSchedulingConditions)));
     final var agent = new SynchronousSchedulerAgent(
         specificationService,
-        mockMerlinService,
         mockMerlinService,
         desc.libPath(),
         Path.of(""),
@@ -1986,7 +2042,7 @@ public class SchedulingIntegrationTests {
 
   record SchedulingRunResults(ScheduleResults scheduleResults, Collection<ActivityDirective> updatedPlan, Plan plan, Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
 
-  static MissionModelService.MissionModelTypes loadMissionModelTypesFromJar(
+  static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
       final Map<String, SerializedValue> configuration)
   throws MissionModelLoader.MissionModelLoadException
@@ -1998,11 +2054,11 @@ public class SchedulingIntegrationTests {
         "",
         "");
     final Map<String, ? extends DirectiveType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().directiveTypes();
-    final var activityTypes = new ArrayList<MissionModelService.ActivityType>();
+    final var activityTypes = new ArrayList<gov.nasa.jpl.aerie.scheduler.server.models.ActivityType>();
     for (final var entry : taskSpecTypes.entrySet()) {
       final var activityTypeName = entry.getKey();
       final var taskSpecType = entry.getValue();
-      activityTypes.add(new MissionModelService.ActivityType(
+      activityTypes.add(new gov.nasa.jpl.aerie.scheduler.server.models.ActivityType(
           activityTypeName,
           taskSpecType
               .getInputType()
@@ -2013,14 +2069,14 @@ public class SchedulingIntegrationTests {
       ));
     }
 
-    final var resourceTypes = new ArrayList<MissionModelService.ResourceType>();
+    final var resourceTypes = new ArrayList<ResourceType>();
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      resourceTypes.add(new MissionModelService.ResourceType(name, resource.getOutputType().getSchema()));
+      resourceTypes.add(new ResourceType(name, resource.getOutputType().getSchema()));
     }
 
-    return new MissionModelService.MissionModelTypes(activityTypes, resourceTypes);
+    return new MerlinService.MissionModelTypes(activityTypes, resourceTypes);
   }
 
   @Test

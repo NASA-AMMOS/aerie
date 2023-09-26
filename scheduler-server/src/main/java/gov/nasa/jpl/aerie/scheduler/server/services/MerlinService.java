@@ -9,22 +9,37 @@ import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
+import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-public interface PlanService {
+public interface MerlinService {
+  record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
+
   interface ReaderRole {
+
+    MerlinService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+    throws IOException, MerlinServiceException;
+    MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+    throws IOException, MerlinServiceException,
+           NoSuchMissionModelException;
+
     /**
      * fetch current revision number of the target plan stored in aerie
      *
@@ -33,7 +48,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     long getPlanRevision(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * fetch current metadata of the target plan (not the activity instance content)
@@ -43,7 +58,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     PlanMetadata getPlanMetadata(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * create an in-memory snapshot of the target plan's activity contents from aerie
@@ -54,7 +69,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
-    throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InstantiationException;
+    throws IOException, NoSuchPlanException, MerlinServiceException, InvalidJsonException, InstantiationException;
 
     /**
      * confirms that the specified plan exists in the aerie database, throwing exception if not
@@ -64,7 +79,7 @@ public interface PlanService {
      */
     //TODO: (defensive) should combine such checks into the mutations they are guarding, but not possible in graphql?
     void ensurePlanExists(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * Gets existing simulation results for current plan if they exist and are suitable for scheduling purposes (current revision, covers the entire planning horizon)
@@ -72,7 +87,27 @@ public interface PlanService {
      * @param planMetadata the plan metadata
      * @return simulation results, optionally
      */
-    Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata) throws PlanServiceException, IOException, InvalidJsonException;
+    Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata) throws MerlinServiceException, IOException, InvalidJsonException;
+
+
+    /**
+     * Gets external profiles associated to a plan, including segments
+     * @param planId the plan id
+     * @throws MerlinServiceException
+     * @throws IOException
+     */
+    ExternalProfiles getExternalProfiles(final PlanId planId)
+    throws MerlinServiceException, IOException;
+
+    /**
+     * Gets resource types associated to a plan, those coming from the mission model as well as those coming from external dataset resources
+     * @param planId the plan id
+     * @throws IOException
+     * @throws MerlinServiceException
+     * @throws NoSuchPlanException
+     */
+    Collection<ResourceType> getResourceTypes(final PlanId planId)
+    throws IOException, MerlinServiceException, NoSuchPlanException;
   }
 
   interface WriterRole {
@@ -91,7 +126,7 @@ public interface PlanService {
         final Plan plan,
         final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * create a new empty plan container based on specifications
@@ -106,7 +141,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
     PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * synchronize the in-memory plan back over to aerie data stores via update operations
@@ -125,7 +160,7 @@ public interface PlanService {
         Plan plan,
         Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
-    throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException, NoSuchActivityInstanceException;
 
     /**
      * delete all the activity instances stored in the target plan container
@@ -136,7 +171,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     void clearPlanActivityDirectives(final PlanId planId)
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * create activity instances in the target plan container for each activity in the input plan
@@ -155,7 +190,7 @@ public interface PlanService {
         final Plan plan,
         final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
-    throws IOException, NoSuchPlanException, PlanServiceException;
+    throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
      * Stores the simulation results produced during scheduling
@@ -165,11 +200,12 @@ public interface PlanService {
      * @param simulationActivityDirectiveIdToMerlinActivityDirectiveId the translation between activity ids in the
      *     local simulation and the merlin activity ids
      * @return
-     * @throws PlanServiceException
+     * @throws MerlinServiceException
      * @throws IOException
      */
    DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResults results,
-                                    final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws PlanServiceException, IOException;
+                                    final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws
+                                                                                                                                                  MerlinServiceException, IOException;
   }
 
   interface OwnerRole extends ReaderRole, WriterRole {}
