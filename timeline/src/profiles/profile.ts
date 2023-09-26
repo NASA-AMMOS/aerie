@@ -41,13 +41,14 @@ export class Profile<V> {
     return segment[0].value;
   }
 
-  public inspect(f: (segments: readonly Segment<V>[]) => void) {
+  public inspect(f: (segments: readonly Segment<V>[]) => void): this {
     const innerSegments = this.segments;
     this.segments = async bounds => {
       const segments = await innerSegments(bounds);
       f(segments);
       return segments;
     };
+    return this;
   }
 
   public set(value: V, interval: Interval): ProfileSpecialization<V>;
@@ -224,6 +225,14 @@ export class Profile<V> {
 
   public specialize(): ProfileSpecialization<V> {
     return ProfileType.specialize(this, this.typeTag);
+  }
+
+  public async any(bounds: Interval, predicate: (v: V, i: Interval) => boolean): Promise<boolean> {
+    return (await this.segments(bounds)).some((s: Segment<V>) => predicate(s.value, s.interval));
+  }
+
+  public async all(bounds: Interval, predicate: (v: V, i: Interval) => boolean): Promise<boolean> {
+    return (await this.segments(bounds)).every((s: Segment<V>) => predicate(s.value, s.interval));
   }
 
   public unsafe = new (class {

@@ -3,15 +3,21 @@ import { bound, coalesce, merge, sortSegments } from '../timeline.js';
 import { Segment } from '../segment.js';
 import { IntervalLike, Inclusivity, Interval } from '../interval.js';
 import {ProfileSpecialization, ProfileType} from '../profiles/profile-type.js';
-import { LinearEquation, Real, map2Arrays, Windows, Profile} from '../internal.js';
+import {LinearEquation, Real, map2Arrays, Windows, Profile, ActivityInstance, fetcher} from '../internal.js';
 import { BinaryOperation } from '../binary-operation.js';
 import { Temporal } from '@js-temporal/polyfill';
+import {AnyActivityType, ActivityTypeName} from "../dynamic/activity-type.js";
 
 export class Spans<S extends IntervalLike> {
   private spans: Timeline<S>;
 
   constructor(spans: Timeline<S>) {
     this.spans = spans;
+  }
+
+  public static ActivityInstances<A extends ActivityTypeName = typeof AnyActivityType>(type?: A): Spans<ActivityInstance<A>> {
+    if (type === undefined) return new Spans(fetcher.allActivityInstances());
+    else return new Spans(fetcher.activityInstanceByType(type));
   }
 
   public async collect(bounds: Interval): Promise<S[]> {

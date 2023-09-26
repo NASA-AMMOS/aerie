@@ -11,7 +11,7 @@ export class Windows extends Profile<boolean> {
     super(segments, ProfileType.Windows);
   }
 
-  public static empty(): Windows {
+  public static override Empty(): Windows {
     return new Windows(async _ => []);
   }
 
@@ -111,5 +111,15 @@ export class Windows extends Profile<boolean> {
 
   public accumulatedDuration(unit: Temporal.Duration): Real {
     return this.mapValues(b => LinearEquation.Constant(b ? 1 : 0), ProfileType.Real).integrate(unit);
+  }
+
+  public override async any(bounds: Interval, predicate?: (v: boolean, i: Interval) => boolean): Promise<boolean> {
+    if (predicate === undefined) predicate = (b: boolean) => b;
+    return await super.any(bounds, predicate);
+  }
+
+  public override async all(bounds: Interval, predicate?: (v: boolean, i: Interval) => boolean): Promise<boolean> {
+    if (predicate === undefined) predicate = (b: boolean) => b;
+    return await super.all(bounds, predicate);
   }
 }

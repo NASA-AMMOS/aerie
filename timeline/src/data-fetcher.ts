@@ -3,22 +3,35 @@ import {coalesce, Timeline, truncate} from './timeline.js';
 import pg from 'pg';
 import {Temporal} from "@js-temporal/polyfill";
 import {Inclusivity, Interval} from "./interval.js";
-import Duration = Temporal.Duration;
 import {ProfileType} from "./profiles/profile-type.js";
+import {ActivityInstance} from "./spans/activity-instance.js";
+import {ActivityTypeName, AnyActivityType} from "./dynamic/activity-type.js";
+import Duration = Temporal.Duration;
 
 export interface DataFetcher {
   resource<V>(name: string, valueMap: (v: any, t: Duration) => V, profileType: ProfileType): Timeline<Segment<V>>;
+  activityInstanceByType<A extends ActivityTypeName>(type: A): Timeline<ActivityInstance<A>>;
+  allActivityInstances(): Timeline<ActivityInstance<any>>;
 }
 
 class UnimplementedDataFetcherStub implements DataFetcher {
   public resource<V>(name: string): Timeline<Segment<V>> {
     throw new Error("`fetcher` global variable has not been set.");
   }
+
+  activityInstanceByType<A extends ActivityTypeName>(type: A): Timeline<ActivityInstance<A>> {
+    throw new Error("`fetcher` global variable has not been set.")
+  }
+
+  allActivityInstances(): Timeline<ActivityInstance<any>> {
+    throw new Error("`fetcher` global variable has not been set.")
+  }
 }
 
 export class AeriePostgresDataFetcher implements DataFetcher {
   private client: pg.Client;
   private resourceCache: Map<String, Promise<Segment<any>[]>> = new Map();
+  private activitiesCache: Promise<ActivityInstance<any>[]> | Map<ActivityTypeName, Promise<ActivityInstance<any>[]>> = new Map();
   private datasetId: number | undefined = undefined;
 
   constructor(
@@ -112,6 +125,59 @@ export class AeriePostgresDataFetcher implements DataFetcher {
 
   public async disconnect(): Promise<void> {
     await this.client.end();
+  }
+
+  public activityInstanceByType<A extends ActivityTypeName>(type: A): Timeline<ActivityInstance<A>> {
+
+    throw new Error("`fetcher` global variable has not been set.")
+    if (type === AnyActivityType) return this.allActivityInstances();
+    if (this.activitiesCache instanceof Map) {
+      const cached = (this.activitiesCache as Map<ActivityTypeName, Promise<ActivityInstance<any>[]>>).get(type);
+      if (cached !== undefined) return async bounds => truncate(cached as unknown as ActivityInstance<A>[], bounds);
+      const promise = (async () => {
+        const result = await this.client.query(
+            'select start_offset, duration, attributes from simulated_activity where simulation_dataset_id = $1 and activity_type_name = $2;',
+            [this.simulationDatasetId, type]
+        );
+        return result.rows.map($ => {
+          const start = Duration.from($.start_offset.toISOString());
+          return new ActivityInstance(
+              type,
+              Interval.Between(start, start.add(Duration.from($.duration.toISOString()))),
+              $.attributes['arguments'],
+              $.attributes['directiveId']
+          );
+        });
+      })();
+      (this.activitiesCache as Map<ActivityTypeName, Promise<ActivityInstance<any>[]>>).set(type, promise);
+      return async bounds => truncate(await promise, bounds);
+    } else {
+      return async bounds => truncate((await this.activitiesCache as ActivityInstance<any>[]).filter($ => $.type === type), bounds);
+    }
+  }
+
+  public allActivityInstances(): Timeline<ActivityInstance<any>> {
+    if (this.activitiesCache instanceof Promise) {
+      return async bounds => truncate(await this.activitiesCache as ActivityInstance<any>[], bounds);
+    } else {
+      const promise = (async () => {
+        const result = await this.client.query(
+            'select start_offset, duration, attributes, activity_type_name from simulated_activity where simulation_dataset_id = $1;',
+            [this.simulationDatasetId]
+        );
+        return result.rows.map($ => {
+          const start = Duration.from($.start_offset.toISOString());
+          return new ActivityInstance(
+              $.activity_type_name,
+              Interval.Between(start, start.add(Duration.from($.duration.toISOString()))),
+              $.attributes['arguments'],
+              $.attributes['directiveId']
+          );
+        });
+      })();
+      this.activitiesCache = promise;
+      return async bounds => truncate(await promise, bounds);
+    }
   }
 }
 

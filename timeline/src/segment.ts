@@ -22,12 +22,12 @@ export class Segment<V> implements IntervalLike {
     return new Segment<W>(f(this), this.interval);
   }
 
-  // @ts-ignore
-  public mapInterval(f: (s: Segment<V>) => Interval): Segment<V> {
+  public mapInterval(f: (s: this) => Interval): this {
+    // @ts-ignore
     return new Segment<V>(this.value, f(this));
   }
 
-  bound(bounds: Interval): this | undefined {
+  public bound(bounds: Interval): this | undefined {
     const intersection = Interval.intersect(bounds, this.interval);
     if (intersection.isEmpty()) return undefined;
     else {
