@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,28 +19,41 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.durationFromPGInterval;
 import static org.junit.jupiter.api.Assertions.*;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
@@ -62,6 +78,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SchedulingIntegrationTests {
 
@@ -69,7 +89,7 @@ public class SchedulingIntegrationTests {
       TimeUtility.fromDOY("2021-001T00:00:00"),
       TimeUtility.fromDOY("2021-005T00:00:00"));
 
-  private record MissionModelDescription(String name, Map<String, SerializedValue> config, Path libPath) {}
+  record MissionModelDescription(String name, Map<String, SerializedValue> config, Path libPath, Instant start) {}
 
   private record SchedulingGoal(GoalId goalId, String definition, boolean enabled, boolean simulateAfter) {
     public SchedulingGoal(GoalId goalId, String definition, boolean enabled) {
@@ -80,12 +100,14 @@ public class SchedulingIntegrationTests {
   private static final MissionModelDescription BANANANATION = new MissionModelDescription(
       "bananantion",
       Map.of("initialDataPath", SerializedValue.of("/etc/hosts")),
-      Path.of(System.getenv("AERIE_ROOT"), "examples", "banananation", "build", "libs")
+      Path.of(System.getenv("AERIE_ROOT"), "examples", "banananation", "build", "libs"),
+      Instant.EPOCH
   );
   private static final MissionModelDescription MINIMAL_MISSION_MODEL = new MissionModelDescription(
       "minimal-mission-model",
       Map.of(),
-      Path.of(System.getenv("AERIE_ROOT"), "examples", "minimal-mission-model", "build", "libs")
+      Path.of(System.getenv("AERIE_ROOT"), "examples", "minimal-mission-model", "build", "libs"),
+      Instant.EPOCH
   );
 
   private SchedulingDSLCompilationService schedulingDSLCompiler;
@@ -1915,7 +1937,7 @@ public class SchedulingIntegrationTests {
           desc.libPath(),
           Path.of(jarFile.getName()),
           desc.name(),
-          loadMissionModelTypesFromJar(jarFile.getAbsolutePath(), desc.config()),
+          loadMissionModelTypesFromJar(desc.start, jarFile.getAbsolutePath(), desc.config()),
           desc.config());
     } catch (MissionModelLoader.MissionModelLoadException e) {
       fail(e);
@@ -2045,11 +2067,19 @@ public class SchedulingIntegrationTests {
 
   static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
+      final Map<String, SerializedValue> configuration) throws MissionModelLoader.MissionModelLoadException
+  {
+    return loadMissionModelTypesFromJar(Instant.EPOCH, jarPath, configuration);
+  }
+
+  static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
+      final Instant startLoad,
+      final String jarPath,
       final Map<String, SerializedValue> configuration)
   throws MissionModelLoader.MissionModelLoadException
   {
     final var missionModel = MissionModelLoader.loadMissionModel(
-        Instant.EPOCH,
+        startLoad,
         SerializedValue.of(configuration),
         Path.of(jarPath),
         "",
@@ -3149,7 +3179,8 @@ public class SchedulingIntegrationTests {
   private static final MissionModelDescription FOO = new MissionModelDescription(
       "foo",
       Map.of(),
-      Path.of(System.getenv("AERIE_ROOT"), "examples", "foo-missionmodel", "build", "libs")
+      Path.of(System.getenv("AERIE_ROOT"), "examples", "foo-missionmodel", "build", "libs"),
+      Instant.EPOCH
   );
 
   /**

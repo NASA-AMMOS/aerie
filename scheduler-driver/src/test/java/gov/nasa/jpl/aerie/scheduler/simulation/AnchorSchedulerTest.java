@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -803,7 +804,7 @@ public class AnchorSchedulerTest {
       }
 
       @Override
-      public Task<T> duplicate() {
+      public Task<T> duplicate(Executor executor) {
         return this;
       }
     };

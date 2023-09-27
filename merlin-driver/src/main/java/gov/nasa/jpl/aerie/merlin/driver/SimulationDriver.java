@@ -242,6 +242,14 @@ public final class SimulationDriver {
     return combinedTimeline;
   }
 
+  public static BiFunction<Duration, Duration, Boolean> periodicCheckpoints(final Duration from, Duration end, final Duration period) {
+    final List<Duration> desiredCheckpoints = new ArrayList<>();
+    for(Duration cur = from; cur.shorterThan(end); cur = cur.plus(period)){
+      desiredCheckpoints.add(cur);
+    }
+    return desiredCheckpoints(desiredCheckpoints);
+  }
+
   public static BiFunction<Duration, Duration, Boolean> desiredCheckpoints(final List<Duration> desiredCheckpoints) {
     return (elapsedTime, nextTime) -> {
       for (final var desiredCheckpoint : desiredCheckpoints) {
