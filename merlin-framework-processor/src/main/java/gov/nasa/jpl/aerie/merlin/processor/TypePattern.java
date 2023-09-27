@@ -6,6 +6,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -15,21 +16,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public sealed interface TypePattern {
   static TypePattern from(final TypeMirror mirror) {
+    TypePattern result;
     switch (mirror.getKind()) {
-      case BOOLEAN: return new PrimitivePattern(Primitive.BOOLEAN);
-      case BYTE: return new PrimitivePattern(Primitive.BYTE);
-      case SHORT: return new PrimitivePattern(Primitive.SHORT);
-      case INT: return new PrimitivePattern(Primitive.INT);
-      case LONG: return new PrimitivePattern(Primitive.LONG);
-      case CHAR: return new PrimitivePattern(Primitive.CHAR);
-      case FLOAT: return new PrimitivePattern(Primitive.FLOAT);
-      case DOUBLE: return new PrimitivePattern(Primitive.DOUBLE);
-      case ARRAY: return new ArrayPattern(TypePattern.from(((ArrayType) mirror).getComponentType()));
-      case TYPEVAR: return new TypeVariablePattern(mirror.toString());
-      case DECLARED: {
+      case BOOLEAN -> result = new PrimitivePattern(Primitive.BOOLEAN);
+      case BYTE -> result = new PrimitivePattern(Primitive.BYTE);
+      case SHORT -> result = new PrimitivePattern(Primitive.SHORT);
+      case INT -> result = new PrimitivePattern(Primitive.INT);
+      case LONG -> result = new PrimitivePattern(Primitive.LONG);
+      case CHAR -> result = new PrimitivePattern(Primitive.CHAR);
+      case FLOAT -> result = new PrimitivePattern(Primitive.FLOAT);
+      case DOUBLE -> result = new PrimitivePattern(Primitive.DOUBLE);
+      case ARRAY -> result = new ArrayPattern(TypePattern.from(((ArrayType) mirror).getComponentType()));
+      case TYPEVAR -> {
+        var typeVarName = mirror.toString();
+        if (typeVarName.contains(" ")) {
+          typeVarName = typeVarName.substring(typeVarName.lastIndexOf(' ') + 1);
+        }
+        result = new TypeVariablePattern(typeVarName);
+      }
+      case DECLARED -> {
         // DeclaredType element can be cast as TypeElement because it's a Type
         final var className = ClassName.get((TypeElement) ((DeclaredType) mirror).asElement());
         final var typeArguments = ((DeclaredType) mirror).getTypeArguments();
@@ -37,12 +46,19 @@ public sealed interface TypePattern {
         for (final var typeArgument : typeArguments) {
           argumentPatterns.add(TypePattern.from(typeArgument));
         }
-        return new ClassPattern(className, argumentPatterns);
+        result = new ClassPattern(className, argumentPatterns);
       }
 
-      default:
-        throw new Error("Cannot construct a pattern for type " + mirror);
+      default -> throw new Error("Cannot construct a pattern for type " + mirror);
     }
+
+    final var annotations = mirror.getAnnotationMirrors();
+    for (int i = annotations.size() - 1; i >= 0; i--) {
+      final var annotation = annotations.get(i);
+      final var className = ClassName.get((TypeElement) annotation.getAnnotationType().asElement());
+      result = new AnnotationPattern(className, Optional.of(annotation), result);
+    }
+    return result;
   }
 
   static TypePattern from(final VariableElement element) {
@@ -193,7 +209,7 @@ public sealed interface TypePattern {
     }
   }
 
-  public enum Primitive {
+  enum Primitive {
     BOOLEAN(TypeName.BOOLEAN),
     BYTE(TypeName.BYTE),
     SHORT(TypeName.SHORT),
@@ -359,6 +375,47 @@ public sealed interface TypePattern {
     @Override
     public TypePattern box() {
       return this;
+    }
+  }
+
+  record AnnotationPattern(ClassName annotationClassName, Optional<AnnotationMirror> payload, TypePattern target) implements TypePattern {
+    @Override
+    public AnnotationPattern substitute(final Map<String, TypePattern> substitution) {
+      return new AnnotationPattern(this.annotationClassName, this.payload, target.substitute(substitution));
+    }
+
+    @Override
+    public Map<String, TypePattern> match(final TypePattern o) throws UnificationException {
+      if (!(o instanceof final AnnotationPattern other)) throw new UnificationException();
+      if (!this.annotationClassName.equals(other.annotationClassName)) throw new UnificationException();
+      return this.target.match(other.target);
+    }
+
+    @Override
+    public boolean isGround() {
+      return this.target.isGround();
+    }
+
+    @Override
+    public boolean isSyntacticallyEqualTo(final TypePattern o) {
+      if (!(o instanceof final AnnotationPattern other)) return false;
+      if (!this.annotationClassName.equals(other.annotationClassName)) return false;
+      return this.target.isSyntacticallyEqualTo(other.target);
+    }
+
+    @Override
+    public TypeName render() {
+      return this.target.render();
+    }
+
+    @Override
+    public TypeName erasure() {
+      return this.render();
+    }
+
+    @Override
+    public TypePattern box() {
+      return new AnnotationPattern(this.annotationClassName, this.payload, this.target.box());
     }
   }
 }
