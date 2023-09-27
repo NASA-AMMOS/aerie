@@ -7,7 +7,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Objects;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.*;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMissionModelIdActionP;
+import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSchedulingDSLTypescriptActionP;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.*;
 import gov.nasa.jpl.aerie.json.JsonParser;
@@ -116,7 +116,7 @@ public record SchedulerBindings(
    */
   private void getSchedulingDslTypescript(final Context ctx) {
     try {
-      final var body = parseJson(ctx.body(), hasuraMissionModelIdActionP);
+      final var body = parseJson(ctx.body(), hasuraSchedulingDSLTypescriptActionP);
       final var missionModelId = body.input().missionModelId();
       final var planId = body.input().planId();
       final var response = this.generateSchedulingLibAction.run(missionModelId, planId);

@@ -99,7 +99,7 @@ public final class SchedulerParsers {
   /**
    * parser for a hasura action that accepts a mission model id as its sole input, along with normal hasura session details
    */
-  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraMissionModelIdActionP
+  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraSchedulingDSLTypescriptActionP
       = hasuraActionF(productP
                           .field("missionModelId", missionModelIdP)
                           .optionalField("planId", nullableP(planIdP))
