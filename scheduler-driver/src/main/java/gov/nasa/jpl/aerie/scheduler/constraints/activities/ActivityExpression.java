@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -58,10 +59,16 @@ public record ActivityExpression(
     Interval endRange,
     Pair<Expression<? extends Profile<?>>, Expression<? extends Profile<?>>> durationRange,
     ActivityType type,
+    SchedulingActivityDirectiveId anchorId,
     java.util.regex.Pattern nameRe,
     Map<String, ProfileExpression<?>> arguments
 ) implements Expression<Spans> {
 
+  public enum ActivityStatus {
+    NO_ANCHOR_FOUND,
+    NO_ACTIVITY_FOUND,
+    ACTIVITY_FOUND
+  }
 
   /**
    * a fluent builder class for constructing consistent template queries
@@ -83,6 +90,7 @@ public record ActivityExpression(
     protected Duration acceptableAbsoluteTimingError = Duration.of(0, Duration.MILLISECOND);
     Map<String, ProfileExpression<?>> arguments = new HashMap<>();
     protected @Nullable ActivityType type;
+    protected @Nullable SchedulingActivityDirectiveId anchorId;
     protected @Nullable Interval startsIn;
     protected @Nullable Interval endsIn;
     protected @Nullable Pair<Expression<? extends Profile<?>>, Expression<? extends Profile<?>>> durationIn;
@@ -119,6 +127,19 @@ public record ActivityExpression(
       return getThis();
     }
 
+    /**
+     * requires activities to match the anchorId
+     *
+     * the matching instance is allowed to have a type that is derived from
+     * the requested type, akin to java instanceof semantics
+     *
+     * @param anchorId IN STORED required SchedulingActivityDirectiveId for matching instances,
+     * @return the same builder object updated with new criteria
+     */
+    public @NotNull Builder withAnchor(@Nullable SchedulingActivityDirectiveId anchorId) {
+      this.anchorId = anchorId;
+      return getThis();
+    }
     /**
      * requires activities have a scheduled start time in a specified range
      *
@@ -227,6 +248,7 @@ public record ActivityExpression(
     public @NotNull
     Builder basedOn(@NotNull ActivityExpression template) {
       type = template.type;
+      anchorId = template.anchorId;
       startsIn = template.startRange;
       endsIn = template.endRange;
       durationIn = template.durationRange;
@@ -255,6 +277,7 @@ public record ActivityExpression(
           endsIn,
           durationIn,
           type,
+          anchorId,
           nameRe,
           arguments
       );
@@ -288,33 +311,43 @@ public record ActivityExpression(
    *     by this template, or false if it does not meet one or more of
    *     the template criteria
    */
-  public boolean matches(
+  //jd review this method to check whether to add anchorid
+  public ActivityStatus matches(
       final @NotNull SchedulingActivityDirective act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
-      final boolean matchArgumentsExactly) {
+      final boolean matchArgumentsExactly,
+      final boolean createPersistentAnchor) {
     final var activityInstance = new ActivityInstance(-1, act.type().getName(), act.arguments(), Interval.between(act.startOffset(), act.getEndTime()));
-    return matches(activityInstance, simulationResults, evaluationEnvironment, matchArgumentsExactly);
+    return matches(activityInstance, simulationResults, evaluationEnvironment, matchArgumentsExactly, createPersistentAnchor);
   }
 
-  public boolean matches(
+  public ActivityStatus matches(
       final @NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
-      final boolean matchArgumentsExactly) {
-    boolean match = (type == null || type.getName().equals(act.type));
+      final boolean matchArgumentsExactly,
+      final boolean createPersistentAnchor) {
+    ActivityStatus match = ActivityStatus.ACTIVITY_FOUND; // default value
 
-    if (match && startRange != null) {
+    if(type != null && type.getName().equals(act.type))
+      match = ActivityStatus.NO_ACTIVITY_FOUND;
+
+    if (match.equals(ActivityStatus.ACTIVITY_FOUND) && startRange != null) {
       final var startT = act.interval.start;
-      match = (startT != null) && startRange.contains(startT);
+      if (startT == null || !startRange.contains(startT)){
+        match = ActivityStatus.NO_ACTIVITY_FOUND;
+      }
     }
 
-    if (match && endRange != null) {
+    if (match.equals(ActivityStatus.ACTIVITY_FOUND) && endRange != null) {
       final var endT = act.interval.end;
-      match = (endT != null) && endRange.contains(endT);
+      if (endT == null || !endRange.contains(endT)){
+        match = ActivityStatus.NO_ACTIVITY_FOUND;
+      }
     }
 
-    if (match && durationRange != null) {
+    if (match.equals(ActivityStatus.ACTIVITY_FOUND) && durationRange != null) {
       final var dur = act.interval.duration();
       final Optional<Duration> durRequirementLower = this.durationRange.getLeft()
           .evaluate(simulationResults, evaluationEnvironment)
@@ -327,39 +360,36 @@ public record ActivityExpression(
       if(durRequirementLower.isEmpty() && durRequirementUpper.isEmpty()){
         throw new RuntimeException("ActivityExpression is malformed, duration bounds are absent but the range is not null");
       }
-      if(durRequirementLower.isPresent()){
-        match = dur.noShorterThan(durRequirementLower.get());
+      if(durRequirementLower.isPresent() && !dur.noShorterThan(durRequirementLower.get())){
+        match = ActivityStatus.NO_ACTIVITY_FOUND;
       }
-      if(durRequirementUpper.isPresent()){
-        match = match && dur.noLongerThan(durRequirementUpper.get());
+      if(durRequirementUpper.isPresent() && !dur.noLongerThan(durRequirementUpper.get())) {
+        match = ActivityStatus.NO_ACTIVITY_FOUND;
       }
     }
 
     //activity must have all instantiated arguments of template to be compatible
-    if (match && arguments != null) {
+    if (match.equals(ActivityStatus.ACTIVITY_FOUND) && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
       final var instantiatedArguments = SchedulingActivityDirective
                 .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {
-          if (actInstanceArguments.containsKey(param.getKey())) {
-            match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
-          }
-          if (!match) {
+          if (actInstanceArguments.containsKey(param.getKey()) && !actInstanceArguments.get(param.getKey()).equals(param.getValue()) {
+            match = ActivityStatus.NO_ACTIVITY_FOUND;
             break;
           }
         }
-      } else {
-        match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
+      } else if(!subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments))){
+        match = ActivityStatus.NO_ACTIVITY_FOUND;
       }
     }
-    if (match && createNewAnchoredActivity == True)
-      match = (act.anchorId() == this.id);
-    else if (createNewAnchoredActivity == False) {
-      match = False;
+
+    if (match.equals(ActivityStatus.ACTIVITY_FOUND) && anchorId != null){
+      if(createPersistentAnchor && !anchorId.equals(act.anchorId))
+        match = ActivityStatus.NO_ACTIVITY_FOUND;
     }
 
-    //jd new paragraph storing activity thatt matches the anchor
     return match;
   }
 
@@ -367,10 +397,11 @@ public record ActivityExpression(
   public Spans evaluate(
       final SimulationResults results,
       final Interval bounds,
-      final EvaluationEnvironment environment)
+      final EvaluationEnvironment environment,
+      final boolean createPersistentAnchor)
   {
     final var spans = new Spans();
-    results.activities.stream().filter(x -> matches(x, results, environment, false)).forEach(x -> spans.add(x.interval));
+    results.activities.stream().filter(x -> matches(x, results, environment, false, createPersistentAnchor)).forEach(x -> spans.add(x.interval));
     return spans;
   }
 

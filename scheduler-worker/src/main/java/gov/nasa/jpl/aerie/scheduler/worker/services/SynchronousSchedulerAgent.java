@@ -241,6 +241,7 @@ public record SynchronousSchedulerAgent(
             activityToGoalId,
             schedulerMissionModel.schedulerModel()
         );
+        //jd update the anchors of the new activities with these new instancesToIds
         final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
         final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
         //collect results and notify subscribers of success

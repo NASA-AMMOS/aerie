@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAnchorConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
@@ -676,6 +677,10 @@ public class PrioritySolver implements Solver {
             logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
           }
         }
+      }
+
+      else if(missing instanceof MissingAnchorConflict missingAnchor){
+
       }
     }//for(missing)
 

@@ -383,12 +383,14 @@ export class Goal {
 
   public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType,  B extends WindowsEDSL.Gen.ActivityType>(opts: ({
     activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    createNewAnchoredActivity: boolean,
+    createAnchor: boolean,
+    allowActivityUpdate: boolean,
     forEach:  WindowsEDSL.Windows | WindowsEDSL.Interval | Temporal.Instant,
     activityFinder?: ActivityExpression<B>
   } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    createNewAnchoredActivity: boolean,
+    createAnchor: boolean,
+    allowActivityUpdate: boolean,
     forEach:  ActivityExpression<T>,
     activityFinder?: ActivityExpression<B>
   }) & CoexistenceGoalTimingConstraints): Goal {
@@ -430,7 +432,8 @@ export class Goal {
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       alias: alias,
       activityTemplate: activityTemplate,
-      createNewAnchoredActivity: opts.createNewAnchoredActivity,
+      createAnchor: opts.createAnchor,
+      allowActivityUpdate: opts.allowActivityUpdate,
       activityFinder: opts.activityFinder?.__astNode,
       forEach: localForEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),

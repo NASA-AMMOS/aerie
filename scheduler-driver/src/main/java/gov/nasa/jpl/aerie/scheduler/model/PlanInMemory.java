@@ -169,12 +169,11 @@ public class PlanInMemory implements Plan {
       ActivityExpression template, SimulationResults simulationResults,
       EvaluationEnvironment evaluationEnvironment)
   {
-    //REVIEW: could do something clever with returning streams to prevent wasted work
-    //REVIEW: something more clever for time-based queries using time index
     LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
-        if (template.matches(act, simulationResults, evaluationEnvironment, true)) {
+        ActivityExpression.ActivityStatus result = template.matches(act, simulationResults, evaluationEnvironment);
+        if (result == ActivityExpression.ActivityStatus.ACTIVITY_FOUND) {
           matched.add(act);
         }
       }

@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAnchorConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
@@ -17,6 +18,8 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -244,12 +247,15 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           activityFinder.build(),
           simulationResults,
           createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window));
+      LinkedList<SchedulingActivityDirective> activitiesFound = new LinkedList<>(existingActs.get(ActivityExpression.ActivityStatus.ACTIVITY_FOUND));
+      LinkedList<SchedulingActivityDirective> activitiesNoAnchorFound = new LinkedList<>(existingActs.get(ActivityExpression.ActivityStatus.NO_ANCHOR_FOUND));
+
 
       var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
-      for(var act : existingActs){
+      for(var act : activitiesFound){
         //has already been associated to this goal
         if(associatedActivitiesToThisGoal.contains(act)){
           alreadyOneActivityAssociated = true;
@@ -257,7 +263,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         }
       }
       if(!alreadyOneActivityAssociated){
-        for(var act : existingActs){
+        for(var act : activitiesFound){
           if(planEvaluation.canAssociateMoreToCreatorOf(act)){
             missingActAssociations.add(act);
           }
@@ -266,7 +272,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       //jd add to template information about activity A.
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
-        if (existingActs.isEmpty()) {
+        if (activitiesFound.isEmpty()) {
           conflicts.add(new MissingActivityTemplateConflict(
               this,
               this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
@@ -274,12 +280,23 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
               createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
               1,
               Optional.empty()));
-        } else {
+        }
+        else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }
       }
 
+      for(var act : activitiesNoAnchorFound){
+        conflicts.add(new MissingAnchorConflict(this, this.temporalContext.evaluate(simulationResults), temp, createEvaluationEnvironmentFromAnchor(window), 1, Optional.empty()));
+        if(associatedActivitiesToThisGoal.contains(act)){
+          alreadyOneActivityAssociated = true;
+          break;
+        }
+      }
+
+
     }//for(anchorAct)
+
 
     return conflicts;
   }

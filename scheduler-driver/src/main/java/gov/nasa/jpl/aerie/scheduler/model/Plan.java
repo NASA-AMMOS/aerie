@@ -87,7 +87,7 @@ public interface Plan {
    * @param template IN the matching criteria to use on activity instances
    * @return collection of instances that match the given template
    */
-  Collection<SchedulingActivityDirective> find(
+  Map<ActivityExpression.ActivityStatus, Collection<SchedulingActivityDirective>> find(
       ActivityExpression template, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
   /**
    * adds a new evaluation to the plan
