@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.anyP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
@@ -98,11 +99,11 @@ public final class SchedulerParsers {
   /**
    * parser for a hasura action that accepts a mission model id as its sole input, along with normal hasura session details
    */
-  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraMissionModelIdActionP
+  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraSchedulingDSLTypescriptActionP
       = hasuraActionF(productP
                           .field("missionModelId", missionModelIdP)
-                          .optionalField("planId", planIdP)
+                          .optionalField("planId", nullableP(planIdP))
       .map(
-          untuple(HasuraAction.MissionModelIdInput::new),
-          input -> tuple(input.missionModelId(), input.planId())));
+          untuple((missionModelId, planId) -> new HasuraAction.MissionModelIdInput(missionModelId, planId.flatMap($->$))),
+          input -> tuple(input.missionModelId(), Optional.of(input.planId()))));
 }

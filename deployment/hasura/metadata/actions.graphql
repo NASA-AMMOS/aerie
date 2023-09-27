@@ -89,7 +89,7 @@ type Query {
 }
 
 type Query {
-  schedulingDslTypescript(missionModelId: Int!): DslTypescriptResponse
+  schedulingDslTypescript(missionModelId: Int!, planId: Int): DslTypescriptResponse
 }
 
 type Query {
