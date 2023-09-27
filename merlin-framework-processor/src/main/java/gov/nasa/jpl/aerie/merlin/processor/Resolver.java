@@ -84,13 +84,13 @@ public final class Resolver {
     // Extract type bindings for the type parameters of the rule
     final Map<String, TypePattern> typeMapping;
     try {
-      typeMapping = rule.head.match(goal);
+      typeMapping = rule.head().match(goal);
     } catch (TypePattern.UnificationException e) {
       return Optional.empty();
     }
 
     // Ensure the match satisfies the rule's type parameter bounds
-    for (final var name : rule.enumBoundedTypeParameters) {
+    for (final var name : rule.enumBoundedTypeParameters()) {
       final var pattern = typeMapping.get(name);
       if (pattern == null) return Optional.empty();
       if (!(pattern instanceof ClassPattern)) return Optional.empty();
@@ -106,8 +106,8 @@ public final class Resolver {
     }
 
     // Satisfy the subgoals of the rule
-    final var dependencies = new ArrayList<CodeBlock>(rule.parameters.size());
-    for (final var parameter : rule.parameters) {
+    final var dependencies = new ArrayList<CodeBlock>(rule.parameters().size());
+    for (final var parameter : rule.parameters()) {
       final var codeBlock = applyRules(parameter.substitute(typeMapping));
       if (codeBlock.isEmpty()) return Optional.empty();
       dependencies.add(codeBlock.get());
@@ -115,7 +115,7 @@ public final class Resolver {
 
     // Build a codeblock satisfying the goal of this rule
     final var builder = CodeBlock.builder();
-    builder.add("$T.$L(", rule.factory, rule.method);
+    builder.add("$T.$L(", rule.factory(), rule.method());
     if (dependencies.size() > 0) {
       final var iter = dependencies.iterator();
       builder.add("\n$>$>$L$<$<", iter.next());
