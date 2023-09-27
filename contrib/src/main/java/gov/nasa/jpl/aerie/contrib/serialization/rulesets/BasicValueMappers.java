@@ -24,14 +24,20 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveShortArrayValue
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.ShortValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.UnitValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithMetadata;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
+import java.lang.annotation.Annotation;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+@WithMetadata(name="unit", annotation=gov.nasa.jpl.aerie.contrib.metadata.Unit.class)
 public final class BasicValueMappers {
 
   // Unit is an enum, so `$unit` needs to be defined before `$enum()`
@@ -131,5 +137,34 @@ public final class BasicValueMappers {
 
   public static ValueMapper<Path> path() {
     return new PathValueMapper();
+  }
+
+  public static ValueMapper<gov.nasa.jpl.aerie.contrib.metadata.Unit> gov_nasa_jpl_aerie_contrib_metadata_Unit() {
+    return new ValueMapper<>() {
+      @Override
+      public ValueSchema getValueSchema() {
+        return ValueSchema.ofStruct(Map.of("value", ValueSchema.STRING));
+      }
+
+      @Override
+      public Result<gov.nasa.jpl.aerie.contrib.metadata.Unit, String> deserializeValue(final SerializedValue serializedValue) {
+        return serializedValue.asMap().flatMap($ -> $.get("value").asString()).map($ -> Result.<gov.nasa.jpl.aerie.contrib.metadata.Unit, String>success(new gov.nasa.jpl.aerie.contrib.metadata.Unit() {
+          @Override
+          public Class<? extends Annotation> annotationType() {
+            return gov.nasa.jpl.aerie.contrib.metadata.Unit.class;
+          }
+
+          @Override
+          public String value() {
+            return $;
+          }
+        })).orElse(Result.failure("Could not deserialize Unit"));
+      }
+
+      @Override
+      public SerializedValue serializeValue(final gov.nasa.jpl.aerie.contrib.metadata.Unit value) {
+        return SerializedValue.of(Map.of("value", SerializedValue.of(value.value())));
+      }
+    };
   }
 }
