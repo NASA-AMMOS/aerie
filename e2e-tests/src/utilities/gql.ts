@@ -185,8 +185,8 @@ const gql = {
   `,
 
   GET_SCHEDULING_DSL_TYPESCRIPT: `#graphql
-    query GetSchedulingDslTypeScript($missionModelId: Int!) {
-      schedulingDslTypescript(missionModelId: $missionModelId) {
+    query GetSchedulingDslTypeScript($missionModelId: Int!, $planId: Int) {
+      schedulingDslTypescript(missionModelId: $missionModelId, planId: $planId) {
         reason
         status
         typescriptFiles {

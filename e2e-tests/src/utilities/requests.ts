@@ -278,8 +278,9 @@ const req = {
   async getSchedulingDslTypeScript(
     request: APIRequestContext,
     missionModelId: number,
+    planId?: number
   ): Promise<SchedulingDslTypesResponse> {
-    const data = await req.hasura(request, gql.GET_SCHEDULING_DSL_TYPESCRIPT, { missionModelId: missionModelId });
+    const data = await req.hasura(request, gql.GET_SCHEDULING_DSL_TYPESCRIPT, { missionModelId: missionModelId, planId: planId });
     const { schedulingDslTypescript } = data;
     return schedulingDslTypescript;
   },
