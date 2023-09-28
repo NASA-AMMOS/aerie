@@ -1,19 +1,23 @@
-import {Segment} from '../segment.js';
-import {Inclusivity, Interval} from '../interval.js';
+import { Segment } from '../segment.js';
+import { Inclusivity, Interval } from '../interval.js';
 import {
-  applyOperation, BoundsMap, EagerTimeline,
-  evaluate, identityBoundsMap,
+  applyOperation,
+  BoundsMap,
+  EagerTimeline,
+  evaluate,
+  identityBoundsMap,
   isLazy,
   LazyTimeline,
   ProfileSpecialization,
   ProfileType,
-  Spans, truncate,
+  Spans,
+  truncate,
   Windows
 } from '../internal.js';
-import {bound, coalesce, Timeline} from '../timeline.js';
-import {BinaryOperation} from '../binary-operation.js';
+import { bound, coalesce, Timeline } from '../timeline.js';
+import { BinaryOperation } from '../binary-operation.js';
 import { fetcher } from '../data-fetcher.js';
-import {Temporal} from '@js-temporal/polyfill';
+import { Temporal } from '@js-temporal/polyfill';
 
 export class Profile<V> {
   protected segments: Timeline<Segment<V>>;
@@ -36,11 +40,14 @@ export class Profile<V> {
   }
 
   public static Resource<V>(name: string): Profile<V> {
-    return new Profile<V>(fetcher.resource(name, $ => $ as V, ProfileType.Other), ProfileType.Other);
+    return new Profile<V>(
+      fetcher.resource(name, $ => $ as V, ProfileType.Other),
+      ProfileType.Other
+    );
   }
 
   public async evaluate(bounds: Interval): Promise<this> {
-    if (!isLazy(this.segments)) throw new Error("Profile has already been evaluated");
+    if (!isLazy(this.segments)) throw new Error('Profile has already been evaluated');
     this.segments = await evaluate(this.segments as LazyTimeline<Segment<V>>, bounds);
     return this;
   }
@@ -49,7 +56,8 @@ export class Profile<V> {
   public collect(bounds: Interval): Promise<Segment<V>[]>;
   public collect(bounds?: Interval): Segment<V>[] | Promise<Segment<V>[]> {
     if (isLazy(this.segments)) {
-      if (bounds === undefined) throw new Error("Collect must be provided a bounds argument if the profile has not been evaluated yet.");
+      if (bounds === undefined)
+        throw new Error('Collect must be provided a bounds argument if the profile has not been evaluated yet.');
       return this.evaluate(bounds).then(p => (p.segments as EagerTimeline<Segment<V>>).array as Segment<V>[]);
     } else {
       return (this.segments as EagerTimeline<Segment<V>>).array;
@@ -58,13 +66,13 @@ export class Profile<V> {
 
   public async valueAt(time: Temporal.Duration): Promise<any | undefined> {
     const segment = await this.collect(Interval.At(time));
-    if (segment.length > 0) throw new Error("multiple segments exist at the same time");
+    if (segment.length > 0) throw new Error('multiple segments exist at the same time');
     if (segment.length === 0) return undefined;
     return segment[0].value;
   }
 
   public inspect(f: (segments: readonly Segment<V>[], bounds: Interval) => void): this {
-    const inspectOp = ({current: bounds}: {current: Interval}, [$]: Segment<V>[][]) => {
+    const inspectOp = ({ current: bounds }: { current: Interval }, [$]: Segment<V>[][]) => {
       f($, bounds);
       return $;
     };
@@ -92,16 +100,14 @@ export class Profile<V> {
   }
 
   public unset(unsetInterval: Interval): ProfileSpecialization<V> {
-    const unsetOp = (_: any, [$]: Segment<V>[][]) => $.flatMap((seg: Segment<V>) => {
-      const currentInterval = seg.interval;
-      const currentValue = seg.value;
-      return Interval.subtract(currentInterval, unsetInterval).map(i => new Segment(currentValue, i));
-    });
+    const unsetOp = (_: any, [$]: Segment<V>[][]) =>
+      $.flatMap((seg: Segment<V>) => {
+        const currentInterval = seg.interval;
+        const currentValue = seg.value;
+        return Interval.subtract(currentInterval, unsetInterval).map(i => new Segment(currentValue, i));
+      });
     const timeline = applyOperation(unsetOp, identityBoundsMap, this.segments);
-    return new Profile<V>(
-        timeline,
-        this.typeTag
-    ).specialize();
+    return new Profile<V>(timeline, this.typeTag).specialize();
   }
 
   public mapValues(f: (v: V, i: Interval) => V): ProfileSpecialization<V>;
@@ -127,16 +133,18 @@ export class Profile<V> {
   ): ProfileSpecialization<Result> {
     if (typeTag === undefined) typeTag = this.typeTag;
     const timeline = applyOperation(
-        (_, [l, r]) => map2Arrays(l, r, op),
-        identityBoundsMap,
-        this.segments, rightProfile.segments
+      (_, [l, r]) => map2Arrays(l, r, op),
+      identityBoundsMap,
+      this.segments,
+      rightProfile.segments
     );
 
     return new Profile(timeline, typeTag).specialize();
   }
 
   public filter(predicate: (v: V, i: Interval) => boolean): ProfileSpecialization<V> {
-    const filterOp: (_: any, a: Segment<V>[][]) => Segment<V>[] = (_, [$]) => $.filter((s: Segment<V>) => predicate(s.value, s.interval));
+    const filterOp: (_: any, a: Segment<V>[][]) => Segment<V>[] = (_, [$]) =>
+      $.filter((s: Segment<V>) => predicate(s.value, s.interval));
     const timeline = applyOperation<Segment<V>>(filterOp, identityBoundsMap, this.segments);
     return new Profile<V>(timeline, this.typeTag).specialize();
   }
@@ -158,55 +166,59 @@ export class Profile<V> {
   }
 
   public edges(edgeFilter: BinaryOperation<V, V, boolean>): Windows {
-    const edgesOp = ({current: bounds}: {current: Interval}, [arr]: Segment<V>[][]) => {
+    const edgesOp = ({ current: bounds }: { current: Interval }, [arr]: Segment<V>[][]) => {
       let buffer: Segment<V> | undefined = undefined;
-      return coalesce(arr.flatMap(currentSegment => {
-        let leftEdge: boolean | undefined;
-        let rightEdge: boolean | undefined;
+      return coalesce(
+        arr
+          .flatMap(currentSegment => {
+            let leftEdge: boolean | undefined;
+            let rightEdge: boolean | undefined;
 
-        const previous = buffer;
-        buffer = currentSegment;
-        const currentInterval = currentSegment.interval;
+            const previous = buffer;
+            buffer = currentSegment;
+            const currentInterval = currentSegment.interval;
 
-        const leftEdgeInterval = Interval.At(currentInterval.start);
-        const rightEdgeInterval = Interval.At(currentInterval.end);
+            const leftEdgeInterval = Interval.At(currentInterval.start);
+            const rightEdgeInterval = Interval.At(currentInterval.end);
 
-        if (currentInterval.end === bounds.end && currentInterval.endInclusivity === bounds.endInclusivity) {
-          if (bounds.includesEnd()) rightEdge = false;
-          else rightEdge = undefined;
-        } else {
-          rightEdge = edgeFilter.left(currentSegment.value, rightEdgeInterval);
-        }
+            if (currentInterval.end === bounds.end && currentInterval.endInclusivity === bounds.endInclusivity) {
+              if (bounds.includesEnd()) rightEdge = false;
+              else rightEdge = undefined;
+            } else {
+              rightEdge = edgeFilter.left(currentSegment.value, rightEdgeInterval);
+            }
 
-        if (previous !== undefined) {
-          if (Interval.compareEndToStart(previous.interval, currentInterval) === 0) {
-            leftEdge = edgeFilter.combine(previous.value, currentSegment.value, leftEdgeInterval);
-          } else {
-            leftEdge = edgeFilter.right(currentSegment.value, leftEdgeInterval);
-          }
-        } else {
-          if (
-              currentInterval.start == bounds.start &&
-              currentInterval.startInclusivity == bounds.startInclusivity
-          ) {
-            if (bounds.includesStart()) leftEdge = false;
-            else leftEdge = undefined;
-          } else {
-            leftEdge = edgeFilter.right(currentSegment.value, leftEdgeInterval);
-          }
-        }
+            if (previous !== undefined) {
+              if (Interval.compareEndToStart(previous.interval, currentInterval) === 0) {
+                leftEdge = edgeFilter.combine(previous.value, currentSegment.value, leftEdgeInterval);
+              } else {
+                leftEdge = edgeFilter.right(currentSegment.value, leftEdgeInterval);
+              }
+            } else {
+              if (
+                currentInterval.start == bounds.start &&
+                currentInterval.startInclusivity == bounds.startInclusivity
+              ) {
+                if (bounds.includesStart()) leftEdge = false;
+                else leftEdge = undefined;
+              } else {
+                leftEdge = edgeFilter.right(currentSegment.value, leftEdgeInterval);
+              }
+            }
 
-        return [
-          new Segment(leftEdge, leftEdgeInterval).transpose(),
-          new Segment(
-              false,
-              Interval.Between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
-          ).transpose(),
-          new Segment(rightEdge, rightEdgeInterval).transpose()
-        ];
-      })
-          .filter($ => $ !== undefined) as Segment<boolean>[], ProfileType.Windows);
-    }
+            return [
+              new Segment(leftEdge, leftEdgeInterval).transpose(),
+              new Segment(
+                false,
+                Interval.Between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
+              ).transpose(),
+              new Segment(rightEdge, rightEdgeInterval).transpose()
+            ];
+          })
+          .filter($ => $ !== undefined) as Segment<boolean>[],
+        ProfileType.Windows
+      );
+    };
     const timeline = applyOperation(edgesOp, identityBoundsMap, this.segments);
     return new Windows(timeline);
   }
@@ -226,23 +238,20 @@ export class Profile<V> {
   }
 
   public shiftBy(shift: Temporal.Duration): ProfileSpecialization<V> {
-    return this.unsafe.mapIntervals(
-      (_, i) => i.shiftBy(shift),
-        {
-          eager: b => b.shiftBy(shift),
-          lazy: b => b.shiftBy(shift.negated())
-        },
-    );
+    return this.unsafe.mapIntervals((_, i) => i.shiftBy(shift), {
+      eager: b => b.shiftBy(shift),
+      lazy: b => b.shiftBy(shift.negated())
+    });
   }
 
   public select(selection: Interval): ProfileSpecialization<V> {
-    const selectOp = (bounds: {current: Interval, next: Interval}, [$]: Segment<V>[][]) => {
+    const selectOp = (bounds: { current: Interval; next: Interval }, [$]: Segment<V>[][]) => {
       // Black magic: if the current and next bounds are unequal, we are in lazy mode.
       // The lazy branch of the bounds map below guaranteed that the input was already evaluated on the
       // selection interval. Thus lazy select is a no-op.
       if (!Interval.equals(bounds.current, bounds.next)) return $;
       else return truncate($, selection);
-    }
+    };
     const selectBoundsMap: BoundsMap = {
       eager: $ => $,
       lazy: $ => {
@@ -292,18 +301,16 @@ export class Profile<V> {
       if (typeTag === undefined) {
         typeTag = this.outerThis.typeTag;
       }
-      const mapOp = (_: any, [$]: Segment<V>[][]) => coalesce($.map(s => f(s.value, s.interval)), typeTag!);
+      const mapOp = (_: any, [$]: Segment<V>[][]) =>
+        coalesce(
+          $.map(s => f(s.value, s.interval)),
+          typeTag!
+        );
       const timeline = applyOperation(mapOp, boundsMap, this.outerThis.segments);
-      return new Profile<W>(
-          timeline,
-          typeTag
-      ).specialize();
+      return new Profile<W>(timeline, typeTag).specialize();
     }
 
-    public mapIntervals(
-      map: (v: V, i: Interval) => Interval,
-      boundsMap: BoundsMap
-    ): ProfileSpecialization<V> {
+    public mapIntervals(map: (v: V, i: Interval) => Interval, boundsMap: BoundsMap): ProfileSpecialization<V> {
       return this.map<V>((v, i) => new Segment<V>(v, map(v, i)), boundsMap, this.outerThis.typeTag);
     }
 
@@ -325,16 +332,17 @@ export class Profile<V> {
       typeTag?: ProfileType
     ): ProfileSpecialization<Result> {
       if (typeTag === undefined) typeTag = this.outerThis.typeTag;
-      const map2Op = (_: any, [l, r]: Segment<any>[][]) => coalesce(map2Arrays(l, r, op).map($ => $.value), typeTag!);
+      const map2Op = (_: any, [l, r]: Segment<any>[][]) =>
+        coalesce(
+          map2Arrays(l, r, op).map($ => $.value),
+          typeTag!
+        );
       const timeline = applyOperation(map2Op, boundsMap, this.outerThis.segments, rightProfile.segments);
 
       return new Profile(timeline, typeTag).specialize();
     }
 
-    public flatMap(
-      f: (v: V, i: Interval) => Segment<V>[],
-      boundsMap: BoundsMap
-    ): ProfileSpecialization<V>;
+    public flatMap(f: (v: V, i: Interval) => Segment<V>[], boundsMap: BoundsMap): ProfileSpecialization<V>;
     public flatMap<W>(
       f: (v: V, i: Interval) => Segment<W>[],
       boundsMap: BoundsMap,
@@ -346,7 +354,11 @@ export class Profile<V> {
       typeTag?: ProfileType
     ): ProfileSpecialization<W> {
       if (typeTag === undefined) typeTag = this.outerThis.typeTag;
-      const flatMapOp = (_: any, [$]: Segment<V>[][]) => coalesce($.flatMap(s => f(s.value, s.interval)), typeTag!);
+      const flatMapOp = (_: any, [$]: Segment<V>[][]) =>
+        coalesce(
+          $.flatMap(s => f(s.value, s.interval)),
+          typeTag!
+        );
       const timeline = applyOperation(flatMapOp, boundsMap, this.outerThis.segments);
       return new Profile<W>(timeline, typeTag).specialize();
     }
@@ -369,7 +381,11 @@ export class Profile<V> {
       typeTag?: ProfileType
     ): ProfileSpecialization<Result> {
       if (typeTag === undefined) typeTag = this.outerThis.typeTag;
-      const flatMap2Op = (_: any, [l, r]: Segment<any>[][]) => coalesce(map2Arrays(l, r, op).flatMap($ => $.value), typeTag!);
+      const flatMap2Op = (_: any, [l, r]: Segment<any>[][]) =>
+        coalesce(
+          map2Arrays(l, r, op).flatMap($ => $.value),
+          typeTag!
+        );
       const timeline = applyOperation(flatMap2Op, boundsMap, this.outerThis.segments, rightProfile.segments);
       return new Profile(timeline, typeTag).specialize();
     }
@@ -429,7 +445,14 @@ export function map2Arrays<V, W, Result>(
           const resultingSegment = leftSegment.mapValue(s => op.left(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          remainingLeftSegment = leftSegment.mapInterval(s => Interval.Between(rightSegment!.interval.start, s.interval.end, rightSegment!.interval.startInclusivity, s.interval.endInclusivity));
+          remainingLeftSegment = leftSegment.mapInterval(s =>
+            Interval.Between(
+              rightSegment!.interval.start,
+              s.interval.end,
+              rightSegment!.interval.startInclusivity,
+              s.interval.endInclusivity
+            )
+          );
           const resultingSegment = new Segment(
             leftSegment.value,
             Interval.Between(
@@ -450,7 +473,14 @@ export function map2Arrays<V, W, Result>(
           const resultingSegment = rightSegment.mapValue(s => op.right(s.value, s.interval)).transpose();
           if (resultingSegment !== undefined) result.push(resultingSegment);
         } else {
-          remainingRightSegment = rightSegment.mapInterval(s => Interval.Between(leftSegment!.interval.start, s.interval.end, leftSegment!.interval.startInclusivity, s.interval.endInclusivity));
+          remainingRightSegment = rightSegment.mapInterval(s =>
+            Interval.Between(
+              leftSegment!.interval.start,
+              s.interval.end,
+              leftSegment!.interval.startInclusivity,
+              s.interval.endInclusivity
+            )
+          );
           const resultingSegment = new Segment(
             rightSegment.value,
             Interval.Between(
@@ -504,6 +534,3 @@ export function map2Arrays<V, W, Result>(
 
   return result;
 }
-
-
-

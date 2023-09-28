@@ -4,8 +4,8 @@ import { ProfileType } from './profiles/profile-type.js';
 
 export type Timeline<V extends IntervalLike> = EagerTimeline<V> | LazyTimeline<V>;
 
-export type LazyTimeline<V> = ((bounds: Interval) => Promise<V[]>);
-export type EagerTimeline<V> = { array: V[], bounds: Interval };
+export type LazyTimeline<V> = (bounds: Interval) => Promise<V[]>;
+export type EagerTimeline<V> = { array: V[]; bounds: Interval };
 
 export function isLazy<V extends IntervalLike, T extends Timeline<V>>(t: T): boolean {
   return typeof t === 'function';
@@ -17,13 +17,13 @@ export function isEager<V extends IntervalLike, T extends Timeline<V>>(t: T): bo
 
 export type BoundsMap = {
   /** Transforms the bounds produced from the previous operations into the bounds to produce from this operation. */
-  eager: (i: Interval) => Interval,
+  eager: (i: Interval) => Interval;
 
   /** Transforms the bounds requested of this operation into the bounds to request of the previous operations. */
-  lazy: (i: Interval) => Interval
+  lazy: (i: Interval) => Interval;
 };
 
-export const identityBoundsMap = { eager: ($: Interval) => $, lazy: ($: Interval) => $};
+export const identityBoundsMap = { eager: ($: Interval) => $, lazy: ($: Interval) => $ };
 
 /**
  * Applies an arbitrary operation to an arbitrary list of timelines.
@@ -35,32 +35,43 @@ export const identityBoundsMap = { eager: ($: Interval) => $, lazy: ($: Interval
  * @param boundsMap
  * @param timelines
  */
-export function applyOperation<O extends IntervalLike>(op: (bounds: {current: Interval, next: Interval}, ...arrays: any[][]) => O[], boundsMap: BoundsMap, ...timelines: Timeline<any>[]): Timeline<O> {
+export function applyOperation<O extends IntervalLike>(
+  op: (bounds: { current: Interval; next: Interval }, ...arrays: any[][]) => O[],
+  boundsMap: BoundsMap,
+  ...timelines: Timeline<any>[]
+): Timeline<O> {
   if (timelines.every($ => Array.isArray($))) {
     // If all timelines are eagerly evaluated, apply the operation eagerly.
     const oldBounds = (timelines[0] as EagerTimeline<any>).bounds;
-    const bounds = {current: oldBounds, next: boundsMap.eager(oldBounds)};
+    const bounds = { current: oldBounds, next: boundsMap.eager(oldBounds) };
     for (const t of timelines.slice(1)) {
-      if ((t as EagerTimeline<any>).bounds !== oldBounds) throw new Error("all operand timelines must be evaluated on the same bounds.");
+      if ((t as EagerTimeline<any>).bounds !== oldBounds)
+        throw new Error('all operand timelines must be evaluated on the same bounds.');
     }
     return { array: op(bounds, timelines), bounds: bounds.next };
   } else {
     // If any timeline is lazy, apply return a lazy timeline.
     return async newBounds => {
       const oldBounds = boundsMap.lazy(newBounds);
-      const arrays = await Promise.all(timelines.map($ => {
-        if (isLazy($)) return ($ as LazyTimeline<any>)(oldBounds);
-        else {
-          if (($ as EagerTimeline<any>).bounds !== oldBounds) throw new Error("all operand timelines must be evaluated on the same bounds");
-          return $;
-        }
-      }));
-      return op({current: oldBounds, next: newBounds}, arrays);
+      const arrays = await Promise.all(
+        timelines.map($ => {
+          if (isLazy($)) return ($ as LazyTimeline<any>)(oldBounds);
+          else {
+            if (($ as EagerTimeline<any>).bounds !== oldBounds)
+              throw new Error('all operand timelines must be evaluated on the same bounds');
+            return $;
+          }
+        })
+      );
+      return op({ current: oldBounds, next: newBounds }, arrays);
     };
   }
 }
 
-export async function evaluate<V extends IntervalLike>(timeline: LazyTimeline<V>, bounds: Interval): Promise<EagerTimeline<V>> {
+export async function evaluate<V extends IntervalLike>(
+  timeline: LazyTimeline<V>,
+  bounds: Interval
+): Promise<EagerTimeline<V>> {
   return { array: await (timeline as LazyTimeline<any>)(bounds), bounds };
 }
 
@@ -91,7 +102,7 @@ export function bound<V extends IntervalLike>(data: any): Timeline<V> {
 }
 
 export function truncate<V extends IntervalLike>(data: V[], bounds: Interval): V[] {
-  return data.map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[]
+  return data.map($ => $.bound(bounds)).filter($ => $ !== undefined) as V[];
 }
 
 export function sortSegments<V>(segments: Segment<V>[], profileType: ProfileType): Segment<V>[] {

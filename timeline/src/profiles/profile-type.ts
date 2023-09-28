@@ -1,4 +1,4 @@
-import {Profile, Windows, Real, LinearEquation, Timeline, Segment} from "../internal.js";
+import { Profile, Windows, Real, LinearEquation, Timeline, Segment } from '../internal.js';
 
 export enum ProfileType {
   Real,

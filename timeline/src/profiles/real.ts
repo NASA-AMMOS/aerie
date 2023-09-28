@@ -1,11 +1,11 @@
-import {applyOperation, identityBoundsMap, Profile, ProfileType, Windows} from '../internal.js';
-import {Segment} from '../segment.js';
-import type {Timeline} from '../timeline.js';
-import {coalesce} from '../timeline.js';
-import {Inclusivity, Interval} from '../interval.js';
-import {BinaryOperation} from '../binary-operation.js';
-import {Temporal} from '@js-temporal/polyfill';
-import { fetcher } from "../data-fetcher.js";
+import { applyOperation, identityBoundsMap, Profile, ProfileType, Windows } from '../internal.js';
+import { Segment } from '../segment.js';
+import type { Timeline } from '../timeline.js';
+import { coalesce } from '../timeline.js';
+import { Inclusivity, Interval } from '../interval.js';
+import { BinaryOperation } from '../binary-operation.js';
+import { Temporal } from '@js-temporal/polyfill';
+import { fetcher } from '../data-fetcher.js';
 
 // @ts-ignore
 export class Real extends Profile<LinearEquation> {
@@ -27,7 +27,9 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public static override Resource(name: string): Real {
-    return new Real(fetcher.resource(name, (v, t) => new LinearEquation(t, v.initial as number, v.rate as number), ProfileType.Real));
+    return new Real(
+      fetcher.resource(name, (v, t) => new LinearEquation(t, v.initial as number, v.rate as number), ProfileType.Real)
+    );
   }
 
   public override async valueAt(time: Temporal.Duration): Promise<number | undefined> {
@@ -44,10 +46,7 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public abs(): Real {
-    return this.unsafe.flatMap(
-      (eq, i) => eq.abs(i),
-      identityBoundsMap
-    );
+    return this.unsafe.flatMap((eq, i) => eq.abs(i), identityBoundsMap);
   }
 
   public plus(other: number | Profile<LinearEquation>): Real {
@@ -140,7 +139,7 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public integrate(unit: Temporal.Duration): Real {
-    const integrateOp = ({current: bounds}: {current: Interval}, [$]: Segment<LinearEquation>[][]) => {
+    const integrateOp = ({ current: bounds }: { current: Interval }, [$]: Segment<LinearEquation>[][]) => {
       const baseRate = 1 / unit.total('second');
       const result: Segment<LinearEquation>[] = [];
       let previousTime = bounds.start;
@@ -148,7 +147,7 @@ export class Real extends Profile<LinearEquation> {
       for (const segment of $) {
         if (Temporal.Duration.compare(previousTime, segment.interval.start) !== 0)
           throw new Error(
-              `Cannot integrate a real profile with gaps. Gap: ${Interval.Between(previousTime, segment.interval.start)}`
+            `Cannot integrate a real profile with gaps. Gap: ${Interval.Between(previousTime, segment.interval.start)}`
           );
         if (segment.value.rate !== 0)
           throw new Error(`Cannot integrate real profiles that aren't piecewise constant. Segment: ${segment}.`);
@@ -159,7 +158,7 @@ export class Real extends Profile<LinearEquation> {
         acc = nextAcc;
       }
       return result;
-    }
+    };
     const timeline = applyOperation(integrateOp, identityBoundsMap, this.segments);
     return new Real(timeline);
   }
@@ -204,41 +203,41 @@ export class Real extends Profile<LinearEquation> {
   }
 
   public override changes(): Windows {
-    const realChangesOp = ({current: bounds}: {current: Interval}, [$]: Segment<LinearEquation>[][]) => {
+    const realChangesOp = ({ current: bounds }: { current: Interval }, [$]: Segment<LinearEquation>[][]) => {
       let previous: Segment<LinearEquation> | undefined = undefined;
       return coalesce(
-          $.flatMap(currentSegment => {
-            let leftEdge: boolean | undefined;
+        $.flatMap(currentSegment => {
+          let leftEdge: boolean | undefined;
 
-            const currentInterval = currentSegment.interval;
+          const currentInterval = currentSegment.interval;
 
-            if (previous !== undefined) {
-              if (
-                  Interval.compareEndToStart(previous.interval, currentInterval) === 0 &&
-                  currentInterval.includesStart()
-              ) {
-                leftEdge =
-                    previous.value.valueAt(currentInterval.start) === currentSegment.value.valueAt(currentInterval.start);
-              } else {
-                leftEdge = undefined;
-              }
+          if (previous !== undefined) {
+            if (
+              Interval.compareEndToStart(previous.interval, currentInterval) === 0 &&
+              currentInterval.includesStart()
+            ) {
+              leftEdge =
+                previous.value.valueAt(currentInterval.start) === currentSegment.value.valueAt(currentInterval.start);
             } else {
-              if (Interval.compareStarts(currentInterval, bounds) === 0) {
-                leftEdge = currentSegment.value.rate !== 0;
-              } else {
-                leftEdge = undefined;
-              }
+              leftEdge = undefined;
             }
+          } else {
+            if (Interval.compareStarts(currentInterval, bounds) === 0) {
+              leftEdge = currentSegment.value.rate !== 0;
+            } else {
+              leftEdge = undefined;
+            }
+          }
 
-            return [
-              new Segment(leftEdge, Interval.At(currentInterval.start)).transpose(),
-              new Segment(
-                  currentSegment.value.rate !== 0,
-                  Interval.Between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
-              )
-            ].filter($ => $ !== undefined) as Segment<boolean>[];
-          }),
-          ProfileType.Windows
+          return [
+            new Segment(leftEdge, Interval.At(currentInterval.start)).transpose(),
+            new Segment(
+              currentSegment.value.rate !== 0,
+              Interval.Between(currentInterval.start, currentInterval.end, Inclusivity.Exclusive)
+            )
+          ].filter($ => $ !== undefined) as Segment<boolean>[];
+        }),
+        ProfileType.Windows
       );
     };
     const timeline = applyOperation(realChangesOp, identityBoundsMap, this.segments);

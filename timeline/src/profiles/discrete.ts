@@ -26,6 +26,9 @@ export class Discrete {
    * @constructor
    */
   public static Resource<V>(name: string): Profile<V> {
-    return new Profile<V>(fetcher.resource<V>(name, $ => $ as V, ProfileType.Other), ProfileType.Other);
+    return new Profile<V>(
+      fetcher.resource<V>(name, $ => $ as V, ProfileType.Other),
+      ProfileType.Other
+    );
   }
 }

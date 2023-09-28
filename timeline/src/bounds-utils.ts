@@ -1,6 +1,6 @@
-import {BoundsMap} from "./timeline.js";
-import {Temporal} from "@js-temporal/polyfill";
-import {Interval} from "./interval.js";
+import { BoundsMap } from './timeline.js';
+import { Temporal } from '@js-temporal/polyfill';
+import { Interval } from './interval.js';
 import Duration = Temporal.Duration;
 
 export const shiftEdgesBoundsMap = (shiftRising: Duration, shiftFalling: Duration) => ({

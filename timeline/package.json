@@ -28,9 +28,7 @@
   "jest": {
     "preset": "ts-jest/presets/default-esm",
     "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "./test/setup/jest.setup.ts"
-    ],
+    "setupFilesAfterEnv": ["./test/setup/jest.setup.ts"],
     "transform": {
       "^.+\\.m?[tj]sx?$": [
         "ts-jest",
@@ -42,12 +40,7 @@
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.ts",
-      "**/?(*.)+(spec|test).ts"
-    ]
+    "extensionsToTreatAsEsm": [".ts"],
+    "testMatch": ["**/__tests__/**/*.test.ts", "**/?(*.)+(spec|test).ts"]
   }
 }

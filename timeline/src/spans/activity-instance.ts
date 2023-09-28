@@ -1,12 +1,12 @@
-import {bound, Interval, IntervalLike, Segment, Spans, Windows} from "../internal.js";
-import {ActivityTypeName, ActivityTypeParameterMap} from "../dynamic/activity-type.js";
+import { bound, Interval, IntervalLike, Segment, Spans, Windows } from '../internal.js';
+import { ActivityTypeName, ActivityTypeParameterMap } from '../dynamic/activity-type.js';
 
 export class ActivityInstance<A extends ActivityTypeName> implements IntervalLike {
   public constructor(
-      public readonly type: A,
-      public readonly interval: Interval,
-      public readonly parameters: ActivityTypeParameterMap[A],
-      public readonly directive_id: number
+    public readonly type: A,
+    public readonly interval: Interval,
+    public readonly parameters: ActivityTypeParameterMap[A],
+    public readonly directive_id: number
   ) {}
 
   /**
@@ -42,22 +42,12 @@ export class ActivityInstance<A extends ActivityTypeName> implements IntervalLik
     if (intersection.isEmpty()) return undefined;
     else {
       // @ts-ignore
-      return new ActivityInstance<A>(
-          this.type,
-          intersection,
-          this.parameters,
-          this.directive_id
-      );
+      return new ActivityInstance<A>(this.type, intersection, this.parameters, this.directive_id);
     }
   }
 
   public mapInterval(map: (i: this) => Interval): this {
     // @ts-ignore
-    return new ActivityInstance<A>(
-        this.type,
-        map(this),
-        this.parameters,
-        this.directive_id
-    );
+    return new ActivityInstance<A>(this.type, map(this), this.parameters, this.directive_id);
   }
 }

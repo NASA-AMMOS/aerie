@@ -6,14 +6,15 @@ import {
   Profile,
   ProfileType,
   Real,
-  Timeline, truncate
+  Timeline,
+  truncate
 } from '../internal.js';
-import {Segment} from '../segment.js';
-import {BinaryOperation} from '../binary-operation.js';
-import {Interval} from '../interval.js';
-import {Temporal} from '@js-temporal/polyfill';
-import { fetcher } from "../data-fetcher.js";
-import {shiftEdgesBoundsMap} from "../bounds-utils.js";
+import { Segment } from '../segment.js';
+import { BinaryOperation } from '../binary-operation.js';
+import { Interval } from '../interval.js';
+import { Temporal } from '@js-temporal/polyfill';
+import { fetcher } from '../data-fetcher.js';
+import { shiftEdgesBoundsMap } from '../bounds-utils.js';
 
 // @ts-ignore
 export class Windows extends Profile<boolean> {
@@ -103,7 +104,8 @@ export class Windows extends Profile<boolean> {
       }
     };
     // I would delegate to `this.unsafe.mapIntervals`, but the result needs to be truncated, so a custom operation it is.
-    const windowsShiftByOp = ({next: bounds}: {next: Interval}, [$]: Segment<boolean>[][]) => truncate(coalesce($.map(shiftInterval), ProfileType.Windows), bounds);
+    const windowsShiftByOp = ({ next: bounds }: { next: Interval }, [$]: Segment<boolean>[][]) =>
+      truncate(coalesce($.map(shiftInterval), ProfileType.Windows), bounds);
     const timeline = applyOperation(windowsShiftByOp, shiftEdgesBoundsMap(shiftRising, shiftFalling), this.segments);
     return new Windows(timeline);
   }

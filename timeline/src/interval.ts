@@ -356,7 +356,7 @@ export class Interval implements IntervalLike {
     } else {
       result += '(';
     }
-    result += this.start.toString() + "," + this.end.toString();
+    result += this.start.toString() + ',' + this.end.toString();
     if (this.endInclusivity === Inclusivity.Inclusive) {
       result += ']';
     } else {

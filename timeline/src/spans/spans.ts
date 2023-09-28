@@ -1,23 +1,24 @@
-import type {BoundsMap, Timeline} from '../timeline.js';
+import type { BoundsMap, Timeline } from '../timeline.js';
 import {
   applyOperation,
   bound,
-  coalesce, EagerTimeline,
+  coalesce,
+  EagerTimeline,
   identityBoundsMap,
   isLazy,
   LazyTimeline,
   merge,
   sortSegments,
-    evaluate
+  evaluate
 } from '../timeline.js';
 import { Segment } from '../segment.js';
 import { IntervalLike, Inclusivity, Interval } from '../interval.js';
-import {ProfileSpecialization, ProfileType} from '../profiles/profile-type.js';
-import {LinearEquation, Real, map2Arrays, Windows, Profile, ActivityInstance, fetcher} from '../internal.js';
+import { ProfileSpecialization, ProfileType } from '../profiles/profile-type.js';
+import { LinearEquation, Real, map2Arrays, Windows, Profile, ActivityInstance, fetcher } from '../internal.js';
 import { BinaryOperation } from '../binary-operation.js';
 import { Temporal } from '@js-temporal/polyfill';
-import {AnyActivityType, ActivityTypeName} from "../dynamic/activity-type.js";
-import {shiftEdgesBoundsMap} from "../bounds-utils.js";
+import { AnyActivityType, ActivityTypeName } from '../dynamic/activity-type.js';
+import { shiftEdgesBoundsMap } from '../bounds-utils.js';
 
 export class Spans<S extends IntervalLike> {
   private spans: Timeline<S>;
@@ -26,13 +27,15 @@ export class Spans<S extends IntervalLike> {
     this.spans = spans;
   }
 
-  public static ActivityInstances<A extends ActivityTypeName = typeof AnyActivityType>(type?: A): Spans<ActivityInstance<A>> {
+  public static ActivityInstances<A extends ActivityTypeName = typeof AnyActivityType>(
+    type?: A
+  ): Spans<ActivityInstance<A>> {
     if (type === undefined) return new Spans(fetcher.allActivityInstances());
     else return new Spans(fetcher.activityInstanceByType(type));
   }
 
   public async evaluate(bounds: Interval): Promise<this> {
-    if (!isLazy(this.spans)) throw new Error("Spans has already been evaluated");
+    if (!isLazy(this.spans)) throw new Error('Spans has already been evaluated');
     this.spans = await evaluate(this.spans as LazyTimeline<S>, bounds);
     return this;
   }
@@ -41,7 +44,8 @@ export class Spans<S extends IntervalLike> {
   public collect(bounds: Interval): Promise<S[]>;
   public collect(bounds?: Interval): S[] | Promise<S[]> {
     if (isLazy(this.spans)) {
-      if (bounds === undefined) throw new Error("Collect must be provided a bounds argument if the profile has not been evaluated yet.");
+      if (bounds === undefined)
+        throw new Error('Collect must be provided a bounds argument if the profile has not been evaluated yet.');
       return this.evaluate(bounds).then(p => (p.spans as EagerTimeline<S>).array as S[]);
     } else {
       return (this.spans as EagerTimeline<S>).array;
@@ -49,7 +53,7 @@ export class Spans<S extends IntervalLike> {
   }
 
   public inspect(f: (spans: readonly S[], bounds: Interval) => void) {
-    const inspectOp = ({current: bounds}: {current: Interval}, [$]: S[][]) => {
+    const inspectOp = ({ current: bounds }: { current: Interval }, [$]: S[][]) => {
       f($, bounds);
       return $;
     };
@@ -79,7 +83,7 @@ export class Spans<S extends IntervalLike> {
       sortSegments(result, profileType);
       coalesce(result, profileType);
       return result;
-    }
+    };
     const timeline = applyOperation(flattenIntoProfileOp, identityBoundsMap, this.spans);
     return new Profile(timeline, profileType).specialize();
   }
@@ -88,7 +92,7 @@ export class Spans<S extends IntervalLike> {
     op: BinaryOperation<S, Result, Result>,
     profileType: ProfileType
   ): ProfileSpecialization<Result> {
-    const combineIntoProfileOp = ({current: bounds}: {current: Interval}, [$]: S[][]) => {
+    const combineIntoProfileOp = ({ current: bounds }: { current: Interval }, [$]: S[][]) => {
       let acc: Segment<Result>[] = [];
       const remaining = $;
       while (remaining.length > 0) {
@@ -98,8 +102,8 @@ export class Spans<S extends IntervalLike> {
         for (const span of remaining) {
           const startComparison = Temporal.Duration.compare(span.interval.start, previousTime);
           if (
-              startComparison > 0 ||
-              (startComparison === 0 && previousInclusivity !== span.interval.startInclusivity)
+            startComparison > 0 ||
+            (startComparison === 0 && previousInclusivity !== span.interval.startInclusivity)
           ) {
             batch.push(new Segment(span, span.interval));
             previousTime = span.interval.end;
@@ -109,7 +113,7 @@ export class Spans<S extends IntervalLike> {
         acc = map2Arrays(batch, acc, op);
       }
       return coalesce(acc, profileType);
-    }
+    };
     const timeline = applyOperation(combineIntoProfileOp, identityBoundsMap, this.spans);
     return new Profile(timeline, profileType).specialize();
   }
@@ -120,7 +124,10 @@ export class Spans<S extends IntervalLike> {
 
   public shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Spans<S> {
     if (shiftFalling === undefined) shiftFalling = shiftRising;
-    return this.unsafe.map(s => s.mapInterval(i => i.interval.shiftBy(shiftRising, shiftFalling)), shiftEdgesBoundsMap(shiftRising, shiftFalling));
+    return this.unsafe.map(
+      s => s.mapInterval(i => i.interval.shiftBy(shiftRising, shiftFalling)),
+      shiftEdgesBoundsMap(shiftRising, shiftFalling)
+    );
   }
 
   public countActive(): Real {
@@ -139,7 +146,7 @@ export class Spans<S extends IntervalLike> {
   }
 
   public starts(): Spans<S> {
-    const startsOp = ({current: bounds}: {current: Interval}, [$]: S[][]) => {
+    const startsOp = ({ current: bounds }: { current: Interval }, [$]: S[][]) => {
       const spans = $.map(i => i.mapInterval(s => Interval.At(s.interval.start)));
       return spans.filter(s => bounds.contains(s.interval));
     };
@@ -148,11 +155,11 @@ export class Spans<S extends IntervalLike> {
   }
 
   public ends(): Spans<S> {
-    const startsOp = ({current: bounds}: {current: Interval}, [$]: S[][]) => {
+    const endsOp = ({ current: bounds }: { current: Interval }, [$]: S[][]) => {
       const spans = $.map(i => i.mapInterval(s => Interval.At(s.interval.end)));
       return spans.filter(s => bounds.contains(s.interval));
     };
-    const timeline = applyOperation(startsOp, identityBoundsMap, this.spans);
+    const timeline = applyOperation(endsOp, identityBoundsMap, this.spans);
     return new Spans(timeline);
   }
 
@@ -163,7 +170,7 @@ export class Spans<S extends IntervalLike> {
     strict: boolean = true
   ): Spans<S> {
     if (numberOfSubSpans === 1) return this;
-    const splitOp = ({current: bounds}: {current: Interval}, [$]: S[][]) => {
+    const splitOp = ({ current: bounds }: { current: Interval }, [$]: S[][]) => {
       return $.flatMap(s => {
         const i = s.interval;
 
@@ -173,17 +180,17 @@ export class Spans<S extends IntervalLike> {
         if (i.isSingleton()) throw new Error('Cannot split an instantaneous span into sub-spans.');
         else if (subWidth === 0)
           throw new Error(
-              `Cannot split a span only ${subWidth} microseconds long in to ${numberOfSubSpans} sub-spans.`
+            `Cannot split a span only ${subWidth} microseconds long in to ${numberOfSubSpans} sub-spans.`
           );
 
         if (strict) {
           if (Interval.compareStarts(i, bounds) === 0)
             throw new Error(
-                'Cannot split a span that starts at or before the bounds start. Consider setting the `strict` arg to `false`.'
+              'Cannot split a span that starts at or before the bounds start. Consider setting the `strict` arg to `false`.'
             );
           if (Interval.compareEnds(i, bounds) === 0)
             throw new Error(
-                'Cannot split a span that ends at or before the bounds end. Consider setting the `strict` arg to `false`.'
+              'Cannot split a span that ends at or before the bounds end. Consider setting the `strict` arg to `false`.'
             );
         }
 
@@ -193,7 +200,7 @@ export class Spans<S extends IntervalLike> {
         for (let index = 0; index < numberOfSubSpans - 1; index++) {
           let nextAcc = acc.add({ microseconds: subWidth });
           result.push(
-              s.mapInterval(() => Interval.Between(acc, nextAcc, internalStartInclusivity, internalEndInclusivity))
+            s.mapInterval(() => Interval.Between(acc, nextAcc, internalStartInclusivity, internalEndInclusivity))
           );
           acc = nextAcc;
         }
