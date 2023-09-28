@@ -1,9 +1,19 @@
-import {LinearEquation, Profile, ProfileType, Real, Timeline} from '../internal.js';
+import {
+  applyOperation,
+  BoundsMap,
+  coalesce,
+  LinearEquation,
+  Profile,
+  ProfileType,
+  Real,
+  Timeline, truncate
+} from '../internal.js';
 import {Segment} from '../segment.js';
 import {BinaryOperation} from '../binary-operation.js';
 import {Interval} from '../interval.js';
 import {Temporal} from '@js-temporal/polyfill';
 import { fetcher } from "../data-fetcher.js";
+import {shiftEdgesBoundsMap} from "../bounds-utils.js";
 
 // @ts-ignore
 export class Windows extends Profile<boolean> {
@@ -85,25 +95,17 @@ export class Windows extends Profile<boolean> {
 
   public override shiftBy(shiftRising: Temporal.Duration, shiftFalling?: Temporal.Duration): Windows {
     if (shiftFalling === undefined) shiftFalling = shiftRising;
-    const boundsMap = (bounds: Interval) => {
-      let start: Temporal.Duration;
-      let end: Temporal.Duration;
-      if (Temporal.Duration.compare(shiftRising, shiftFalling!) === 1) {
-        start = bounds.start.subtract(shiftRising);
-        end = bounds.end.subtract(shiftFalling!);
+    const shiftInterval = (s: Segment<boolean>) => {
+      if (s.value) {
+        return new Segment(true, s.interval.shiftBy(shiftRising, shiftFalling!));
       } else {
-        start = bounds.start.subtract(shiftFalling!);
-        end = bounds.end.subtract(shiftRising);
+        return new Segment(false, s.interval.shiftBy(shiftFalling!, shiftRising));
       }
-      return Interval.Between(start, end, bounds.startInclusivity, bounds.endInclusivity);
     };
-    return this.unsafe.mapIntervals((v, i) => {
-      if (v) {
-        return i.shiftBy(shiftRising, shiftFalling!);
-      } else {
-        return i.shiftBy(shiftFalling!, shiftRising);
-      }
-    }, boundsMap);
+    // I would delegate to `this.unsafe.mapIntervals`, but the result needs to be truncated, so a custom operation it is.
+    const windowsShiftByOp = ({next: bounds}: {next: Interval}, [$]: Segment<boolean>[][]) => truncate(coalesce($.map(shiftInterval), ProfileType.Windows), bounds);
+    const timeline = applyOperation(windowsShiftByOp, shiftEdgesBoundsMap(shiftRising, shiftFalling), this.segments);
+    return new Windows(timeline);
   }
 
   public starts = () => this.transitions(false, true);
@@ -113,13 +115,13 @@ export class Windows extends Profile<boolean> {
     return this.mapValues(b => LinearEquation.Constant(b ? 1 : 0), ProfileType.Real).integrate(unit);
   }
 
-  public override async any(bounds: Interval, predicate?: (v: boolean, i: Interval) => boolean): Promise<boolean> {
+  public override async any(predicate?: (v: boolean, i: Interval) => boolean, bounds?: Interval): Promise<boolean> {
     if (predicate === undefined) predicate = (b: boolean) => b;
-    return await super.any(bounds, predicate);
+    return await super.any(predicate, bounds);
   }
 
-  public override async all(bounds: Interval, predicate?: (v: boolean, i: Interval) => boolean): Promise<boolean> {
+  public override async all(predicate?: (v: boolean, i: Interval) => boolean, bounds?: Interval): Promise<boolean> {
     if (predicate === undefined) predicate = (b: boolean) => b;
-    return await super.all(bounds, predicate);
+    return await super.all(predicate, bounds);
   }
 }

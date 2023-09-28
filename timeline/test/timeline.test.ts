@@ -1,7 +1,7 @@
 import {Inclusivity, Interval} from "../src/interval.js";
 import {Temporal} from "@js-temporal/polyfill";
 import {Segment} from "../src/segment.js";
-import {bound, coalesce} from "../src/timeline.js";
+import {bound, coalesce, isLazy, LazyTimeline} from "../src/timeline.js";
 import {ProfileType} from "../src/profiles/profile-type.js";
 import Duration = Temporal.Duration;
 
@@ -13,7 +13,9 @@ describe("bound",  () => {
   const bounds = between(dur(0), dur(10));
   test("bound array", async () => {
     const input = [new Segment(true, between(dur(4), dur(5)))];
-    const result = await bound(input)(bounds);
+    const bounded = bound(input);
+    expect(isLazy(bounded)).toBeTruthy();
+    const result = await (bounded as LazyTimeline<Segment<boolean>>)(bounds);
 
     expect(result).toEqual(input);
   });

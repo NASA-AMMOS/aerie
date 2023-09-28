@@ -97,6 +97,11 @@ export class Interval implements IntervalLike {
     return new Interval(time, time, Inclusivity.Inclusive, Inclusivity.Inclusive);
   }
 
+  /** Create an empty interval at time zero. */
+  public static Empty(): Interval {
+    return new Interval(new Temporal.Duration(), new Temporal.Duration(), Inclusivity.Exclusive, Inclusivity.Exclusive);
+  }
+
   /**
    * Returns true if the interval contains no points.
    *
