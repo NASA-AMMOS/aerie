@@ -717,7 +717,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   {
     final var request = """
         query GetResourceTypes {
-           resourceTypes(missionModelId: "%d") {
+           resource_type(where: {model_id: {_eq: %d}}) {
              name
              schema
            }
@@ -726,7 +726,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final JsonObject response;
     response = postRequest(request).get();
     final var data = response.getJsonObject("data");
-    final var resourceTypesJsonArray = data.getJsonArray("resourceTypes");
+    final var resourceTypesJsonArray = data.getJsonArray("resource_type");
 
     final var resourceTypes = new ArrayList<ResourceType>();
 
@@ -746,7 +746,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @param planId the plan id
    * @return
    * @throws IOException
-   * @throws MissionModelServiceException
    * @throws MerlinServiceException
    * @throws NoSuchPlanException
    */
