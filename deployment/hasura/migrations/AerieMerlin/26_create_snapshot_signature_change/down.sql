@@ -54,3 +54,5 @@ comment on function create_snapshot(integer, text, text) is e''
   '  - The tags on those activities'
 	'  - When the snapshot was taken'
 	'  - Optionally: who took the snapshot and a name';
+
+call migrations.mark_migration_rolled_back('26');
