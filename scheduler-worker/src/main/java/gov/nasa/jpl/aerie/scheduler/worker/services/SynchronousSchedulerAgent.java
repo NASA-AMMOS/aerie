@@ -309,7 +309,7 @@ public record SynchronousSchedulerAgent(
             (a) -> schedID_to_MerlinID.get(a.getKey())));
     if(simID_to_MerlinID.values().containsAll(schedDirectiveToMerlinId.values()) && schedDirectiveToMerlinId.values().containsAll(simID_to_MerlinID.values())){
       return Optional.of(merlinService.storeSimulationResults(planMetadata,
-                                                              simulationFacade.getLatestDriverSimulationResults(),
+                                                              simulationFacade.getLatestDriverSimulationResults().get(),
                                                               simID_to_MerlinID));
     } else{
       //schedule in simulation is inconsistent with current state of the plan (user probably disabled simulation for some of the goals)

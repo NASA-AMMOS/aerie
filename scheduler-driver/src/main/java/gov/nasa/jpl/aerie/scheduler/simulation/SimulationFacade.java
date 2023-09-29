@@ -88,9 +88,10 @@ public class SimulationFacade implements AutoCloseable{
     return Optional.of(lastSimulationData.constraintsResults());
   }
 
-  public SimulationResults getLatestDriverSimulationResults(){
-    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return this.initialSimulationResults.get().driverResults();
-    return lastSimulationData.driverResults();
+  public Optional<SimulationResults> getLatestDriverSimulationResults(){
+    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().driverResults());
+    if(lastSimulationData == null) return Optional.empty();
+    return Optional.of(lastSimulationData.driverResults());
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
