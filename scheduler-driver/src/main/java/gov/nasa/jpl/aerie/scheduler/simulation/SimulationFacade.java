@@ -281,10 +281,11 @@ public class SimulationFacade implements AutoCloseable{
       insertedActivities.put(activity, activityDirective);
     }
     try {
-    driver.simulateActivities(directivesToSimulate);
+      driver.simulateActivities(directivesToSimulate);
     } catch(Exception e){
       throw new SimulationException("An exception happened during simulation", e);
     }
+    this.lastSimulationData = null;
   }
 
   public static class SimulationException extends Exception {
