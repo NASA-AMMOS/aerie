@@ -61,6 +61,11 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
   }
 
+  @Override
+  public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId, final SimulationDatasetId simulationDatasetId) {
+    return lookup(planId);
+  }
+
   public boolean isEqualTo(final InMemoryResultsCellRepository other) {
     return this.cells.equals(other.cells);
   }
