@@ -298,7 +298,7 @@ public class SimulationFacade implements AutoCloseable{
       //compare references
       if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results), this.insertedActivities.keySet());
+        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results));
       }
     } catch (Exception e){
       throw new SimulationException("An exception happened during simulation", e);

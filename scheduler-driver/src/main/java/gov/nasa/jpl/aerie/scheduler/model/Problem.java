@@ -141,8 +141,7 @@ public class Problem {
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
         simulationResults,
         SimulationResultsConverter.convertToConstraintModelResults(
-            simulationResults),
-        plan.getActivities()));
+            simulationResults)));
   }
 
   /**
