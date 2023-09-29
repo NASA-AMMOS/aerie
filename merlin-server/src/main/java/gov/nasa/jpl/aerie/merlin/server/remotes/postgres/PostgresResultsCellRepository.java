@@ -165,6 +165,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
+  private static Optional<SimulationDatasetRecord> getSimulationDatasetRecordById(
+      final Connection connection,
+      final long simulationDatasetId
+  ) throws SQLException
+  {
+    try (final var lookupSimulationDatasetAction = new GetSimulationDatasetByIdAction(connection)) {
+      return lookupSimulationDatasetAction.get(simulationDatasetId);
+    }
+  }
+
   private static SimulationDatasetRecord createSimulationDataset(
       final Connection connection,
       final SimulationRecord simulation,
