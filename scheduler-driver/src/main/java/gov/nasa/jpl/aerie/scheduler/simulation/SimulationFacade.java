@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -158,10 +157,16 @@ public class SimulationFacade implements AutoCloseable{
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
   throws SimulationException
   {
-    if(insertedActivities.size() == 0) return Map.of();
-    computeSimulationResultsUntil(endTime);
+    var latestSimulationData = this.getLatestDriverSimulationResults();
+    //if no initial sim results and no sim has been performed, perform a sim and get the sim results
+    if(latestSimulationData.isEmpty()){
+      //useful only if there are activities to simulate for this case of getting child activities
+      if(insertedActivities.size() == 0) return Map.of();
+      computeSimulationResultsUntil(endTime);
+      latestSimulationData = this.getLatestDriverSimulationResults();
+    }
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
-    this.lastSimulationData.driverResults().simulatedActivities.forEach( (activityInstanceId, activity) -> {
+    latestSimulationData.get().simulatedActivities.forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimulationData.driverResults(), activityInstanceId);
       final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(
