@@ -81,6 +81,13 @@ public class SimulationFacade implements AutoCloseable{
     this.initialPlanHasBeenModified = true;
   }
 
+  /**
+   * @return true if initial simulation results are stale, false otherwise
+   */
+  public boolean areInitialSimulationResultsStale(){
+    return this.initialPlanHasBeenModified;
+  }
+
   public Optional<gov.nasa.jpl.aerie.constraints.model.SimulationResults> getLatestConstraintSimulationResults(){
     if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().constraintsResults());
     if(lastSimulationData == null) return Optional.empty();

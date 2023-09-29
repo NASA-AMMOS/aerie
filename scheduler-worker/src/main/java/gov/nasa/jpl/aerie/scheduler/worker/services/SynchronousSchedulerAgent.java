@@ -291,6 +291,7 @@ public record SynchronousSchedulerAgent(
                                                      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
   throws MerlinServiceException, IOException
   {
+    if(!simulationFacade.areInitialSimulationResultsStale()) return Optional.empty();
     //finish simulation until end of horizon before posting results
     try {
       simulationFacade.computeSimulationResultsUntil(planningHorizon.getEndAerie());
