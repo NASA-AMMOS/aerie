@@ -11,6 +11,7 @@ import * as urls from '../utilities/urls.js';
 test.describe('Merlin Bindings', () => {
   let mission_model_id: number;
   let plan_id: number;
+  let second_plan_id: number;
   let admin: User = {
     username: "Admin_User",
     default_role: "aerie_admin",
@@ -50,11 +51,16 @@ test.describe('Merlin Bindings', () => {
       duration : time.getIntervalFromDoyRange(plan_start_timestamp, plan_end_timestamp)
     };
     plan_id = await req.createPlan(request, plan_input, admin.session);
+
+    // Insert the Second Plan
+    plan_input.name = plan_input.name +' (2)';
+    second_plan_id = await req.createPlan(request, plan_input, admin.session);
   });
   test.afterAll(async ({ request }) => {
     // Remove Model and Plan
     await req.deleteMissionModel(request, mission_model_id);
     await req.deletePlan(request, plan_id);
+    await req.deletePlan(request, second_plan_id);
 
     // Remove Users
     await req.deleteUser(request, admin.username);
@@ -199,6 +205,21 @@ test.describe('Merlin Bindings', () => {
     expect((await response.json())).toEqual({
       message: "input mismatch exception",
       cause: "no simulation datasets found for plan id " + plan_id
+    });
+
+    // Returns a 404 if given an invalid simulation dataset id
+    // message is "Simulation Dataset with id `1` does not belong to Plan with id `1`
+    const invalidSimDatasetId = (await awaitSimulation(request, second_plan_id)).simulationDatasetId;
+    response = await request.post(`${urls.MERLIN_URL}/constraintViolations`, {
+      data: {
+        action: {name: "check_constraints"},
+        input: {planId: plan_id, simulationDatasetId: invalidSimDatasetId},
+        request_query: "",
+        session_variables: admin.session}});
+    expect(response.status()).toEqual(404);
+    expect((await response.json())).toEqual({
+      message: "input mismatch exception",
+      cause: "Simulation Dataset with id `" + invalidSimDatasetId + "` does not belong to Plan with id `"+plan_id+"`"
     });
 
     // Simulation already tested; run one
