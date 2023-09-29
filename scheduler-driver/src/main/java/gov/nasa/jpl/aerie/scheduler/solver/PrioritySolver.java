@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -188,14 +189,7 @@ public class PrioritySolver implements Solver {
         plan.add(act);
         finalSetOfActsInserted.add(act);
       }
-      final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> allGeneratedActivities;
-      try {
-        allGeneratedActivities = simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
-      } catch (SimulationFacade.SimulationException e) {
-        throw new RuntimeException("Exception while simulating to get child activities", e);
-      }
-      processNewGeneratedActivities(allGeneratedActivities);
-      final var replaced = pullActivityDurationsIfNecessary();
+      final var replaced = synchronizeSimulationWithSchedulerPlan();
       for(final var actReplaced : replaced.entrySet()){
         if(finalSetOfActsInserted.contains(actReplaced.getKey())){
           finalSetOfActsInserted.remove(actReplaced.getKey());
@@ -211,6 +205,19 @@ public class PrioritySolver implements Solver {
       }
     }
     return new InsertActivityResult(allGood, finalSetOfActsInserted);
+  }
+
+  private Map<SchedulingActivityDirective, SchedulingActivityDirective> synchronizeSimulationWithSchedulerPlan() {
+    final Map<SchedulingActivityDirective, SchedulingActivityDirective> replacedInPlan;
+    try {
+      final var allGeneratedActivities =
+          simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
+      processNewGeneratedActivities(allGeneratedActivities);
+      replacedInPlan = pullActivityDurationsIfNecessary();
+    } catch (SimulationFacade.SimulationException e) {
+      throw new RuntimeException("Exception while simulating to get child activities", e);
+    }
+    return replacedInPlan;
   }
 
   /**
@@ -786,9 +793,7 @@ public class PrioritySolver implements Solver {
     if (lastSimResultsFromFacade.isEmpty() || lastSimResultsFromFacade.get().bounds.end.shorterThan(time)) {
       try {
         this.simulationFacade.computeSimulationResultsUntil(time);
-        final var allGeneratedActivities = simulationFacade.getAllChildActivities(time);
-        processNewGeneratedActivities(allGeneratedActivities);
-        pullActivityDurationsIfNecessary();
+        synchronizeSimulationWithSchedulerPlan();
       } catch (SimulationFacade.SimulationException e) {
         throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
       }
