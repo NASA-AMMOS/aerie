@@ -118,6 +118,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public void resource(final String name, final Resource<?> resource) {
+      if (this.resources.containsKey(name)) throw new IllegalArgumentException("A resource with that name has already been declared: \"" + name + "\"");
       this.resources.put(name, resource);
     }
 
