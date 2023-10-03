@@ -169,6 +169,9 @@ const gql = {
           duration
           start_time
           start_offset
+          parent_id
+          type: activity_type_name
+          id
         }
       }
     }
