@@ -182,6 +182,20 @@ test.describe('Merlin Bindings', () => {
     expect(response.status()).toEqual(404);
     expect((await response.json()).message).toEqual('no such plan');
 
+    // Returns a 404 if the SimulationDataset id is invalid
+    // message is "input mismatch exception"
+    response = await request.post(`${urls.MERLIN_URL}/constraintViolations`, {
+      data: {
+        action: {name: "check_constraints"},
+        input: {planId: plan_id, simulationDatasetId: -1},
+        request_query: "",
+        session_variables: admin.session}});
+    expect(response.status()).toEqual(404);
+    expect((await response.json())).toEqual({
+      message: "input mismatch exception",
+      cause: "simulation dataset with id `-1` does not exist"
+    });
+
     // Returns a 403 if unauthorized
     response = await request.post(`${urls.MERLIN_URL}/constraintViolations`, {
       data: {
@@ -204,7 +218,7 @@ test.describe('Merlin Bindings', () => {
     expect(response.status()).toEqual(404);
     expect((await response.json())).toEqual({
       message: "input mismatch exception",
-      cause: "no simulation datasets found for plan id " + plan_id
+      cause: "plan with id " + plan_id +" has not yet been simulated at its current revision"
     });
 
     // Returns a 404 if given an invalid simulation dataset id
@@ -218,7 +232,7 @@ test.describe('Merlin Bindings', () => {
         session_variables: admin.session}});
     expect(response.status()).toEqual(404);
     expect((await response.json())).toEqual({
-      message: "input mismatch exception",
+      message: "simulation dataset mismatch exception",
       cause: "Simulation Dataset with id `" + invalidSimDatasetId + "` does not belong to Plan with id `"+plan_id+"`"
     });
 

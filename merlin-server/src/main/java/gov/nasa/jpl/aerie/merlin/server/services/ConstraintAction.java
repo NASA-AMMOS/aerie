@@ -51,11 +51,18 @@ public class ConstraintAction {
       throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException {
     final var plan = this.planService.getPlanForValidation(planId);
     final Optional<SimulationResultsHandle> resultsHandle$;
+    final SimulationDatasetId simDatasetId;
     if (simulationDatasetId.isPresent()) {
       resultsHandle$ = this.simulationService.get(planId, simulationDatasetId.get());
+      simDatasetId = resultsHandle$
+        .map(SimulationResultsHandle::getSimulationDatasetId)
+        .orElseThrow(() -> new InputMismatchException("simulation dataset with id `" + simulationDatasetId.get().id() + "` does not exist"));
     } else {
       final var revisionData = this.planService.getPlanRevisionData(planId);
       resultsHandle$ = this.simulationService.get(planId, revisionData);
+      simDatasetId = resultsHandle$
+        .map(SimulationResultsHandle::getSimulationDatasetId)
+        .orElseThrow(() -> new InputMismatchException("plan with id " + planId.id() +" has not yet been simulated at its current revision"));
     }
 
 
@@ -68,9 +75,6 @@ public class ConstraintAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var simDatasetId = resultsHandle$
-        .map(SimulationResultsHandle::getSimulationDatasetId)
-        .orElseThrow(() -> new InputMismatchException("no simulation datasets found for plan id " + planId.id()));
     final var violations = new HashMap<Long, ConstraintResult>();
 
     final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
