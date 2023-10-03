@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
@@ -120,14 +121,32 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
       final var simulation = getSimulation(connection, planId);
-      final var datasetRecord = lookupSimulationDatasetRecord(
-          connection,
-          simulation.id());
-      final var datasetId$ = datasetRecord.map(SimulationDatasetRecord::datasetId);
+      final var datasetRecord = lookupSimulationDatasetRecord(connection, simulation.id());
 
-      if (datasetId$.isEmpty()) return Optional.empty();
+      if (datasetRecord.isEmpty()) return Optional.empty();
 
-      final var datasetId = datasetId$.get();
+      final var datasetId = datasetRecord.get().datasetId();
+      return Optional.of(new PostgresResultsCell(this.dataSource, simulation, datasetId));
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to get simulation", ex);
+    }
+  }
+
+  @Override
+  public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId, final SimulationDatasetId simulationDatasetId) throws SimulationDatasetMismatchException {
+    try (final var connection = this.dataSource.getConnection()) {
+      final var simulation = getSimulation(connection, planId);
+      final var datasetRecord = getSimulationDatasetRecordById(connection, simulationDatasetId.id());
+
+      if (datasetRecord.isEmpty()) return Optional.empty();
+      // If this check fails, then the specified sim dataset is not a simulation for the specified plan
+      if (datasetRecord.get().simulationId() != simulation.id()) {
+        throw new SimulationDatasetMismatchException(
+            planId,
+            new SimulationDatasetId(datasetRecord.get().simulationDatasetId()));
+      }
+
+      final var datasetId = datasetRecord.get().datasetId();
       return Optional.of(new PostgresResultsCell(this.dataSource, simulation, datasetId));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get simulation", ex);
@@ -162,6 +181,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (final var getSimulationDatasetAction = new GetSimulationDatasetAction(connection)) {
       return getSimulationDatasetAction.get(datasetId);
+    }
+  }
+
+  private static Optional<SimulationDatasetRecord> getSimulationDatasetRecordById(
+      final Connection connection,
+      final long simulationDatasetId
+  ) throws SQLException
+  {
+    try (final var lookupSimulationDatasetAction = new GetSimulationDatasetByIdAction(connection)) {
+      return lookupSimulationDatasetAction.get(simulationDatasetId);
     }
   }
 

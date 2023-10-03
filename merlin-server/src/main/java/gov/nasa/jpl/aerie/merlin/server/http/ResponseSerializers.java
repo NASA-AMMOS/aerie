@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
@@ -463,6 +464,13 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeInputMismatchException(final InputMismatchException ex) {
     return Json.createObjectBuilder()
+               .add("message", "input mismatch exception")
+               .add("cause", ex.getMessage())
+               .build();
+  }
+
+  public static JsonValue serializeSimulationDatasetMismatchException(final SimulationDatasetMismatchException ex){
+     return Json.createObjectBuilder()
                .add("message", "input mismatch exception")
                .add("cause", ex.getMessage())
                .build();

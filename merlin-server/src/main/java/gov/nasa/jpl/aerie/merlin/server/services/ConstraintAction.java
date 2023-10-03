@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -23,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class ConstraintAction {
@@ -48,10 +48,17 @@ public class ConstraintAction {
   }
 
   public List<ConstraintResult> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
-  throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
-  {
+      throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException {
     final var plan = this.planService.getPlanForValidation(planId);
-    final var revisionData = this.planService.getPlanRevisionData(planId);
+    final Optional<SimulationResultsHandle> resultsHandle$;
+    if (simulationDatasetId.isPresent()) {
+      resultsHandle$ = this.simulationService.get(planId, simulationDatasetId.get());
+    } else {
+      final var revisionData = this.planService.getPlanRevisionData(planId);
+      resultsHandle$ = this.simulationService.get(planId, revisionData);
+    }
+
+
     final var constraintCode = new HashMap<Long, Constraint>();
 
     try {
@@ -61,10 +68,9 @@ public class ConstraintAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var resultsHandle$ = this.simulationService.get(planId, revisionData);
-    final var simDatasetId = simulationDatasetId.orElseGet(() -> resultsHandle$
+    final var simDatasetId = resultsHandle$
         .map(SimulationResultsHandle::getSimulationDatasetId)
-        .orElseThrow(() -> new InputMismatchException("no simulation datasets found for plan id " + planId.id())));
+        .orElseThrow(() -> new InputMismatchException("no simulation datasets found for plan id " + planId.id()));
     final var violations = new HashMap<Long, ConstraintResult>();
 
     final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);

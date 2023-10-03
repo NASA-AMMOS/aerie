@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -250,6 +251,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(404).result(ExceptionSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final InputMismatchException ex) {
       ctx.status(404).result(ResponseSerializers.serializeInputMismatchException(ex).toString());
+    } catch (SimulationDatasetMismatchException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeSimulationDatasetMismatchException(ex).toString());
     } catch (final PermissionsServiceException ex) {
       ctx.status(503).result(ExceptionSerializers.serializePermissionsServiceException(ex).toString());
     } catch (final Unauthorized ex) {

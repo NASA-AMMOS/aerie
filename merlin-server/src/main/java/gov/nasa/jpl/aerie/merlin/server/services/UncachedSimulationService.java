@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryRevisionData;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository.InMemoryCell;
 
@@ -42,5 +43,10 @@ public record UncachedSimulationService (
         getSimulationResults(planId, revisionData, null) instanceof ResultsProtocol.State.Success s ?
             s.results() :
             null);
+  }
+
+  @Override
+  public Optional<SimulationResultsHandle> get(PlanId planId, SimulationDatasetId simulationDatasetId) {
+    throw new UnsupportedOperationException(); // Cannot get a cached result from an uncached service
   }
 }
