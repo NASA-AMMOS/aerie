@@ -299,7 +299,7 @@ public final class ConstraintParsers {
 
   public static final JsonParser<Violation> violationP =
       productP
-          .field("violationWindows", listP(intervalP))
+          .field("windows", listP(intervalP))
           .field("activityInstanceIds", listP(longP))
           .map(
               untuple(Violation::new),
@@ -310,8 +310,8 @@ public final class ConstraintParsers {
       productP
           .field("violations", listP(violationP))
           .field("gaps", listP(intervalP))
-          .field("constraintType", enumP(ConstraintType.class, Enum::name))
-          .field("resourceNames", listP(stringP))
+          .field("type", enumP(ConstraintType.class, Enum::name))
+          .field("resourceIds", listP(stringP))
           .field("constraintId", longP)
           .field("constraintName", stringP)
           .map(
