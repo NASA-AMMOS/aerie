@@ -43,6 +43,8 @@ node_modules
 deployment/postgres-init-db/sql/**/*.sql
 !deployment/postgres-init-db/sql/ui/init.sql
 !deployment/postgres-init-db/sql/ui/tables/view.sql
+!deployment/postgres-init-db/sql/ui/tables/extension_roles.sql
+!deployment/postgres-init-db/sql/ui/tables/extensions.sql
 !deployment/postgres-init-db/sql/ui/tables/schema_migrations.sql
 !deployment/postgres-init-db/sql/ui/applied_migrations.sql
 
