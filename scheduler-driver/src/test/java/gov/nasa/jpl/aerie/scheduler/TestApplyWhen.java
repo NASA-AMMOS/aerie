@@ -470,7 +470,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(8, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 

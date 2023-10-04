@@ -440,6 +440,16 @@ public final class Duration implements Comparable<Duration> {
   }
 
   /**
+   * Determine whether this duration lies in [lower bound, upper bound], bounds comprised
+   * @param lowerBound the lower bound, inclusive
+   * @param upperBound the upper bound, inclusive
+   * @return true if lies in the interval, false otherwise
+   */
+  public boolean between(final Duration lowerBound, final Duration upperBound){
+    return (this.noShorterThan(lowerBound) && this.noLongerThan(upperBound));
+  }
+
+  /**
    * Determine whether this duration is longer than another.
    *
    * @see Duration#compareTo(Duration)
