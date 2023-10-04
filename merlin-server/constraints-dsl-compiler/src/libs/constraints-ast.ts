@@ -50,7 +50,8 @@ export enum NodeKind {
   AbsoluteInterval = 'AbsoluteInterval',
   IntervalAlias = 'IntervalAlias',
   IntervalDuration = 'IntervalDuration',
-  RollingThreshold = 'RollingThreshold'
+  RollingThreshold = 'RollingThreshold',
+  WindowsExpressionKeepTrueSegment = 'WindowsExpressionKeepTrueSegment'
 }
 
 export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints | RollingThreshold;
@@ -113,7 +114,9 @@ export type WindowsExpression =
   | WindowsExpressionFromSpans
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
-  | AssignGapsExpression<WindowsExpression>;
+  | AssignGapsExpression<WindowsExpression>
+    | WindowsExpressionKeepTrueSegment;
+
 
 export type SpansExpression =
   | SpansExpressionActivitySpan
@@ -157,6 +160,12 @@ export interface WindowsExpressionValue {
 export interface WindowsExpressionNot {
   kind: NodeKind.WindowsExpressionNot;
   expression: WindowsExpression;
+}
+
+export interface WindowsExpressionKeepTrueSegment {
+  kind: NodeKind.WindowsExpressionKeepTrueSegment;
+  expression: WindowsExpression;
+  index: number;
 }
 
 export interface IntervalsExpressionShiftEdges {

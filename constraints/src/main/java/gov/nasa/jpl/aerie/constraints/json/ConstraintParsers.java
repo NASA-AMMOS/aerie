@@ -280,6 +280,15 @@ public final class ConstraintParsers {
               untuple((kind, alias) -> new StartOf(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias));
 
+  static JsonParser<KeepTrueSegment> keepTrueSegmentP(JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionKeepTrueSegment"))
+        .field("expression", windowsExpressionP)
+        .field("index", intP)
+        .map(
+            untuple((kind, expression, index) -> new KeepTrueSegment(expression, index)),
+            $ -> tuple(Unit.UNIT, $.expression, $.i));
+  }
   static final JsonParser<Duration> durationP =
       longP
           .map(
@@ -580,7 +589,8 @@ public final class ConstraintParsers {
         windowsFromSpansF(spansP),
         activityWindowP,
         assignGapsF(selfP),
-        shiftByF(selfP)
+        shiftByF(selfP),
+        keepTrueSegmentP(selfP)
     ));
   }
 
