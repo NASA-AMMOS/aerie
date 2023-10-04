@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class Registrar {
   private final Initializer builder;
@@ -27,14 +28,22 @@ public final class Registrar {
   }
 
   public void real(final String name, final Resource<RealDynamics> resource) {
+    real(name, resource, $ -> $);
+  }
+
+  public <T> void realWithMetadata(final String name, final Resource<RealDynamics> resource, final String key, final T metadata, final ValueMapper<T> metadataValueMapper) {
+    real(name, resource, $ -> ValueSchema.withMeta(key, metadataValueMapper.serializeValue(metadata), $));
+  }
+
+  private void real(final String name, final Resource<RealDynamics> resource, UnaryOperator<ValueSchema> schemaModifier) {
     this.builder.resource(
         name,
         makeResource(
             "real",
             resource,
-            ValueSchema.ofStruct(Map.of(
+            schemaModifier.apply(ValueSchema.ofStruct(Map.of(
                 "initial", ValueSchema.REAL,
-                "rate", ValueSchema.REAL)),
+                "rate", ValueSchema.REAL))),
             dynamics -> SerializedValue.of(Map.of(
                 "initial", SerializedValue.of(dynamics.initial),
                 "rate", SerializedValue.of(dynamics.rate)))));
