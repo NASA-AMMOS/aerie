@@ -329,6 +329,9 @@ public class SimulationFacade implements AutoCloseable{
       }
     }
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
+    if(activity.anchorId()!= null && !planActDirectiveIdToSimulationActivityDirectiveId.containsKey(activity.anchorId())){
+      throw new RuntimeException("Activity with id "+ activity.anchorId() + " referenced as an anchor by activity " + activity.toString() + " is not present in the plan");
+    }
     return new ActivityDirective(
         activity.startOffset(),
         serializedActivity,
