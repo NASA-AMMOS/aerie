@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.discreteResource;
+import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.realResource;
+
 public final class Mission {
   public final Accumulator fruit;
   public final AdditiveRegister peel;
@@ -36,8 +39,8 @@ public final class Mission {
 
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
-    registrar.discrete("/peel", this.peel, new DoubleValueMapper());
-    registrar.real("/fruit", this.fruit);
+    discreteResource(registrar, "/peel", this.peel, new DoubleValueMapper(), "kg");
+    realResource(registrar, "/fruit", this.fruit, "bananas");
     registrar.discrete("/plant", this.plant, new IntegerValueMapper());
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
