@@ -471,7 +471,7 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeSimulationDatasetMismatchException(final SimulationDatasetMismatchException ex){
      return Json.createObjectBuilder()
-               .add("message", "input mismatch exception")
+               .add("message", "simulation dataset mismatch exception")
                .add("cause", ex.getMessage())
                .build();
   }
