@@ -592,6 +592,9 @@ export class ActivityExpression<T extends WindowsEDSL.Gen.ActivityType> {
 }
 
 export class TimingConstraint {
+
+  public static defaultPadding: Temporal.Duration = Temporal.Duration.from({microseconds:1});
+
   /** @internal **/
   private constructor() {}
   /**
@@ -632,6 +635,23 @@ export class TimingConstraint {
       upperBound: upperBound.__astNode,
       singleton: false
     })
+  }
+
+  /**
+   *  Represents a precise time point at a defined offset (default: 1 microseconds, can be modified) from the start or end of a window.
+   *  Equivalent to TimingConstraint.singleton(windowProperty).plus(TimingConstraint.defaultPadding)
+   * @param windowProperty either WindowProperty.START or WindowProperty.END
+   */
+  public static justAfter(windowProperty: WindowProperty): SingletonTimingConstraint {
+    return this.singleton(windowProperty).plus(this.defaultPadding);
+  }
+  /**
+   *  Represents a precise time point at a defined offset (default: -1 microseconds, can be modified) from the start or end of a window.
+   *  Equivalent to TimingConstraint.singleton(windowProperty).minus(TimingConstraint.defaultPadding)
+   * @param windowProperty either WindowProperty.START or WindowProperty.END
+   */
+  public static justBefore(windowProperty: WindowProperty): SingletonTimingConstraint {
+    return this.singleton(windowProperty).minus(this.defaultPadding);
   }
 }
 
@@ -837,6 +857,7 @@ declare global {
                                                                 matchingArgs: WindowsEDSL.Gen.ActivityTypeParameterMapWithUndefined[T]): ActivityExpression<T>
   }
   class TimingConstraint {
+    public static defaultPadding: Temporal.Duration;
     /**
      * The singleton timing constraint represents a precise time point
      * at some offset from either the start or end of a window.
@@ -862,6 +883,18 @@ declare global {
      * @param upperBound represents the (inclusive) upper bound of the time interval
      */
     public static bounds(lowerBound: SingletonTimingConstraint, upperBound: SingletonTimingConstraint): FlexibleRangeTimingConstraint
+    /**
+     *  Represents a precise time point at a defined offset (default: 1 microseconds, can be modified) from the start or end of a window.
+     *  Equivalent to TimingConstraint.singleton(windowProperty).plus(TimingConstraint.defaultPadding)
+     * @param windowProperty either WindowProperty.START or WindowProperty.END
+     */
+    public static justAfter(windowProperty: WindowProperty): SingletonTimingConstraint
+    /**
+     *  Represents a precise time point at a defined offset (default: -1 microseconds, can be modified) from the start or end of a window.
+     *  Equivalent to TimingConstraint.singleton(windowProperty).minus(TimingConstraint.defaultPadding)
+     * @param windowProperty either WindowProperty.START or WindowProperty.END
+     */
+    public static justBefore(windowProperty: WindowProperty): SingletonTimingConstraint
   }
   var WindowProperty: typeof AST.WindowProperty
   var Operator: typeof AST.TimingConstraintOperator

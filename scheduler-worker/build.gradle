@@ -124,8 +124,8 @@ dependencies {
   testImplementation project(':examples:foo-missionmodel')
   testImplementation testFixtures(project(':scheduler-server'))
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
   testImplementation 'org.assertj:assertj-core:3.24.2'
-  testImplementation 'junit:junit:4.13.2'
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'org.glassfish:javax.json:1.1.4'
 }

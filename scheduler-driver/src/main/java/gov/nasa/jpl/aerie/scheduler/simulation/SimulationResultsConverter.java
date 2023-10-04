@@ -47,9 +47,7 @@ public class SimulationResultsConverter {
   {
     final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration());
-    final var activityInterval = startT.isEqualTo(endT)
-        ? Interval.between(startT, endT)
-        : Interval.betweenClosedOpen(startT, endT);
+    final var activityInterval = Interval.between(startT, endT);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
         activityInterval);
