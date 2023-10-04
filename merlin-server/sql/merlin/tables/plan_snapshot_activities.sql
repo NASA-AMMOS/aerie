@@ -7,6 +7,7 @@ create table plan_snapshot_activities(
     name text,
     source_scheduling_goal_id integer,
     created_at timestamptz not null,
+    created_by text,
     last_modified_at timestamptz not null,
     last_modified_by text,
     start_offset interval not null,

@@ -54,10 +54,10 @@ create procedure restore_from_snapshot(_plan_id integer, _snapshot_id integer)
 
 		-- Upsert the rest
 		insert into activity_directive (
-		      id, plan_id, name, source_scheduling_goal_id, created_at, last_modified_at, last_modified_by,
+		      id, plan_id, name, source_scheduling_goal_id, created_at, created_by, last_modified_at, last_modified_by,
 		      start_offset, type, arguments, last_modified_arguments_at, metadata,
 		      anchor_id, anchored_to_start)
-		select psa.id, _plan_id, psa.name, psa.source_scheduling_goal_id, psa.created_at, psa.last_modified_at, psa.last_modified_by,
+		select psa.id, _plan_id, psa.name, psa.source_scheduling_goal_id, psa.created_at, psa.created_by, psa.last_modified_at, psa.last_modified_by,
 		       psa.start_offset, psa.type, psa.arguments, psa.last_modified_arguments_at, psa.metadata,
 		       psa.anchor_id, psa.anchored_to_start
 		from plan_snapshot_activities psa
@@ -67,6 +67,7 @@ create procedure restore_from_snapshot(_plan_id integer, _snapshot_id integer)
 		set name = excluded.name,
 		    source_scheduling_goal_id = excluded.source_scheduling_goal_id,
 		    created_at = excluded.created_at,
+		    created_by = excluded.created_by,
 		    last_modified_by = excluded.last_modified_by,
 		    start_offset = excluded.start_offset,
 		    type = excluded.type,

@@ -24,12 +24,12 @@ begin
     from plan where id = _plan_id
     returning snapshot_id into inserted_snapshot_id;
   insert into plan_snapshot_activities(
-      snapshot_id, id, name, source_scheduling_goal_id, created_at,
+      snapshot_id, id, name, source_scheduling_goal_id, created_at, created_by,
       last_modified_at, last_modified_by, start_offset, type,
       arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start)
     select
       inserted_snapshot_id,                              -- this is the snapshot id
-      id, name, source_scheduling_goal_id, created_at,   -- these are the rest of the data for an activity row
+      id, name, source_scheduling_goal_id, created_at, created_by, -- these are the rest of the data for an activity row
       last_modified_at, last_modified_by, start_offset, type,
       arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
     from activity_directive where activity_directive.plan_id = _plan_id;
