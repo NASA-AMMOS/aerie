@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public final class MerlinWorkerAppDriver {
   public static void main(String[] args) throws InterruptedException {
@@ -67,8 +68,9 @@ public final class MerlinWorkerAppDriver {
     try (final var app = Javalin.create().start(8080)) {
       app.get("/health", ctx -> ctx.status(200));
 
-      while (true) {
-        final var notification = notificationQueue.take();
+      while (listenThread.isAlive()) {
+        final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
+        if(notification == null) continue;
         final var planId = new PlanId(notification.planId());
         final var datasetId = notification.datasetId();
 

@@ -5,6 +5,8 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
@@ -76,8 +78,9 @@ public final class SchedulerWorkerAppDriver {
     try(final var app = Javalin.create().start(8080)) {
       app.get("/health", ctx -> ctx.status(200));
 
-      while (true) {
-        final var notification = notificationQueue.take();
+      while (listenThread.isAlive()) {
+        final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
+        if (notification == null) continue;
         final var specificationRevision = notification.specificationRevision();
         final var specificationId = new SpecificationId(notification.specificationId());
 
