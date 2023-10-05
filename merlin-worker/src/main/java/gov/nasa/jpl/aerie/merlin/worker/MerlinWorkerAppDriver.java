@@ -55,38 +55,45 @@ public final class MerlinWorkerAppDriver {
         configuration.untruePlanStart()
     );
     final var planController = new LocalPlanService(stores.plans());
-    final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController, configuration.simulationProgressPollPeriodMillis());
+    final var simulationAgent = new SynchronousSimulationAgent(
+        planController,
+        missionModelController,
+        configuration.simulationProgressPollPeriodMillis());
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
-    listenAction.registerListener();
+    final var listenThread = listenAction.registerListener();
 
-    final var app = Javalin.create().start(8080);
-    app.get("/health", ctx -> ctx.status(200));
+    try (final var app = Javalin.create().start(8080)) {
+      app.get("/health", ctx -> ctx.status(200));
 
-    while (true) {
-      final var notification = notificationQueue.take();
-      final var planId = new PlanId(notification.planId());
-      final var datasetId = notification.datasetId();
+      while (true) {
+        final var notification = notificationQueue.take();
+        final var planId = new PlanId(notification.planId());
+        final var datasetId = notification.datasetId();
 
-      final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
-      if (owner.isEmpty()) continue;
+        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
+        if (owner.isEmpty()) continue;
 
-      final var revisionData = new PostgresPlanRevisionData(
-          notification.modelRevision(),
-          notification.planRevision(),
-          notification.simulationRevision(),
-          notification.simulationTemplateRevision());
-      final ResultsProtocol.WriterRole writer = owner.get();
-      try {
-        simulationAgent.simulate(planId, revisionData, writer);
-      } catch (final Throwable ex) {
-        ex.printStackTrace(System.err);
-        writer.failWith(b -> b
-            .type("UNEXPECTED_SIMULATION_EXCEPTION")
-            .message("Something went wrong while simulating")
-            .trace(ex));
+        final var revisionData = new PostgresPlanRevisionData(
+            notification.modelRevision(),
+            notification.planRevision(),
+            notification.simulationRevision(),
+            notification.simulationTemplateRevision());
+        final ResultsProtocol.WriterRole writer = owner.get();
+        try {
+          simulationAgent.simulate(planId, revisionData, writer);
+        } catch (final Throwable ex) {
+          ex.printStackTrace(System.err);
+          writer.failWith(b -> b
+              .type("UNEXPECTED_SIMULATION_EXCEPTION")
+              .message("Something went wrong while simulating")
+              .trace(ex));
+        }
       }
+    } finally {
+      // Kill the listening thread
+      listenThread.interrupt();
     }
   }
 

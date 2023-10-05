@@ -71,30 +71,34 @@ public final class SchedulerWorkerAppDriver {
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSchedulingRequestNotificationPayload>();
     final var listenAction = new ListenSchedulerCapability(hikariDataSource, notificationQueue);
-    listenAction.registerListener();
+    final var listenThread = listenAction.registerListener();
 
-    final var app = Javalin.create().start(8080);
-    app.get("/health", ctx -> ctx.status(200));
+    try(final var app = Javalin.create().start(8080)) {
+      app.get("/health", ctx -> ctx.status(200));
 
-    while (true) {
-      final var notification = notificationQueue.take();
-      final var specificationRevision = notification.specificationRevision();
-      final var specificationId = new SpecificationId(notification.specificationId());
+      while (true) {
+        final var notification = notificationQueue.take();
+        final var specificationRevision = notification.specificationRevision();
+        final var specificationId = new SpecificationId(notification.specificationId());
 
-      final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
-      if (owner.isEmpty()) continue;
+        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
+        if (owner.isEmpty()) continue;
 
-      final var revisionData = new SpecificationRevisionData(specificationRevision);
-      final ResultsProtocol.WriterRole writer = owner.get();
-      try {
-        scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer);
-      } catch (final Throwable ex) {
-        ex.printStackTrace(System.err);
-        writer.failWith(b -> b
-            .type("UNEXPECTED_SCHEDULER_EXCEPTION")
-            .message("Something went wrong while scheduling")
-            .trace(ex));
+        final var revisionData = new SpecificationRevisionData(specificationRevision);
+        final ResultsProtocol.WriterRole writer = owner.get();
+        try {
+          scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer);
+        } catch (final Throwable ex) {
+          ex.printStackTrace(System.err);
+          writer.failWith(b -> b
+              .type("UNEXPECTED_SCHEDULER_EXCEPTION")
+              .message("Something went wrong while scheduling")
+              .trace(ex));
+        }
       }
+    } finally {
+      // Kill the listen thread
+      listenThread.interrupt();
     }
   }
 
