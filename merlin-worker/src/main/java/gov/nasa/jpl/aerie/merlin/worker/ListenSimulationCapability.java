@@ -28,8 +28,8 @@ public class ListenSimulationCapability {
     this.notificationQueue = notificationQueue;
   }
 
-  public void registerListener() {
-    new Thread(() -> {
+  public Thread registerListener() {
+    final var listenThread = new Thread(() -> {
       try (final var connection = this.dataSource.getConnection()) {
         try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
           listenSimulationStatusAction.apply();
@@ -37,7 +37,7 @@ public class ListenSimulationCapability {
           throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
         }
 
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
           final var pgConnection = connection.unwrap(PGConnection.class);
           final var notifications = pgConnection.getNotifications(10000);
           if (notifications != null) {
@@ -54,16 +54,20 @@ public class ListenSimulationCapability {
                 try {
                   this.notificationQueue.put(notificationPayload);
                 } catch (InterruptedException e) {
-                  // We do not expect this thread to be interrupted. If it is, exit gracefully:
+                  // This thread will be interrupted when the worker's main loop exits, so it should exit gracefully:
+                  logger.info("Listener has been interrupted");
                   return;
                 }
               }
             }
           }
         }
+        logger.info("Listener has received interrupted signal");
       } catch (SQLException e) {
         throw new DatabaseException("Listener encountered exception", e);
       }
-    }).start();
+    });
+    listenThread.start();
+    return listenThread;
   }
 }
