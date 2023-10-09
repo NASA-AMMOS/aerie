@@ -1654,9 +1654,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     response = postRequest(req, arguments).get();
     final var returnedIds = response.getJsonObject("data").getJsonObject("insert_span").getJsonArray("returning");
     final var simIdToPostgresId = new HashMap<Long, Long>(ids.size());
-    int i = 0;
-    for (final var id : ids) {
-      simIdToPostgresId.put(id, (long) returnedIds.get(i).asJsonObject().getInt("id"));
+    for (int i = 0; i< ids.size(); ++i) {
+      simIdToPostgresId.put(ids.get(i), (long) returnedIds.get(i).asJsonObject().getInt("id"));
     }
     return simIdToPostgresId;
   }

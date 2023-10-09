@@ -66,4 +66,7 @@ type SimulatedActivity = {
   duration: string | null;
   start_time: string;
   start_offset: string;
+  type: string;
+  parent_id: number | null;
+  id: number;
 }
