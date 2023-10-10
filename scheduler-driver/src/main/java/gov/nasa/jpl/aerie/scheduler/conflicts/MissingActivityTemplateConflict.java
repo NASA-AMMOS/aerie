@@ -100,4 +100,17 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
   public ActivityExpression getActTemplate() {
     return template;
   }
+
+  @Override
+  public String toString(){
+    return "Conflict: missing activity template [cardinality:"
+           + this.getCardinality()
+           + ", duration: "
+           + (this.getTotalDuration().isPresent() ? this.getTotalDuration() : "N/A")
+           +"] of type: "
+           + getActTemplate().type().getName()
+           + " in temporal context "
+           + getTemporalContext().trueSegmentsToString()
+           + ". Produced by goal " + getGoal().getName();
+  }
 }

@@ -674,4 +674,15 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   public String toString() {
     return segments.toString();
   }
+
+  /**
+   * toString only for the true segments
+   */
+  public String trueSegmentsToString(){
+    final var sb = new StringBuilder();
+    sb.append("[");
+    this.iterateEqualTo(true).forEach(w -> sb.append(w.toString()));
+    sb.append("]");
+    return sb.toString();
+  }
 }

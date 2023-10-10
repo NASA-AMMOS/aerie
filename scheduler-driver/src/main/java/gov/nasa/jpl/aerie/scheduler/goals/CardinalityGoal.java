@@ -107,6 +107,9 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       if (occurrenceRange != null) {
         goal.occurrenceRange = occurrenceRange;
       }
+      if(name==null){
+        goal.name = "CardinalityGoal_"+"thereExists_"+this.thereExists.type().getName()+"_(duration:"+((this.durationRange != null) ? this.durationRange: "N/A") +", occurrences:" + ((this.occurrenceRange != null) ? this.occurrenceRange: "N/A") +")";
+      }
       return goal;
     }
   }//Builder

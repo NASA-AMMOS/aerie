@@ -30,6 +30,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
+
+  public long durationSinceRestart = 0;
+
   private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
   /* The current real time. All the tasks before and at this time have been performed.
  Simulation has not started so it is set to MIN_VALUE. */
@@ -66,14 +69,26 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     initSimulation();
   }
 
+
+  private void printTimeSpent(){
+    final var dur = durationSinceRestart/1_000_000_000.;
+    final var average = curTime.shorterThan(Duration.of(1, Duration.SECONDS)) ? 0 : dur/curTime.in(Duration.SECONDS);
+    if(dur != 0) {
+      logger.info("Time spent in the last sim " + dur + "s, average per simulation second " + average + "s. Simulated until " + curTime);
+    }
+  }
+
   // This method is currently only used in one test.
   /*package-private*/ void clearActivitiesInserted() {activitiesInserted.clear();}
 
   /*package-private*/ void initSimulation(){
-    logger.warn("Reinitialization of the scheduling simulation");
+    logger.info("Reinitialization of the scheduling simulation");
+    printTimeSpent();
+    durationSinceRestart = 0;
     plannedDirectiveToTask.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
+    long before = System.nanoTime();
     if (this.engine != null) this.engine.close();
     this.engine = new SimulationEngine();
     batch = null;
@@ -96,6 +111,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
     }
+    this.durationSinceRestart += System.nanoTime() - before;
     countSimulationRestarts++;
   }
 
@@ -109,10 +125,14 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   @Override
   public void close() {
+    logger.debug("Closing sim");
+    printTimeSpent();
     this.engine.close();
   }
 
   private void simulateUntil(Duration endTime){
+    long before = System.nanoTime();
+    logger.info("Simulating until "+endTime);
     assert(endTime.noShorterThan(curTime));
       if(batch == null){
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
@@ -129,7 +149,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
-    lastSimResults = null;
+      lastSimResults = null;
+      this.durationSinceRestart += (System.nanoTime() - before);
   }
 
 
@@ -165,6 +186,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     final var earliestStartOffset = resolved.get(null).get(0);
 
     if(earliestStartOffset.getRight().noLongerThan(curTime)){
+      logger.info("Restarting simulation because earliest start of activity to simulate " + earliestStartOffset.getRight() + " is before current sim time " + curTime);
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -196,9 +218,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
+      logger.info("Simulating from " + curTime + " to " + endTime + " to get simulation results");
       simulateUntil(endTime);
+    } else{
+      logger.info("Not simulating because asked endTime "+endTime+" is before current sim time " + curTime);
     }
-
+    final var before = System.nanoTime();
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
       lastSimResults = SimulationEngine.computeResults(
           engine,
@@ -210,11 +235,14 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
+    this.durationSinceRestart += System.nanoTime() - before;
+
     return lastSimResults;
   }
 
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
+    final var before = System.nanoTime();
     if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
     }
@@ -271,6 +299,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       }
     }
     lastSimResults = null;
+    this.durationSinceRestart+= System.nanoTime() - before;
   }
 
   /**

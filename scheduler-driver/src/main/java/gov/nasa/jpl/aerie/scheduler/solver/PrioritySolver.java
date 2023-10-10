@@ -103,6 +103,13 @@ public class PrioritySolver implements Solver {
       if(!events.isEmpty()) return Optional.of(events.get(events.size()-1));
       return Optional.empty();
     }
+
+    public void logHistory(){
+      logger.info("Rootfinding history");
+      for(final var event: events){
+        logger.info("Start:" + event.start + " end:" + (event.end==null ? "error" : event.end));
+      }
+    }
   }
 
   /**
@@ -141,6 +148,7 @@ public class PrioritySolver implements Solver {
       try {
         initializePlan();
         if(problem.getInitialSimulationResults().isPresent()) {
+          logger.debug("Loading initial simulation results from the DB");
           simulationFacade.loadInitialSimResults(problem.getInitialSimulationResults().get());
         }
       } catch (SimulationFacade.SimulationException e) {
@@ -172,7 +180,7 @@ public class PrioritySolver implements Solver {
   private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
-
+    logger.info("Inserting new activities in the plan to check plan validity");
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
       var duration = act.duration();
@@ -207,6 +215,7 @@ public class PrioritySolver implements Solver {
     final var finalSetOfActsInserted = new ArrayList<SchedulingActivityDirective>();
 
     if(allGood) {
+      logger.info("New activities have been inserted in the plan successfully");
       if(!acts.isEmpty()) simulationFacade.initialSimulationResultsAreStale();
       //update plan with regard to simulation
       for(var act: acts) {
@@ -221,6 +230,7 @@ public class PrioritySolver implements Solver {
         }
       }
     } else{
+      logger.info("New activities could not be inserted in the plan, see error just above");
       //update simulation with regard to plan
       try {
         simulationFacade.removeActivitiesFromSimulation(acts);
@@ -461,9 +471,11 @@ public class PrioritySolver implements Solver {
           evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
           evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
           if(subgoalIsSatisfied){
+            logger.info("OR goal " + goal.getName() + ": subgoal " + subgoal.getName() + " has been satisfied, stopping");
             atLeastOneSatisfied = true;
             break;
           }
+          logger.info("OR goal " + goal.getName() + ": subgoal " + subgoal.getName() + " could not be satisfied, moving on to next subgoal");
         }
         if(atLeastOneSatisfied){
           evaluation.forGoal(goal).setScore(0);
@@ -496,6 +508,7 @@ public class PrioritySolver implements Solver {
     for (var subgoal : goal.getSubgoals()) {
       satisfyGoal(subgoal);
       if (evaluation.forGoal(subgoal).getScore() == 0) {
+        logger.info("AND goal " + goal.getName() + ": subgoal " + subgoal.getName() + " has been satisfied, moving on to next subgoal");
         nbGoalSatisfied++;
       }
     }
@@ -547,29 +560,34 @@ public class PrioritySolver implements Solver {
     assert plan != null;
 
     //continue creating activities as long as goal wants more and we can do so
+    logger.info("Starting conflict detection before goal " + goal.getName());
     var missingConflicts = getConflicts(goal);
+    logger.info("Found "+ missingConflicts.size() +" conflicts in conflict detection");
     //setting the number of conflicts detected at first evaluation, will be used at backtracking
     evaluation.forGoal(goal).setNbConflictsDetected(missingConflicts.size());
     assert missingConflicts != null;
 
     final var itConflicts = missingConflicts.iterator();
-
+    int i = 0;
     //create new activity instances for each missing conflict
     while (itConflicts.hasNext()) {
       final var missing = itConflicts.next();
       assert missing != null;
-
+      logger.info("Processing conflict " + (++i));
+      logger.info(missing.toString());
       //determine the best activities to satisfy the conflict
       if (!analysisOnly && (missing instanceof MissingActivityInstanceConflict missingActivityInstanceConflict)) {
         final var acts = getBestNewActivities(missingActivityInstanceConflict);
         //add the activities to the output plan
         if (!acts.isEmpty()) {
+          logger.info("Found activity to satisfy missing activity instance conflict");
           final var insertionResult = checkAndInsertActs(acts);
           if(insertionResult.success){
-
             evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
             itConflicts.remove();
             //REVIEW: really association should be via the goal's own query...
+          } else{
+            logger.info("Conflict " + i + " could not be satisfied");
           }
         }
       }
@@ -580,11 +598,14 @@ public class PrioritySolver implements Solver {
         if(durationToAccomplish.isPresent()) {
           durationLeft = durationToAccomplish.get();
         }
+        var nbIterations = 0;
         while(cardinalityLeft > 0 || durationLeft.longerThan(Duration.ZERO)){
+          logger.info("Trying to satisfy template conflict " + i + " (iteration: "+(++nbIterations)+"). Missing cardinality: " + cardinalityLeft + ", duration: " + (durationLeft.isEqualTo(Duration.ZERO) ? "N/A" : durationLeft));
           final var acts = getBestNewActivities(missingActivityTemplateConflict);
           assert acts != null;
           //add the activities to the output plan
           if (!acts.isEmpty()) {
+            logger.info("Found activity to satisfy missing activity template conflict");
             final var insertionResult = checkAndInsertActs(acts);
             if(insertionResult.success()){
 
@@ -598,10 +619,12 @@ public class PrioritySolver implements Solver {
                                                     .reduce(Duration.ZERO, Duration::plus));
             }
           } else{
+            logger.info("Conflict " + i + " could not be satisfied");
             break;
           }
         }
         if(cardinalityLeft <= 0 && durationLeft.noLongerThan(Duration.ZERO)){
+          logger.info("Conflict " + i + " has been addressed");
           itConflicts.remove();
         }
       } else if(missing instanceof MissingAssociationConflict missingAssociationConflict){
@@ -620,7 +643,10 @@ public class PrioritySolver implements Solver {
             //decision-making here, we choose the first satisfying activity
             evaluation.forGoal(goal).associate(act, false);
             itConflicts.remove();
+            logger.info("Activity " + act + " has been associated to goal " + goal.getName() +" to satisfy conflict " + i);
             break;
+          } else{
+            logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
           }
         }
       }
@@ -628,8 +654,10 @@ public class PrioritySolver implements Solver {
 
 
     if(!missingConflicts.isEmpty() && goal.shouldRollbackIfUnsatisfied()){
+      logger.warn("Rolling back changes for "+goal.getName());
       rollback(goal);
     }
+    logger.info("Finishing goal satisfaction for goal " + goal.getName() +":"+ (missingConflicts.size() == 0 ? "SUCCESS" : "FAILURE. Number of conflicts that could not be addressed: " + missingConflicts.size()));
     evaluation.forGoal(goal).setScore(-missingConflicts.size());
   }
 
@@ -648,6 +676,7 @@ public class PrioritySolver implements Solver {
     assert goal != null;
     assert plan != null;
     //REVIEW: maybe should have way to request only certain kinds of conflicts
+    logger.debug("Computing simulation results until "+ this.problem.getPlanningHorizon().getEndAerie() + " (planning horizon end) in order to compute conflicts");
     final var lastSimulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie());
     synchronizeSimulationWithSchedulerPlan();
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
@@ -705,7 +734,6 @@ public class PrioritySolver implements Solver {
     //start from the time interval where the missing activity causes a problem
     //NB: these are start windows
     var possibleWindows = missing.getTemporalContext();
-
     //prune based on constraints on goal and activity type (mutex, state,
     //event, etc)
     //TODO: move this into polymorphic method. don't want to be demuxing types
@@ -728,10 +756,11 @@ public class PrioritySolver implements Solver {
       //TODO: placeholder for now to avoid mutex fall through
       throw new IllegalArgumentException("request to create activities for conflict of unrecognized type");
     }
+    logger.debug("Initial windows from conflict temporal context :" + possibleWindows.trueSegmentsToString());
     possibleWindows = narrowByResourceConstraints(possibleWindows, resourceConstraints);
-
+    logger.debug("Windows after narrowing by resource constraints :" + possibleWindows.trueSegmentsToString());
     possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints(), missing.getEvaluationEnvironment());
-
+    logger.debug("Windows after narrowing by global scheduling conditions :" + possibleWindows.trueSegmentsToString());
     //narrow to windows where activity duration will fit
     var startWindows = possibleWindows;
     //for now handling just start-time windows, so no need to prune duration
@@ -757,6 +786,7 @@ public class PrioritySolver implements Solver {
         startWindows = startWindows.and(missing.getTemporalContext());
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
+        logger.info("Instantiating activity in windows " + startWindows.trueSegmentsToString());
         final var act = createOneActivity(
             missingTemplate.getActTemplate(),
             goal.getName() + "_" + java.util.UUID.randomUUID(),
@@ -795,9 +825,10 @@ public class PrioritySolver implements Solver {
     if (windows.stream().noneMatch(Segment::value) || constraints.isEmpty()) {
       return ret;
     }
-
+    logger.info("Narrowing windows by resource constraints");
     final var totalDomain = Interval.between(windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
     //make sure the simulation results cover the domain
+    logger.debug("Computing simulation results until "+ totalDomain.end + " in order to compute resource constraints");
     final var latestSimulationResults = this.getLatestSimResultsUpTo(totalDomain.end);
     synchronizeSimulationWithSchedulerPlan();
     //iteratively narrow the windows from each constraint
@@ -812,7 +843,7 @@ public class PrioritySolver implements Solver {
         break;
       }
     }
-  return ret;
+    return ret;
   }
 
 
@@ -841,6 +872,7 @@ public class PrioritySolver implements Solver {
       return tmp;
     }
     //make sure the simulation results cover the domain
+    logger.debug("Computing simulation results until "+ tmp.maxTrueTimePoint().get().getKey() + " in order to compute global scheduling conditions");
     final var latestSimulationResults = this.getLatestSimResultsUpTo(tmp.maxTrueTimePoint().get().getKey());
     synchronizeSimulationWithSchedulerPlan();
     for (GlobalConstraint gc : constraints) {
@@ -872,7 +904,9 @@ public class PrioritySolver implements Solver {
       final Windows windows,
       final EvaluationEnvironment evaluationEnvironment) {
     //REVIEW: how to properly export any flexibility to instance?
+    logger.info("Trying to create one activity, will loop through possible windows");
     for (var window : windows.iterateEqualTo(true)) {
+      logger.info("Trying in window " + window);
       var activity = instantiateActivity(activityExpression, name, window, evaluationEnvironment);
       if (activity.isPresent()) {
         return activity;
@@ -898,9 +932,9 @@ public class PrioritySolver implements Solver {
     if (activityExpression.endRange() != null) {
       taskNetwork.addEndInterval(name, activityExpression.endRange().start, activityExpression.endRange().end);
     }
+    Optional<Duration> durRequirementLower = Optional.empty();
+    Optional<Duration> durRequirementUpper = Optional.empty();;
     if (activityExpression.durationRange() != null) {
-      final Optional<Duration> durRequirementLower;
-      final Optional<Duration> durRequirementUpper;
       try {
         durRequirementLower = activityExpression.durationRange().getLeft()
                                                                          .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
@@ -920,7 +954,15 @@ public class PrioritySolver implements Solver {
     }
     final var success = taskNetwork.solveConstraints();
     if (!success) {
-      logger.warn("Inconsistent temporal constraints, will try next opportunity for activity placement if it exists");
+      logger.debug("Inconsistent static temporal constraints, cannot place activity in interval");
+      logger.debug("Start range " + activityExpression.startRange());
+      logger.debug("End range " + activityExpression.endRange());
+      logger.debug(
+          "Duration range [" +
+          (durRequirementLower.isPresent() ? durRequirementLower.get() : "-inf") +
+          ", " +
+          (durRequirementUpper.isPresent() ? durRequirementUpper.get() : "+inf"));
+      logger.debug("Interval range " + interval);
       return Optional.empty();
     }
     final var solved = taskNetwork.getAllData(name);
@@ -1096,17 +1138,19 @@ public class PrioritySolver implements Solver {
 
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
       final var lastActivityTested = result.history().getLastEvent();
+      logger.info("Finished rootfinding: SUCCESS");
+      history.logHistory();
       return Optional.of(lastActivityTested.get().activity);
     } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
-      logger.debug("Rootfinding encountered a zero-derivative");
+      logger.info("Rootfinding encountered a zero-derivative");
     } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
-      logger.debug("Rootfinding encountered an infinite-derivative");
+      logger.info("Rootfinding encountered an infinite-derivative");
     } catch (EquationSolvingAlgorithms.DivergenceException e) {
-      logger.debug("Rootfinding diverged");
+      logger.info("Rootfinding diverged");
     } catch (EquationSolvingAlgorithms.ExceededMaxIterationException e) {
-      logger.debug("Too many iterations");
+      logger.info("Too many iterations");
     } catch (EquationSolvingAlgorithms.NoSolutionException e) {
-      logger.debug("No solution");
+      logger.info("Rootfinding found no solution");
     }
     if(!history.events.isEmpty()) {
       try {
@@ -1115,6 +1159,8 @@ public class PrioritySolver implements Solver {
         throw new RuntimeException("Exception while simulating original plan after activity insertion failure" ,e);
       }
     }
+    logger.info("Finished rootfinding: FAILURE");
+    history.logHistory();
     return Optional.empty();
   }
 
