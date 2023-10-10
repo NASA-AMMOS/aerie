@@ -137,7 +137,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t1hr, actTypeControllable));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeControllable));
     Assertions.assertEquals(plan.getActivities().size(), 2);
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test

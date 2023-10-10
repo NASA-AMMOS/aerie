@@ -497,7 +497,7 @@ public class PrioritySolver implements Solver {
     plan.remove(insertedActivities);
     evalForGoal.removeAssociation(associatedActivities);
     evalForGoal.removeAssociation(insertedActivities);
-    evalForGoal.setScore(-(evalForGoal.getNbConflictsDetected().get()));
+    evalForGoal.setScore(-(evalForGoal.getNbConflictsDetected().orElse(1)));
   }
 
   private void satisfyCompositeGoal(CompositeAndGoal goal) {
@@ -510,6 +510,13 @@ public class PrioritySolver implements Solver {
       if (evaluation.forGoal(subgoal).getScore() == 0) {
         logger.info("AND goal " + goal.getName() + ": subgoal " + subgoal.getName() + " has been satisfied, moving on to next subgoal");
         nbGoalSatisfied++;
+      } else {
+        logger.info("AND goal " + goal.getName() + ": subgoal " + subgoal.getName() + " has NOT been satisfied");
+        if(goal.shouldRollbackIfUnsatisfied()){
+          logger.info("AND goal " + goal.getName() + ": stopping goal satisfaction after first failure, remove shouldRollbackIfUnsatisfied(true) on AND goal to maximize satisfaction instead of early termination");
+          break;
+        }
+        logger.info("AND goal " + goal.getName() + ": moving on to next subgoal (trying to maximize satisfaction)");
       }
     }
     final var goalIsSatisfied = (nbGoalSatisfied == goal.getSubgoals().size());
