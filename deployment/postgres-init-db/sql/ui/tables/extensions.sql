@@ -30,7 +30,7 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-create trigger set_timestamp
+create trigger extensions_set_timestamp
   before update on extensions
   for each row
 execute function extensions_set_updated_at();
