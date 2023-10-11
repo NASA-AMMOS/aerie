@@ -7,5 +7,5 @@ import java.util.Collection;
 
 public record SimulationData(
     SimulationResults driverResults,
-    gov.nasa.jpl.aerie.constraints.model.SimulationResults constraintsResults,
-    Collection<SchedulingActivityDirective> activitiesInPlan){}
+    gov.nasa.jpl.aerie.constraints.model.SimulationResults constraintsResults
+){}

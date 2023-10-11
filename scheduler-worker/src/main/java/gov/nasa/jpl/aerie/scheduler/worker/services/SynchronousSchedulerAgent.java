@@ -132,7 +132,7 @@ public record SynchronousSchedulerAgent(
         final var externalProfiles = loadExternalProfiles(planMetadata.planId());
         final var initialSimulationResults = loadSimulationResults(planMetadata);
         //seed the problem with the initial plan contents
-        final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);
+        final var loadedPlanComponents = loadInitialPlan(planMetadata, problem, initialSimulationResults);
         problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults);
         problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
         //apply constraints/goals to the problem
@@ -291,6 +291,7 @@ public record SynchronousSchedulerAgent(
                                                      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
   throws MerlinServiceException, IOException
   {
+    if(!simulationFacade.areInitialSimulationResultsStale()) return Optional.empty();
     //finish simulation until end of horizon before posting results
     try {
       simulationFacade.computeSimulationResultsUntil(planningHorizon.getEndAerie());
@@ -309,7 +310,7 @@ public record SynchronousSchedulerAgent(
             (a) -> schedID_to_MerlinID.get(a.getKey())));
     if(simID_to_MerlinID.values().containsAll(schedDirectiveToMerlinId.values()) && schedDirectiveToMerlinId.values().containsAll(simID_to_MerlinID.values())){
       return Optional.of(merlinService.storeSimulationResults(planMetadata,
-                                                              simulationFacade.getLatestDriverSimulationResults(),
+                                                              simulationFacade.getLatestDriverSimulationResults().get(),
                                                               simID_to_MerlinID));
     } else{
       //schedule in simulation is inconsistent with current state of the plan (user probably disabled simulation for some of the goals)
@@ -400,11 +401,15 @@ public record SynchronousSchedulerAgent(
    *
    * @param planMetadata metadata of plan container to load from
    * @param problem the problem that the plan adheres to
+   * @param initialSimulationResults initial simulation results (optional)
    * @return a plan with all activity instances loaded from the target merlin plan container
    * @throws ResultsProtocolFailure when the requested plan cannot be loaded, or the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private PlanComponents loadInitialPlan(final PlanMetadata planMetadata, final Problem problem) {
+  private PlanComponents loadInitialPlan(
+      final PlanMetadata planMetadata,
+      final Problem problem,
+      final Optional<SimulationResults> initialSimulationResults) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
       final var merlinPlan =  merlinService.getPlanActivityDirectives(planMetadata, problem);
@@ -430,12 +435,19 @@ public record SynchronousSchedulerAgent(
                     .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
                 Duration.MICROSECONDS);
           }
-        } else if (
-            schedulerActType.getDurationType() instanceof DurationType.Uncontrollable
-            || schedulerActType.getDurationType() instanceof DurationType.Fixed
-            || schedulerActType.getDurationType() instanceof DurationType.Parametric
-        ) {
-          // Do nothing
+        } else if (schedulerActType.getDurationType() instanceof DurationType.Fixed fixedDurationType) {
+          actDuration = fixedDurationType.duration();
+        } else if(schedulerActType.getDurationType() instanceof DurationType.Parametric parametricDurationType) {
+          actDuration = parametricDurationType.durationFunction().apply(activity.serializedActivity().getArguments());
+        } else if(schedulerActType.getDurationType() instanceof DurationType.Uncontrollable) {
+          if(initialSimulationResults.isPresent()){
+            for(final var simAct: initialSimulationResults.get().simulatedActivities.entrySet()){
+              if(simAct.getValue().directiveId().isPresent() &&
+                 simAct.getValue().directiveId().get().equals(elem.getKey())){
+                actDuration = simAct.getValue().duration();
+              }
+            }
+          }
         } else {
           throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
         }

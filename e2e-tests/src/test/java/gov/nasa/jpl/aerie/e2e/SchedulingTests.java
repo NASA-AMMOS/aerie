@@ -66,6 +66,18 @@ public class SchedulingTests {
         startsAt: TimingConstraint.singleton(WindowProperty.START)
       })""";
 
+  private final String bakeBananaGoalDefinition =
+      """
+      export default (): Goal =>
+          Goal.ActivityRecurrenceGoal({
+              activityTemplate: ActivityTemplates.BakeBananaBread({
+                  temperature: 325.0,
+                  tbSugar: 2,
+                  glutenFree: false,
+              }),
+              interval: Temporal.Duration.from({ hours: 12 }),
+          });""";
+
   @BeforeAll
   void beforeAll() {
     // Setup Requests
@@ -123,6 +135,30 @@ public class SchedulingTests {
                                                           .add("growingDuration", 7200000000L) // 2h
                                                           .build());
     hasura.updatePlanRevisionSchedulingSpec(planId);
+  }
+
+  //reproduces issue #1165
+  @Test
+  void twoInARow() throws IOException {
+    // Setup: Add Goal
+    final int bakeBananaBreadGoalId = hasura.insertSchedulingGoal(
+        "BakeBanana Scheduling Test Goal",
+        modelId,
+        bakeBananaGoalDefinition);
+    hasura.createSchedulingSpecGoal(bakeBananaBreadGoalId, schedulingSpecId, 0);
+    try {
+      // Schedule and get Plan
+      hasura.awaitScheduling(schedulingSpecId);
+      hasura.updatePlanRevisionSchedulingSpec(planId);
+      hasura.awaitScheduling(schedulingSpecId);
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+      assertEquals(2, activities.size());
+      activities.forEach(a->assertEquals("BakeBananaBread", a.type()));
+    } finally {
+      // Teardown: Delete Goal
+      hasura.deleteSchedulingGoal(bakeBananaBreadGoalId);
+    }
   }
 
   @Test

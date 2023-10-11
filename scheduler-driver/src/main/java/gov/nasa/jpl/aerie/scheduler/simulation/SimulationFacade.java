@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -82,15 +81,23 @@ public class SimulationFacade implements AutoCloseable{
     this.initialPlanHasBeenModified = true;
   }
 
+  /**
+   * @return true if initial simulation results are stale, false otherwise
+   */
+  public boolean areInitialSimulationResultsStale(){
+    return this.initialPlanHasBeenModified;
+  }
+
   public Optional<gov.nasa.jpl.aerie.constraints.model.SimulationResults> getLatestConstraintSimulationResults(){
     if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().constraintsResults());
     if(lastSimulationData == null) return Optional.empty();
     return Optional.of(lastSimulationData.constraintsResults());
   }
 
-  public SimulationResults getLatestDriverSimulationResults(){
-    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return this.initialSimulationResults.get().driverResults();
-    return lastSimulationData.driverResults();
+  public Optional<SimulationResults> getLatestDriverSimulationResults(){
+    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().driverResults());
+    if(lastSimulationData == null) return Optional.empty();
+    return Optional.of(lastSimulationData.driverResults());
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
@@ -157,10 +164,16 @@ public class SimulationFacade implements AutoCloseable{
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
   throws SimulationException
   {
-    if(insertedActivities.size() == 0) return Map.of();
-    computeSimulationResultsUntil(endTime);
+    var latestSimulationData = this.getLatestDriverSimulationResults();
+    //if no initial sim results and no sim has been performed, perform a sim and get the sim results
+    if(latestSimulationData.isEmpty()){
+      //useful only if there are activities to simulate for this case of getting child activities
+      if(insertedActivities.size() == 0) return Map.of();
+      computeSimulationResultsUntil(endTime);
+      latestSimulationData = this.getLatestDriverSimulationResults();
+    }
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
-    this.lastSimulationData.driverResults().simulatedActivities.forEach( (activityInstanceId, activity) -> {
+    latestSimulationData.get().simulatedActivities.forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimulationData.driverResults(), activityInstanceId);
       final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(
@@ -275,10 +288,11 @@ public class SimulationFacade implements AutoCloseable{
       insertedActivities.put(activity, activityDirective);
     }
     try {
-    driver.simulateActivities(directivesToSimulate);
+      driver.simulateActivities(directivesToSimulate);
     } catch(Exception e){
       throw new SimulationException("An exception happened during simulation", e);
     }
+    this.lastSimulationData = null;
   }
 
   public static class SimulationException extends Exception {
@@ -298,7 +312,7 @@ public class SimulationFacade implements AutoCloseable{
       //compare references
       if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results), this.insertedActivities.keySet());
+        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results));
       }
     } catch (Exception e){
       throw new SimulationException("An exception happened during simulation", e);
