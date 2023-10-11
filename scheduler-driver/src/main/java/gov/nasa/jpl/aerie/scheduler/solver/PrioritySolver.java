@@ -207,6 +207,11 @@ public class PrioritySolver implements Solver {
     return new InsertActivityResult(allGood, finalSetOfActsInserted);
   }
 
+  /**
+   * Pulls all the child activities from the simulation + fills in activity durations
+   * This method should be called only when the state of the plan is considered safe, i.e. not during rootfinding
+   * @return a map of scheduling activity directives (old -> new) that have been replaced in the plan due to updated durations
+   */
   private Map<SchedulingActivityDirective, SchedulingActivityDirective> synchronizeSimulationWithSchedulerPlan() {
     final Map<SchedulingActivityDirective, SchedulingActivityDirective> replacedInPlan;
     try {
@@ -620,6 +625,7 @@ public class PrioritySolver implements Solver {
     assert plan != null;
     //REVIEW: maybe should have way to request only certain kinds of conflicts
     final var lastSimulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie());
+    synchronizeSimulationWithSchedulerPlan();
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
     final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, evaluationEnvironment);
     assert rawConflicts != null;
@@ -771,6 +777,7 @@ public class PrioritySolver implements Solver {
     final var totalDomain = Interval.between(windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
     //make sure the simulation results cover the domain
     final var latestSimulationResults = this.getLatestSimResultsUpTo(totalDomain.end);
+    synchronizeSimulationWithSchedulerPlan();
     //iteratively narrow the windows from each constraint
     //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
@@ -793,7 +800,6 @@ public class PrioritySolver implements Solver {
     if (lastSimResultsFromFacade.isEmpty() || lastSimResultsFromFacade.get().bounds.end.shorterThan(time)) {
       try {
         this.simulationFacade.computeSimulationResultsUntil(time);
-        synchronizeSimulationWithSchedulerPlan();
       } catch (SimulationFacade.SimulationException e) {
         throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
       }
@@ -814,6 +820,7 @@ public class PrioritySolver implements Solver {
     }
     //make sure the simulation results cover the domain
     final var latestSimulationResults = this.getLatestSimResultsUpTo(tmp.maxTrueTimePoint().get().getKey());
+    synchronizeSimulationWithSchedulerPlan();
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof GlobalConstraintWithIntrospection c) {
         tmp = c.findWindows(
