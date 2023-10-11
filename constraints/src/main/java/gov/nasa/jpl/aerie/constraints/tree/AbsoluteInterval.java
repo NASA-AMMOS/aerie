@@ -25,15 +25,15 @@ public record AbsoluteInterval(
   public Interval evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final Duration relativeStart = start
         .map(instant -> Duration.of(results.planStart.until(instant, ChronoUnit.MICROS), Duration.MICROSECOND))
-        .orElse(Duration.MIN_VALUE);
+        .orElse(results.bounds.start);
     final Duration relativeEnd = end
         .map(instant -> Duration.of(results.planStart.until(instant, ChronoUnit.MICROS), Duration.MICROSECOND))
-        .orElse(Duration.MAX_VALUE);
+        .orElse(results.bounds.end);
     return Interval.between(
         relativeStart,
-        startInclusivity.orElse(Interval.Inclusivity.Inclusive),
+        startInclusivity.orElse(start.isPresent() ? Interval.Inclusivity.Inclusive : results.bounds.startInclusivity),
         relativeEnd,
-        endInclusivity.orElse(Interval.Inclusivity.Inclusive)
+        endInclusivity.orElse(end.isPresent() ? Interval.Inclusivity.Inclusive : results.bounds.endInclusivity)
     );
   }
 
