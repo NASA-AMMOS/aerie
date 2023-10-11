@@ -43,7 +43,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   /** Times when a resource profile segment should be removed from the simulation results. */
   public HashMap<Duration, Set<String>> removedResourceSegments = new HashMap<>();
   public TemporalEventSource oldTemporalEventSource;
-  protected Duration curTime = Duration.ZERO;
+  protected Duration curTime = Duration.MIN_VALUE;
 
   public Duration curTime() {
     return curTime;

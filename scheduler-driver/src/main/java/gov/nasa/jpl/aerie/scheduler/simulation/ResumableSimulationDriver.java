@@ -114,7 +114,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
     /* The current real time. */
-    setCurTime(Duration.ZERO);
+    //setCurTime(Duration.ZERO);
 
     // Begin tracking any resources that have not already been simulated.
     trackResources();
@@ -123,9 +123,11 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     startDaemons(curTime());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-    engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
+    //engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
 
     countSimulationRestarts++;
+    if (debug) System.out.println("ResumableSimulationDriver::countSimulationRestarts incremented to " + countSimulationRestarts);
+
   }
 
   private void trackResources() {
@@ -151,8 +153,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   private void startDaemons(Duration time) {
     if (missionModel.hasDaemons()) {
-      engine.scheduleTask(time, missionModel.getDaemon(), null);
-      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
     }
   }
 
@@ -166,7 +167,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     assert(endTime.noShorterThan(curTime()));
     if (endTime.isEqualTo(Duration.MAX_VALUE)) return;
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the endTime.
-    engine.scheduleTask(endTime, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
+    //engine.scheduleTask(endTime, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
     while(engine.hasJobsScheduledThrough(endTime)) {
       // Run the jobs in this batch.
       engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
@@ -271,7 +272,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    */
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
-    if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
+    if (debug) System.out.println("ResumableSimulationDriver.simulate(" + schedule + ")");
 
     if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
@@ -314,6 +315,11 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
           .allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
+
+      if(engine.timeOfNextJobs().longerThan(planDuration)){
+        break;
+      }
+
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles

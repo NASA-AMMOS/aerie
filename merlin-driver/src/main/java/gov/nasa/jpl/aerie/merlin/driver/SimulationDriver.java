@@ -83,7 +83,7 @@ public final class SimulationDriver<Model> {
     //assert useResourceTracker;
 
     /* The current real time. */
-    setCurTime(Duration.ZERO);
+    //setCurTime(Duration.ZERO);
 
     // Begin tracking any resources that have not already been simulated.
     trackResources();
@@ -92,10 +92,10 @@ public final class SimulationDriver<Model> {
     startDaemons(curTime());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-    engine.scheduleTask(
-        simDuration,
-        executor -> $ -> TaskStatus.completed(Unit.UNIT),
-        null); // TODO: skip this if rerunning? and end time is same?
+//    engine.scheduleTask(
+//        simDuration,
+//        executor -> $ -> TaskStatus.completed(Unit.UNIT),
+//        null); // TODO: skip this if rerunning? and end time is same?
   }
 
 
@@ -223,7 +223,7 @@ public final class SimulationDriver<Model> {
   }
 
   private void startDaemons(Duration time) {
-    engine.scheduleTask(time, missionModel.getDaemon(), null);
+    engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
     engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
   }
 

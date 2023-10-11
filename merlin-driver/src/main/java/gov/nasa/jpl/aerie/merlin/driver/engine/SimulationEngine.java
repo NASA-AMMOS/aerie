@@ -567,7 +567,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     // Increment real time, if necessary.
     var timeForDelta = Duration.min(nextTime, maximumTime);
-    final var delta = timeForDelta.minus(curTime());
+    final var delta = timeForDelta.minus(Duration.max(curTime(), Duration.ZERO));
     setCurTime(timeForDelta);
     if (!delta.isZero()) {
       stepIndexAtTime = 0;
@@ -595,7 +595,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     if (staleReadTime.isEqualTo(nextTime)) {
       rescheduleStaleTasks(earliestStaleReads);
-    }
+    }  // TODO -- probably need an else to postpone the batch of jobs so that they are recollected on the next step()
 
     if (timeOfNextJobs.isEqualTo(nextTime)) {
 
@@ -1420,8 +1420,8 @@ public final class SimulationEngine implements AutoCloseable {
         if (!timeline.isTopicStale(topic, this.currentTime)) {
           SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
         }
+        SimulationEngine.this.invalidateTopic(topic, this.currentTime);
       }
-      SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
 
     /**
