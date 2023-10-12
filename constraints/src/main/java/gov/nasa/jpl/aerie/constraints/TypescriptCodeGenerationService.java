@@ -392,6 +392,7 @@ public final class TypescriptCodeGenerationService {
   private static boolean valueSchemaIsNumeric(final ValueSchema valueSchema) {
     return valueSchema.equals(ValueSchema.INT)
         || valueSchema.equals(ValueSchema.REAL)
-        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA);
+        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA)
+        || valueSchema.asMeta().map($ -> valueSchemaIsNumeric($.target())).orElse(false);
   }
 }
