@@ -133,6 +133,27 @@ class SchedulerDatabaseTests {
       ));
     }
 
+    private int getSpecificationRevision(int specificationId) throws SQLException {
+      final var res = connection.createStatement().executeQuery("""
+          select revision from scheduling_specification
+          where id = %d;
+          """.formatted(specificationId));
+      res.next();
+      return res.getInt("revision");
+    }
+
+    @Test
+    void shouldIncrementSpecRevisionAfterModifyingGoal() throws SQLException {
+      insertGoalPriorities(0, new int[] {0, 1, 2, 3, 4}, new int[]{0, 1, 2, 3, 4});
+      final var revisionBefore  = getSpecificationRevision(specificationIds[0]);
+      connection.createStatement().executeUpdate("""
+        update scheduling_goal
+        set name = 'other name' where id = %d;
+      """.formatted(goalIds[3]));
+      final var revisionAfter  = getSpecificationRevision(specificationIds[0]);
+      assertEquals(revisionBefore + 1, revisionAfter);
+    }
+
     @Test
     void shouldReorderPrioritiesOnUpdate() throws SQLException {
       insertGoalPriorities(0, new int[] {0, 1, 2}, new int[]{0, 1, 2});
