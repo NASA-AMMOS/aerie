@@ -208,6 +208,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: validateModelArguments
     definition:
       kind: ""
@@ -216,6 +217,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
   - name: validatePlan
     definition:
       kind: ""
@@ -224,6 +226,7 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
+      - role: viewer
 custom_types:
   enums:
     - name: MerlinSimulationStatus
