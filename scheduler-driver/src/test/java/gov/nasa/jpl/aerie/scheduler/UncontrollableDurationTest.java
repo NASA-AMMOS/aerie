@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
@@ -95,7 +96,7 @@ public class UncontrollableDurationTest {
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT1M29S"), problem.getActivityType("SolarPanelNonLinear")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT16M40S"), planningHorizon.fromStart("PT18M9S"), problem.getActivityType("SolarPanelNonLinear")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT33M20S"), planningHorizon.fromStart("PT34M49S"), problem.getActivityType("SolarPanelNonLinear")));
-    assertEquals(13, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(11, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -219,10 +220,10 @@ public class UncontrollableDurationTest {
     final var plan = solver.getNextSolution().get();
     //Activity can be started in [0, 2m] but this activity will throw an exception if ran in [0, 1m] so it is scheduled at 2m (as being the second bounds the rootfinding tries before search).
     assertTrue(TestUtility.containsActivity(plan,
-                                            planningHorizon.fromStart("PT120S"),
-                                            planningHorizon.fromStart("PT120S"),
+                                            planningHorizon.fromStart("PT1M38.886061S"),
+                                            planningHorizon.fromStart("PT1M38.886061S"),
                                             problem.getActivityType("LateRiser")));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 }

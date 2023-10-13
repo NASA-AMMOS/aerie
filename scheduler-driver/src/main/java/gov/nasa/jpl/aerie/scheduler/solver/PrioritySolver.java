@@ -88,26 +88,39 @@ public class PrioritySolver implements Solver {
 
   private final SimulationFacade simulationFacade;
 
-  public record EventWithActivity(Duration start, Duration end, SchedulingActivityDirective activity){}
-
-  public static class HistoryWithActivity{
-    List<EventWithActivity> events;
+  public record ActivityMetadata(SchedulingActivityDirective activityDirective){}
+  public static class HistoryWithActivity implements EquationSolvingAlgorithms.History<Duration, ActivityMetadata> {
+    List<Pair<EquationSolvingAlgorithms.FunctionCoordinate<Duration>, Optional<ActivityMetadata>>> events;
 
     public HistoryWithActivity(){
       events = new ArrayList<>();
     }
-    public void add(EventWithActivity event){
-      this.events.add(event);
+    public void add(EquationSolvingAlgorithms.FunctionCoordinate<Duration> functionCoordinate, ActivityMetadata activityMetadata){
+      this.events.add(Pair.of(functionCoordinate, Optional.ofNullable(activityMetadata)));
     }
-    public Optional<EventWithActivity> getLastEvent(){
-      if(!events.isEmpty()) return Optional.of(events.get(events.size()-1));
-      return Optional.empty();
+
+    @Override
+    public List<Pair<EquationSolvingAlgorithms.FunctionCoordinate<Duration>, Optional<ActivityMetadata>>> getHistory() {
+      return events;
+    }
+
+    public Optional<Pair<EquationSolvingAlgorithms.FunctionCoordinate<Duration>, Optional<ActivityMetadata>>> getLastEvent(){
+      if(events.isEmpty()) return Optional.empty();
+      return Optional.of(events.get(events.size() - 1));
+    }
+
+    @Override
+    public boolean alreadyVisited(final Duration x) {
+      for(final var event:events){
+        if(event.getLeft().x().isEqualTo(x)) return true;
+      }
+      return false;
     }
 
     public void logHistory(){
       logger.info("Rootfinding history");
       for(final var event: events){
-        logger.info("Start:" + event.start + " end:" + (event.end==null ? "error" : event.end));
+        logger.info("Start:" + event.getLeft().x() + " end:" + (event.getLeft().fx()==null ? "error" : event.getLeft().fx()));
       }
     }
   }
@@ -979,9 +992,11 @@ public class PrioritySolver implements Solver {
     //CASE 1: activity has an uncontrollable duration
     if(activityExpression.type().getDurationType() instanceof DurationType.Uncontrollable){
       final var history = new HistoryWithActivity();
-      final var f = new EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity>(){
+      final var f = new EquationSolvingAlgorithms.Function<Duration, ActivityMetadata>(){
         @Override
-        public Duration valueAt(Duration start, HistoryWithActivity history) {
+        public Duration valueAt(Duration start, final EquationSolvingAlgorithms.History<Duration, ActivityMetadata> history)
+        throws EquationSolvingAlgorithms.DiscontinuityException
+        {
           final var latestConstraintsSimulationResults = getLatestSimResultsUpTo(start);
           final var actToSim = SchedulingActivityDirective.of(
               activityExpression.type(),
@@ -999,21 +1014,21 @@ public class PrioritySolver implements Solver {
           final var lastInsertion = history.getLastEvent();
           Optional<Duration> computedDuration = Optional.empty();
           final var toRemove = new ArrayList<SchedulingActivityDirective>();
-          lastInsertion.ifPresent(eventWithActivity -> toRemove.add(eventWithActivity.activity()));
+          lastInsertion.ifPresent(eventWithActivity -> toRemove.add(eventWithActivity.getValue().get().activityDirective()));
           try {
             simulationFacade.removeAndInsertActivitiesFromSimulation(toRemove, List.of(actToSim));
             computedDuration = simulationFacade.getActivityDuration(actToSim);
             if(computedDuration.isPresent()) {
-              history.add(new EventWithActivity(start, start.plus(computedDuration.get()), actToSim));
+              history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(computedDuration.get())), new ActivityMetadata(actToSim));
             } else{
               logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
-              history.add(new EventWithActivity(start, null, actToSim));
+              history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start,  null), new ActivityMetadata(actToSim));
             }
           } catch (SimulationFacade.SimulationException e) {
             logger.debug("Simulation error while trying to simulate activities: " + e);
-            history.add(new EventWithActivity(start, null, actToSim));
+            history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start,  null), new ActivityMetadata(actToSim));
           }
-          return computedDuration.map(start::plus).orElse(Duration.MAX_VALUE);
+          return computedDuration.map(start::plus).orElseThrow(EquationSolvingAlgorithms.DiscontinuityException::new);
         }
 
       };
@@ -1085,9 +1100,9 @@ public class PrioritySolver implements Solver {
           true));
     } else if (activityExpression.type().getDurationType() instanceof DurationType.Parametric dt) {
       final var history = new HistoryWithActivity();
-      final var f = new EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity>() {
+      final var f = new EquationSolvingAlgorithms.Function<Duration, ActivityMetadata>() {
         @Override
-        public Duration valueAt(final Duration start, final HistoryWithActivity history) {
+        public Duration valueAt(final Duration start, final EquationSolvingAlgorithms.History<Duration, ActivityMetadata> history) {
           final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
               activityExpression.arguments(),
               start,
@@ -1104,7 +1119,7 @@ public class PrioritySolver implements Solver {
                                                                 null,
                                                                 null,
                                                                 true);
-            history.add(new EventWithActivity(start, start.plus(duration), activity));
+            history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(duration)), new ActivityMetadata(activity));
             return duration.plus(start);
           } catch (InstantiationException e) {
             logger.error("Cannot instantiate parameterized duration activity type: " + activityExpression.type().getName());
@@ -1120,7 +1135,7 @@ public class PrioritySolver implements Solver {
   }
 
   private  Optional<SchedulingActivityDirective> rootFindingHelper(
-      final EquationSolvingAlgorithms.Function<Duration, HistoryWithActivity> f,
+      final EquationSolvingAlgorithms.Function<Duration, ActivityMetadata> f,
       final HistoryWithActivity history,
       final TaskNetworkAdapter.TNActData solved) {
     try {
@@ -1130,12 +1145,11 @@ public class PrioritySolver implements Solver {
       final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
 
       final var result = new EquationSolvingAlgorithms
-          .SecantDurationAlgorithm<HistoryWithActivity>()
+          .SecantDurationAlgorithm<ActivityMetadata>()
           .findRoot(
               f,
               history,
               startInterval.start,
-              startInterval.end,
               endInterval.start.plus(durationHalfEndInterval),
               durationHalfEndInterval,
               durationHalfEndInterval,
@@ -1144,10 +1158,10 @@ public class PrioritySolver implements Solver {
               20);
 
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      final var lastActivityTested = result.history().getLastEvent();
       logger.info("Finished rootfinding: SUCCESS");
       history.logHistory();
-      return Optional.of(lastActivityTested.get().activity);
+      final var lastActivityTested = result.history().getHistory().get(history.getHistory().size() - 1);
+      return Optional.of(lastActivityTested.getRight().get().activityDirective());
     } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
       logger.info("Rootfinding encountered a zero-derivative");
     } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
@@ -1161,7 +1175,7 @@ public class PrioritySolver implements Solver {
     }
     if(!history.events.isEmpty()) {
       try {
-        simulationFacade.removeActivitiesFromSimulation(List.of(history.getLastEvent().get().activity()));
+        simulationFacade.removeActivitiesFromSimulation(List.of(history.getLastEvent().get().getRight().get().activityDirective()));
       } catch (SimulationFacade.SimulationException e) {
         throw new RuntimeException("Exception while simulating original plan after activity insertion failure" ,e);
       }
