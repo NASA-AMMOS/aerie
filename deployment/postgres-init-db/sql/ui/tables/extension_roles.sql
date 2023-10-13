@@ -1,6 +1,6 @@
 create table extension_roles (
-  extension_id  integer not null,
   id integer generated always as identity,
+  extension_id  integer not null,
   role text not null,
 
   constraint extension_roles_primary_key primary key (id),
