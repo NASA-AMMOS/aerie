@@ -3,8 +3,8 @@ import { sleep, check } from 'k6';
 import { Trend } from 'k6/metrics';
 import { Options } from 'k6/options';
 import { req } from './requests';
-import gql from '../../e2e-tests/src/utilities/gql';
-import * as urls from '../../e2e-tests/src/utilities/urls';
+import gql from '../assets/gql';
+import * as urls from '../assets/urls';
 
 // Besides the default metrics k6 records, we can define our own statistics and manually add data points to them
 const effective_args_duration = new Trend('effective_arg_duration', true);

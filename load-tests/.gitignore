@@ -3,3 +3,4 @@ dist
 *.json
 *.jar
 k6
+assets
