@@ -22,6 +22,7 @@ create table merge_staging_area(
     tags int[] default '{}',
     source_scheduling_goal_id integer,
     created_at timestamptz not null,
+    created_by text,
     last_modified_by text,
     start_offset interval not null,
     type text not null,

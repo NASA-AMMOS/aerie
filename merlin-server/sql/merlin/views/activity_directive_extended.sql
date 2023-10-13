@@ -76,6 +76,7 @@ create view activity_directive_extended as
     get_tags(ad.id, ad.plan_id) as tags,
     ad.source_scheduling_goal_id as source_scheduling_goal_id,
     ad.created_at as created_at,
+    ad.created_by as created_by,
     ad.last_modified_at as last_modified_at,
     ad.last_modified_by as last_modified_by,
     ad.start_offset as start_offset,

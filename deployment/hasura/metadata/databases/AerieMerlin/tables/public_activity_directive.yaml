@@ -92,7 +92,7 @@ select_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [ name, start_offset, type, arguments, metadata, anchor_id, anchored_to_start ]
+      columns: [ name, start_offset, type, arguments, metadata, anchor_id, anchored_to_start, created_by ]
       filter: {}
       set:
         last_modified_by: "x-hasura-user-id"
@@ -109,12 +109,14 @@ insert_permissions:
       check: {}
       set:
         last_modified_by: "x-hasura-user-id"
+        created_by: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, start_offset, arguments, metadata, anchor_id, anchored_to_start, plan_id, type]
       check: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
       set:
         last_modified_by: "x-hasura-user-id"
+        created_by: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:
