@@ -31,6 +31,8 @@ import java.util.Optional;
  */
 public class SimulationFacade implements AutoCloseable{
 
+  private static boolean debug = false;
+
   public static final boolean defaultUseResourceTracker = false;
 
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
@@ -229,6 +231,7 @@ public class SimulationFacade implements AutoCloseable{
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
       if (driver != null) {
+        if (debug) System.out.println("SimulationFacade::pastSimulationRestarts (" + pastSimulationRestarts + ") += driver.getCountSimulationRestarts() (" + driver.getCountSimulationRestarts() + ") = " + (pastSimulationRestarts + driver.getCountSimulationRestarts()));
         this.pastSimulationRestarts += driver.getCountSimulationRestarts();
         driver.close();
       }
