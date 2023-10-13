@@ -157,6 +157,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       goal.alias = alias;
 
+      if(name==null){
+        goal.name = "CoexistenceGoal_forEach_"+forEach.prettyPrint()+"_thereExists_"+this.thereExists.type().getName();
+      }
+
       return goal;
     }
 

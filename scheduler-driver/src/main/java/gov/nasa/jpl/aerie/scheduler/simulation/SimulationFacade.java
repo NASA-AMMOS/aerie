@@ -164,6 +164,7 @@ public class SimulationFacade implements AutoCloseable{
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
   throws SimulationException
   {
+    logger.info("Need to compute simulation results until "+ endTime + " for getting child activities");
     var latestSimulationData = this.getLatestDriverSimulationResults();
     //if no initial sim results and no sim has been performed, perform a sim and get the sim results
     if(latestSimulationData.isEmpty()){
@@ -196,6 +197,9 @@ public class SimulationFacade implements AutoCloseable{
       final Collection<SchedulingActivityDirective> activitiesToRemove,
       final Collection<SchedulingActivityDirective> activitiesToAdd) throws SimulationException
   {
+    logger.debug("Removing("+activitiesToRemove.size()+")/Adding("+activitiesToAdd.size()+") activities from simulation");
+    activitiesToRemove.stream().forEach(remove -> logger.debug("Removing act starting at " + remove.startOffset()));
+    activitiesToAdd.stream().forEach(adding -> logger.debug("Adding act starting at " + adding.startOffset()));
     var atLeastOneActualRemoval = false;
     for(final var act: activitiesToRemove){
       if(insertedActivities.containsKey(act)){
@@ -217,10 +221,12 @@ public class SimulationFacade implements AutoCloseable{
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
+      logger.info("(Re)creating simulation driver because at least one removal("+atLeastOneActualRemoval+") or insertion in the past ("+earliestActStartTime+")");
       if (driver != null) {
         this.pastSimulationRestarts += driver.getCountSimulationRestarts();
         driver.close();
       }
+      logger.info("Number of simulation restarts so far: " + this.pastSimulationRestarts);
       driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
     }
     simulateActivities(allActivitiesToSimulate);

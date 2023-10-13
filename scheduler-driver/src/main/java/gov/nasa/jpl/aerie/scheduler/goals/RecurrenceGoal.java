@@ -91,6 +91,10 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       }
       goal.recurrenceInterval = every;
 
+      if(name==null){
+        goal.name = "RecurrenceGoal_one_"+this.thereExists.type().getName()+"_every_["+goal.recurrenceInterval.min+","+goal.recurrenceInterval.max+"]";
+      }
+
       return goal;
     }
 

@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -25,6 +28,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -172,17 +176,29 @@ public class GoalBuilder {
       final SchedulingDSL.ConstraintExpression constraintExpression) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
       return new ForEachActivitySpans(
-          ($, simResults, environment) -> {
-            final var startTime = $.interval.start;
-            if (!$.type.equals(c.type())) return false;
-            for (final var arg: c
-                .arguments()
-                .map(expr -> expr.evaluateMap(simResults, startTime, environment))
-                .orElse(Map.of())
-                .entrySet()) {
-              if (!arg.getValue().equals($.parameters.get(arg.getKey()))) return false;
+          new TriFunction<>() {
+            @Override
+            public Boolean apply(
+                final ActivityInstance activityInstance,
+                final SimulationResults simResults,
+                final EvaluationEnvironment environment)
+            {
+              final var startTime = activityInstance.interval.start;
+              if (!activityInstance.type.equals(c.type())) return false;
+              for (final var arg : c
+                  .arguments()
+                  .map(expr -> expr.evaluateMap(simResults, startTime, environment))
+                  .orElse(Map.of())
+                  .entrySet()) {
+                if (!arg.getValue().equals(activityInstance.parameters.get(arg.getKey()))) return false;
+              }
+              return true;
             }
-            return true;
+
+            @Override
+            public String toString() {
+              return "(filter by ActivityExpression)";
+            }
           },
           "alias" + c.type(),
           new ActivitySpan("alias" + c.type())
