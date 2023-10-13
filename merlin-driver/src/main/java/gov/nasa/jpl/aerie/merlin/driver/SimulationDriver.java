@@ -92,10 +92,10 @@ public final class SimulationDriver<Model> {
     startDaemons(curTime());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
-//    engine.scheduleTask(
-//        simDuration,
-//        executor -> $ -> TaskStatus.completed(Unit.UNIT),
-//        null); // TODO: skip this if rerunning? and end time is same?
+    engine.scheduleTask(
+        simDuration,
+        executor -> $ -> TaskStatus.completed(Unit.UNIT),
+        null); // TODO: skip this if rerunning? and end time is same?
   }
 
 
