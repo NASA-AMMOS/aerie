@@ -7,6 +7,7 @@ create table extension_roles (
   constraint extension_roles_to_extension
     foreign key (extension_id)
       references "extensions"
+      on update cascade
       on delete cascade
 );
 

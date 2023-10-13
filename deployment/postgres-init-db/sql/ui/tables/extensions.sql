@@ -1,12 +1,12 @@
 create table extensions (
-  description text,
   id integer generated always as identity,
+  description text,
   label text not null,
   owner text,
   url text not null,
   updated_at timestamptz not null default now(),
 
-  constraint extension_primary_key primary key (id)
+  constraint extensions_primary_key primary key (id)
 );
 
 comment on table extensions is e''
@@ -22,7 +22,7 @@ comment on column extensions.url is e''
 comment on column extensions.updated_at is e''
   'The time the extension was last updated.';
 
-create or replace function extensions_set_updated_at()
+create function extensions_set_updated_at()
 returns trigger
 language plpgsql as $$begin
   new.updated_at = now();
