@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
@@ -50,7 +49,7 @@ public class UncontrollableDurationTest {
   public void testNonLinear(){
 
     //duration should be 300 seconds trapezoidal
-    final var solarPanelActivityTrapezoidal = new ActivityCreationTemplate.Builder()
+    final var solarPanelActivityTrapezoidal = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("SolarPanelNonLinear"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .withArgument("theta_turn", SerializedValue.of(2.))
@@ -59,7 +58,7 @@ public class UncontrollableDurationTest {
         .build();
 
     //turn should be 89.44 secs and triangle shape
-    final var solarPanelActivityTriangle = new ActivityCreationTemplate.Builder()
+    final var solarPanelActivityTriangle = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("SolarPanelNonLinear"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .withArgument("theta_turn", SerializedValue.of(0.2))
@@ -102,7 +101,7 @@ public class UncontrollableDurationTest {
   @Test
   public void testTimeDependent(){
 
-    final var solarPanelActivityTrapezoidal = new ActivityCreationTemplate.Builder()
+    final var solarPanelActivityTrapezoidal = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("SolarPanelNonLinearTimeDependent"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .withArgument("command", SerializedValue.of(1.))
@@ -110,7 +109,7 @@ public class UncontrollableDurationTest {
         .withArgument("omega_max", SerializedValue.of(0.01))
         .build();
 
-    final var solarPanelActivityTriangle = new ActivityCreationTemplate.Builder()
+    final var solarPanelActivityTriangle = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("SolarPanelNonLinearTimeDependent"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .withArgument("command", SerializedValue.of(0.5))
@@ -158,7 +157,7 @@ public class UncontrollableDurationTest {
                                                                    Duration.of(1, Duration.MICROSECONDS),
                                                                    Duration.of(3, Duration.MICROSECONDS), null, true);
 
-    final var zeroDurationUncontrollableActivity = new ActivityCreationTemplate.Builder()
+    final var zeroDurationUncontrollableActivity = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("ZeroDurationUncontrollableActivity"))
         .withTimingPrecision(Duration.of(1, Duration.MICROSECONDS))
         .build();
@@ -192,7 +191,7 @@ public class UncontrollableDurationTest {
 
   @Test
   public void testScheduleExceptionThrowingTask(){
-    final var zeroDurationUncontrollableActivity = new ActivityCreationTemplate.Builder()
+    final var zeroDurationUncontrollableActivity = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("LateRiser"))
         .withTimingPrecision(Duration.of(1, Duration.MICROSECONDS))
         .build();

@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
@@ -64,7 +63,7 @@ public class TestUnsatisfiableCompositeGoals {
         .forEach(new ActivityExpression.Builder()
                      .ofType(A)
                      .build())
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(B)
                             .build())
         .startsAt(TimeAnchor.START)
@@ -236,9 +235,9 @@ public class TestUnsatisfiableCompositeGoals {
     CardinalityGoal unsatisfiableGoal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(21, Duration.SECONDS)))
         .occurences(new Range<>(10, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))

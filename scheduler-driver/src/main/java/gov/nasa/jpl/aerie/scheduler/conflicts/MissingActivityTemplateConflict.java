@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 
 import java.util.Optional;
@@ -28,7 +28,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
   public MissingActivityTemplateConflict(
       ActivityTemplateGoal goal,
       Windows temporalContext,
-      ActivityCreationTemplate template,
+      ActivityExpression template,
       EvaluationEnvironment evaluationEnvironment,
       int cardinality,
       Optional<Duration> totalDuration)
@@ -95,9 +95,9 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
   /**
    * The conflict can constraint the goal template to guide the search
    */
-  private final ActivityCreationTemplate template;
+  private final ActivityExpression template;
 
-  public ActivityCreationTemplate getActTemplate() {
+  public ActivityExpression getActTemplate() {
     return template;
   }
 }

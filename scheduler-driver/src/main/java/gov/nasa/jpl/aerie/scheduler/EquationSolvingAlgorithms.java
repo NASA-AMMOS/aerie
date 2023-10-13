@@ -32,7 +32,6 @@ public class EquationSolvingAlgorithms {
 
   public interface Function<T, History> {
     T valueAt(T x, History historyType);
-    boolean isApproximation();
   }
 
   public static class ZeroDerivativeException extends Exception{
@@ -88,11 +87,6 @@ public class EquationSolvingAlgorithms {
         @Override
         public Duration valueAt(final Duration x, final History history) {
           return f.valueAt(x, history).minus(y);
-        }
-
-        @Override
-        public boolean isApproximation() {
-          return f.isApproximation();
         }
       };
 

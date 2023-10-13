@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.*;
@@ -35,7 +35,7 @@ public class FixedDurationTest {
   @Test
   public void testFieldAnnotation(){
 
-    final var fixedDurationActivityTemplate = new ActivityCreationTemplate.Builder()
+    final var fixedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("BananaNap"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .build();
@@ -65,7 +65,7 @@ public class FixedDurationTest {
   @Test
   public void testMethodAnnotation(){
 
-    final var fixedDurationActivityTemplate = new ActivityCreationTemplate.Builder()
+    final var fixedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("RipenBanana"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .build();

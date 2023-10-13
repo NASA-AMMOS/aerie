@@ -174,7 +174,7 @@ public class PlanInMemory implements Plan {
     LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
-        if (template.matches(act, simulationResults, evaluationEnvironment)) {
+        if (template.matches(act, simulationResults, evaluationEnvironment, true)) {
           matched.add(act);
         }
       }

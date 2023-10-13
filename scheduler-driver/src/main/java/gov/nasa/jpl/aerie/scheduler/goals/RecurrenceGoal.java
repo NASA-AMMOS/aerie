@@ -113,7 +113,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     final var windows = tempWindowPlanHorizon.and(this.getTemporalContext().evaluate(simulationResults, evaluationEnvironment));
 
     //check repeat is larger than activity duration
-    if(this.getActTemplate().getType().getDurationType() instanceof DurationType.Fixed act){
+    if(this.getActTemplate().type().getDurationType() instanceof DurationType.Fixed act){
       boolean durActVSRec = act.duration().longerThan(this.recurrenceInterval.min);
       if(durActVSRec){
         throw new UnexpectedTemporalContextChangeException("The goal is unsatisfiable as its duration is longer than the repeat duration");
