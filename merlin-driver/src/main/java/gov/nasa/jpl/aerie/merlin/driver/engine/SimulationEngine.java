@@ -378,14 +378,23 @@ public final class SimulationEngine implements AutoCloseable {
   private TreeMap<Duration, List<EventGraph<Event>>> getCombinedEventsByTask(TaskId taskId) {
     var newEvents = this.timeline.eventsByTask.get(taskId);
     if (oldEngine == null) return newEvents;
-    var oldEvents = _oldEventsByTask.get(taskId);
-    if (oldEvents == null) {
-      oldEvents = this.oldEngine.getCombinedEventsByTask(taskId);
-      _oldEventsByTask.put(taskId, oldEvents);
+    SimulationEngine engine = this;
+    TreeMap<Duration, List<EventGraph<Event>>> oldEvents = null;
+    while (oldEvents == null && engine != null) {
+      oldEvents = engine._oldEventsByTask.get(taskId);
+      engine = engine.oldEngine;
+    }
+    if (oldEvents != null) {
+      this._oldEventsByTask.put(taskId, oldEvents);
     }
     return TemporalEventSource.mergeMapsFirstWins(newEvents, oldEvents);
   }
   private HashMap<TaskId, TreeMap<Duration, List<EventGraph<Event>>>> _oldEventsByTask = new HashMap<>();
+
+
+  // TODO -- make recursive calls here non-recursive (like in getCombinedEventsByTask()),
+  // TODO -- including getSimulatedActivityIdForTaskId(), setCurTime(), and CombinedSimulationResults
+
 
   private SimulatedActivityId getSimulatedActivityIdForTaskId(TaskId taskId) {
     var simId = taskToSimulatedActivityId == null ? null : taskToSimulatedActivityId.get(taskId.id());
