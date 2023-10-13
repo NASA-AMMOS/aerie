@@ -24,7 +24,6 @@ comment on column extensions.updated_at is e''
 
 create or replace function extensions_set_updated_at()
   returns trigger
-  security definer
   language plpgsql as $$begin
   new.updated_at = now();
   return new;
