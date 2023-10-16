@@ -12,9 +12,13 @@ import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
+import gov.nasa.jpl.aerie.json.JsonObjectParser;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -346,6 +350,30 @@ public final class ConstraintParsers {
   static final JsonParser<Expression<Duration>> durationExprP =
       chooseP(intervalDurationP, durationLiteralP);
 
+  static <T> JsonParser<Pair<Optional<T>, Optional<T>>> optionalRangeF(JsonParser<T> boundP) {
+    return productP
+        .optionalField("min", boundP)
+        .optionalField("max", boundP);
+  }
+
+  static JsonObjectParser<SpansContains> spansContainsF(JsonParser<Expression<Spans>> spansExpressionP) {
+    final JsonParser<SpansContains.Requirement> requirementP = productP
+        .field("count", optionalRangeF(intP))
+        .field("duration", optionalRangeF(durationExprP))
+        .map(
+            untuple((count, duration) -> new SpansContains.Requirement(count.getLeft(), count.getRight(), duration.getLeft(), duration.getRight())),
+            $ -> tuple(Pair.of($.minCount(), $.maxCount()), Pair.of($.minDur(), $.maxDur()))
+        );
+    return productP
+        .field("kind", literalP("SpansExpressionContains"))
+        .field("parents", spansExpressionP)
+        .field("children", spansExpressionP)
+        .field("requirement", requirementP)
+        .map(
+            untuple((kind, parents, children, requirement) -> new SpansContains(parents, children, requirement)),
+            $ -> tuple(Unit.UNIT, $.parents(), $.children(), $.requirement()));
+  }
+
   static final JsonParser<WindowsValue> windowsValueP =
       productP
           .field("kind", literalP("WindowsExpressionValue"))
@@ -590,7 +618,8 @@ public final class ConstraintParsers {
         activityWindowP,
         assignGapsF(selfP),
         shiftByF(selfP),
-        keepTrueSegmentP(selfP)
+        keepTrueSegmentP(selfP),
+        spansContainsF(spansP)
     ));
   }
 
