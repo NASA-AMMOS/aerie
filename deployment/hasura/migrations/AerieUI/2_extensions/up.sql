@@ -35,16 +35,11 @@ create trigger extensions_set_timestamp
 execute function extensions_set_updated_at();
 
 create table extension_roles (
-  id integer generated always as identity,
-  extension_id  integer not null,
+  extension_id integer not null references extensions(id)
+    on update cascade
+    on delete cascade,
   role text not null,
-
-  constraint extension_roles_primary_key primary key (id),
-  constraint extension_roles_to_extension
-    foreign key (extension_id)
-      references "extensions"
-      on update cascade
-      on delete cascade
+  primary key(extension_id, role)
 );
 
 comment on table extension_roles is e''
