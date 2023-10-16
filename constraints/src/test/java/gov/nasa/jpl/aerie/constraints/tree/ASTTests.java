@@ -1451,6 +1451,109 @@ public class ASTTests {
     assertEquivalent(expected.set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false), result3);
   }
 
+  @Test
+  public void testSpansCoexistence() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var parents = new Spans(
+      interval(0, 3, SECONDS), // has no children inside it
+      interval(6, 9, SECONDS), // has one child of duration 3
+      interval(12, 15, SECONDS), // has two children, total duration 2
+      interval(16, 19, SECONDS) // has one partially-contained child, intersection duration 3
+    );
+
+    final var children = new Spans(
+        interval(6, 9, SECONDS),
+        interval(12, 13, SECONDS),
+        interval(14, 15, SECONDS),
+        interval(16, 20, SECONDS)
+    );
+
+    final var count1Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.of(1),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()
+        )))
+            .evaluate(simResults);
+    final var count1Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(0, 3, SECONDS), false)
+        .set(interval(16, 19, SECONDS), false);
+    assertIterableEquals(count1Expected, count1Result);
+
+    final var count2Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.of(2),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()
+        )))
+            .evaluate(simResults);
+    final var count2Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(0, 3, SECONDS), false)
+        .set(interval(6, 9, SECONDS), false)
+        .set(interval(16, 19, SECONDS), false);
+    assertIterableEquals(count2Expected, count2Result);
+
+    final var count3Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.empty(),
+            Optional.of(1),
+            Optional.empty(),
+            Optional.empty()
+        )))
+            .evaluate(simResults);
+    final var count3Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(12, 15, SECONDS), false);
+    assertIterableEquals(count3Expected, count3Result);
+
+    final var duration1Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(Supplier.of(Duration.of(3, SECONDS))),
+            Optional.empty()
+        )))
+            .evaluate(simResults);
+    final var duration1Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(0, 3, SECONDS), false)
+        .set(interval(12, 15, SECONDS), false);
+    assertIterableEquals(duration1Expected, duration1Result);
+
+    final var duration2Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(Supplier.of(Duration.of(2500, MILLISECOND)))
+        )))
+            .evaluate(simResults);
+    final var duration2Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(6, 9, SECONDS), false)
+        .set(interval(16, 19, SECONDS), false);
+    assertIterableEquals(duration2Expected, duration2Result);
+
+    final var combinedResult =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.of(1),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(Supplier.of(Duration.of(2, SECONDS)))
+        )))
+            .evaluate(simResults);
+    final var combinedExpected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(0, 3, SECONDS), false)
+        .set(interval(6, 9, SECONDS), false)
+        .set(interval(16, 19, SECONDS), false);
+    assertIterableEquals(combinedExpected, combinedResult);
+  }
+
   /**
    * An expression that yields the same aliased object every time it is evaluated.
    */
