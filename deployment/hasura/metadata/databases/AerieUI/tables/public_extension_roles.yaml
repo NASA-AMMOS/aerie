@@ -29,7 +29,7 @@ insert_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [extension_id, role]
+      columns: [role]
       filter: {}
 delete_permissions:
   - role: aerie_admin
