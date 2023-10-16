@@ -132,8 +132,8 @@ public final class Resolver {
 
     // Satisfy the subgoals of the rule
     final var dependencies = new ArrayList<CodeBlock>(rule.parameters().size());
-    if (rule.label().isPresent()) {
-      dependencies.add(CodeBlock.of("$S", rule.label().get()));
+    if (rule.name().isPresent()) {
+      dependencies.add(CodeBlock.of("$S", rule.name().get()));
     }
     for (final var parameter : rule.parameters()) {
       if (parameter instanceof ClassPattern p && annotationValues.containsKey(p.name())) {

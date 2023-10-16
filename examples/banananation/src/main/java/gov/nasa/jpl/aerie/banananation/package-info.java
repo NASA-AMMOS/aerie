@@ -1,6 +1,7 @@
 @MissionModel(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
+@WithMappers(CustomValueMappers.class)
 
 @WithConfiguration(Configuration.class)
 

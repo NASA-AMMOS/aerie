@@ -11,13 +11,17 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.RecordComponentElement;
@@ -27,10 +31,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class AutoValueMappers {
-  static TypeRule typeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
+  static TypeRule recordTypeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
     if (!autoValueMapperElement.getKind().equals(ElementKind.RECORD)) {
       throw new InvalidMissionModelException(
           "@%s.%s is only allowed on records".formatted(
@@ -61,7 +66,37 @@ public class AutoValueMappers {
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
   }
 
-  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<? extends Element> recordTypes) {
+  static TypeRule annotationTypeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
+    if (!autoValueMapperElement.getKind().equals(ElementKind.ANNOTATION_TYPE)) {
+      throw new InvalidMissionModelException(
+          "@%s.%s is only allowed on annotations".formatted(
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.Annotation.class.getSimpleName()),
+          autoValueMapperElement);
+    }
+
+    final var typeMirrors = new HashSet<TypeMirror>();
+    for (final var enclosedElement : autoValueMapperElement.getEnclosedElements()) {
+      if (!(enclosedElement.getKind() == ElementKind.METHOD)) continue;
+      typeMirrors.add(((ExecutableElement) enclosedElement).getReturnType());
+    }
+
+    return new TypeRule(
+        new TypePattern.ClassPattern(
+            ClassName.get(ValueMapper.class),
+            List.of(TypePattern.from(autoValueMapperElement.asType()))),
+        Set.of(),
+        typeMirrors
+            .stream()
+            .map(component -> (TypePattern) new TypePattern.ClassPattern(
+                ClassName.get(ValueMapper.class),
+                List.of(TypePattern.from(component).box())))
+            .toList(),
+        generatedClassName,
+        ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
+  }
+
+  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<? extends Element> recordTypes, final Iterable<? extends Element> annotationTypes) {
     final var typeName = missionModel.getAutoValueMappersName();
 
     final var builder =
@@ -143,6 +178,128 @@ public class AutoValueMappers {
                               .toList(),
                           ",\n"))
                       .add("$<)$<);")
+                      .build())
+              .build());
+    }
+
+    record Property(String name, TypeMirror type, String mapperName) {}
+    for (final var annotation : annotationTypes) {
+      final var methodName = ClassName.get((TypeElement) annotation).canonicalName().replace(".", "_");
+      final var properties = new ArrayList<Property>();
+      final var necessaryMappers = new HashMap<TypeMirror, String>();
+      for (final var element : annotation.getEnclosedElements()) {
+        if (!(element.getKind() == ElementKind.METHOD)) continue;
+        final var typeMirror = ((ExecutableElement) element).getReturnType();
+        final var elementName = element.toString().replace("(", "").replace(")", "");
+        final var valueMapperIdentifier = getIdentifier(typeMirror.toString()) + "ValueMapper";
+        properties.add(new Property(elementName, typeMirror, valueMapperIdentifier));
+        necessaryMappers.put(typeMirror, valueMapperIdentifier);
+      }
+
+      builder.addMethod(
+          MethodSpec
+              .methodBuilder(methodName)
+              .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+              .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(annotation.asType())))
+              .addParameters(
+                  necessaryMappers
+                      .entrySet()
+                      .stream()
+                      .map(mapperRequest -> ParameterSpec
+                          .builder(
+                              ParameterizedTypeName.get(
+                                  ClassName.get(ValueMapper.class),
+                                  ClassName.get(mapperRequest.getKey()).box()),
+                              mapperRequest.getValue(),
+                              Modifier.FINAL)
+                          .build())
+                      .toList())
+              .addCode(
+                  CodeBlock
+                      .builder()
+                      .add("return $L;\n",
+                           TypeSpec
+                               .anonymousClassBuilder(CodeBlock.of(""))
+                               .addSuperinterface(
+                                   ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(annotation.asType())))
+                               .addMethod(
+                                   MethodSpec
+                                       .methodBuilder("getValueSchema")
+                                       .addModifiers(Modifier.PUBLIC)
+                                       .returns(ValueSchema.class)
+                                       .addStatement("final var schema = new $T<$T, $T>()", HashMap.class, String.class, ValueSchema.class)
+                                       .addCode(
+                                           properties
+                                               .stream()
+                                               .map($ -> CodeBlock.builder().addStatement("schema.put($S, $L.getValueSchema())", $.name, $.mapperName))
+                                               .reduce((x, y) -> x.add("$L", y.build()))
+                                               .orElse(CodeBlock.builder())
+                                               .build())
+                                       .addStatement("return $T.ofStruct(schema)", ValueSchema.class)
+                                       .build())
+                               .addMethod(
+                                   MethodSpec
+                                       .methodBuilder("deserializeValue")
+                                       .addModifiers(Modifier.PUBLIC)
+                                       .addParameter(SerializedValue.class, "value")
+                                       .returns(
+                                           ParameterizedTypeName.get(
+                                               ClassName.get(Result.class),
+                                               TypeName.get(annotation.asType()),
+                                               ClassName.get(String.class)))
+                                       .addStatement(
+                                           "return $T.success($L)",
+                                           Result.class,
+                                           TypeSpec
+                                               .anonymousClassBuilder("")
+                                               .addSuperinterface(annotation.asType())
+                                               .addMethod(
+                                                   MethodSpec
+                                                       .methodBuilder("annotationType")
+                                                       .addModifiers(Modifier.PUBLIC)
+                                                       .addAnnotation(Override.class)
+                                                       .returns(ParameterizedTypeName.get(
+                                                           ClassName.get(Class.class),
+                                                           TypeName.get(annotation.asType())))
+                                                       .addStatement("return $T.class", annotation.asType())
+                                                       .build())
+                                               .addMethods(
+                                                   properties
+                                                       .stream()
+                                                       .map($ ->
+                                                         MethodSpec
+                                                             .methodBuilder($.name)
+                                                             .addModifiers(Modifier.PUBLIC)
+                                                             .addAnnotation(Override.class)
+                                                             .returns(TypeName.get($.type))
+                                                             .addStatement(
+                                                                 "return $L.deserializeValue($L.asMap().get().get($S)).getSuccessOrThrow()",
+                                                                 $.mapperName,
+                                                                 "value",
+                                                                  $.name)
+                                                             .build())
+                                                       .toList())
+                                               .build())
+                                       .build())
+                               .addMethod(
+                                   MethodSpec
+                                       .methodBuilder("serializeValue")
+                                       .addModifiers(Modifier.PUBLIC)
+                                       .addParameter(ClassName.get(annotation.asType()), "value")
+                                       .returns(SerializedValue.class)
+                                       .addStatement(
+                                           "return $T.of($T.of($L))",
+                                           SerializedValue.class,
+                                           Map.class,
+                                           String.join(
+                                               ",",
+                                               properties
+                                                   .stream()
+                                                   .map($ -> CodeBlock.of("$S, $L.serializeValue($L.$L())", $.name, $.mapperName, "value", $.name).toString())
+                                                   .toList())
+                                           )
+                                       .build())
+                               .build())
                       .build())
               .build());
     }
