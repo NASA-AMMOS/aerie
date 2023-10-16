@@ -25,21 +25,21 @@ public record SpansConnectTo(Expression<Spans> from, Expression<Spans> to) imple
         toIndex++;
       }
       final Duration endTime;
-      final Interval.Inclusivity endInlusivity;
+      final Interval.Inclusivity endInclusivity;
       if (toIndex == sortedTo.size()) {
         endTime = bounds.end;
-        endInlusivity = bounds.endInclusivity;
+        endInclusivity = bounds.endInclusivity;
       }
       else {
         endTime = sortedTo.get(toIndex).interval().start;
-        endInlusivity = Interval.Inclusivity.Inclusive;
+        endInclusivity = Interval.Inclusivity.Inclusive;
       }
       result.add(
           Interval.between(
               startTime,
               Interval.Inclusivity.Inclusive,
               endTime,
-              endInlusivity
+              endInclusivity
           ),
           span.value()
       );
