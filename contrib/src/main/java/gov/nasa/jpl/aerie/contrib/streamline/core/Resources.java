@@ -43,8 +43,16 @@ public final class Resources {
     return resource.getDynamics().getOrThrow().data();
   }
 
+  public static <D> D currentData(Resource<D> resource, D dynamicsIfError) {
+    return resource.getDynamics().match(Expiring::data, error -> dynamicsIfError);
+  }
+
   public static <V, D extends Dynamics<V, D>> V currentValue(Resource<D> resource) {
     return currentData(resource).extract();
+  }
+
+  public static <V, D extends Dynamics<V, D>> V currentValue(Resource<D> resource, V valueIfError) {
+    return resource.getDynamics().match(result -> result.data().extract(), error -> valueIfError);
   }
 
   public static <D extends Dynamics<?, D>> Condition dynamicsChange(Resource<D> resource) {

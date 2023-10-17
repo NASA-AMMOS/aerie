@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
 import java.util.Objects;
 
 public final class Unit {
+  public static final Unit SCALAR = new Unit(Dimension.SCALAR, 1, "(scalar)", "(scalar)");
+
   public final Dimension dimension;
   public final double multiplier;
   public final String longName;

@@ -42,8 +42,14 @@ public final class Reactions {
   }
 
   public static void every(Duration period, Runnable action) {
-    delay(period);
-    action.run();
-    spawn(replaying(() -> every(period, action)));
+    every(() -> period, action);
+  }
+
+  public static void every(Supplier<Duration> periodSupplier, Runnable action) {
+    spawn(replaying(() -> {
+      delay(periodSupplier.get());
+      action.run();
+      every(periodSupplier, action);
+    }));
   }
 }

@@ -59,4 +59,8 @@ public final class UnitAwareResources {
   public static <D extends Dynamics<Double, D>> UnitAware<Double> currentValue(UnitAware<Resource<D>> resource) {
     return quantity(Resources.currentValue(resource.value()), resource.unit());
   }
+
+  public static <D extends Dynamics<?, D>> UnitAware<Resource<D>> cache(UnitAware<Resource<D>> resource) {
+    return resource.map(Resources::cache);
+  }
 }

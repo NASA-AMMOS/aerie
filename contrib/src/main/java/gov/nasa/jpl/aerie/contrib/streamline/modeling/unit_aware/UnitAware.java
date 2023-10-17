@@ -1,8 +1,12 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
 
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
+import static java.util.function.Function.identity;
 
 public interface UnitAware<T> {
 
@@ -15,6 +19,8 @@ public interface UnitAware<T> {
   Unit unit();
 
   UnitAware<T> in(Unit desiredUnit);
+
+  UnitAware<T> map(UnaryOperator<T> unitInvariantFunction);
 
   /**
    * General constructor, used primarily by library code.
@@ -47,6 +53,11 @@ public interface UnitAware<T> {
       }
 
       @Override
+      public UnitAware<T> map(final UnaryOperator<T> unitInvariantFunction) {
+        return unitAware(unitInvariantFunction.apply(value), unit, rescale);
+      }
+
+      @Override
       public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
@@ -74,5 +85,9 @@ public interface UnitAware<T> {
         value,
         unit,
         desiredUnit -> unitAware(scaling.apply(value, unit.multiplier / desiredUnit.multiplier), desiredUnit, scaling));
+  }
+
+  static <T extends Comparable<T>> Comparator<UnitAware<T>> comparator() {
+    return Comparator.comparing(identity(), (p, q) -> p.value().compareTo(q.value(p.unit())));
   }
 }

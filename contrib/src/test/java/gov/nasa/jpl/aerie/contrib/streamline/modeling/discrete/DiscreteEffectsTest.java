@@ -75,19 +75,19 @@ class DiscreteEffectsTest {
 
   @Test
   void flag_set_makes_value_true() {
-    set(flag);
+    turnOn(flag);
     assertTrue(currentValue(flag));
   }
 
   @Test
   void flag_unset_makes_value_false() {
-    unset(flag);
+    turnOff(flag);
     assertFalse(currentValue(flag));
   }
 
   @Test
   void flag_toggle_changes_value() {
-    set(flag);
+    turnOn(flag);
     toggle(flag);
     assertFalse(currentValue(flag));
 

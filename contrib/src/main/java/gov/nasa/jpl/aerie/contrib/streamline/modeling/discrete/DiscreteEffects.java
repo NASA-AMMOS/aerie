@@ -3,6 +3,11 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
 
 public final class DiscreteEffects {
@@ -16,16 +21,16 @@ public final class DiscreteEffects {
 
   // Flag/Switch style operations
 
-  public static void set(CellResource<Discrete<Boolean>> resource) {
+  public static void turnOn(CellResource<Discrete<Boolean>> resource) {
     set(resource, true);
   }
 
-  public static void unset(CellResource<Discrete<Boolean>> resource) {
+  public static void turnOff(CellResource<Discrete<Boolean>> resource) {
     set(resource, false);
   }
 
   public static void toggle(CellResource<Discrete<Boolean>> resource) {
-    resource.emit(effect(x -> !x));
+    resource.emit("Toggle", effect(x -> !x));
   }
 
   // Counter style operations
@@ -35,7 +40,7 @@ public final class DiscreteEffects {
   }
 
   public static void increment(CellResource<Discrete<Integer>> resource, int amount) {
-    resource.emit(effect(x -> x + amount));
+    resource.emit("Increment by " + amount, effect(x -> x + amount));
   }
 
   public static void decrement(CellResource<Discrete<Integer>> resource) {
@@ -43,17 +48,43 @@ public final class DiscreteEffects {
   }
 
   public static void decrement(CellResource<Discrete<Integer>> resource, int amount) {
-    resource.emit(effect(x -> x - amount));
+    resource.emit("Decrement by " + amount, effect(x -> x - amount));
+  }
+
+  // Queue style operations, mirroring the Queue interface
+
+  public static <T> void add(CellResource<Discrete<List<T>>> resource, T element) {
+    resource.emit("Add %s to queue".formatted(element), effect(q -> {
+      var q$ = new LinkedList<>(q);
+      q$.add(element);
+      return q$;
+    }));
+  }
+
+  public static <T> Optional<T> remove(CellResource<Discrete<List<T>>> resource) {
+    final var currentQueue = currentValue(resource);
+    if (currentQueue.isEmpty()) return Optional.empty();
+
+    final T result = currentQueue.get(currentQueue.size() - 1);
+    resource.emit("Remove %s from queue".formatted(result), effect(q -> {
+      var q$ = new LinkedList<>(q);
+      T purportedResult = q$.removeLast();
+      if (!result.equals(purportedResult)) {
+        throw new IllegalStateException("Detected effect conflicting with queue remove operation");
+      }
+      return q$;
+    }));
+    return Optional.of(result);
   }
 
   // Consumable style operations
 
   public static void consume(CellResource<Discrete<Double>> resource, double amount) {
-    resource.emit(effect(x -> x - amount));
+    resource.emit("Consume " + amount, effect(x -> x - amount));
   }
 
   public static void restore(CellResource<Discrete<Double>> resource, double amount) {
-    resource.emit(effect(x -> x + amount));
+    resource.emit("Restore " + amount, effect(x -> x + amount));
   }
 
   // Non-consumable style operations

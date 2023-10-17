@@ -2,15 +2,11 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.allocate;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.success;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.signalling;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.not;
@@ -25,7 +21,7 @@ public final class ClockResources {
   }
 
   public static Resource<Discrete<Boolean>> lessThan(Resource<Clock> clock, Duration threshold) {
-    return bind(clock, (Clock c) -> {
+    return bind(clock, c -> {
       final Duration crossoverTime = threshold.minus(c.extract());
       return ExpiringToResourceMonad.unit(
           crossoverTime.isPositive()

@@ -19,10 +19,18 @@ public final class StandardUnits {
   public static final Unit MILLISECOND = Unit.derived("ms", "millisecond", 1e-3, SECOND);
   public static final Unit MINUTE = Unit.derived("min", "minute", 60, SECOND);
   public static final Unit HOUR = Unit.derived("hr", "hour", 60, MINUTE);
+  public static final Unit KILOMETER = Unit.derived("km", "kilometer", 1000, METER);
   public static final Unit BYTE = Unit.derived("B", "byte", 8, BIT);
   public static final Unit NEWTON = Unit.derived("N", "newton", KILOGRAM.multiply(METER).divide(SECOND.power(2)));
   public static final Unit MEGABIT_PER_SECOND = Unit.derived("Mbps", "megabit per second", 1e6, BIT.divide(SECOND));
+  public static final Unit DEGREE = Unit.derived("deg", "degree", 180 / Math.PI, RADIAN);
 
   public static final Unit JOULE = Unit.derived("J", "joule", NEWTON.multiply(METER));
   public static final Unit WATT = Unit.derived("W", "watt", JOULE.divide(SECOND));
+
+  /**
+   * Astronomical unit as defined by
+   * <a href="https://www.iau.org/static/resolutions/IAU2012_English.pdf">IAU 2012 Resolution B2</a>.
+   */
+  public static final Unit ASTRONOMICAL_UNIT = Unit.derived("au", "astronomical unit", 149_597_870_700.0, METER);
 }

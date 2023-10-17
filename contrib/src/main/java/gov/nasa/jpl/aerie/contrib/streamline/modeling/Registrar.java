@@ -22,9 +22,12 @@ import java.util.Set;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Tracing.trace;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static java.util.stream.Collectors.joining;
 
 public class Registrar {
@@ -66,7 +69,7 @@ public class Registrar {
     var registeredResource = trace ? trace(name, resource) : resource;
     baseRegistrar.discrete(
         name,
-        () -> registeredResource.getDynamics().match(v -> v.data().extract(), e -> null),
+        () -> currentValue(registeredResource, null),
         new NullableValueMapper<>(mapper));
     logErrors(name, registeredResource);
   }
@@ -74,9 +77,10 @@ public class Registrar {
   public void real(final String name, final Resource<Linear> resource) {
     resource.registerName(name);
     var registeredResource = trace ? trace(name, resource) : resource;
-    baseRegistrar.real(name, () -> registeredResource.getDynamics().match(
-        v -> RealDynamics.linear(v.data().extract(), v.data().rate()),
-        e -> RealDynamics.constant(0)));
+    baseRegistrar.real(name, () -> {
+      var linear = currentData(registeredResource, linear(0, 0));
+      return RealDynamics.linear(linear.extract(), linear.rate());
+    });
     logErrors(name, registeredResource);
   }
 
@@ -95,23 +99,6 @@ public class Registrar {
           var affectedResources$ = new HashSet<>(affectedResources);
           affectedResources$.add(resourceName);
           return affectedResources$;
-        }
-      });
-      return s$;
-    }));
-    return Unit.UNIT;
-  }
-
-  private Unit removeError(String resourceName, Throwable e) {
-    errors.emit(effect(s -> {
-      var s$ = new HashMap<>(s);
-      s$.compute(e, (e$, affectedResources) -> {
-        if (affectedResources == null) {
-          return null;
-        } else {
-          var affectedResources$ = new HashSet<>(affectedResources);
-          affectedResources$.remove(resourceName);
-          return affectedResources$.isEmpty() ? null : affectedResources$;
         }
       });
       return s$;

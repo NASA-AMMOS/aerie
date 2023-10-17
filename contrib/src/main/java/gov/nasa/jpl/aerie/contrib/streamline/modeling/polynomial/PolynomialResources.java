@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.Unit;
@@ -13,9 +15,15 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAwareOperat
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAwareResources;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
@@ -25,6 +33,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.ef
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.unit;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAwareResources.extend;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
@@ -45,8 +54,64 @@ public final class PolynomialResources {
     return ResourceMonad.map(discrete, d -> polynomial(d.extract()));
   }
 
-  public static UnitAware<Resource<Polynomial>> asPolynomial(UnitAware<Resource<Discrete<Double>>> discrete) {
+  public static UnitAware<Resource<Polynomial>> asUnitAwarePolynomial(UnitAware<Resource<Discrete<Double>>> discrete) {
     return unitAware(asPolynomial(discrete.value()), discrete.unit());
+  }
+
+  public static UnitAware<Resource<Polynomial>> asUnitAwarePolynomial(Resource<Discrete<UnitAware<Double>>> discrete) {
+    var unit = currentValue(discrete).unit();
+    return unitAware(asPolynomial(DiscreteResourceMonad.map(discrete, q -> q.value(unit))), unit);
+  }
+
+  /**
+   * Returns a continuous resource that follows a precomputed sequence of values.
+   * Before the first key in segments, value is the first entry in segments.
+   * Between keys in segments, a linear interpolation between the two adjacent entries is used.
+   * After the last key in segments, value is the last entry in segments.
+   */
+  public static Resource<Polynomial> precomputed(final NavigableMap<Duration, Double> segments) {
+    if (segments.isEmpty()) {
+      throw new IllegalArgumentException("Segments map must have at least one segment");
+    }
+    var clock = clock();
+    return ResourceMonad.bind(clock, clock$ -> {
+      var t = clock$.extract();
+      var start = segments.floorEntry(t);
+      var end = segments.higherEntry(t);
+      Expiring<Polynomial> result;
+      if (end == null) {
+        result = neverExpiring(polynomial(start.getValue()));
+      } else if (start == null) {
+        result = expiring(polynomial(end.getValue()), end.getKey().minus(t));
+      } else {
+        // interpolate between start and end
+        var startTime = start.getKey();
+        var endTime = end.getKey();
+        var slope = (end.getValue() - start.getValue()) / endTime.minus(startTime).ratioOver(SECOND);
+        var data = polynomial(start.getValue(), slope).step(t.minus(startTime));
+        result = expiring(data, endTime.minus(t));
+      }
+      return ExpiringToResourceMonad.unit(result);
+    });
+  }
+
+  /**
+   * Returns a continuous resource that follows a precomputed sequence of values.
+   * Before the first key in segments, value is valueBeforeFirstEntry.
+   * Between keys in segments, a linear interpolation between the two adjacent entries is used.
+   * After the last key in segments, value is the last entry in segments.
+   */
+  public static Resource<Polynomial> precomputed(
+      final NavigableMap<Instant, Double> segments, final Instant simulationStartTime) {
+    var segmentsUsingDurationKeys = new TreeMap<Duration, Double>();
+    for (var entry : segments.entrySet()) {
+      segmentsUsingDurationKeys.put(
+          Duration.of(
+              ChronoUnit.MICROS.between(simulationStartTime, entry.getKey()),
+              Duration.MICROSECONDS),
+          entry.getValue());
+    }
+    return precomputed(segmentsUsingDurationKeys);
   }
 
   @SafeVarargs

@@ -8,14 +8,19 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.toggle;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.using;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialEffects.consume;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.asPolynomial;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.asUnitAwarePolynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.clamp;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.constant;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.integrate;
@@ -81,7 +86,7 @@ public final class Demo {
   UnitAware<CellResource<Discrete<Double>>> power = DiscreteResources.unitAware(
       cellResource(discrete(120.0)), WATT);
 
-  UnitAware<Resource<Polynomial>> batterySOC = integrate(asPolynomial(simplify(power)), quantity(100, JOULE));
+  UnitAware<Resource<Polynomial>> batterySOC = integrate(asUnitAwarePolynomial(simplify(power)), quantity(100, JOULE));
   UnitAware<Resource<Discrete<Double>>> clampedPower = DiscreteResources.unitAware(map(power.value(WATT), p -> p < 0 ? 0 : p), WATT);
   UnitAware<Resource<Discrete<Double>>> clampedPower_v2 = /* map(power, p -> lessThan(p, quantity(0, WATT)) ? quantity(0, WATT) : p) */
       null;
@@ -99,6 +104,26 @@ public final class Demo {
       set(enumSwitch, OnOff.OFF);
       toggle(boolSwitch);
     });
+  }
+
+
+  // Example of a locking state:
+
+  CellResource<Discrete<Integer>> importantHardware = cellResource(discrete(42));
+  CellResource<Discrete<Optional<Integer>>> importantHardwareLock = cellResource(discrete(Optional.empty()));
+  Resource<Discrete<Boolean>> importantHardwareLockAssertion = assertThat(
+      "Important hardware does not change state while locked",
+      map(importantHardwareLock, importantHardware, (lock, state) -> lock.map(state::equals).orElse(true)));
+  void lockImportantHardware() {
+    if (currentValue(importantHardwareLock).isPresent()) {
+      throw new IllegalStateException("Already locked!");
+    } else {
+      set(importantHardwareLock, Optional.of(currentValue(importantHardware)));
+    }
+  }
+
+  void unlockImportantHardware() {
+    set(importantHardwareLock, Optional.empty());
   }
 
   public enum OnOff { ON, OFF }
