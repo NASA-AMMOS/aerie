@@ -1474,6 +1474,7 @@ public class ASTTests {
         interval(16, 20, SECONDS)
     );
 
+    // require min count 1
     final var count1Result =
         (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
             Optional.of(1),
@@ -1487,6 +1488,7 @@ public class ASTTests {
         .set(interval(16, 19, SECONDS), false);
     assertIterableEquals(count1Expected, count1Result);
 
+    // require min count 2
     final var count2Result =
         (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
             Optional.of(2),
@@ -1501,6 +1503,7 @@ public class ASTTests {
         .set(interval(16, 19, SECONDS), false);
     assertIterableEquals(count2Expected, count2Result);
 
+    // require max count 1
     final var count3Result =
         (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
             Optional.empty(),
@@ -1513,6 +1516,7 @@ public class ASTTests {
         .set(interval(12, 15, SECONDS), false);
     assertIterableEquals(count3Expected, count3Result);
 
+    // require min duration 3s
     final var duration1Result =
         (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
             Optional.empty(),
@@ -1526,6 +1530,7 @@ public class ASTTests {
         .set(interval(12, 15, SECONDS), false);
     assertIterableEquals(duration1Expected, duration1Result);
 
+    // require max duration 2.5s
     final var duration2Result =
         (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
             Optional.empty(),
@@ -1539,6 +1544,7 @@ public class ASTTests {
         .set(interval(16, 19, SECONDS), false);
     assertIterableEquals(duration2Expected, duration2Result);
 
+    // require min count 1 and max duration 2s
     final var combinedResult =
         (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
             Optional.of(1),

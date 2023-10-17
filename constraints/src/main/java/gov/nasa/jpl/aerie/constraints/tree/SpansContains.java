@@ -37,7 +37,7 @@ public record SpansContains(Expression<Spans> parents, Expression<Spans> childre
     final var children = this.children.evaluate(results, bounds, environment);
     var falseIntervals = new ArrayList<Interval>();
 
-
+    // Check for count requirements if they exist
     if (this.requirement.minCount.isPresent() || this.requirement.maxCount.isPresent()) {
       final var sortedParents = StreamSupport.stream(parents.spliterator(), true).sorted((l, r) -> l
           .interval()
@@ -70,6 +70,8 @@ public record SpansContains(Expression<Spans> parents, Expression<Spans> childre
         }
       }
     }
+
+    // Check for duration requirements if they exist.
     if (this.requirement.minDur().isPresent() || this.requirement.maxDur.isPresent()) {
       final var accumulatedDuration = children.accumulatedDuration(Duration.MICROSECOND);
       final Optional<Long> minDur;
