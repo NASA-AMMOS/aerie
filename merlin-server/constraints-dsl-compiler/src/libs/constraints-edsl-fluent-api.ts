@@ -612,7 +612,7 @@ export class Spans {
    * Both `min` and `max` can be provided at the same time (e.g. `{count: {min: 1, max: 3}}`.
    *
    * There is no option to require an exact duration, because the implementation uses floating point comparison.
-   * If you need an exact duration, you can approximate it by using a small around around the desired value.
+   * If you need an exact duration, you can approximate it by using a small range around the desired value.
    *
    * @param children child spans to check the existence of.
    * @param requirement what to check for in each parent span.
@@ -1540,7 +1540,7 @@ declare global {
      * Both `min` and `max` can be provided at the same time (e.g. `{count: {min: 1, max: 3}}`.
      *
      * There is no option to require an exact duration, because the implementation uses floating point comparison.
-     * If you need an exact duration, you can approximate it by using a small around around the desired value.
+     * If you need an exact duration, you can approximate it by using a small range around the desired value.
      *
      * @param children child spans to check the existence of.
      * @param requirement what to check for in each parent span.
