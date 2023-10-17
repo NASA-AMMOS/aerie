@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.e2e.types;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,28 +18,34 @@ public sealed interface ValueSchema {
   ValueSchemaString VALUE_SCHEMA_STRING = new ValueSchemaString();
 
   static ValueSchema fromJSON(JsonObject json) {
-    switch (json.getString("type")) {
-      case "boolean" -> {return VALUE_SCHEMA_BOOLEAN;}
-      case "duration" -> {return VALUE_SCHEMA_DURATION;}
-      case "int" -> {return VALUE_SCHEMA_INT;}
-      case "path" -> {return VALUE_SCHEMA_PATH;}
-      case "real" -> {return VALUE_SCHEMA_REAL;}
-      case "series" -> {return new ValueSchemaSeries(ValueSchema.fromJSON(json.getJsonObject("items")));}
-      case "string" -> {return VALUE_SCHEMA_STRING;}
+    final var result = switch (json.getString("type")) {
+      case "boolean" -> VALUE_SCHEMA_BOOLEAN;
+      case "duration" -> VALUE_SCHEMA_DURATION;
+      case "int" -> VALUE_SCHEMA_INT;
+      case "path" -> VALUE_SCHEMA_PATH;
+      case "real" -> VALUE_SCHEMA_REAL;
+      case "series" -> new ValueSchemaSeries(ValueSchema.fromJSON(json.getJsonObject("items")));
+      case "string" -> VALUE_SCHEMA_STRING;
       case "struct" -> {
         final var items = new HashMap<String, ValueSchema>();
         final var itemsJson = json.getJsonObject("items");
         for(final var item : itemsJson.keySet()){
           items.put(item, ValueSchema.fromJSON(itemsJson.getJsonObject(item)));
         }
-        return new ValueSchemaStruct(items);
+        yield new ValueSchemaStruct(items);
       }
       case "variant" -> {
         final var variants = json.getJsonArray("variants")
                                  .getValuesAs((JsonObject v) -> new Variant(v.getString("key"), v.getString("label")));
-        return new ValueSchemaVariant(variants);
+        yield new ValueSchemaVariant(variants);
       }
       default -> throw new IllegalArgumentException("Cannot determine ValueSchema from JSON");
+    };
+    if (json.containsKey("metadata")) {
+      final var metadata = new HashMap<>(json.getJsonObject("metadata"));
+      return new ValueSchemaMeta(metadata, result);
+    } else {
+      return result;
     }
   }
 
@@ -132,6 +140,16 @@ public sealed interface ValueSchema {
                  .build();
     }
   }
+
+  record ValueSchemaMeta(Map<String, JsonValue> metadata, ValueSchema target) implements ValueSchema {
+    @Override
+    public JsonObject toJson() {
+      final var builder = Json.createObjectBuilder(target.toJson());
+      metadata.forEach(builder::add);
+      return builder.build();
+    }
+  }
+
   record Variant(String key, String label) {
     public JsonObject toJson() {
       return Json.createObjectBuilder().add("key", key).add("label", label).build();
