@@ -41,7 +41,7 @@ public final class Mission {
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
     discreteResource(registrar, "/peel", this.peel, new DoubleValueMapper(), "kg");
     realResource(registrar, "/fruit", this.fruit, "bananas");
-    registrar.discrete("/plant", this.plant, new IntegerValueMapper());
+    discreteResource(registrar, "/plant", this.plant, new IntegerValueMapper(), "count");
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
     registrar.topic("/producer", this.producer.ref, new StringValueMapper());
