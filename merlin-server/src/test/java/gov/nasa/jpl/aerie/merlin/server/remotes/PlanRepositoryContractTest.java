@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class PlanRepositoryContractTest {
   protected InMemoryPlanRepository planRepository = null;
@@ -36,7 +38,7 @@ public abstract class PlanRepositoryContractTest {
 
     // THEN
     final Plan fetchedPlan = this.planRepository.getPlanForValidation(ids.planId());
-    assertThat(fetchedPlan.name).isEqualTo("new-plan");
+    assertEquals("new-plan", fetchedPlan.name);
   }
 
   @Test
@@ -55,8 +57,9 @@ public abstract class PlanRepositoryContractTest {
 
     // THEN
     final Plan fetchedPlan = this.planRepository.getPlanForValidation(ids.planId());
-    assertThat(fetchedPlan.name).isEqualTo("new-plan");
-    assertThat(fetchedPlan.activityDirectives.values()).containsExactly(activity);
+    assertEquals("new-plan", fetchedPlan.name);
+    assertEquals(1, fetchedPlan.activityDirectives.size());
+    assertTrue(fetchedPlan.activityDirectives.containsValue(activity));
   }
 
   @Test
@@ -69,7 +72,9 @@ public abstract class PlanRepositoryContractTest {
     final CreatedPlan ids = this.planRepository.storePlan(new Plan());
 
     // THEN
-    assertThat(this.planRepository.getPlanForValidation(ids.planId()).activityDirectives).isNotNull().isEmpty();
+    final var directives = this.planRepository.getPlanForValidation(ids.planId()).activityDirectives;
+    assertNotNull(directives);
+    assertTrue(directives.isEmpty());
   }
 
   @Test
@@ -78,12 +83,12 @@ public abstract class PlanRepositoryContractTest {
     this.planRepository.storePlan(new Plan());
     final CreatedPlan ids = this.planRepository.storePlan(new Plan());
     this.planRepository.storePlan(new Plan());
-    assertThat(this.planRepository.getAllPlans()).size().isEqualTo(3);
+    assertEquals(3, this.planRepository.getAllPlans().size());
 
     // WHEN
     this.planRepository.deletePlan(ids.planId());
 
     // THEN
-    assertThat(this.planRepository.getAllPlans()).size().isEqualTo(2);
+    assertEquals(2, this.planRepository.getAllPlans().size());
   }
 }
