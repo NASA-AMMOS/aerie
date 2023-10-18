@@ -15,7 +15,7 @@ class TypescriptCodeGenerationServiceTest {
   @Test
   void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
     final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
-    final var expected = codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)));
+    final var expected = codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)), Optional.empty());
     assertEquals(expected,
         """
             /** Start Codegen */

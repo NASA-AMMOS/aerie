@@ -103,14 +103,14 @@ public final class StubPlanService implements PlanService {
   @Override
   public List<Pair<Duration, ProfileSet>> getExternalDatasets(
       final PlanId planId,
-      final Optional<SimulationDatasetId> simulationDatasetId
+      final SimulationDatasetId simulationDatasetId
       ) throws NoSuchPlanException
   {
     return List.of();
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException {
     return Map.of("external resource", ValueSchema.BOOLEAN);
   }
 
