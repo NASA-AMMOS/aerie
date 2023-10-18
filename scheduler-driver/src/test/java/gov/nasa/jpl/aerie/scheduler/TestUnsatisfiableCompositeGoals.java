@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUnsatisfiableCompositeGoals {
@@ -253,7 +252,7 @@ public class TestUnsatisfiableCompositeGoals {
     final var solver = new PrioritySolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
-    assertThat(plan.getActivities().size()).isEqualTo(0);
+    assertEquals(0, plan.getActivities().size());
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }
