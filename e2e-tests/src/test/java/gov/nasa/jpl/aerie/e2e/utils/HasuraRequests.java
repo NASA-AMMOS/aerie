@@ -584,6 +584,7 @@ public class HasuraRequests implements AutoCloseable {
                               .add("simulationDatasetId", simulationDatasetID)
                               .build();
     final var constraintResults = makeRequest(GQL.CHECK_CONSTRAINTS, variables).getJsonArray("constraintViolations");
+    System.out.println(constraintResults);
     return constraintResults.getValuesAs(e -> ConstraintRecord.fromJSON(e.asJsonObject()));
   }
 

@@ -442,7 +442,7 @@ public class ConstraintsTests {
       final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
       // Hasura strips the cause message ("Assumption falsified -- mission model for existing plan does not exist")
       // from the error it returns
-      if (!message.equals("input mismatch exception")) {
+      if (!message.equals("not a valid json response from webhook")) {
         throw exception;
       }
     }
