@@ -39,7 +39,6 @@ task e2eTest(type: Test) {
 dependencies {
   testImplementation 'com.microsoft.playwright:playwright:1.37.0'
 
-  testImplementation 'org.assertj:assertj-core:3.24.2'
   testImplementation 'org.glassfish:javax.json:1.1.4'
   testImplementation 'org.apache.commons:commons-lang3:3.13.0'
 
