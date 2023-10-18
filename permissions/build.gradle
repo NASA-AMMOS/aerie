@@ -1,7 +1,5 @@
 plugins {
   id 'java'
-  id 'java-test-fixtures'
-  id 'jacoco'
 }
 
 java {
@@ -11,24 +9,5 @@ java {
 }
 
 dependencies {
-  implementation 'io.javalin:javalin:5.6.2'
   implementation 'org.glassfish:javax.json:1.1.4'
-
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-  testImplementation 'org.assertj:assertj-core:3.24.2'
-}
-
-test {
-  useJUnitPlatform()
-  testLogging {
-      events 'passed', 'skipped', 'failed'
-      exceptionFormat 'full'
-  }
-}
-
-jacocoTestReport {
-  dependsOn test
-  reports {
-    xml.required = true
-  }
 }
