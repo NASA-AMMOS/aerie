@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.Connection;
@@ -100,19 +99,13 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
     return results;
   }
 
-  static List<PlanDatasetRecord> getAllPlanDatasetsForPlan(final Connection connection, final PlanId planId) throws SQLException {
-    try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
-      return getPlanDatasetsAction.get(planId);
-    }
-  }
-
-  static List<PlanDatasetRecord> getAllPlanDatasetsForSimDataset(
+  static List<PlanDatasetRecord> getPlanDatasetsForPlan(
       final Connection connection,
       final PlanId planId,
-      final SimulationDatasetId simulationDatasetId) throws SQLException {
-      try (final var getSimAssociatedPlanDatasetsAction = new GetSimAssociatedPlanDatasetsAction(connection)) {
-        return getSimAssociatedPlanDatasetsAction.get(planId, simulationDatasetId);
-      }
+      final Optional<SimulationDatasetId> simulationDatasetId) throws SQLException {
+    try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
+      return getPlanDatasetsAction.get(planId, simulationDatasetId);
+    }
   }
 
   static List<ProfileRecord> getProfileRecords(

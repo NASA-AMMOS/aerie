@@ -121,7 +121,7 @@ public class ConstraintAction {
             Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
       }
 
-      final var externalDatasets = this.planService.getExternalDatasets(planId, simulationDatasetId);
+      final var externalDatasets = this.planService.getExternalDatasets(planId, simDatasetId);
       final var realExternalProfiles = new HashMap<String, LinearProfile>();
       final var discreteExternalProfiles = new HashMap<String, DiscreteProfile>();
 
@@ -154,10 +154,10 @@ public class ConstraintAction {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
 
-        // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
             plan.missionModelId,
             Optional.of(planId),
+            Optional.of(simDatasetId),
             constraint.definition()
         );
 

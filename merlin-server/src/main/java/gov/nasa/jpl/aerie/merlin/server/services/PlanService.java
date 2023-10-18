@@ -32,6 +32,6 @@ public interface PlanService {
   void extendExternalDataset(DatasetId datasetId, ProfileSet profileSet) throws NoSuchPlanDatasetException;
   List<Pair<Duration, ProfileSet>> getExternalDatasets(
       final PlanId planId,
-      final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException;
-  Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException;
+      final SimulationDatasetId simulationDatasetId) throws NoSuchPlanException;
+  Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException;
 }

@@ -45,8 +45,8 @@ public interface PlanRepository {
   void extendExternalDataset(DatasetId datasetId, ProfileSet profileSet) throws NoSuchPlanDatasetException;
   List<Pair<Duration, ProfileSet>> getExternalDatasets(
       PlanId planId,
-      Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException;
-  Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId) throws NoSuchPlanException;
+      SimulationDatasetId simulationDatasetId) throws NoSuchPlanException;
+  Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId, Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException;
 
   record CreatedPlan(PlanId planId, List<ActivityDirectiveId> activityIds) {}
 }
