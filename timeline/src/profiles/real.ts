@@ -28,7 +28,10 @@ export class Real extends Profile<LinearEquation> {
 
   public static override Resource(name: string): Real {
     return new Real(
-      fetcher.resource(name, (v, t) => new LinearEquation(t, v.initial as number, v.rate as number), ProfileType.Real)
+      fetcher.resource(name, (v, t) => {
+        if (typeof v === "number") return new LinearEquation(t, v, 0.0);
+        else return new LinearEquation(t, v.initial as number, v.rate as number);
+      }, ProfileType.Real)
     );
   }
 
@@ -361,5 +364,9 @@ export class LinearEquation {
         )
       ].filter($ => !$.interval.isEmpty());
     }
+  }
+
+  public toString(): string {
+    return JSON.stringify(this);
   }
 }

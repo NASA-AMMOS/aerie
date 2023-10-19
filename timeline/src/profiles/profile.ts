@@ -46,21 +46,24 @@ export class Profile<V> {
     );
   }
 
+  public timeline = () => this.segments;
+
   public async evaluate(bounds: Interval): Promise<this> {
-    if (!isLazy(this.segments)) throw new Error('Profile has already been evaluated');
+    if (!isLazy(this.segments)) throw new Error(`Profile has already been evaluated on bounds ${(this.segments as EagerTimeline<Segment<V>>).bounds}`);
     this.segments = await evaluate(this.segments as LazyTimeline<Segment<V>>, bounds);
     return this;
   }
 
-  public collect(): Segment<V>[];
-  public collect(bounds: Interval): Promise<Segment<V>[]>;
-  public collect(bounds?: Interval): Segment<V>[] | Promise<Segment<V>[]> {
+  public async collect(bounds?: Interval): Promise<Segment<V>[]> {
     if (isLazy(this.segments)) {
       if (bounds === undefined)
         throw new Error('Collect must be provided a bounds argument if the profile has not been evaluated yet.');
-      return this.evaluate(bounds).then(p => (p.segments as EagerTimeline<Segment<V>>).array as Segment<V>[]);
-    } else {
+      await this.evaluate(bounds);
       return (this.segments as EagerTimeline<Segment<V>>).array;
+    } else {
+      const s = this.segments as EagerTimeline<Segment<V>>;
+      if (bounds !== undefined && !Interval.equals(bounds, s.bounds)) throw new Error(`Profile has already been collected on different bounds. Requested: ${bounds}, previous: ${s.bounds}.`);
+      return s.array;
     }
   }
 
@@ -275,12 +278,12 @@ export class Profile<V> {
   }
 
   public async any(predicate: (v: V, i: Interval) => boolean, bounds?: Interval): Promise<boolean> {
-    const segments = bounds === undefined ? this.collect() : await this.collect(bounds);
+    const segments = await this.collect(bounds);
     return segments.some((s: Segment<V>) => predicate(s.value, s.interval));
   }
 
   public async all(predicate: (v: V, i: Interval) => boolean, bounds?: Interval): Promise<boolean> {
-    const segments = bounds === undefined ? this.collect() : await this.collect(bounds);
+    const segments = await this.collect(bounds);
     return segments.every((s: Segment<V>) => predicate(s.value, s.interval));
   }
 

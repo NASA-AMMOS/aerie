@@ -8,8 +8,13 @@ export {
   Real,
   Discrete,
   bound,
+  applyOperation,
+  identityBoundsMap,
   Segment,
   Interval,
-  Inclusivity
+  Inclusivity,
+  BinaryOperation,
+  Spans,
+  ActivityType
 } from './internal.js';
 export { Temporal } from '@js-temporal/polyfill';

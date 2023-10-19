@@ -13,3 +13,5 @@ export * from './data-fetcher.js';
 export * from './interval.js';
 export * from './segment.js';
 export * from './timeline.js';
+
+export * from './dynamic/activity-type.js';

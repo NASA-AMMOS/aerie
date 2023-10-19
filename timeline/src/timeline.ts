@@ -40,31 +40,34 @@ export function applyOperation<O extends IntervalLike>(
   boundsMap: BoundsMap,
   ...timelines: Timeline<any>[]
 ): Timeline<O> {
-  if (timelines.every($ => Array.isArray($))) {
+  if (timelines.every($ => isEager($))) {
     // If all timelines are eagerly evaluated, apply the operation eagerly.
     const oldBounds = (timelines[0] as EagerTimeline<any>).bounds;
     const bounds = { current: oldBounds, next: boundsMap.eager(oldBounds) };
     for (const t of timelines.slice(1)) {
-      if ((t as EagerTimeline<any>).bounds !== oldBounds)
-        throw new Error('all operand timelines must be evaluated on the same bounds.');
+      if (!Interval.equals((t as EagerTimeline<any>).bounds, oldBounds))
+        throw new Error(`All operand timelines must be evaluated on the same bounds. Requested: ${oldBounds}, found: ${(t as EagerTimeline<any>).bounds}`);
     }
-    return { array: op(bounds, timelines), bounds: bounds.next };
+    const arrays = timelines.map($ => ($ as EagerTimeline<any>).array);
+    return { array: op(bounds, arrays), bounds: bounds.next };
   } else {
     // If any timeline is lazy, apply return a lazy timeline.
-    return async newBounds => {
+    // Variable is NOT inlined to give the function a name in the stack trace.
+    const evaluateOperation = async (newBounds: Interval) => {
       const oldBounds = boundsMap.lazy(newBounds);
       const arrays = await Promise.all(
         timelines.map($ => {
           if (isLazy($)) return ($ as LazyTimeline<any>)(oldBounds);
           else {
-            if (($ as EagerTimeline<any>).bounds !== oldBounds)
-              throw new Error('all operand timelines must be evaluated on the same bounds');
+            if (!Interval.equals(($ as EagerTimeline<any>).bounds, oldBounds))
+              throw new Error(`All operand timelines must be evaluated on the same bounds. Requested: ${newBounds}, found: ${($ as EagerTimeline<any>).bounds}`);
             return $;
           }
         })
       );
       return op({ current: oldBounds, next: newBounds }, arrays);
     };
+    return evaluateOperation;
   }
 }
 
@@ -176,7 +179,7 @@ export function coalesce<V>(segments: Segment<V>[], typeTag: ProfileType): Segme
 export function cache<V extends IntervalLike>(t: Timeline<V>): Timeline<V> {
   // Stored as a list of tuples that we must search through because Intervals contain Durations,
   // which have an inaccurate equality check.
-  if (!isLazy(t)) return t;
+  if (isEager(t)) return t;
   let history: [Interval, V[]][] = [];
   return async bounds => {
     for (const [i, t] of history) {

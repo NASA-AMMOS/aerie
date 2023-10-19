@@ -71,6 +71,15 @@ export class Spans<S extends IntervalLike> {
     return new Spans(timeline);
   }
 
+  public mapToSegments<T>(f: (span: S) => T, boundsMap: BoundsMap): Spans<Segment<T>> {
+    const mapToSegmentsOp = (_: any, [$]: S[][]) => $.map(s => {
+      let value = f(s);
+      return new Segment(value, s.interval);
+    });
+    const timeline = applyOperation(mapToSegmentsOp, boundsMap, this.spans);
+    return new Spans<Segment<T>>(timeline);
+  }
+
   public filter(predicate: (s: S) => boolean): Spans<S> {
     const filterOp = (_: any, [$]: S[][]) => $.filter(predicate);
     const timeline = applyOperation(filterOp, identityBoundsMap, this.spans);
