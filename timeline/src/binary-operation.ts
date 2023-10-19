@@ -72,7 +72,9 @@ export class BinaryOperation<Left, Right, Out> {
    *
    * @param func a function which computes the operation on both operands.
    */
-  public static combineOrIdentity<Left, Right, Combine>(func: (l: Left, r: Right, i: Interval) => Left | Right | Combine): BinaryOperation<Left, Right, Left | Right | Combine> {
+  public static combineOrIdentity<Left, Right, Combine>(
+    func: (l: Left, r: Right, i: Interval) => Left | Right | Combine
+  ): BinaryOperation<Left, Right, Left | Right | Combine> {
     return BinaryOperation.cases(
       l => l,
       r => r,

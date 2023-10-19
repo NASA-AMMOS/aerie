@@ -49,7 +49,10 @@ export class Profile<V> {
   public timeline = () => this.segments;
 
   public async evaluate(bounds: Interval): Promise<this> {
-    if (!isLazy(this.segments)) throw new Error(`Profile has already been evaluated on bounds ${(this.segments as EagerTimeline<Segment<V>>).bounds}`);
+    if (!isLazy(this.segments))
+      throw new Error(
+        `Profile has already been evaluated on bounds ${(this.segments as EagerTimeline<Segment<V>>).bounds}`
+      );
     this.segments = await evaluate(this.segments as LazyTimeline<Segment<V>>, bounds);
     return this;
   }
@@ -62,7 +65,10 @@ export class Profile<V> {
       return (this.segments as EagerTimeline<Segment<V>>).array;
     } else {
       const s = this.segments as EagerTimeline<Segment<V>>;
-      if (bounds !== undefined && !Interval.equals(bounds, s.bounds)) throw new Error(`Profile has already been collected on different bounds. Requested: ${bounds}, previous: ${s.bounds}.`);
+      if (bounds !== undefined && !Interval.equals(bounds, s.bounds))
+        throw new Error(
+          `Profile has already been collected on different bounds. Requested: ${bounds}, previous: ${s.bounds}.`
+        );
       return s.array;
     }
   }

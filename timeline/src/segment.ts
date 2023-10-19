@@ -4,12 +4,11 @@ import { Interval, IntervalLike } from './interval.js';
  * A generic container for associating a value with an interval on the timeline.
  */
 export class Segment<V> implements IntervalLike {
-
   constructor(
-      /** The interval on the timeline over which this segment applies. */
-      public readonly value: V,
-      /** The value contained in this segment */
-      public readonly interval: Interval
+    /** The interval on the timeline over which this segment applies. */
+    public readonly value: V,
+    /** The value contained in this segment */
+    public readonly interval: Interval
   ) {}
 
   /** Static version of the constructor */

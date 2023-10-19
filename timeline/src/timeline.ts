@@ -46,7 +46,11 @@ export function applyOperation<O extends IntervalLike>(
     const bounds = { current: oldBounds, next: boundsMap.eager(oldBounds) };
     for (const t of timelines.slice(1)) {
       if (!Interval.equals((t as EagerTimeline<any>).bounds, oldBounds))
-        throw new Error(`All operand timelines must be evaluated on the same bounds. Requested: ${oldBounds}, found: ${(t as EagerTimeline<any>).bounds}`);
+        throw new Error(
+          `All operand timelines must be evaluated on the same bounds. Requested: ${oldBounds}, found: ${
+            (t as EagerTimeline<any>).bounds
+          }`
+        );
     }
     const arrays = timelines.map($ => ($ as EagerTimeline<any>).array);
     return { array: op(bounds, arrays), bounds: bounds.next };
@@ -60,7 +64,11 @@ export function applyOperation<O extends IntervalLike>(
           if (isLazy($)) return ($ as LazyTimeline<any>)(oldBounds);
           else {
             if (!Interval.equals(($ as EagerTimeline<any>).bounds, oldBounds))
-              throw new Error(`All operand timelines must be evaluated on the same bounds. Requested: ${newBounds}, found: ${($ as EagerTimeline<any>).bounds}`);
+              throw new Error(
+                `All operand timelines must be evaluated on the same bounds. Requested: ${newBounds}, found: ${
+                  ($ as EagerTimeline<any>).bounds
+                }`
+              );
             return $;
           }
         })
