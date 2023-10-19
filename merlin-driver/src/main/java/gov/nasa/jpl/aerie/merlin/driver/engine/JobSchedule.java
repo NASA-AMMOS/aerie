@@ -9,9 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 
@@ -22,12 +20,11 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   /** A time-ordered queue of all tasks whose resumption time is concretely known. */
   @DerivedFrom("scheduledJobs")
   private final ConcurrentSkipListSet<Pair<TimeRef, JobRef>> queue = new ConcurrentSkipListSet<>(Comparator.comparing(Pair::getLeft));
-  //private final PriorityQueue<Pair<TimeRef, JobRef>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
   public void schedule(final JobRef job, final TimeRef time) {
     final var oldTime = this.scheduledJobs.put(job, time);
 
-    if (oldTime != null) this.queue.remove(Pair.of(oldTime, job));  // TODO: Is this remove rarely executed?  If not, it's O(n), consider an ordered set instead of a PriorityQueue
+    if (oldTime != null) this.queue.remove(Pair.of(oldTime, job));
     this.queue.add(Pair.of(time, job));
   }
 
