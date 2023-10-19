@@ -20,6 +20,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/app/files
+    networks:
+      - aerie_net
   aerie_merlin:
     container_name: aerie_merlin
     depends_on: ["postgres"]
@@ -42,6 +44,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+    networks:
+      - aerie_net
   aerie_merlin_worker_1:
     container_name: aerie_merlin_worker
     depends_on: ["postgres"]
@@ -63,6 +67,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
+    networks:
+      - aerie_net
   aerie_scheduler:
     container_name: aerie_scheduler
     depends_on: ["aerie_merlin", "postgres"]
@@ -83,6 +89,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+    networks:
+      - aerie_net
   aerie_scheduler_worker_1:
     container_name: aerie_scheduler_worker_1
     depends_on: ["postgres"]
@@ -105,6 +113,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
+    networks:
+      - aerie_net
   aerie_sequencing:
     container_name: aerie_sequencing
     depends_on: ["postgres"]
@@ -125,6 +135,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/sequencing_file_store
+    networks:
+      - aerie_net
   aerie_ui:
     container_name: aerie_ui
     depends_on: ["postgres"]
@@ -139,6 +151,8 @@ services:
     image: "${REPOSITORY_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     ports: ["80:80"]
     restart: always
+    networks:
+      - aerie_net
   hasura:
     container_name: hasura
     depends_on: ["postgres"]
@@ -163,6 +177,8 @@ services:
     restart: always
     volumes:
       - ./hasura/metadata:/hasura-metadata
+    networks:
+      - aerie_net
   postgres:
     container_name: postgres
     environment:
@@ -177,8 +193,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init-db:/docker-entrypoint-initdb.d
+    networks:
+      - aerie_net
 
 volumes:
   aerie_file_store:
   mission_file_store:
   postgres_data:
+
+networks:
+  aerie_net:

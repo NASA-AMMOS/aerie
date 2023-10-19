@@ -1,0 +1,51 @@
+# increase max body size for model uploads
+client_max_body_size 100M;
+
+# redirect HTTP to HTTPS (80 -> 443)
+server {
+    listen 80;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+
+# terminate TLS and proxy pass UI
+server {
+    listen              443 ssl;
+    server_name         ${AERIE_HOST};
+    ssl_certificate     /cert.pem;
+    ssl_certificate_key /key.pem;
+    ssl_protocols       TLSv1.3;
+
+    location / {
+        proxy_pass http://aerie_ui;
+    }
+}
+
+# terminate TLS and proxy pass hasura
+server {
+    listen              8080 ssl;
+    server_name         ${AERIE_HOST};
+    ssl_certificate     /cert.pem;
+    ssl_certificate_key /key.pem;
+    ssl_protocols       TLSv1.3;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+
+    location / {
+        proxy_pass http://hasura:8080;
+    }
+}
+
+# terminate TLS and proxy pass gateway
+server {
+    listen              9000 ssl;
+    server_name         ${AERIE_HOST};
+    ssl_certificate     /cert.pem;
+    ssl_certificate_key /key.pem;
+    ssl_protocols       TLSv1.3;
+
+    location / {
+        proxy_pass http://aerie_gateway:9000;
+    }
+}
