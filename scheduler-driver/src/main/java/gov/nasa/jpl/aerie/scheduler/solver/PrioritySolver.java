@@ -678,9 +678,9 @@ public class PrioritySolver implements Solver {
           }
         }
       }
-
+      //jd todo complete
       else if(missing instanceof MissingAnchorConflict missingAnchor){
-
+  //jd todo: 1. add code of missingassociationconflict. 2. add anchorid. 3. update plan, gneerateactivityinstances and simulationfacade
       }
     }//for(missing)
 
@@ -946,6 +946,7 @@ public class PrioritySolver implements Solver {
     return Optional.empty();
   }
   private Optional<SchedulingActivityDirective> instantiateActivity(
+      //todo jd add anchorid if createPersistentAnchor is set to true
       final ActivityExpression activityExpression,
       final String name,
       final Interval interval,

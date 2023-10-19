@@ -438,6 +438,52 @@ public class SchedulingIntegrationTests {
     }
   }
 
+
+  @Test
+  void testCoexistenceGoalWithAnchors() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                null,
+                true
+            ),
+            new ActivityDirective(
+                Duration.MINUTE.times(5),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(Duration.MINUTE.in(MICROSECOND))
+                ),
+                null,
+                true
+            )
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            createAnchor: true,
+            forEach: ActivityExpression.ofType(ActivityTypes.BiteBanana),
+            activityFinder: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: (interval) => ActivityTemplates.GrowBanana({quantity: 10, growingDuration: Temporal.Duration.from({minutes:1}) }),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(0, goalResult.createdActivities().size());
+    assertEquals(1, goalResult.satisfyingActivities().size());
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+  }
+
   @Test
   void testCoexistencePartialActWithParameter() {
     final var expectedSatisfactionAct = new ActivityDirective(

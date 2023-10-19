@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    * @param template  desired activity template
    * @param evaluationEnvironment the evaluation environment at the time of creation so variables can be retrieved later at instantiation
    * @param cardinality the desired number of times the activity template should be inserted
+   * @param SchedulingActivityDirectiveId anchorId,
    * @param totalDuration the desired total duration
    */
   public MissingActivityTemplateConflict(
@@ -31,6 +33,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
       ActivityExpression template,
       EvaluationEnvironment evaluationEnvironment,
       int cardinality,
+      Optional<SchedulingActivityDirectiveId> anchorId,
       Optional<Duration> totalDuration)
   {
     super(goal, evaluationEnvironment);
@@ -42,11 +45,16 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
     this.temporalContext = temporalContext;
     this.template = template;
     this.cardinality = cardinality;
+    this.anchorId = anchorId;
     this.totalDuration = totalDuration;
   }
 
   //the number of times the activity needs to be inserted
   int cardinality;
+  Optional<SchedulingActivityDirectiveId> anchorId;
+  public Optional<SchedulingActivityDirectiveId> getAnchorId(){
+    return anchorId;
+  }
 
   //the desired total duration over the number of activities needed
   Optional<Duration> totalDuration;

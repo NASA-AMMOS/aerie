@@ -73,7 +73,7 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate<any>,
-  createAnchor: boolean,
+  createNewAnchoredActivity: boolean,
   allowActivityUpdate: boolean,
   activityFinder: ActivityExpression<any> | undefined,
   alias: string,

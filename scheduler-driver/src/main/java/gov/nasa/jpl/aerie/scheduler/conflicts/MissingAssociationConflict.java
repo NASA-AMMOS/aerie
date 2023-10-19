@@ -4,11 +4,14 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public class MissingAssociationConflict extends Conflict {
   private final Collection<SchedulingActivityDirective> instances;
+  private Optional<SchedulingActivityDirectiveId> anchorToId;
 
   /**
    * ctor creates a new conflict
@@ -19,6 +22,13 @@ public class MissingAssociationConflict extends Conflict {
   public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom) {
     super(goal, new EvaluationEnvironment());
     this.instances = instancesToChooseFrom;
+    this.anchorToId = Optional.empty();
+  }
+
+  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom, SchedulingActivityDirectiveId anchorToId) {
+    super(goal, new EvaluationEnvironment());
+    this.instances = instancesToChooseFrom;
+    this.anchorToId = Optional.ofNullable(anchorToId);
   }
 
   public Collection<SchedulingActivityDirective> getActivityInstancesToChooseFrom(){

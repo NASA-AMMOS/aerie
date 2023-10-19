@@ -523,6 +523,8 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+              true,
+              true,
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -606,6 +608,7 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+              true,true,
               Optional.of(new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity1", Optional.of(
                   new StructExpressionAt(Map.of("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))))
               ))),
@@ -655,6 +658,8 @@ class SchedulingDSLCompilationServiceTests {
                       Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
                   ))
               ),
+              false,
+              false,
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -702,6 +707,8 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
                                                  ))
               ),
+              false,
+              false,
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -857,6 +864,8 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+              false,
+              false,
               Optional.empty(),
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
@@ -897,6 +906,8 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1ParametersWithDurationReference()
               ),
+              false,
+              false,
               Optional.empty(),
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),

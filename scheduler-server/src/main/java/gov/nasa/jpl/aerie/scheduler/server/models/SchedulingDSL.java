@@ -117,7 +117,8 @@ public class SchedulingDSL {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
-            .field("createNewAnchoredActivity",boolP)
+            .field("createPersistentAnchor",boolP)
+            .field("allowActivityUpdate",boolP)
             .optionalField("activityFinder", activityExpressionP)
             .field("alias", stringP)
             .field("forEach", constraintExpressionP)
@@ -137,7 +138,8 @@ public class SchedulingDSL {
   coexistenceGoalTransform() {
     return Convert.between(untuple(GoalSpecifier.CoexistenceGoalDefinition::new), (GoalSpecifier.CoexistenceGoalDefinition $) -> tuple(
         $.activityTemplate(),
-        $.createNewAnchoredActivity(),
+        $.createPersistentAnchor(),
+        $.allowActivityUpdate(),
         $.activityFinder(),
         $.alias,
         $.forEach,
@@ -269,7 +271,8 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
-        boolean createNewAnchoredActivity,
+        boolean createPersistentAnchor,
+        boolean allowActivityUpdate,
         Optional<ConstraintExpression.ActivityExpression> activityFinder,
         String alias,
         ConstraintExpression forEach,

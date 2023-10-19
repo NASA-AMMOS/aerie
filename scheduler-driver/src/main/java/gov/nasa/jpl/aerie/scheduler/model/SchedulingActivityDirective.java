@@ -124,6 +124,18 @@ public record SchedulingActivityDirective(
         activityInstance.anchoredToStart);
   }
 
+  public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, SchedulingActivityDirectiveId anchorId){
+    return SchedulingActivityDirective.of(
+        activityInstance.id,
+        activityInstance.type,
+        activityInstance.startOffset,
+        activityInstance.duration,
+        new HashMap<>(activityInstance.arguments),
+        activityInstance.topParent,
+        anchorId,
+        activityInstance.anchoredToStart);
+  }
+
   /**
    * Scheduler Activity Directives generated from the Plan have their ID set to the negative of the ActivityDirectiveId
    */
@@ -154,6 +166,11 @@ public record SchedulingActivityDirective(
         o.anchorId,
         o.anchoredToStart
     );
+  }
+
+  @Override
+  public ActivityType type() {
+    return type;
   }
 
   /**

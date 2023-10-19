@@ -13,7 +13,9 @@ import gov.nasa.jpl.aerie.scheduler.constraints.transformers.TimeWindowsTransfor
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
 

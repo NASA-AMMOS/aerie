@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAnchorConflict;
@@ -16,9 +17,9 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -32,7 +33,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   private TimeExpression endExpr;
   private DurationExpression durExpr;
   private String alias;
-
+  private boolean createPersistentAnchor;
+  private boolean allowActivityUpdate;
   /**
    * the pattern used to locate anchor activity instances in the plan
    */
@@ -116,6 +118,18 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
+    boolean createPersistentAnchor;
+    public Builder createPersistentAnchor(boolean createPersistentAnchor){
+      this.createPersistentAnchor = createPersistentAnchor;
+      return getThis();
+    }
+
+    boolean allowActivityUpdate;
+    public Builder allowActivityUpdate(boolean allowActivityUpdate){
+      this.allowActivityUpdate = allowActivityUpdate;
+      return getThis();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -169,6 +183,13 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
   }//Builder
 
+  public boolean isCreatePersistentAnchor() {
+    return createPersistentAnchor;
+  }
+
+  public boolean isAllowActivityUpdate() {
+    return allowActivityUpdate;
+  }
   /**
    * {@inheritDoc}
    *
@@ -224,80 +245,119 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       assert activityFinder != null;
       activityFinder.basedOn(this.matchActTemplate);
       activityCreationTemplate.basedOn(this.desiredActTemplate);
-      if(this.startExpr != null) {
+      if (this.startExpr != null) {
         Interval startTimeRange = null;
         startTimeRange = this.startExpr.computeTime(simulationResults, plan, window.interval());
         activityFinder.startsIn(startTimeRange);
         activityCreationTemplate.startsIn(startTimeRange);
       }
-      if(this.endExpr != null) {
+      if (this.endExpr != null) {
         Interval endTimeRange = null;
         endTimeRange = this.endExpr.computeTime(simulationResults, plan, window.interval());
         activityFinder.endsIn(endTimeRange);
         activityCreationTemplate.endsIn(endTimeRange);
       }
       /* this will override whatever might be already present in the template */
-      if(durExpr!=null){
+      if (durExpr != null) {
         var durRange = this.durExpr.compute(window.interval(), simulationResults);
         activityFinder.durationIn(durRange);
         activityCreationTemplate.durationIn(durRange);
       }
-      //jd check if anchor is already in the plan
-      final var existingActs = plan.find(
+      //jd todo check if activities without anchor are needed here
+      final var activitiesFound = plan.find(
           activityFinder.build(),
           simulationResults,
           createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window));
-      LinkedList<SchedulingActivityDirective> activitiesFound = new LinkedList<>(existingActs.get(ActivityExpression.ActivityStatus.ACTIVITY_FOUND));
-      LinkedList<SchedulingActivityDirective> activitiesNoAnchorFound = new LinkedList<>(existingActs.get(ActivityExpression.ActivityStatus.NO_ANCHOR_FOUND));
 
-
-      var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
-      for(var act : activitiesFound){
+      for (var act : activitiesFound) {
         //has already been associated to this goal
-        if(associatedActivitiesToThisGoal.contains(act)){
+        if (associatedActivitiesToThisGoal.contains(act)) {
           alreadyOneActivityAssociated = true;
           break;
         }
       }
-      if(!alreadyOneActivityAssociated){
-        for(var act : activitiesFound){
-          if(planEvaluation.canAssociateMoreToCreatorOf(act)){
-            missingActAssociations.add(act);
+      if (!alreadyOneActivityAssociated) {
+        SchedulingActivityDirectiveId anchorIdTo = new SchedulingActivityDirectiveId(window
+                                                                                         .value()
+                                                                                         .get()
+                                                                                         .activityInstance().id);
+        var missingActAssociationsWithAnchor = new ArrayList<SchedulingActivityDirective>();
+        var missingActAssociationsWithoutAnchor = new ArrayList<SchedulingActivityDirective>();
+        /*
+        If activities that can satisfy the goal have been found, then create two arraylist to distinguish between:
+         1) those activities that also satisfy the anchoring  (e.g. anchorId value equals the SchedulingActivityDirectiveId of the "for each" activity directive in the goal
+         2) activities without the anchorId set
+         */
+        for (var act : activitiesFound) {
+          if (planEvaluation.canAssociateMoreToCreatorOf(act)) {
+            if (act.anchorId() == anchorIdTo)
+              missingActAssociationsWithAnchor.add(act);
+            else
+              missingActAssociationsWithoutAnchor.add(act);
           }
         }
-      }
-      //jd add to template information about activity A.
-      if (!alreadyOneActivityAssociated) {
-        //create conflict if no matching target activity found
-        if (activitiesFound.isEmpty()) {
+
+        /* The truth table that determines the type of conflict is shown below
+        createPersistentAnchor	allowActivityUpdate	missingActAssociationsWithAnchor	missingActAssociationsWithoutAnchor 	type conflict
+              0	                      0	                  0	                                0	                              MissingActivityTemplateConflict
+              0	                      0	                  0	                                1	                              MissingActivityTemplateConflict
+              0	                      0	                  1	                                0	                              MissingAssociationConflict
+              0	                      0	                  1	                                1	                              MissingAssociationConflict
+              0	                      1	                  0	                                0	                              MissingActivityTemplateConflict
+              0	                      1	                  0	                                1	                              MissingAnchorConflict
+              0	                      1	                  1	                                0	                              MissingAssociationConflict
+              0	                      1	                  1	                                1	                              MissingAssociationConflict
+              1	                      0	                  0	                                0	                              MissingActivityTemplateConflict
+              1	                      0	                  0	                                1	                              MissingActivityTemplateConflict
+              1	                      0	                  1	                                0	                              MissingAssociationConflict
+              1	                      0	                  1	                                1	                              MissingAssociationConflict
+              1	                      1	                  0	                                0	                              MissingActivityTemplateConflict
+              1	                      1	                  0	                                1	                              MissingAnchorConflict
+              1	                      1	                  1	                                0	                              MissingAssociationConflict
+              1	                      1	                  1	                                1	                              MissingAssociationConflict
+         */
+        if (!createPersistentAnchor && !allowActivityUpdate) {
           conflicts.add(new MissingActivityTemplateConflict(
               this,
               this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
               activityCreationTemplate.build(),
               createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
               1,
-              Optional.empty()));
-        }
-        else {
-          conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+              Optional.of(anchorIdTo),
+              Optional.empty(
+              )));
+        } else if (!createPersistentAnchor && allowActivityUpdate && missingActAssociationsWithAnchor.isEmpty() && !missingActAssociationsWithoutAnchor.isEmpty()) {
+          conflicts.add(new MissingAnchorConflict(this, missingActAssociationsWithoutAnchor, anchorIdTo));
+        } else if (!createPersistentAnchor && allowActivityUpdate && !missingActAssociationsWithAnchor.isEmpty()) {
+          conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithAnchor));
+        } else if (createPersistentAnchor && !allowActivityUpdate) {
+          conflicts.add(new MissingActivityTemplateConflict(
+              this,
+              this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
+              activityCreationTemplate.build(),
+              createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+              1,
+              Optional.of(anchorIdTo),
+              Optional.empty(
+              )));
+        } else if (createPersistentAnchor && allowActivityUpdate && missingActAssociationsWithAnchor.isEmpty() && !missingActAssociationsWithoutAnchor.isEmpty()) {
+          conflicts.add(new MissingAnchorConflict(this, missingActAssociationsWithoutAnchor, anchorIdTo));
+        } else if (createPersistentAnchor && allowActivityUpdate && !missingActAssociationsWithAnchor.isEmpty()) {
+          conflicts.add(new MissingActivityTemplateConflict(
+              this,
+              this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
+              activityCreationTemplate.build(),
+              createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+              1,
+              Optional.of(anchorIdTo),
+              Optional.empty(
+              )));
         }
       }
-
-      for(var act : activitiesNoAnchorFound){
-        conflicts.add(new MissingAnchorConflict(this, this.temporalContext.evaluate(simulationResults), temp, createEvaluationEnvironmentFromAnchor(window), 1, Optional.empty()));
-        if(associatedActivitiesToThisGoal.contains(act)){
-          alreadyOneActivityAssociated = true;
-          break;
-        }
-      }
-
-
-    }//for(anchorAct)
-
-
+    }
     return conflicts;
   }
 

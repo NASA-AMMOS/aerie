@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -125,37 +126,52 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
       final var satisfyingActSearch = new ActivityExpression.Builder()
           .basedOn(requestedAct)
           .build();
-      final var matchingActs = plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
 
-      var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
-      var planEvaluation = plan.getEvaluation();
-      var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
-      var alreadyOneActivityAssociated = false;
-      for(var act : matchingActs){
-        //has already been associated to this goal
-        if(associatedActivitiesToThisGoal.contains(act)){
-          alreadyOneActivityAssociated = true;
-          break;
-        }
-      }
-      if(!alreadyOneActivityAssociated){
-        //fetch all activities that can be associated, scheduler will make a choice
-        for(var act : matchingActs){
-          if(planEvaluation.canAssociateMoreToCreatorOf(act)){
-            missingActAssociations.add(act);
+
+      final var mapMatchingActs = plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
+      for (var entry : mapMatchingActs.entrySet()) {
+        // Get the key and LinkedList from the entry
+        var status = entry.getKey();
+        final var matchingActs = entry.getValue();
+        // Check the key value
+        if (status == ActivityExpression.ActivityStatus.ACTIVITY_WITHOUT_ANCHOR_FOUND) {
+          //jd todo think what to do when activity without anchor found
+          System.out.println("Found an activity without an anchor.");
+        } else if (status == ActivityExpression.ActivityStatus.NO_ACTIVITY_FOUND) {
+          System.out.println("No activity found.");
+        } else if (status == ActivityExpression.ActivityStatus.ACTIVITY_FOUND) {
+          var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
+          var planEvaluation = plan.getEvaluation();
+          var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
+          var alreadyOneActivityAssociated = false;
+
+          for(var act : matchingActs){
+            //has already been associated to this goal
+            if(associatedActivitiesToThisGoal.contains(act)){
+              alreadyOneActivityAssociated = true;
+              break;
+            }
           }
-        }
-      }
-      //adding appropriate conflicts
-      if(!alreadyOneActivityAssociated) {
-        //generate a conflict if no matching acts found
-        if (matchingActs.isEmpty()) {
-          conflicts.add(new MissingActivityInstanceConflict(
-              this, requestedAct, new EvaluationEnvironment()));
-          //REVIEW: pass the requested instance to conflict or otherwise cache it
-          //        for the imminent request to create it in the plan
-        } else {
-          conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+          if(!alreadyOneActivityAssociated){
+            //fetch all activities that can be associated, scheduler will make a choice
+            for(var act : matchingActs){
+              if(planEvaluation.canAssociateMoreToCreatorOf(act)){
+                missingActAssociations.add(act);
+              }
+            }
+          }
+          //adding appropriate conflicts
+          if(!alreadyOneActivityAssociated) {
+            //generate a conflict if no matching acts found
+            if (matchingActs.isEmpty()) {
+              conflicts.add(new MissingActivityInstanceConflict(
+                  this, requestedAct, new EvaluationEnvironment()));
+              //REVIEW: pass the requested instance to conflict or otherwise cache it
+              //        for the imminent request to create it in the plan
+            } else {
+              conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+            }
+          }
         }
       }
     }//for(requestedAct)

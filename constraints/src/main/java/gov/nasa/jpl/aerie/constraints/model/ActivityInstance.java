@@ -5,21 +5,25 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class ActivityInstance {
   public final long id;
+  public long anchorId;
   public final String type;
   public final Map<String, SerializedValue> parameters;
   public final Interval interval;
 
   public ActivityInstance(
       final long id,
+      final long anchorId,
       final String type,
       final Map<String, SerializedValue> parameters,
       final Interval interval
   ) {
     this.type = type;
     this.id = id;
+    this.anchorId = anchorId;
     this.parameters = parameters;
     this.interval = interval;
   }
@@ -30,6 +34,7 @@ public final class ActivityInstance {
     final var o = (ActivityInstance)obj;
 
     return Objects.equals(this.id, o.id) &&
+           Objects.equals(this.anchorId, o.anchorId) &&
            Objects.equals(this.type, o.type) &&
            Objects.equals(this.parameters, o.parameters) &&
            Objects.equals(this.interval, o.interval);
@@ -37,6 +42,6 @@ public final class ActivityInstance {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.id, this.type, this.parameters, this.interval);
+    return Objects.hash(this.id, this.anchorId, this.type, this.parameters, this.interval);
   }
 }

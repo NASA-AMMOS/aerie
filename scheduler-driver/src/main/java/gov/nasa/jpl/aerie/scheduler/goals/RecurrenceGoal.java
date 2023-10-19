@@ -212,7 +212,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
     for (var intervalT = start.plus(recurrenceInterval.max);
-         ;
+        ;
          intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);

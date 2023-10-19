@@ -61,6 +61,8 @@ public class GoalBuilder {
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
+          .createPersistentAnchor(g.createPersistentAnchor())
+          .allowActivityUpdate(g.allowActivityUpdate())
           .forEach(spansOfConstraintExpression(
               g.forEach()))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))

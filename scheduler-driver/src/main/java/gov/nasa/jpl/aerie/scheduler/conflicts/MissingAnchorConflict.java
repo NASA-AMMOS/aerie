@@ -2,12 +2,11 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
-import java.util.Optional;
+import java.util.Collection;
 
 /**
  * describes plan problem due to lack of aan anchor
@@ -15,87 +14,38 @@ import java.util.Optional;
  */
 public class MissingAnchorConflict extends Conflict {
 
-  /**
-   * ctor creates a new conflict regarding a missing activity
-   *
-   * @param goal  the dissatisfied goal that issued the conflict
-   * @param temporalContext  the times in the plan when the goal was
-   * @param template  desired activity template
-   * @param evaluationEnvironment the evaluation environment at the time of creation so variables can be retrieved later at instantiation
-   * @param totalDuration the desired total duration
-   */
-  public MissingAnchorConflict(
-      ActivityTemplateGoal goal,
-      Windows temporalContext,
-      ActivityCreationTemplate template,
-      EvaluationEnvironment evaluationEnvironment,
-      SchedulingActivityDirectiveId anchorId,
-      Optional<Duration> totalDuration)
-  {
-    super(goal, evaluationEnvironment);
-    if (temporalContext == null) {
-      throw new IllegalArgumentException(
-          "creating missing activity template conflict requires non-null temporal context");
-    }
-    this.temporalContext = temporalContext;
-    this.template = template;
-    this.anchorId = anchorId;
-    this.totalDuration = totalDuration;
-  }
-
-  //the number of times the activity needs to be inserted
-  SchedulingActivityDirectiveId anchorId;
-
-  //the desired total duration over the number of activities needed
-  Optional<Duration> totalDuration;
-
-  public SchedulingActivityDirectiveId getAnchorId(){
-    return anchorId;
-  }
-
-  public Optional<Duration> getTotalDuration(){
-    return totalDuration;
-  }
+  private final Collection<SchedulingActivityDirective> instances;
+  private final SchedulingActivityDirectiveId anchorIdTo;
 
   /**
-   * {@inheritDoc}
+   * ctor creates a new conflict
    *
-   * the times over which the missing activity template is causing a problem
+   * @param goal IN STORED the dissatisfied goal that issued the conflict
+   * @param instancesToChooseFrom IN the list of instances to choose from to perform the association
    *
-   * does not consider other constraints on the possible activity, eg timing
-   * with respect to other events or allowable state transitions or even
-   * the activity's own duration limits
-   *
-   * the times encompass just the desired start times of the missing activity
-   * @return
    */
+  public MissingAnchorConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom, SchedulingActivityDirectiveId anchorIdTo) {
+    super(goal, new EvaluationEnvironment());
+    this.instances = instancesToChooseFrom;
+    this.anchorIdTo = anchorIdTo;
+  }
+
+  public SchedulingActivityDirectiveId getAnchorIdTo() {
+    return anchorIdTo;
+  }
+
+  public Collection<SchedulingActivityDirective> getActivityInstancesToChooseFrom(){
+    return instances;
+  }
+
   @Override
   public Windows getTemporalContext() {
-    return temporalContext;
+    return null;
   }
 
-  /**
-   * the goal whose dissatisfaction initially created this conflict
-   *
-   * @return reference to the dissatisfied goal that caused this conflict
-   */
   @Override
-  public ActivityTemplateGoal getGoal() {
-    return (ActivityTemplateGoal) super.getGoal();
-  }
-
-  /**
-   * the times over which the activity templates' absence causes a problem
-   *
-   * see more details at accessor getTemporalContext()
-   */
-  private final Windows temporalContext;
-  /**
-   * The conflict can constraint the goal template to guide the search
-   */
-  private final ActivityCreationTemplate template;
-
-  public ActivityCreationTemplate getActTemplate() {
-    return template;
+  public String toString(){
+    return "Conflict: missing association between goal and 1 activity of following set: "
+           + this.getActivityInstancesToChooseFrom() + ". Produced by goal " + getGoal().getName();
   }
 }

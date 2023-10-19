@@ -383,13 +383,11 @@ export class Goal {
 
   public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType,  B extends WindowsEDSL.Gen.ActivityType>(opts: ({
     activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    createAnchor: boolean,
-    allowActivityUpdate: boolean,
     forEach:  WindowsEDSL.Windows | WindowsEDSL.Interval | Temporal.Instant,
     activityFinder?: ActivityExpression<B>
   } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    createAnchor: boolean,
+    createNewAnchoredActivity: boolean,
     allowActivityUpdate: boolean,
     forEach:  ActivityExpression<T>,
     activityFinder?: ActivityExpression<B>
@@ -428,12 +426,26 @@ export class Goal {
       activityTemplate = opts.activityTemplate;
     }
 
+    let createNewAnchoredActivitytmp: boolean;
+    let allowActivityUpdatetmp: boolean;
+
+    if ((opts as {createNewAnchoredActivity: boolean}).createNewAnchoredActivity !== undefined)
+      createNewAnchoredActivitytmp = (opts as {createNewAnchoredActivity: boolean}).createNewAnchoredActivity;
+    else
+      createNewAnchoredActivitytmp = false;
+
+    if ((opts as {allowActivityUpdate: boolean}).allowActivityUpdate !== undefined)
+      allowActivityUpdatetmp = (opts as {allowActivityUpdate: boolean}).allowActivityUpdate;
+    else
+      allowActivityUpdatetmp = false;
+
+
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       alias: alias,
       activityTemplate: activityTemplate,
-      createAnchor: opts.createAnchor,
-      allowActivityUpdate: opts.allowActivityUpdate,
+      createNewAnchoredActivity: createNewAnchoredActivitytmp,
+      allowActivityUpdate: allowActivityUpdatetmp,
       activityFinder: opts.activityFinder?.__astNode,
       forEach: localForEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
