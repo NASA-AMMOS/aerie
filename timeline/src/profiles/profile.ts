@@ -129,15 +129,15 @@ export class Profile<V> {
     );
   }
 
-  public map2Values<W>(rightProfile: Profile<W>, op: BinaryOperation<V, W, V>): ProfileSpecialization<V>;
+  public map2Values<W>(rightProfile: Profile<W>, op: BinaryOperation<V, W, V | undefined>): ProfileSpecialization<V>;
   public map2Values<W, Result>(
     rightProfile: Profile<W>,
-    op: BinaryOperation<V, W, Result>,
+    op: BinaryOperation<V, W, Result | undefined>,
     typeTag: ProfileType
   ): ProfileSpecialization<Result>;
   public map2Values<W, Result>(
     rightProfile: Profile<W>,
-    op: BinaryOperation<V, W, Result>,
+    op: BinaryOperation<V, W, Result | undefined>,
     typeTag?: ProfileType
   ): ProfileSpecialization<Result> {
     if (typeTag === undefined) typeTag = this.typeTag;
@@ -174,7 +174,7 @@ export class Profile<V> {
     );
   }
 
-  public edges(edgeFilter: BinaryOperation<V, V, boolean>): Windows {
+  public edges(edgeFilter: BinaryOperation<V, V, boolean | undefined>): Windows {
     const edgesOp = ({ current: bounds }: { current: Interval }, [arr]: Segment<V>[][]) => {
       let buffer: Segment<V> | undefined = undefined;
       return coalesce(
@@ -374,18 +374,18 @@ export class Profile<V> {
 
     public flatMap2<W>(
       rightProfile: Profile<W>,
-      op: BinaryOperation<V, W, Segment<V>[]>,
+      op: BinaryOperation<V, W, Segment<V>[] | undefined>,
       boundsMap: BoundsMap
     ): ProfileSpecialization<V>;
     public flatMap2<W, Result>(
       rightProfile: Profile<W>,
-      op: BinaryOperation<V, W, Segment<Result>[]>,
+      op: BinaryOperation<V, W, Segment<Result>[] | undefined>,
       boundsMap: BoundsMap,
       typeTag: ProfileType
     ): ProfileSpecialization<Result>;
     public flatMap2<W, Result>(
       rightProfile: Profile<W>,
-      op: BinaryOperation<V, W, Segment<Result>[]>,
+      op: BinaryOperation<V, W, Segment<Result>[] | undefined>,
       boundsMap: BoundsMap,
       typeTag?: ProfileType
     ): ProfileSpecialization<Result> {
@@ -404,7 +404,7 @@ export class Profile<V> {
 export function map2Arrays<V, W, Result>(
   left: Segment<V>[],
   right: Segment<W>[],
-  op: BinaryOperation<V, W, Result>
+  op: BinaryOperation<V, W, Result | undefined>
 ): Segment<Result>[] {
   const result: Segment<Result>[] = [];
 
