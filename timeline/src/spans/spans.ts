@@ -7,7 +7,7 @@ import {
   identityBoundsMap,
   isLazy,
   LazyTimeline,
-  merge,
+  zip,
   sortSegments,
   evaluate
 } from '../timeline.js';
@@ -17,7 +17,6 @@ import { ProfileSpecialization, ProfileType } from '../profiles/profile-type.js'
 import { LinearEquation, Real, map2Arrays, Windows, Profile, ActivityInstance, fetcher } from '../internal.js';
 import { BinaryOperation } from '../binary-operation.js';
 import { Temporal } from '@js-temporal/polyfill';
-import { AnyActivityType, ActivityTypeName } from '../dynamic/activity-type.js';
 import { shiftEdgesBoundsMap } from '../bounds-utils.js';
 
 export class Spans<S extends IntervalLike> {
@@ -27,11 +26,17 @@ export class Spans<S extends IntervalLike> {
     this.spans = spans;
   }
 
-  public static ActivityInstances<A extends ActivityTypeName = typeof AnyActivityType>(
-    type?: A
-  ): Spans<ActivityInstance<A>> {
-    if (type === undefined) return new Spans(fetcher.allActivityInstances());
-    else return new Spans(fetcher.activityInstanceByType(type));
+  public static ActivityInstances<P = { [key: string]: any }>(
+    ...types: string[]
+  ): Spans<ActivityInstance<P>> {
+    if (types.length === 0) return new Spans(fetcher.allActivityInstances() as Timeline<ActivityInstance<P>>);
+    else {
+      let timeline: Timeline<ActivityInstance> = types.reduce(
+          (acc, type) => zip(acc, fetcher.activityInstanceByType(type)),
+          async _ => []
+      );
+      return new Spans(timeline as Timeline<ActivityInstance<P>>);
+    }
   }
 
   public async evaluate(bounds: Interval): Promise<this> {
@@ -62,22 +67,22 @@ export class Spans<S extends IntervalLike> {
   }
 
   public add<T extends IntervalLike>(span: T): Spans<S | T> {
-    const timeline = merge(this.spans, bound([span]));
+    const timeline = zip(this.spans, bound([span]));
     return new Spans(timeline);
   }
 
   public addAll<T extends IntervalLike>(other: Spans<T>): Spans<S | T> {
-    const timeline = merge(this.spans, other.spans);
+    const timeline = zip(this.spans, other.spans);
     return new Spans(timeline);
   }
 
-  public mapToSegments<T>(f: (span: S) => T, boundsMap: BoundsMap): Spans<Segment<T>> {
+  public mapToSegments<T>(f: (span: S) => T): Spans<Segment<T>> {
     const mapToSegmentsOp = (_: any, [$]: S[][]) =>
       $.map(s => {
         let value = f(s);
         return new Segment(value, s.interval);
       });
-    const timeline = applyOperation(mapToSegmentsOp, boundsMap, this.spans);
+    const timeline = applyOperation(mapToSegmentsOp, identityBoundsMap, this.spans);
     return new Spans<Segment<T>>(timeline);
   }
 
@@ -99,7 +104,7 @@ export class Spans<S extends IntervalLike> {
   }
 
   public combineIntoProfile<Result>(
-    op: BinaryOperation<S, Result, Result>,
+    op: BinaryOperation<Result, S, Result>,
     profileType: ProfileType
   ): ProfileSpecialization<Result> {
     const combineIntoProfileOp = ({ current: bounds }: { current: Interval }, [$]: S[][]) => {
@@ -120,7 +125,7 @@ export class Spans<S extends IntervalLike> {
             previousInclusivity = span.interval.endInclusivity;
           }
         }
-        acc = map2Arrays(batch, acc, op);
+        acc = map2Arrays(acc, batch, op);
       }
       return coalesce(acc, profileType);
     };
@@ -142,10 +147,9 @@ export class Spans<S extends IntervalLike> {
 
   public countActive(): Real {
     return this.combineIntoProfile<LinearEquation>(
-      BinaryOperation.cases(
-        () => LinearEquation.Constant(1),
-        r => r,
-        (_, r) => r.plus(1)
+      BinaryOperation.fold(
+          () => LinearEquation.Constant(1),
+          (acc, _) => acc.plus(1)
       ),
       ProfileType.Real
     ).assignGaps(0);

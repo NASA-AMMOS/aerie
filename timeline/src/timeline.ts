@@ -133,9 +133,13 @@ export function sortSegments<V>(segments: Segment<V>[], profileType: ProfileType
 }
 
 /**
- * input condition: segments must be sorted such that between each pair of consecutive elements, one of the following is true:
+ * In-place flattens an array of overlapping segments into non-overlapping segments with unequal consecutive values.
+ *
+ * *Input condition*: segments must be sorted such that between each pair of consecutive elements, one of the following is true:
  * - if the values are unequal, the start and end times (including inclusivity) must be strictly increasing
  * - if the values are equal, the start time must be non-decreasing.
+ *
+ * This input condition is not checked, and violating it is undefined behavior.
  *
  * Empty intervals are removed, and their values are not considered for the purposes of the sorted input condition.
  *
@@ -199,7 +203,7 @@ export function cache<V extends IntervalLike>(t: Timeline<V>): Timeline<V> {
   };
 }
 
-export function merge<V extends IntervalLike, W extends IntervalLike>(
+export function zip<V extends IntervalLike, W extends IntervalLike>(
   left: Timeline<V>,
   right: Timeline<W>
 ): Timeline<V | W> {

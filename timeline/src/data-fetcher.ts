@@ -5,13 +5,12 @@ import { Temporal } from '@js-temporal/polyfill';
 import { Inclusivity, Interval } from './interval.js';
 import { ProfileType } from './profiles/profile-type.js';
 import { ActivityInstance } from './spans/activity-instance.js';
-import { ActivityTypeName, AnyActivityType } from './dynamic/activity-type.js';
 import Duration = Temporal.Duration;
 
 export interface DataFetcher {
   resource<V>(name: string, valueMap: (v: any, t: Duration) => V, profileType: ProfileType): Timeline<Segment<V>>;
-  activityInstanceByType<A extends ActivityTypeName>(type: A): Timeline<ActivityInstance<A>>;
-  allActivityInstances(): Timeline<ActivityInstance<any>>;
+  activityInstanceByType(type: string): Timeline<ActivityInstance>;
+  allActivityInstances(): Timeline<ActivityInstance>;
 }
 
 class UnimplementedDataFetcherStub implements DataFetcher {
@@ -19,11 +18,11 @@ class UnimplementedDataFetcherStub implements DataFetcher {
     throw new Error('`fetcher` global variable has not been set.');
   }
 
-  activityInstanceByType<A extends ActivityTypeName>(type: A): Timeline<ActivityInstance<A>> {
+  activityInstanceByType(type: string): Timeline<ActivityInstance> {
     throw new Error('`fetcher` global variable has not been set.');
   }
 
-  allActivityInstances(): Timeline<ActivityInstance<any>> {
+  allActivityInstances(): Timeline<ActivityInstance> {
     throw new Error('`fetcher` global variable has not been set.');
   }
 }
@@ -31,7 +30,7 @@ class UnimplementedDataFetcherStub implements DataFetcher {
 export class AeriePostgresDataFetcher implements DataFetcher {
   private client: pg.Client;
   private resourceCache: Map<String, Promise<Segment<any>[]>> = new Map();
-  private activitiesCache: Promise<ActivityInstance<any>[]> | Map<ActivityTypeName, Promise<ActivityInstance<any>[]>> =
+  private activitiesCache: Promise<ActivityInstance[]> | Map<string, Promise<ActivityInstance[]>> =
     new Map();
   private datasetId: number | undefined = undefined;
 
@@ -136,12 +135,10 @@ export class AeriePostgresDataFetcher implements DataFetcher {
     await this.client.end();
   }
 
-  public activityInstanceByType<A extends ActivityTypeName>(type: A): Timeline<ActivityInstance<A>> {
-    throw new Error('`fetcher` global variable has not been set.');
-    if (type === AnyActivityType) return this.allActivityInstances();
+  public activityInstanceByType(type: string): Timeline<ActivityInstance> {
     if (this.activitiesCache instanceof Map) {
-      const cached = (this.activitiesCache as Map<ActivityTypeName, Promise<ActivityInstance<any>[]>>).get(type);
-      if (cached !== undefined) return async bounds => truncate(cached as unknown as ActivityInstance<A>[], bounds);
+      const cached = (this.activitiesCache as Map<string, Promise<ActivityInstance[]>>).get(type);
+      if (cached !== undefined) return async bounds => truncate(await cached, bounds);
       const promise = (async () => {
         const result = await this.client.query(
           'select start_offset, duration, attributes from simulated_activity where simulation_dataset_id = $1 and activity_type_name = $2;',
@@ -157,20 +154,20 @@ export class AeriePostgresDataFetcher implements DataFetcher {
           );
         });
       })();
-      (this.activitiesCache as Map<ActivityTypeName, Promise<ActivityInstance<any>[]>>).set(type, promise);
+      (this.activitiesCache as Map<string, Promise<ActivityInstance[]>>).set(type, promise);
       return async bounds => truncate(await promise, bounds);
     } else {
       return async bounds =>
         truncate(
-          ((await this.activitiesCache) as ActivityInstance<any>[]).filter($ => $.type === type),
+          ((await this.activitiesCache) as ActivityInstance[]).filter($ => $.type === type),
           bounds
         );
     }
   }
 
-  public allActivityInstances(): Timeline<ActivityInstance<any>> {
+  public allActivityInstances(): Timeline<ActivityInstance> {
     if (this.activitiesCache instanceof Promise) {
-      return async bounds => truncate((await this.activitiesCache) as ActivityInstance<any>[], bounds);
+      return async bounds => truncate((await this.activitiesCache) as ActivityInstance[], bounds);
     } else {
       const promise = (async () => {
         const result = await this.client.query(

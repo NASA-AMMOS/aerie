@@ -4,11 +4,11 @@ import type { Interval } from './interval.js';
 export class BinaryOperation<Left, Right, Out> {
   private constructor(
     /** Left-operand-only operation for when the right operand is missing. */
-    public readonly left: (l: Left, i: Interval) => Out | undefined,
+    public readonly left: (l: Left, i: Interval) => Out,
     /** Right-operand-only operation for when the left operand is missing. */
-    public readonly right: (r: Right, i: Interval) => Out | undefined,
+    public readonly right: (r: Right, i: Interval) => Out,
     /** Binary operation for when both operands are present. */
-    public readonly combine: (l: Left, r: Right, i: Interval) => Out | undefined
+    public readonly combine: (l: Left, r: Right, i: Interval) => Out
   ) {}
 
   /**
@@ -21,9 +21,9 @@ export class BinaryOperation<Left, Right, Out> {
    * @param combine Binary operation for when both operands are present.
    */
   public static cases<Left, Right, Out>(
-    left: (l: Left, i: Interval) => Out | undefined,
-    right: (r: Right, i: Interval) => Out | undefined,
-    combine: (l: Left, r: Right, i: Interval) => Out | undefined
+    left: (l: Left, i: Interval) => Out,
+    right: (r: Right, i: Interval) => Out,
+    combine: (l: Left, r: Right, i: Interval) => Out,
   ): BinaryOperation<Left, Right, Out> {
     return new BinaryOperation<Left, Right, Out>(left, right, combine);
   }
@@ -36,7 +36,7 @@ export class BinaryOperation<Left, Right, Out> {
    * @param func a function which computes the operation on possibly undefined left and right operands
    */
   public static singleFunction<Left, Right, Out>(
-    func: (l: Left | undefined, r: Right | undefined, i: Interval) => Out | undefined
+    func: (l: Left | undefined, r: Right | undefined, i: Interval) => Out
   ): BinaryOperation<Left, Right, Out> {
     return new BinaryOperation(
       (l, i) => func(l, undefined, i),
@@ -52,8 +52,8 @@ export class BinaryOperation<Left, Right, Out> {
    * @param func a function which computes the operation on both operands.
    */
   public static combineOrUndefined<Left, Right, Out>(
-    func: (l: Left, r: Right, i: Interval) => Out | undefined
-  ): BinaryOperation<Left, Right, Out> {
+    func: (l: Left, r: Right, i: Interval) => Out
+  ): BinaryOperation<Left, Right, Out | undefined> {
     return BinaryOperation.cases(
       _ => undefined,
       _ => undefined,
@@ -79,6 +79,17 @@ export class BinaryOperation<Left, Right, Out> {
       l => l,
       r => r,
       (l, r, i) => func(l, r, i)
+    );
+  }
+
+  public static fold<In, Out>(
+      convert: (v: In, i: Interval) => Out,
+      combine: (acc: Out, v: In, i: Interval) => Out
+  ): BinaryOperation<Out, In, Out> {
+    return BinaryOperation.cases(
+        l => l,
+        convert,
+        combine
     );
   }
 }

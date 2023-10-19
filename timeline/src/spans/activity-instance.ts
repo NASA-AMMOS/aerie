@@ -1,18 +1,17 @@
 import { bound, Interval, IntervalLike, Segment, Spans, Windows } from '../internal.js';
-import { ActivityTypeName, ActivityTypeParameterMap } from '../dynamic/activity-type.js';
 
-export class ActivityInstance<A extends ActivityTypeName> implements IntervalLike {
+export class ActivityInstance<P = { [key: string]: any }> implements IntervalLike {
   public constructor(
-    public readonly type: A,
+    public readonly type: string,
     public readonly interval: Interval,
-    public readonly parameters: ActivityTypeParameterMap[A],
+    public readonly parameters: P,
     public readonly directive_id: number
   ) {}
 
   /**
    * Produces a span for the duration of the activity.
    */
-  public span(): Spans<ActivityInstance<A>> {
+  public span(): Spans<ActivityInstance<P>> {
     return new Spans(bound([this]));
   }
 
@@ -26,14 +25,14 @@ export class ActivityInstance<A extends ActivityTypeName> implements IntervalLik
   /**
    * Produces an instantaneous window at the start of the activity.
    */
-  public start(): Spans<ActivityInstance<A>> {
+  public start(): Spans<ActivityInstance<P>> {
     return this.span().starts();
   }
 
   /**
    * Produces an instantaneous window at the end of the activity.
    */
-  public end(): Spans<ActivityInstance<A>> {
+  public end(): Spans<ActivityInstance<P>> {
     return this.span().ends();
   }
 
@@ -42,12 +41,12 @@ export class ActivityInstance<A extends ActivityTypeName> implements IntervalLik
     if (intersection.isEmpty()) return undefined;
     else {
       // @ts-ignore
-      return new ActivityInstance<A>(this.type, intersection, this.parameters, this.directive_id);
+      return new ActivityInstance<P>(this.type, intersection, this.parameters, this.directive_id);
     }
   }
 
   public mapInterval(map: (i: this) => Interval): this {
     // @ts-ignore
-    return new ActivityInstance<A>(this.type, map(this), this.parameters, this.directive_id);
+    return new ActivityInstance<P>(this.type, map(this), this.parameters, this.directive_id);
   }
 }
