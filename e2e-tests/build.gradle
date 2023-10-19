@@ -17,6 +17,8 @@ jacocoTestReport {
 }
 
 task e2eTest(type: Test) {
+  dependsOn ":examples:banananation:assemble"
+
   if(file('.env').exists()) {
     file('.env').readLines().each() {
       def (key, value) = it.tokenize('=')
