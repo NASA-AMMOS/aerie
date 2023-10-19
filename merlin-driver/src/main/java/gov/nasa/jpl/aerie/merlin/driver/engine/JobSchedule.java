@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
+
 
 public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   /** The scheduled time for each upcoming job. */
@@ -18,7 +21,8 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
 
   /** A time-ordered queue of all tasks whose resumption time is concretely known. */
   @DerivedFrom("scheduledJobs")
-  private final PriorityQueue<Pair<TimeRef, JobRef>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
+  private final ConcurrentSkipListSet<Pair<TimeRef, JobRef>> queue = new ConcurrentSkipListSet<>(Comparator.comparing(Pair::getLeft));
+  //private final PriorityQueue<Pair<TimeRef, JobRef>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
   public void schedule(final JobRef job, final TimeRef time) {
     final var oldTime = this.scheduledJobs.put(job, time);
@@ -36,14 +40,14 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   /** Returns the offset time of the next set of job in the queue. */
   public Duration timeOfNextJobs() {
     if (this.queue.isEmpty()) return Duration.MAX_VALUE;
-    final var time = this.queue.peek().getKey();
+    final var time = this.queue.iterator().next().getKey();
     return time.project();
   }
 
   public Batch<JobRef> extractNextJobs(final Duration maximumTime) {
     if (this.queue.isEmpty()) return new Batch<>(maximumTime, Collections.emptySet());
 
-    final var time = this.queue.peek().getKey();
+    final var time = this.queue.first().getKey();
     if (time.project().longerThan(maximumTime)) {
       return new Batch<>(maximumTime, Collections.emptySet());
     }
@@ -51,12 +55,12 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
     // Ready all tasks at the soonest task time.
     final var readyJobs = new HashSet<JobRef>();
     while (true) {
-      final var entry = this.queue.peek();
+      final var entry = this.queue.first();
       if (entry == null) break;
       if (entry.getLeft().compareTo(time) > 0) break;
 
       this.scheduledJobs.remove(entry.getRight());
-      this.queue.remove();
+      this.queue.pollFirst();  // removes first
 
       readyJobs.add(entry.getRight());
     }
@@ -66,7 +70,7 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
 
   public Optional<TimeRef> min() {
     if (this.queue.isEmpty()) return Optional.empty();
-    return Optional.of(queue.peek().getKey());
+    return Optional.of(queue.first().getKey());
   }
 
   public void clear() {
