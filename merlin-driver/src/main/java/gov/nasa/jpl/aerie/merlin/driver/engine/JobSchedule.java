@@ -37,7 +37,7 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   /** Returns the offset time of the next set of job in the queue. */
   public Duration timeOfNextJobs() {
     if (this.queue.isEmpty()) return Duration.MAX_VALUE;
-    final var time = this.queue.iterator().next().getKey();
+    final var time = this.queue.first().getKey();
     return time.project();
   }
 
