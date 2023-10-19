@@ -193,8 +193,10 @@ export class AeriePostgresDataFetcher implements DataFetcher {
   }
 }
 
+/** The global shared data fetcher. */
 export let fetcher: DataFetcher = new UnimplementedDataFetcherStub();
 
+/** Sets the global shared data fetcher. */
 export function setFetcher(f: DataFetcher) {
   fetcher = f;
 }

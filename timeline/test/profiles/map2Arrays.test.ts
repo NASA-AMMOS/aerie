@@ -39,7 +39,7 @@ test('basic combine or undefined', () => {
 });
 
 describe('map2Arrays segment alignments', () => {
-  const op = BinaryOperation.combineOrIdentity<number>((l, r) => l + r);
+  const op = BinaryOperation.combineOrIdentity<number, number, number>((l, r) => l + r);
   const makeLeft = (
     s: number,
     e: number,
