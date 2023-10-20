@@ -15,6 +15,10 @@ public final class Subscriptions<TopicRef, QueryRef> {
   @DerivedFrom("topicsByQuery")
   private final Map<TopicRef, Set<QueryRef>> queriesByTopic = new HashMap<>();
 
+  public Set<TopicRef> getTopics() {
+    return queriesByTopic.keySet();
+  }
+
   // This method takes ownership of `topics`; the set should not be referenced after calling this method.
   public void subscribeQuery(final QueryRef query, final Set<TopicRef> topics) {
     this.topicsByQuery.put(query, topics);

@@ -215,11 +215,12 @@ public final class SimulationEngine implements AutoCloseable {
     Duration earliest = before;
     for (var entry : timeline.staleTopics.entrySet()) {
       Topic<?> topic = entry.getKey();
-      if (!timeline.isTopicStale(topic, after)) continue;
+      Optional<Duration> nextStale = timeline.whenIsTopicStale(topic, after, before);
+      if (nextStale.isEmpty()) continue;
       TreeMap<Duration, List<EventGraph<Event>>> eventsByTime =
           timeline.oldTemporalEventSource.getCombinedEventsByTopic().get(topic);
       if (eventsByTime == null) continue;
-      var subMap = eventsByTime.subMap(after, false, earliest, true);
+      var subMap = eventsByTime.subMap(nextStale.get(), !nextStale.get().isEqualTo(after), earliest, true);
       Duration d = null;
       for (var e : subMap.entrySet()) {
         final List<EventGraph<Event>> events = e.getValue();
@@ -227,6 +228,7 @@ public final class SimulationEngine implements AutoCloseable {
         boolean affectsTopic = events.stream().anyMatch(graph -> Optional.ofNullable(timeline.oldTemporalEventSource.topicsForEventGraph.get(graph)).map(topics -> topics.contains(topic)).orElse(false));
         if (!affectsTopic) continue;  // This is the case where old events were removed.
         d = e.getKey();
+        if (!timeline.isTopicStale(topic, d)) continue;
         break;
       }
       if (d == null) {
@@ -269,6 +271,38 @@ public final class SimulationEngine implements AutoCloseable {
     }
     if (list.isEmpty()) earliest = Duration.MAX_VALUE;
     return Pair.of(list, earliest);
+  }
+
+  public Pair<List<Topic<?>>, Duration> earliestConditionTopics(Duration after, Duration before) {
+    var list = new ArrayList<Topic<?>>();
+    Duration earliest = before;
+    for (Topic topic : this.waitingConditions.getTopics()) {
+      TreeMap<Duration, List<EventGraph<Event>>> eventsByTime =
+          timeline.getCombinedEventsByTopic().get(topic);
+      if (eventsByTime == null) continue;
+      var subMap = eventsByTime.subMap(after, true, earliest, true);
+      Duration d = null;
+      for (var e : subMap.entrySet()) {
+        final List<EventGraph<Event>> events = e.getValue();
+        if (events == null || events.isEmpty()) continue;
+//        boolean affectsTopic = events.stream().anyMatch(graph -> Optional.ofNullable(timeline.oldTemporalEventSource.topicsForEventGraph.get(graph)).map(topics -> topics.contains(topic)).orElse(false));
+//        if (!affectsTopic) continue;  // This is the case where old events were removed.
+        d = e.getKey();
+        break;
+      }
+      if (d == null) {
+        continue;
+      }
+      int comp = d.compareTo(earliest);
+      if (comp <= 0) {
+        if (comp < 0) list.clear();
+        list.add(topic);
+        earliest = d;
+      }
+    }
+    if (list.isEmpty()) earliest = Duration.MAX_VALUE;
+    return Pair.of(list, earliest);
+
   }
 
   private ExecutionState<?> getTaskExecutionState(TaskId taskId) {
@@ -574,6 +608,10 @@ public final class SimulationEngine implements AutoCloseable {
     var staleReadTime = earliestStaleReads.getLeft();
     nextTime = Duration.min(nextTime, staleReadTime);
 
+    var earliestConditionTopics = earliestConditionTopics(curTime(), nextTime);
+    var conditionTime = earliestConditionTopics.getRight();
+    nextTime = Duration.min(nextTime, conditionTime);
+
     // Increment real time, if necessary.
     var timeForDelta = Duration.min(nextTime, maximumTime);
     final var delta = timeForDelta.minus(Duration.max(curTime(), Duration.ZERO));
@@ -590,23 +628,33 @@ public final class SimulationEngine implements AutoCloseable {
       return;
     }
 
+    Set<Topic<?>> invalidatedTopics = new HashSet<>();
+
     if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
       for (Topic<?> topic : earliestStaleTopics.getLeft()) {
-        invalidateTopic(topic, staleTopicTime);
+        invalidateTopic(topic, nextTime);
+        invalidatedTopics.add(topic);
       }
     }
 
     if (resourceTracker == null && staleTopicOldEventTime.isEqualTo(nextTime)) {
-      for (Topic<?> topic : earliestStaleTopicOldEvents.getLeft()) {
-        invalidateTopic(topic, staleTopicOldEventTime);
+      for (Topic<?> topic : earliestStaleTopicOldEvents.getLeft().stream().filter(t -> !invalidatedTopics.contains(t)).toList()) {
+        invalidateTopic(topic, nextTime);
+        invalidatedTopics.add(topic);
+      }
+    }
+
+    if (conditionTime.isEqualTo(nextTime)) {
+      for (Topic<?> topic : earliestConditionTopics.getLeft().stream().filter(t -> !invalidatedTopics.contains(t)).toList()) {
+        invalidateTopic(topic, nextTime);
+        invalidatedTopics.add(topic);
       }
     }
 
     if (staleReadTime.isEqualTo(nextTime)) {
       rescheduleStaleTasks(earliestStaleReads);
-    }  // TODO -- probably need an else to postpone the batch of jobs so that they are recollected on the next step()
-
-    if (timeOfNextJobs.isEqualTo(nextTime)) {
+    } else
+    if (timeOfNextJobs.isEqualTo(nextTime) && invalidatedTopics.isEmpty()) {
 
       final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
       // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
@@ -629,39 +677,7 @@ public final class SimulationEngine implements AutoCloseable {
         }));
       }
 
-//      // Copy commits from old timeline if we haven't already
-//      List<TemporalEventSource.TimePoint.Commit> currentCommits = null;
-//      if (oldEngine != null) {
-//        currentCommits = this.timeline.commitsByTime.get(curTime());
-//        if (currentCommits == null || currentCommits.isEmpty()) {
-//          currentCommits = oldEngine.timeline.getCombinedCommitsByTime().get(curTime());
-//          if (currentCommits != null && !currentCommits.isEmpty()) {
-//            currentCommits = new ArrayList<>(currentCommits);
-////            this.timeline.commitsByTime.put(curTime(), currentCommits);
-////          var oldCommitList = oldEngine.timeline.getCombinedCommitsByTime().get(curTime());
-////          if (oldCommitList != null) {
-////            for (TemporalEventSource.TimePoint.Commit c : oldCommitList) {
-////              this.timeline.add(c.events(), curTime());
-////              updateTaskInfo(c.events());
-////            }
-////            currentCommits = this.timeline.commitsByTime.get(curTime());
-////          }
-//          }
-//        }
-//        overlayingEvents = currentCommits != null && stepIndexAtTime < currentCommits.size();
-//      }
-//
-//      if (overlayingEvents && false) {
-//        final TemporalEventSource.TimePoint.Commit oldCommit = currentCommits.get(stepIndexAtTime);
-//        final EventGraph<Event> newGraph = EventGraph.concurrently(oldCommit.events(), tip);
-////        var topics = TemporalEventSource.extractTopics(newGraph);
-////        var commit = new TemporalEventSource.TimePoint.Commit(newGraph, topics);
-////        currentCommits.set(stepIndexAtTime, commit);
-//        //addIndices(commit, time, topics);
-//        timeline.replaceEventGraph(oldCommit.events(), newGraph);
-//      } else {
-        this.timeline.add(tip, curTime());
-//      }
+      this.timeline.add(tip, curTime());
       updateTaskInfo(tip);
       stepIndexAtTime += 1;
 

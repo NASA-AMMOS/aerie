@@ -553,6 +553,23 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     return staleTime != null && map.get(staleTime);
   }
 
+  public Optional<Duration> whenIsTopicStale(Topic<?> topic, Duration earliestTimeOffset, Duration latestTimeOffset) {
+    if (oldTemporalEventSource == null) return Optional.of(earliestTimeOffset);
+    var map = this.staleTopics.get(topic);
+    if (map == null) return Optional.empty();
+    final Duration staleTime = map.floorKey(earliestTimeOffset);
+    if (staleTime != null && map.get(staleTime)) {
+      return Optional.of(earliestTimeOffset);
+    }
+    var submap = map.subMap(earliestTimeOffset, true, latestTimeOffset, true);
+    for (Map.Entry<Duration, Boolean> e : submap.entrySet()) {
+      if (e.getValue()) return Optional.of(e.getKey());
+    }
+    return Optional.empty();
+  }
+
+
+
   /**
    * Step up the Cell for one set of Events (an EventGraph) up to a specified last Event.  Stepping up means to
    * apply Effects from Events up to some point in time.  The EventGraph represents partially time-ordered events.
