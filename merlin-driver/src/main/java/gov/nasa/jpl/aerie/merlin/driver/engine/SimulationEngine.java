@@ -752,6 +752,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
+    ExecutionState<Return> duplicate();
     /** The task is in its primary operational phase. */
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
@@ -765,6 +766,11 @@ public final class SimulationEngine implements AutoCloseable {
       public InProgress<Return> continueWith(final Task<Return> newState) {
         return new InProgress<>(this.startOffset, newState);
       }
+
+      @Override
+      public ExecutionState<Return> duplicate() {
+        return new InProgress<>(startOffset, state.duplicate());
+      }
     }
 
     /** The task has completed its primary operation, but has unfinished children. */
@@ -777,6 +783,11 @@ public final class SimulationEngine implements AutoCloseable {
       public Terminated<Return> joinedAt(final Duration joinOffset) {
         return new Terminated<>(this.startOffset, this.endOffset, joinOffset);
       }
+
+      @Override
+      public ExecutionState<Return> duplicate() {
+        return new AwaitingChildren<>(startOffset, endOffset, new LinkedList<>(remainingChildren));
+      }
     }
 
     /** The task and all its delegated children have completed. */
@@ -784,6 +795,11 @@ public final class SimulationEngine implements AutoCloseable {
         Duration startOffset,
         Duration endOffset,
         Duration joinOffset
-    ) implements ExecutionState<Return> {}
+    ) implements ExecutionState<Return> {
+      @Override
+      public ExecutionState<Return> duplicate() {
+        return this;
+      }
+    }
   }
 }
