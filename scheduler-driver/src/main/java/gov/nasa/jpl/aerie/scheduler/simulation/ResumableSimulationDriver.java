@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -398,9 +399,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final ActivityDirectiveId directiveId,
       final TaskFactory<Output> task,
       final Topic<ActivityDirectiveId> activityTopic) {
-    return executor -> scheduler -> {
-      scheduler.emit(directiveId, activityTopic);
-      return task.create(executor).step(scheduler);
-    };
+    return executor ->
+        Task.run($ -> $.emit(directiveId, activityTopic))
+            .andThen(task.create(executor));
   }
 }

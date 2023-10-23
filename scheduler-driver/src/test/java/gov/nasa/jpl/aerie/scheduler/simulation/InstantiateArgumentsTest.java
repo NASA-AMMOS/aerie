@@ -11,10 +11,12 @@ import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
 import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -29,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
@@ -141,13 +145,13 @@ public class InstantiateArgumentsTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
+      return executor -> oneShotTask($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
+        return TaskStatus.delayed(oneMinute, oneShotTask($$ -> {
           $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
-        });
-      };
+        }));
+      });
     }
   };
 
@@ -195,4 +199,18 @@ public class InstantiateArgumentsTest {
       return SerializedValue.of(Map.of());
     }
   };
+
+  private static <T> Task<T> oneShotTask(Function<Scheduler, TaskStatus<T>> f) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<T> step(final Scheduler scheduler) {
+        return f.apply(scheduler);
+      }
+
+      @Override
+      public Task<T> duplicate(Executor executor) {
+        return this;
+      }
+    };
+  }
 }

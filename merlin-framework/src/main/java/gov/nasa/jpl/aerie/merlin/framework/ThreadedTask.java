@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -250,5 +252,31 @@ public final class ThreadedTask<Return> implements Task<Return> {
     public TaskAbort() {
       super(null, null, /* capture suppressed exceptions? */ true, /* capture stack trace? */ false);
     }
+  }
+
+  @Override
+  public Task<Return> duplicate(Executor executor) {
+    final ThreadedTask<Return> threadedTask = new ThreadedTask<>(executor, rootContext, task);
+    final var readIterator = readLog.iterator();
+    final Scheduler scheduler = new Scheduler() {
+      @Override
+      public <State> State get(final CellId<State> cellId) {
+        return (State) readIterator.next();
+      }
+
+      @Override
+      public <Event> void emit(final Event event, final Topic<Event> topic) {
+
+      }
+
+      @Override
+      public void spawn(final InSpan childSpan, final TaskFactory<?> task) {
+
+      }
+    };
+    for (int i = 0; i < stepCount; i++) {
+      threadedTask.step(scheduler);
+    }
+    return threadedTask;
   }
 }

@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -32,6 +33,16 @@ public interface Task<Output> {
    */
   default void release() {}
 
+  /**
+   * Produce a copy of this Task that can be stepped independently from this Task
+   *
+   * <p>Clients must not invoke {@code duplicate()} after {@link #step(Scheduler)} or {@link #release()}
+   * has been invoked.</p>
+   * @param executor the executor to use for the new Task
+   * @return a copy of this Task that can be stepped independently from this Task
+   */
+  Task<Output> duplicate(Executor executor);
+
   default <Output> Task<Output> andThen(Task<Output> task2) {
     return new Task<>() {
       @Override
@@ -50,6 +61,11 @@ public interface Task<Output> {
             return new TaskStatus.Delayed<>(s.delay(), s.continuation().andThen(task2));
           }
         }
+      }
+
+      @Override
+      public Task<Output> duplicate(final Executor executor) {
+        return Task.this.duplicate(executor).andThen(task2.duplicate(executor));
       }
     };
   }
@@ -73,6 +89,11 @@ public interface Task<Output> {
           }
         }
       }
+
+      @Override
+      public Task<Unit> duplicate(final Executor executor) {
+        return Task.this.duplicate(executor).dropOutput();
+      }
     };
   }
 
@@ -82,6 +103,11 @@ public interface Task<Output> {
       public TaskStatus<Unit> step(final Scheduler scheduler) {
         return TaskStatus.calling(InSpan.Parent, (TaskFactory < Output >)executor -> task, Task.empty());
       }
+
+      @Override
+      public Task<Unit> duplicate(final Executor executor) {
+        return calling(task.duplicate(executor));
+      }
     };
   }
 
@@ -90,6 +116,11 @@ public interface Task<Output> {
       @Override
       public TaskStatus<Unit> step(final Scheduler scheduler) {
         return TaskStatus.calling(InSpan.Fresh, (TaskFactory<Output>) executor -> task, Task.empty());
+      }
+
+      @Override
+      public Task<Unit> duplicate(final Executor executor) {
+        return callingWithSpan(task.duplicate(executor));
       }
     };
   }
@@ -143,6 +174,11 @@ public interface Task<Output> {
       public TaskStatus<Output> step(final Scheduler scheduler) {
         return TaskStatus.completed(f.apply(scheduler));
       }
+
+      @Override
+      public Task<Output> duplicate(final Executor executor) {
+        return this;
+      }
     };
   }
 
@@ -152,6 +188,11 @@ public interface Task<Output> {
       public TaskStatus<Unit> step(final Scheduler scheduler) {
         return TaskStatus.completed(Unit.UNIT);
       }
+
+      @Override
+      public Task<Unit> duplicate(final Executor executor) {
+        return this;
+      }
     };
   }
 
@@ -160,6 +201,11 @@ public interface Task<Output> {
       @Override
       public TaskStatus<Output> step(final Scheduler scheduler) {
         return f.apply(scheduler);
+      }
+
+      @Override
+      public Task<Output> duplicate(final Executor executor) {
+        return this;
       }
     };
   }
