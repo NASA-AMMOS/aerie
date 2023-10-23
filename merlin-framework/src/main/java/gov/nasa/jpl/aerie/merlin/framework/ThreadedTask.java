@@ -7,6 +7,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
@@ -22,6 +24,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
 
   private Lifecycle lifecycle = Lifecycle.Inactive;
   private Return returnValue;
+  private final List<Object> readLog = new ArrayList<>();
+  private int stepCount = 0;
 
   public ThreadedTask(final Executor executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -31,6 +35,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
 
   @Override
   public TaskStatus<Return> step(final Scheduler scheduler) {
+    this.stepCount++;
     try {
       if (this.lifecycle == Lifecycle.Terminated) {
         return TaskStatus.completed(this.returnValue);
@@ -136,7 +141,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
+        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this, ThreadedTask.this.readLog);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
