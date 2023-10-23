@@ -20,4 +20,8 @@ implements Iterable<Profile.Segment<Dynamics>> {
   public Iterator<Segment<Dynamics>> iterator() {
     return this.segments.iterator();
   }
+
+  public Profile<Dynamics> duplicate() {
+    return new Profile<>(segments.duplicate());
+  }
 }
