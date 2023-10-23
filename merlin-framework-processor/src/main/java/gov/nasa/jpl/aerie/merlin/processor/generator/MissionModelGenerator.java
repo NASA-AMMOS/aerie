@@ -24,6 +24,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
@@ -31,6 +32,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -833,12 +835,18 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .orElseGet(() -> CodeBlock
                             .builder()
                             .add(
-                                "return executor -> scheduler -> {$>\n$L$<};\n",
+                                "return executor -> new $T<>() { public $T<$T> step($T scheduler) {$>\n$L$<} public $T<$T> duplicate() { return this; }};\n",
+                                Task.class,
+                                TaskStatus.class,
+                                Unit.class,
+                                Scheduler.class,
                                 CodeBlock.builder()
-                                    .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
-                                    .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")
+                                    .addStatement("scheduler.emit($L, $L.this.$L)", "activity", activityType.inputType().mapper().name, "inputTopic")
+                                    .addStatement("scheduler.emit($T.UNIT, $L.this.$L)", Unit.class, activityType.inputType().mapper().name, "outputTopic")
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
-                                    .build())
+                                    .build(),
+                                Task.class,
+                                Unit.class)
                             .build()))
                 .build())
         .build();

@@ -10,11 +10,13 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -665,13 +668,13 @@ public class AnchorSchedulerTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
+      return executor -> oneShotTask($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
+        return TaskStatus.delayed(oneMinute, oneShotTask($$ -> {
           $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
-        });
-      };
+        }));
+      });
     }
   };
 
@@ -690,18 +693,18 @@ public class AnchorSchedulerTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> scheduler -> {
+      return executor -> oneShotTask(scheduler -> {
         scheduler.emit(this, decomposingActivityDirectiveInputTopic);
         return TaskStatus.delayed(
             Duration.ZERO,
-            $ -> {
+            oneShotTask($ -> {
               try {
                 $.spawn(delayedActivityDirective.getTaskFactory(null, null));
               } catch (final InstantiationException ex) {
                 throw new Error("Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                     ex.toString()));
               }
-              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), $$ -> {
+              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), oneShotTask($$ -> {
                 try {
                   $$.spawn(delayedActivityDirective.getTaskFactory(null, null));
                 } catch (final InstantiationException ex) {
@@ -711,9 +714,9 @@ public class AnchorSchedulerTest {
                 }
                 $$.emit(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
                 return TaskStatus.completed(Unit.UNIT);
-              });
-            });
-      };
+              }));
+            }));
+      });
     }
   };
 
@@ -807,4 +810,18 @@ public class AnchorSchedulerTest {
       )
   );
   //endregion
+
+  private static <T> Task<T> oneShotTask(Function<Scheduler, TaskStatus<T>> f) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<T> step(final Scheduler scheduler) {
+        return f.apply(scheduler);
+      }
+
+      @Override
+      public Task<T> duplicate() {
+        return this;
+      }
+    };
+  }
 }

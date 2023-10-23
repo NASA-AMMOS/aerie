@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
@@ -15,8 +16,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -394,9 +393,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final ActivityDirectiveId directiveId,
       final TaskFactory<Output> task,
       final Topic<ActivityDirectiveId> activityTopic) {
-    return executor -> scheduler -> {
-      scheduler.emit(directiveId, activityTopic);
-      return task.create(executor).step(scheduler);
-    };
+    return executor -> SimulationDriver.oneShotTask(
+        scheduler -> {
+          scheduler.emit(directiveId, activityTopic);
+          return task.create(executor).step(scheduler);
+        });
   }
 }
