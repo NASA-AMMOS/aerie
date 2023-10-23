@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,30 +57,71 @@ import java.util.function.Consumer;
  */
 public final class SimulationEngine implements AutoCloseable {
   /** The set of all jobs waiting for time to pass. */
-  private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
+  private final JobSchedule<JobId, SchedulingInstant> scheduledJobs;
   /** The set of all jobs waiting on a condition. */
-  private final Map<ConditionId, TaskId> waitingTasks = new HashMap<>();
+  private final Map<ConditionId, TaskId> waitingTasks;
   /** The set of all tasks blocked on some number of subtasks. */
-  private final Map<TaskId, MutableInt> blockedTasks = new HashMap<>();
+  private final Map<TaskId, MutableInt> blockedTasks;
   /** The set of conditions depending on a given set of topics. */
-  private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ConditionId> waitingConditions;
   /** The set of queries depending on a given set of topics. */
-  private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ResourceId> waitingResources;
 
   /** The execution state for every task. */
-  private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
+  private final Map<TaskId, ExecutionState<?>> tasks;
   /** The getter for each tracked condition. */
-  private final Map<ConditionId, Condition> conditions = new HashMap<>();
+  private final Map<ConditionId, Condition> conditions;
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  private final Map<ResourceId, ProfilingState<?>> resources;
 
   /** The set of all spans of work contributed to by modeled tasks. */
-  private final Map<SpanId, Span> spans = new HashMap<>();
+  private final Map<SpanId, Span> spans;
   /** A count of the direct contributors to each span, including child spans and tasks. */
-  private final Map<SpanId, MutableInt> spanContributorCount = new HashMap<>();
+  private final Map<SpanId, MutableInt> spanContributorCount;
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
-  private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+  private final ExecutorService executor;
+
+  public SimulationEngine() {
+    scheduledJobs = new JobSchedule<>();
+    waitingTasks = new LinkedHashMap<>();
+    blockedTasks = new LinkedHashMap<>();
+    waitingConditions = new Subscriptions<>();
+    waitingResources = new Subscriptions<>();
+    tasks = new LinkedHashMap<>();
+    conditions = new LinkedHashMap<>();
+    resources = new LinkedHashMap<>();
+    spans = new LinkedHashMap<>();
+    spanContributorCount = new LinkedHashMap<>();
+    executor = Executors.newVirtualThreadPerTaskExecutor();
+  }
+
+  private SimulationEngine(SimulationEngine other) {
+    // New Executor allows other SimulationEngine to be closed
+    executor = Executors.newVirtualThreadPerTaskExecutor();
+    scheduledJobs = other.scheduledJobs.duplicate();
+    waitingTasks = new LinkedHashMap<>(other.waitingTasks);
+    blockedTasks = new LinkedHashMap<>();
+    for (final var entry : other.blockedTasks.entrySet()) {
+      blockedTasks.put(entry.getKey(), new MutableInt(entry.getValue()));
+    }
+    waitingConditions = other.waitingConditions.duplicate();
+    waitingResources = other.waitingResources.duplicate();
+    tasks = new LinkedHashMap<>();
+    for (final var entry : other.tasks.entrySet()) {
+      tasks.put(entry.getKey(), entry.getValue().duplicate(executor));
+    }
+    conditions = new LinkedHashMap<>(other.conditions);
+    resources = new LinkedHashMap<>();
+    for (final var entry : other.resources.entrySet()) {
+      resources.put(entry.getKey(), entry.getValue().duplicate());
+    }
+    spans = new LinkedHashMap<>(other.spans);
+    spanContributorCount = new LinkedHashMap<>();
+    for (final var entry : other.spanContributorCount.entrySet()) {
+      spanContributorCount.put(entry.getKey(), new MutableInt(entry.getValue().getValue()));
+    }
+  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state) {
@@ -825,5 +867,9 @@ public final class SimulationEngine implements AutoCloseable {
     public boolean isComplete() {
       return this.endOffset.isPresent();
     }
+  }
+
+  public SimulationEngine duplicate() {
+    return new SimulationEngine(this);
   }
 }
