@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.staticallyCreated;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
@@ -67,8 +68,7 @@ public final class Resources {
           startException -> currentDynamics.match(
               ignored -> true,
               // Use semantic comparison for exceptions, since derivation can generate the exception each invocation.
-              currentException -> !(startException.getClass().equals(currentException.getClass())
-                                    && startException.getMessage().equals(currentException.getMessage()))));
+              currentException -> !equivalentExceptions(startException, currentException)));
 
       return positive == haveChanged
           ? Optional.of(atEarliest)
@@ -78,6 +78,16 @@ public final class Resources {
                 exception -> Optional.empty())
             : Optional.empty();
     };
+  }
+
+  // TODO: Should this be moved somewhere else?
+  /**
+   * Tests if two exceptions are equivalent from the point of view of resource values.
+   * Two exceptions are equivalent if they have the same type and message.
+   */
+  public static boolean equivalentExceptions(Throwable startException, Throwable currentException) {
+    return startException.getClass().equals(currentException.getClass())
+           && startException.getMessage().equals(currentException.getMessage());
   }
 
   public static <D extends Dynamics<?, D>> Condition dynamicsChange(List<Resource<D>> resources) {

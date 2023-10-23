@@ -6,7 +6,9 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
@@ -18,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -31,6 +34,9 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.expiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.equivalentExceptions;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.formatName;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
@@ -48,6 +54,10 @@ public final class DiscreteResources {
   }
 
   public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
+    return cache("", resource, updatePredicate);
+  }
+
+  public static <V> Resource<Discrete<V>> cache(String profilingName, Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
     final var cell = cellResource(resource.getDynamics());
     BiPredicate<ErrorCatching<Expiring<Discrete<V>>>, ErrorCatching<Expiring<Discrete<V>>>> liftedUpdatePredicate = (eCurrent, eNew) ->
         eCurrent.match(
@@ -56,14 +66,16 @@ public final class DiscreteResources {
                 newException -> true),
             currentException -> eNew.match(
                 value -> true,
-                newException -> !currentException.equals(newException)));
-    whenever(() -> {
+                newException -> !equivalentExceptions(currentException, newException)));
+    whenever(profile(formatName("cache %s", profilingName), () -> {
       var currentDynamics = resource.getDynamics();
-      return when(() -> DynamicsMonad.unit(discrete(liftedUpdatePredicate.test(currentDynamics, resource.getDynamics()))));
-    }, () -> {
+      return when(() -> DynamicsMonad.unit(discrete(liftedUpdatePredicate.test(
+          currentDynamics,
+          resource.getDynamics()))));
+    }), profile(formatName("update cache %s", profilingName), () -> {
       final var newDynamics = resource.getDynamics();
       cell.emit($ -> newDynamics);
-    });
+    }));
     return cell;
   }
 
@@ -122,13 +134,24 @@ public final class DiscreteResources {
 
   // Boolean logic
 
+  public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
+    // Short-circuiting and: Only gets right if left is true
+    return bind(left, l -> l ? right : unit(false));
+  }
+
   @SafeVarargs
   public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>>... operands) {
     return and(stream(operands));
   }
 
   public static Resource<Discrete<Boolean>> and(Stream<Resource<Discrete<Boolean>>> operands) {
-    return operands.reduce(unit(true), lift(Boolean::logicalAnd)::apply);
+    // Reduce using the short-circuiting and to improve efficiency
+    return operands.reduce(unit(true), DiscreteResources::and);
+  }
+
+  public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
+    // Short-circuiting or: Only gets right if left is false
+    return bind(left, l -> l ? unit(true) : right);
   }
 
   @SafeVarargs
@@ -137,7 +160,8 @@ public final class DiscreteResources {
   }
 
   public static Resource<Discrete<Boolean>> or(Stream<Resource<Discrete<Boolean>>> operands) {
-    return operands.reduce(unit(false), lift(Boolean::logicalOr)::apply);
+    // Reduce using the short-circuiting or to improve efficiency
+    return operands.reduce(unit(false), DiscreteResources::or);
   }
 
   public static Resource<Discrete<Boolean>> not(Resource<Discrete<Boolean>> operand) {
@@ -177,5 +201,15 @@ public final class DiscreteResources {
 
   public static Resource<Discrete<Integer>> divide(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
     return map(left, right, (l, r) -> l / r);
+  }
+
+  // Collections
+
+  public static <C extends Collection<?>> Resource<Discrete<Boolean>> isEmpty(Resource<Discrete<C>> resource) {
+    return map(resource, Collection::isEmpty);
+  }
+
+  public static <C extends Collection<?>> Resource<Discrete<Boolean>> isNonEmpty(Resource<Discrete<C>> resource) {
+    return not(isEmpty(resource));
   }
 }
