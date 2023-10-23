@@ -365,6 +365,17 @@ public final class SimulationEngine implements AutoCloseable {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
   }
 
+  public void unscheduleAfter(final Duration duration) {
+    for (final var task : new ArrayList<>(this.tasks.entrySet())) {
+      final var taskId = task.getKey();
+      final var executionState = task.getValue();
+      if (executionState instanceof ExecutionState.NotStarted<?> e && e.startTime.longerThan(duration)) {
+        this.tasks.remove(taskId);
+        this.scheduledJobs.unschedule(JobId.forTask(taskId));
+      }
+    }
+  }
+
   private record TaskInfo(
       Map<String, ActivityDirectiveId> taskToPlannedDirective,
       Map<String, SerializedActivity> input,
