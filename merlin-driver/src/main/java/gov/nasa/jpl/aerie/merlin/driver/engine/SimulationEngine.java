@@ -134,7 +134,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
+    this.tasks.put(task, new ExecutionState.NotStarted<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
@@ -236,7 +236,9 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
+    if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
+      stepEffectModel(task, e.startedAt(currentTime), frame, currentTime);
+    } else if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
       stepEffectModel(task, e, frame, currentTime);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
@@ -807,6 +809,21 @@ public final class SimulationEngine implements AutoCloseable {
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
     ExecutionState<Return> duplicate();
+
+    /** The task has been scheduled, but not started. */
+    record NotStarted<Return>(Duration startTime, Task<Return> state)
+        implements ExecutionState<Return>
+    {
+      public InProgress<Return> startedAt(final Duration startOffset) {
+        return new InProgress<>(startOffset, state);
+      }
+
+      @Override
+      public ExecutionState<Return> duplicate() {
+        return new NotStarted<>(startTime, state.duplicate());
+      }
+    }
+
     /** The task is in its primary operational phase. */
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
