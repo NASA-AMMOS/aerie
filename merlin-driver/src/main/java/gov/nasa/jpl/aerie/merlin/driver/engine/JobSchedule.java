@@ -58,4 +58,13 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   }
 
   public record Batch<JobRef>(Duration offsetFromStart, Set<JobRef> jobs) {}
+
+  public JobSchedule<JobRef, TimeRef> duplicate() {
+    final JobSchedule<JobRef, TimeRef> jobSchedule = new JobSchedule<>();
+    for (final var entry : this.queue.entrySet()) {
+      jobSchedule.queue.put(entry.getKey(), new HashSet<>(entry.getValue()));
+    }
+    jobSchedule.scheduledJobs.putAll(this.scheduledJobs);
+    return jobSchedule;
+  }
 }
