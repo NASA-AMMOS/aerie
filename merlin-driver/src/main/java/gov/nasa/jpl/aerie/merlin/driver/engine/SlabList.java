@@ -99,4 +99,12 @@ public final class SlabList<T> implements Iterable<T> {
       this(new ArrayList<>(SLAB_SIZE), new MutableObject<>(null));
     }
   }
+
+  public SlabList<T> duplicate() {
+    final SlabList<T> slabList = new SlabList<>();
+    for (T t : this) {
+      slabList.append(t);
+    }
+    return slabList;
+  }
 }
