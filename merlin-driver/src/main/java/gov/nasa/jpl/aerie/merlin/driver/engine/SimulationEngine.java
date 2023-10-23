@@ -51,29 +51,61 @@ import java.util.function.Consumer;
  */
 public final class SimulationEngine implements AutoCloseable {
   /** The set of all jobs waiting for time to pass. */
-  private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
+  private final JobSchedule<JobId, SchedulingInstant> scheduledJobs;
   /** The set of all jobs waiting on a given signal. */
-  private final Subscriptions<SignalId, TaskId> waitingTasks = new Subscriptions<>();
+  private final Subscriptions<SignalId, TaskId> waitingTasks;
   /** The set of conditions depending on a given set of topics. */
-  private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ConditionId> waitingConditions;
   /** The set of queries depending on a given set of topics. */
-  private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ResourceId> waitingResources;
 
   /** The execution state for every task. */
-  private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
+  private final Map<TaskId, ExecutionState<?>> tasks;
   /** The getter for each tracked condition. */
-  private final Map<ConditionId, Condition> conditions = new HashMap<>();
+  private final Map<ConditionId, Condition> conditions;
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  private final Map<ResourceId, ProfilingState<?>> resources;
 
   /** The task that spawned a given task (if any). */
-  private final Map<TaskId, TaskId> taskParent = new HashMap<>();
+  private final Map<TaskId, TaskId> taskParent;
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
-  private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
+  private final Map<TaskId, Set<TaskId>> taskChildren;
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
-  private final ExecutorService executor = getLoomOrFallback();
+  private final ExecutorService executor;
+
+  public SimulationEngine() {
+    scheduledJobs = new JobSchedule<>();
+    waitingTasks = new Subscriptions<>();
+    waitingConditions = new Subscriptions<>();
+    waitingResources = new Subscriptions<>();
+    tasks = new HashMap<>();
+    conditions = new HashMap<>();
+    resources = new HashMap<>();
+    taskParent = new HashMap<>();
+    taskChildren = new HashMap<>();
+    executor = getLoomOrFallback();
+  }
+
+  private SimulationEngine(SimulationEngine other) {
+    scheduledJobs = other.scheduledJobs.duplicate();
+    waitingTasks = other.waitingTasks.duplicate();
+    waitingConditions = other.waitingConditions.duplicate();
+    waitingResources = other.waitingResources.duplicate();
+    tasks = new HashMap<>();
+    for (final var entry : other.tasks.entrySet()) {
+      tasks.put(entry.getKey(), entry.getValue().duplicate());
+    }
+    conditions = new HashMap<>(other.conditions);
+    resources = new HashMap<>();
+    for (final var entry : other.resources.entrySet()) {
+      resources.put(entry.getKey(), entry.getValue().duplicate());
+    }
+    taskParent = new HashMap<>(other.taskParent);
+    taskChildren = new HashMap<>(other.taskChildren);
+    executor = other.executor;
+  }
 
   private static ExecutorService getLoomOrFallback() {
     // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
@@ -823,5 +855,9 @@ public final class SimulationEngine implements AutoCloseable {
         return this;
       }
     }
+  }
+
+  public SimulationEngine duplicate() {
+    return new SimulationEngine(this);
   }
 }
