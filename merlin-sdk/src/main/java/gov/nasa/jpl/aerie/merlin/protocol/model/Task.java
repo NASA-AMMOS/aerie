@@ -23,4 +23,6 @@ public interface Task<Return> {
    * nor shall {@link #step(Scheduler)} be called after this method.</p>
    */
   default void release() {}
+
+  Task<Return> duplicate();
 }

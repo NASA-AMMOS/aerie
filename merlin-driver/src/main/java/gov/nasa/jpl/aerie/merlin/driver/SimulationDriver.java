@@ -3,7 +3,9 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class SimulationDriver {
   public static <Model>
@@ -220,17 +223,17 @@ public final class SimulationDriver {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
+    return executor -> oneShotTask(scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> oneShotTask(scheduler1 -> {
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
-    }), scheduler2 -> {
+    })), oneShotTask(scheduler2 -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
       for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> scheduler3 ->
+        scheduler2.spawn(executor2 -> oneShotTask(scheduler3 ->
             // Delay until the dependent starts
-            TaskStatus.delayed(dependent.getRight(), scheduler4 -> {
+            TaskStatus.delayed(dependent.getRight(), oneShotTask(scheduler4 -> {
               final var dependentDirectiveId = dependent.getLeft();
               final var serializedDependentDirective = schedule.get(dependentDirectiveId).serializedActivity();
 
@@ -255,9 +258,23 @@ public final class SimulationDriver {
                   activityTopic
               ));
               return TaskStatus.completed(Unit.UNIT);
-            }));
+            }))));
       }
       return TaskStatus.completed(Unit.UNIT);
-    });
+    })));
+  }
+
+  private static <T> Task<T> oneShotTask(Function<Scheduler, TaskStatus<T>> f) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<T> step(final Scheduler scheduler) {
+        return f.apply(scheduler);
+      }
+
+      @Override
+      public Task<T> duplicate() {
+        return this;
+      }
+    };
   }
 }
