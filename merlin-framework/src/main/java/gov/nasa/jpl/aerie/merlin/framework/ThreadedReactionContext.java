@@ -7,8 +7,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /* package-local */
@@ -16,18 +16,18 @@ final class ThreadedReactionContext implements Context {
   private final Scoped<Context> rootContext;
   private final TaskHandle handle;
   private Scheduler scheduler;
-  private List<Object> readLog;
+  private final Consumer<Object> readLogger;
 
   public ThreadedReactionContext(
       final Scoped<Context> rootContext,
       final Scheduler scheduler,
       final TaskHandle handle,
-      final List<Object> readLog)
+      final Consumer<Object> readLog)
   {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.scheduler = scheduler;
     this.handle = handle;
-    this.readLog = readLog;
+    this.readLogger = readLog;
   }
 
   @Override
@@ -38,7 +38,7 @@ final class ThreadedReactionContext implements Context {
   @Override
   public <State> State ask(final CellId<State> cellId) {
     final State state = this.scheduler.get(cellId);
-    this.readLog.add(state);
+    this.readLogger.accept(state);
     return state;
   }
 
