@@ -76,7 +76,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<ResourceId, ProfilingState<?>> resources;
 
   /** Tasks that have been scheduled, but not started */
-  private final Set<TaskId> unstartedTasks;
+  private final Map<TaskId, Duration> unstartedTasks;
 
   /** The set of all spans of work contributed to by modeled tasks. */
   private final Map<SpanId, Span> spans;
@@ -95,7 +95,7 @@ public final class SimulationEngine implements AutoCloseable {
     tasks = new LinkedHashMap<>();
     conditions = new LinkedHashMap<>();
     resources = new LinkedHashMap<>();
-    unstartedTasks = new LinkedHashSet<>();
+    unstartedTasks = new LinkedHashMap<>();
     spans = new LinkedHashMap<>();
     spanContributorCount = new LinkedHashMap<>();
     executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -121,7 +121,7 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var entry : other.resources.entrySet()) {
       resources.put(entry.getKey(), entry.getValue().duplicate());
     }
-    unstartedTasks = new LinkedHashSet<>(other.unstartedTasks);
+    unstartedTasks = new LinkedHashMap<>(other.unstartedTasks);
     spans = new LinkedHashMap<>(other.spans);
     spanContributorCount = new LinkedHashMap<>();
     for (final var entry : other.spanContributorCount.entrySet()) {
@@ -141,7 +141,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
-    this.unstartedTasks.add(task);
+    this.unstartedTasks.put(task, startTime);
 
     return span;
   }
@@ -382,6 +382,15 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     this.executor.shutdownNow();
+  }
+
+  public void unscheduleAfter(final Duration duration) {
+    for (final var taskId : new ArrayList<>(this.tasks.keySet())) {
+      if (this.unstartedTasks.containsKey(taskId) && this.unstartedTasks.get(taskId).longerThan(duration)) {
+        this.tasks.remove(taskId);
+        this.scheduledJobs.unschedule(JobId.forTask(taskId));
+      }
+    }
   }
 
   private record SpanInfo(
