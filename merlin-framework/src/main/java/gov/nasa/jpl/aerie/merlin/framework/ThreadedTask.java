@@ -14,9 +14,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class ThreadedTask<Return> implements Task<Return> {
+  private final boolean CACHE_READS = Boolean.parseBoolean(getEnv("THREADED_TASK_CACHE_READS", "false"));
+
   private final Scoped<Context> rootContext;
   private final Supplier<Return> task;
   private final Executor executor;
@@ -143,7 +146,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this, ThreadedTask.this.readLog);
+        final Consumer<Object> readLogger = CACHE_READS ? ThreadedTask.this.readLog::add : $ -> {};
+        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this, readLogger);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
@@ -256,6 +260,9 @@ public final class ThreadedTask<Return> implements Task<Return> {
 
   @Override
   public Task<Return> duplicate(Executor executor) {
+    if (!CACHE_READS) {
+      throw new RuntimeException("Cannot duplicate threaded task without cached reads");
+    }
     final ThreadedTask<Return> threadedTask = new ThreadedTask<>(executor, rootContext, task);
     final var readIterator = readLog.iterator();
     final Scheduler scheduler = new Scheduler() {
@@ -278,5 +285,10 @@ public final class ThreadedTask<Return> implements Task<Return> {
       threadedTask.step(scheduler);
     }
     return threadedTask;
+  }
+
+  private static String getEnv(final String key, final String fallback) {
+    final var env = System.getenv(key);
+    return env == null ? fallback : env;
   }
 }
