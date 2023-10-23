@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,9 @@ public final class SimulationEngine implements AutoCloseable {
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, ProfilingState<?>> resources;
 
+  /** Tasks that have been scheduled, but not started */
+  private final Set<TaskId> unstartedTasks;
+
   /** The set of all spans of work contributed to by modeled tasks. */
   private final Map<SpanId, Span> spans;
   /** A count of the direct contributors to each span, including child spans and tasks. */
@@ -91,6 +95,7 @@ public final class SimulationEngine implements AutoCloseable {
     tasks = new LinkedHashMap<>();
     conditions = new LinkedHashMap<>();
     resources = new LinkedHashMap<>();
+    unstartedTasks = new LinkedHashSet<>();
     spans = new LinkedHashMap<>();
     spanContributorCount = new LinkedHashMap<>();
     executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -116,6 +121,7 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var entry : other.resources.entrySet()) {
       resources.put(entry.getKey(), entry.getValue().duplicate());
     }
+    unstartedTasks = new LinkedHashSet<>(other.unstartedTasks);
     spans = new LinkedHashMap<>(other.spans);
     spanContributorCount = new LinkedHashMap<>();
     for (final var entry : other.spanContributorCount.entrySet()) {
@@ -134,6 +140,8 @@ public final class SimulationEngine implements AutoCloseable {
     this.spanContributorCount.put(span, new MutableInt(1));
     this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
+
+    this.unstartedTasks.add(task);
 
     return span;
   }
@@ -228,6 +236,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Perform the next step of a modeled task. */
   public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) throws SpanException {
+    this.unstartedTasks.remove(task);
     // The handler for the next status of the task is responsible
     //   for putting an updated state back into the task set.
     var state = this.tasks.remove(task);
