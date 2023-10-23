@@ -46,6 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -802,6 +803,10 @@ public final class SimulationEngine implements AutoCloseable {
   private record ExecutionState<Output>(SpanId span, Optional<TaskId> caller, Task<Output> state) {
     public ExecutionState<Output> continueWith(final Task<Output> newState) {
       return new ExecutionState<>(this.span, this.caller, newState);
+    }
+
+    public ExecutionState<Output> duplicate(Executor executor) {
+      return new ExecutionState<>(span, caller, state.duplicate(executor));
     }
   }
 
