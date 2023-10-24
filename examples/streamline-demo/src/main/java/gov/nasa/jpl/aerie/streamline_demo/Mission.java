@@ -7,7 +7,7 @@ public final class Mission {
   public final ErrorTestingModel errorTestingModel;
 
   public Mission(final gov.nasa.jpl.aerie.merlin.framework.Registrar registrar$, final Configuration config) {
-    var registrar = new Registrar(registrar$);
+    var registrar = new Registrar(registrar$, Registrar.ErrorBehavior.Log);
     dataModel = new DataModel(registrar, config);
     errorTestingModel = new ErrorTestingModel(registrar, config);
   }

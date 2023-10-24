@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
 
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.replaying;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.spawn;
@@ -16,6 +17,16 @@ public final class PolynomialEffects {
 
   // Consumable style operations
 
+  /**
+   * Consume some amount of a resource instantaneously.
+   */
+  public static void consume(CellResource<Polynomial> resource, double amount) {
+    resource.emit(effect($ -> $.subtract(polynomial(amount))));
+  }
+
+  /**
+   * Consume resource according to a given polynomial profile while an action runs.
+   */
   public static void consuming(CellResource<Polynomial> resource, Polynomial profile, Runnable action) {
     resource.emit(effect($ -> $.subtract(profile)));
     final Duration start = Resources.currentTime();
@@ -24,21 +35,33 @@ public final class PolynomialEffects {
     // Nullify ongoing effects by adding a profile with the same behavior,
     // but with an initial value of 0
     final Polynomial steppedProfile = profile.step(elapsedTime);
-    final Polynomial counteractingProfile = steppedProfile.subtract(Polynomial.polynomial(steppedProfile.extract()));
+    final Polynomial counteractingProfile = steppedProfile.subtract(polynomial(steppedProfile.extract()));
     resource.emit(effect($ -> $.add(counteractingProfile)));
   }
 
-  public static void consume(CellResource<Polynomial> resource, double amount) {
-    resource.emit(effect($ -> $.subtract(Polynomial.polynomial(amount))));
+  /**
+   * Consume some amount of a resource at a uniform rate over a fixed period of time.
+   */
+  public static void consumeUniformly(CellResource<Polynomial> resource, double amount, Duration time) {
+    consume(resource, amount / time.ratioOver(SECOND), time);
   }
 
-  public static void consume(CellResource<Polynomial> resource, double amount, Duration time) {
-    final Polynomial profile = Polynomial.polynomial(0, amount / time.ratioOver(SECOND));
-    spawn(replaying(() -> consuming(resource, profile, () -> delay(time))));
+  /**
+   * Consume some resource a fixed rate during an action
+   */
+  public static void consuming(CellResource<Polynomial> resource, double rate, Runnable action) {
+    consuming(resource, polynomial(0, rate), action);
+  }
+
+  /**
+   * Consume some resource at a fixed rate for a fixed period of time, asynchronously.
+   */
+  public static void consume(CellResource<Polynomial> resource, double rate, Duration time) {
+    spawn(replaying(() -> consuming(resource, rate, () -> delay(time))));
   }
 
   public static void restoring(CellResource<Polynomial> resource, Polynomial profile, Runnable action) {
-    consuming(resource, profile.multiply(Polynomial.polynomial(-1)), action);
+    consuming(resource, profile.multiply(polynomial(-1)), action);
   }
 
   public static void restore(CellResource<Polynomial> resource, double amount) {
@@ -46,7 +69,7 @@ public final class PolynomialEffects {
   }
 
   public static void restore(CellResource<Polynomial> resource, double amount, Duration time) {
-    consume(resource, -amount, time);
+    consumeUniformly(resource, -amount, time);
   }
 
   // Non-consumable style operations
@@ -62,7 +85,11 @@ public final class PolynomialEffects {
   }
 
   public static void using(CellResource<Polynomial> resource, double amount, Runnable action) {
-    using(resource, Polynomial.polynomial(amount), action);
+    using(resource, polynomial(amount), action);
+  }
+
+  public static void using(CellResource<Polynomial> resource, double amount, Duration time) {
+    using(resource, amount, () -> delay(time));
   }
 
   // Consumable style operations
@@ -76,7 +103,7 @@ public final class PolynomialEffects {
   }
 
   public static void consume(UnitAware<CellResource<Polynomial>> resource, UnitAware<Double> amount, Duration time) {
-    consume(resource.value(), amount.value(resource.unit()), time);
+    consumeUniformly(resource.value(), amount.value(resource.unit()), time);
   }
 
   public static void restoring(UnitAware<CellResource<Polynomial>> resource, UnitAware<Polynomial> profile, Runnable action) {

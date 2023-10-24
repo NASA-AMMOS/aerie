@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialEffects;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
@@ -63,7 +64,7 @@ public final class Demo {
     using(power_w, 10, () -> {
       using(rwaControl, () -> {
         // Consume 5.4 kg of fuel over the next minute, linearly
-        consume(fuel_kg, 5.4, Duration.MINUTE);
+        PolynomialEffects.consumeUniformly(fuel_kg, 5.4, Duration.MINUTE);
         // Separately, we could be doing things during that minute.
         delay(Duration.MINUTE);
       });

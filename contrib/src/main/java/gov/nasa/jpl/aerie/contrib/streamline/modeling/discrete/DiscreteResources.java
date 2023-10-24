@@ -6,9 +6,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
@@ -35,8 +33,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.equivalentExceptions;
-import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.formatName;
-import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
@@ -54,10 +50,6 @@ public final class DiscreteResources {
   }
 
   public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
-    return cache("", resource, updatePredicate);
-  }
-
-  public static <V> Resource<Discrete<V>> cache(String profilingName, Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
     final var cell = cellResource(resource.getDynamics());
     BiPredicate<ErrorCatching<Expiring<Discrete<V>>>, ErrorCatching<Expiring<Discrete<V>>>> liftedUpdatePredicate = (eCurrent, eNew) ->
         eCurrent.match(
@@ -67,15 +59,15 @@ public final class DiscreteResources {
             currentException -> eNew.match(
                 value -> true,
                 newException -> !equivalentExceptions(currentException, newException)));
-    whenever(profile(formatName("cache %s", profilingName), () -> {
+    whenever(() -> {
       var currentDynamics = resource.getDynamics();
       return when(() -> DynamicsMonad.unit(discrete(liftedUpdatePredicate.test(
           currentDynamics,
           resource.getDynamics()))));
-    }), profile(formatName("update cache %s", profilingName), () -> {
+    }, () -> {
       final var newDynamics = resource.getDynamics();
       cell.emit($ -> newDynamics);
-    }));
+    });
     return cell;
   }
 
@@ -96,8 +88,8 @@ public final class DiscreteResources {
     var clock = clock();
     return ResourceMonad.bind(clock, clock$ -> {
       var t = clock$.extract();
-      var value = segments.floorEntry(t).getValue();
-      if (value == null) value = valueBeforeFirstEntry;
+      var entry = segments.floorEntry(t);
+      var value = entry == null ? valueBeforeFirstEntry : entry.getValue();
       var nextTime = expiry(Optional.ofNullable(segments.higherKey(t)));
       return ExpiringToResourceMonad.unit(expiring(discrete(value), nextTime.minus(t)));
     });

@@ -28,6 +28,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Tracing.trace;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar.ErrorBehavior.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.not;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.when;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
@@ -41,10 +42,24 @@ public class Registrar {
   private boolean trace = false;
   private boolean profile = false;
   private final CellResource<Discrete<Map<Throwable, Set<String>>>> errors;
+  private final ErrorBehavior errorBehavior;
 
-  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar) {
+  public enum ErrorBehavior {
+    /**
+     * Log errors to the error state,
+     * and replace resource value with null.
+     */
+    Log,
+    /**
+     * Throw errors, crashing the simulation immediately.
+     */
+    Throw
+  }
+
+  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final ErrorBehavior errorBehavior) {
     Resources.init();
     this.baseRegistrar = baseRegistrar;
+    this.errorBehavior = errorBehavior;
     errors = cellResource(Discrete.discrete(Map.of()));
     var errorString = map(errors, errors$ -> errors$.entrySet().stream().map(entry -> formatError(entry.getKey(), entry.getValue())).collect(joining("\n\n")));
     discrete("errors", errorString, new StringValueMapper());
@@ -81,22 +96,28 @@ public class Registrar {
 
   public <Value> void discrete(final String name, final Resource<Discrete<Value>> resource, final ValueMapper<Value> mapper) {
     resource.registerName(name);
-    var registeredResource = debug(name, resource);
-    baseRegistrar.discrete(
-        name,
-        () -> currentValue(registeredResource, null),
-        new NullableValueMapper<>(mapper));
-    logErrors(name, registeredResource);
+    var debugResource = debug(name, resource);
+    gov.nasa.jpl.aerie.merlin.framework.Resource<Value> registeredResource = switch (errorBehavior) {
+      case Log -> () -> currentValue(debugResource, null);
+      case Throw -> wrapErrors(name, () -> currentValue(debugResource));
+    };
+    baseRegistrar.discrete(name, registeredResource, new NullableValueMapper<>(mapper));
+    if (errorBehavior.equals(Log)) logErrors(name, debugResource);
   }
 
   public void real(final String name, final Resource<Linear> resource) {
     resource.registerName(name);
-    var registeredResource = debug(name, resource);
-    baseRegistrar.real(name, () -> {
-      var linear = currentData(registeredResource, linear(0, 0));
-      return RealDynamics.linear(linear.extract(), linear.rate());
-    });
-    logErrors(name, registeredResource);
+    var debugResource = debug(name, resource);
+    gov.nasa.jpl.aerie.merlin.framework.Resource<RealDynamics> registeredResource = switch (errorBehavior) {
+      case Log -> () -> realDynamics(currentData(debugResource, linear(0, 0)));
+      case Throw -> wrapErrors(name, () -> realDynamics(currentData(debugResource)));
+    };
+    baseRegistrar.real(name, registeredResource);
+    if (errorBehavior.equals(Log)) logErrors(name, debugResource);
+  }
+
+  private static RealDynamics realDynamics(Linear linear) {
+    return RealDynamics.linear(linear.extract(), linear.rate());
   }
 
   private <D> Resource<D> debug(String name, Resource<D> resource) {
@@ -132,5 +153,15 @@ public class Registrar {
       return s$;
     }));
     return Unit.UNIT;
+  }
+
+  private static <D> gov.nasa.jpl.aerie.merlin.framework.Resource<D> wrapErrors(String resourceName, gov.nasa.jpl.aerie.merlin.framework.Resource<D> resource) {
+    return () -> {
+      try {
+        return resource.getDynamics();
+      } catch (Throwable e) {
+        throw new RuntimeException("Error affecting " + resourceName, e);
+      }
+    };
   }
 }
