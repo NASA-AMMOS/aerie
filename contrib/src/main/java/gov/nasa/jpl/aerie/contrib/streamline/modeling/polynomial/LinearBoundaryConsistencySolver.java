@@ -27,6 +27,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.success;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad.bind;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.GeneralConstraint.constraint;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.InequalityComparison.GreaterThanOrEquals;
@@ -320,9 +321,6 @@ public final class LinearBoundaryConsistencySolver {
         }
         return multiply(result, constant(inverseScale));
       }, drivingVariables));
-    }
-    private static <D> Resource<D> eraseExpiry(Resource<D> p) {
-      return () -> p.getDynamics().map(e -> neverExpiring(e.data()));
     }
   }
   // Directional constraints are useful for arc consistency, since they have input (driving) and output (constrained) variables.

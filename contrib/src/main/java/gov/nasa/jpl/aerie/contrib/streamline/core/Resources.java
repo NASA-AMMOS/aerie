@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.staticallyCreated;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
@@ -176,5 +177,17 @@ public final class Resources {
       delay(interval);
       cell.emit($ -> newDynamics);
     }));
+  }
+
+  /**
+   * Erase expiry information from a resource.
+   *
+   * <p>
+   *   This is useful when a resource is defined through a feedback loop,
+   *   to not propagate the expiry across iterations of that loop
+   * </p>
+   */
+  public static <D> Resource<D> eraseExpiry(Resource<D> p) {
+    return () -> p.getDynamics().map(e -> neverExpiring(e.data()));
   }
 }

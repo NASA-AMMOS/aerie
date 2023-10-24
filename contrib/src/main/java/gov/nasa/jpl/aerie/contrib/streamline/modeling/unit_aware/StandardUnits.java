@@ -27,6 +27,8 @@ public final class StandardUnits {
 
   public static final Unit JOULE = Unit.derived("J", "joule", NEWTON.multiply(METER));
   public static final Unit WATT = Unit.derived("W", "watt", JOULE.divide(SECOND));
+  public static final Unit COULOMB = Unit.derived("C", "coulomb", AMPERE.multiply(SECOND));
+  public static final Unit VOLT = Unit.derived("V", "volt", JOULE.divide(COULOMB));
 
   /**
    * Astronomical unit as defined by
