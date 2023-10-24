@@ -1452,7 +1452,7 @@ public class ASTTests {
   }
 
   @Test
-  public void testSpansCoexistence() {
+  public void testSpansContains() {
     final var simResults = new SimulationResults(
         Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
@@ -1558,6 +1558,42 @@ public class ASTTests {
         .set(interval(6, 9, SECONDS), false)
         .set(interval(16, 19, SECONDS), false);
     assertIterableEquals(combinedExpected, combinedResult);
+  }
+
+  @Test
+  void testSpansContainsNotEnoughChildren() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var parents = new Spans(
+        interval(0, 3, SECONDS), // has no children inside it
+        interval(6, 9, SECONDS), // has one child of duration 3
+        interval(12, 15, SECONDS), // has two children, total duration 2
+        interval(16, 19, SECONDS) // has one partially-contained child, intersection duration 3
+    );
+
+    final var children = new Spans(
+        interval(1, 2, SECONDS)
+    );
+
+    // require min count 1
+    final var count1Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.of(1),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()
+        )))
+            .evaluate(simResults);
+    final var count1Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(6, 9, SECONDS), false)
+        .set(interval(12, 15, SECONDS), false)
+        .set(interval(16, 19, SECONDS), false);
+    assertIterableEquals(count1Expected, count1Result);
   }
 
   /**

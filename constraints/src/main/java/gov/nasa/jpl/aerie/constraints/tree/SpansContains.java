@@ -45,22 +45,29 @@ public record SpansContains(Expression<Spans> parents, Expression<Spans> childre
       final var sortedChildren = StreamSupport.stream(children.spliterator(), true).sorted((l, r) -> l
           .interval()
           .compareStarts(r.interval())).toList();
+      final var childrenLength = sortedChildren.size();
       var childIndex = 0;
 
       for (final var parent: sortedParents) {
-        final var parentInterval = parent.interval();
-        var childInterval = sortedChildren.get(childIndex).interval();
-        while (childInterval.compareStarts(parentInterval) == -1) {
-          childIndex++;
-          childInterval = sortedChildren.get(childIndex).interval();
-        }
-
         var instanceCount = new AtomicInteger(0);
-        var transientChildIndex = childIndex;
-        while (parentInterval.contains(childInterval)) {
-          instanceCount.getAndIncrement();
-          transientChildIndex++;
-          childInterval = sortedChildren.get(transientChildIndex).interval();
+        final var parentInterval = parent.interval();
+
+        ifChildrenExist:
+        if (childIndex < childrenLength) {
+          var childInterval = sortedChildren.get(childIndex).interval();
+          while (childInterval.compareStarts(parentInterval) == -1) {
+            childIndex++;
+            if (childIndex == childrenLength) break ifChildrenExist;
+            childInterval = sortedChildren.get(childIndex).interval();
+          }
+
+          var transientChildIndex = childIndex;
+          while (parentInterval.contains(childInterval)) {
+            instanceCount.getAndIncrement();
+            transientChildIndex++;
+            if (transientChildIndex == childrenLength) break ifChildrenExist;
+            childInterval = sortedChildren.get(transientChildIndex).interval();
+          }
         }
 
         if (this.requirement.minCount.map(c -> instanceCount.get() < c).orElse(false)) {
