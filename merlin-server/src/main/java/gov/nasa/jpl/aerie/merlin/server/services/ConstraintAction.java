@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
@@ -10,7 +9,9 @@ import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
+import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -49,7 +50,7 @@ public class ConstraintAction {
   }
 
   public List<ConstraintResult> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
-      throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException {
+      throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException , ConstraintCompilationException{
     final var plan = this.planService.getPlanForValidation(planId);
     final Optional<SimulationResultsHandle> resultsHandle$;
     final SimulationDatasetId simDatasetId;
@@ -155,6 +156,7 @@ public class ConstraintAction {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
 
+        // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
             plan.missionModelId,
             Optional.of(planId),
@@ -165,9 +167,15 @@ public class ConstraintAction {
         if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
           expression = success.constraintExpression();
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-          throw new ConstraintCompilationException("Constraint compilation failed: " + error);
+          throw new ConstraintCompilationException(constraint.name(),error);
         } else {
-          throw new ConstraintCompilationException("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
+          throw new ConstraintCompilationException(constraint.name(),new ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error(new ArrayList<>(){{
+            add(new ConstraintsCompilationError.UserCodeError(
+                "Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult,
+                "",
+                new ConstraintsCompilationError.CodeLocation(0, 0),
+                ""));
+          }}));
         }
 
         final var names = new HashSet<String>();
