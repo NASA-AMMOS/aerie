@@ -1,13 +1,42 @@
--- Captures the state of a plan and all of its activities
-create function create_snapshot(_plan_id integer)
+-- Drop Hasura function override
+create function hasura_functions.create_snapshot(_plan_id integer, _snapshot_name text, hasura_session json)
+  returns hasura_functions.create_snapshot_return_value
+  volatile
+  language plpgsql as $$
+declare
+  _snapshot_id integer;
+  _snapshotter text;
+  _function_permission metadata.permission;
+begin
+  _snapshotter := (hasura_session ->> 'x-hasura-user-id');
+  _function_permission := metadata.get_function_permissions('create_snapshot', hasura_session);
+  perform metadata.raise_if_plan_merge_permission('create_snapshot', _function_permission);
+  if not _function_permission = 'NO_CHECK' then
+    call metadata.check_general_permissions('create_snapshot', _function_permission, _plan_id, _snapshotter);
+  end if;
+  if _snapshot_name is null then
+    raise exception 'Snapshot name cannot be null.';
+  end if;
+
+  select create_snapshot(_plan_id, _snapshot_name, _snapshotter) into _snapshot_id;
+  return row(_snapshot_id)::hasura_functions.create_snapshot_return_value;
+end;
+$$;
+
+drop function hasura_functions.create_snapshot(integer, text, json, text);
+
+-- Replace create_snapshot(integer, text, text, text) with create_snapshot(integer, text, text)
+create or replace function create_snapshot(_plan_id integer)
 	returns integer
 	language plpgsql as $$
 begin
-	return create_snapshot(_plan_id, null, null, null);
+	return create_snapshot(_plan_id, null, null);
 end
 $$;
 
-create function create_snapshot(_plan_id integer, _snapshot_name text, _description text, _user text)
+drop function create_snapshot(integer, text, text, text);
+
+create function create_snapshot(_plan_id integer, _snapshot_name text, _user text)
   returns integer -- snapshot id inserted into the table
   language plpgsql as $$
   declare
@@ -19,8 +48,8 @@ begin
     raise exception 'Plan % does not exist.', _plan_id;
   end if;
 
-  insert into plan_snapshot(plan_id, revision, snapshot_name, description, taken_by)
-    select id, revision, _snapshot_name, _description, _user
+  insert into plan_snapshot(plan_id, revision, snapshot_name, taken_by)
+    select id, revision, _snapshot_name, _user
     from plan where id = _plan_id
     returning snapshot_id into inserted_snapshot_id;
   insert into plan_snapshot_activities(
@@ -56,13 +85,15 @@ begin
 $$;
 
 comment on function create_snapshot(integer) is e''
-	'See comment on create_snapshot(integer, text, text, text)';
+	'See comment on create_snapshot(integer, text, text)';
 
-comment on function create_snapshot(integer, text, text, text) is e''
+comment on function create_snapshot(integer, text, text) is e''
   'Create a snapshot of the specified plan. A snapshot consists of:'
   '  - The plan''s id and revision'
   '  - All the activities in the plan'
   '  - The preset status of those activities'
   '  - The tags on those activities'
 	'  - When the snapshot was taken'
-	'  - Optionally: who took the snapshot, a name for the snapshot, a description of the snapshot';
+	'  - Optionally: who took the snapshot and a name';
+
+call migrations.mark_migration_rolled_back('31');
