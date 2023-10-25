@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.constraints.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
@@ -240,6 +240,8 @@ public final class MerlinBindings implements Plugin {
       final var constraintViolations = this.constraintAction.getViolations(planId, simulationDatasetId);
 
       ctx.result(ResponseSerializers.serializeConstraintResults(constraintViolations).toString());
+    } catch (ConstraintCompilationException ex) {
+      ctx.result((ResponseSerializers.serializeConstraintCompileException(ex)).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
@@ -252,8 +254,6 @@ public final class MerlinBindings implements Plugin {
       ctx.status(404).result(ExceptionSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final InputMismatchException ex) {
       ctx.status(404).result(ResponseSerializers.serializeInputMismatchException(ex).toString());
-    } catch (final ConstraintCompilationException ex) {
-      ctx.status(404).result(ResponseSerializers.serializeConstraintCompilationException(ex).toString());
     } catch (SimulationDatasetMismatchException ex) {
       ctx.status(404).result(ResponseSerializers.serializeSimulationDatasetMismatchException(ex).toString());
     } catch (final PermissionsServiceException ex) {
