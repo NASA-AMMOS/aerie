@@ -593,9 +593,10 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param includeEndTime whether to apply the Events occurring at endTime
    */
   public void stepUpSimple(final Cell<?> cell, final Duration endTime, final boolean includeEndTime) {
-    if (debug) System.out.println("stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") BEGIN");
+    if (debug) System.out.println("stepUpSimple(" + cell + " " + cell.getTopics() + ", " + endTime + ", " + includeEndTime + ") BEGIN");
     final NavigableMap<Duration, List<EventGraph<Event>>> subTimeline;
     var cellTimePair = getCellTime(cell);
+    if (debug) System.out.println("cell time: " + cellTimePair);
     var cellTime = cellTimePair.getLeft();
     var cellSteppedAtTime = cellTimePair.getRight();
     if (cellTime.longerThan(endTime)) {

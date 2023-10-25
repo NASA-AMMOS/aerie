@@ -223,8 +223,10 @@ public final class SimulationDriver<Model> {
   }
 
   private void startDaemons(Duration time) {
-    engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
-    engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+    if (!this.rerunning) {
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
+      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+    }
   }
 
   private void trackResources() {
@@ -378,5 +380,21 @@ public final class SimulationDriver<Model> {
 
   public SimulationResultsInterface computeResults(Instant startTime, Duration simDuration) {
     return engine.computeResults(startTime, simDuration, SimulationEngine.defaultActivityTopic);
+  }
+
+  public SimulationEngine getEngine() {
+    return engine;
+  }
+
+  public MissionModel<Model> getMissionModel() {
+    return missionModel;
+  }
+
+  public Instant getStartTime() {
+    return startTime;
+  }
+
+  public Duration getPlanDuration() {
+    return planDuration;
   }
 }

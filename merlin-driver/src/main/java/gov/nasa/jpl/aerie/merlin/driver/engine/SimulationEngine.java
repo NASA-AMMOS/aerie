@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
  */
 public final class SimulationEngine implements AutoCloseable {
   private static boolean debug = false;
+  private static boolean trace = false;
 
   /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
   public final SimulationEngine oldEngine;
@@ -568,11 +569,15 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     final var conditions = this.waitingConditions.invalidateTopic(topic);
+    if (trace) System.out.println("invalidateTopic(): conditions waiting on topic: " + conditions);
     for (final var condition : conditions) {
       // If we were going to signal tasks on this condition, well, don't do that.
       // Schedule the condition to be rechecked ASAP.
       this.scheduledJobs.unschedule(JobId.forSignal(SignalId.forCondition(condition)));
-      this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(invalidationTime));
+      var cjid = JobId.forCondition(condition);
+      var t = SubInstant.Conditions.at(invalidationTime);
+      if (trace) System.out.println("invalidateTopic(): schedule(ConditionJobId " + cjid + " at time " + t + ")");
+      this.scheduledJobs.schedule(cjid, t);
     }
   }
 
@@ -588,29 +593,38 @@ public final class SimulationEngine implements AutoCloseable {
     var timeOfNextJobs = timeOfNextJobs();
     var nextTime = timeOfNextJobs;
 
+    Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads = null;
+    Duration staleReadTime = null;
     Pair<List<Topic<?>>, Duration> earliestStaleTopics = null;
     Pair<List<Topic<?>>, Duration> earliestStaleTopicOldEvents = null;
     Duration staleTopicTime = null;
     Duration staleTopicOldEventTime = null;
-    if (resourceTracker == null) {
-      earliestStaleTopics = earliestStaleTopics(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-      if (debug) System.out.println("earliestStaleTopics(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopics);
-      staleTopicTime = earliestStaleTopics.getRight();
-      nextTime = Duration.min(nextTime, staleTopicTime);
+    Duration conditionTime = null;
+    Pair<List<Topic<?>>, Duration> earliestConditionTopics = null;
 
-      earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime(), Duration.min(nextTime, maximumTime));
-      if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopicOldEvents);
-      staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight();
-      nextTime = Duration.min(nextTime, staleTopicOldEventTime);
+    if (oldEngine != null) {
+      if (resourceTracker == null) {
+        earliestStaleTopics = earliestStaleTopics(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
+        if (debug) System.out.println("earliestStaleTopics(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopics);
+        staleTopicTime = earliestStaleTopics.getRight();
+        nextTime = Duration.min(nextTime, staleTopicTime);
+
+        earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime(), Duration.min(nextTime, maximumTime));
+        if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopicOldEvents);
+        staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight();
+        nextTime = Duration.min(nextTime, staleTopicOldEventTime);
+      }
+
+      earliestStaleReads = earliestStaleReads(
+          curTime(),
+          nextTime);  // might want to not limit by nextTime and cache for future iterations
+      staleReadTime = earliestStaleReads.getLeft();
+      nextTime = Duration.min(nextTime, staleReadTime);
+
+      earliestConditionTopics = earliestConditionTopics(curTime(), nextTime);
+      conditionTime = earliestConditionTopics.getRight();
+      nextTime = Duration.min(nextTime, conditionTime);
     }
-
-    var earliestStaleReads = earliestStaleReads(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-    var staleReadTime = earliestStaleReads.getLeft();
-    nextTime = Duration.min(nextTime, staleReadTime);
-
-    var earliestConditionTopics = earliestConditionTopics(curTime(), nextTime);
-    var conditionTime = earliestConditionTopics.getRight();
-    nextTime = Duration.min(nextTime, conditionTime);
 
     // Increment real time, if necessary.
     var timeForDelta = Duration.min(nextTime, maximumTime);
@@ -623,35 +637,49 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
     //   even if they occur at the same real time.
 
-    if (nextTime.longerThan(maximumTime) || nextTime.isEqualTo(Duration.MAX_VALUE)) {
-      if (debug) System.out.println("step(): end -- time elapsed (" + curTime() + ") past maximum (" + maximumTime + ")");
-      return;
-    }
-
     Set<Topic<?>> invalidatedTopics = new HashSet<>();
 
-    if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
-      for (Topic<?> topic : earliestStaleTopics.getLeft()) {
-        invalidateTopic(topic, nextTime);
-        invalidatedTopics.add(topic);
+    if (oldEngine != null) {
+
+      if (nextTime.longerThan(maximumTime) || nextTime.isEqualTo(Duration.MAX_VALUE)) {
+        if (debug) System.out.println("step(): end -- time elapsed ("
+                                      + curTime()
+                                      + ") past maximum ("
+                                      + maximumTime
+                                      + ")");
+        return;
+      }
+
+      if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
+        for (Topic<?> topic : earliestStaleTopics.getLeft()) {
+          invalidateTopic(topic, nextTime);
+          invalidatedTopics.add(topic);
+        }
+      }
+
+      if (resourceTracker == null && staleTopicOldEventTime.isEqualTo(nextTime)) {
+        for (Topic<?> topic : earliestStaleTopicOldEvents
+            .getLeft()
+            .stream()
+            .filter(t -> !invalidatedTopics.contains(t))
+            .toList()) {
+          invalidateTopic(topic, nextTime);
+          invalidatedTopics.add(topic);
+        }
+      }
+
+      if (conditionTime.isEqualTo(nextTime)) {
+        for (Topic<?> topic : earliestConditionTopics
+            .getLeft()
+            .stream()
+            .filter(t -> !invalidatedTopics.contains(t))
+            .toList()) {
+          invalidateTopic(topic, nextTime);
+          invalidatedTopics.add(topic);
+        }
       }
     }
-
-    if (resourceTracker == null && staleTopicOldEventTime.isEqualTo(nextTime)) {
-      for (Topic<?> topic : earliestStaleTopicOldEvents.getLeft().stream().filter(t -> !invalidatedTopics.contains(t)).toList()) {
-        invalidateTopic(topic, nextTime);
-        invalidatedTopics.add(topic);
-      }
-    }
-
-    if (conditionTime.isEqualTo(nextTime)) {
-      for (Topic<?> topic : earliestConditionTopics.getLeft().stream().filter(t -> !invalidatedTopics.contains(t)).toList()) {
-        invalidateTopic(topic, nextTime);
-        invalidatedTopics.add(topic);
-      }
-    }
-
-    if (staleReadTime.isEqualTo(nextTime)) {
+    if (staleReadTime != null && staleReadTime.isEqualTo(nextTime)) {
       rescheduleStaleTasks(earliestStaleReads);
     } else
     if (timeOfNextJobs.isEqualTo(nextTime) && invalidatedTopics.isEmpty()) {
@@ -770,7 +798,10 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate(task);
       this.conditions.put(condition, s.condition());
-      this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
+      var jid = JobId.forCondition(condition);
+      var t = SubInstant.Conditions.at(currentTime);
+      if (trace) System.out.println("stepEffectModel(TaskId=" + task + "): conditionId = " + condition + ", AwaitingCondition s = " + s + ", ConditionJobId = " + jid + ", at time " + t);
+      this.scheduledJobs.schedule(jid, t);
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forCondition(condition)));
@@ -820,21 +851,31 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final Duration horizonTime,
       final Topic<Topic<?>> queryTopic) {
+    if (trace) System.out.println("updateCondition(ConditionId=" + condition + ", queryTopic=" + queryTopic + ")");
     final var querier = new EngineQuerier(currentTime, frame, queryTopic, condition.sourceTask());
     final var prediction = this.conditions
         .get(condition)
         .nextSatisfied(querier, Duration.MAX_VALUE) //horizonTime.minus(currentTime)
         .map(currentTime::plus);
 
+    if (trace) System.out.println("updateCondition(): waitingConditions.subscribeQuery(conditionId=" + condition + ", querier.referencedTopics=" + querier.referencedTopics + ")");
     this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);
 
     final Optional<Duration> expiry = querier.expiry.map(d -> currentTime.plus((Duration)d));
+    if (trace) System.out.println("updateCondition(): expiry = " + expiry);
     if (prediction.isPresent() && (expiry.isEmpty() || prediction.get().shorterThan(expiry.get()))) {
-      this.scheduledJobs.schedule(JobId.forSignal(SignalId.forCondition(condition)), SubInstant.Tasks.at(prediction.get()));
+      var csid = SignalId.forCondition(condition);
+      var sjid = JobId.forSignal(csid);
+      var t = SubInstant.Tasks.at(prediction.get());
+      if (trace) System.out.println("updateCondition(): schedule(SignalJobId " + sjid + " for ConditionSignalID " + csid + " + at time " + t + ")");
+      this.scheduledJobs.schedule(sjid, t);
     } else {
       // Try checking again later -- where "later" is in some non-zero amount of time!
       final var nextCheckTime = Duration.max(expiry.orElse(Duration.MAX_VALUE), currentTime.plus(Duration.EPSILON));
-      this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(nextCheckTime));
+      var cjid = JobId.forCondition(condition);
+      var t = SubInstant.Conditions.at(nextCheckTime);
+      if (trace) System.out.println("updateCondition(): schedule(ConditionJobId " + cjid + " at time " + t + ")");
+      this.scheduledJobs.schedule(cjid, t);
     }
   }
 
@@ -1209,7 +1250,7 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId)
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.ofNullable(directiveId)
         ));
       } else if (state instanceof ExecutionState.AwaitingChildren<?> e){
         final var inputAttributes = this.taskInfo.input().get(task.id());
@@ -1219,7 +1260,7 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId)
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.ofNullable(directiveId)
         ));
       } else {
         throw new Error("Unexpected subtype of %s: %s".formatted(ExecutionState.class, state.getClass()));

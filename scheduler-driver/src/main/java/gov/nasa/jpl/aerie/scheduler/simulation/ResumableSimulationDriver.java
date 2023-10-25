@@ -152,7 +152,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   }
 
   private void startDaemons(Duration time) {
-    if (missionModel.hasDaemons()) {
+    if (!rerunning && missionModel.hasDaemons()) {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
     }
   }

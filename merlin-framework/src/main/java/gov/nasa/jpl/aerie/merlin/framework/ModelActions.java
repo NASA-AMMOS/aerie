@@ -46,6 +46,10 @@ public /*non-final*/ class ModelActions {
     spawn(threaded(task));
   }
 
+  public static <T> void spawn(String taskName, final Supplier<T> task) {
+    spawn(taskName, threaded(task));
+  }
+
   public static void spawn(final Runnable task) {
     spawn(() -> {
       task.run();

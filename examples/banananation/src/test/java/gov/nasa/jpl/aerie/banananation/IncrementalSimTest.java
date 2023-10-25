@@ -1,11 +1,18 @@
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
+import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
+import gov.nasa.jpl.aerie.banananation.generated.ActivityActions;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
@@ -210,6 +217,151 @@ public final class IncrementalSimTest {
     assertEquals(4.0, fruitProfile.get(2).dynamics().initial);
     assertEquals(3.0, fruitProfile.get(3).dynamics().initial);
   }
+
+  @Test
+  public void testSimultaneousEvents() {
+    if (debug) System.out.println("testSimultaneousEvents()");
+    // SimulatedActivityId[id=0]=SimulatedActivity[type=BiteBanana, arguments={biteSize=NumericValue[value=3.0]}, start=2023-10-22T19:12:52.109029Z, duration=+00:00:00.000000, parentId=null, childIds=[], directiveId=Optional[ActivityDirectiveId[id=0]], computedAttributes=MapValue[map={newFlag=StringValue[value=B], biteSizeWasBig=BooleanValue[value=true]}]],
+    // SimulatedActivityId[id=1]=SimulatedActivity[type=GrowBanana, arguments={growingDuration=NumericValue[value=1000000], quantity=NumericValue[value=1]}, start=2023-10-22T19:12:51.109029Z, duration=+00:00:01.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={}]],
+    // SimulatedActivityId[id=3]=SimulatedActivity[type=BiteBanana, arguments={biteSize=NumericValue[value=1.0]}, start=2023-10-22T19:12:52.109029Z, duration=+00:00:00.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={newFlag=StringValue[value=A], biteSizeWasBig=BooleanValue[value=false]}]],
+    // SimulatedActivityId[id=4]=SimulatedActivity[type=GrowBanana, arguments={growingDuration=NumericValue[value=1000000], quantity=NumericValue[value=1]}, start=2023-10-22T19:12:55.109029Z, duration=+00:00:01.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={}]],
+    // SimulatedActivityId[id=5]=SimulatedActivity[type=GrowBanana, arguments={growingDuration=NumericValue[value=1000000], quantity=NumericValue[value=1]}, start=2023-10-22T19:12:49.109029Z, duration=+00:00:01.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={}]],
+    // SimulatedActivityId[id=6]=SimulatedActivity[type=BiteBanana, arguments={biteSize=NumericValue[value=1.0]}, start=2023-10-22T19:12:50.109029Z, duration=+00:00:00.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={newFlag=StringValue[value=A], biteSizeWasBig=BooleanValue[value=false]}]],
+    // SimulatedActivityId[id=7]=SimulatedActivity[type=GrowBanana, arguments={growingDuration=NumericValue[value=1000000], quantity=NumericValue[value=1]}, start=2023-10-22T19:12:47.109029Z, duration=+00:00:01.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={}]],
+    // SimulatedActivityId[id=8]=SimulatedActivity[type=GrowBanana, arguments={growingDuration=NumericValue[value=1000000], quantity=NumericValue[value=1]}, start=2023-10-22T19:12:53.109029Z, duration=+00:00:01.000000, parentId=null, childIds=[], directiveId=Optional.empty, computedAttributes=MapValue[map={}]]
+    final var schedule1 = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(1, SECONDS),
+            new SerializedActivity("GrowBanana", Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", SerializedValue.of(Duration.SECOND.times(1).in(Duration.MICROSECONDS))))),
+        Pair.of(
+            duration(2, SECONDS),
+            new SerializedActivity("GrowBanana", Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", SerializedValue.of(Duration.SECOND.times(1).in(Duration.MICROSECONDS))))),
+        Pair.of(
+            duration(3, SECONDS),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(1)))),
+        Pair.of(
+            duration(4, SECONDS),
+            new SerializedActivity("GrowBanana", Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", SerializedValue.of(Duration.SECOND.times(1).in(Duration.MICROSECONDS))))),
+        Pair.of(
+            duration(5, SECONDS),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(3)))),
+        Pair.of(
+            duration(5, SECONDS),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(1)))),
+        Pair.of(
+            duration(6, SECONDS),
+            new SerializedActivity("GrowBanana", Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", SerializedValue.of(Duration.SECOND.times(1).in(Duration.MICROSECONDS))))),
+        Pair.of(
+            duration(8, SECONDS),
+            new SerializedActivity("GrowBanana", Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", SerializedValue.of(Duration.SECOND.times(1).in(Duration.MICROSECONDS)))))
+    );
+    final HashMap<ActivityDirectiveId, ActivityDirective> schedule2 = new HashMap<>();
+    final HashMap<ActivityDirectiveId, ActivityDirective> schedule3 = new HashMap<>();
+    schedule1.forEach((key, value) -> {
+      final SerializedValue val = value.serializedActivity().getArguments().get("biteSize");
+      if (val == null || !val.equals(SerializedValue.of(3))) {
+        schedule2.put(key, value);
+      } else {
+        schedule3.put(key, value);
+      }
+    });
+
+    final var startTime = Instant.now();
+    final var simDuration = duration(10, SECOND);
+
+    // simulate the schedule for a baseline to compare against incremental sim
+    var driver = SimulationUtility.getDriver(simDuration, false);
+    var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
+    final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+
+    // create a new driver to start over
+    driver = SimulationUtility.getDriver(simDuration, false);
+    simulationResults = driver.simulate(schedule2, startTime, simDuration, startTime, simDuration);
+
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+
+    // now do incremental sim on schedule
+    driver.initSimulation(simDuration);
+    simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
+    if (debug) System.out.println("correct      fruit profile = " + correctFruitProfile);
+    if (debug) System.out.println("partial      fruit profile = " + fruitProfile);
+
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    if (debug) System.out.println("inc sim      fruit profile = " + fruitProfile);
+    List<ProfileSegment<RealDynamics>> diff = subtract(fruitProfile, correctFruitProfile);
+    if (debug) System.out.println("inc sim diff fruit profile = " + diff);
+  }
+
+  @Test
+  public void testDaemon() {
+    if (debug) System.out.println("testDaemon()");
+
+
+    final var emptySchedule = SimulationUtility.buildSchedule();
+    final var schedule = SimulationUtility.buildSchedule(
+        Pair.of(
+            duration(5, SECONDS),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(3))))
+    );
+
+    final var startTime = Instant.now();
+    final var simDuration = duration(10, SECOND);
+
+    // simulate the schedule for a baseline to compare against incremental sim
+    var driver = SimulationUtility.getDriver(simDuration, true);
+    var simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
+    final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+
+    if (debug) System.out.println("schedule = " + simulationResults.getSimulatedActivities());
+
+
+    // create a new driver to start over
+    driver = SimulationUtility.getDriver(simDuration, true);
+    simulationResults = driver.simulate(emptySchedule, startTime, simDuration, startTime, simDuration);
+
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+
+    // now do incremental sim on schedule
+    driver.initSimulation(simDuration);
+    simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
+    if (debug) System.out.println("correct        fruit profile = " + correctFruitProfile);
+    if (debug) System.out.println("empty schedule fruit profile = " + fruitProfile);
+
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    if (debug) System.out.println("inc sim        fruit profile = " + fruitProfile);
+    List<ProfileSegment<RealDynamics>> diff = subtract(fruitProfile, correctFruitProfile);
+    if (debug) System.out.println("inc sim diff   fruit profile = " + diff);
+  }
+
+  private List<ProfileSegment<RealDynamics>> subtract(List<ProfileSegment<RealDynamics>> lps1, List<ProfileSegment<RealDynamics>> lps2) {
+    List<ProfileSegment<RealDynamics>> result = new ArrayList<>();
+    int i = 0;
+    for (; i < Math.min(lps1.size(), lps2.size()); ++i) {
+      var pf1 = lps1.get(i);
+      var pf2 = lps2.get(i);
+      if (pf1.extent().isEqualTo(pf2.extent())) {
+        result.add(new ProfileSegment<>(pf1.extent(), pf1.dynamics().minus(pf2.dynamics())));
+      } else {
+        result.add(new ProfileSegment<>(Duration.min(pf1.extent(), pf2.extent()), pf1.dynamics().minus(pf2.dynamics())));
+        break;
+      }
+    }
+    if (i < Math.max(lps1.size(), lps2.size())) {
+      result.add(new ProfileSegment<>(ZERO, RealDynamics.linear(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)));
+    }
+    return result;
+  }
+
 
   final static String INIT_SIM = "Initial Simulation";
   final static String COMP_RESULTS = "Compute Results";
