@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
@@ -42,6 +43,9 @@ import static java.util.Arrays.stream;
 public final class DiscreteResources {
   private DiscreteResources() {}
 
+  /**
+   * Returns a condition that's satisfied whenever this resource is true.
+   */
   public static Condition when(Resource<Discrete<Boolean>> resource) {
     return (positive, atEarliest, atLatest) ->
         resource.getDynamics().match(
@@ -49,8 +53,12 @@ public final class DiscreteResources {
             error -> Optional.empty());
   }
 
+  /**
+   * Cache resource, updating the cache when updatePredicate(cached value, resource value) is true.
+   */
   public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
     final var cell = cellResource(resource.getDynamics());
+    // TODO: Does the update predicate need to propagate expiry information?
     BiPredicate<ErrorCatching<Expiring<Discrete<V>>>, ErrorCatching<Expiring<Discrete<V>>>> liftedUpdatePredicate = (eCurrent, eNew) ->
         eCurrent.match(
             current -> eNew.match(
@@ -61,9 +69,9 @@ public final class DiscreteResources {
                 newException -> !equivalentExceptions(currentException, newException)));
     whenever(() -> {
       var currentDynamics = resource.getDynamics();
-      return when(() -> DynamicsMonad.unit(discrete(liftedUpdatePredicate.test(
+      return when(() -> DiscreteDynamicsMonad.unit(liftedUpdatePredicate.test(
           currentDynamics,
-          resource.getDynamics()))));
+          resource.getDynamics())));
     }, () -> {
       final var newDynamics = resource.getDynamics();
       cell.emit($ -> newDynamics);
@@ -71,6 +79,9 @@ public final class DiscreteResources {
     return cell;
   }
 
+  /**
+   * Sample valueSupplier once every samplePeriod.
+   */
   public static <V, T extends Dynamics<Duration, T>> Resource<Discrete<V>> sampled(Supplier<V> valueSupplier, Resource<T> samplePeriod) {
     var result = cellResource(discrete(valueSupplier.get()));
     every(() -> currentValue(samplePeriod, Duration.MAX_VALUE),
@@ -111,10 +122,16 @@ public final class DiscreteResources {
     return precomputed(valueBeforeFirstEntry, segmentsUsingDurationKeys);
   }
 
+  /**
+   * Add units to a discrete double resource.
+   */
   public static UnitAware<Resource<Discrete<Double>>> unitAware(Resource<Discrete<Double>> resource, Unit unit) {
     return UnitAwareResources.unitAware(resource, unit, DiscreteResources::discreteScaling);
   }
 
+  /**
+   * Add units to a discrete double resource.
+   */
   public static UnitAware<CellResource<Discrete<Double>>> unitAware(CellResource<Discrete<Double>> resource, Unit unit) {
     return UnitAwareResources.unitAware(resource, unit, DiscreteResources::discreteScaling);
   }
@@ -126,40 +143,66 @@ public final class DiscreteResources {
 
   // Boolean logic
 
+  /**
+   * Short-circuiting logical "and"
+   */
   public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting and: Only gets right if left is true
     return bind(left, l -> l ? right : unit(false));
   }
 
+  /**
+   * Reduce operands using short-circuiting logical "and"
+   */
   @SafeVarargs
   public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>>... operands) {
     return and(stream(operands));
   }
 
+  /**
+   * Reduce operands using short-circuiting logical "and"
+   */
   public static Resource<Discrete<Boolean>> and(Stream<Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting and to improve efficiency
     return operands.reduce(unit(true), DiscreteResources::and);
   }
 
+  /**
+   * Short-circuiting logical "or"
+   */
   public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting or: Only gets right if left is false
     return bind(left, l -> l ? unit(true) : right);
   }
 
+  /**
+   * Reduce operands using short-circuiting logical "or"
+   */
   @SafeVarargs
   public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>>... operands) {
     return or(stream(operands));
   }
 
+  /**
+   * Reduce operands using short-circuiting logical "or"
+   */
   public static Resource<Discrete<Boolean>> or(Stream<Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting or to improve efficiency
     return operands.reduce(unit(false), DiscreteResources::or);
   }
 
+  /**
+   * Logical "not"
+   */
   public static Resource<Discrete<Boolean>> not(Resource<Discrete<Boolean>> operand) {
     return map(operand, $ -> !$);
   }
 
+  /**
+   * Assert that this resource is always true.
+   * Otherwise, this resource fails.
+   * Register this resource to detect that failure.
+   */
   public static Resource<Discrete<Boolean>> assertThat(String description, Resource<Discrete<Boolean>> assertion) {
     return map(assertion, a -> {
       if (a) return true;
@@ -169,38 +212,62 @@ public final class DiscreteResources {
 
   // Integer arithmetic
 
+  /**
+   * Add integer resources
+   */
   @SafeVarargs
   public static Resource<Discrete<Integer>> add(Resource<Discrete<Integer>>... operands) {
     return sum(Arrays.stream(operands));
   }
 
+  /**
+   * Add integer resources
+   */
   public static Resource<Discrete<Integer>> sum(Stream<Resource<Discrete<Integer>>> operands) {
     return operands.reduce(unit(0), lift(Integer::sum)::apply);
   }
 
+  /**
+   * Subtract integer resources
+   */
   public static Resource<Discrete<Integer>> subtract(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
     return map(left, right, (l, r) -> l - r);
   }
 
+  /**
+   * Multiply integer resources
+   */
   @SafeVarargs
   public static Resource<Discrete<Integer>> multiply(Resource<Discrete<Integer>>... operands) {
     return product(Arrays.stream(operands));
   }
 
+  /**
+   * Multiply integer resources
+   */
   public static Resource<Discrete<Integer>> product(Stream<Resource<Discrete<Integer>>> operands) {
     return operands.reduce(unit(1), lift((Integer x, Integer y) -> x * y)::apply);
   }
 
+  /**
+   * Divide integer resources
+   */
   public static Resource<Discrete<Integer>> divide(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
     return map(left, right, (l, r) -> l / r);
   }
 
   // Collections
 
+  /**
+   * Returns a resource that's true when the argument is empty
+   */
   public static <C extends Collection<?>> Resource<Discrete<Boolean>> isEmpty(Resource<Discrete<C>> resource) {
     return map(resource, Collection::isEmpty);
   }
 
+  /**
+   * Returns a resource that's true when the argument is non-empty
+   */
   public static <C extends Collection<?>> Resource<Discrete<Boolean>> isNonEmpty(Resource<Discrete<C>> resource) {
     return not(isEmpty(resource));
   }

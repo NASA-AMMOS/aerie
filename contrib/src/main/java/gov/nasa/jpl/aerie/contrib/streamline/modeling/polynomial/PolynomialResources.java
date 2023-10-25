@@ -20,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
@@ -33,6 +34,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.ma
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.unit;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.lift;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
@@ -51,14 +53,27 @@ public final class PolynomialResources {
     return unitAware(constant(quantity.value()), quantity.unit());
   }
 
+  /**
+   * Treat a discrete resource as a polynomial with constant profile segments.
+   */
   public static Resource<Polynomial> asPolynomial(Resource<Discrete<Double>> discrete) {
     return map(discrete, d -> polynomial(d.extract()));
   }
 
+  /**
+   * Treat a discrete resource as a polynomial with constant profile segments.
+   */
   public static UnitAware<Resource<Polynomial>> asUnitAwarePolynomial(UnitAware<? extends Resource<Discrete<Double>>> discrete) {
     return unitAware(asPolynomial(discrete.value()), discrete.unit());
   }
 
+  /**
+   * Treat a discrete resource as a polynomial with constant profile segments.
+   * <p>
+   *   Note that this requires dimension-checking every segment individually, which can degrade performance.
+   *   If possible, try using <code>UnitAware&lt;Resource&lt;Discrete&lt;Double&gt;&gt;&gt;</code>
+   * </p>
+   */
   public static UnitAware<Resource<Polynomial>> asUnitAwarePolynomial(Resource<Discrete<UnitAware<Double>>> discrete) {
     var unit = currentValue(discrete).unit();
     return unitAware(asPolynomial(DiscreteResourceMonad.map(discrete, q -> q.value(unit))), unit);
@@ -115,30 +130,64 @@ public final class PolynomialResources {
     return precomputed(segmentsUsingDurationKeys);
   }
 
+  /**
+   * Add polynomial resources.
+   */
   @SafeVarargs
   public static Resource<Polynomial> add(Resource<Polynomial>... summands) {
-    return Arrays.stream(summands)
-        .reduce(constant(0), (p, q) -> map(p, q, Polynomial::add));
+    return sum(Arrays.stream(summands));
   }
 
+  public static Resource<Polynomial> sum(Stream<? extends Resource<Polynomial>> summands) {
+    return summands.reduce(constant(0), lift(Polynomial::add), lift(Polynomial::add)::apply);
+  }
+
+  /**
+   * Subtract polynomial resources.
+   */
   public static Resource<Polynomial> subtract(Resource<Polynomial> p, Resource<Polynomial> q) {
     return map(p, q, Polynomial::subtract);
   }
 
+  /**
+   * Flip the sign of a polynomial resource.
+   */
   public static Resource<Polynomial> negate(Resource<Polynomial> p) {
     return multiply(constant(-1), p);
   }
 
+  /**
+   * Multiply polynomial resources.
+   */
   @SafeVarargs
   public static Resource<Polynomial> multiply(Resource<Polynomial>... factors) {
     return Arrays.stream(factors)
                  .reduce(constant(1), (p, q) -> map(p, q, Polynomial::multiply));
   }
 
+  /**
+   * Multiply polynomial resources.
+   */
+  public static Resource<Polynomial> product(Stream<? extends Resource<Polynomial>> factors) {
+    return factors.reduce(constant(1), lift(Polynomial::multiply), lift(Polynomial::multiply)::apply);
+  }
+
+  /**
+   * Divide a polynomial by a discrete resource.
+   * <p>
+   *   The divisor must be discrete, because the quotient of two polynomials is not necessarily a polynomial.
+   * </p>
+   */
   public static Resource<Polynomial> divide(Resource<Polynomial> p, Resource<Discrete<Double>> q) {
     return map(p, q, (p$, q$) -> p$.divide(q$.extract()));
   }
 
+  /**
+   * Compute the integral of integrand, starting at startingValue.
+   * <p>
+   *   This method allocates a cell, so must be called during initialization, not simulation.
+   * </p>
+   */
   public static Resource<Polynomial> integrate(Resource<Polynomial> integrand, double startingValue) {
     var cell = cellResource(map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
     // Use integrand's expiry but not integral's, since we're refreshing the integral
@@ -148,6 +197,39 @@ public final class PolynomialResources {
     return cell;
   }
 
+  /**
+   * Compute the integral of integrand, starting at startingValue.
+   * Also clamp the integral between lowerBound and upperBound (inclusive).
+   * <p>
+   *   Note that <code>clampedIntegrate(r, l, u, s)</code> differs from
+   *   <code>clamp(integrate(r, s), l, u)</code> in how they handle reversing from a boundary.
+   * </p>
+   * <p>
+   *   To see how, consider bounds of [0, 5], with an integrand of 1 for 10 seconds, then -1 for 10 seconds.
+   * </p>
+   * <p>
+   *   clamp & integrate:
+   * </p>
+   * <pre>
+   *   5       /----------\
+   *          /            \
+   *         /              \
+   *        /                \
+   *   0   /                  \
+   * time  0        10        20
+   * </pre>
+   * <p>
+   *   clampedIntegrate:
+   * </p>
+   * <pre>
+   *   5       /-----\
+   *          /       \
+   *         /         \
+   *        /           \
+   *   0   /             \-----
+   * time  0        10        20
+   * </pre>
+   */
   public static Resource<Polynomial> clampedIntegrate(
       Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
     var cell = cellResource(map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
@@ -166,10 +248,16 @@ public final class PolynomialResources {
     return cell;
   }
 
+  /**
+   * Returns the derivative of this resource.
+   */
   public static Resource<Polynomial> differentiate(Resource<Polynomial> p) {
     return map(p, Polynomial::derivative);
   }
 
+  /**
+   * Return a resource which is the average of the operand over the last interval time.
+   */
   public static Resource<Polynomial> movingAverage(Resource<Polynomial> p, Duration interval) {
     var pIntegral = integrate(p, 0);
     var shiftedIntegral = shift(pIntegral, interval, polynomial(0));
@@ -216,10 +304,19 @@ public final class PolynomialResources {
     return ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.max(q$)));
   }
 
+  /**
+   * Absolute value
+   */
   public static Resource<Polynomial> abs(Resource<Polynomial> p) {
     return max(p, negate(p));
   }
 
+  /**
+   * Returns min(max(p, lowerBound), upperBound).
+   * <p>
+   *   If lowerBound ever exceeds upperBound, this resource fails.
+   * </p>
+   */
   public static Resource<Polynomial> clamp(Resource<Polynomial> p, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound) {
     return ResourceMonad.bind(
         lessThan(upperBound, lowerBound),
@@ -237,34 +334,120 @@ public final class PolynomialResources {
     return p.multiply(polynomial(s));
   }
 
+  /**
+   * Add units to a polynomial resource.
+   */
   public static UnitAware<Resource<Polynomial>> unitAware(Resource<Polynomial> p, Unit unit) {
     return UnitAwareResources.unitAware(p, unit, PolynomialResources::scalePolynomial);
   }
 
+  /**
+   * Add units to a polynomial resource.
+   */
   public static UnitAware<CellResource<Polynomial>> unitAware(CellResource<Polynomial> p, Unit unit) {
     return UnitAwareResources.unitAware(p, unit, PolynomialResources::scalePolynomial);
   }
 
-  public static UnitAware<Resource<Polynomial>> add(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> q) {
-    return UnitAwareOperations.add(extend(PolynomialResources::scalePolynomial), p, q, PolynomialResources::add);
+  /**
+   * Add polynomial resources.
+   */
+  @SafeVarargs
+  public static UnitAware<Resource<Polynomial>> add(UnitAware<? extends Resource<Polynomial>>... summands) {
+    if (summands.length == 0) {
+      throw new IllegalArgumentException("Cannot perform unit-aware addition of zero arguments.");
+    }
+    final Unit unit = summands[0].unit();
+    return unitAware(sum(Arrays.stream(summands).map(r -> r.value(unit))), unit);
   }
 
+  /**
+   * Add polynomial resources.
+   */
+  public static UnitAware<Resource<Polynomial>> sum$(Stream<UnitAware<? extends Resource<Polynomial>>> summands) {
+    return add(summands.<UnitAware<? extends Resource<Polynomial>>>toArray(UnitAware[]::new));
+  }
+
+  /**
+   * Subtract polynomial resources.
+   */
   public static UnitAware<Resource<Polynomial>> subtract(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> q) {
-    return UnitAwareOperations.subtract(extend(PolynomialResources::scalePolynomial), p, q, PolynomialResources::subtract);
+    return UnitAwareOperations.subtract(extend(PolynomialResources::scalePolynomial),
+                                        PolynomialResources::subtract,
+                                        p, q);
   }
 
-  public static UnitAware<Resource<Polynomial>> multiply(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> q) {
-    return UnitAwareOperations.multiply(extend(PolynomialResources::scalePolynomial), p, q, PolynomialResources::multiply);
+  /**
+   * Multiply polynomial resources.
+   */
+  @SafeVarargs
+  public static UnitAware<Resource<Polynomial>> multiply(UnitAware<? extends Resource<Polynomial>>... factors) {
+    return unitAware(
+        product(Arrays.stream(factors).map(UnitAware::value)),
+        Arrays.stream(factors).map(UnitAware::unit).reduce(Unit.SCALAR, Unit::multiply));
   }
 
+  /**
+   * Multiply polynomial resources.
+   */
+  public static UnitAware<Resource<Polynomial>> product$(Stream<UnitAware<? extends Resource<Polynomial>>> factors) {
+    return multiply(factors.<UnitAware<? extends Resource<Polynomial>>>toArray(UnitAware[]::new));
+  }
+
+  /**
+   * Divide a polynomial by a discrete resource.
+   * <p>
+   *   The divisor must be discrete, because the quotient of two polynomials is not necessarily a polynomial.
+   * </p>
+   */
   public static UnitAware<Resource<Polynomial>> divide(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Discrete<Double>>> q) {
-    return UnitAwareOperations.divide(extend(PolynomialResources::scalePolynomial), p, q, PolynomialResources::divide);
+    return UnitAwareOperations.divide(extend(PolynomialResources::scalePolynomial), PolynomialResources::divide, p, q);
   }
 
+  /**
+   * Compute the integral of integrand, starting at startingValue.
+   * <p>
+   *   This method allocates a cell, so must be called during initialization, not simulation.
+   * </p>
+   */
   public static UnitAware<Resource<Polynomial>> integrate(UnitAware<? extends Resource<Polynomial>> p, UnitAware<Double> startingValue) {
-    return UnitAwareOperations.integrate(extend(PolynomialResources::scalePolynomial), p, startingValue, PolynomialResources::integrate);
+    return UnitAwareOperations.integrate(extend(PolynomialResources::scalePolynomial),
+                                         PolynomialResources::integrate,
+                                         p, startingValue);
   }
 
+  /**
+   * Compute the integral of integrand, starting at startingValue.
+   * Also clamp the integral between lowerBound and upperBound (inclusive).
+   * <p>
+   *   Note that <code>clampedIntegrate(r, l, u, s)</code> differs from
+   *   <code>clamp(integrate(r, s), l, u)</code> in how they handle reversing from a boundary.
+   * </p>
+   * <p>
+   *   To see how, consider bounds of [0, 5], with an integrand of 1 for 10 seconds, then -1 for 10 seconds.
+   * </p>
+   * <p>
+   *   clamp & integrate:
+   * </p>
+   * <pre>
+   *   5       /----------\
+   *          /            \
+   *         /              \
+   *        /                \
+   *   0   /                  \
+   * time  0        10        20
+   * </pre>
+   * <p>
+   *   clampedIntegrate:
+   * </p>
+   * <pre>
+   *   5       /-----\
+   *          /       \
+   *         /         \
+   *        /           \
+   *   0   /             \-----
+   * time  0        10        20
+   * </pre>
+   */
   public static UnitAware<Resource<Polynomial>> clampedIntegrate(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> lowerBound, UnitAware<? extends Resource<Polynomial>> upperBound, UnitAware<Double> startingValue) {
     final Unit resultUnit = p.unit().multiply(StandardUnits.SECOND);
     return unitAware(
@@ -276,8 +459,13 @@ public final class PolynomialResources {
         resultUnit);
   }
 
+  /**
+   * Returns the derivative of this resource.
+   */
   public static UnitAware<Resource<Polynomial>> differentiate(UnitAware<? extends Resource<Polynomial>> p) {
-    return UnitAwareOperations.differentiate(extend(PolynomialResources::scalePolynomial), p, PolynomialResources::differentiate);
+    return UnitAwareOperations.differentiate(extend(PolynomialResources::scalePolynomial),
+                                             PolynomialResources::differentiate,
+                                             p);
   }
 
   // Ugly $ suffix is to avoid ambiguous overloading after erasure.
@@ -321,6 +509,12 @@ public final class PolynomialResources {
     return unitAware(max(p.value(), q.value(p.unit())), p.unit());
   }
 
+  /**
+   * Returns min(max(p, lowerBound), upperBound).
+   * <p>
+   *   If lowerBound ever exceeds upperBound, this resource fails.
+   * </p>
+   */
   public static UnitAware<Resource<Polynomial>> clamp(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> lowerBound, UnitAware<? extends Resource<Polynomial>> upperBound) {
     return unitAware(clamp(p.value(), lowerBound.value(p.unit()), upperBound.value(p.unit())), p.unit());
   }

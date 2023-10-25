@@ -16,6 +16,9 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 public final class ClockResources {
   private ClockResources() {}
 
+  /**
+   * Create a clock starting at zero time.
+   */
   public static Resource<Clock> clock() {
     return cellResource(Clock.clock(ZERO));
   }

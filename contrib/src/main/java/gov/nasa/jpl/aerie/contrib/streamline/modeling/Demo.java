@@ -30,7 +30,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomi
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.unitAware;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.Quantities.quantity;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.StandardUnits.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAwareOperations.simplify;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 
@@ -87,7 +86,7 @@ public final class Demo {
   UnitAware<CellResource<Discrete<Double>>> power = DiscreteResources.unitAware(
       cellResource(discrete(120.0)), WATT);
 
-  UnitAware<Resource<Polynomial>> batterySOC = integrate(asUnitAwarePolynomial(simplify(power)), quantity(100, JOULE));
+  UnitAware<Resource<Polynomial>> batterySOC = integrate(asUnitAwarePolynomial(power), quantity(100, JOULE));
   UnitAware<Resource<Discrete<Double>>> clampedPower = DiscreteResources.unitAware(map(power.value(WATT), p -> p < 0 ? 0 : p), WATT);
   UnitAware<Resource<Discrete<Double>>> clampedPower_v2 = /* map(power, p -> lessThan(p, quantity(0, WATT)) ? quantity(0, WATT) : p) */
       null;

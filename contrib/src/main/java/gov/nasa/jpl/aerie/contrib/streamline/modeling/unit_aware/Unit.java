@@ -2,6 +2,9 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
 
 import java.util.Objects;
 
+/**
+ * A unit of measure in the QUDV system.
+ */
 public final class Unit {
   public static final Unit SCALAR = new Unit(Dimension.SCALAR, 1, "(scalar)", "(scalar)");
 

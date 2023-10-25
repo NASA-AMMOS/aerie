@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
 
+/**
+ * Collection of standard units, including all SI base units.
+ */
 public final class StandardUnits {
   private StandardUnits() {}
 

@@ -9,6 +9,9 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 public final class ClockEffects {
   private ClockEffects() {}
 
+  /**
+   * Reset clock to zero elapsed time.
+   */
   public static void restart(CellResource<Clock> stopwatch) {
     stopwatch.emit("Restart", effect(c -> clock(ZERO)));
   }

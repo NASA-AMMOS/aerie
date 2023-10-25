@@ -26,6 +26,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.failure;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.success;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad.bind;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
@@ -47,8 +48,7 @@ import static java.util.stream.Collectors.toMap;
  *   Constraints are linear in a set of variables,
  *   and each variable is a polynomial resource.
  *   When a driving variable changes, or the current solution expires,
- *   the solver runs independently of Aerie
- *   like a substep of the Aerie simulation step.
+ *   the solver runs as part of the next Aerie simulation step.
  * </p>
  */
 public final class LinearBoundaryConsistencySolver {
@@ -68,7 +68,7 @@ public final class LinearBoundaryConsistencySolver {
       solve();
       // After that, solve whenever any of the driven terms change
       // OR a solved variable changes (which can only happen when it expires)
-      Reactions.whenever(
+      whenever(
           contextualized(name + " resolving condition", () -> Stream.concat(
               drivenTerms.stream(),
               variables.stream().map(Variable::resource))

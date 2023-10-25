@@ -3,6 +3,10 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
 import static java.lang.Integer.signum;
 import static org.apache.commons.math3.util.ArithmeticUtils.gcd;
 
+/**
+ * Lightweight exact rational number, used primarily for tracking dimensionality
+ * in the QUDV system.
+ */
 public record Rational(int numerator, int denominator) implements Comparable<Rational> {
   public static final Rational ZERO = new Rational(0, 1);
   public static final Rational ONE = new Rational(1, 1);
@@ -47,6 +51,9 @@ public record Rational(int numerator, int denominator) implements Comparable<Rat
         denominator * other.denominator);
   }
 
+  /**
+   * Flip numerator and divisor, equivalent to raising to the power -1.
+   */
   public Rational invert() {
     return new Rational(denominator, numerator);
   }
@@ -60,6 +67,9 @@ public record Rational(int numerator, int denominator) implements Comparable<Rat
     return Integer.compare(numerator * o.denominator, denominator * o.numerator);
   }
 
+  /**
+   * Approximate this as a floating-point number.
+   */
   public double doubleValue() {
     return ((double) numerator) / denominator;
   }

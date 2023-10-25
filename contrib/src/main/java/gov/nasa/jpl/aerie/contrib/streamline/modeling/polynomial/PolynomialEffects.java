@@ -55,10 +55,16 @@ public final class PolynomialEffects {
     spawn(replaying(() -> consuming(resource, rate, () -> delay(time))));
   }
 
+  /**
+   * Restore resource according to a given polynomial profile while an action runs.
+   */
   public static void restoring(CellResource<Polynomial> resource, Polynomial profile, Runnable action) {
     withConsumableEffects("restoring", resource, profile.multiply(polynomial(-1)), action);
   }
 
+  /**
+   * Consume some amount of a resource instantaneously.
+   */
   public static void restore(CellResource<Polynomial> resource, double amount) {
     resource.emit(
         "Restore %.1e discretely".formatted(amount),
@@ -100,26 +106,50 @@ public final class PolynomialEffects {
 
   // Non-consumable style operations
 
+  /**
+   * Decrease resource according to a given polynomial profile while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void using(CellResource<Polynomial> resource, Polynomial profile, Runnable action) {
     withNonConsumableEffect("using", resource, profile, action);
   }
 
+  /**
+   * Decrease resource by a fixed amount while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void using(CellResource<Polynomial> resource, double amount, Runnable action) {
     using(resource, polynomial(amount), action);
   }
 
+  /**
+   * Decrease resource by a fixed amount for a fixed time,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void using(CellResource<Polynomial> resource, double amount, Duration time) {
     using(resource, amount, () -> delay(time));
   }
 
+  /**
+   * Increase resource according to a given polynomial profile while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void providing(CellResource<Polynomial> resource, Polynomial profile, Runnable action) {
     withNonConsumableEffect("providing", resource, profile.multiply(polynomial(-1)), action);
   }
 
+  /**
+   * Increase resource by a fixed amount while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void providing(CellResource<Polynomial> resource, double amount, Runnable action) {
     providing(resource, polynomial(amount), action);
   }
 
+  /**
+   * Increase resource by a fixed amount for a fixed time,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void providing(CellResource<Polynomial> resource, double amount, Duration time) {
     providing(resource, amount, () -> delay(time));
   }
@@ -171,10 +201,16 @@ public final class PolynomialEffects {
     spawn(replaying(() -> consuming(resource, rate, () -> delay(time))));
   }
 
+  /**
+   * Restore resource according to a given polynomial profile while an action runs.
+   */
   public static void restoring$(UnitAware<CellResource<Polynomial>> resource, UnitAware<Polynomial> profile, Runnable action) {
     restoring(resource.value(), profile.value(resource.unit()), action);
   }
 
+  /**
+   * Restore some amount of a resource instantaneously.
+   */
   public static void restore(UnitAware<CellResource<Polynomial>> resource, UnitAware<Double> amount) {
     restore(resource.value(), amount.value(resource.unit()));
   }
@@ -202,26 +238,50 @@ public final class PolynomialEffects {
 
   // Non-consumable style operations
 
+  /**
+   * Decrease resource according to a given polynomial profile while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void using$(UnitAware<CellResource<Polynomial>> resource, UnitAware<Polynomial> profile, Runnable action) {
     using(resource.value(), profile.value(resource.unit()), action);
   }
 
+  /**
+   * Decrease resource by a fixed amount while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void using(UnitAware<CellResource<Polynomial>> resource, UnitAware<Double> amount, Runnable action) {
     using(resource.value(), amount.value(resource.unit()), action);
   }
 
+  /**
+   * Decrease resource by a fixed amount for a fixed time,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void using(UnitAware<CellResource<Polynomial>> resource, UnitAware<Double> amount, Duration time) {
     using(resource.value(), amount.value(resource.unit()), time);
   }
 
+  /**
+   * Increase resource according to a given polynomial profile while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void providing$(UnitAware<CellResource<Polynomial>> resource, UnitAware<Polynomial> profile, Runnable action) {
     providing(resource.value(), profile.value(resource.unit()), action);
   }
 
+  /**
+   * Increase resource by a fixed amount while an action runs,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void providing(UnitAware<CellResource<Polynomial>> resource, UnitAware<Double> amount, Runnable action) {
     providing(resource.value(), amount.value(resource.unit()), action);
   }
 
+  /**
+   * Increase resource by a fixed amount for a fixed time,
+   * restoring the resource to its original profile when the action completes.
+   */
   public static void providing(UnitAware<CellResource<Polynomial>> resource, UnitAware<Double> amount, Duration time) {
     providing(resource.value(), amount.value(resource.unit()), time);
   }

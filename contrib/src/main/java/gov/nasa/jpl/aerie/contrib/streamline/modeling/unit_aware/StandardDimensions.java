@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
 
+/**
+ * Collection of standard dimensions, including all SI base dimensions.
+ */
 public final class StandardDimensions {
   private StandardDimensions() {}
 

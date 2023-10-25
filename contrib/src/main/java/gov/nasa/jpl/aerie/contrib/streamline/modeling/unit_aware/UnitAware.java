@@ -8,6 +8,10 @@ import java.util.function.UnaryOperator;
 
 import static java.util.function.Function.identity;
 
+/**
+ * A value of type T with an attached unit.
+ * This can be rescaled to other units measuring the same dimension.
+ */
 public interface UnitAware<T> {
 
   default T value(Unit desiredUnit) {

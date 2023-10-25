@@ -56,6 +56,10 @@ public final class UnitAwareResources {
     return extend(scaling, ResourceMonad::map);
   }
 
+  public static <D extends Dynamics<Double, D>> UnitAware<Double> currentValue(UnitAware<? extends Resource<D>> resource, UnitAware<Double> valueIfError) {
+    return quantity(Resources.currentValue(resource.value(), valueIfError.value(resource.unit())), resource.unit());
+  }
+
   public static <D extends Dynamics<Double, D>> UnitAware<Double> currentValue(UnitAware<? extends Resource<D>> resource) {
     return quantity(Resources.currentValue(resource.value()), resource.unit());
   }

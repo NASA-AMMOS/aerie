@@ -9,18 +9,30 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 public final class VariableClockEffects {
   private VariableClockEffects() {}
 
+  /**
+   * Stop the clock without affecting the current time.
+   */
   public static void pause(CellResource<VariableClock> stopwatch) {
     stopwatch.emit("Pause", effect(c -> pausedStopwatch(c.extract())));
   }
 
+  /**
+   * Start the clock without affecting the current time.
+   */
   public static void start(CellResource<VariableClock> stopwatch) {
     stopwatch.emit("Start", effect(c -> runningStopwatch(c.extract())));
   }
 
+  /**
+   * Stop the clock and reset the time to zero.
+   */
   public static void reset(CellResource<VariableClock> stopwatch) {
     stopwatch.emit("Reset", effect(c -> pausedStopwatch(ZERO)));
   }
 
+  /**
+   * Start the clock and reset the time to zero.
+   */
   public static void restart(CellResource<VariableClock> stopwatch) {
     stopwatch.emit("Restart", effect(c -> runningStopwatch(ZERO)));
   }
