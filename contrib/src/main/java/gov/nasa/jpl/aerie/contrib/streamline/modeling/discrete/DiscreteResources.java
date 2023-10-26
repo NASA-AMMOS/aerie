@@ -10,9 +10,9 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMo
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.Unit;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAwareResources;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;

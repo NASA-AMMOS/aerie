@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
+package gov.nasa.jpl.aerie.contrib.streamline.unit_aware;
 
 import static java.lang.Integer.signum;
 import static org.apache.commons.math3.util.ArithmeticUtils.gcd;

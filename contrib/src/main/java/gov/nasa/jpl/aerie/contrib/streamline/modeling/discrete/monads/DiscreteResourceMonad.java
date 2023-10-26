@@ -1,10 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
 import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.function.BiFunction;

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialEffects;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -28,8 +28,8 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomi
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThan;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThan$;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.unitAware;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.Quantities.quantity;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.StandardUnits.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Quantities.quantity;
+import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits.*;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
+package gov.nasa.jpl.aerie.contrib.streamline.unit_aware;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.Quantities.quantity;
+import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Quantities.quantity;
 
 public final class UnitAwareResources {
   private UnitAwareResources() {}

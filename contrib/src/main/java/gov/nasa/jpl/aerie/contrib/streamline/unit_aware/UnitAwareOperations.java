@@ -1,10 +1,9 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
+package gov.nasa.jpl.aerie.contrib.streamline.unit_aware;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.StandardUnits.SECOND;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware.unitAware;
+import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware.unitAware;
 
 /**
  * Utilities for working with unit-aware objects correctly.
@@ -30,12 +29,12 @@ public final class UnitAwareOperations {
   }
 
   public static <A, B> UnitAware<A> integrate(BiFunction<A, Double, A> scaling, BiFunction<A, B, A> integration, UnitAware<? extends A> a, UnitAware<? extends B> b) {
-    final Unit newUnit = a.unit().multiply(SECOND);
+    final Unit newUnit = a.unit().multiply(StandardUnits.SECOND);
     return unitAware(integration.apply(a.value(), b.value(newUnit)), newUnit, scaling);
   }
 
   public static <A> UnitAware<A> differentiate(BiFunction<A, Double, A> scaling, Function<A, A> differentiation, UnitAware<? extends A> a) {
-    return unitAware(differentiation.apply(a.value()), a.unit().divide(SECOND), scaling);
+    return unitAware(differentiation.apply(a.value()), a.unit().divide(StandardUnits.SECOND), scaling);
   }
 
   public static <A extends Comparable<A>> int compare(UnitAware<? extends A> a, UnitAware<? extends A> b) {

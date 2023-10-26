@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 
 import java.util.LinkedList;
 import java.util.List;

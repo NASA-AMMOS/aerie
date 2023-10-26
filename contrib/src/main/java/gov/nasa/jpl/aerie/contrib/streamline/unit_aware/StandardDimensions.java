@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
+package gov.nasa.jpl.aerie.contrib.streamline.unit_aware;
 
 /**
  * Collection of standard dimensions, including all SI base dimensions.

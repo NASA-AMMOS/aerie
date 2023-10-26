@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.StandardUnits;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware.UnitAware;
+import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
