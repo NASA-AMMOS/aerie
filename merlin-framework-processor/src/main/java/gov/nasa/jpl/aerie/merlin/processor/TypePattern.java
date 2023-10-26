@@ -49,18 +49,62 @@ public sealed interface TypePattern {
     return from(element.asType());
   }
 
+  /**
+   * Given a TypePattern, produce a new TypePattern where all type variables whose names are
+   * in the given map have been replaced with the corresponding type patterns.
+   * @param substitution A map from type variable name to the type pattern with which to replace it
+   * @return a TypePattern with the same structure, but with any matching type variables replaced
+   * E.g. ClassPattern(List, TypeVariablePattern(T)).substitute(Map.of("T", ClassPattern(Double))) will return
+   *   ClassPattern(List, Double)
+   */
   TypePattern substitute(Map<String, TypePattern> substitution);
 
+  /**
+   * Attempt to match this TypePattern against the given other TypePattern. Throw a UnificationException if they cannot be matched
+   * @param other the ground TypePattern to match against this TypePattern
+   * @return an assignment of type variables to TypePatterns, if match is successful
+   * @throws UnificationException if the two patterns do not match
+   */
   Map<String, TypePattern> match(TypePattern other) throws UnificationException;
 
+  /**
+   * Whether this TypePattern contains any type variables. Ground is true if there are no type variables present.
+   * @return false if there is at least one type variable in this TypePattern. true if there are none.
+   */
   boolean isGround();
 
+  /**
+   * Whether this TypePattern has the same structure, same types, and same type variable names as the other pattern
+   * @param other the other TypePattern to compare with
+   * @return true if the two TypePatterns are identical, false otherwise.
+   */
   boolean isSyntacticallyEqualTo(TypePattern other);
 
+  /**
+   * Represent this TypePattern as a javapoet TypeName
+   * @return a javapoet TypeName corresponding to this TypePattern
+   *
+   * E.g. ClassPattern(List, Double).render() --> ClassName(List, Double)
+   */
   TypeName render();
 
+  /**
+   * Represent this TypePattern as a javapoet TypeName without generics
+   * @return a javapoet TypeName corresponding to this TypePattern without generics
+   *
+   * E.g. ClassPattern(List, Double).erasure() --> ClassName(List)
+   */
   TypeName erasure();
 
+  /**
+   * If this TypePattern represents a primitive, return a TypePattern that represents the corresponding Object type.
+   * @return a TypePattern that is not a PrimitiveTypePattern
+   *
+   * E.g. PrimitivePattern(boolean) --> ClassPattern(Boolean)
+   *
+   * There is no need to recurse: if the top level is not a PrimitiveTypePattern,
+   * the entire type pattern is already considered "boxed"
+   */
   TypePattern box();
 
   class UnificationException extends Exception {}
