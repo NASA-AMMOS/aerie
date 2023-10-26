@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
@@ -162,9 +161,9 @@ public final class DiscreteResources {
   /**
    * Reduce operands using short-circuiting logical "and"
    */
-  public static Resource<Discrete<Boolean>> and(Stream<Resource<Discrete<Boolean>>> operands) {
+  public static Resource<Discrete<Boolean>> and(Stream<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting and to improve efficiency
-    return operands.reduce(unit(true), DiscreteResources::and);
+    return operands.reduce(unit(true), DiscreteResources::and, DiscreteResources::and);
   }
 
   /**
@@ -186,9 +185,9 @@ public final class DiscreteResources {
   /**
    * Reduce operands using short-circuiting logical "or"
    */
-  public static Resource<Discrete<Boolean>> or(Stream<Resource<Discrete<Boolean>>> operands) {
+  public static Resource<Discrete<Boolean>> or(Stream<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting or to improve efficiency
-    return operands.reduce(unit(false), DiscreteResources::or);
+    return operands.reduce(unit(false), DiscreteResources::or, DiscreteResources::or);
   }
 
   /**
@@ -223,8 +222,8 @@ public final class DiscreteResources {
   /**
    * Add integer resources
    */
-  public static Resource<Discrete<Integer>> sum(Stream<Resource<Discrete<Integer>>> operands) {
-    return operands.reduce(unit(0), lift(Integer::sum)::apply);
+  public static Resource<Discrete<Integer>> sum(Stream<? extends Resource<Discrete<Integer>>> operands) {
+    return operands.reduce(unit(0), lift(Integer::sum), lift(Integer::sum)::apply);
   }
 
   /**
@@ -245,8 +244,8 @@ public final class DiscreteResources {
   /**
    * Multiply integer resources
    */
-  public static Resource<Discrete<Integer>> product(Stream<Resource<Discrete<Integer>>> operands) {
-    return operands.reduce(unit(1), lift((Integer x, Integer y) -> x * y)::apply);
+  public static Resource<Discrete<Integer>> product(Stream<? extends Resource<Discrete<Integer>>> operands) {
+    return operands.reduce(unit(1), lift((x, y) -> x * y), lift((Integer x, Integer y) -> x * y)::apply);
   }
 
   /**
