@@ -1,6 +1,5 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.unit_aware;
+package gov.nasa.jpl.aerie.contrib.streamline.unit_aware;
 
-import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Dimension;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
