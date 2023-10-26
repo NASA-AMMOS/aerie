@@ -1,12 +1,5 @@
--- Captures the state of a plan and all of its activities
-create function create_snapshot(_plan_id integer)
-	returns integer
-	language plpgsql as $$
-begin
-	return create_snapshot(_plan_id, null, null, null);
-end
-$$;
-
+-- Replace create_snapshot(integer, text, text) with create_snapshot(integer, text, text, text)
+drop function create_snapshot(integer, text, text);
 create function create_snapshot(_plan_id integer, _snapshot_name text, _description text, _user text)
   returns integer -- snapshot id inserted into the table
   language plpgsql as $$
@@ -55,6 +48,14 @@ begin
   end;
 $$;
 
+create or replace function create_snapshot(_plan_id integer)
+	returns integer
+	language plpgsql as $$
+begin
+	return create_snapshot(_plan_id, null, null, null);
+end
+$$;
+
 comment on function create_snapshot(integer) is e''
 	'See comment on create_snapshot(integer, text, text, text)';
 
@@ -66,3 +67,32 @@ comment on function create_snapshot(integer, text, text, text) is e''
   '  - The tags on those activities'
 	'  - When the snapshot was taken'
 	'  - Optionally: who took the snapshot, a name for the snapshot, a description of the snapshot';
+
+-- Add Hasura function override
+create function hasura_functions.create_snapshot(_plan_id integer, _snapshot_name text, hasura_session json, _description text default null)
+  returns hasura_functions.create_snapshot_return_value
+  volatile
+  language plpgsql as $$
+declare
+  _snapshot_id integer;
+  _snapshotter text;
+  _function_permission metadata.permission;
+begin
+  _snapshotter := (hasura_session ->> 'x-hasura-user-id');
+  _function_permission := metadata.get_function_permissions('create_snapshot', hasura_session);
+  perform metadata.raise_if_plan_merge_permission('create_snapshot', _function_permission);
+  if not _function_permission = 'NO_CHECK' then
+    call metadata.check_general_permissions('create_snapshot', _function_permission, _plan_id, _snapshotter);
+  end if;
+  if _snapshot_name is null then
+    raise exception 'Snapshot name cannot be null.';
+  end if;
+
+  select create_snapshot(_plan_id, _snapshot_name, _description, _snapshotter) into _snapshot_id;
+  return row(_snapshot_id)::hasura_functions.create_snapshot_return_value;
+end;
+$$;
+
+drop function hasura_functions.create_snapshot(_plan_id integer, _snapshot_name text, hasura_session json);
+
+call migrations.mark_migration_applied('31');
