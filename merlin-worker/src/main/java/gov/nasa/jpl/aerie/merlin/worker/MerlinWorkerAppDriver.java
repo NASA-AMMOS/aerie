@@ -2,48 +2,38 @@ package gov.nasa.jpl.aerie.merlin.worker;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRevisionData;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.merlin.worker.capabilities.ListenSimulationCapability;
+import gov.nasa.jpl.aerie.merlin.worker.capabilities.HandleSimulationCapability;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
 import io.javalin.Javalin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Optional;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public final class MerlinWorkerAppDriver {
+
+  private static final Logger logger = LoggerFactory.getLogger(MerlinWorkerAppDriver.class);
+
   public static void main(String[] args) throws InterruptedException {
+    final var app = Javalin.create().start(8080);
+    app.get("/health", ctx -> ctx.status(200));
+
     final var configuration = loadConfiguration();
-    final var store = configuration.store();
-
-    if (!(store instanceof final PostgresStore postgresStore)) {
-      throw new UnexpectedSubtypeError(Store.class, store);
-    }
-    final var hikariConfig = new HikariConfig();
-    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-    hikariConfig.addDataSourceProperty("serverName", postgresStore.server());
-    hikariConfig.addDataSourceProperty("portNumber", postgresStore.port());
-    hikariConfig.addDataSourceProperty("databaseName", postgresStore.database());
-    hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
-    hikariConfig.setUsername(postgresStore.user());
-    hikariConfig.setPassword(postgresStore.password());
-    hikariConfig.setMaximumPoolSize(2);
-
-    hikariConfig.setConnectionInitSql("set time zone 'UTC'");
-
-    final var hikariDataSource = new HikariDataSource(hikariConfig);
+    final var hikariDataSource = getHikariDataSource(configuration);
 
     final var stores = new Stores(
         new PostgresPlanRepository(hikariDataSource),
@@ -61,42 +51,58 @@ public final class MerlinWorkerAppDriver {
         missionModelController,
         configuration.simulationProgressPollPeriodMillis());
 
-    final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
-    final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
-    final var listenThread = listenAction.registerListener();
+    final var simulationNotificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
 
-    try (final var app = Javalin.create().start(8080)) {
-      app.get("/health", ctx -> ctx.status(200));
+    final var targetThreadCount = 4;
 
-      while (listenThread.isAlive()) {
-        final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
-        if(notification == null) continue;
-        final var planId = new PlanId(notification.planId());
-        final var datasetId = notification.datasetId();
+    try (var executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(targetThreadCount)) {
 
-        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
-        if (owner.isEmpty()) continue;
+      // start simulation listener thread
+      final var simulationListenAction = new ListenSimulationCapability(hikariDataSource, simulationNotificationQueue);
+      final var simulationListenThread = simulationListenAction.registerListener();
 
-        final var revisionData = new PostgresPlanRevisionData(
-            notification.modelRevision(),
-            notification.planRevision(),
-            notification.simulationRevision(),
-            notification.simulationTemplateRevision());
-        final ResultsProtocol.WriterRole writer = owner.get();
-        try {
-          simulationAgent.simulate(planId, revisionData, writer);
-        } catch (final Throwable ex) {
-          ex.printStackTrace(System.err);
-          writer.failWith(b -> b
-              .type("UNEXPECTED_SIMULATION_EXCEPTION")
-              .message("Something went wrong while simulating")
-              .trace(ex));
-        }
+      // start simulation handler thread
+      final var simulationHandleAction = new HandleSimulationCapability(
+          hikariDataSource,
+          simulationNotificationQueue,
+          stores,
+          simulationAgent
+      );
+      final var simulationHandleThread = simulationHandleAction.registerHandler();
+
+      executor.submit(simulationListenThread);
+      executor.submit(simulationHandleThread);
+
+      // threads should never stop running, so we busy wait on active count to detect if any threads
+      // have failed. if any threads failed, we kill the rest so the merlin-worker process exits and restarts
+      while (executor.getActiveCount() == targetThreadCount) {
+        Thread.sleep(1000);
       }
-    } finally {
-      // Kill the listening thread
-      listenThread.interrupt();
+      executor.shutdownNow();
+      app.close();
     }
+  }
+
+  private static HikariDataSource getHikariDataSource(WorkerAppConfiguration configuration) {
+    final var store = configuration.store();
+
+    if (!(store instanceof final PostgresStore postgresStore)) {
+      throw new UnexpectedSubtypeError(Store.class, store);
+    }
+
+    final var hikariConfig = new HikariConfig();
+    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+    hikariConfig.addDataSourceProperty("serverName", postgresStore.server());
+    hikariConfig.addDataSourceProperty("portNumber", postgresStore.port());
+    hikariConfig.addDataSourceProperty("databaseName", postgresStore.database());
+    hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
+    hikariConfig.setUsername(postgresStore.user());
+    hikariConfig.setPassword(postgresStore.password());
+    hikariConfig.setMaximumPoolSize(2);
+
+    hikariConfig.setConnectionInitSql("set time zone 'UTC'");
+
+    return new HikariDataSource(hikariConfig);
   }
 
   private static String getEnv(final String key, final String fallback){

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.worker;
+package gov.nasa.jpl.aerie.merlin.worker.capabilities;
 
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.ListenSimulationStatusAction;
@@ -29,7 +29,8 @@ public class ListenSimulationCapability {
   }
 
   public Thread registerListener() {
-    final var listenThread = new Thread(() -> {
+      return new Thread(() -> {
+        logger.info("simulation listener thread starting...");
       try (final var connection = this.dataSource.getConnection()) {
         try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
           listenSimulationStatusAction.apply();
@@ -62,12 +63,9 @@ public class ListenSimulationCapability {
             }
           }
         }
-        logger.info("Listener has received interrupted signal");
       } catch (SQLException e) {
         throw new DatabaseException("Listener encountered exception", e);
       }
     });
-    listenThread.start();
-    return listenThread;
   }
 }
