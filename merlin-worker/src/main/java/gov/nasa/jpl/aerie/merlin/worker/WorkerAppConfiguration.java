@@ -10,7 +10,8 @@ public record WorkerAppConfiguration(
     Path merlinFileStore,
     Store store,
     long simulationProgressPollPeriodMillis,
-    Instant untruePlanStart
+    Instant untruePlanStart,
+    boolean validationThreadEnabled
 ) {
   public WorkerAppConfiguration {
     Objects.requireNonNull(merlinFileStore);

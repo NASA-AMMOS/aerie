@@ -11,9 +11,12 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
-import gov.nasa.jpl.aerie.merlin.worker.capabilities.ListenSimulationCapability;
 import gov.nasa.jpl.aerie.merlin.worker.capabilities.HandleSimulationCapability;
+import gov.nasa.jpl.aerie.merlin.worker.capabilities.HandleValidationCapability;
+import gov.nasa.jpl.aerie.merlin.worker.capabilities.ListenSimulationCapability;
+import gov.nasa.jpl.aerie.merlin.worker.capabilities.ListenValidationCapability;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
+import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresValidationNotificationPayload;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +55,9 @@ public final class MerlinWorkerAppDriver {
         configuration.simulationProgressPollPeriodMillis());
 
     final var simulationNotificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
+    final var validationNotificationQueue = new LinkedBlockingQueue<PostgresValidationNotificationPayload>();
 
-    final var targetThreadCount = 4;
+    final var targetThreadCount = configuration.validationThreadEnabled() ? 4 : 2;
 
     try (var executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(targetThreadCount)) {
 
@@ -72,6 +76,21 @@ public final class MerlinWorkerAppDriver {
 
       executor.submit(simulationListenThread);
       executor.submit(simulationHandleThread);
+
+      // conditionally start validation listener and handler threads
+      if (configuration.validationThreadEnabled()) {
+        final var validationListenAction = new ListenValidationCapability(hikariDataSource, validationNotificationQueue);
+        final var validationListenThread = validationListenAction.registerListener();
+
+        final var validationHandleAction = new HandleValidationCapability(
+            hikariDataSource,
+            validationNotificationQueue,
+            missionModelController);
+        final var validationHandleThread = new Thread(validationHandleAction::registerHandler);
+
+        executor.submit(validationListenThread);
+        executor.submit(validationHandleThread);
+      }
 
       // threads should never stop running, so we busy wait on active count to detect if any threads
       // have failed. if any threads failed, we kill the rest so the merlin-worker process exits and restarts
@@ -98,7 +117,7 @@ public final class MerlinWorkerAppDriver {
     hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
     hikariConfig.setUsername(postgresStore.user());
     hikariConfig.setPassword(postgresStore.password());
-    hikariConfig.setMaximumPoolSize(2);
+    hikariConfig.setMaximumPoolSize(configuration.validationThreadEnabled() ? 4 : 2);
 
     hikariConfig.setConnectionInitSql("set time zone 'UTC'");
 
@@ -119,7 +138,8 @@ public final class MerlinWorkerAppDriver {
                           getEnv("MERLIN_WORKER_DB_PASSWORD", ""),
                           getEnv("MERLIN_WORKER_DB", "aerie_merlin")),
         Integer.parseInt(getEnv("SIMULATION_PROGRESS_POLL_PERIOD_MILLIS", "5000")),
-        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
+        Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
+        Boolean.parseBoolean(getEnv("ENABLE_VALIDATION_THREAD", "false"))
     );
   }
 }
