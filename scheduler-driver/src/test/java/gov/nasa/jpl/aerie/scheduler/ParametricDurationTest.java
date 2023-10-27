@@ -31,7 +31,7 @@ public class ParametricDurationTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochDays(3));
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
   }
 
   @Test

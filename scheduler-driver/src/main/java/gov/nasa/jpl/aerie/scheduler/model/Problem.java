@@ -100,6 +100,8 @@ public class Problem {
     return planningHorizon;
   }
 
+  public SchedulerModel getSchedulerModel() { return schedulerModel; }
+
   /**
    * adds a new global constraint to the mission model
    *

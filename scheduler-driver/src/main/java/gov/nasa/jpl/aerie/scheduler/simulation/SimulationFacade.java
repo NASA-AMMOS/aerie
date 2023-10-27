@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -32,6 +33,7 @@ public class SimulationFacade implements AutoCloseable{
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
 
   private final MissionModel<?> missionModel;
+  private final SchedulerModel schedulerModel;
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
@@ -100,7 +102,9 @@ public class SimulationFacade implements AutoCloseable{
     return Optional.of(lastSimulationData.driverResults());
   }
 
-  public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
+  public SimulationFacade(final PlanningHorizon planningHorizon,
+                          final MissionModel<?> missionModel,
+                          final SchedulerModel schedulerModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
     this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
@@ -110,6 +114,7 @@ public class SimulationFacade implements AutoCloseable{
     this.pastSimulationRestarts = 0;
     this.initialPlan = new ArrayList<>();
     this.initialSimulationResults = Optional.empty();
+    this.schedulerModel = schedulerModel;
   }
 
   @Override
@@ -337,7 +342,7 @@ public class SimulationFacade implements AutoCloseable{
     if (activity.duration() != null) {
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
-        arguments.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+        arguments.put(dt.parameterName(), this.schedulerModel.serializeDuration(activity.duration()));
       } else if (
           durationType instanceof DurationType.Uncontrollable
           || durationType instanceof DurationType.Fixed

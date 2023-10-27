@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUnsatisfiableCompositeGoals {
@@ -41,8 +42,7 @@ public class TestUnsatisfiableCompositeGoals {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    return SimulationUtility.buildProblemFromFoo(h);
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
@@ -218,10 +218,7 @@ public class TestUnsatisfiableCompositeGoals {
   public void testCardinalityBacktrack() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(

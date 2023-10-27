@@ -1048,9 +1048,7 @@ public class PrioritySolver implements Solver {
       //handle variable duration parameter here
       final Duration setActivityDuration;
       if (instantiatedArguments.containsKey(durationParameterName)) {
-        final var argumentDuration = Duration.of(
-            instantiatedArguments.get(durationParameterName).asInt().get(),
-            Duration.MICROSECOND);
+        final var argumentDuration = problem.getSchedulerModel().deserializeDuration(instantiatedArguments.get(durationParameterName));
         if (solved.duration().contains(argumentDuration)) {
           setActivityDuration = argumentDuration;
         } else {

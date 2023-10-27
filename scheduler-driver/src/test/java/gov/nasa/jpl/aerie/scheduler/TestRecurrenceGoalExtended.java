@@ -7,15 +7,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRecurrenceGoalExtended {
@@ -26,10 +24,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testRecurrence() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -61,10 +56,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testRecurrenceSecondGoalOutOfWindowAndPlanHorizon() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -93,10 +85,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testRecurrenceRepeatIntervalLargerThanGoalWindow() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -125,10 +114,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testGoalWindowLargerThanPlanHorizon() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(5),TestUtility.timeFromEpochSeconds(15));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     final var goalWindow = new Windows(false).set(List.of(
         Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(5, Duration.SECONDS)),
@@ -164,10 +150,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testGoalDurationLargerGoalWindow() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -197,10 +180,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testGoalDurationLargerRepeatInterval() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -230,10 +210,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testAddActivityNonEmptyPlan() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -251,8 +228,7 @@ public class TestRecurrenceGoalExtended {
     var plan = solver.getNextSolution().orElseThrow();
 
     // Create a new problem with previous plan and add new goal interleaved two time units wrt original goal
-    Problem problem2 = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon, fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem2 = buildProblemFromFoo(planningHorizon);
     problem2.setInitialPlan(plan);
     RecurrenceGoal goal2 = new RecurrenceGoal.Builder()
         .named("Test recurrence goal 2")

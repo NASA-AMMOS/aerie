@@ -31,12 +31,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
+    final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
     return new PrioritySolver(
             new Problem(
                     bananaMissionModel,
                     h,
-                    new SimulationFacade(h, bananaMissionModel),
-                    SimulationUtility.getBananaSchedulerModel()));
+                    new SimulationFacade(h, bananaMissionModel, schedulerModel),
+                    schedulerModel));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {
@@ -75,7 +76,8 @@ public class PrioritySolverTest {
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
+    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel, fooSchedulerModel), fooSchedulerModel);
   }
 
   private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2025-005T01:01:01.001"));
@@ -241,7 +243,10 @@ public class PrioritySolverTest {
   {
     final var problem = makeTestMissionAB();
 
-    final var adHocFacade = new SimulationFacade(problem.getPlanningHorizon(), problem.getMissionModel());
+    final var adHocFacade = new SimulationFacade(
+        problem.getPlanningHorizon(),
+        problem.getMissionModel(),
+        problem.getSchedulerModel());
     adHocFacade.insertActivitiesIntoSimulation(makePlanA012(problem).getActivities());
     adHocFacade.computeSimulationResultsUntil(problem.getPlanningHorizon().getEndAerie());
     final var simResults = adHocFacade.getLatestDriverSimulationResults().get();
@@ -276,9 +281,15 @@ public class PrioritySolverTest {
     var planningHorizon = h;
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
+    Problem problem = new Problem(
+        fooMissionModel,
         planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+        new SimulationFacade(
+            planningHorizon,
+            fooMissionModel,
+            fooSchedulerModel),
+        SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     //act at t=1hr and at t=2hrs

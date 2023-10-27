@@ -60,10 +60,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceCutoff1() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -96,10 +93,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceCutoff2() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -132,10 +126,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceShorterWindow() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -168,10 +159,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceLongerWindow() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -217,10 +205,7 @@ public class TestApplyWhen {
     RESULT: [+-------------------]
     */
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -257,10 +242,7 @@ public class TestApplyWhen {
     // RESULT:            [++--------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(Arrays.asList(
@@ -303,10 +285,7 @@ public class TestApplyWhen {
     // RESULT:            [++--------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(Arrays.asList(
@@ -350,10 +329,7 @@ public class TestApplyWhen {
     // RESULT:            [++-----++-++----~~---] (if not global)
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -398,10 +374,7 @@ public class TestApplyWhen {
     // RESULT:            [----------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -441,10 +414,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceCutoffUncontrollable() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(21));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("BasicActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -482,9 +452,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
@@ -525,10 +493,7 @@ public class TestApplyWhen {
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -575,10 +540,7 @@ public class TestApplyWhen {
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -627,9 +589,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
 
     final var activityType = problem.getActivityType("BasicActivity");
@@ -674,9 +634,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -729,9 +687,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -791,9 +747,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -848,9 +802,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -915,9 +867,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(28)); //this boundary is inclusive.
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -994,9 +944,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(12));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1062,9 +1010,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(16));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1128,9 +1074,7 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1237,10 +1181,7 @@ public class TestApplyWhen {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, hor, new SimulationFacade(
-        hor,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(hor);
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
@@ -1314,10 +1255,7 @@ public class TestApplyWhen {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(18));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, hor, new SimulationFacade(
-        hor,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(hor);
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
@@ -1392,10 +1330,7 @@ public class TestApplyWhen {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, hor, new SimulationFacade(
-        hor,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(hor);
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
