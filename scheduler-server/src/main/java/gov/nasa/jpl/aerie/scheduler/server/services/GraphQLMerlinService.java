@@ -427,7 +427,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         //add duration to parameters if controllable
         if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
           if (!activity.arguments().containsKey(durationType.parameterName())){
-            activity.addArgument(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+            activity.addArgument(durationType.parameterName(), durationType.valueMapperInterface().serializeControllableDuration(activity.duration()));
           }
         }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
@@ -564,7 +564,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final var insertionObjectArguments = Json.createObjectBuilder();
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
         if(!act.arguments().containsKey(durationType.parameterName())){
-          insertionObjectArguments.add(durationType.parameterName(), act.duration().in(Duration.MICROSECOND));
+          insertionObjectArguments.add(durationType.parameterName(), serializedValueP.unparse(durationType.valueMapperInterface().serializeControllableDuration(act.duration())));
         }
       }
 

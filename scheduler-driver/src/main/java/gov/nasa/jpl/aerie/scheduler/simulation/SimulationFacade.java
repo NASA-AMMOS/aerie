@@ -337,7 +337,7 @@ public class SimulationFacade implements AutoCloseable{
     if (activity.duration() != null) {
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
-        arguments.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+        arguments.put(dt.parameterName(), dt.valueMapperInterface().serializeControllableDuration(activity.duration()));
       } else if (
           durationType instanceof DurationType.Uncontrollable
           || durationType instanceof DurationType.Fixed

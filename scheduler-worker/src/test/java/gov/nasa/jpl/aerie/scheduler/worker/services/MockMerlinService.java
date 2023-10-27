@@ -206,7 +206,9 @@ class MockMerlinService implements MerlinService.OwnerRole {
       if(type.getDurationType() instanceof DurationType.Controllable durationType){
         //detect duration parameter and add it to parameters
         if(!arguments.containsKey(durationType.parameterName())){
-          arguments.put(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+          arguments.put(
+              durationType.parameterName(),
+              durationType.valueMapperInterface().serializeControllableDuration(activity.duration()));
         }
       }
       activityDirectives.add(new ActivityDirective(
