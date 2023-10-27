@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.protocol.types;
 import java.util.Map;
 
 public sealed interface DurationType {
-  record Controllable(String parameterName) implements DurationType {}
+  record Controllable(String parameterName, ControllableDurationValueMapper valueMapperInterface) implements DurationType {}
   record Uncontrollable() implements DurationType {}
   record Fixed(Duration duration) implements DurationType {}
   record Parametric(ThrowingDurationFunction durationFunction) implements DurationType {}
@@ -12,8 +12,8 @@ public sealed interface DurationType {
     return new Uncontrollable();
   }
 
-  static DurationType controllable(final String parameterName) {
-    return new Controllable(parameterName);
+  static DurationType controllable(final String parameterName, final ControllableDurationValueMapper durationValueMapper) {
+    return new Controllable(parameterName, durationValueMapper);
   }
 
   static DurationType fixed(final Duration duration) {
@@ -22,6 +22,11 @@ public sealed interface DurationType {
 
   static DurationType parametric(final ThrowingDurationFunction durationFunction) {
     return new Parametric(durationFunction);
+  }
+
+  interface ControllableDurationValueMapper {
+    SerializedValue serializeControllableDuration(final Duration duration);
+    Duration deserializeControllableDuration(final SerializedValue serializedValue);
   }
 
   interface ThrowingDurationFunction {
