@@ -133,6 +133,7 @@ services:
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
       UNTRUE_PLAN_START: "2000-01-01T11:58:55.816Z"
+      ENABLE_VALIDATION_THREAD: true
     image: "aerie_merlin_worker_1"
     ports: ["5007:5005", "27187:8080"]
     restart: always
