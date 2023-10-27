@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.differentiable;
+package gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;

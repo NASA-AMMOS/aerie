@@ -1,9 +1,9 @@
-package gov.nasa.jpl.aerie.contrib.streamline.modeling.differentiable;
+package gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box;
 
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.differentiable.Differentiable.differentiable;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Differentiable.differentiable;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 
 public final class DifferentiableDynamics {

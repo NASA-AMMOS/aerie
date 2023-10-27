@@ -208,7 +208,7 @@ public final class PolynomialResources {
    *   To see how, consider bounds of [0, 5], with an integrand of 1 for 10 seconds, then -1 for 10 seconds.
    * </p>
    * <p>
-   *   clamp & integrate:
+   *   clamp and integrate:
    * </p>
    * <pre>
    *   5       /----------\
@@ -426,7 +426,7 @@ public final class PolynomialResources {
    *   To see how, consider bounds of [0, 5], with an integrand of 1 for 10 seconds, then -1 for 10 seconds.
    * </p>
    * <p>
-   *   clamp & integrate:
+   *   clamp and integrate:
    * </p>
    * <pre>
    *   5       /----------\
