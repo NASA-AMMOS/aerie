@@ -28,11 +28,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public class AutoValueMappers {
-  private static final Pattern JAVA_IDENTIFIER_ILLEGAL_CHARACTERS = Pattern.compile("[.><,\\[\\]]");
-
   static TypeRule typeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
     if (!autoValueMapperElement.getKind().equals(ElementKind.RECORD)) {
       throw new InvalidMissionModelException(
@@ -91,10 +88,7 @@ public class AutoValueMappers {
         if (!(element instanceof RecordComponentElement el)) continue;
         final var typeMirror = el.getAccessor().getReturnType();
         final var elementName = element.toString();
-        final var valueMapperIdentifier = JAVA_IDENTIFIER_ILLEGAL_CHARACTERS
-                                              .matcher(typeMirror.toString())
-                                              .replaceAll("_")
-                                          + "ValueMapper";
+        final var valueMapperIdentifier = getIdentifier(typeMirror.toString()) + "ValueMapper";
         componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
         necessaryMappers.put(typeMirror, valueMapperIdentifier);
       }
@@ -166,5 +160,28 @@ public class AutoValueMappers {
     } else {
       return CodeBlock.of("(Class<$T>) (Object) ", TypeName.get(record.asType()));
     }
+  }
+
+  /**
+   * Turn a given string into a valid Java identifier
+   * @param str a string that may or may not be a valid Java identifier
+   * @return a string that is a valid Java identifier
+   */
+  public static String getIdentifier(String str) {
+    if (str.length() == 0) throw new IllegalArgumentException("Cannot turn empty string into an identifier");
+    final var identifier = new StringBuilder();
+    if (Character.isJavaIdentifierStart(str.charAt(0))) {
+      identifier.append(str.charAt(0));
+    } else {
+      identifier.append("_");
+    }
+    for (int i = 1; i < str.length(); i++) {
+      if (Character.isJavaIdentifierPart(str.charAt(i))) {
+        identifier.append(str.charAt(i));
+      } else {
+        identifier.append("_");
+      }
+    }
+    return identifier.toString();
   }
 }
