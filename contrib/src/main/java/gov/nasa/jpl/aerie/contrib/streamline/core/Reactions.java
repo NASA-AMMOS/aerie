@@ -3,11 +3,13 @@ package gov.nasa.jpl.aerie.contrib.streamline.core;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.dynamicsChange;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.updates;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.when;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.replaying;
@@ -38,7 +40,13 @@ public final class Reactions {
 
   // Special case for dynamicsChange condition, since it's non-obvious that this needs to be run in lambda form
   public static <D extends Dynamics<?, D>> void wheneverDynamicsChange(Resource<D> resource, Consumer<ErrorCatching<Expiring<D>>> reaction) {
-    whenever(() -> dynamicsChange(resource), () -> reaction.accept(resource.getDynamics()));
+    final MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel = new MutableObject<>();
+    whenever(() -> dynamicsChange(resource, dynamicsSideChannel), () -> reaction.accept(dynamicsSideChannel.getValue()));
+  }
+
+  public static <D extends Dynamics<?, D>> void wheneverUpdates(Resource<D> resource, Consumer<ErrorCatching<Expiring<D>>> reaction) {
+    final MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel = new MutableObject<>();
+    whenever(() -> updates(resource, dynamicsSideChannel), () -> reaction.accept(dynamicsSideChannel.getValue()));
   }
 
   public static void every(Duration period, Runnable action) {

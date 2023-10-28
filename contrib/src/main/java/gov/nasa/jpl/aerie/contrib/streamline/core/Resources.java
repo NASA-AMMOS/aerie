@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.staticallyCreated;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
@@ -57,11 +59,32 @@ public final class Resources {
     return resource.getDynamics().match(result -> result.data().extract(), error -> valueIfError);
   }
 
+  /**
+   * Condition that's triggered when the dynamics on resource change in a way
+   * that's different from just evolving with time.
+   * This can be due to effects on a cell used by this resource,
+   * or by some part of the derivation expiring.
+   */
   public static <D extends Dynamics<?, D>> Condition dynamicsChange(Resource<D> resource) {
+    return dynamicsChange(resource, null);
+  }
+
+  /**
+   * Like {@link Resources#updates(Resource)}, but also stores the sampled resource value in
+   * a side channel for later use.
+   *
+   * <p>
+   *   WARNING! Since the side channel is not managed by Aerie,
+   *   it won't be synchronized with task history, nor respect task parallelism and isolation.
+   *   <emph>If you don't know what that means, don't use this method.</emph>
+   * </p>
+   */
+  public static <D extends Dynamics<?, D>> Condition dynamicsChange(Resource<D> resource, MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel) {
     final var startingDynamics = resource.getDynamics();
     final Duration startTime = currentTime();
     return (positive, atEarliest, atLatest) -> {
       var currentDynamics = resource.getDynamics();
+      if (dynamicsSideChannel != null) dynamicsSideChannel.setValue(currentDynamics);
       boolean haveChanged = startingDynamics.match(
           start -> currentDynamics.match(
               current -> !current.data().equals(start.data().step(currentTime().minus(startTime))),
@@ -81,6 +104,49 @@ public final class Resources {
     };
   }
 
+  /**
+   * A weaker form of {@link Resources#dynamicsChange},
+   * which doesn't attempt to compare dynamics.
+   * This Condition is less robust, and may trigger spuriously.
+   * However, this condition doesn't depend on dynamics having a well-behaved equals method.
+   */
+  public static Condition updates(Resource<?> resource) {
+    return updates(resource, null);
+  }
+
+  /**
+   * Like {@link Resources#updates(Resource)}, but also stores the sampled resource value in
+   * a side channel for later use.
+   *
+   * <p>
+   *   WARNING! Since the side channel is not managed by Aerie,
+   *   it won't be synchronized with task history, nor respect task parallelism and isolation.
+   *   <emph>If you don't know what that means, don't use this method.</emph>
+   * </p>
+   */
+  public static <D> Condition updates(Resource<D> resource, MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel) {
+    return new Condition() {
+      private boolean first = true;
+
+      @Override
+      public Optional<Duration> nextSatisfied(
+          final boolean positive,
+          final Duration atEarliest,
+          final Duration atLatest)
+      {
+        // Get resource to subscribe this condition to resource's cells
+        var dynamics = resource.getDynamics();
+        if (dynamicsSideChannel != null) dynamicsSideChannel.setValue(dynamics);
+        if (first) {
+          first = false;
+          return dynamics.match(Expiring::expiry, e -> NEVER).value().filter(atLatest::noShorterThan);
+        } else {
+          return Optional.of(atEarliest);
+        }
+      }
+    };
+  }
+
   // TODO: Should this be moved somewhere else?
   /**
    * Tests if two exceptions are equivalent from the point of view of resource values.
@@ -89,15 +155,6 @@ public final class Resources {
   public static boolean equivalentExceptions(Throwable startException, Throwable currentException) {
     return startException.getClass().equals(currentException.getClass())
            && startException.getMessage().equals(currentException.getMessage());
-  }
-
-  public static <D extends Dynamics<?, D>> Condition dynamicsChange(List<Resource<D>> resources) {
-    assert resources.size() > 0;
-    var result = dynamicsChange(resources.get(0));
-    for (Resource<D> r : resources) {
-      result = result.or(dynamicsChange(r));
-    }
-    return result;
   }
 
   /**

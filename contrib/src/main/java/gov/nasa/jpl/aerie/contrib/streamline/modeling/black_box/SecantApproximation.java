@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
 import org.apache.commons.math3.exception.NoBracketingException;
 import org.apache.commons.math3.exception.NumberIsTooLargeException;
@@ -20,8 +21,9 @@ import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.dynamicsChange;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.updates;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
@@ -43,8 +45,8 @@ public final class SecantApproximation {
    */
   public static <D extends Dynamics<Double, D>> Resource<Linear> secantApproximation(Resource<D> resource, Function<Expiring<D>, Duration> secantInterval) {
     var result = cellResource(secantDynamics(resource, secantInterval));
-    // Since result is cached, dynamicsChange(result) just detects expiry
-    whenever(() -> dynamicsChange(resource).or(dynamicsChange(result)), () -> {
+    // Since result is cached, updates(result) just detects expiry
+    whenever(() -> updates(resource).or(updates(result)), () -> {
       var newDynamics = secantDynamics(resource, secantInterval);
       result.emit("Update secant approximation", $ -> newDynamics);
     });
@@ -53,7 +55,10 @@ public final class SecantApproximation {
 
   private static <D extends Dynamics<Double, ?>> ErrorCatching<Expiring<Linear>> secantDynamics(
       Resource<D> resource, Function<Expiring<D>, Duration> secantInterval) {
-    return resource.getDynamics().map(d -> ExpiringMonad.map(d, d$ -> secant(d$, secantInterval.apply(d))));
+    return resource.getDynamics().map(d -> {
+      var interval = secantInterval.apply(d);
+      return ExpiringMonad.bind(d, d$ -> expiring(secant(d$, interval), interval));
+    });
   }
 
   private static Linear secant(Dynamics<Double, ?> d, Duration interval) {
@@ -100,15 +105,22 @@ public final class SecantApproximation {
       return exp -> {
         var e = exp.expiry().value().orElse(Duration.MAX_VALUE);
         var solver = new BrentSolver();
+        UnivariateFunction errorFn = t -> maximumError - errorEstimate.apply(new ErrorEstimateInput<>(exp.data(), t, maximumError));
         try {
           double intervalSize = solver.solve(
               100,
-              t -> maximumError - errorEstimate.apply(new ErrorEstimateInput<>(exp.data(), t, maximumError)),
+              errorFn,
               Duration.min(e, minimumSamplePeriod).ratioOver(SECOND),
               Duration.min(e, maximumSamplePeriod).ratioOver(SECOND));
           return Duration.roundNearest(intervalSize, SECOND);
         } catch (NoBracketingException x) {
-          return maximumSamplePeriod;
+          if (errorFn.value(minimumSamplePeriod.ratioOver(SECOND)) > 0) {
+            // maximum error > estimated error, best case
+            return maximumSamplePeriod;
+          } else {
+            // maximum error < estimated error, worst case
+            return minimumSamplePeriod;
+          }
         } catch (TooManyEvaluationsException | NumberIsTooLargeException x) {
           return minimumSamplePeriod;
         }
@@ -222,7 +234,7 @@ public final class SecantApproximation {
         var maxRelativeError = input.maximumError;
         var valueMagnitude = Math.abs(d.step(Duration.roundNearest(t / 2, SECOND)).extract());
         var maxAbsoluteError = maxRelativeError * (valueMagnitude + epsilon);
-        return absoluteErrorEstimate.apply(new ErrorEstimateInput<>(d, t, maxAbsoluteError));
+        return absoluteErrorEstimate.apply(new ErrorEstimateInput<>(d, t, maxAbsoluteError)) / (valueMagnitude + epsilon);
       };
     }
   }
