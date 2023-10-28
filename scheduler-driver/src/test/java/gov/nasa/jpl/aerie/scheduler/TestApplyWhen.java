@@ -1182,7 +1182,7 @@ public class TestApplyWhen {
         planningHorizon,
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
-    final var r3Value = 6;
+    final var r3Value = "6";
     final var r1 = new LinearProfile(new Segment<>(Interval.between(Duration.ZERO, Duration.SECONDS.times(5)), new LinearEquation(Duration.ZERO, 5, 1)));
     final var r2 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(5)));
     final var r3 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(r3Value)));
@@ -1226,7 +1226,7 @@ public class TestApplyWhen {
     final var startOfActivity =   cond.evaluate(emptySimulationResults, Interval.FOREVER, new EvaluationEnvironment(externalRealProfiles, externalDiscreteProfiles)).iterateEqualTo(true).iterator().next().start;
     assertEquals(1, plan.get().getActivitiesByTime().size());
     final var act = plan.get().getActivitiesByTime().get(0);
-    assertEquals(act.duration(), Duration.of(r3Value, Duration.MICROSECONDS));
+    assertEquals(act.duration(), Duration.of(Long.parseLong(r3Value), Duration.MICROSECONDS));
     assertEquals(startOfActivity, Duration.of(1, Duration.SECONDS));
     assertEquals(act.startOffset(), startOfActivity);
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());

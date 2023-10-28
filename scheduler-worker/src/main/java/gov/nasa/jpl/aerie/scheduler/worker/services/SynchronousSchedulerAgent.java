@@ -429,11 +429,7 @@ public record SynchronousSchedulerAgent(
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
           final var serializedDuration = activity.serializedActivity().getArguments().get(s.parameterName());
           if (serializedDuration != null) {
-            actDuration = Duration.of(
-                serializedDuration
-                    .asInt()
-                    .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
-                Duration.MICROSECONDS);
+            actDuration = s.valueMapperInterface().deserializeControllableDuration(serializedDuration);
           }
         } else if (schedulerActType.getDurationType() instanceof DurationType.Fixed fixedDurationType) {
           actDuration = fixedDurationType.duration();

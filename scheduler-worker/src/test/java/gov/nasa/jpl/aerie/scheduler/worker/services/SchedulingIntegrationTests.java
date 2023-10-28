@@ -357,7 +357,7 @@ public class SchedulingIntegrationTests {
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(3),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
             null,
             true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -411,7 +411,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(Duration.MINUTE.in(MICROSECONDS))
+                    "growingDuration", SerializedValue.of(Long.toString(Duration.MINUTE.in(MICROSECONDS)))
                 ),
                 null,
                 true
@@ -632,7 +632,7 @@ public class SchedulingIntegrationTests {
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(3),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
             null,
             true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -738,7 +738,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -787,7 +787,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -840,7 +840,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -894,7 +894,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -951,7 +951,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1004,7 +1004,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1055,7 +1055,7 @@ public class SchedulingIntegrationTests {
                             "GrowBanana",
                             Map.of(
                                     "quantity", SerializedValue.of(1),
-                                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                             null,
                             true)),
             List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1115,7 +1115,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1170,7 +1170,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1224,7 +1224,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1278,7 +1278,7 @@ public class SchedulingIntegrationTests {
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(100),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
             null,
             true),
         new ActivityDirective(
@@ -1327,7 +1327,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1449,7 +1449,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1494,7 +1494,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1537,7 +1537,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1582,7 +1582,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1630,7 +1630,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1761,7 +1761,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirective(
@@ -1769,7 +1769,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirective(
@@ -1777,7 +1777,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirective(
@@ -2101,7 +2101,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2162,7 +2162,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2214,7 +2214,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(growBananaDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2448,7 +2448,7 @@ public class SchedulingIntegrationTests {
                 Duration.ZERO,
                 "DurationParameterActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirectiveId(2L),
@@ -2457,7 +2457,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(1L),
                 false),
             new ActivityDirectiveId(3L),
@@ -2465,7 +2465,7 @@ public class SchedulingIntegrationTests {
                 Duration.of(5, MINUTES),
                 "ControllableDurationActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(2L),
                 false)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2532,7 +2532,7 @@ public class SchedulingIntegrationTests {
                 Duration.ZERO,
                 "DurationParameterActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirectiveId(2L),
@@ -2541,7 +2541,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(1L),
                 false),
             new ActivityDirectiveId(3L),
@@ -2549,7 +2549,7 @@ public class SchedulingIntegrationTests {
                 Duration.of(5, MINUTES),
                 "ControllableDurationActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(2L),
                 false)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2616,7 +2616,7 @@ public class SchedulingIntegrationTests {
                 tenMinutes,
                 "DurationParameterActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirectiveId(2L),
@@ -2625,7 +2625,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(1L),
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2691,7 +2691,7 @@ public class SchedulingIntegrationTests {
                 Duration.ZERO,
                 "DurationParameterActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirectiveId(2L),
@@ -2700,7 +2700,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(1L),
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2771,7 +2771,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2841,7 +2841,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2903,7 +2903,7 @@ public class SchedulingIntegrationTests {
                 Duration.ZERO,
                 "DurationParameterActivity",
                 Map.of(
-                    "duration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "duration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirectiveId(2L),
@@ -2912,7 +2912,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 new ActivityDirectiveId(1L),
                 false)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -2974,7 +2974,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             // Activity Anchored to run after Plan End
@@ -2984,7 +2984,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(2),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 false)),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -3046,7 +3046,7 @@ public class SchedulingIntegrationTests {
                   "GrowBanana",
                   Map.of(
                       "quantity", SerializedValue.of(1),
-                      "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                      "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                   null,
                   true)
           ),
@@ -3109,7 +3109,7 @@ public class SchedulingIntegrationTests {
                   "GrowBanana",
                   Map.of(
                       "quantity", SerializedValue.of(1),
-                      "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                      "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                   null,
                   true)
           ),
@@ -3256,7 +3256,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(2),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true),
             new ActivityDirectiveId(2L),
@@ -3265,7 +3265,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "growingDuration", SerializedValue.of(Long.toString(activityDuration.in(Duration.MICROSECONDS)))),
                 null,
                 true)
         ),

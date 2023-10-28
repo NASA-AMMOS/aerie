@@ -11,20 +11,21 @@ import java.util.function.Function;
 public final class DurationValueMapper implements ValueMapper<Duration> {
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.DURATION;
+    return ValueSchema.STRING;
   }
 
   @Override
   public Result<Duration, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
-        .asInt()
+        .asString()
+        .map(Long::parseLong)
         .map(v -> Duration.of(v, Duration.MICROSECONDS))
         .map((Function<Duration, Result<Duration, String>>) Result::success)
-        .orElseGet(() -> Result.failure("Expected integer, got " + serializedValue.toString()));
+        .orElseGet(() -> Result.failure("Expected duration int wrapped in string, got " + serializedValue.toString()));
   }
 
   @Override
   public SerializedValue serializeValue(final Duration value) {
-    return SerializedValue.of(value.in(Duration.MICROSECONDS));
+    return SerializedValue.of(Long.toString(value.in(Duration.MICROSECONDS)));
   }
 }

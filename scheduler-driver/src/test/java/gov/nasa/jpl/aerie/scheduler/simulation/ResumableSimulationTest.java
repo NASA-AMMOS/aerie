@@ -82,7 +82,7 @@ public class ResumableSimulationTest {
   public void testStopsAtEndOfPlanningHorizon(){
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
-        new SerializedActivity("ControllableDurationActivity", Map.of("duration", SerializedValue.of(tenHours.in(MICROSECOND)))),
+        new SerializedActivity("ControllableDurationActivity", Map.of("duration", SerializedValue.of(Long.toString(tenHours.in(MICROSECOND))))),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours);
