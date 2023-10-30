@@ -5,12 +5,9 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.ErrorEstimateInput;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.solvers.BrentSolver;
-import org.apache.commons.math3.exception.NoBracketingException;
-import org.apache.commons.math3.exception.NumberIsTooLargeException;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.apache.commons.math3.optim.MaxEval;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
@@ -28,7 +25,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linea
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
 /**
- * Utilities to build a secant approximation of a black-box {@link Differentiable} resource.
+ * Utilities to build a secant approximation of {@link Unstructured} or {@link Differentiable} resources.
  */
 public final class SecantApproximation {
   private SecantApproximation() {}
@@ -66,69 +63,6 @@ public final class SecantApproximation {
     var e = d.step(interval).extract();
     return linear(s, (e - s) / interval.ratioOver(SECOND));
   }
-
-  public static final class IntervalFunctions {
-    private IntervalFunctions() {}
-
-    /**
-     * Secant approximation method using uniform point spacing.
-     */
-    public static Function<Expiring<?>, Duration> byUniformSampling(Duration samplePeriod) {
-      return exp -> Duration.min(samplePeriod, exp.expiry().value().orElse(Duration.MAX_VALUE));
-    }
-
-    /**
-     * Chooses secant intervals which attempt to bound the maximum error.
-     * To ensure efficient convergence, a minimum and maximum size for the interval must be supplied.
-     * Error is measured by the provided error estimate function.
-     * Pre-built error functions are available in {@link ErrorEstimates}.
-     * For example,
-     * <pre>
-     * Resource&lt;Differentiable&gt; real;
-     * Resource&lt;Linear&gt; approx = secantApproximation(real,
-     *     byBoundingError(1e-4, Duration.MINUTE, Duration.HOUR,
-     *         relative(errorByQuadraticApproximation(), 1e-8)));
-     * </pre>
-     */
-    public static <D extends Dynamics<Double, D>> Function<Expiring<D>, Duration> byBoundingError(
-        double maximumError, Duration minimumSamplePeriod, Duration maximumSamplePeriod, Function<ErrorEstimateInput<D>, Double> errorEstimate) {
-      if (maximumError <= 0) {
-        throw new IllegalArgumentException("maximumError must be positive");
-      }
-      if (!minimumSamplePeriod.isPositive()) {
-        throw new IllegalArgumentException("minimumSamplePeriod must be positive");
-      }
-      if (maximumSamplePeriod.shorterThan(minimumSamplePeriod)) {
-        throw new IllegalArgumentException("maximumSamplePeriod must be at least minimumSamplePeriod");
-      }
-
-      return exp -> {
-        var e = exp.expiry().value().orElse(Duration.MAX_VALUE);
-        var solver = new BrentSolver();
-        UnivariateFunction errorFn = t -> maximumError - errorEstimate.apply(new ErrorEstimateInput<>(exp.data(), t, maximumError));
-        try {
-          double intervalSize = solver.solve(
-              100,
-              errorFn,
-              Duration.min(e, minimumSamplePeriod).ratioOver(SECOND),
-              Duration.min(e, maximumSamplePeriod).ratioOver(SECOND));
-          return Duration.roundNearest(intervalSize, SECOND);
-        } catch (NoBracketingException x) {
-          if (errorFn.value(minimumSamplePeriod.ratioOver(SECOND)) > 0) {
-            // maximum error > estimated error, best case
-            return maximumSamplePeriod;
-          } else {
-            // maximum error < estimated error, worst case
-            return minimumSamplePeriod;
-          }
-        } catch (TooManyEvaluationsException | NumberIsTooLargeException x) {
-          return minimumSamplePeriod;
-        }
-      };
-    }
-  }
-
-  public record ErrorEstimateInput<D>(D actualDynamics, Double intervalInSeconds, Double maximumError) {}
 
   public static final class ErrorEstimates {
     private ErrorEstimates() {}
@@ -229,9 +163,9 @@ public final class SecantApproximation {
     public static <D extends Dynamics<Double, D>> Function<ErrorEstimateInput<D>, Double> relative(
         Function<ErrorEstimateInput<D>, Double> absoluteErrorEstimate, double epsilon) {
       return input -> {
-        var d = input.actualDynamics;
-        var t = input.intervalInSeconds;
-        var maxRelativeError = input.maximumError;
+        var d = input.actualDynamics();
+        var t = input.intervalInSeconds();
+        var maxRelativeError = input.maximumError();
         var valueMagnitude = Math.abs(d.step(Duration.roundNearest(t / 2, SECOND)).extract());
         var maxAbsoluteError = maxRelativeError * (valueMagnitude + epsilon);
         return absoluteErrorEstimate.apply(new ErrorEstimateInput<>(d, t, maxAbsoluteError)) / (valueMagnitude + epsilon);
