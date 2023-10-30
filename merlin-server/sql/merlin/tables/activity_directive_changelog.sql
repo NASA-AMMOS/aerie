@@ -16,6 +16,8 @@ create table activity_directive_changelog (
   anchor_id integer default null,
   anchored_to_start boolean default true not null,
 
+  validation_results jsonb default '{}'::jsonb,
+
   constraint activity_directive_changelog_natural_key
     primary key (plan_id, activity_directive_id, revision),
   constraint changelog_references_activity_directive
@@ -96,3 +98,36 @@ create trigger delete_min_activity_directive_revision_trigger
   for each row
   when (new.revision > 10)
   execute function delete_min_activity_directive_revision();
+
+create or replace function notify_validation_workers()
+  returns trigger
+security definer
+  language plpgsql as $$
+begin
+    perform (
+      with payload(activity_directive_id,
+                   plan_id,
+                   revision,
+                   plan_id,
+                   model_id,
+                   type,
+                   arguments) as
+             (
+               select new.activity_directive_id,
+                      NEW.plan_id,
+                      NEW.revision,
+                      NEW.plan_id,
+                      (select model_id from plan where id = NEW.plan_id),
+                      NEW.type,
+                      NEW.arguments
+             )
+      select pg_notify('validation_notification', json_strip_nulls(row_to_json(payload))::text)
+      from payload
+    );
+    return null;
+end$$;
+
+create trigger notify_validation_workers_trigger
+  after insert on activity_directive_changelog
+  for each row
+  execute function notify_validation_workers();
