@@ -28,20 +28,31 @@ public enum GQL {
   CHECK_CONSTRAINTS("""
     query checkConstraints($planId: Int!, $simulationDatasetId: Int) {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
-        constraintId
-        constraintName
-        type
-        resourceIds
-        violations {
-          activityInstanceIds
-          windows {
-            start
+        success
+        results {
+          constraintId
+          constraintName
+          resourceIds
+          type
+          gaps {
             end
+            start
+          }
+          violations {
+            activityInstanceIds
+            windows {
+              end
+              start
+            }
           }
         }
-        gaps {
-          start
-          end
+        errors {
+          message
+          stack
+          location {
+            column
+            line
+          }
         }
       }
     }"""),
