@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.e2e;
 
 import com.microsoft.playwright.Playwright;
+import gov.nasa.jpl.aerie.e2e.types.ConstraintError;
+import gov.nasa.jpl.aerie.e2e.types.ConstraintResult;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput.ProfileSegmentInput;
 import gov.nasa.jpl.aerie.e2e.types.ValueSchema;
@@ -100,11 +102,13 @@ public class ConstraintsTests {
   @Test
   void constraintsSucceedOneViolation() throws IOException {
     hasura.awaitSimulation(planId);
-    final var constraintsResults = hasura.checkConstraints(planId);
-    assertEquals(1, constraintsResults.size());
+    final var constraintsResponses = hasura.checkConstraints(planId);
+    assertEquals(1, constraintsResponses.size());
 
     // Check the Result
-    final var constraintResult = constraintsResults.get(0);
+    final var constraintResponse = constraintsResponses.get(0);
+    assertEquals(true,constraintResponse.success());
+    final ConstraintResult constraintResult = constraintResponse.result();
     assertEquals(constraintId, constraintResult.constraintId());
     assertEquals(constraintName, constraintResult.constraintName());
 
@@ -155,7 +159,9 @@ public class ConstraintsTests {
 
     // Check results
     assertTrue(cachedRun.results().isPresent());
-    assertEquals(constraintRuns.get(0), cachedRun.results().get());
+    final var constraintResponse = constraintRuns.get(0);
+    assertEquals(true,constraintResponse.success());
+    assertEquals(constraintResponse.result(), cachedRun.results().get());
   }
 
   @Test
@@ -217,11 +223,13 @@ public class ConstraintsTests {
         "0h",
         Json.createObjectBuilder().add("duration", thirtyFiveDays).build());
     hasura.awaitSimulation(planId);
-    final var constraintResults = hasura.checkConstraints(planId);
-    assertEquals(1, constraintResults.size());
+    final var constraintsResponses = hasura.checkConstraints(planId);
+    assertEquals(1, constraintsResponses.size());
 
     // Check the Result
-    final var constraintResult = constraintResults.get(0);
+    final var constraintResponse = constraintsResponses.get(0);
+    assertEquals(true,constraintResponse.success());
+    final var constraintResult = constraintResponse.result();
     assertEquals(constraintId, constraintResult.constraintId());
     assertEquals(constraintName, constraintResult.constraintName());
 
@@ -253,11 +261,14 @@ public class ConstraintsTests {
     assertEquals(0, newConstraintResults.size());
 
     // Expect one violation on the old simulation
-    final var oldConstraintResults = hasura.checkConstraints(planId, oldSimDatasetId);
-    assertEquals(1, oldConstraintResults.size());
+    final var oldConstraintsResponses = hasura.checkConstraints(planId, oldSimDatasetId);
+    assertEquals(1, oldConstraintsResponses.size());
 
     // Check the Result
-    final var constraintResult = oldConstraintResults.get(0);
+    final var oldConstraintResponse = oldConstraintsResponses.get(0);
+    assertEquals(true,oldConstraintResponse.success());
+    final var constraintResult = oldConstraintResponse.result();
+
     assertEquals(constraintId, constraintResult.constraintId());
     assertEquals(constraintName, constraintResult.constraintName());
 
@@ -338,12 +349,15 @@ public class ConstraintsTests {
       // Constraint Results w/o SimDatasetId
       final var noDatasetResults = hasura.checkConstraints(planId);
       assertEquals(1, noDatasetResults.size());
-      final var ndRecord = noDatasetResults.get(0);
+      assertEquals(true,  noDatasetResults.get(0).success());
+
+      final var ndRecord = noDatasetResults.get(0).result();
 
       // Constraint Results w/ SimDatasetId
       final var withDatasetResults = hasura.checkConstraints(planId, simDatasetId);
       assertEquals(1, withDatasetResults.size());
-      final var wdRecord = withDatasetResults.get(0);
+      assertEquals(true,  withDatasetResults.get(0).success());
+      final var wdRecord = withDatasetResults.get(0).result();
 
       // The results should be the same
       assertEquals(ndRecord, wdRecord);
@@ -390,9 +404,12 @@ public class ConstraintsTests {
       hasura.deleteActivity(planId, activityId);
       hasura.awaitSimulation(planId);
       // Check constraints against the old simID (the one with the external dataset)
-      final var constraintRuns = hasura.checkConstraints(planId, simDatasetId);
-      assertEquals(1, constraintRuns.size());
-      final var record = constraintRuns.get(0);
+      final var constraintResponses = hasura.checkConstraints(planId, simDatasetId);
+      assertEquals(1, constraintResponses.size());
+
+      final var constraintResponse = constraintResponses.get(0);
+      assertEquals(true,constraintResponse.success());
+      final var record = constraintResponse.result();
 
       // Check the Result
       assertEquals(constraintName, record.constraintName());
@@ -437,14 +454,13 @@ public class ConstraintsTests {
       final int newSimDatasetId = hasura.awaitSimulation(planId).simDatasetId();
       // This test causes the endpoint to throw an exception when it fails to compile the constraint,
       // as it cannot find the external dataset resource in the set of known resource types.
-      // "input mismatch exception" is the return msg for this error
-      final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId, newSimDatasetId));
-      final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
-      // Hasura strips the cause message ("Constraint compilation failed -- Error[errors=[UserCodeError[ $ERROR ]]]")
-      // from the error it returns
-      if (!message.equals("constraint compilation exception")) {
-        throw exception;
-      }
+      final var constraintResponses = hasura.checkConstraints(planId);
+      assertEquals(1,constraintResponses.size());
+      final var constraintRepsonse = constraintResponses.get(0);
+      assertEquals(false,constraintRepsonse.success());
+      assertEquals(1,constraintRepsonse.errors().size());
+      final ConstraintError error = constraintRepsonse.errors().get(0);
+      assertEquals("Constraint 'fruit_equal_peel': TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
     }
 
     @Test
@@ -456,12 +472,14 @@ public class ConstraintsTests {
 
       // The constraint run is expected to fail with the following message because the constraint
       // DSL isn't being generated for datasets that are outdated.
-      final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId));
-      final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
+      final var constraintResponses = hasura.checkConstraints(planId);
+      assertEquals(1,constraintResponses.size());
+      final var constraintRepsonse = constraintResponses.get(0);
+      assertEquals(false,constraintRepsonse.success());
+      assertEquals(1,constraintRepsonse.errors().size());
+      final ConstraintError error = constraintRepsonse.errors().get(0);
+      assertEquals("Constraint 'fruit_equal_peel': TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
 
-      if (!message.equals("constraint compilation exception")) {
-        throw exception;
-      }
     }
   }
 }
