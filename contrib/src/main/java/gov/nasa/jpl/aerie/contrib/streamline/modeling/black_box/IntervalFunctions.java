@@ -27,8 +27,7 @@ public final class IntervalFunctions {
    * Chooses sample intervals which attempt to bound the maximum error.
    * To ensure efficient convergence, a minimum and maximum size for the interval must be supplied.
    * Error is measured by the provided error estimate function.
-   * Pre-built error functions are available in {@link SecantApproximation.ErrorEstimates}
-   * and {@link DiscreteApproximation.ErrorEstimates}.
+   * Pre-built error functions are available in {@link SecantApproximation.ErrorEstimates}.
    * For example,
    * <pre>
    * Resource&lt;Differentiable&gt; real;
@@ -37,7 +36,7 @@ public final class IntervalFunctions {
    *         relative(errorByQuadraticApproximation(), 1e-8)));
    * </pre>
    */
-  public static <D extends Dynamics<Double, D>> Function<Expiring<D>, Duration> byBoundingError(
+  public static <D extends Dynamics<?, D>> Function<Expiring<D>, Duration> byBoundingError(
       double maximumError,
       Duration minimumSamplePeriod,
       Duration maximumSamplePeriod,

@@ -1,9 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
-import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.ErrorEstimateInput;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
@@ -17,10 +15,8 @@ import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.updates;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.intervalApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
@@ -37,28 +33,18 @@ public final class SecantApproximation {
    * For example:
    * <pre>
    * Resource&lt;BlackBox&lt;Double&gt;&gt; real;
-   * Resource&lt;Linear&gt; approx = secantApproximation(real, byUniformSampling(Duration.HOUR));
+   * Resource&lt;Linear&gt; approx = approximate(resource, secantApproximation(byUniformSampling(Duration.HOUR)));
    * </pre>
    */
-  public static <D extends Dynamics<Double, D>> Resource<Linear> secantApproximation(Resource<D> resource, Function<Expiring<D>, Duration> secantInterval) {
-    var result = cellResource(secantDynamics(resource, secantInterval));
-    // Since result is cached, updates(result) just detects expiry
-    whenever(() -> updates(resource).or(updates(result)), () -> {
-      var newDynamics = secantDynamics(resource, secantInterval);
-      result.emit("Update secant approximation", $ -> newDynamics);
-    });
-    return result;
+  public static <D extends Dynamics<Double, D>> Function<Expiring<D>, Expiring<Linear>> secantApproximation(Function<Expiring<D>, Duration> intervalFunction) {
+    return intervalApproximation(SecantApproximation::secant, intervalFunction);
   }
 
-  private static <D extends Dynamics<Double, ?>> ErrorCatching<Expiring<Linear>> secantDynamics(
-      Resource<D> resource, Function<Expiring<D>, Duration> secantInterval) {
-    return resource.getDynamics().map(d -> {
-      var interval = secantInterval.apply(d);
-      return ExpiringMonad.bind(d, d$ -> expiring(secant(d$, interval), interval));
-    });
+  private static Expiring<Linear> secant(Expiring<? extends Dynamics<Double, ?>> d, Duration interval) {
+    return ExpiringMonad.bind(d, d$ -> expiring(secant(d$, interval), interval));
   }
 
-  private static Linear secant(Dynamics<Double, ?> d, Duration interval) {
+  public static Linear secant(Dynamics<Double, ?> d, Duration interval) {
     var s = d.extract();
     var e = d.step(interval).extract();
     return linear(s, (e - s) / interval.ratioOver(SECOND));
@@ -146,29 +132,6 @@ public final class SecantApproximation {
           // If we can't evaluate the error, play it safe by returning infinite error.
           return Double.POSITIVE_INFINITY;
         }
-      };
-    }
-
-    /**
-     * Interprets maximumError as a relative error, using the given absolute error estimate.
-     * <p>
-     *   Gets the function value at the interval midpoint to estimate a magnitude M,
-     *   then computes absolute error as (relative error) * (M + epsilon).
-     * </p>
-     * <p>
-     *   Epsilon should be close to the minimum value that is functionally different from zero for your application,
-     *   to give enough accuracy everywhere without over-sampling near zero.
-     * </p>
-     */
-    public static <D extends Dynamics<Double, D>> Function<ErrorEstimateInput<D>, Double> relative(
-        Function<ErrorEstimateInput<D>, Double> absoluteErrorEstimate, double epsilon) {
-      return input -> {
-        var d = input.actualDynamics();
-        var t = input.intervalInSeconds();
-        var maxRelativeError = input.maximumError();
-        var valueMagnitude = Math.abs(d.step(Duration.roundNearest(t / 2, SECOND)).extract());
-        var maxAbsoluteError = maxRelativeError * (valueMagnitude + epsilon);
-        return absoluteErrorEstimate.apply(new ErrorEstimateInput<>(d, t, maxAbsoluteError)) / (valueMagnitude + epsilon);
       };
     }
   }
