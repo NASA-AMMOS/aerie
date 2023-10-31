@@ -354,18 +354,15 @@ public class AutoValueMappers {
    * @return enough information to 1) call the record constructor, in order, with the right types, and 2) define a method with the list of required value mappers, and 3) generate a call to that method
    */
   private static ComponentsAndMappers getComponentsAndMappers(final Element element) {
-    final var mapperTypeMirrors = new HashSet<TypeMirror>();
     final var components = new ArrayList<ComponentMapper>();
     final var mappers = new ArrayList<MapperType>();
     for (final var enclosedElement : element.getEnclosedElements()) {
+      final var componentIdentifier = getIdentifier(enclosedElement.getSimpleName().toString());
       if (!(enclosedElement instanceof RecordComponentElement el)) continue;
       final TypeMirror typeMirror = el.getAccessor().getReturnType();
-      final var mapperIdentifier = getIdentifier(typeMirror.toString()) + "ValueMapper";
-      if (!mapperTypeMirrors.contains(typeMirror)) {
-        mapperTypeMirrors.add(typeMirror);
-        mappers.add(new MapperType(mapperIdentifier, TypePattern.from(typeMirror).box()));
-      }
-      final var componentIdentifier = getIdentifier(enclosedElement.getSimpleName().toString());
+      final var typePattern = TypePattern.from(typeMirror).box();
+      final var mapperIdentifier = componentIdentifier + "_ValueMapper";
+      mappers.add(new MapperType(mapperIdentifier, typePattern));
       components.add(new ComponentMapper(componentIdentifier, mapperIdentifier));
     }
     return new ComponentsAndMappers(components, mappers);
