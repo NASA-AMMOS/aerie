@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-@WithMetadata(name="unit", annotation=gov.nasa.jpl.aerie.contrib.metadata.Unit.class)
 public final class BasicValueMappers {
 
   // Unit is an enum, so `$unit` needs to be defined before `$enum()`

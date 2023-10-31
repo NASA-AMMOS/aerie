@@ -62,6 +62,8 @@ import java.util.stream.Collectors;
       typeRules.addAll(this.parseValueMappers(factory));
     }
 
+    typeRules.addAll(parseMetadataAnnotations(missionModelElement));
+
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     for (final var activityTypeElement : this.getMissionModelActivityTypes(missionModelElement)) {
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
@@ -218,9 +220,13 @@ import java.util.stream.Collectors;
         rules.add(this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
       }
     }
+    return rules;
+  }
 
+  private List<TypeRule> parseMetadataAnnotations(final PackageElement missionModelElement) throws InvalidMissionModelException {
+    final var rules = new ArrayList<TypeRule>();
     // Generate type rules from annotations
-    for (final var namedElement : getMetadataAnnotations(factory)) {
+    for (final var namedElement : getMetadataAnnotations(missionModelElement)) {
       final var name = namedElement.getLeft();
       final var annotationElement = namedElement.getRight();
       final var className = ClassName.get(annotationElement);
@@ -247,7 +253,6 @@ import java.util.stream.Collectors;
           name
       ));
     }
-
     return rules;
   }
 
@@ -329,17 +334,17 @@ import java.util.stream.Collectors;
     return activityTypeElements;
   }
 
-  private List<Pair<String, TypeElement>> getMetadataAnnotations(final TypeElement factory) throws InvalidMissionModelException {
+  private List<Pair<String, TypeElement>> getMetadataAnnotations(final PackageElement missionModelElement) throws InvalidMissionModelException {
     final var metadataAnnotations = new ArrayList<Pair<String, TypeElement>>();
 
-    for (final var activityTypeAnnotation : getRepeatableAnnotation(factory, MissionModel.WithMetadata.class)) {
+    for (final var activityTypeAnnotation : getRepeatableAnnotation(missionModelElement, MissionModel.WithMetadata.class)) {
       // SAFETY: We know that MissionModel.WithMetadata has an "annotation" field
       final var annotation = getAnnotationAttribute(activityTypeAnnotation, "annotation").orElseThrow();
 
       if (!(annotation.getValue() instanceof DeclaredType declaredType)) {
         throw new InvalidMissionModelException(
             "Metadata annotation class not yet defined",
-            factory,
+            missionModelElement,
             activityTypeAnnotation,
             annotation);
       }
@@ -352,7 +357,7 @@ import java.util.stream.Collectors;
                     MissionModel.WithMetadata.class.getCanonicalName(),
                     declaredType.asElement().asType(),
                     kind),
-            factory,
+            missionModelElement,
             activityTypeAnnotation,
             annotation);
       }

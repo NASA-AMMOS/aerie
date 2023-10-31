@@ -45,7 +45,7 @@ public @interface MissionModel {
   }
 
   @Retention(RetentionPolicy.CLASS)
-  @Target(ElementType.TYPE)
+  @Target(ElementType.PACKAGE)
   @Repeatable(AllMetadata.class)
   @interface WithMetadata {
     String name();
@@ -53,7 +53,7 @@ public @interface MissionModel {
   }
 
   @Retention(RetentionPolicy.CLASS)
-  @Target(ElementType.TYPE)
+  @Target(ElementType.PACKAGE)
   @interface AllMetadata {
     WithMetadata[] value();
   }
