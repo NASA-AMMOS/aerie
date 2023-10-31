@@ -44,23 +44,17 @@ public class AutoValueMappers {
           autoValueMapperElement);
     }
 
-    final var typeMirrors = new HashSet<TypeMirror>();
-    for (final var enclosedElement : autoValueMapperElement.getEnclosedElements()) {
-      if (!(enclosedElement instanceof RecordComponentElement el)) continue;
-      final var typeMirror = el.getAccessor().getReturnType();
-      typeMirrors.add(typeMirror);
-    }
-
+    final var componentsAndMappers = getComponentsAndMappers(autoValueMapperElement);
     return new TypeRule(
         new TypePattern.ClassPattern(
             ClassName.get(ValueMapper.class),
             List.of(TypePattern.from(autoValueMapperElement.asType()))),
         Set.of(),
-        typeMirrors
+        componentsAndMappers.mappers()
             .stream()
-            .map(component -> (TypePattern) new TypePattern.ClassPattern(
+            .map(mapper -> (TypePattern) new TypePattern.ClassPattern(
                 ClassName.get(ValueMapper.class),
-                List.of(TypePattern.from(component).box())))
+                List.of(mapper.typePattern().box())))
             .toList(),
         generatedClassName,
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
@@ -114,19 +108,9 @@ public class AutoValueMappers {
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-    record ComponentMapperNamePair(String componentName, String mapperName) {}
     for (final var record : recordTypes) {
       final var methodName = ClassName.get((TypeElement) record).canonicalName().replace(".", "_");
-      final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
-      final var necessaryMappers = new HashMap<TypeMirror, String>();
-      for (final var element : record.getEnclosedElements()) {
-        if (!(element instanceof RecordComponentElement el)) continue;
-        final var typeMirror = el.getAccessor().getReturnType();
-        final var elementName = element.toString();
-        final var valueMapperIdentifier = getIdentifier(typeMirror.toString()) + "ValueMapper";
-        componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
-        necessaryMappers.put(typeMirror, valueMapperIdentifier);
-      }
+      final var componentMappers = getComponentsAndMappers(record);
 
       builder.addMethod(
           MethodSpec
@@ -135,15 +119,15 @@ public class AutoValueMappers {
               .addTypeVariables(((TypeElement) record).getTypeParameters().stream().map(TypeVariableName::get).toList())
               .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
               .addParameters(
-                  necessaryMappers
-                      .entrySet()
+                  componentMappers
+                      .mappers()
                       .stream()
-                      .map(mapperRequest -> ParameterSpec
+                      .map(mapper -> ParameterSpec
                           .builder(
                               ParameterizedTypeName.get(
                                   ClassName.get(ValueMapper.class),
-                                  ClassName.get(mapperRequest.getKey()).box()),
-                              mapperRequest.getValue(),
+                                  mapper.typePattern().render().box()),
+                              mapper.identifier(),
                               Modifier.FINAL)
                           .build())
                       .toList())
@@ -162,7 +146,7 @@ public class AutoValueMappers {
                            ClassName.get((TypeElement) record))
                       .add("$T.of($>\n", List.class)
                       .add(CodeBlock.join(
-                          componentToMapperName
+                          componentMappers.components()
                               .stream()
                               .map(recordComponent ->
                                        CodeBlock
@@ -173,7 +157,7 @@ public class AutoValueMappers {
                                                recordComponent.componentName(),
                                                ClassName.get((TypeElement) record),
                                                recordComponent.componentName(),
-                                               recordComponent.mapperName())
+                                               recordComponent.mapperIdentifier())
                                            .build())
                               .toList(),
                           ",\n"))
@@ -340,5 +324,50 @@ public class AutoValueMappers {
       }
     }
     return identifier.toString();
+  }
+
+  /**
+   * @param components In order, all the record component names and corresponding mapper identifiers
+   * @param mappers In order, all the mapper identifiers and types
+   */
+  record ComponentsAndMappers(List<ComponentMapper> components, List<MapperType> mappers) {}
+
+  /**
+   * Correlates the name of a component with the parameter name of its corresponding mapper.
+   * @param componentName the name of the record component (i.e. the "field name")
+   * @param mapperIdentifier the identifier which will hold the mapper corresponding to this field
+   */
+  record ComponentMapper(String componentName, String mapperIdentifier) {}
+
+  /**
+   * Associates the identifier of a mapper with its TypePattern.
+   * @param identifier the unique identifier for this mapper.
+   * @param typePattern the type pattern describing this mapper.
+   */
+  record MapperType(String identifier, TypePattern typePattern) {}
+
+  /**
+   * Given a Record element, generate the parameter names and TypePatterns corresponding
+   * to its mapper dependencies.
+   *
+   * @param element A Record element
+   * @return enough information to 1) call the record constructor, in order, with the right types, and 2) define a method with the list of required value mappers, and 3) generate a call to that method
+   */
+  private static ComponentsAndMappers getComponentsAndMappers(final Element element) {
+    final var mapperTypeMirrors = new HashSet<TypeMirror>();
+    final var components = new ArrayList<ComponentMapper>();
+    final var mappers = new ArrayList<MapperType>();
+    for (final var enclosedElement : element.getEnclosedElements()) {
+      if (!(enclosedElement instanceof RecordComponentElement el)) continue;
+      final TypeMirror typeMirror = el.getAccessor().getReturnType();
+      final var mapperIdentifier = getIdentifier(typeMirror.toString()) + "ValueMapper";
+      if (!mapperTypeMirrors.contains(typeMirror)) {
+        mapperTypeMirrors.add(typeMirror);
+        mappers.add(new MapperType(mapperIdentifier, TypePattern.from(typeMirror).box()));
+      }
+      final var componentIdentifier = getIdentifier(enclosedElement.getSimpleName().toString());
+      components.add(new ComponentMapper(componentIdentifier, mapperIdentifier));
+    }
+    return new ComponentsAndMappers(components, mappers);
   }
 }
