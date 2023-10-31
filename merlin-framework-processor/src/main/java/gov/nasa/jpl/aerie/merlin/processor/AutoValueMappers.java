@@ -27,6 +27,7 @@ import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -307,6 +308,11 @@ public class AutoValueMappers {
    * Turn a given string into a valid Java identifier
    * @param str a string that may or may not be a valid Java identifier
    * @return a string that is a valid Java identifier
+   *
+   * Any illegal characters are replaced by their UTF_8 integer representation as a decimal number surrounded by underscores.
+   * This helps ensure that strings the differ only in illegal characters get unique identifiers. (e.g. "m/s" and "m*s")
+   *
+   * E.g. "<Hello (Worl%d!)" becomes "_60_Hello_32__40_Worl_37_d_33__41_"
    */
   public static String getIdentifier(String str) {
     if (str.length() == 0) throw new IllegalArgumentException("Cannot turn empty string into an identifier");
@@ -314,13 +320,17 @@ public class AutoValueMappers {
     if (Character.isJavaIdentifierStart(str.charAt(0))) {
       identifier.append(str.charAt(0));
     } else {
-      identifier.append("_");
+      identifier.append('_');
+      identifier.append((int) str.charAt(0));
+      identifier.append('_');
     }
     for (int i = 1; i < str.length(); i++) {
       if (Character.isJavaIdentifierPart(str.charAt(i))) {
         identifier.append(str.charAt(i));
       } else {
-        identifier.append("_");
+        identifier.append('_');
+        identifier.append((int) str.charAt(i));
+        identifier.append('_');
       }
     }
     return identifier.toString();
