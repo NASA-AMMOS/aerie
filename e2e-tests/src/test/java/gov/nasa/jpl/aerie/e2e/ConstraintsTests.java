@@ -440,27 +440,28 @@ public class ConstraintsTests {
       // "input mismatch exception" is the return msg for this error
       final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId, newSimDatasetId));
       final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
-      // Hasura strips the cause message ("Assumption falsified -- mission model for existing plan does not exist")
+      // Hasura strips the cause message ("Constraint compilation failed -- Error[errors=[UserCodeError[ $ERROR ]]]")
       // from the error it returns
-      if (!message.equals("input mismatch exception")) {
+      if (!message.equals("constraint compilation exception")) {
         throw exception;
       }
     }
 
-    /*
-     * This test SHOULD return the same results as "noViolationsOutdatedSimulationSimDatasetId"
-     * However, due to #1166 (https://github.com/NASA-AMMOS/aerie/issues/1166), it currently will return
-     * not only different, but incorrect results (passing with a violation instead of failing to compile)
-     */
     @Test
     @DisplayName("Outdated Simulation-Associated External Datasets aren't loaded")
     void compilationFailsOutdatedSimulationNoSimDataset() throws IOException {
       // Delete Activity to make the simulation outdated, then resim
       hasura.deleteActivity(planId, activityId);
       hasura.awaitSimulation(planId);
-      // TODO: The remainder of this test will need to be fixed after 1166 is resolved
-      final var results = hasura.checkConstraints(planId);
-      assertEquals(1, results.size());
+
+      // The constraint run is expected to fail with the following message because the constraint
+      // DSL isn't being generated for datasets that are outdated.
+      final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId));
+      final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
+
+      if (!message.equals("constraint compilation exception")) {
+        throw exception;
+      }
     }
   }
 }

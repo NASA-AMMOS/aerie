@@ -91,7 +91,7 @@ class ConstraintsDSLCompilationServiceTests {
   private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint));
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), Optional.empty(), constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -102,7 +102,7 @@ class ConstraintsDSLCompilationServiceTests {
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
-        MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint
+        MISSION_MODEL_ID, Optional.of(PLAN_ID), Optional.empty(), constraint
     ));
     if (actualErrors.errors()
                     .stream()

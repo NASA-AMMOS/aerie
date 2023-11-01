@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
@@ -121,7 +122,7 @@ public class ConstraintAction {
             Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
       }
 
-      final var externalDatasets = this.planService.getExternalDatasets(planId, simulationDatasetId);
+      final var externalDatasets = this.planService.getExternalDatasets(planId, simDatasetId);
       final var realExternalProfiles = new HashMap<String, LinearProfile>();
       final var discreteExternalProfiles = new HashMap<String, DiscreteProfile>();
 
@@ -154,19 +155,19 @@ public class ConstraintAction {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
 
-        // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
             plan.missionModelId,
             Optional.of(planId),
+            Optional.of(simDatasetId),
             constraint.definition()
         );
 
         if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
           expression = success.constraintExpression();
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-          throw new Error("Constraint compilation failed: " + error);
+          throw new ConstraintCompilationException("Constraint compilation failed: " + error);
         } else {
-          throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
+          throw new ConstraintCompilationException("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
         }
 
         final var names = new HashSet<String>();

@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,13 +21,13 @@ public class TypescriptCodeGenerationServiceAdapter {
     this.planService = planService;
   }
 
-  public String generateTypescriptTypes(final String missionModelId, final Optional<PlanId> planId)
+  public String generateTypescriptTypes(final String missionModelId, final Optional<PlanId> planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
   {
     return TypescriptCodeGenerationService
         .generateTypescriptTypes(
             activityTypes(missionModelService, missionModelId),
-            resourceSchemas(missionModelService, missionModelId, planService, planId));
+            resourceSchemas(missionModelService, missionModelId, planService, planId, simulationDatasetId));
   }
 
   static Map<String, TypescriptCodeGenerationService.ActivityType> activityTypes(final MissionModelService missionModelService, final String missionModelId)
@@ -51,12 +52,13 @@ public class TypescriptCodeGenerationServiceAdapter {
       final MissionModelService missionModelService,
       final String modelId,
       final PlanService planService,
-      final Optional<PlanId> planId
+      final Optional<PlanId> planId,
+      final Optional<SimulationDatasetId> simulationDatasetId
   ) throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
     final var simulatedResourceSchemas = missionModelService.getResourceSchemas(modelId);
     final var results = new HashMap<String, ValueSchema>(simulatedResourceSchemas);
     if (planId.isPresent()) {
-        final var externalResourceSchemas = planService.getExternalResourceSchemas(planId.get());
+        final var externalResourceSchemas = planService.getExternalResourceSchemas(planId.get(), simulationDatasetId);
         results.putAll(externalResourceSchemas);
     }
     return results;

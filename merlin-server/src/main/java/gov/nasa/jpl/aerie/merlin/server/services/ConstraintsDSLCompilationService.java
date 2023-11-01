@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -52,10 +53,14 @@ public class ConstraintsDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(final String missionModelId, final Optional<PlanId> planId, final String constraintTypescript)
-  throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
+  synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(
+      final String missionModelId,
+      final Optional<PlanId> planId,
+      final Optional<SimulationDatasetId> simulationDatasetId,
+      final String constraintTypescript
+  ) throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
   {
-    final var missionModelGeneratedCode = this.typescriptCodeGenerationService.generateTypescriptTypes(missionModelId, planId);
+    final var missionModelGeneratedCode = this.typescriptCodeGenerationService.generateTypescriptTypes(missionModelId, planId, simulationDatasetId);
     final JsonObject messageJson = Json.createObjectBuilder()
         .add("constraintCode", constraintTypescript)
         .add("missionModelGeneratedCode", missionModelGeneratedCode)
