@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,6 +58,7 @@ public sealed interface ValueSchema {
     T onSeries(ValueSchema value);
     T onStruct(Map<String, ValueSchema> value);
     T onVariant(List<Variant> variants);
+    T onMeta(Map<String, SerializedValue> metadata, ValueSchema target);
   }
 
   record RealSchema() implements ValueSchema {
@@ -115,8 +118,16 @@ public sealed interface ValueSchema {
   }
 
   record VariantSchema(List<Variant> variants) implements ValueSchema {
+    @Override
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onVariant(variants);
+    }
+  }
+
+  record MetaSchema(Map<String, SerializedValue> metadata, ValueSchema target) implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onMeta(metadata, target);
     }
   }
 
@@ -153,6 +164,23 @@ public sealed interface ValueSchema {
   static ValueSchema ofVariant(final List<Variant> variants) {
     Objects.requireNonNull(variants);
     return new VariantSchema(variants);
+  }
+
+  /**
+   * Augments a {@link ValueSchema} with the given metadata.
+   * If the underlying ValueSchema is already a MetaSchema, the new MetaSchema will be merged with the underlying one.
+   * In the event of a key collision, the given `metadata` takes precedence over the target's `metadata`
+   * @return A new {@link ValueSchema} wrapping the original schema.
+   */
+  static ValueSchema withMeta(final String key, final SerializedValue metadata, final ValueSchema target) {
+    final var metaSchema = target.asMeta();
+    if (metaSchema.isPresent()) {
+      final var newMap = new HashMap<>(metaSchema.get().metadata);
+      newMap.put(key, metadata);
+      return new MetaSchema(newMap, metaSchema.get().target());
+    } else {
+      return new MetaSchema(Map.of(key, metadata), target);
+    }
   }
 
   ValueSchema REAL = new RealSchema();
@@ -217,6 +245,9 @@ public sealed interface ValueSchema {
     public T onVariant(final List<Variant> variants) {
       return this.onDefault();
     }
+
+    @Override
+    public T onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) { return this.onDefault(); }
   }
 
   /**
@@ -370,6 +401,22 @@ public sealed interface ValueSchema {
       }
     });
   }
+
+  /**
+   * Asserts that this object represents a metadata node.
+   *
+   * @return An {@link Optional} containing the Metadata node
+   *   Otherwise, returns an empty {@link Optional}
+   */
+  default Optional<MetaSchema> asMeta() {
+    return this.match(new OptionalVisitor<>() {
+      @Override
+      public Optional<MetaSchema> onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) {
+        return Optional.of(new MetaSchema(metadata, target));
+      }
+    });
+  }
+
   /**
    * @param key The unique internal name of this variant
    * @param label The user-facing presentation of this variant

@@ -303,6 +303,11 @@ return (<T>makeAllDiscreteProfile(args))
                 .map(ValueSchema.Variant::label)
                 .toList());
       }
+
+      @Override
+      public TypescriptType onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) {
+        return target.match(this);
+      }
     });
   }
 

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import javax.json.Json;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,9 +73,9 @@ public class MissionModelTests {
     resourceTypes.add(new ResourceType("/flag/conflicted", VALUE_SCHEMA_BOOLEAN));
     resourceTypes.add(new ResourceType(
         "/fruit",
-        new ValueSchemaStruct(Map.of("rate", VALUE_SCHEMA_REAL, "initial", VALUE_SCHEMA_REAL))));
-    resourceTypes.add(new ResourceType("/peel", VALUE_SCHEMA_REAL));
-    resourceTypes.add(new ResourceType("/plant", VALUE_SCHEMA_INT));
+        new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "bananas")).build()), new ValueSchemaStruct(Map.of("rate", VALUE_SCHEMA_REAL, "initial", VALUE_SCHEMA_REAL)))));
+    resourceTypes.add(new ResourceType("/peel", new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "kg")).build()), VALUE_SCHEMA_REAL)));
+    resourceTypes.add(new ResourceType("/plant", new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "count")).build()), VALUE_SCHEMA_INT)));
     resourceTypes.add(new ResourceType("/producer", VALUE_SCHEMA_STRING));
     return resourceTypes;
   }
@@ -89,9 +90,14 @@ public class MissionModelTests {
         Map.of(
             "tbSugar", new Parameter(1, VALUE_SCHEMA_INT),
             "glutenFree", new Parameter(2, VALUE_SCHEMA_BOOLEAN),
-            "temperature", new Parameter(0, VALUE_SCHEMA_REAL))));
+            "temperature", new Parameter(0, VALUE_SCHEMA_REAL)),
+        VALUE_SCHEMA_INT));
     activityTypes.add(new ActivityType("BananaNap", Map.of()));
-    activityTypes.add(new ActivityType("BiteBanana", Map.of("biteSize", new Parameter(0, VALUE_SCHEMA_REAL))));
+    activityTypes.add(new ActivityType(
+        "BiteBanana",
+        Map.of("biteSize", new Parameter(0, new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "m")).build(), "banannotation", Json.createObjectBuilder().add("value", Json.createValue("Specifies the size of bite to take")).build()), VALUE_SCHEMA_REAL))),
+        new ValueSchemaStruct(Map.of("biteSizeWasBig", VALUE_SCHEMA_BOOLEAN, "newFlag", new ValueSchemaVariant(List.of(new Variant("A", "A"), new Variant("B", "B")))))
+        ));
     activityTypes.add(new ActivityType("ChangeProducer", Map.of("producer", new Parameter(0, VALUE_SCHEMA_STRING))));
     activityTypes.add(new ActivityType("child", Map.of("counter", new Parameter(0, VALUE_SCHEMA_INT))));
     activityTypes.add(new ActivityType("ControllableDurationActivity", Map.of("duration", new Parameter(0, VALUE_SCHEMA_DURATION))));
@@ -104,7 +110,12 @@ public class MissionModelTests {
                    new Variant("DSL", "DSL"),
                    new Variant("FiberOptic", "FiberOptic"),
                    new Variant("DietaryFiberOptic", "DietaryFiberOptic")))))));
-    activityTypes.add(new ActivityType("DurationParameterActivity", Map.of("duration", new Parameter(0, VALUE_SCHEMA_DURATION))));
+    activityTypes.add(new ActivityType(
+        "DurationParameterActivity",
+        Map.of("duration", new Parameter(0, VALUE_SCHEMA_DURATION)),
+        new ValueSchemaStruct(Map.of(
+            "duration", VALUE_SCHEMA_DURATION,
+            "durationInSeconds", new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "s")).build()), VALUE_SCHEMA_REAL)))));
     activityTypes.add(new ActivityType("grandchild", Map.of("counter", new Parameter(0, VALUE_SCHEMA_INT))));
     activityTypes.add(new ActivityType("GrowBanana", Map.of(
         "quantity", new Parameter(0, VALUE_SCHEMA_INT),
@@ -247,8 +258,8 @@ public class MissionModelTests {
             entry("byteArray", new Parameter(19,new ValueSchemaSeries(VALUE_SCHEMA_INT))),
             entry("charArray", new Parameter(23, new ValueSchemaSeries(VALUE_SCHEMA_STRING))),
             entry("doubleMap", new Parameter(43,new ValueSchemaSeries(new ValueSchemaStruct(Map.of(
-                "key", VALUE_SCHEMA_REAL,
-                "value", VALUE_SCHEMA_REAL))))),
+                "key", new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "s")).build()), VALUE_SCHEMA_REAL),
+                "value", new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "W")).build()), VALUE_SCHEMA_REAL)))))),
             entry("floatList", new Parameter(35, new ValueSchemaSeries(VALUE_SCHEMA_REAL))),
             entry("longArray", new Parameter(22, new ValueSchemaSeries(VALUE_SCHEMA_INT))),
             entry("obnoxious", new Parameter(57, new ValueSchemaSeries(new ValueSchemaSeries(new ValueSchemaStruct(Map.of(
@@ -265,7 +276,7 @@ public class MissionModelTests {
                 "value", VALUE_SCHEMA_BOOLEAN))))),
             entry("boxedFloat", new Parameter(9, VALUE_SCHEMA_REAL)),
             entry("boxedShort", new Parameter(11, VALUE_SCHEMA_INT)),
-            entry("doubleList", new Parameter(34, new ValueSchemaSeries(VALUE_SCHEMA_REAL))),
+            entry("doubleList", new Parameter(34, new ValueSchemaSeries(new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "m")).build()), VALUE_SCHEMA_REAL)))),
             entry("floatArray", new Parameter(18, new ValueSchemaSeries(VALUE_SCHEMA_REAL))),
             entry("shortArray", new Parameter(20, new ValueSchemaSeries(VALUE_SCHEMA_INT))),
             entry("stringList", new Parameter(42, new ValueSchemaSeries(VALUE_SCHEMA_STRING))),
@@ -343,6 +354,10 @@ public class MissionModelTests {
         assertTrue(actualParams.containsKey(key));
         assertEquals(expectedParams.get(key), actualParams.get(key));
       }
+
+      final var expectedComputedAttributes = expectedTypes.get(i).computedAttributes();
+      final var actualComputedAttributes = activityTypes.get(i).computedAttributes();
+      assertEquals(expectedComputedAttributes, actualComputedAttributes);
     }
   }
 }

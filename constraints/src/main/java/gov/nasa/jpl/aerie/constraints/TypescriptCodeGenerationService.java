@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
@@ -220,6 +221,12 @@ public final class TypescriptCodeGenerationService {
         final var res = valueSchemaToTypescript(valueSchema);
         return "(%s | Discrete<%s>)".formatted(res, res);
       }
+
+      // TODO: Elevate annotation information
+      @Override
+      public String onMeta(final Map<String, SerializedValue> metadata, final ValueSchema value) {
+        return value.match(this);
+      }
     });
   }
 
@@ -287,6 +294,12 @@ public final class TypescriptCodeGenerationService {
       public String onVariant(final List<ValueSchema.Variant> variants) {
         final var res = valueSchemaToTypescript(valueSchema);
         return "(%s | Discrete<%s> | undefined)".formatted(res, res);
+      }
+
+      // TODO Elevate annotation information
+      @Override
+      public String onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) {
+        return target.match(this);
       }
     });
   }
@@ -358,6 +371,12 @@ public final class TypescriptCodeGenerationService {
         result.append(")");
         return result.toString();
       }
+
+      // TODO Elevate annotation information
+      @Override
+      public String onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) {
+        return target.match(this);
+      }
     });
   }
 
@@ -373,6 +392,7 @@ public final class TypescriptCodeGenerationService {
   private static boolean valueSchemaIsNumeric(final ValueSchema valueSchema) {
     return valueSchema.equals(ValueSchema.INT)
         || valueSchema.equals(ValueSchema.REAL)
-        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA);
+        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA)
+        || valueSchema.asMeta().map($ -> valueSchemaIsNumeric($.target())).orElse(false);
   }
 }

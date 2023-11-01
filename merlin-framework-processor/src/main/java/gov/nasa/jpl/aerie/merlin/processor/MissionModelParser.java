@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
+import gov.nasa.jpl.aerie.merlin.framework.MetadataValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
@@ -15,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -58,6 +61,8 @@ import java.util.stream.Collectors;
     for (final var factory : this.getMissionModelMapperClasses(missionModelElement)) {
       typeRules.addAll(this.parseValueMappers(factory));
     }
+
+    typeRules.addAll(parseMetadataAnnotations(missionModelElement));
 
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     for (final var activityTypeElement : this.getMissionModelActivityTypes(missionModelElement)) {
@@ -208,15 +213,47 @@ import java.util.stream.Collectors;
   private List<TypeRule> parseValueMappers(final TypeElement factory)
   throws InvalidMissionModelException
   {
-    final var valueMappers = new ArrayList<TypeRule>();
+    final var rules = new ArrayList<TypeRule>();
 
     for (final var element : factory.getEnclosedElements()) {
       if (element.getKind().equals(ElementKind.METHOD)) {
-        valueMappers.add(this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
+        rules.add(this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
       }
     }
+    return rules;
+  }
 
-    return valueMappers;
+  private List<TypeRule> parseMetadataAnnotations(final PackageElement missionModelElement) throws InvalidMissionModelException {
+    final var rules = new ArrayList<TypeRule>();
+    // Generate type rules from annotations
+    for (final var namedElement : getMetadataAnnotations(missionModelElement)) {
+      final var name = namedElement.getLeft();
+      final var annotationElement = namedElement.getRight();
+      final var className = ClassName.get(annotationElement);
+      rules.add(new TypeRule(
+          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(
+              new TypePattern.AnnotationPattern(
+                  className,
+                  Optional.empty(),
+                  new TypePattern.TypeVariablePattern("T")
+              ))),
+          Set.of(),
+          List.of(
+              new TypePattern.ClassPattern(
+                  ClassName.get(ValueMapper.class),
+                  List.of(new TypePattern.TypeVariablePattern("T"))
+              ),
+              new TypePattern.ClassPattern(
+                  ClassName.get(ValueMapper.class),
+                  List.of(new TypePattern.ClassPattern(className, List.of()))),
+              new TypePattern.ClassPattern(className, List.of())
+          ),
+          ClassName.get(MetadataValueMapper.class),
+          "annotationValueMapper",
+          name
+      ));
+    }
+    return rules;
   }
 
   private TypeRule parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
@@ -295,6 +332,43 @@ import java.util.stream.Collectors;
     }
 
     return activityTypeElements;
+  }
+
+  private List<Pair<String, TypeElement>> getMetadataAnnotations(final PackageElement missionModelElement) throws InvalidMissionModelException {
+    final var metadataAnnotations = new ArrayList<Pair<String, TypeElement>>();
+
+    for (final var activityTypeAnnotation : getRepeatableAnnotation(missionModelElement, MissionModel.WithMetadata.class)) {
+      // SAFETY: We know that MissionModel.WithMetadata has an "annotation" field
+      final var annotation = getAnnotationAttribute(activityTypeAnnotation, "annotation").orElseThrow();
+
+      if (!(annotation.getValue() instanceof DeclaredType declaredType)) {
+        throw new InvalidMissionModelException(
+            "Metadata annotation class not yet defined",
+            missionModelElement,
+            activityTypeAnnotation,
+            annotation);
+      }
+
+      final var kind = declaredType.asElement().getKind();
+      if (!kind.equals(ElementKind.ANNOTATION_TYPE)) {
+        throw new InvalidMissionModelException(
+            "%s annotation applied to non-annotation: %s has kind: %s"
+                .formatted(
+                    MissionModel.WithMetadata.class.getCanonicalName(),
+                    declaredType.asElement().asType(),
+                    kind),
+            missionModelElement,
+            activityTypeAnnotation,
+            annotation);
+      }
+      // SAFETY: We know that the MissionModel.WithMetadata annotation has a name field
+      final var name = getAnnotationAttribute(activityTypeAnnotation, "name").orElseThrow();
+
+      // SAFETY: TypeElement cast works because the element of a DeclaredType must be a TypeElement
+      metadataAnnotations.add(Pair.of((String) name.getValue(), (TypeElement) declaredType.asElement()));
+    }
+
+    return metadataAnnotations;
   }
 
   //

@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -66,7 +67,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeValueSchema(final ValueSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
-    return schema.match(new ValueSchemaSerializer());
+    return new ValueSchemaJsonParser().unparse(schema);
   }
 
   public static JsonValue serializeParameters(final List<Parameter> parameters) {
@@ -74,7 +75,7 @@ public final class ResponseSerializers {
         .collect(Collectors.toMap(i -> parameters.get(i).name(), i -> Pair.of(i, parameters.get(i))));
 
     return serializeMap(pair -> Json.createObjectBuilder()
-            .add("schema", pair.getRight().schema().match(new ValueSchemaSerializer()))
+            .add("schema", new ValueSchemaJsonParser().unparse(pair.getRight().schema()))
             .add("order", pair.getLeft())
             .build(),
         parameterMap);
@@ -482,88 +483,5 @@ public final class ResponseSerializers {
                .add("message", "simulation dataset mismatch exception")
                .add("cause", ex.getMessage())
                .build();
-  }
-
-  private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
-    @Override
-    public JsonValue onReal() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "real")
-          .build();
-    }
-
-    @Override
-    public JsonValue onInt() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "int")
-          .build();
-    }
-
-    @Override
-    public JsonValue onBoolean() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "boolean")
-          .build();
-    }
-
-    @Override
-    public JsonValue onString() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "string")
-          .build();
-    }
-
-    @Override
-    public JsonValue onDuration() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "duration")
-          .build();
-    }
-
-    @Override
-    public JsonValue onPath() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "path")
-          .build();
-    }
-
-    @Override
-    public JsonValue onSeries(final ValueSchema itemSchema) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "series")
-          .add("items", itemSchema.match(this))
-          .build();
-    }
-
-    @Override
-    public JsonValue onStruct(final Map<String, ValueSchema> parameterSchemas) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "struct")
-          .add("items", serializeMap(x -> x.match(this), parameterSchemas))
-          .build();
-    }
-
-    @Override
-    public JsonValue onVariant(final List<ValueSchema.Variant> variants) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "variant")
-          .add("variants", serializeIterable(
-              v -> Json
-                  .createObjectBuilder()
-                  .add("key", v.key())
-                  .add("label", v.label())
-                  .build(),
-              variants))
-          .build();
-    }
   }
 }

@@ -174,6 +174,7 @@ public enum GQL {
       activity_type(where: {model_id: {_eq: $missionModelId}}, order_by: {name: asc}) {
         name
         parameters
+        computed_attributes_value_schema
       }
     }"""),
   GET_CONSTRAINT_RUNS("""

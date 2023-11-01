@@ -11,4 +11,8 @@ public @interface AutoValueMapper {
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.TYPE)
   @interface Record {}
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.ANNOTATION_TYPE)
+  @interface Annotation {}
 }

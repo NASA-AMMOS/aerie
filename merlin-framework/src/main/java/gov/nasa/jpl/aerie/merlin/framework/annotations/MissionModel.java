@@ -43,4 +43,18 @@ public @interface MissionModel {
   @interface WithMappers {
     Class<?> value();
   }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @Repeatable(AllMetadata.class)
+  @interface WithMetadata {
+    String name();
+    Class<?> annotation();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @interface AllMetadata {
+    WithMetadata[] value();
+  }
 }
