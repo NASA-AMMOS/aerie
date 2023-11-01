@@ -588,6 +588,61 @@ export class Spans {
       windowsExpression: windows.__astNode
     });
   }
+
+  /**
+   * Creates a windows object that is false when one of these Spans does not contain a child span, and true otherwise.
+   * The parents are the callee and the children are the argument, i.e. `parents.contains(children)`.
+   * The default requirement of one child per parent can be modified.
+   *
+   * More concretely, for the expression `A.contains(B)`, the result is:
+   * - `true` inside any A spans if (by default) they contain at least one B span
+   *   - for counting spans, "contain" means that the entire B span is inside the A span.
+   * - `true` (vacuously) outside the union of all A spans
+   * - `false` inside any A spans that do not contain a B span
+   *
+   * The requirement for one child span can be optionally changed by providing the second argument:
+   * - `{count: n}` requires *exactly* `n` children per parent.
+   * - `{count: {min: n}}` requires at least `n` children per parent.
+   * - `{count: {max: n}}` requires at most `n` children per parent
+   * - `{duration: {min: d}}` requires a total duration of children of at least `d`
+   * - `{duration: {max: d}}` requires a total duration of children of at most `d`
+   *
+   * Both `count` and `duration` can be provided at the same time
+   * (e.g. `{count: 2, duration: {min: Temporal.Duration.from({hours: 1})}}`).
+   * Both `min` and `max` can be provided at the same time (e.g. `{count: {min: 1, max: 3}}`.
+   *
+   * There is no option to require an exact duration, because the implementation uses floating point comparison.
+   * If you need an exact duration, you can approximate it by using a small range around the desired value.
+   *
+   * @param children child spans to check the existence of.
+   * @param requirement what to check for in each parent span.
+   */
+  public contains(children: Spans, requirement?: SpansContainsRequirement): Windows {
+    if (requirement === undefined) requirement = {count: {min: 1}};
+    if (requirement.count === undefined) requirement.count = {};
+    else if (typeof requirement.count === 'number') requirement.count = {
+      min: requirement.count,
+      max: requirement.count
+    };
+    if (requirement.duration === undefined) requirement.duration = {};
+    return new Windows({
+      kind: AST.NodeKind.SpansExpressionContains,
+      parents: this.__astNode,
+      children: children.__astNode,
+      requirement: requirement as {count: {min?: number, max?: number}, duration: {min?: AST.Duration, max?: AST.Duration}}
+    });
+  }
+}
+
+export type SpansContainsRequirement = {
+  count?: number | {
+    min?: number,
+    max?: number
+  },
+  duration?: AST.Duration | {
+    min?: AST.Duration,
+    max?: AST.Duration
+  }
 }
 
 /**
@@ -1196,7 +1251,7 @@ declare global {
     ExcessHull = 'ExcessHull',
     DeficitSpans = 'DeficitSpans',
     DeficitHull = 'DeficitHull'
-}
+  }
 
   /** A boolean profile; a function from time to truth values. */
   export class Windows {
@@ -1461,6 +1516,47 @@ declare global {
      * @param windows
      */
     public selectWhenTrue(windows: Windows): Spans;
+
+    /**
+     * Creates a windows object that is false when one of these Spans does not contain a child span, and true otherwise.
+     * The parents are the callee and the children are the argument, i.e. `parents.contains(children)`.
+     * The default requirement of one child per parent can be modified.
+     *
+     * More concretely, for the expression `A.contains(B)`, the result is:
+     * - `true` inside any A spans if (by default) they contain at least one B span
+     *   - for counting spans, "contain" means that the entire B span is inside the A span.
+     * - `true` (vacuously) outside the union of all A spans
+     * - `false` inside any A spans that do not contain a B span
+     *
+     * The requirement for one child span can be optionally changed by providing the second argument:
+     * - `{count: n}` requires *exactly* `n` children per parent.
+     * - `{count: {min: n}}` requires at least `n` children per parent.
+     * - `{count: {max: n}}` requires at most `n` children per parent
+     * - `{duration: {min: d}}` requires a total duration of children of at least `d`
+     * - `{duration: {max: d}}` requires a total duration of children of at most `d`
+     *
+     * Both `count` and `duration` can be provided at the same time
+     * (e.g. `{count: 2, duration: {min: Temporal.Duration.from({hours: 1})}}`).
+     * Both `min` and `max` can be provided at the same time (e.g. `{count: {min: 1, max: 3}}`.
+     *
+     * There is no option to require an exact duration, because the implementation uses floating point comparison.
+     * If you need an exact duration, you can approximate it by using a small range around the desired value.
+     *
+     * @param children child spans to check the existence of.
+     * @param requirement what to check for in each parent span.
+     */
+    public contains(children: Spans, requirement?: SpansContainsRequirement): Windows;
+  }
+
+  export type SpansContainsRequirement = {
+    count?: number | {
+      min?: number,
+      max?: number
+    },
+    duration?: {
+      min?: AST.Duration,
+      max?: AST.Duration
+    }
   }
 
   /**

@@ -30,6 +30,7 @@ export enum NodeKind {
   SpansExpressionConnectTo = 'SpansExpressionConnectTo',
   SpansExpressionInterval = 'SpansExpressionInterval',
   SpansSelectWhenTrue = 'SpansSelectWhenTrue',
+  SpansExpressionContains = 'SpansExpressionContains',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -115,7 +116,8 @@ export type WindowsExpression =
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
   | AssignGapsExpression<WindowsExpression>
-    | WindowsExpressionKeepTrueSegment;
+  | WindowsExpressionKeepTrueSegment
+  | SpansExpressionContains;
 
 
 export type SpansExpression =
@@ -166,6 +168,22 @@ export interface WindowsExpressionKeepTrueSegment {
   kind: NodeKind.WindowsExpressionKeepTrueSegment;
   expression: WindowsExpression;
   index: number;
+}
+
+export interface SpansExpressionContains {
+  kind: NodeKind.SpansExpressionContains;
+  parents: SpansExpression;
+  children: SpansExpression;
+  requirement: {
+    count: {
+      min?: number,
+      max?: number
+    },
+    duration: {
+      min?: Duration,
+      max?: Duration
+    }
+  };
 }
 
 export interface IntervalsExpressionShiftEdges {
