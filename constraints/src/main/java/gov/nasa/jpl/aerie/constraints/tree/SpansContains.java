@@ -66,8 +66,8 @@ public record SpansContains(Expression<Spans> parents, Expression<Spans> childre
         var lookaheadChildIndex = childIndex;
         while (lookaheadChildIndex < childrenLength) {
           final var childInterval = sortedChildren.get(lookaheadChildIndex).interval();
-          if (!parentInterval.contains(childInterval)) break;
-          instanceCount.getAndIncrement();
+          if (parentInterval.contains(childInterval)) instanceCount.getAndIncrement();
+          else if (parentInterval.compareEndToStart(childInterval) < 1) break;
           lookaheadChildIndex++;
         }
 
