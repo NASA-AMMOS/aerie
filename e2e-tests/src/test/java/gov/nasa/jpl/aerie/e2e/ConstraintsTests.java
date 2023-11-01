@@ -440,7 +440,7 @@ public class ConstraintsTests {
       // "input mismatch exception" is the return msg for this error
       final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId, newSimDatasetId));
       final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
-      // Hasura strips the cause message ("Constraint compilation failed -- $ERROR")
+      // Hasura strips the cause message ("Constraint compilation failed -- Error[errors=[UserCodeError[ $ERROR ]]]")
       // from the error it returns
       if (!message.equals("constraint compilation exception")) {
         throw exception;
@@ -454,8 +454,8 @@ public class ConstraintsTests {
       hasura.deleteActivity(planId, activityId);
       hasura.awaitSimulation(planId);
 
-      // This test is expected to fail with the following message because the constraint
-      // DSL is being generated for datasets that are outdated.
+      // The constraint run is expected to fail with the following message because the constraint
+      // DSL isn't being generated for datasets that are outdated.
       final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId));
       final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
 
