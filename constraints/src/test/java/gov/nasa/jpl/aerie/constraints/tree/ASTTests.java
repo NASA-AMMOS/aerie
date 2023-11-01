@@ -1570,10 +1570,10 @@ public class ASTTests {
     );
 
     final var parents = new Spans(
-        interval(0, 3, SECONDS), // has no children inside it
-        interval(6, 9, SECONDS), // has one child of duration 3
-        interval(12, 15, SECONDS), // has two children, total duration 2
-        interval(16, 19, SECONDS) // has one partially-contained child, intersection duration 3
+        interval(0, 3, SECONDS),
+        interval(6, 9, SECONDS),
+        interval(12, 15, SECONDS),
+        interval(16, 19, SECONDS)
     );
 
     final var children = new Spans(
@@ -1593,6 +1593,44 @@ public class ASTTests {
         .set(interval(6, 9, SECONDS), false)
         .set(interval(12, 15, SECONDS), false)
         .set(interval(16, 19, SECONDS), false);
+    assertIterableEquals(count1Expected, count1Result);
+  }
+
+  @Test
+  void testSpansContainsLookahead() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var parents = new Spans(
+        interval(0, 3, SECONDS),
+        interval(5, 9, SECONDS),
+        interval(5, 9, SECONDS),
+        interval(11, 13, SECONDS),
+        interval(11, 13, SECONDS)
+    );
+
+    final var children = new Spans(
+        interval(3, 4, SECONDS),
+        interval(6, 7, SECONDS),
+        interval(7, 8, SECONDS)
+    );
+
+    // require min count 1
+    final var count1Result =
+        (new SpansContains(Supplier.of(parents), Supplier.of(children), new SpansContains.Requirement(
+            Optional.of(2),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()
+        )))
+            .evaluate(simResults);
+    final var count1Expected = new Windows(interval(0, 20, SECONDS), true)
+        .set(interval(0, 3, SECONDS), false)
+        .set(interval(11, 13, SECONDS), false);
     assertIterableEquals(count1Expected, count1Result);
   }
 
