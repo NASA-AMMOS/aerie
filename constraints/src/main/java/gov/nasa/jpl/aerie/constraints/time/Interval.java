@@ -252,11 +252,7 @@ public final class Interval implements Comparable<Interval>{
   }
 
   public int compareEndToStart(Interval other) {
-    final var timeComparison = this.end.compareTo(other.start);
-    if (timeComparison != 0) return timeComparison;
-    else if (this.endInclusivity != other.startInclusivity) return 0;
-    else if (this.endInclusivity == Inclusive) return 1;
-    else return -1;
+    return compareEndToStart(this, other);
   }
 
   public boolean contains(Duration d){
@@ -321,20 +317,30 @@ public final class Interval implements Comparable<Interval>{
   }
 
   public static int compareStartToEnd(final Interval x, final Interval y) {
-    // First, order by absolute time.
-    if (!x.start.isEqualTo(y.end)) {
-      return x.start.compareTo(y.end);
-    }
-
-    // Second, order by inclusivity
-    if (!y.includesEnd()) return 1;
-    if (!x.includesStart()) return 1;
-
-    return 0;
+    return -compareEndToStart(y, x);
   }
 
+  /**
+   * Compares the end of x to the start of y.
+   *
+   * Returns -1 if x ends before y starts.
+   * Returns 1 if x ends after (see below) y starts.
+   * Returns 0 if x exactly meets (see below) y with no overlap
+   *
+   * To clarify, `compareEndToStart([a, b), [b, c)) == 0`,
+   * but `compareEndToStart([a, b], [b, c]) == 1`. This might be unintuitive,
+   * but I've found this to be much more useful in practice than `-1` and `0`, respectively.
+   * This is because as long as x starts before y, we get a few properties:
+   * - -1 indicates a gap between x and y
+   * - 1 indicates overlap between x and y
+   * - 0 indicates no gap and no overlap
+   */
   public static int compareEndToStart(final Interval x, final Interval y) {
-    return -compareStartToEnd(y, x);
+    final var timeComparison = x.end.compareTo(y.start);
+    if (timeComparison != 0) return timeComparison;
+    else if (x.endInclusivity != y.startInclusivity) return 0;
+    else if (x.endInclusivity == Inclusive) return 1;
+    else return -1;
   }
 
   public static boolean meets(final Interval x, final Interval y) {
