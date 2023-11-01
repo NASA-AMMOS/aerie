@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
@@ -164,9 +165,9 @@ public class ConstraintAction {
         if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
           expression = success.constraintExpression();
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-          throw new Error("Constraint compilation failed: " + error);
+          throw new ConstraintCompilationException("Constraint compilation failed: " + error);
         } else {
-          throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
+          throw new ConstraintCompilationException("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
         }
 
         final var names = new HashSet<String>();

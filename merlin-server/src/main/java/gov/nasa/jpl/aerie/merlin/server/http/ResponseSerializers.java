@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.constraints.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
@@ -465,6 +466,13 @@ public final class ResponseSerializers {
   public static JsonValue serializeInputMismatchException(final InputMismatchException ex) {
     return Json.createObjectBuilder()
                .add("message", "input mismatch exception")
+               .add("cause", ex.getMessage())
+               .build();
+  }
+
+  public static JsonValue serializeConstraintCompilationException(final ConstraintCompilationException ex) {
+    return Json.createObjectBuilder()
+               .add("message", "constraint compilation exception")
                .add("cause", ex.getMessage())
                .build();
   }
