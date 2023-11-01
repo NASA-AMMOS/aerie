@@ -440,7 +440,7 @@ public class ConstraintsTests {
       // "input mismatch exception" is the return msg for this error
       final var exception = assertThrows(RuntimeException.class, () -> hasura.checkConstraints(planId, newSimDatasetId));
       final var message = exception.getMessage().split("\"message\":\"")[1].split("\"}]")[0];
-      // Hasura strips the cause message ("Assumption falsified -- mission model for existing plan does not exist")
+      // Hasura strips the cause message ("Constraint compilation failed -- $ERROR")
       // from the error it returns
       if (!message.equals("constraint compilation exception")) {
         throw exception;
