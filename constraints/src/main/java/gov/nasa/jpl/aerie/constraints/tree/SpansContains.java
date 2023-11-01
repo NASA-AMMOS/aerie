@@ -46,28 +46,29 @@ public record SpansContains(Expression<Spans> parents, Expression<Spans> childre
           .interval()
           .compareStarts(r.interval())).toList();
       final var childrenLength = sortedChildren.size();
-      var childIndex = 0;
+      int childIndex = 0;
 
       for (final var parent: sortedParents) {
         var instanceCount = new AtomicInteger(0);
         final var parentInterval = parent.interval();
 
-        ifChildrenExist:
-        if (childIndex < childrenLength) {
-          var childInterval = sortedChildren.get(childIndex).interval();
-          while (childInterval.compareStarts(parentInterval) == -1) {
-            childIndex++;
-            if (childIndex == childrenLength) break ifChildrenExist;
-            childInterval = sortedChildren.get(childIndex).interval();
-          }
+        // This algorithm uses the sorted nature of the parents and children to do the check with a single pass
+        // down each list (with some lookahead).
 
-          var transientChildIndex = childIndex;
-          while (parentInterval.contains(childInterval)) {
-            instanceCount.getAndIncrement();
-            transientChildIndex++;
-            if (transientChildIndex == childrenLength) break ifChildrenExist;
-            childInterval = sortedChildren.get(transientChildIndex).interval();
-          }
+        // Multiple parent spans might overlap, so we iterate the children until we reach the current parent,
+        // then switch to a lookahead index when counting children inside the parent.
+        // For the next parent, the lookahead index is reset so that children can be double-counted if necessary.
+        while (childIndex < childrenLength) {
+          final var childInterval = sortedChildren.get(childIndex).interval();
+          if (childInterval.compareStarts(parentInterval) != -1) break;
+          childIndex++;
+        }
+        var lookaheadChildIndex = childIndex;
+        while (lookaheadChildIndex < childrenLength) {
+          final var childInterval = sortedChildren.get(lookaheadChildIndex).interval();
+          if (!parentInterval.contains(childInterval)) break;
+          instanceCount.getAndIncrement();
+          lookaheadChildIndex++;
         }
 
         if (this.requirement.minCount.map(c -> instanceCount.get() < c).orElse(false)) {
