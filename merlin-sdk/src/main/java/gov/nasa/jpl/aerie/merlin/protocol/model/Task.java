@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
+import java.util.concurrent.Executor;
+
 public interface Task<Return> {
   /**
    * Perform one step of the task, returning the next step of the task and the conditions under which to perform it.
@@ -24,5 +26,5 @@ public interface Task<Return> {
    */
   default void release() {}
 
-  Task<Return> duplicate();
+  Task<Return> duplicate(Executor executor);
 }
