@@ -2,15 +2,15 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
-import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -146,20 +146,22 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateActivityDirectiveValidations(
-      final ActivityDirectiveId directiveId,
-      final PlanId planId,
-      final Timestamp argumentsModifiedTime,
-      final List<ValidationNotice> notices
-  )
-  {
-    try (final var connection = this.dataSource.getConnection()) {
-      try (final var updateActivityDirectiveValidationsAction = new UpdateActivityDirectiveValidationsAction(connection)) {
-        updateActivityDirectiveValidationsAction.apply(directiveId.id(), planId.id(), argumentsModifiedTime, notices);
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException(
-          "Failed to update derived data for activity directive with id `%d` and plan id '%d'".formatted(directiveId.id(), planId.id()), ex);
+  public Map<MissionModelId, List<ActivityDirectiveForValidation>> getUnvalidatedDirectives() {
+    try (final var connection = this.dataSource.getConnection();
+         final var unvalidatedDirectivesAction = new GetUnvalidatedDirectivesAction(connection)) {
+      return unvalidatedDirectivesAction.get();
+    } catch (SQLException ex) {
+      throw new DatabaseException("Failed to get unvalidated activity directives", ex);
+    }
+  }
+
+  @Override
+  public void updateDirectiveValidations(List<Pair<ActivityDirectiveForValidation, MissionModelService.BulkArgumentValidationResponse>> updates) {
+    try (final var connection = this.dataSource.getConnection();
+         final var updateAction = new UpdateActivityDirectiveValidationsAction(connection)) {
+      updateAction.apply(updates);
+    } catch (SQLException ex) {
+      throw new DatabaseException("Failed to update activity directive validations", ex);
     }
   }
 
