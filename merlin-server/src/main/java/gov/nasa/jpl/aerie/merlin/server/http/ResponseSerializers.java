@@ -24,6 +24,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkEffectiveArgumentResponse;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkArgumentValidationResponse;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -156,6 +157,41 @@ public final class ResponseSerializers {
         .add("success", JsonValue.FALSE)
         .add("errors", String.format("Internal error: %s", response))
         .build();
+  }
+
+  public static JsonValue serializeBulkArgumentValidationResponseList(final List<BulkArgumentValidationResponse> responses) {
+    return serializeIterable(ResponseSerializers::serializeBulkArgumentValidationResponse, responses);
+  }
+
+  public static JsonValue serializeBulkArgumentValidationResponse(BulkArgumentValidationResponse response) {
+    // TODO use pattern matching in switch statement with JDK 21
+    if (response instanceof BulkArgumentValidationResponse.Success) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.TRUE)
+                 .build();
+    } else if (response instanceof BulkArgumentValidationResponse.Validation v) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("errors", Json.createObjectBuilder()
+                     .add("validationNotices", serializeIterable(ResponseSerializers::serializeValidationNotice, v.notices()))
+                     .build())
+                 .build();
+    } else if (response instanceof BulkArgumentValidationResponse.NoSuchActivityError e) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("errors", Json.createObjectBuilder()
+                     .add("noSuchActivityError", serializeNoSuchActivityTypeException(e.ex()))
+                     .build())
+                 .build();
+    } else if (response instanceof BulkArgumentValidationResponse.InstantiationError f) {
+      return serializeInstantiationException(f.ex());
+    }
+
+    // This should never happen, but we don't have exhaustive pattern matching
+    return Json.createObjectBuilder()
+               .add("success", JsonValue.FALSE)
+               .add("errors", String.format("Internal error: %s", response))
+               .build();
   }
 
   public static JsonValue serializeCreatedDatasetId(final long datasetId) {
