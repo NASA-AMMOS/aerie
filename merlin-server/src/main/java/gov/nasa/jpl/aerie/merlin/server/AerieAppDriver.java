@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.ValidationWorker;
 import gov.nasa.jpl.aerie.permissions.PermissionsService;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
@@ -53,6 +54,16 @@ public final class AerieAppDriver {
         configuration.merlinFileStore(),
         stores.missionModels(),
         configuration.untruePlanStart());
+
+    if (configuration.enableContinuousValidationThread()) {
+      final var validationWorker = new ValidationWorker(
+          missionModelController,
+          configuration.validationThreadPollingPeriod());
+      final var thread = new Thread(validationWorker::workerLoop);
+      thread.setDaemon(true);
+      thread.start();
+    }
+
     final var planController = new LocalPlanService(stores.plans());
 
     final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController, planController);
@@ -169,7 +180,9 @@ public final class AerieAppDriver {
                           getEnv("MERLIN_DB", "aerie_merlin")),
         Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
         URI.create(getEnv("HASURA_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
-        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
+        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
+        Boolean.parseBoolean(getEnv("ENABLE_CONTINUOUS_VALIDATION_THREAD", "false")),
+        Integer.parseInt(getEnv("VALIDATION_THREAD_POLLING_PERIOD", "500"))
     );
   }
 }
