@@ -42,6 +42,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -89,13 +90,14 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private SimulationEngine(SimulationEngine other) {
+    executor = getLoomOrFallback();
     scheduledJobs = other.scheduledJobs.duplicate();
     waitingTasks = other.waitingTasks.duplicate();
     waitingConditions = other.waitingConditions.duplicate();
     waitingResources = other.waitingResources.duplicate();
     tasks = new HashMap<>();
     for (final var entry : other.tasks.entrySet()) {
-      tasks.put(entry.getKey(), entry.getValue().duplicate());
+      tasks.put(entry.getKey(), entry.getValue().duplicate(executor));
     }
     conditions = new HashMap<>(other.conditions);
     resources = new HashMap<>();
@@ -104,7 +106,6 @@ public final class SimulationEngine implements AutoCloseable {
     }
     taskParent = new HashMap<>(other.taskParent);
     taskChildren = new HashMap<>(other.taskChildren);
-    executor = other.executor;
   }
 
   private static ExecutorService getLoomOrFallback() {
@@ -143,6 +144,10 @@ public final class SimulationEngine implements AutoCloseable {
   public <Dynamics>
   void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
     final var id = new ResourceId(name);
+
+    if (this.resources.containsKey(id)) {
+      throw new IllegalArgumentException("Re-tracking previously tracked resource " + name);
+    }
 
     this.resources.put(id, ProfilingState.create(resource));
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
@@ -396,6 +401,10 @@ public final class SimulationEngine implements AutoCloseable {
         this.scheduledJobs.unschedule(JobId.forTask(taskId));
       }
     }
+  }
+
+  public Optional<Duration> peekNextTime() {
+    return this.scheduledJobs.peekNextTime();
   }
 
   private record TaskInfo(
@@ -819,7 +828,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
-    ExecutionState<Return> duplicate();
+    ExecutionState<Return> duplicate(Executor executor);
 
     /** The task has been scheduled, but not started. */
     record NotStarted<Return>(Duration startTime, Task<Return> state)
@@ -830,8 +839,8 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       @Override
-      public ExecutionState<Return> duplicate() {
-        return new NotStarted<>(startTime, state.duplicate());
+      public ExecutionState<Return> duplicate(Executor executor) {
+        return new NotStarted<>(startTime, state.duplicate(executor));
       }
     }
 
@@ -850,8 +859,8 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       @Override
-      public ExecutionState<Return> duplicate() {
-        return new InProgress<>(startOffset, state.duplicate());
+      public ExecutionState<Return> duplicate(Executor executor) {
+        return new InProgress<>(startOffset, state.duplicate(executor));
       }
     }
 
@@ -867,7 +876,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       @Override
-      public ExecutionState<Return> duplicate() {
+      public ExecutionState<Return> duplicate(Executor executor) {
         return new AwaitingChildren<>(startOffset, endOffset, new LinkedList<>(remainingChildren));
       }
     }
@@ -879,7 +888,7 @@ public final class SimulationEngine implements AutoCloseable {
         Duration joinOffset
     ) implements ExecutionState<Return> {
       @Override
-      public ExecutionState<Return> duplicate() {
+      public ExecutionState<Return> duplicate(Executor executor) {
         return this;
       }
     }

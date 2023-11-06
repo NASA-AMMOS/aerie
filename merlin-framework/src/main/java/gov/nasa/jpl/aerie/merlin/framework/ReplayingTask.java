@@ -9,6 +9,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public final class ReplayingTask<Return> implements Task<Return> {
@@ -70,7 +71,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
   private static final Yield Yield = new Yield();
 
   @Override
-  public Task<Return> duplicate() {
+  public Task<Return> duplicate(Executor executor) {
     final ReplayingTask<Return> replayingTask = new ReplayingTask<>(rootContext, task);
     replayingTask.memory.reads().addAll(this.memory.reads());
     replayingTask.memory.writes().setValue(this.memory.writes());

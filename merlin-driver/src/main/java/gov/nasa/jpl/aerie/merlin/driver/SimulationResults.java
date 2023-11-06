@@ -55,4 +55,34 @@ public final class SimulationResults {
         + ", unfinishedActivities=" + this.unfinishedActivities
         + " }";
   }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    SimulationResults that = (SimulationResults) o;
+
+    if (!startTime.equals(that.startTime)) return false;
+    if (!duration.isEqualTo(that.duration)) return false;
+    if (!realProfiles.equals(that.realProfiles)) return false;
+    if (!discreteProfiles.equals(that.discreteProfiles)) return false;
+    if (!simulatedActivities.equals(that.simulatedActivities)) return false;
+    if (!unfinishedActivities.equals(that.unfinishedActivities)) return false;
+    if (!topics.equals(that.topics)) return false;
+    return events.equals(that.events);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = startTime.hashCode();
+    result = 31 * result + duration.hashCode();
+    result = 31 * result + realProfiles.hashCode();
+    result = 31 * result + discreteProfiles.hashCode();
+    result = 31 * result + simulatedActivities.hashCode();
+    result = 31 * result + unfinishedActivities.hashCode();
+    result = 31 * result + topics.hashCode();
+    result = 31 * result + events.hashCode();
+    return result;
+  }
 }
