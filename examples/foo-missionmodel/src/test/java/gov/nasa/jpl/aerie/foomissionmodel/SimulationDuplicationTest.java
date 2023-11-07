@@ -402,8 +402,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         $ -> {},
-        desiredCheckpoints,
-        cachedSimulationEngine);
+        cachedSimulationEngine,
+        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
   static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
@@ -450,8 +450,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         $ -> {},
-        desiredCheckpoints,
-        cachedSimulationEngine);
+        cachedSimulationEngine,
+        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();

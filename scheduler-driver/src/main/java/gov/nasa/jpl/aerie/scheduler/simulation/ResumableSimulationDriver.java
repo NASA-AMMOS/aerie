@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
@@ -409,7 +410,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       }
 
       @Override
-      public Task<T> duplicate() {
+      public Task<T> duplicate(Executor executor) {
         return this;
       }
     };

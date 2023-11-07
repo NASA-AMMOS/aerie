@@ -7,6 +7,10 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
@@ -234,6 +238,9 @@ public final class LocalMissionModelService implements MissionModelService {
         .getEffectiveArguments(arguments);
   }
 
+  static Map<String, MissionModel<?>> missionModelCache = new HashMap<>();
+  static Map<String, List<SimulationDriver.CachedSimulationEngine>> cachedEngines = new HashMap<>();
+
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
@@ -251,18 +258,66 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
-    // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(
+    final MissionModel<?> missionModel = missionModelCache.computeIfAbsent(message.missionModelId(), $ -> {
+      try {
+        return loadAndInstantiateMissionModel(
             message.missionModelId(),
             message.simulationStartTime(),
-            SerializedValue.of(config)),
-        message.activityDirectives(),
-        message.simulationStartTime(),
-        message.simulationDuration(),
-        message.planStartTime(),
-        message.planDuration(),
-        simulationExtentConsumer);
+            SerializedValue.of(config));
+      } catch (NoSuchMissionModelException e) {
+        throw new RuntimeException(e);
+      }
+    });
+
+    // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
+    Optional<SimulationDriver.CachedSimulationEngine> simulationEngine = SimulationDriver.bestCachedEngine(message.activityDirectives(), cachedEngines.getOrDefault(message.missionModelId(), List.of()));
+    if (simulationEngine.isEmpty()) {
+      final SimulationEngine engine = new SimulationEngine();
+      final TemporalEventSource timeline = new TemporalEventSource();
+      final LiveCells cells = new LiveCells(timeline, missionModel.getInitialCells());
+
+      // Begin tracking all resources.
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
+
+        engine.trackResource(name, resource, Duration.ZERO);
+      }
+
+      {
+        // Start daemon task(s) immediately, before anything else happens.
+        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+        {
+          final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+          final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
+          timeline.add(commit);
+        }
+      }
+
+      final var cachedSimulationEngine = new SimulationDriver.CachedSimulationEngine(
+          Duration.ZERO,
+          List.of(),
+          engine,
+          cells,
+          timeline.points(),
+          new Topic<>()
+      );
+      simulationEngine = Optional.of(cachedSimulationEngine);
+    }
+
+    final var simulationResultsWithCheckpoints =
+        SimulationDriver.simulateWithCheckpoints(
+            missionModel,
+            message.activityDirectives(),
+            message.simulationStartTime(),
+            message.simulationDuration(),
+            message.planStartTime(),
+            message.planDuration(),
+            simulationExtentConsumer,
+            simulationEngine.get(),
+            SimulationDriver.wallClockCheckpoints(20));
+    cachedEngines.computeIfAbsent(message.missionModelId(), $ -> new ArrayList<>()).addAll(simulationResultsWithCheckpoints.checkpoints());
+    return simulationResultsWithCheckpoints.results();
   }
 
   @Override
