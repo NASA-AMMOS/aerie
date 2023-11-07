@@ -15,7 +15,12 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestUtility {
 
@@ -146,4 +151,23 @@ public class TestUtility {
     return timeFromEpochHours(days * 24);
   }
 
+  /** matches activities if they agree in everything except the (possibly auto-generated) names **/
+  public static void assertSetEquality(List<SchedulingActivityDirective> expected, List<SchedulingActivityDirective> actual) {
+    assertEquals(expected.size(), actual.size());
+    final var backupExpected = new ArrayList<>(expected);
+    for (SchedulingActivityDirective directive : actual) {
+      final int matchIndex = getIndexSADList(backupExpected, directive);
+      assertNotEquals(-1, matchIndex);
+      backupExpected.remove(matchIndex); // Remove to avoid similar elements matching twice
+    }
+  }
+
+  private static int getIndexSADList(List<SchedulingActivityDirective> list, SchedulingActivityDirective directive) {
+    for (int i = 0; i < list.size(); ++i) {
+      if (list.get(i).equalsInProperties(directive)) {
+        return i;
+      }
+    }
+    return -1;
+  }
 }

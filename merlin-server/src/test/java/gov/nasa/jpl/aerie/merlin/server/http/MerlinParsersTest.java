@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
@@ -18,32 +17,22 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.*;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class MerlinParsersTest {
-  public static final class NestedLists {
-    public final List<NestedLists> lists;
-
-    public NestedLists(final List<NestedLists> lists) {
-      this.lists = lists;
-    }
+  public record NestedLists(List<NestedLists> lists) {
 
     @Override
-    public boolean equals(final Object obj) {
-      if (!(obj instanceof NestedLists)) return false;
-      final var other = (NestedLists) obj;
-      return Objects.equals(this.lists, other.lists);
-    }
-
-    @Override
-    public int hashCode() {
-      return this.lists.hashCode();
-    }
+      public boolean equals(final Object obj) {
+        if (!(obj instanceof final NestedLists other)) return false;
+        return Objects.equals(this.lists, other.lists);
+      }
 
     public static NestedLists nestedList(NestedLists... lists) {
-      return new NestedLists(List.of(lists));
+        return new NestedLists(List.of(lists));
+      }
     }
-  }
 
   @Test
   public void testRecursiveList() {
@@ -64,13 +53,10 @@ public final class MerlinParsersTest {
             . build())
         . build();
 
-    assertThat(
-        listsP.parse(foo).getSuccessOrThrow()
-    ).isEqualTo(
-        nestedList(
+    final var expected = nestedList(
             nestedList(nestedList()),
-            nestedList(nestedList(), nestedList(), nestedList()))
-    );
+            nestedList(nestedList(), nestedList(), nestedList()));
+    assertEquals(expected, listsP.parse(foo).getSuccessOrThrow());
   }
 
   @Test
@@ -78,12 +64,12 @@ public final class MerlinParsersTest {
     final var expected = SerializedValue.of(3.14);
     final var actual = serializedValueP.parse(Json.createValue(3.14)).getSuccessOrThrow();
 
-    assertThat(expected).isEqualTo(actual);
+    assertEquals(expected, actual);
   }
 
   @Test
   public void testRealIsNotALong() {
-    assertThat(longP.parse(Json.createValue(3.14))).matches(JsonParseResult::isFailure);
+    assertTrue(longP.parse(Json.createValue(3.14)).isFailure());
   }
 
   @Test
@@ -111,7 +97,7 @@ public final class MerlinParsersTest {
           new HasuraAction.MissionModelInput("1"),
           new HasuraAction.Session("aerie_admin", null));
 
-      assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+      assertEquals(expected, hasuraMissionModelActionP.parse(json).getSuccessOrThrow());
     }
 
     {
@@ -138,7 +124,7 @@ public final class MerlinParsersTest {
           new HasuraAction.MissionModelInput("1"),
           new HasuraAction.Session("aerie_admin", "userId"));
 
-      assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+      assertEquals(expected, hasuraMissionModelActionP.parse(json).getSuccessOrThrow());
     }
   }
 
@@ -163,6 +149,6 @@ public final class MerlinParsersTest {
 
     final var expected = new HasuraMissionModelEvent("1");
 
-    assertThat(hasuraMissionModelEventTriggerP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+    assertEquals(expected, hasuraMissionModelEventTriggerP.parse(json).getSuccessOrThrow());
   }
 }

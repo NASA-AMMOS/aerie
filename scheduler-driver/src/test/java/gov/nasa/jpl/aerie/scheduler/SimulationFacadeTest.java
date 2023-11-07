@@ -1,22 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.AssignGaps;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
-import gov.nasa.jpl.aerie.constraints.tree.Equal;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.LessThan;
-import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
-import gov.nasa.jpl.aerie.constraints.tree.RealResource;
-import gov.nasa.jpl.aerie.constraints.tree.RealValue;
-import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
-import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
-import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -44,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.google.common.truth.Truth.assertThat;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
@@ -66,7 +51,6 @@ public class SimulationFacadeTest {
 
   //hard-coded range of scheduling/simulation operations
   private static final PlanningHorizon horizon = new PlanningHorizon(t0h, tEndh);
-  private static final Interval entireHorizon = horizon.getHor();
 
   //concrete named time points used to setup tests and validate expectations
   private static final Duration t0 = horizon.toDur(t0h);
@@ -165,16 +149,19 @@ public class SimulationFacadeTest {
     problem.setInitialPlan(plan);
     final var solver = new PrioritySolver(problem);
     final var plan1 = solver.getNextSolution();
-    assertThat(plan1.isPresent()).isTrue();
+    assertTrue(plan1.isPresent());
+
     final var actAssociatedInFirstRun = plan1.get().getEvaluation().forGoal(goal).getAssociatedActivities();
-    assertThat(actAssociatedInFirstRun.size()).isEqualTo(1);
+    assertEquals(1, actAssociatedInFirstRun.size());
+
     problem.setInitialPlan(plan1.get());
     final var solver2 = new PrioritySolver(problem);
     final var plan2 = solver2.getNextSolution();
-    assertThat(plan2.isPresent()).isTrue();
+    assertTrue(plan2.isPresent());
+
     final var actAssociatedInSecondRun = plan2.get().getEvaluation().forGoal(goal).getAssociatedActivities();
-    assertThat(actAssociatedInSecondRun.size()).isEqualTo(1);
-    assertThat(actAssociatedInFirstRun.iterator().next().equalsInProperties(actAssociatedInSecondRun.iterator().next())).isTrue();
+    assertEquals(1, actAssociatedInSecondRun.size());
+    assertTrue(actAssociatedInFirstRun.iterator().next().equalsInProperties(actAssociatedInSecondRun.iterator().next()));
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -184,7 +171,7 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t1_5));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults().get(), null, horizon.getHor());
-    assertThat(actual).isEqualTo(SerializedValue.of(3.0));
+    assertEquals(SerializedValue.of(3.0), actual);
   }
 
   @Test
@@ -193,7 +180,7 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults().get(), null, horizon.getHor());
-    assertThat(actual).isEqualTo(SerializedValue.of(2.9));
+    assertEquals(SerializedValue.of(2.9), actual);
     assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -206,7 +193,7 @@ public class SimulationFacadeTest {
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
         Segment.of(interval(2, Inclusive,5, Exclusive, SECONDS), false)
     );
-    assertThat(actual).isEqualTo(expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -218,7 +205,7 @@ public class SimulationFacadeTest {
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
         Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
     );
-    assertThat(actual).isEqualTo(expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -231,7 +218,7 @@ public class SimulationFacadeTest {
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
         Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
     );
-    assertThat(actual).isEqualTo(expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -244,7 +231,7 @@ public class SimulationFacadeTest {
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
         Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
     );
-    assertThat(actual).isEqualTo(expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -257,7 +244,7 @@ public class SimulationFacadeTest {
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
         Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
     );
-    assertThat(actual).isEqualTo(expected);
+    assertEquals(expected, actual);
   }
 
   @Test

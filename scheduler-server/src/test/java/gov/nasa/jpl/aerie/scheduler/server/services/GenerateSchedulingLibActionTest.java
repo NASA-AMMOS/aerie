@@ -1,7 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public final class GenerateSchedulingLibActionTest {
 
@@ -16,7 +17,7 @@ public final class GenerateSchedulingLibActionTest {
 
   private static void assertTypescriptResourceLoaded(final String basename) {
     final var res = GenerateSchedulingLibAction.getTypescriptResource(basename);
-    assertThat(res.basename()).isEqualTo(basename);
-    assertThat(res.source()).isNotEmpty();
+    assertEquals(basename, res.basename());
+    assertFalse(res.source().isEmpty());
   }
 }

@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import com.google.common.truth.Correspondence;
-import com.google.common.truth.Truth;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -15,10 +13,10 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Objects;
 
-import static com.google.common.truth.Truth8.assertThat;
+import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LongDurationPlanTest {
 
@@ -52,20 +50,6 @@ public class LongDurationPlanTest {
     return plan;
   }
 
-  /** used to compare plan activities but ignore generated details like name **/
-  private static boolean equalsExceptInName(SchedulingActivityDirective a, SchedulingActivityDirective b) {
-    //REVIEW: maybe unify within ActivityInstance closer to data
-    return Objects.equals(a.getType(), b.getType())
-           && Objects.equals(a.startOffset(), b.startOffset())
-           && Objects.equals(a.getEndTime(), b.getEndTime())
-           && Objects.equals(a.duration(), b.duration())
-           && Objects.equals(a.arguments(), b.arguments());
-  }
-
-  /** matches activities if they agree in everything except the (possibly auto-generated) names **/
-  private static final Correspondence<SchedulingActivityDirective, SchedulingActivityDirective> equalExceptInName = Correspondence.from(
-      LongDurationPlanTest::equalsExceptInName, "matches");
-
   @Test
   public void getNextSolution_initialPlanInOutput() {
     final var problem = makeTestMissionAB();
@@ -75,10 +59,8 @@ public class LongDurationPlanTest {
 
     final var plan = solver.getNextSolution();
 
-    assertThat(plan).isPresent();
-    Truth.assertThat(plan.get().getActivitiesByTime())
-         .comparingElementsUsing(equalExceptInName)
-         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertTrue(plan.isPresent());
+    assertSetEquality(plan.get().getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -97,9 +79,7 @@ public class LongDurationPlanTest {
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    Truth.assertThat(plan.getActivitiesByTime())
-         .comparingElementsUsing(equalExceptInName)
-         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

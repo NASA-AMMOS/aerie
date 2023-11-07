@@ -17,8 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class MissionModelTest {
 
@@ -59,7 +60,7 @@ public final class MissionModelTest {
                          specType.getOutputType().getSchema())));
 
     // THEN
-    assertThat(activityTypes).containsAllEntriesOf(expectedTypes);
+    assertTrue(activityTypes.entrySet().containsAll(expectedTypes.entrySet()));
   }
 
   @Test
@@ -89,7 +90,7 @@ public final class MissionModelTest {
         specType.getOutputType().getSchema());
 
     // THEN
-    assertThat(type).isEqualTo(expectedType);
+    assertEquals(expectedType, type);
   }
 
   @Test
@@ -97,8 +98,9 @@ public final class MissionModelTest {
     // GIVEN
     final String activityId = "nonexistent activity type";
 
+    // THEN
+    assertThrows(MissionModelService.NoSuchActivityTypeException.class, () -> {
     // WHEN
-    final var thrown = catchThrowable(() -> {
         final var specType = Optional
             .ofNullable(registry.directiveTypes().get(activityId))
             .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activityId));
@@ -109,9 +111,6 @@ public final class MissionModelTest {
             specType.getInputType().getRequiredParameters(),
             specType.getOutputType().getSchema());
     });
-
-    // THEN
-    assertThat(thrown).isInstanceOf(MissionModelService.NoSuchActivityTypeException.class);
   }
 
   @Test
@@ -132,7 +131,7 @@ public final class MissionModelTest {
     final var failures = specType.getInputType().validateArguments(activity.getArguments());
 
     // THEN
-    assertThat(failures).isEmpty();
+    assertTrue(failures.isEmpty());
   }
 
   @Test
@@ -143,7 +142,7 @@ public final class MissionModelTest {
                                                 "y", SerializedValue.of(1.0)));
 
     // WHEN
-    final var thrown = catchThrowable(() -> {
+    final var thrown = assertThrows(InstantiationException.class, () -> {
         final var activity = new SerializedActivity(typeName, parameters);
         final var specType = Optional
             .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
@@ -152,13 +151,10 @@ public final class MissionModelTest {
     });
 
     // THEN
-    assertThat(thrown).isInstanceOf(InstantiationException.class);
-    if (thrown instanceof final InstantiationException e) {
-      assertThat(e.extraneousArguments).isEmpty();
-      assertThat(e.missingArguments).map(args -> args.parameterName()).isEqualTo(List.of("z"));
-      assertThat(e.unconstructableArguments).map(args -> args.parameterName()).isEqualTo(List.of("y"));
-      assertThat(e.validArguments).map(args -> args.parameterName()).isEqualTo(List.of("x", "y", "vecs"));
-    }
+    assertTrue(thrown.extraneousArguments.isEmpty());
+    assertEquals(List.of("z"), thrown.missingArguments.stream().map(a -> a.parameterName()).toList());
+    assertEquals(List.of("y"), thrown.unconstructableArguments.stream().map(a -> a.parameterName()).toList());
+    assertEquals(List.of("x", "y", "vecs"), thrown.validArguments.stream().map(a -> a.parameterName()).toList());
   }
 
   @Test
@@ -168,7 +164,7 @@ public final class MissionModelTest {
     final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
     // WHEN
-    final var thrown = catchThrowable(() -> {
+    final var thrown = assertThrows(InstantiationException.class, () -> {
         final var activity = new SerializedActivity(typeName, parameters);
         final var specType = Optional
             .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
@@ -177,12 +173,9 @@ public final class MissionModelTest {
     });
 
     // THEN
-    assertThat(thrown).isInstanceOf(InstantiationException.class);
-    if (thrown instanceof final InstantiationException e) {
-      assertThat(e.extraneousArguments).map(args -> args.parameterName()).isEqualTo(List.of("Nonexistent"));
-      assertThat(e.missingArguments).map(args -> args.parameterName()).isEqualTo(List.of("z"));
-      assertThat(e.unconstructableArguments).isEmpty();
-      assertThat(e.validArguments).map(args -> args.parameterName()).isEqualTo(List.of("x", "y", "vecs"));
-    }
+    assertEquals(List.of("Nonexistent"), thrown.extraneousArguments.stream().map(a -> a.parameterName()).toList());
+    assertEquals(List.of("z"), thrown.missingArguments.stream().map(a -> a.parameterName()).toList());
+    assertTrue(thrown.unconstructableArguments.isEmpty());
+    assertEquals(List.of("x", "y", "vecs"), thrown.validArguments.stream().map(a -> a.parameterName()).toList());
   }
 }

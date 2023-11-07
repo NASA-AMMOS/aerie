@@ -25,22 +25,16 @@ dependencies {
   implementation project(':constraints')
   implementation project(':scheduler-driver')
 
-  implementation 'org.apache.commons:commons-lang3:3.13.0'
-  implementation 'io.javalin:javalin:5.6.2'
+  implementation 'io.javalin:javalin:5.6.3'
   implementation 'org.eclipse:yasson:3.0.3'
-  implementation 'org.apache.bcel:bcel:6.7.0'
 
   implementation 'org.postgresql:postgresql:42.6.0'
   implementation 'com.zaxxer:HikariCP:5.0.1'
 
   testImplementation project(':examples:foo-missionmodel')
   testImplementation project(':merlin-framework')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-  testImplementation 'org.assertj:assertj-core:3.24.2'
-  testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
-  testImplementation 'org.glassfish:javax.json:1.1.4'
 
   testFixturesImplementation project(':merlin-driver')
 }

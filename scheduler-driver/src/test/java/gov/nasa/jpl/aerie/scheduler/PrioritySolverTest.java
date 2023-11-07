@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import com.google.common.testing.NullPointerTester;
-import com.google.common.truth.Correspondence;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
@@ -26,9 +25,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
@@ -60,9 +58,9 @@ public class PrioritySolverTest {
     final var solver = makeEmptyProblemSolver();
     final var plan = solver.getNextSolution();
 
-    assertThat(plan).isPresent();
-    assertThat(plan.get().getEvaluation()).isEqualTo(new Evaluation());
-    assertThat(plan.get().getActivitiesByTime()).isEmpty();
+    assertTrue(plan.isPresent());
+    assertEquals(new Evaluation(), plan.get().getEvaluation());
+    assertTrue(plan.get().getActivitiesByTime().isEmpty());
   }
 
   @Test
@@ -71,7 +69,7 @@ public class PrioritySolverTest {
     solver.getNextSolution();
     final var plan1 = solver.getNextSolution();
 
-    assertThat(plan1).isEmpty();
+    assertTrue(plan1.isEmpty());
   }
 
   //test mission with two primitive activity types
@@ -118,10 +116,6 @@ public class PrioritySolverTest {
     return plan;
   }
 
-  /** matches activities if they agree in everything except the (possibly auto-generated) names **/
-  private static final Correspondence<SchedulingActivityDirective, SchedulingActivityDirective> equalExceptInName = Correspondence.from(
-      SchedulingActivityDirective::equalsInProperties, "matches");
-
   @Test
   public void getNextSolution_initialPlanInOutput() {
     final var problem = makeTestMissionAB();
@@ -131,10 +125,8 @@ public class PrioritySolverTest {
 
     final var plan = solver.getNextSolution();
 
-    assertThat(plan).isPresent();
-    assertThat(plan.get().getActivitiesByTime())
-        .comparingElementsUsing(equalExceptInName)
-        .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertTrue(plan.isPresent());
+    assertSetEquality(plan.get().getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -153,9 +145,7 @@ public class PrioritySolverTest {
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    assertThat(plan.getActivitiesByTime())
-        .comparingElementsUsing(equalExceptInName)
-        .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -174,12 +164,10 @@ public class PrioritySolverTest {
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    assertThat(plan.getEvaluation()).isNotNull();
+    assertNotNull(plan.getEvaluation());
     final var eval = plan.getEvaluation().forGoal(goal);
-    assertThat(eval).isNotNull();
-    assertThat(eval.getAssociatedActivities())
-        .comparingElementsUsing(equalExceptInName)
-        .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
+    assertNotNull(eval);
+    assertSetEquality(eval.getAssociatedActivities().stream().toList(), expectedPlan.getActivitiesByTime());
     assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -206,11 +194,8 @@ public class PrioritySolverTest {
     //TODO: evaluation should have association of instances to goal
     //TODO: should ensure no other spurious acts yet need to ignore special interval activities
     //TODO: may want looser expectation (eg allow flexibility as long as right repeat pattern met)
-    assertThat(plan.getActivitiesByTime().get(0).equalsInProperties(expectedPlan.getActivitiesByTime().get(0)))
-        .isTrue();
-    assertThat(plan.getActivitiesByTime())
-        .comparingElementsUsing(equalExceptInName)
-        .containsExactlyElementsIn(expectedPlan.getActivitiesByTime()).inOrder();
+    assertTrue(plan.getActivitiesByTime().get(0).equalsInProperties(expectedPlan.getActivitiesByTime().get(0)));
+    assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -242,9 +227,7 @@ public class PrioritySolverTest {
     final var expectedPlan = makePlanAB012(problem);
     //TODO: evaluation should have association of instances to goal
     //TODO: should ensure no other spurious acts yet need to ignore special interval activities
-    assertThat(plan.getActivitiesByTime())
-        .comparingElementsUsing(equalExceptInName)
-        .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
+    assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -284,9 +267,7 @@ public class PrioritySolverTest {
     final var solver = makeProblemSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     final var expectedPlan = makePlanAB012(problem);
-    assertThat(plan.getActivitiesByTime())
-        .comparingElementsUsing(equalExceptInName)
-        .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
+    assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
     assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
@@ -327,7 +308,7 @@ public class PrioritySolverTest {
 
     var plan = solver.getNextSolution().orElseThrow();
     //will insert an activity at the beginning of the plan in addition of the two already-present activities
-    assertThat(plan.getActivities().size()).isEqualTo(3);
+    assertEquals(3, plan.getActivities().size());
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 

@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import org.junit.jupiter.api.Test;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ActivityTypeTest {
@@ -23,7 +23,7 @@ public class ActivityTypeTest {
     final var expected = "A";
     final var obj = new ActivityType(expected);
     final var actual = obj.getName();
-    assertThat(actual).isEqualTo(expected);
+    assertEquals(expected, actual);
   }
 
 }
