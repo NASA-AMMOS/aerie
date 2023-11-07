@@ -30,7 +30,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 
 public final class SimulationDriver {
-  static List<CachedSimulationEngine> cachedEngines = new ArrayList<>(); // TODO cache relevant prefix of plan, sim config, model id
+  public static List<CachedSimulationEngine> cachedEngines = new ArrayList<>(); // TODO cache relevant prefix of plan, sim config, model id
   // TODO correctly handle relatively scheduled activities
 
   public static <Model>
@@ -57,6 +57,7 @@ public final class SimulationDriver {
     public CachedSimulationEngine {
       cells.freeze();
       timePoints.freeze();
+      simulationEngine.close();
     }
 
     public static CachedSimulationEngine empty() {
