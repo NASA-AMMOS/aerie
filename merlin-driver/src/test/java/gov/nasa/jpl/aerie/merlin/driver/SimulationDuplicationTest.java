@@ -19,6 +19,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Triple;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -335,5 +337,10 @@ public class SimulationDuplicationTest {
         return this;
       }
     };
+  }
+
+  @AfterEach
+  void afterEach() {
+    assertEquals(SimulationDriver.cachedEngines.size(), SimulationEngine.getNumActiveSimulationEngines());
   }
 }
