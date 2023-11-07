@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.constraints.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
@@ -16,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
@@ -275,7 +275,17 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeConstraintResults(final List<ConstraintResult> list) {
-    return serializeIterable(ResponseSerializers::serializeConstraintResult, list);
+    var results = list.stream().map(ConstraintResult -> Json.createObjectBuilder()
+                                                          .add("success", JsonValue.TRUE)
+                                                          .add("constraintName",ConstraintResult.constraintName)
+                                                          .add("errors", Json.createArrayBuilder().build())
+                                                          .add("results", serializeConstraintResult(ConstraintResult))
+                                                          .build()).collect(Collectors.toList());
+
+    final var resultsArrayBuilder = Json.createArrayBuilder();
+    results.forEach(resultsArrayBuilder::add);
+
+    return resultsArrayBuilder.build();
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
@@ -390,6 +400,29 @@ public final class ResponseSerializers {
                .add("kind", "invalid-entity")
                .add("message", "invalid json")
                .build();
+  }
+
+  public static JsonValue serializeConstraintCompileException(final ConstraintCompilationException ex){
+
+    final var userCodeError = ex.getErrors().errors().stream()
+                                 .map(UserCodeError -> Json.createObjectBuilder()
+                                                           .add("stack", UserCodeError.stack())
+                                                           .add("message", "Constraint '"+ex.getConstraintName()+"'"+": "+UserCodeError.message())
+                                                           .add("location", Json.createObjectBuilder()
+                                                                               .add("line",UserCodeError.location().line())
+                                                                               .add("column",UserCodeError.location().column()).build())
+                                                           .build())
+                                 .collect(Collectors.toList());
+
+    final var userCodeErrorArrayBuilder = Json.createArrayBuilder();
+    userCodeError.forEach(userCodeErrorArrayBuilder::add);
+
+   return Json.createArrayBuilder().add(Json.createObjectBuilder()
+               .add("success", JsonValue.FALSE)
+               .add("constraintName",ex.getConstraintName())
+               .add("errors", userCodeErrorArrayBuilder.build())
+               .add("results",Json.createObjectBuilder().build())
+                                  .build()).build();
   }
 
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
