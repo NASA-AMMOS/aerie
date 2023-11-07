@@ -42,6 +42,7 @@ import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SimulationDuplicationTest {
@@ -222,6 +223,116 @@ public class SimulationDuplicationTest {
     assertResultsEqual(expected, results3.results());
   }
 
+  @Test
+  void testFooNonEmptyPlanMultipleCheckpointsMultipleResumes() {
+    final MissionModel<Mission> missionModel = makeMissionModel(
+        new MissionModelBuilder(),
+        Instant.EPOCH,
+        new Configuration());
+    final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
+        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+        missionModel,
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule
+    );
+    final SimulationResults expected = SimulationDriver.simulate(
+        missionModel,
+        schedule,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        $ -> {});
+    assertResultsEqual(expected, results.results());
+
+    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results2.results());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(1),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results3.results());
+  }
+
+  @Test
+  void testFooNonEmptyPlanMultipleCheckpointsMultipleResumesWithEdits() {
+    final MissionModel<Mission> missionModel = makeMissionModel(
+        new MissionModelBuilder(),
+        Instant.EPOCH,
+        new Configuration());
+    final Pair<ActivityDirectiveId, ActivityDirective> activity1 = activity(
+        1,
+        MINUTE,
+        "foo",
+        Map.of("z", SerializedValue.of(123)));
+    final Map<ActivityDirectiveId, ActivityDirective> schedule1 = Map.ofEntries(
+        activity1,
+        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final Map<ActivityDirectiveId, ActivityDirective> schedule2 = Map.ofEntries(
+        activity1,
+        activity(390, SECONDS, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+        missionModel,
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule1
+    );
+    final SimulationResults expected1 = SimulationDriver.simulate(
+        missionModel,
+        schedule1,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        $ -> {});
+
+    final SimulationResults expected2 = SimulationDriver.simulate(
+        missionModel,
+        schedule2,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        $ -> {});
+
+    assertResultsEqual(expected1, results.results());
+
+    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule2
+    );
+    assertResultsEqual(expected2, results2.results());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(1),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule2
+    );
+
+    assertResultsEqual(expected2, results3.results());
+  }
+
   private static long nextActivityDirectiveId = 0L;
 
   private static Pair<ActivityDirectiveId, ActivityDirective> activity(final long quantity, final Duration unit, final String type) {
@@ -236,9 +347,6 @@ public class SimulationDuplicationTest {
   }
 
   private static Pair<ActivityDirectiveId, ActivityDirective> activity(final Duration startOffset, final String type, final Map<String, SerializedValue> args) {
-    if (nextActivityDirectiveId > 1) {
-      System.out.println();
-    }
     return Pair.of(new ActivityDirectiveId(nextActivityDirectiveId++), new ActivityDirective(startOffset, type, args, null, true));
   }
 
