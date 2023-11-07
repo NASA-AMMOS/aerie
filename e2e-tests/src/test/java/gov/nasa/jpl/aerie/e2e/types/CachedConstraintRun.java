@@ -8,7 +8,7 @@ public record CachedConstraintRun(
       int simDatasetId,
       String constraintDefinition,
       boolean definitionOutdated,
-      Optional<ConstraintResult> results
+      Optional<ConstraintRecord> results
   ) {
   public static CachedConstraintRun fromJSON(JsonObject json) {
     return new CachedConstraintRun(
@@ -18,7 +18,7 @@ public record CachedConstraintRun(
         json.getBoolean("definition_outdated"),
         json.getJsonObject("results").isEmpty() ?
             Optional.empty() :
-            Optional.of(ConstraintResult.fromJSON(json.getJsonObject("results")))
+            Optional.of(ConstraintRecord.fromJSON(json.getJsonObject("results")))
     );
   }
 }
