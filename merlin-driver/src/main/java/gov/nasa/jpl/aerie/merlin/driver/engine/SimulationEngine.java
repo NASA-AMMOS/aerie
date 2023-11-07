@@ -56,6 +56,13 @@ import java.util.function.Consumer;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  private static int numActiveSimulationEngines = 0;
+  private boolean closed = false;
+
+  public static int getNumActiveSimulationEngines() {
+    return numActiveSimulationEngines;
+  }
+
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs;
   /** The set of all jobs waiting on a condition. */
@@ -86,6 +93,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final ExecutorService executor;
 
   public SimulationEngine() {
+    numActiveSimulationEngines++;
     scheduledJobs = new JobSchedule<>();
     waitingTasks = new LinkedHashMap<>();
     blockedTasks = new LinkedHashMap<>();
@@ -101,6 +109,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private SimulationEngine(SimulationEngine other) {
+    numActiveSimulationEngines++;
     // New Executor allows other SimulationEngine to be closed
     executor = Executors.newVirtualThreadPerTaskExecutor();
     scheduledJobs = other.scheduledJobs.duplicate();
@@ -130,6 +139,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Schedule a new task to be performed at the given time. */
   public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state) {
+    if (this.closed) throw new IllegalStateException("Cannot schedule task on closed simulation engine");
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var span = SpanId.generate();
@@ -148,6 +158,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** Register a resource whose profile should be accumulated over time. */
   public <Dynamics>
   void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
+    if (this.closed) throw new IllegalStateException("Cannot track resource on closed simulation engine");
     final var id = new ResourceId(name);
 
     this.resources.put(id, ProfilingState.create(resource));
@@ -156,6 +167,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
   public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
+    if (this.closed) throw new IllegalStateException("Cannot invalidate topic on closed simulation engine");
     final var resources = this.waitingResources.invalidateTopic(topic);
     for (final var resource : resources) {
       this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(invalidationTime));
@@ -172,6 +184,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Removes and returns the next set of jobs to be performed concurrently. */
   public JobSchedule.Batch<JobId> extractNextJobs(final Duration maximumTime) {
+    if (this.closed) throw new IllegalStateException("Cannot extract next jobs on closed simulation engine");
     final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
 
     // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
@@ -195,6 +208,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final Duration maximumTime
   ) throws SpanException {
+    if (this.closed) throw new IllegalStateException("Cannot perform jobs on closed simulation engine");
     var tip = EventGraph.<Event>empty();
     Mutable<Optional<Throwable>> exception = new MutableObject<>(Optional.empty());
     for (final var job$ : jobs) {
@@ -234,7 +248,8 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Perform the next step of a modeled task. */
-  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) throws SpanException {
+  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime)  throws SpanException {
+    if (this.closed) throw new IllegalStateException("Cannot step task on closed simulation engine");
     this.unstartedTasks.remove(task);
     // The handler for the next status of the task is responsible
     //   for putting an updated state back into the task set.
@@ -338,6 +353,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final Duration horizonTime
   ) {
+    if (this.closed) throw new IllegalStateException("Cannot update condition on closed simulation engine");
     final var querier = new EngineQuerier(frame);
     final var prediction = this.conditions
         .get(condition)
@@ -362,6 +378,7 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
+    if (this.closed) throw new IllegalStateException("Cannot update resource on closed simulation engine");
     final var querier = new EngineQuerier(frame);
     this.resources.get(resource).append(currentTime, querier);
 
@@ -376,14 +393,17 @@ public final class SimulationEngine implements AutoCloseable {
   /** Resets all tasks (freeing any held resources). The engine should not be used after being closed. */
   @Override
   public void close() {
+    numActiveSimulationEngines--;
     for (final var task : this.tasks.values()) {
       task.state().release();
     }
 
     this.executor.shutdownNow();
+    this.closed = true;
   }
 
   public void unscheduleAfter(final Duration duration) {
+    if (this.closed) throw new IllegalStateException("Cannot unschedule jobs on closed simulation engine");
     for (final var taskId : new ArrayList<>(this.tasks.keySet())) {
       if (this.unstartedTasks.containsKey(taskId) && this.unstartedTasks.get(taskId).longerThan(duration)) {
         this.tasks.remove(taskId);
