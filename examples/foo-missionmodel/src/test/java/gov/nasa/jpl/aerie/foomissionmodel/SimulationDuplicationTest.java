@@ -97,7 +97,6 @@ public class SimulationDuplicationTest {
 
   @Test
   void testTrivialDuplicate() {
-    final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
     final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
         missionModel,
         SimulationDriver.CachedSimulationEngine.empty(), List.of(Duration.of(5, MINUTES)), Map.of()
@@ -175,6 +174,52 @@ public class SimulationDuplicationTest {
     );
 
     assertResultsEqual(expected, results2.results());
+  }
+
+  @Test
+  void testFooNonEmptyPlanMultipleResumes() {
+    final MissionModel<Mission> missionModel = makeMissionModel(
+        new MissionModelBuilder(),
+        Instant.EPOCH,
+        new Configuration());
+    final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
+        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+        missionModel,
+        List.of(Duration.of(5, MINUTES)),
+        schedule
+    );
+    final SimulationResults expected = SimulationDriver.simulate(
+        missionModel,
+        schedule,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        $ -> {});
+    assertResultsEqual(expected, results.results());
+
+    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results2.results());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results3.results());
   }
 
   private static long nextActivityDirectiveId = 0L;
