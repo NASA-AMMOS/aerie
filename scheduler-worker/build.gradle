@@ -17,7 +17,7 @@ java {
 
 node {
   nodeProjectDir = file("${project.projectDir.toPath().resolve("scheduling-dsl-compiler")}")
-  version = '18.13.0'
+  version = '20.9.0'
   download = true
 }
 
