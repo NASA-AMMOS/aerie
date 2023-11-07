@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -835,7 +836,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .orElseGet(() -> CodeBlock
                             .builder()
                             .add(
-                                "return executor -> new $T<>() { public $T<$T> step($T scheduler) {$>\n$L$<} public $T<$T> duplicate() { return this; }};\n",
+                                "return executor -> new $T<>() { public $T<$T> step($T scheduler) {$>\n$L$<} public $T<$T> duplicate($T executor) { return this; }};\n",
                                 Task.class,
                                 TaskStatus.class,
                                 Unit.class,
@@ -846,7 +847,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
                                     .build(),
                                 Task.class,
-                                Unit.class)
+                                Unit.class,
+                                Executor.class)
                             .build()))
                 .build())
         .build();
