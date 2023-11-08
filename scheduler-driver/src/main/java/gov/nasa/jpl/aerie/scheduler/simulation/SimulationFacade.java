@@ -169,12 +169,12 @@ public class SimulationFacade implements AutoCloseable{
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
   throws SimulationException
   {
-    logger.info("Need to compute simulation results until "+ endTime + " for getting child activities");
     var latestSimulationData = this.getLatestDriverSimulationResults();
     //if no initial sim results and no sim has been performed, perform a sim and get the sim results
     if(latestSimulationData.isEmpty()){
       //useful only if there are activities to simulate for this case of getting child activities
       if(insertedActivities.size() == 0) return Map.of();
+      logger.info("Need to compute simulation results until "+ endTime + " for getting child activities");
       computeSimulationResultsUntil(endTime);
       latestSimulationData = this.getLatestDriverSimulationResults();
     }
@@ -222,11 +222,14 @@ public class SimulationFacade implements AutoCloseable{
     }
     if(allActivitiesToSimulate.isEmpty() && !atLeastOneActualRemoval) return;
     //reset resumable simulation
-    if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(this.driver.getCurrentSimulationEndTime())){
+    final var currSimEndTime = this.driver.getCurrentSimulationEndTime();
+    if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(currSimEndTime)){
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
-      logger.info("(Re)creating simulation driver because at least one removal("+atLeastOneActualRemoval+") or insertion in the past ("+earliestActStartTime+")");
+      logger.info("(Re)creating simulation driver because at least one simulated activity was removed ({}) " +
+                  "and/or earliest start time of newly added activities {} <= current sim end time {}",
+                  atLeastOneActualRemoval, earliestActStartTime, currSimEndTime);
       if (driver != null) {
         this.pastSimulationRestarts += driver.getCountSimulationRestarts();
         driver.close();

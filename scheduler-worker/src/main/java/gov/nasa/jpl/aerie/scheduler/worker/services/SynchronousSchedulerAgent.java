@@ -71,6 +71,9 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.solver.Solver;
 import org.apache.commons.lang3.tuple.Pair;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
@@ -90,6 +93,8 @@ public record SynchronousSchedulerAgent(
 )
     implements SchedulerAgent
 {
+  private static final Logger logger = LoggerFactory.getLogger(SynchronousSchedulerAgent.class);
+
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinService);
     Objects.requireNonNull(modelJarsDir);
@@ -112,6 +117,9 @@ public record SynchronousSchedulerAgent(
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
+      final var logSuffix = String.format("for scheduling request %d", request.specificationId().id());
+      logger.debug("Beginning of scheduling {}", logSuffix);
+
       final var specification = specificationService.getSpecification(request.specificationId());
       final var planMetadata = merlinService.getPlanMetadata(specification.planId());
       ensureRequestIsCurrent(request);
@@ -133,12 +141,18 @@ public record SynchronousSchedulerAgent(
             schedulerMissionModel.schedulerModel()
         );
         final var externalProfiles = loadExternalProfiles(planMetadata.planId());
+
+        logger.debug("Loading initial simulation results {}", logSuffix);
         final var initialSimulationResults = loadSimulationResults(planMetadata);
+
         //seed the problem with the initial plan contents
+        logger.debug("Loading initial plan {}", logSuffix);
         final var loadedPlanComponents = loadInitialPlan(planMetadata, problem, initialSimulationResults);
         problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults);
         problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
         //apply constraints/goals to the problem
+        logger.debug("Compiling {} global scheduling conditions {}",
+                     specification.globalSchedulingConditions().size(), logSuffix);
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
         final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
         specification.globalSchedulingConditions().forEach($ -> {
@@ -170,7 +184,10 @@ public record SynchronousSchedulerAgent(
         }
 
         compiledGlobalSchedulingConditions.forEach(problem::add);
+        logger.debug("Compiled and added {} global scheduling conditions {}",
+                     compiledGlobalSchedulingConditions.size(), logSuffix);
 
+        logger.debug("Compiling {} goals {}", specification.goalsByPriority().size(), logSuffix);
         final var orderedGoals = new ArrayList<Goal>();
         final var goals = new HashMap<Goal, GoalId>();
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
@@ -200,6 +217,9 @@ public record SynchronousSchedulerAgent(
               .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
           return;
         }
+        logger.debug("Compiled {} goals {}", compiledGoals.size(), logSuffix);
+
+        logger.debug("Building {} goals {}", compiledGoals.size(), logSuffix);
         for (final var compiledGoal : compiledGoals) {
           final var goal = GoalBuilder
               .goalOfGoalSpecifier(
@@ -211,21 +231,40 @@ public record SynchronousSchedulerAgent(
           orderedGoals.add(goal);
           goals.put(goal, compiledGoal.getKey().id());
         }
+        logger.debug("Built {} goals: {} {}", orderedGoals.size(),
+                     String.join(",", goals.entrySet().stream()
+                                 .map(entry ->
+                                      String.format("%d (%s)", entry.getValue().id(), entry.getKey()))
+                                 .toList()), logSuffix);
+
         problem.setGoals(orderedGoals);
 
+        logger.debug("Creating solver {}", logSuffix);
         final var scheduler = createScheduler(planMetadata, problem, specification.analysisOnly());
+
         //run the scheduler to find a solution to the posed problem, if any
+        logger.debug("Running solver {}", logSuffix);
         final var solutionPlan = scheduler.getNextSolution().orElseThrow(
             () -> new ResultsProtocolFailure("scheduler returned no solution"));
 
+        logger.debug("Solver returned {} goal evaluations {}",
+                     solutionPlan.getEvaluation().getGoalEvaluations().size(), logSuffix);
+
         final var activityToGoalId = new HashMap<SchedulingActivityDirective, GoalId>();
-        for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
+        for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) { //Goal -> GoalEvaluation
+          logger.debug("Solver created {} activities for goal {} ({}) {}",
+                       entry.getValue().getInsertedActivities().size(),
+                       goals.containsKey(entry.getKey()) ? goals.get(entry.getKey()).id() : -1,
+                       entry.getKey(), logSuffix);
           for (final var activity : entry.getValue().getInsertedActivities()) {
             activityToGoalId.put(activity, goals.get(entry.getKey()));
           }
         }
+        logger.debug("Solver created {} activities {}", activityToGoalId.size(), logSuffix);
+
         //store the solution plan back into merlin (and reconfirm no intervening mods!)
         //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
+        logger.debug("Storing final plan {}", logSuffix);
         ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
         final var instancesToIds = storeFinalPlan(
             planMetadata,
@@ -236,11 +275,25 @@ public record SynchronousSchedulerAgent(
             schedulerMissionModel.schedulerModel()
         );
         final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
+
+        logger.debug("Storing simulation results {}", logSuffix);
         final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
+
         //collect results and notify subscribers of success
         final var results = collectResults(solutionPlan, instancesToIds, goals);
+
+        results.goalResults().entrySet().forEach(entry -> {
+            final var id = entry.getKey();
+            final var result = entry.getValue();
+            logger.debug("Results for goal {}: satisfied={}, createdActivities={}, satisfyingActivities={}, {}",
+                         id.id(), result.satisfied(), result.createdActivities().size(),
+                         result.satisfyingActivities().size(), logSuffix);
+        });
+
+        logger.debug("Scheduling succeded {}", logSuffix);
         writer.succeedWith(results, datasetId);
       }
+
     } catch (final SpecificationLoadException e) {
       writer.failWith(b -> b
           .type("SPECIFICATION_LOAD_EXCEPTION")
@@ -627,8 +680,10 @@ public record SynchronousSchedulerAgent(
    */
   private ScheduleResults collectResults(final Plan plan, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
     Map<GoalId, ScheduleResults.GoalResult> goalResults = new HashMap<>();
-      for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) {
+      for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) { //Goal -> GoalEvaluation
         var goalId = goalsToIds.get(goalEval.getKey());
+        logger.debug("Collecting solver results for goal {} ({})",
+                     goalId != null ? goalId.id() : -1, goalEval.getKey());
         //goal could be anonymous, a subgoal of a composite goal for example, and thus have no meaning for results sent back
         final var activitiesById = plan.getActivitiesById();
         if(goalId != null) {

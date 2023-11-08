@@ -161,7 +161,7 @@ public class PrioritySolver implements Solver {
       try {
         initializePlan();
         if(problem.getInitialSimulationResults().isPresent()) {
-          logger.debug("Loading initial simulation results from the DB");
+          logger.debug("[SIM FACADE] Loading initial simulation results from the DB");
           simulationFacade.loadInitialSimResults(problem.getInitialSimulationResults().get());
         }
       } catch (SimulationFacade.SimulationException e) {
@@ -205,18 +205,22 @@ public class PrioritySolver implements Solver {
       }
       if(checkSimBeforeInsertingActivities) {
         try {
+          logger.debug("[SIM FACADE] PrioritySolver.checkAndInsertActs(): inserting activity into simulation {}", act);
           simulationFacade.removeAndInsertActivitiesFromSimulation(List.of(), List.of(act));
         } catch (SimulationFacade.SimulationException e) {
           allGood = false;
           logger.error("Tried to simulate {} but the activity could not be instantiated", act, e);
           break;
         }
+        logger.debug("[SIM FACADE] PrioritySolver.checkAndInsertActs(): getting simulated activity duration");
         var simDur = simulationFacade.getActivityDuration(act);
         if (simDur.isEmpty()) {
           logger.error("Activity " + act + " could not be simulated");
           allGood = false;
           break;
         }
+        logger.debug("PrioritySolver.checkAndInsertActs(): simulated activity duration {}, expected {}",
+                     simDur.get(), act.duration());
         if (act.duration() != null && simDur.get().compareTo(act.duration()) != 0) {
           allGood = false;
           logger.error("When simulated, activity " + act
@@ -243,7 +247,7 @@ public class PrioritySolver implements Solver {
         }
       }
     } else{
-      logger.info("New activities could not be inserted in the plan, see error just above");
+      logger.info("[SIM FACADE] New activities could not be inserted in the plan, see error just above");
       //update simulation with regard to plan
       try {
         simulationFacade.removeActivitiesFromSimulation(acts);
@@ -262,6 +266,8 @@ public class PrioritySolver implements Solver {
   private Map<SchedulingActivityDirective, SchedulingActivityDirective> synchronizeSimulationWithSchedulerPlan() {
     final Map<SchedulingActivityDirective, SchedulingActivityDirective> replacedInPlan;
     try {
+      logger.debug("[SIM FACADE] PrioritySolver.synchronizeSimulationWithSchedulerPlan(): getting all child activities until {}",
+                   simulationFacade.getCurrentSimulationEndTime());
       final var allGeneratedActivities =
           simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
       processNewGeneratedActivities(allGeneratedActivities);
@@ -286,6 +292,7 @@ public class PrioritySolver implements Solver {
 
     evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
+    logger.debug("[SIM FACADE] PrioritySolver.initializePlan(): adding initial plan");
     if(simulationFacade != null) simulationFacade.addInitialPlan(this.plan.getActivitiesByTime());
   }
 
@@ -299,6 +306,8 @@ public class PrioritySolver implements Solver {
     final var replaced = new HashMap<SchedulingActivityDirective, SchedulingActivityDirective>();
     for (final var activity : plan.getActivities()) {
       if (activity.duration() == null) {
+        logger.debug("[SIM FACADE] PrioritySolver.pullActivityDurationsIfNecessary(): getting simulated duration for activity {}",
+                     activity);
         final var duration = simulationFacade.getActivityDuration(activity);
         if (duration.isPresent()) {
           final var replacementAct = SchedulingActivityDirective.copyOf(
@@ -311,6 +320,10 @@ public class PrioritySolver implements Solver {
           generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getLeft().equals(activity) ? Pair.of(replacementAct, pair.getRight()): pair).collect(Collectors.toList());
           generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getRight().equals(activity) ? Pair.of(pair.getLeft(), replacementAct): pair).collect(Collectors.toList());
           replaced.put(activity, replacementAct);
+          logger.debug("PrioritySolver.pullActivityDurationsIfNecessary(): replaced activity with duration {}",
+                       duration.get());
+        } else {
+          logger.debug("PrioritySolver.pullActivityDurationsIfNecessary(): failed to get simulated activity duration");
         }
       }
     }
@@ -869,9 +882,11 @@ public class PrioritySolver implements Solver {
 
   private SimulationResults getLatestSimResultsUpTo(Duration time){
     SimulationResults lastSimulationResults = null;
+    logger.debug("[SIM FACADE] PrioritySolver.getLatestSimResultsUpTo(): getting sim results up to {}", time);
     var lastSimResultsFromFacade = this.simulationFacade.getLatestConstraintSimulationResults();
     if (lastSimResultsFromFacade.isEmpty() || lastSimResultsFromFacade.get().bounds.end.shorterThan(time)) {
       try {
+        logger.debug("[SIM FACADE] PrioritySolver.getLatestSimResultsUpTo(): computing sim results up to {}", time);
         this.simulationFacade.computeSimulationResultsUntil(time);
       } catch (SimulationFacade.SimulationException e) {
         throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
@@ -1016,9 +1031,14 @@ public class PrioritySolver implements Solver {
           final var toRemove = new ArrayList<SchedulingActivityDirective>();
           lastInsertion.ifPresent(eventWithActivity -> toRemove.add(eventWithActivity.getValue().get().activityDirective()));
           try {
+            logger.debug("[SIM FACADE] PrioritySolver.instantiateActivity(): removing {} and adding {}",
+                         toRemove.isEmpty() ? "null" : toRemove.get(0), actToSim);
             simulationFacade.removeAndInsertActivitiesFromSimulation(toRemove, List.of(actToSim));
+            logger.debug("[SIM FACADE] PrioritySolver.instantiateActivity(): getting simulated duration of added activity");
             computedDuration = simulationFacade.getActivityDuration(actToSim);
             if(computedDuration.isPresent()) {
+              logger.debug("PrioritySolver.instantiateActivity(): got simulated duration of added activity {}",
+                           computedDuration.get());
               history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(computedDuration.get())), new ActivityMetadata(actToSim));
             } else{
               logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
@@ -1173,7 +1193,9 @@ public class PrioritySolver implements Solver {
     }
     if(!history.events.isEmpty()) {
       try {
-        simulationFacade.removeActivitiesFromSimulation(List.of(history.getLastEvent().get().getRight().get().activityDirective()));
+        final var dead = history.getLastEvent().get().getRight().get().activityDirective();
+        logger.debug("[SIM FACADE] PrioritySolver.instantiateActivity(): removing {}", dead);
+        simulationFacade.removeActivitiesFromSimulation(List.of(dead));
       } catch (SimulationFacade.SimulationException e) {
         throw new RuntimeException("Exception while simulating original plan after activity insertion failure" ,e);
       }

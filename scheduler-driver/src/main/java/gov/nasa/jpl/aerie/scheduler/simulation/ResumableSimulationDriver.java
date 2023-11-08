@@ -76,6 +76,16 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     if(dur != 0) {
       logger.info("Time spent in the last sim " + dur + "s, average per simulation second " + average + "s. Simulated until " + curTime);
     }
+    if (countSimulationRestarts > 1) {
+      logger.info("{} restart(s) of this sim driver instance", countSimulationRestarts - 1);
+    }
+  }
+
+  private void printDuration(final String what, final long ns) {
+    logger.debug("[SIM DRIVER] {} took {}s", what, ns/1_000_000_000.0);
+    //for (final var elt : Thread.currentThread().getStackTrace()) {
+    //  logger.debug("    {}", elt);
+    //}
   }
 
   // This method is currently only used in one test.
@@ -111,7 +121,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
     }
-    this.durationSinceRestart += System.nanoTime() - before;
+    final var dur = System.nanoTime() - before;
+    printDuration("init", dur);
+    this.durationSinceRestart += dur;
     countSimulationRestarts++;
   }
 
@@ -138,6 +150,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
       // Increment real time, if necessary.
+      final var simFrom = curTime;
       while(!batch.offsetFromStart().longerThan(endTime) && !endTime.isEqualTo(Duration.MAX_VALUE)) {
         //by default, curTime is negative to signal we have not started simulation yet. We set it to 0 when we start.
         final var delta = batch.offsetFromStart().minus(curTime.isNegative() ? Duration.ZERO : curTime);
@@ -150,7 +163,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
       lastSimResults = null;
-      this.durationSinceRestart += (System.nanoTime() - before);
+      final var dur = System.nanoTime() - before;
+      printDuration("sim until " + endTime + " (from " + simFrom + " to " + curTime + ")", dur);
+      this.durationSinceRestart += dur;
   }
 
 
@@ -221,7 +236,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       logger.info("Simulating from " + curTime + " to " + endTime + " to get simulation results");
       simulateUntil(endTime);
     } else{
-      logger.info("Not simulating because asked endTime "+endTime+" is before current sim time " + curTime);
+      logger.info("Not simulating because asked endTime "+endTime+" is <= current sim time " + curTime);
     }
     final var before = System.nanoTime();
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
@@ -235,17 +250,23 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
-    this.durationSinceRestart += System.nanoTime() - before;
+    final var dur = System.nanoTime() - before;
+    printDuration("compute results from " + startTimestamp + " to " + endTime, dur);
+    this.durationSinceRestart += dur;
 
     return lastSimResults;
   }
 
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
-    final var before = System.nanoTime();
     if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
     }
+
+    final var simFrom = curTime.isNegative() ? Duration.ZERO : curTime;
+    logger.debug("[SIM DRIVER] simulate schedule of {} activites starting at {}", schedule.size(), simFrom);
+
+    long before = System.nanoTime();
 
     // Get all activities as close as possible to absolute time, then schedule all activities.
     // Using HashMap explicitly because it allows `null` as a key.
@@ -299,7 +320,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       }
     }
     lastSimResults = null;
-    this.durationSinceRestart+= System.nanoTime() - before;
+    final var dur = System.nanoTime() - before;
+    printDuration("simulate schedule of " + schedule.size() + " acts (from " + simFrom + " to " + curTime + ")", dur);
+    this.durationSinceRestart+= dur;
   }
 
   /**
