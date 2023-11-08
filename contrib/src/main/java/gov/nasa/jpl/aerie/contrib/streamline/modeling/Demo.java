@@ -1,17 +1,37 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Differentiable;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableDynamics;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DiscreteApproximation;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DivergenceEstimators;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Unstructured;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialEffects;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DiscreteApproximation.discreteApproximation;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DivergenceEstimators.byBoundingError;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byBoundingError;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byUniformSampling;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByOptimization;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.toggle;
@@ -105,6 +125,42 @@ public final class Demo {
       toggle(boolSwitch);
     });
   }
+
+  // Example of using unstructured resources + approximation to represent functions that aren't
+  // easily represented by analytic derivations
+  Resource<Polynomial> p = cellResource(polynomial(1, 2, 3));
+  Resource<Polynomial> q = cellResource(polynomial(6, 5, 4));
+  Resource<Unstructured<Double>> quotient = UnstructuredResources.map(p, q, (p$, q$) -> p$ / q$);
+  Resource<Linear> approxQuotient = approximate(quotient, secantApproximation(IntervalFunctions.<Unstructured<Double>>byBoundingError(
+      1e-6, Duration.SECOND, Duration.HOUR.times(24), errorByOptimization())));
+
+  Resource<Unstructured<Pair<Vector3D, Vector3D>>> positionAndVelocity = cellResource(Unstructured.timeBased(t -> /* some spice call */ null));
+  Resource<Discrete<Pair<Vector3D, Vector3D>>> approxPosVel = approximate(
+      positionAndVelocity,
+      DiscreteApproximation.<Pair<Vector3D, Vector3D>, Unstructured<Pair<Vector3D, Vector3D>>>discreteApproximation(
+          byBoundingError(
+              1e-6,
+              Duration.SECOND,
+              Duration.HOUR.times(24),
+              (u, v) -> Math.max(
+                  u.getLeft().distance(v.getLeft()) / v.getLeft().getNorm(),
+                  u.getRight().distance(v.getRight()) / v.getRight().getNorm()))));
+
+  // Example of the semi-structured "differentiable" resources, and using the additional information to approximate:
+  Resource<Differentiable> pDiff = ResourceMonad.map(p, DifferentiableDynamics::asDifferentiable);
+  Resource<Differentiable> qDiff = ResourceMonad.map(q, DifferentiableDynamics::asDifferentiable);
+  Resource<Differentiable> quotient2 = ResourceMonad.map(pDiff, qDiff, Differentiable::divide);
+  Resource<Linear> approxQuotient2 = approximate(
+      quotient2,
+      secantApproximation(byBoundingError(
+          1e-6,
+          Duration.SECOND,
+          Duration.HOUR.times(24),
+          errorByQuadraticApproximation())));
+
+  // Another example, pushing a polynomial down to a linear for registering:
+  Resource<Polynomial> r;
+  Resource<Linear> approxR = approximate(r, SecantApproximation.<Polynomial>secantApproximation(byUniformSampling(Duration.HOUR)));
 
 
   // Example of a locking state:

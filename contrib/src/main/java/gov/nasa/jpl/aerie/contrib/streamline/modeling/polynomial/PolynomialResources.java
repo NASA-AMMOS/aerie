@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
@@ -77,6 +78,20 @@ public final class PolynomialResources {
   public static UnitAware<Resource<Polynomial>> asUnitAwarePolynomial(Resource<Discrete<UnitAware<Double>>> discrete) {
     var unit = currentValue(discrete).unit();
     return unitAware(asPolynomial(DiscreteResourceMonad.map(discrete, q -> q.value(unit))), unit);
+  }
+
+  /**
+   * Treat a linear resource as a polynomial with linear profile segments.
+   */
+  public static Resource<Polynomial> asPolynomial$(Resource<Linear> linear) {
+    return map(linear, l -> polynomial(l.extract(), l.rate()));
+  }
+
+  /**
+   * Treat a linear resource as a polynomial with linear profile segments.
+   */
+  public static UnitAware<Resource<Polynomial>> asUnitAwarePolynomial$(UnitAware<? extends Resource<Linear>> linear) {
+    return unitAware(asPolynomial$(linear.value()), linear.unit());
   }
 
   /**
@@ -230,23 +245,45 @@ public final class PolynomialResources {
    * time  0        10        20
    * </pre>
    */
-  public static Resource<Polynomial> clampedIntegrate(
+  public static ClampedIntegrateResult clampedIntegrate(
       Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
     var cell = cellResource(map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
+    // Erase expiry information when calculating next iteration of integral
+    var nonExpiringCell = eraseExpiry(cell);
     // Clamp integrand to UB/LB rates as needed
-    var integrandUB = bind(greaterThanOrEquals(cell, upperBound), full -> full.extract() ? differentiate(upperBound) : constant(Double.POSITIVE_INFINITY));
-    var integrandLB = bind(lessThanOrEquals(cell, lowerBound), empty -> empty.extract() ? differentiate(lowerBound) : constant(Double.NEGATIVE_INFINITY));
+    var integrandUB = bind(greaterThanOrEquals(nonExpiringCell, upperBound), full -> full.extract() ? differentiate(upperBound) : constant(Double.POSITIVE_INFINITY));
+    var integrandLB = bind(lessThanOrEquals(nonExpiringCell, lowerBound), empty -> empty.extract() ? differentiate(lowerBound) : constant(Double.NEGATIVE_INFINITY));
     var effectiveIntegrand = clamp(integrand, integrandLB, integrandUB);
     // Separately, clamp the value to the UB/LB value to account for overshooting due to discrete time
     // Erase the expiry information from cell to cut the feedback loop there.
     var effectiveIntegral = map(
-        clamp(eraseExpiry(cell), lowerBound, upperBound),
+        clamp(nonExpiringCell, lowerBound, upperBound),
         effectiveIntegrand,
         (value, rate) -> rate.integral(value.extract()));
     // Use integrand's expiry but not integral's, since we're refreshing the integral
     wheneverDynamicsChange(effectiveIntegral, integral -> cell.emit("Update integral", $ -> integral));
-    return cell;
+    // Finally, compute the overflow/underflow as the difference between input and output rates:
+    var flowDifference = subtract(differentiate(effectiveIntegral), integrand);
+    return new ClampedIntegrateResult(
+        effectiveIntegral,
+        max(flowDifference, constant(0)),
+        negate(min(flowDifference, constant(0))));
   }
+
+  /**
+   * The result of a {@link PolynomialResources#clampedIntegrate(Resource, Resource, Resource, double)} call.
+   *
+   * @param integral    The clamped integral value.
+   * @param overflow    The rate of overflow, when integral hits upper bound.
+   *                    Integrate this to get cumulative overflow.
+   * @param underflow   The rate of underflow, when integral hits lower bound.
+   *                    Integrate this to get cumulative underflow.
+   */
+  public record ClampedIntegrateResult(
+      Resource<Polynomial> integral,
+      Resource<Polynomial> overflow,
+      Resource<Polynomial> underflow
+  ) {}
 
   /**
    * Returns the derivative of this resource.
@@ -448,16 +485,33 @@ public final class PolynomialResources {
    * time  0        10        20
    * </pre>
    */
-  public static UnitAware<Resource<Polynomial>> clampedIntegrate(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> lowerBound, UnitAware<? extends Resource<Polynomial>> upperBound, UnitAware<Double> startingValue) {
+  public static UnitAwareClampedIntegrateResult clampedIntegrate(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> lowerBound, UnitAware<? extends Resource<Polynomial>> upperBound, UnitAware<Double> startingValue) {
     final Unit resultUnit = p.unit().multiply(StandardUnits.SECOND);
-    return unitAware(
-        clampedIntegrate(
+    var unitNaiveResult = clampedIntegrate(
             p.value(),
             lowerBound.value(resultUnit),
             upperBound.value(resultUnit),
-            startingValue.value(resultUnit)),
-        resultUnit);
+            startingValue.value(resultUnit));
+    return new UnitAwareClampedIntegrateResult(
+        unitAware(unitNaiveResult.integral(), resultUnit),
+        unitAware(unitNaiveResult.overflow(), p.unit()),
+        unitAware(unitNaiveResult.underflow(), p.unit()));
   }
+
+  /**
+   * The result of a {@link PolynomialResources#clampedIntegrate(UnitAware, UnitAware, UnitAware, UnitAware)} call.
+   *
+   * @param integral    The clamped integral value.
+   * @param overflow    The rate of overflow, when integral hits upper bound.
+   *                    Integrate this to get cumulative overflow.
+   * @param underflow   The rate of underflow, when integral hits lower bound.
+   *                    Integrate this to get cumulative underflow.
+   */
+  public record UnitAwareClampedIntegrateResult(
+      UnitAware<Resource<Polynomial>> integral,
+      UnitAware<Resource<Polynomial>> overflow,
+      UnitAware<Resource<Polynomial>> underflow
+  ) {}
 
   /**
    * Returns the derivative of this resource.

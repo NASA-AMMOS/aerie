@@ -66,25 +66,10 @@ public final class Resources {
    * or by some part of the derivation expiring.
    */
   public static <D extends Dynamics<?, D>> Condition dynamicsChange(Resource<D> resource) {
-    return dynamicsChange(resource, null);
-  }
-
-  /**
-   * Like {@link Resources#updates(Resource)}, but also stores the sampled resource value in
-   * a side channel for later use.
-   *
-   * <p>
-   *   WARNING! Since the side channel is not managed by Aerie,
-   *   it won't be synchronized with task history, nor respect task parallelism and isolation.
-   *   <emph>If you don't know what that means, don't use this method.</emph>
-   * </p>
-   */
-  public static <D extends Dynamics<?, D>> Condition dynamicsChange(Resource<D> resource, MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel) {
     final var startingDynamics = resource.getDynamics();
     final Duration startTime = currentTime();
     return (positive, atEarliest, atLatest) -> {
       var currentDynamics = resource.getDynamics();
-      if (dynamicsSideChannel != null) dynamicsSideChannel.setValue(currentDynamics);
       boolean haveChanged = startingDynamics.match(
           start -> currentDynamics.match(
               current -> !current.data().equals(start.data().step(currentTime().minus(startTime))),
@@ -111,20 +96,6 @@ public final class Resources {
    * However, this condition doesn't depend on dynamics having a well-behaved equals method.
    */
   public static Condition updates(Resource<?> resource) {
-    return updates(resource, null);
-  }
-
-  /**
-   * Like {@link Resources#updates(Resource)}, but also stores the sampled resource value in
-   * a side channel for later use.
-   *
-   * <p>
-   *   WARNING! Since the side channel is not managed by Aerie,
-   *   it won't be synchronized with task history, nor respect task parallelism and isolation.
-   *   <emph>If you don't know what that means, don't use this method.</emph>
-   * </p>
-   */
-  public static <D> Condition updates(Resource<D> resource, MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel) {
     return new Condition() {
       private boolean first = true;
 
@@ -136,7 +107,6 @@ public final class Resources {
       {
         // Get resource to subscribe this condition to resource's cells
         var dynamics = resource.getDynamics();
-        if (dynamicsSideChannel != null) dynamicsSideChannel.setValue(dynamics);
         if (first) {
           first = false;
           return dynamics.match(Expiring::expiry, e -> NEVER).value().filter(atLatest::noShorterThan);

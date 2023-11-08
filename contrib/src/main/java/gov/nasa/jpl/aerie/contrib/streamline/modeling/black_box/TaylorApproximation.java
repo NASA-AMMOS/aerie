@@ -15,7 +15,7 @@ public final class TaylorApproximation {
   private TaylorApproximation() {}
 
   /**
-   * Perform a fixed-degree Taylor approximation of resource.
+   * Fixed-degree Taylor approximation.
    */
   public static Function<Expiring<Differentiable>, Expiring<Polynomial>> taylorApproximation(int degree, BiFunction<Differentiable, Polynomial, Duration> divergenceEstimator) {
     return divergingApproximation(d -> expand(d, degree), divergenceEstimator);

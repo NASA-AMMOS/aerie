@@ -40,13 +40,11 @@ public final class Reactions {
 
   // Special case for dynamicsChange condition, since it's non-obvious that this needs to be run in lambda form
   public static <D extends Dynamics<?, D>> void wheneverDynamicsChange(Resource<D> resource, Consumer<ErrorCatching<Expiring<D>>> reaction) {
-    final MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel = new MutableObject<>();
-    whenever(() -> dynamicsChange(resource, dynamicsSideChannel), () -> reaction.accept(dynamicsSideChannel.getValue()));
+    whenever(() -> dynamicsChange(resource), () -> reaction.accept(resource.getDynamics()));
   }
 
   public static <D extends Dynamics<?, D>> void wheneverUpdates(Resource<D> resource, Consumer<ErrorCatching<Expiring<D>>> reaction) {
-    final MutableObject<ErrorCatching<Expiring<D>>> dynamicsSideChannel = new MutableObject<>();
-    whenever(() -> updates(resource, dynamicsSideChannel), () -> reaction.accept(dynamicsSideChannel.getValue()));
+    whenever(() -> updates(resource), () -> reaction.accept(resource.getDynamics()));
   }
 
   public static void every(Duration period, Runnable action) {

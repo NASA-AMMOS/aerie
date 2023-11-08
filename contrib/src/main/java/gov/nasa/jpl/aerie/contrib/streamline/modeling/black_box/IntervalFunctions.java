@@ -19,7 +19,7 @@ public final class IntervalFunctions {
   /**
    * Use uniform point spacing for an approximation
    */
-  public static Function<Expiring<?>, Duration> byUniformSampling(Duration samplePeriod) {
+  public static <D> Function<Expiring<D>, Duration> byUniformSampling(Duration samplePeriod) {
     return exp -> Duration.min(samplePeriod, exp.expiry().value().orElse(Duration.MAX_VALUE));
   }
 

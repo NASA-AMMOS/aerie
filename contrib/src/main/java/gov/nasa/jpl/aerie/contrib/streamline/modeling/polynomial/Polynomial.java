@@ -36,6 +36,7 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
    */
   private static final int MAX_RANGE_FOR_ROOT_SEARCH = 2;
 
+  // TODO: Add Duration parameter for unit of formal parameter
   public static Polynomial polynomial(double... coefficients) {
     int n = coefficients.length;
     if (n == 0) {
