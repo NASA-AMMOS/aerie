@@ -272,37 +272,7 @@ public final class LocalMissionModelService implements MissionModelService {
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     Optional<SimulationDriver.CachedSimulationEngine> simulationEngine = SimulationDriver.bestCachedEngine(message.activityDirectives(), cachedEngines.getOrDefault(message.missionModelId(), List.of()));
     if (simulationEngine.isEmpty()) {
-      final SimulationEngine engine = new SimulationEngine();
-      final TemporalEventSource timeline = new TemporalEventSource();
-      final LiveCells cells = new LiveCells(timeline, missionModel.getInitialCells());
-
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-
-        engine.trackResource(name, resource, Duration.ZERO);
-      }
-
-      {
-        // Start daemon task(s) immediately, before anything else happens.
-        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-        {
-          final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-          final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
-          timeline.add(commit);
-        }
-      }
-
-      final var cachedSimulationEngine = new SimulationDriver.CachedSimulationEngine(
-          Duration.ZERO,
-          List.of(),
-          engine,
-          cells,
-          timeline.points(),
-          new Topic<>()
-      );
-      simulationEngine = Optional.of(cachedSimulationEngine);
+      simulationEngine = Optional.of(SimulationDriver.CachedSimulationEngine.empty(missionModel));
     }
 
     final var simulationResultsWithCheckpoints =

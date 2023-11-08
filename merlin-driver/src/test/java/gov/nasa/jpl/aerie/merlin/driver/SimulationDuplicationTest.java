@@ -19,7 +19,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Triple;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +73,8 @@ public class SimulationDuplicationTest {
 
   @Test
   void testDuplicate() {
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(), List.of(Duration.of(5, MINUTES)));
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(
+        missionModel), List.of(Duration.of(5, MINUTES)));
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
         Map.of(),
