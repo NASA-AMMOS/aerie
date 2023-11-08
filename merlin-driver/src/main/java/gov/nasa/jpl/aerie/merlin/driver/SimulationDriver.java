@@ -71,15 +71,38 @@ public final class SimulationDriver {
       simulationEngine.close();
     }
 
-    public static CachedSimulationEngine empty() {
-      return new CachedSimulationEngine(
+    public static CachedSimulationEngine empty(final MissionModel<?> missionModel) {
+      final SimulationEngine engine = new SimulationEngine();
+      final TemporalEventSource timeline = new TemporalEventSource();
+      final LiveCells cells = new LiveCells(timeline, missionModel.getInitialCells());
+
+      // Begin tracking all resources.
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
+
+        engine.trackResource(name, resource, Duration.ZERO);
+      }
+
+      {
+        // Start daemon task(s) immediately, before anything else happens.
+        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+        {
+          final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+          final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
+          timeline.add(commit);
+        }
+      }
+
+      final var cachedSimulationEngine = new SimulationDriver.CachedSimulationEngine(
           Duration.ZERO,
           List.of(),
-          new SimulationEngine(),
-          new LiveCells(new TemporalEventSource()),
-          new SlabList<>(),
+          engine,
+          cells,
+          timeline.points(),
           new Topic<>()
       );
+      return cachedSimulationEngine;
     }
   }
 

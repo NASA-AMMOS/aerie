@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
@@ -19,7 +20,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Triple;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +74,8 @@ public class SimulationDuplicationTest {
 
   @Test
   void testDuplicate() {
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(), List.of(Duration.of(5, MINUTES)));
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(
+        missionModel), List.of(Duration.of(5, MINUTES)));
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
         Map.of(),
@@ -276,7 +277,7 @@ public class SimulationDuplicationTest {
 
   static MissionModel<?> missionModel = new MissionModel<>(
       new Object(),
-      new LiveCells(null),
+      new LiveCells(new CausalEventSource()),
       Map.of(),
       List.of(
           new MissionModel.SerializableTopic<>(

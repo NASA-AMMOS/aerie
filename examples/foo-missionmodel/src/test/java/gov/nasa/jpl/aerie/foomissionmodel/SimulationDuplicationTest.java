@@ -8,9 +8,8 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -100,7 +99,7 @@ public class SimulationDuplicationTest {
   void testTrivialDuplicate() {
     final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
         missionModel,
-        SimulationDriver.CachedSimulationEngine.empty(), List.of(Duration.of(5, MINUTES)), Map.of()
+        SimulationDriver.CachedSimulationEngine.empty(missionModel), List.of(Duration.of(5, MINUTES)), Map.of()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -411,37 +410,6 @@ public class SimulationDuplicationTest {
       final List<Duration> desiredCheckpoints,
       final Map<ActivityDirectiveId, ActivityDirective> schedule
   ) {
-    final SimulationEngine engine = new SimulationEngine();
-    final TemporalEventSource timeline = new TemporalEventSource();
-    final LiveCells cells = new LiveCells(timeline, missionModel.getInitialCells());
-
-    // Begin tracking all resources.
-    for (final var entry : missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-
-      engine.trackResource(name, resource, Duration.ZERO);
-    }
-
-    {
-      // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-      {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
-        timeline.add(commit);
-      }
-    }
-
-    final var cachedSimulationEngine = new SimulationDriver.CachedSimulationEngine(
-        Duration.ZERO,
-        List.of(),
-        engine,
-        cells,
-        timeline.points(),
-        new Topic<>()
-    );
-
     return SimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
@@ -450,7 +418,7 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         $ -> {},
-        cachedSimulationEngine,
+        SimulationDriver.CachedSimulationEngine.empty(missionModel),
         SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
@@ -577,7 +545,7 @@ public class SimulationDuplicationTest {
 
   static MissionModel<?> missionModel = new MissionModel<>(
       new Object(),
-      new LiveCells(null),
+      new LiveCells(new CausalEventSource()),
       Map.of(),
       List.of(
           new MissionModel.SerializableTopic<>(
