@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
@@ -63,7 +64,8 @@ public final class MerlinWorkerAppDriver {
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
-    final var listenThread = listenAction.registerListener();
+    final var canceledListener = new SimulationCanceledListener();
+    final var listenThread = listenAction.registerListener(canceledListener);
 
     try (final var app = Javalin.create().start(8080)) {
       app.get("/health", ctx -> ctx.status(200));
