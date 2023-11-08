@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class SimulationDriver {
   public static <Model>
@@ -26,10 +27,19 @@ public final class SimulationDriver {
       final Instant simulationStartTime,
       final Duration simulationDuration,
       final Instant planStartTime,
-      final Duration planDuration
+      final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled
   )
   {
-    return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, $ -> {});
+    return simulate(
+        missionModel,
+        schedule,
+        simulationStartTime,
+        simulationDuration,
+        planStartTime,
+        planDuration,
+        simulationCanceled,
+        $ -> {});
   }
 
   public static <Model>
@@ -40,6 +50,7 @@ public final class SimulationDriver {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   ) {
     try (final var engine = new SimulationEngine()) {

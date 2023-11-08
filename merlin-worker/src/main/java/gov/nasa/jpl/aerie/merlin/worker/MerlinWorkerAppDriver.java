@@ -76,8 +76,14 @@ public final class MerlinWorkerAppDriver {
         final var planId = new PlanId(notification.planId());
         final var datasetId = notification.datasetId();
 
+        // Register as early as possible to avoid potentially missing a canceled signal
+        canceledListener.register(new DatasetId(datasetId));
+
         final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
-        if (owner.isEmpty()) continue;
+        if (owner.isEmpty()) {
+          canceledListener.unregister();
+          continue;
+        }
 
         final var revisionData = new PostgresPlanRevisionData(
             notification.modelRevision(),
@@ -86,13 +92,16 @@ public final class MerlinWorkerAppDriver {
             notification.simulationTemplateRevision());
         final ResultsProtocol.WriterRole writer = owner.get();
         try {
-          simulationAgent.simulate(planId, revisionData, writer);
+          simulationAgent.simulate(planId, revisionData, writer, canceledListener);
         } catch (final Throwable ex) {
           ex.printStackTrace(System.err);
           writer.failWith(b -> b
               .type("UNEXPECTED_SIMULATION_EXCEPTION")
               .message("Something went wrong while simulating")
               .trace(ex));
+        }
+        finally {
+          canceledListener.unregister();
         }
       }
     } finally {
