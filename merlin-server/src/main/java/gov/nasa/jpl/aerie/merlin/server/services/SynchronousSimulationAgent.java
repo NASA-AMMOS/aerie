@@ -116,6 +116,10 @@ public record SynchronousSimulationAgent (
       return;
     }
 
-    writer.succeedWith(results);
+    if(canceledListener.get()) {
+      writer.reportIncompleteResults(results);
+    } else {
+      writer.succeedWith(results);
+    }
   }
 }

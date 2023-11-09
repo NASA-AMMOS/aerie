@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
@@ -24,6 +25,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -341,7 +343,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postSimulationResults(
       final Connection connection,
       final long datasetId,
-      final SimulationResults results
+      final SimulationResults results,
+      final SimulationStateRecord state
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     final var simulationStart = new Timestamp(results.startTime);
@@ -352,7 +355,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     insertSimulationEvents(connection, datasetId, results.events, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
-      setSimulationStateAction.apply(datasetId, SimulationStateRecord.success());
+      setSimulationStateAction.apply(datasetId, state);
     }
   }
 
@@ -515,7 +518,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     public void succeedWith(final SimulationResults results) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
-        postSimulationResults(connection, datasetId, results);
+        postSimulationResults(connection, datasetId, results, SimulationStateRecord.success());
         deleteSimulationExtent(connection, datasetId);
         transactionContext.commit();
       } catch (final SQLException ex) {
@@ -536,6 +539,30 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update simulation state to failure", ex);
+      } catch (final NoSuchSimulationDatasetException ex) {
+        // A cell should only be created for a valid, existing dataset
+        // A dataset should only be deleted by its cell
+        throw new Error("Cell references nonexistent simulation dataset");
+      }
+    }
+
+    @Override
+    public void reportIncompleteResults(final SimulationResults results) {
+      try (final var connection = dataSource.getConnection();
+           final var transactionContext = new TransactionContext(connection)) {
+        final var reason = new SimulationFailure.Builder()
+            .type("SIMULATION_CANCELED")
+            .data(Json.createObjectBuilder()
+                    .add("elapsedTime", SimulationException.formatDuration(results.duration))
+                    .add("utcTimeDoy", SimulationException.formatInstant(Duration.addToInstant(results.startTime, results.duration)))
+                    .build())
+            .message("Simulation run was canceled")
+            .build();
+        postSimulationResults(connection, datasetId, results, SimulationStateRecord.incomplete(reason));
+        deleteSimulationExtent(connection, datasetId);
+        transactionContext.commit();
+      } catch (final SQLException ex) {
+        throw new DatabaseException("Failed to store simulation results", ex);
       } catch (final NoSuchSimulationDatasetException ex) {
         // A cell should only be created for a valid, existing dataset
         // A dataset should only be deleted by its cell
