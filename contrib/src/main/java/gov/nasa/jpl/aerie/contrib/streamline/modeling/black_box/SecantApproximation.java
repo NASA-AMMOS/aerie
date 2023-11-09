@@ -72,7 +72,8 @@ public final class SecantApproximation {
         var midpointCurvature = dPrimeMidpoint.derivative().extract();
 
         // Secant across the interval
-        var secant = secant(d, Duration.roundNearest(t, SECOND));
+        var tDuration = Duration.roundNearest(t, SECOND);
+        var secant = secant(d, tDuration);
         var secantStartValue = secant.extract();
         var secantSlope = secant.rate();
         var secantMidValue = secantStartValue + (secantSlope * t / 2);
@@ -83,11 +84,17 @@ public final class SecantApproximation {
         var b = midpointSlope - secantSlope;
         var c = midpointValue - secantMidValue;
 
-        // Find the location of the extremum:
-        var extremePoint = -b / (2 * a);
-        // If the extreme point is within the interval, consider the error there
-        var extremumError = ((-t / 2) < extremePoint && extremePoint < (t / 2))
-            ? Math.abs(c - (b * b / (4 * a))) : 0;
+        double extremumError;
+        if (a == 0) {
+          extremumError = 0;
+        } else {
+          // Find the location of the extremum:
+          var extremePoint = -b / (2 * a);
+          // If the extreme point is within the interval, consider the error there
+          extremumError = ((-t / 2) < extremePoint && extremePoint < (t / 2))
+              ? Math.abs(c - (b * b / (4 * a))) : 0;
+        }
+
         // Also evaluate the error function at +/- (t/2), the interval start and end points.
         var startSecantError = Math.abs((a * t * t / 4) - (b * t / 2) + c);
         var endSecantError = Math.abs((a * t * t / 4) + (b * t / 2) + c);
@@ -96,8 +103,10 @@ public final class SecantApproximation {
 
         // Assuming that the Taylor expansion monotonically diverges from the true value,
         // we can bound the error between the Taylor expansion and the true value by measuring the endpoints.
-        var startTaylorError = Math.abs((midpointCurvature * t * t / 8) - (midpointSlope * t / 2) + midpointValue);
-        var endTaylorError = Math.abs((midpointCurvature * t * t / 8) + (midpointSlope * t / 2) + midpointValue);
+        var startTrueValue = d.extract();
+        var endTrueValue = d.step(tDuration).extract();
+        var startTaylorError = Math.abs(((midpointCurvature * t * t / 8) - (midpointSlope * t / 2) + midpointValue) - startTrueValue);
+        var endTaylorError = Math.abs(((midpointCurvature * t * t / 8) + (midpointSlope * t / 2) + midpointValue) - endTrueValue);
         var taylorError = Math.max(startTaylorError, endTaylorError);
 
         // Finally, we can bound the error across the entire interval as
