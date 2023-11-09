@@ -49,7 +49,11 @@ public final class VariableClockResources {
     return not(lessThan(clock, threshold));
   }
 
-  public static Resource<Linear> toLinear(Resource<VariableClock> clock, Duration unit) {
+  public static Resource<Linear> asLinear(Resource<VariableClock> clock, Duration unit) {
     return map(clock, c -> linear(c.extract().ratioOver(unit), c.multiplier()));
+  }
+
+  public static Resource<VariableClock> asVariableClock(Resource<Clock> clock) {
+    return map(clock, c -> new VariableClock(c.extract(), 1));
   }
 }

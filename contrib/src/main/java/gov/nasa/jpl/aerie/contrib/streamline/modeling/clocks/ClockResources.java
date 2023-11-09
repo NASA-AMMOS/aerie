@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
@@ -44,5 +45,9 @@ public final class ClockResources {
 
   public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Clock> clock, Duration threshold) {
     return not(lessThan(clock, threshold));
+  }
+
+  public static Resource<Linear> asLinear(Resource<Clock> clock, Duration unit) {
+    return VariableClockResources.asLinear(VariableClockResources.asVariableClock(clock), unit);
   }
 }
