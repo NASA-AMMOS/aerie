@@ -4,16 +4,13 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-import org.apache.commons.lang3.mutable.MutableObject;
 
-import java.util.List;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.staticallyCreated;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
@@ -44,19 +41,35 @@ public final class Resources {
   }
 
   public static <D> D currentData(Resource<D> resource) {
-    return resource.getDynamics().getOrThrow().data();
+    return data(resource.getDynamics());
   }
 
   public static <D> D currentData(Resource<D> resource, D dynamicsIfError) {
-    return resource.getDynamics().match(Expiring::data, error -> dynamicsIfError);
+    return data(resource.getDynamics(), dynamicsIfError);
   }
 
   public static <V, D extends Dynamics<V, D>> V currentValue(Resource<D> resource) {
-    return currentData(resource).extract();
+    return value(resource.getDynamics());
   }
 
   public static <V, D extends Dynamics<V, D>> V currentValue(Resource<D> resource, V valueIfError) {
-    return resource.getDynamics().match(result -> result.data().extract(), error -> valueIfError);
+    return value(resource.getDynamics(), valueIfError);
+  }
+
+  public static <D> D data(ErrorCatching<Expiring<D>> dynamics) {
+    return dynamics.getOrThrow().data();
+  }
+
+  public static <D> D data(ErrorCatching<Expiring<D>> dynamics, D dynamicsIfError) {
+    return dynamics.match(Expiring::data, error -> dynamicsIfError);
+  }
+
+  public static <V, D extends Dynamics<V, D>> V value(ErrorCatching<Expiring<D>> dynamics) {
+    return data(dynamics).extract();
+  }
+
+  public static <V, D extends Dynamics<V, D>> V value(ErrorCatching<Expiring<D>> dynamics, V valueIfError) {
+    return dynamics.match(result -> result.data().extract(), error -> valueIfError);
   }
 
   /**

@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Differentiable;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableDynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DiscreteApproximation;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DivergenceEstimators;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Unstructured;
@@ -25,7 +24,6 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DiscreteApproximation.discreteApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DivergenceEstimators.byBoundingError;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byBoundingError;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byUniformSampling;
