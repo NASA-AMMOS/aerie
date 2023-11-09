@@ -5,12 +5,15 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.not;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
 
 public final class VariableClockResources {
@@ -44,5 +47,9 @@ public final class VariableClockResources {
 
   public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<VariableClock> clock, Duration threshold) {
     return not(lessThan(clock, threshold));
+  }
+
+  public static Resource<Linear> toLinear(Resource<VariableClock> clock, Duration unit) {
+    return map(clock, c -> linear(c.extract().ratioOver(unit), c.multiplier()));
   }
 }
