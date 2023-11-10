@@ -215,21 +215,21 @@ public final class DiscreteResources {
    * Add integer resources
    */
   @SafeVarargs
-  public static Resource<Discrete<Integer>> add(Resource<Discrete<Integer>>... operands) {
-    return sum(Arrays.stream(operands));
+  public static Resource<Discrete<Integer>> addInt(Resource<Discrete<Integer>>... operands) {
+    return sumInt(Arrays.stream(operands));
   }
 
   /**
    * Add integer resources
    */
-  public static Resource<Discrete<Integer>> sum(Stream<? extends Resource<Discrete<Integer>>> operands) {
+  public static Resource<Discrete<Integer>> sumInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
     return operands.reduce(unit(0), lift(Integer::sum), lift(Integer::sum)::apply);
   }
 
   /**
    * Subtract integer resources
    */
-  public static Resource<Discrete<Integer>> subtract(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
+  public static Resource<Discrete<Integer>> subtractInt(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
     return map(left, right, (l, r) -> l - r);
   }
 
@@ -237,21 +237,67 @@ public final class DiscreteResources {
    * Multiply integer resources
    */
   @SafeVarargs
-  public static Resource<Discrete<Integer>> multiply(Resource<Discrete<Integer>>... operands) {
-    return product(Arrays.stream(operands));
+  public static Resource<Discrete<Integer>> multiplyInt(Resource<Discrete<Integer>>... operands) {
+    return productInt(Arrays.stream(operands));
   }
 
   /**
    * Multiply integer resources
    */
-  public static Resource<Discrete<Integer>> product(Stream<? extends Resource<Discrete<Integer>>> operands) {
+  public static Resource<Discrete<Integer>> productInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
     return operands.reduce(unit(1), lift((x, y) -> x * y), lift((Integer x, Integer y) -> x * y)::apply);
   }
 
   /**
    * Divide integer resources
    */
-  public static Resource<Discrete<Integer>> divide(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
+  public static Resource<Discrete<Integer>> divideInt(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
+    return map(left, right, (l, r) -> l / r);
+  }
+
+  // Double arithmetic
+
+  /**
+   * Add double resources
+   */
+  @SafeVarargs
+  public static Resource<Discrete<Double>> add(Resource<Discrete<Double>>... operands) {
+    return sum(Arrays.stream(operands));
+  }
+
+  /**
+   * Add double resources
+   */
+  public static Resource<Discrete<Double>> sum(Stream<? extends Resource<Discrete<Double>>> operands) {
+    return operands.reduce(unit(0.0), lift(Double::sum), lift(Double::sum)::apply);
+  }
+
+  /**
+   * Subtract double resources
+   */
+  public static Resource<Discrete<Double>> subtract(Resource<Discrete<Double>> left, Resource<Discrete<Double>> right) {
+    return map(left, right, (l, r) -> l - r);
+  }
+
+  /**
+   * Multiply double resources
+   */
+  @SafeVarargs
+  public static Resource<Discrete<Double>> multiply(Resource<Discrete<Double>>... operands) {
+    return product(Arrays.stream(operands));
+  }
+
+  /**
+   * Multiply double resources
+   */
+  public static Resource<Discrete<Double>> product(Stream<? extends Resource<Discrete<Double>>> operands) {
+    return operands.reduce(unit(1.0), lift((x, y) -> x * y), lift((Double x, Double y) -> x * y)::apply);
+  }
+
+  /**
+   * Divide double resources
+   */
+  public static Resource<Discrete<Double>> divide(Resource<Discrete<Double>> left, Resource<Discrete<Double>> right) {
     return map(left, right, (l, r) -> l / r);
   }
 
