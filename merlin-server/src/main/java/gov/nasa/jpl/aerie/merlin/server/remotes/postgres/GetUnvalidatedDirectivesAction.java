@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,7 +20,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
 public class GetUnvalidatedDirectivesAction implements AutoCloseable {
   private static final String sql = """
-      select ad.id, ad.plan_id, ad.type, ad.arguments, p.model_id
+      select ad.id, ad.plan_id, ad.type, ad.arguments, p.model_id, adv.last_modified_arguments_at
         from activity_directive ad
         join activity_directive_validations adv
           on ad.id = adv.directive_id and ad.plan_id = adv.plan_id
@@ -45,11 +46,13 @@ public class GetUnvalidatedDirectivesAction implements AutoCloseable {
       final var type = results.getString("type");
       final var arguments = getJsonColumn(results, "arguments", activityArgumentsP)
           .getSuccessOrThrow($ -> new Error("Corrupt activity arguments cannot be parsed: " + $.reason()));
+      final var argumentTimestamp = results.getTimestamp("last_modified_arguments_at");
 
       map.computeIfAbsent(modelId, $ -> new ArrayList<>())
          .add(new ActivityDirectiveForValidation(
              new ActivityDirectiveId(directiveId),
              new PlanId(planId),
+             argumentTimestamp,
              new SerializedActivity(type, arguments)
          ));
     }
