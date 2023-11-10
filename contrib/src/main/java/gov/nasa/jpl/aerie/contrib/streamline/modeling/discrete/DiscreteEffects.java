@@ -75,6 +75,22 @@ public final class DiscreteEffects {
     resource.emit("Decrement by " + amount, effect(x -> x - amount));
   }
 
+  // General numeric resources
+
+  /**
+   * Add amount to resource's value
+   */
+  public static void increase(CellResource<Discrete<Double>> resource, double amount) {
+    resource.emit("Increase by " + amount, effect(x -> x + amount));
+  }
+
+  /**
+   * Subtract amount from resource's value
+   */
+  public static void decrease(CellResource<Discrete<Double>> resource, double amount) {
+    resource.emit("Decrease by " + amount, effect(x -> x - amount));
+  }
+
   // Queue style operations, mirroring the Queue interface
 
   /**
