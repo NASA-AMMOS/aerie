@@ -16,7 +16,7 @@ import java.util.List;
     update activity_directive_validations
     set validations = ?::jsonb,
         status = 'complete'
-    where (directive_id, plan_id) = (?, ?)
+    where (directive_id, plan_id, last_modified_arguments_at) = (?, ?, ?)
   """;
 
   private final PreparedStatement statement;
@@ -35,6 +35,7 @@ import java.util.List;
         PreparedStatements.setValidationResponse(statement, 1, validation);
         statement.setLong(2, directive.id().id());
         statement.setLong(3, directive.planId().id());
+        statement.setTimestamp(4, directive.argumentsModifiedTime());
 
         statement.addBatch();
       }
