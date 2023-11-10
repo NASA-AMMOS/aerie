@@ -6,6 +6,5 @@ public record ActivityDirectiveForValidation
 (
     ActivityDirectiveId id,
     PlanId planId,
-    Timestamp argumentsModifiedTime,
     SerializedActivity activity
 ) { }
