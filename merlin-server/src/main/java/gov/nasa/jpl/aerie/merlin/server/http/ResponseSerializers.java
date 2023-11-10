@@ -172,6 +172,7 @@ public final class ResponseSerializers {
     } else if (response instanceof BulkArgumentValidationResponse.Validation v) {
       return Json.createObjectBuilder()
                  .add("success", JsonValue.FALSE)
+                 .add("type", "VALIDATION_NOTICES")
                  .add("errors", Json.createObjectBuilder()
                      .add("validationNotices", serializeIterable(ResponseSerializers::serializeValidationNotice, v.notices()))
                      .build())
@@ -179,12 +180,15 @@ public final class ResponseSerializers {
     } else if (response instanceof BulkArgumentValidationResponse.NoSuchActivityError e) {
       return Json.createObjectBuilder()
                  .add("success", JsonValue.FALSE)
+                 .add("type", "NO_SUCH_ACTIVITY_TYPE")
                  .add("errors", Json.createObjectBuilder()
                      .add("noSuchActivityError", serializeNoSuchActivityTypeException(e.ex()))
                      .build())
                  .build();
     } else if (response instanceof BulkArgumentValidationResponse.InstantiationError f) {
-      return serializeInstantiationException(f.ex());
+      return Json.createObjectBuilder(serializeInstantiationException(f.ex()).asJsonObject())
+          .add("type", "INSTANTIATION_ERRORS")
+          .build();
     }
 
     // This should never happen, but we don't have exhaustive pattern matching
