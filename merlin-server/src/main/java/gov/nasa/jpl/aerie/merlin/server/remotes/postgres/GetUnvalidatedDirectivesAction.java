@@ -25,7 +25,7 @@ public class GetUnvalidatedDirectivesAction implements AutoCloseable {
           on ad.id = adv.directive_id and ad.plan_id = adv.plan_id
         join plan p
           on ad.plan_id = p.id
-        where adv.validations = '{}';
+        where adv.status = 'pending';
         """;
 
   private final PreparedStatement statement;

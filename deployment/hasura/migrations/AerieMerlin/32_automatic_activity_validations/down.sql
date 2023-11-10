@@ -13,6 +13,7 @@ end$$;
 
 alter table activity_directive_validations
   drop column last_modified_arguments_at,
+  drop column status,
   add column last_modified_at timestamptz not null default now();
 
 comment on column activity_directive_validations.last_modified_at is e''

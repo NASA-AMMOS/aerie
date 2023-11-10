@@ -191,10 +191,10 @@ $$ begin
   call plan_locked_exception(new.plan_id);
   new.last_modified_arguments_at = now();
 
-  -- clear old validations
+  -- request new validation
   update activity_directive_validations
     set last_modified_arguments_at = new.last_modified_arguments_at,
-        validations = '{}'
+        status = 'pending'
     where (directive_id, plan_id) = (new.id, new.plan_id);
 
   return new;

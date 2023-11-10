@@ -2,6 +2,7 @@ create table activity_directive_validations (
   directive_id integer not null,
   plan_id integer not null,
   last_modified_arguments_at timestamptz not null,
+  status text not null default 'pending',
   validations jsonb default '{}'::jsonb,
 
   constraint activity_directive_validations_natural_key
