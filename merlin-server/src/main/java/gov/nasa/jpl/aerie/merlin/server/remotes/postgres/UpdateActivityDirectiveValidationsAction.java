@@ -13,7 +13,8 @@ import java.util.List;
 /*package-local*/ final class UpdateActivityDirectiveValidationsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     update activity_directive_validations
-    set validations = ?::jsonb
+    set validations = ?::jsonb,
+        status = 'complete'
     where (directive_id, plan_id) = (?, ?)
   """;
 

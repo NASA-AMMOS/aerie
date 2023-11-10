@@ -1,5 +1,6 @@
 alter table activity_directive_validations
   drop column last_modified_at,
+  add column status text not null default 'pending',
   add column last_modified_arguments_at timestamptz not null;
 
 comment on column activity_directive_validations.last_modified_arguments_at is e''
@@ -14,10 +15,10 @@ $$ begin
   call plan_locked_exception(new.plan_id);
   new.last_modified_arguments_at = now();
 
-  -- clear old validations
+  -- request new validation
   update activity_directive_validations
     set last_modified_arguments_at = new.last_modified_arguments_at,
-        validations = '{}'
+        status = 'pending'
     where (directive_id, plan_id) = (new.id, new.plan_id);
 
   return new;
