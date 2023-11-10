@@ -53,7 +53,9 @@ public record ValidationWorker(LocalMissionModelService missionModelService, int
       } catch (NoSuchMissionModelException ex) {
         logger.error("Validation request failed due to no such mission model: {}", ex.toString());
       } catch (InterruptedException ex) {
-        throw new RuntimeException("Failed to sleep in validation thread", ex);
+        return;
+      } catch (Throwable t) {
+        logger.error("Recovering from unexpected error encountered in validation thread: ", t);
       }
     }
   }
