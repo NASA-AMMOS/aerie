@@ -210,6 +210,16 @@ public enum GQL {
         success
       }
     }"""),
+  GET_ACTIVITY_VALIDATIONS("""
+    query GetActivityValidations($planId: Int!) {
+      activity_directive_validations(where: {plan_id: {_eq: $planId}}) {
+        status
+        validations
+        plan_id
+        last_modified_arguments_at
+        directive_id
+      }
+    }"""),
   GET_EFFECTIVE_MODEL_ARGUMENTS("""
     query GetEffectiveModelArguments($modelId: ID!, $modelArgs: ModelArguments!) {
       getModelEffectiveArguments(missionModelId: $modelId, modelArguments: $modelArgs) {

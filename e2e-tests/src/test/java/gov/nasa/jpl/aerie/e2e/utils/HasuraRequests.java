@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.e2e.types.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonValue;
 import javax.json.JsonObject;
 import java.io.IOException;
@@ -222,6 +223,22 @@ public class HasuraRequests implements AutoCloseable {
         .getJsonArray("getActivityEffectiveArgumentsBulk")
         .getValuesAs(EffectiveActivityArguments::fromJSON);
   }
+
+  public Map<Long, ActivityValidation> getActivityValidations(final int planId) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("planId", planId)
+                              .build();
+    final JsonArray response = makeRequest(GQL.GET_ACTIVITY_VALIDATIONS, variables)
+        .getJsonArray("activity_directive_validations");
+    final var res = new HashMap<Long, ActivityValidation>();
+    for (final var object : response) {
+      res.put(
+          (long) object.asJsonObject().getInt("directive_id"),
+          ActivityValidation.fromJSON(object.asJsonObject()));
+    }
+    return res;
+  }
+
   //endregion
 
   //region Simulation
