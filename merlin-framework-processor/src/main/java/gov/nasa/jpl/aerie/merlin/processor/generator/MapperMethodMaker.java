@@ -159,6 +159,7 @@ public abstract sealed class MapperMethodMaker permits
 
                     return CodeBlock
                         .builder()
+                        .beginControlFlow("try")
                         .addStatement(
                             "if (!$L.$L()) notices.add(new $T($T.of($L), $S))",
                             "input",
@@ -166,7 +167,10 @@ public abstract sealed class MapperMethodMaker permits
                             ValidationNotice.class,
                             List.class,
                             subjects,
-                            validation.failureMessage());
+                            validation.failureMessage())
+                        .nextControlFlow("catch ($T ex)", Throwable.class)
+                        .addStatement("notices.add(new $T($T.of($L), ex.getMessage()))", ValidationNotice.class, List.class, subjects)
+                        .endControlFlow();
                 })
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                 .build())
