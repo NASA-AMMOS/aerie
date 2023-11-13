@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.engine.ResourceId;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
-  private static boolean debug = false;
+  private static boolean debug = true;
   public LiveCells liveCells;
   private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
@@ -97,30 +96,60 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 //    this.points.append(new TimePoint.Delta(delta));
 //  }
 
-  public void add(final EventGraph<Event> graph, Duration time) {
-    var topics = extractTopics(graph);
-    var commit = new TimePoint.Commit(graph, topics);
-//    this.points.append(commit);
-    addIndices(commit, time, topics);
+  // When adding a new commit to the timeline, we need to combine it with pre-existing commits
+  public void add(final EventGraph<Event> graph, Duration time, final int stepIndexAtTime) {
+    List<TimePoint.Commit> commits = commitsByTime.get(time);
+    // copy old commits to new timeline if haven't already
+    boolean copyingCommits = oldTemporalEventSource != null && (commits == null || commits.isEmpty());
+    if (copyingCommits) {
+      commits = oldTemporalEventSource.getCombinedCommitsByTime().get(time);
+      if (commits != null && !commits.isEmpty()) {
+        commits = new ArrayList<>(commits);// Make a copy of list to avoid modifying the old timeline
+        commitsByTime.put(time, commits);
+      }
+    }
+    var newEventGraph = graph;
+    boolean combineGraphs = oldTemporalEventSource != null && commits != null && commits.size() > stepIndexAtTime;
+    if (combineGraphs) {  // commits in new graph already replacing old
+      newEventGraph = EventGraph.concurrently(graph, commits.get(stepIndexAtTime).events());
+    }
+    var topics = extractTopics(newEventGraph);
+    var commit = new TimePoint.Commit(newEventGraph, topics);
+    if (combineGraphs) {
+      commits.set(stepIndexAtTime, commit);
+      commitsByTime.put(time, commits); // need to add if copied from old timeline
+    } else {
+      // If not combining with an existing graphs, just add to the end of the list.
+      commitsByTime.computeIfAbsent(time, $ -> new ArrayList<>()).add(commit);
+    }
+    // Add indices for the new and copied commits
+    // NOTE: since this is additive, we don't need to worry about replacing the old pre-combined graph's indices
+    if (copyingCommits) {
+      commits.forEach(c -> addIndices(c, time, oldTemporalEventSource.getTopicsForEventGraph(c.events)));
+    } else {
+      addIndices(commit, time, topics);
+    }
   }
 
   /**
    * Index the commit and graph by time, topic, and task.
    * For multiple commits at the same time, we assume addIndices() is called for each commit in the sequential order
    * that they are to be applied.
+   *
    * @param commit the commit of Events to add
    * @param time the time as a Duration when the events occur
    */
   protected void addIndices(final TimePoint.Commit commit, Duration time, Set<Topic<?>> topics) {
-    commitsByTime.computeIfAbsent(time, $ -> new ArrayList<>()).add(commit);
     final var finalTopics = topics == null ? extractTopics(commit.events) : topics;
     final var tasks = extractTasks(commit.events);
     timeForEventGraph.put(commit.events, time);
     var eventList = commitsByTime.get(time).stream().map(c -> c.events).toList();
-    topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList));
+    if (finalTopics != null)
+      finalTopics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList));
     tasks.forEach(t -> this.eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, eventList));
     // TODO: REVIEW -- do we really need all these maps?
-    topicsForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(finalTopics.size())).addAll(topics);
+    if (finalTopics != null)
+      topicsForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(finalTopics.size())).addAll(finalTopics);
     tasksForEventGraph.computeIfAbsent(commit.events, $ -> HashSet.newHashSet(tasks.size())).addAll(tasks);
   }
 
@@ -593,26 +622,27 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param includeEndTime whether to apply the Events occurring at endTime
    */
   public void stepUpSimple(final Cell<?> cell, final Duration endTime, final boolean includeEndTime) {
-    if (debug) System.out.println("stepUpSimple(" + cell + " " + cell.getTopics() + ", " + endTime + ", " + includeEndTime + ") BEGIN");
+    if (debug) System.out.println("" + i + " stepUpSimple(" + cell + " " + cell.getTopics() + ", " + endTime + ", " + includeEndTime + ") BEGIN");
     final NavigableMap<Duration, List<EventGraph<Event>>> subTimeline;
     var cellTimePair = getCellTime(cell);
-    if (debug) System.out.println("cell time: " + cellTimePair);
+    if (debug) System.out.println("" + i + " cell time: " + cellTimePair);
     var cellTime = cellTimePair.getLeft();
     var cellSteppedAtTime = cellTimePair.getRight();
     if (cellTime.longerThan(endTime)) {
-      throw new UnsupportedOperationException("Trying to step cell from the past");
+      throw new UnsupportedOperationException("" + i + " Trying to step cell from the past");
     }
     try {
       final TreeMap<Duration, List<EventGraph<Event>>> eventsByTimeForTopic = eventsByTopic.get(cell.getTopic());
       if (eventsByTimeForTopic == null) {
         if (endTime.longerThan(cellTime) && endTime.shorterThan(Duration.MAX_VALUE)) {
-          if (debug) System.out.println("cell.step(" + endTime.minus(cellTime) + ")");
+          if (debug) System.out.println("" + i + " cell.step(" + endTime.minus(cellTime) + ")");
           cell.step(endTime.minus(cellTime));
+          var prevCellTime = cellTime;
           cellTime = endTime;
           cellSteppedAtTime = 0;
-          putCellTime(cell, cellTime, cellSteppedAtTime);
+          putCellTime(cell, prevCellTime, cellTime, cellSteppedAtTime);
         }
-        if (debug) System.out.println("stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") END");
+        if (debug) System.out.println("" + i + " stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") END");
         return;
       }
       subTimeline = eventsByTimeForTopic.subMap(cellTime, true, endTime, includeEndTime);
@@ -623,13 +653,14 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       final List<EventGraph<Event>> eventGraphList = e.getValue();
       var delta = e.getKey().minus(cellTime);
       if (delta.isPositive()) {
-        if (debug) System.out.println("cell.step(" + delta + ")");
+        if (debug) System.out.println("" + i + " cell.step(" + delta + ")");
         cell.step(delta);
+        var prevCellTime = cellTime;
         cellTime = e.getKey();
         cellSteppedAtTime = 0;
-        putCellTime(cell, cellTime, cellSteppedAtTime);
+        putCellTime(cell, prevCellTime, cellTime, cellSteppedAtTime);
       } else if (delta.isNegative()) {
-        throw new UnsupportedOperationException("Trying to step cell from the past");
+        throw new UnsupportedOperationException("" + i + " Trying to step cell from the past");
       }
 //      cellTimePair = getCellTime(cell);
       if (cellTime.isEqualTo(e.getKey()) && cellSteppedAtTime == eventGraphList.size()) {
@@ -637,19 +668,22 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       } else {
         for (; cellSteppedAtTime < eventGraphList.size(); ++cellSteppedAtTime) {
           var eventGraph = eventGraphList.get(cellSteppedAtTime);
-          if (debug) System.out.println("cell.apply(" + eventGraph + ")");
+          if (debug) System.out.println("" + i + " cell.apply(" + eventGraph + ")");
           cell.apply(eventGraph, null, false);
         }
+        var prevCellTime = cellTime;
         cellTime = e.getKey();
-        putCellTime(cell, cellTime, cellSteppedAtTime);
+        putCellTime(cell, prevCellTime, cellTime, cellSteppedAtTime);
       }
     }
     if (endTime.longerThan(cellTime) && endTime.shorterThan(Duration.MAX_VALUE)) {
-      if (debug) System.out.println("cell.step(" + endTime.minus(cellTime) + ")");
+      if (debug) System.out.println("" + i + " cell.step(" + endTime.minus(cellTime) + ")");
       cell.step(endTime.minus(cellTime));
-      putCellTime(cell, endTime, 0);
+      var prevCellTime = cellTime;
+      cellTime = endTime;
+      putCellTime(cell, prevCellTime, cellTime, 0);
     }
-    if (debug) System.out.println("stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") END");
+    if (debug) System.out.println("" + i + " stepUpSimple(" + cell + ", " + endTime + ", " + includeEndTime + ") END");
   }
 
   /**
@@ -660,7 +694,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param endTime the time up to which the cell is stepped
    * @param includeEndTime whether to apply the Events occurring at endTime
    */
-  public void stepUp(final Cell<?> cell, final Duration endTime, final boolean includeEndTime) {
+  public <D> void stepUp(final Cell<D> cell, final Duration endTime, final boolean includeEndTime) {
     // Separate out the simpler case of no past simulation for readability
     if (oldTemporalEventSource == null) {
       stepUpSimple(cell, endTime, includeEndTime);
@@ -692,8 +726,8 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     var iter = subTimeline == null ? null : subTimeline.entrySet().iterator();
     var entry = iter != null && iter.hasNext() ? iter.next() : null;
     var entryTime = entry == null ? Duration.MAX_VALUE : entry.getKey();
-    var oldCell = getOldCell(cell).orElseThrow();
-    var oldCellTimePair = oldTemporalEventSource.getCellTime(cell);
+    var oldCell = oldTemporalEventSource.<D>getOrCreateCellInCache(cell.getTopic(), cellTime, false);  // TODO -- maybe pass cellSteppedAtTime index to make more efficient
+    var oldCellTimePair = oldTemporalEventSource.getCellTime(oldCell);
     var oldCellTime = oldCellTimePair.getLeft();
     final var originalOldCellTime = oldCellTime;
     var oldCellSteppedAtTime = oldCellTimePair.getRight();
@@ -702,8 +736,9 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     var oldEntry = oldIter != null && oldIter.hasNext() ? oldIter.next() : null;
     var oldEntryTime = oldEntry == null ? Duration.MAX_VALUE : oldEntry.getKey();
     var stale = TemporalEventSource.this.isTopicStale(cell.getTopic(), cellTime);
-    if (debug) System.out.println("" + i + " stepUp(" + cell.getTopic() + ", " + endTime + ", " + includeEndTime + "): cellState = " + cell.toString() + ", stale = " + stale + ", cellTime = " + cellTimePair + ", oldState = " + oldCell.getState().toString() + ", oldCellTime = " + oldCellTimePair);
-
+    if (debug) System.out.println("" + i + " BEGIN stepUp(" + cell.getTopic() + ", " + endTime + ", " + includeEndTime + "): cellState = " + cell.toString() + ", stale = " + stale + ", cellTime = " + cellTimePair + ", oldCellState = " + oldCell.getState().toString() + ", oldCellTime = " + oldCellTimePair);
+    if (debug) System.out.println("" + i + " stepUp(): entry = " + entry + ", entryTime = " + entryTime);
+    if (debug) System.out.println("" + i + " stepUp(): oldEntry = " + oldEntry + ", oldEntryTime = " + oldEntryTime);
     // Each iteration of this loop processes a time delta and a list of EventGraphs; else just steps up to endTime.
     // The cell applies both the old and new EventGraphs except only the new when at the same timepoint.
     // An old cell is created and/or stepped just within the old TemporalEventSource to determine if the
@@ -719,7 +754,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         if (oldCellTime.shorterThan(minWrtOld) && minWrtOld.shorterThan(Duration.MAX_VALUE)) {
           stepped = true;
           oldCell.step(minWrtOld.minus(oldCellTime));
-          if (debug) System.out.println("" + i + " stepUp(): oldCell.step(minWrtOld=" + minWrtOld + " - oldCellTime=" + oldCellTime + " = " + minWrtOld.minus(oldCellTime) + ")");
+          if (debug) System.out.println("" + i + " stepUp(): oldCell.step(minWrtOld=" + minWrtOld + " - oldCellTime=" + oldCellTime + " = " + minWrtOld.minus(oldCellTime) + "), oldCellState = " + oldCell.getState().toString());
           oldCellTime = minWrtOld;
           oldCellSteppedAtTime = 0;
           oldTemporalEventSource.putCellTime(oldCell, oldCellTime, oldCellSteppedAtTime);
@@ -730,7 +765,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       if (cellTime.shorterThan(minWrtNew) && minWrtNew.shorterThan(Duration.MAX_VALUE)) {
         stepped = true;
         cell.step(minWrtNew.minus(cellTime));
-        if (debug) System.out.println("" + i + " stepUp(): cell.step(minWrtOld=" + minWrtNew + " - cellTime=" + cellTime + " = " + minWrtNew.minus(cellTime) + ")");
+        if (debug) System.out.println("" + i + " stepUp(): cell.step(minWrtOld=" + minWrtNew + " - cellTime=" + cellTime + " = " + minWrtNew.minus(cellTime) + "), cellState = " + cell.getState().toString());
         cellTime = minWrtNew;
         cellSteppedAtTime = 0;
       }
@@ -826,9 +861,11 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       }
 
     }
-    putCellTime(cell, cellTime, cellSteppedAtTime);
+    var prevCellTimePair = getCellTime(cell);
+    var prevCellTime = prevCellTimePair == null ? Duration.MAX_VALUE : prevCellTimePair.getLeft();
+    putCellTime(cell, prevCellTime, cellTime, cellSteppedAtTime);
     if (debug) cellTimePair = Pair.of(cellTime, cellSteppedAtTime);
-    if (debug) System.out.println("" + i + " END stepUp(" + cell.getTopic() + ", " + endTime + ", " + includeEndTime + "): cellState = " + cell.toString() + ", stale = " + stale + ", cellTime = " + cellTimePair);
+    if (debug) System.out.println("" + i + " END stepUp(" + cell.getTopic() + ", " + endTime + ", " + includeEndTime + "): cellState = " + cell.toString() + ", stale = " + stale + ", cellTime = " + cellTimePair + ", oldCellState = " + oldCell.getState().toString() + ", oldCellTime = " + oldCellTimePair);
   }
 
   protected boolean updateStale(Cell<?> cell, Cell<?> oldCell) {
@@ -850,13 +887,14 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     if (cell.isEmpty()) {
       throw new RuntimeException("Can't find cell for query.");
     }
-    return getCell((Cell<State>)cell.get().get(), endTime, includeEndTime);
+    return getCell((Cell<State>)cell.get().cell, endTime, includeEndTime);
   }
 
   public <State> Cell<State> getCell(Cell<State> cell, Duration endTime, boolean includeEndTime) {
-    var time = getCellTime(cell).getLeft();
+    var t = getCellTime(cell);
     // Use the one in LiveCells if not asking for a time in the past.
-    if (time == null || time.noLongerThan(endTime)) {
+    if (t == null || t.getLeft().shorterThan(endTime) || (t.getLeft().isEqualTo(endTime) &&
+                                                          (includeEndTime || t.getRight() == 0))) {
       stepUp(cell, endTime, includeEndTime);
       return cell;
     }
@@ -870,7 +908,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     if (cell.isEmpty()) {
       throw new RuntimeException("Can't find cell for query.");
     }
-    return getCell(cell.get().get(), endTime, includeEndTime);
+    return getCell(cell.get().cell, endTime, includeEndTime);
   }
 
   public <State> Cell<State> getOrCreateCellInCache(Topic<?> topic, Duration endTime, boolean includeEndTime) {
@@ -882,7 +920,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       // TODO: maybe pass in boolean for whether to duplicate the cell in the cache instead of removing and adding back after stepping up
       inner.remove(entry.getKey());
     } else {
-      cell = missionModel.getInitialCells().getCells(topic).stream().findFirst().orElseThrow().get().duplicate();
+      cell = missionModel.getInitialCells().getCells(topic).stream().findFirst().orElseThrow().cell.duplicate();
     }
     stepUp(cell, endTime, includeEndTime);
     inner.put(endTime, cell);
@@ -891,13 +929,23 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
   public Optional<LiveCell<?>> getOldCell(LiveCell<?> cell) {
     if (oldTemporalEventSource == null) return Optional.empty();
-    return oldTemporalEventSource.liveCells.getCells(cell.get().getTopic()).stream().findFirst();
+    return oldTemporalEventSource.liveCells.getCells(cell.cell.getTopic()).stream().findFirst();
   }
 
   public Optional<Cell<?>> getOldCell(Cell<?> cell) {
     if (oldTemporalEventSource == null) return Optional.empty();
     return oldTemporalEventSource.liveCells.getCells(cell.getTopic()).stream().findFirst().map(lc -> lc.cell);
   }
+
+//  public Optional<Cell<?>> getOldCell(Cell<?> cell, Duration latest) {
+//    if (oldTemporalEventSource == null) return Optional.empty();
+//    var c = getOldCell(cell);
+//    var p = oldTemporalEventSource.getCellTime(c.get());
+//    if (p.getLeft().noLongerThan(latest)) {
+//      return c;
+//    }
+//    oldTemporalEventSource.getliveCells.
+//  }
 
   public Pair<Duration, Integer> getCellTime(Cell<?> cell) {
     var cellTime = cellTimes.get(cell);
@@ -917,6 +965,19 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     this.cellTimeStepped.put(cell, cellStepped);
   }
 
+  public void putCellTime(Cell<?> cell, Duration oldCellTime, Duration cellTime, int cellStepped) {
+    // replace cell in cache
+    if (!oldCellTime.isEqualTo(cellTime)) {
+      for (var t : cell.getTopics()) {
+        final TreeMap<Duration, Cell<?>> inner = cellCache.computeIfAbsent(t, $ -> new TreeMap<>());
+        var storedCell = inner.get(oldCellTime);
+        if (cell == storedCell) inner.remove(oldCellTime);
+        inner.put(cellTime, cell);
+      }
+    }
+    // now put the cell time
+    putCellTime(cell, cellTime, cellStepped);
+  }
 
   @Override
   public TemporalCursor cursor() {

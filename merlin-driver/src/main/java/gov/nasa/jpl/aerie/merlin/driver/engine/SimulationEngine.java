@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.CombinedSimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.EventGraphFlattener;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
@@ -51,6 +52,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -60,7 +62,7 @@ import java.util.stream.Collectors;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
-  private static boolean debug = false;
+  private static boolean debug = true;
   private static boolean trace = false;
 
   /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
@@ -83,6 +85,7 @@ public final class SimulationEngine implements AutoCloseable {
   public ResourceTracker resourceTracker;
   /** The history of when tasks read topics/cells */
   private final HashMap<Topic<?>, TreeMap<Duration, HashMap<TaskId, Event>>> cellReadHistory = new HashMap<>();
+  private final TreeMap<Duration, HashSet<TaskId>> removedCellReadHistory = new TreeMap<>();
 
   private final MissionModel<?> missionModel;
 
@@ -166,12 +169,163 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /**
+   * A cache of the combinedHistory so that it does not need to be recomputed after simulation.  The parent engine sets
+   * the cache for the child engine per topic and clears it for the grandchild per topic.  This assumes that an engine
+   * will not have more than one parent.
+   */
+  protected HashMap<Topic<?>, TreeMap<Duration, HashMap<TaskId, Event>>> _combinedHistory = new HashMap<>();
+  /**
+   * A cache of part of the combinedHistory computation that is the old combined history without the removed task history.
+   * This should be cleared by the parent engine.
+   */
+  protected HashMap<Topic<?>, TreeMap<Duration, HashMap<TaskId, Event>>> _oldCleanedHistory = new HashMap<>();
+  // protected Duration _combinedHistoryTime = null;
+
+//  public HashMap<Topic<?>, TreeMap<Duration, HashMap<TaskId, Event>>> getCombinedCellReadHistory() {
+//
+//  }
+//  public TreeMap<Duration, HashMap<TaskId, Event>> getCombinedCellReadHistory(Topic<?> topic) {
+//    return getCombinedCellReadHistory().get(topic);
+//  }
+
+  public TreeMap<Duration, HashMap<TaskId, Event>> getCombinedCellReadHistory(Topic<?> topic) {
+    // check cache
+    var inner = _combinedHistory.get(topic);
+    if (inner != null) return inner;
+
+    inner = cellReadHistory.get(topic);
+    if (oldEngine == null) {
+      // If there's no history from an old engine, then just set the cache to the local history
+      _combinedHistory = cellReadHistory;
+      if (inner == null) return new TreeMap();
+      return inner;
+    }
+
+    var oldInner = oldEngine.getCombinedCellReadHistory(topic);
+    if (oldEngine._combinedHistory.get(topic) == null) {
+      oldEngine._combinedHistory.put(topic, oldInner);
+      if (oldEngine.oldEngine != null && oldEngine.oldEngine._combinedHistory != null) {
+        oldEngine.oldEngine._combinedHistory.remove(topic);
+        oldEngine.oldEngine._oldCleanedHistory.remove(topic);
+        oldEngine.oldEngine.cellReadHistory.remove(topic);
+      }
+    }
+
+    // Clean the removed tasks from the old read history
+    // Check for cached computation first
+    var oldCleanedHistory = _oldCleanedHistory.get(topic);
+    if (oldCleanedHistory == null) {
+      //TreeMap<Duration, HashMap<TaskId, Event>> oldCleanedHistory = null;
+      Set<Duration> commonKeys = oldInner.keySet().stream().filter(d -> removedCellReadHistory.containsKey(d)).collect(
+          Collectors.toSet());
+      if (commonKeys.isEmpty()) {
+        oldCleanedHistory = oldInner;
+      } else {
+        oldCleanedHistory = new TreeMap<>();
+        for (var oDur : commonKeys) {
+          var rTasks = removedCellReadHistory.get(oDur);
+          var oTaskMap = oldInner.get(oDur);
+          if (rTasks == null) {
+            oldCleanedHistory.put(oDur, oTaskMap);
+          }
+          HashMap<TaskId, Event> cleanTaskMap = new HashMap<>();
+          Set<TaskId> commonTasks = oTaskMap.keySet().stream().filter(t -> rTasks.contains(t)).collect(
+              Collectors.toSet());
+          if (commonTasks.isEmpty()) {
+            cleanTaskMap = oTaskMap;
+          } else {
+            cleanTaskMap = new HashMap<>();
+            for (var tEntry : oTaskMap.entrySet()) {
+              var oTaskId = tEntry.getKey();
+              if (!rTasks.contains(oTaskId)) {
+                cleanTaskMap.put(tEntry.getKey(), tEntry.getValue());
+              }
+            }
+          }
+          oldCleanedHistory.put(oDur, cleanTaskMap);
+        }
+      }
+      // Now cache the results
+      _oldCleanedHistory.put(topic, oldCleanedHistory);
+    }
+
+    // Now merge local history with old cleaned history
+    TreeMap<Duration, HashMap<TaskId, Event>> combinedTopicHistory = null;
+    if (oldCleanedHistory.isEmpty()) {
+      combinedTopicHistory = inner;
+    } else if (inner == null || inner.isEmpty()) {
+      combinedTopicHistory = oldCleanedHistory;
+    }
+
+    // No need to cache this.  The parent engine caches this.
+    return combinedTopicHistory;
+  }
+
+
+
+  /**
    * Get the earliest time within a specified range that potentially stale cells are read by tasks not scheduled
    * to be re-run.
    * @param after start of time range
    * @param before end of time range
    * @return the time of the earliest read, the tasks doing the reads, and the noop Events/Topics read by each task
    */
+  /** Get the earliest time that topics become stale and return those topics with the time */
+  public Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReadsNew(Duration after, Duration before, Topic<Topic<?>> queryTopic) {
+    // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
+    // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
+    var earliest = before;
+    final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
+    ConcurrentSkipListSet<Duration> durs = timeline.staleTopics.entrySet().stream().collect(() -> new ConcurrentSkipListSet<Duration>(),
+                                                                                            (set, entry) -> set.addAll(entry.getValue().keySet().stream().filter(d -> entry.getValue().get(d)).toList()),
+                                                                                            (set1, set2) -> set1.addAll(set2));
+    if (durs.isEmpty()) return Pair.of(Duration.MAX_VALUE, Collections.emptyMap());
+    var earliestStaleTopic = durs.higher(after);
+    final TreeMap<Duration, List<EventGraph<Event>>> readEvents = oldEngine.timeline.getCombinedEventsByTopic().get(queryTopic);
+    if (readEvents == null || readEvents.isEmpty()) return Pair.of(Duration.MAX_VALUE, Collections.emptyMap());
+    var readEventsSubmap = readEvents.subMap(after, false, before, true);
+    for (var te : readEventsSubmap.entrySet()) {
+      final List<EventGraph<Event>> graphList = te.getValue();
+      for (var eventGraph : graphList) {
+        final List<Pair<String, Event>> flatGraph = EventGraphFlattener.flatten(eventGraph);
+        for (var pair : flatGraph) {
+          Event event = pair.getRight();
+          // HERE!
+        }
+      }
+    }
+
+    if (readEvents.isEmpty()) return Pair.of( Duration.MAX_VALUE, Collections.emptyMap());
+    for (var entry : timeline.staleTopics.entrySet()) {
+      Topic<?> topic = entry.getKey();
+      var subMap = entry.getValue().subMap(after, false, earliest, true);
+      Duration d = null;
+      for (var e : subMap.entrySet()) {
+        if (e.getValue()) {
+          d = e.getKey();
+          var topicEventsSubMap = readEventsSubmap.subMap(d, true, earliest, true);
+          break;
+        }
+      }
+      if (d == null) {
+        continue;
+      }
+      int comp = d.compareTo(earliest);
+      if (comp <= 0) {
+        if (comp < 0) tasks.clear();
+        //tasks.add(topic);
+        earliest = d;
+      }
+    }
+    if (tasks.isEmpty()) earliest = Duration.MAX_VALUE;
+    return Pair.of(earliest, tasks);
+  }
+
+//public String whatsThis(Topic<?> topic) {
+//    return missionModel.getResources().entrySet().stream().filter(e -> e.getValue().toString()).findFirst()
+//}
+
+
   public Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads(Duration after, Duration before) {
     // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
     // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
@@ -179,7 +333,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
     final var topicsStale = timeline.staleTopics.keySet();
     for (var topic : topicsStale) {
-      var topicReads = cellReadHistory.get(topic);
+      var topicReads = getCombinedCellReadHistory(topic);
       if (topicReads == null || topicReads.isEmpty()) {
         continue;
       }
@@ -191,6 +345,14 @@ public final class SimulationEngine implements AutoCloseable {
       for (var entry : topicReadsAfter.entrySet()) {
         Duration d = entry.getKey();
         HashMap<TaskId, Event> taskIds = entry.getValue();
+//        // filter out tasks of removed activities
+//        // Moved and removed activities have
+//        var filteredStream = entry.getValue().entrySet().stream().filter(e -> !removedActivities.contains(e.getKey()) &&
+//                                                                              !(oldEngine.getSimulatedActivityIdForTaskId(e.getKey()) != null &&
+//                                                                                removedActivities.contains(oldEngine.getSimulatedActivityIdForTaskId(e.getKey()))));
+//        HashMap<TaskId, Event> taskIds = filteredStream.collect(() -> new HashMap<TaskId, Event>(),
+//                                                                (map, e) -> map.put(e.getKey(), e.getValue()),
+//                                                                (map1, map2) -> map1.putAll(map2));
         if (timeline.isTopicStale(topic, d)) {
           if (d.shorterThan(earliest)) {
             earliest = d;
@@ -281,7 +443,7 @@ public final class SimulationEngine implements AutoCloseable {
       TreeMap<Duration, List<EventGraph<Event>>> eventsByTime =
           timeline.getCombinedEventsByTopic().get(topic);
       if (eventsByTime == null) continue;
-      var subMap = eventsByTime.subMap(after, true, earliest, true);
+      var subMap = eventsByTime.subMap(after, false, earliest, true);
       Duration d = null;
       for (var e : subMap.entrySet()) {
         final List<EventGraph<Event>> events = e.getValue();
@@ -326,19 +488,39 @@ public final class SimulationEngine implements AutoCloseable {
     if (staleTime != null) {
       if (staleTime.noLongerThan(time)) {
         // already marked stale by this time; a stale task cannot become unstale because we can't see it's internal state
-        return;
+        String taskName = getNameForTask(taskId);
+        System.err.println("WARNING: trying to set stale task stale at earlier time; this should not be possible; cannot re-execute a task more than once: TaskId = " + taskId + ", task name = \"" + taskName + "\"");
       }
+      return;
     }
-    staleTasks.put(taskId, time);
-    final ExecutionState<?> execState = oldEngine.getTaskExecutionState(taskId);
+    // find parent task to execute and mark parents stale
+    TaskId parentId = taskId;
+    while (parentId != null) {
+      staleTasks.put(taskId, time);
+      // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
+      if (oldEngine.getFactoryForTaskId(parentId) != null) {
+        break;
+      }
+      if (oldEngine.isActivity(parentId)) {
+        break;
+      }
+      if (oldEngine.isDaemonTask(parentId)) {
+        break;
+      }
+      var nextParentId = oldEngine.getTaskParent(taskId);
+      if (nextParentId == null) break;
+      parentId = nextParentId;
+    }
+
+    final ExecutionState<?> execState = oldEngine.getTaskExecutionState(parentId);
     final Duration taskStart;
     if (execState != null) taskStart = execState.startOffset(); // WARNING: assumes offset is from same plan start
     else {
       //taskStart = Duration.ZERO;
       throw new RuntimeException("Can't find task start!");
     }
-    rescheduleTask(taskId, taskStart);
-    removeTaskHistory(taskId);
+    rescheduleTask(parentId, taskStart);
+    removeTaskHistory(parentId, time);
   }
 
   /**
@@ -365,11 +547,11 @@ public final class SimulationEngine implements AutoCloseable {
         // for stepping further.
         var steppedCell = timeline.getCell(topic, timeOfStaleReads, false);
         final Cell<?> tempCell = steppedCell.duplicate();
-        List<TemporalEventSource.TimePoint.Commit> events = this.timeline.commitsByTime.get(timeOfStaleReads);
+        List<TemporalEventSource.TimePoint.Commit> events = this.timeline.getCombinedCommitsByTime().get(timeOfStaleReads);
         if (events == null || events.isEmpty()) throw new RuntimeException("No EventGraph for potentially stale read.");
         this.timeline.stepUp(tempCell, events.get(events.size()-1).events(), noop, false);
         // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
-        var oldEvents = this.timeline.oldTemporalEventSource.commitsByTime.get(timeOfStaleReads);
+        var oldEvents = this.timeline.oldTemporalEventSource.getCombinedCommitsByTime().get(timeOfStaleReads);
         if (oldEvents == null || oldEvents.isEmpty()) throw new RuntimeException("No old EventGraph for potentially stale read.");
         if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
           // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
@@ -377,6 +559,7 @@ public final class SimulationEngine implements AutoCloseable {
           this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(),
                                                       oldEvents.get(oldEvents.size()-1).events(), noop, false);
           if (!tempCell.getState().equals(tempOldCell.get().getState())) {
+            if (debug) System.out.println("Stale read: new cell state (" + tempCell.getState() + ") != od cell state (" + tempOldCell.get().getState() + ")");
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads);
             break;  // rescheduled task, so can move on to the next task
@@ -430,11 +613,15 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO -- make recursive calls here non-recursive (like in getCombinedEventsByTask()),
   // TODO -- including getSimulatedActivityIdForTaskId(), setCurTime(), and CombinedSimulationResults
 
-
+  //private HashSet<TaskId> _missingOldSimulatedActivityIds = new HashSet<>(); // short circuit deeply nested searches for taskIds that have
   private SimulatedActivityId getSimulatedActivityIdForTaskId(TaskId taskId) {
+    //if (_missingOldSimulatedActivityIds.contains(taskId)) return
     var simId = taskToSimulatedActivityId == null ? null : taskToSimulatedActivityId.get(taskId.id());
     if (simId == null && oldEngine != null) {
-      simId = oldEngine.getSimulatedActivityIdForTaskId(taskId);
+      // If this activity hasn't been seen in this simulation, it may be in a past one; this check avoids unnecessarily recursing
+      if (!this.isActivity(taskId)) {
+        simId = oldEngine.getSimulatedActivityIdForTaskId(taskId);
+      }
     }
     return simId;
   }
@@ -442,13 +629,20 @@ public final class SimulationEngine implements AutoCloseable {
   public void removeActivity(final TaskId taskId) {
     var simId = getSimulatedActivityIdForTaskId(taskId);
     removedActivities.add(simId);
-    removeTaskHistory(taskId);
+    removeTaskHistory(taskId, Duration.MIN_VALUE);
   }
 
-  public void removeTaskHistory(final TaskId taskId) {
+  public void removeTaskHistory(final TaskId taskId, Duration startingAfterTime) { // TODO -- need graph index with time
     // Look for the task's Events in the old and new timelines.
+    if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime + ") BEGIN");
     final TreeMap<Duration, List<EventGraph<Event>>> graphsForTask = this.timeline.eventsByTask.get(taskId);
     final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.getCombinedEventsByTask(taskId);
+    if (debug) System.out.println("old combined graphs = " + oldGraphsForTask);
+    if (debug) System.out.println("new local graphs = " + graphsForTask);
+    if (debug) {
+      final TreeMap<Duration, List<EventGraph<Event>>> combinedGraphsForTask = this.getCombinedEventsByTask(taskId);
+      if (debug) System.out.println("new combined graphs = " + graphsForTask);
+    }
     var allKeys = new TreeSet<Duration>();
     if (graphsForTask != null) {
       allKeys.addAll(graphsForTask.keySet());
@@ -457,6 +651,7 @@ public final class SimulationEngine implements AutoCloseable {
       allKeys.addAll(oldGraphsForTask.keySet());
     }
     for (Duration time : allKeys) {
+      if (time.noLongerThan(startingAfterTime)) continue;
       List<EventGraph<Event>> gl = graphsForTask == null ? null : graphsForTask.get(time); // If old graph is already replaced used the replacement
       if (gl == null || gl.isEmpty()) gl = oldGraphsForTask == null ? null : oldGraphsForTask.get(time);  // else we can replace the old graph
       for (var g : gl) {
@@ -469,8 +664,10 @@ public final class SimulationEngine implements AutoCloseable {
         // replace the old graph with one without the task's events, updating data structures
         var newG = g.filter(e -> !taskId.equals(e.provenance()));
         if (newG != g) {
+          if (debug) System.out.println("replacing old graph=" + g + " with new graph=" + newG + " at time " + time);
           timeline.replaceEventGraph(g, newG);
           updateTaskInfo(newG);
+          removedCellReadHistory.computeIfAbsent(time, $ -> new HashSet<>()).add(taskId);
         }
       }
     }
@@ -478,8 +675,15 @@ public final class SimulationEngine implements AutoCloseable {
     taskInfo.removeTask(taskId);
 
     // Remove children, too!
-    var children = this.taskChildren.get(taskId);
-    if (children != null) children.forEach(c -> removeTaskHistory(c));
+    var children = this.oldEngine.getTaskChildren(taskId);
+    if (children != null) children.forEach(c -> removeTaskHistory(c, startingAfterTime));
+    if (debug) {
+      final TreeMap<Duration, List<EventGraph<Event>>> localGraphsForTask = this.timeline.eventsByTask.get(taskId);
+      final TreeMap<Duration, List<EventGraph<Event>>> combinedGraphsForTask = this.getCombinedEventsByTask(taskId);
+      System.out.println("resulting local graphs = " + localGraphsForTask);
+      System.out.println("resulting combined graphs = " + combinedGraphsForTask);
+    }
+    if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime +  ") END");
   }
 
   private static ExecutorService getLoomOrFallback() {
@@ -597,20 +801,20 @@ public final class SimulationEngine implements AutoCloseable {
     Duration staleReadTime = null;
     Pair<List<Topic<?>>, Duration> earliestStaleTopics = null;
     Pair<List<Topic<?>>, Duration> earliestStaleTopicOldEvents = null;
-    Duration staleTopicTime = null;
-    Duration staleTopicOldEventTime = null;
-    Duration conditionTime = null;
+    Duration staleTopicTime = Duration.MAX_VALUE;
+    Duration staleTopicOldEventTime = Duration.MAX_VALUE;
+    Duration conditionTime = Duration.MAX_VALUE;
     Pair<List<Topic<?>>, Duration> earliestConditionTopics = null;
 
-    if (oldEngine != null) {
+    if (oldEngine != null && nextTime.noShorterThan(curTime())) {
       if (resourceTracker == null) {
         earliestStaleTopics = earliestStaleTopics(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-        if (debug) System.out.println("earliestStaleTopics(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopics);
+        //if (debug) System.out.println("earliestStaleTopics(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopics);
         staleTopicTime = earliestStaleTopics.getRight();
         nextTime = Duration.min(nextTime, staleTopicTime);
 
         earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime(), Duration.min(nextTime, maximumTime));
-        if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopicOldEvents);
+        //if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopicOldEvents);
         staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight();
         nextTime = Duration.min(nextTime, staleTopicOldEventTime);
       }
@@ -651,6 +855,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
+        if (debug) System.out.println("earliestStaleTopics at " + nextTime + " = " + earliestStaleTopics);
         for (Topic<?> topic : earliestStaleTopics.getLeft()) {
           invalidateTopic(topic, nextTime);
           invalidatedTopics.add(topic);
@@ -658,6 +863,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       if (resourceTracker == null && staleTopicOldEventTime.isEqualTo(nextTime)) {
+        if (debug) System.out.println("nextStaleTopicOldEvents at " + nextTime + " = " + earliestStaleTopicOldEvents);
         for (Topic<?> topic : earliestStaleTopicOldEvents
             .getLeft()
             .stream()
@@ -669,6 +875,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       if (conditionTime.isEqualTo(nextTime)) {
+        if (debug) System.out.println("earliestConditionTopics at " + nextTime + " = " + earliestConditionTopics);
         for (Topic<?> topic : earliestConditionTopics
             .getLeft()
             .stream()
@@ -680,6 +887,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     if (staleReadTime != null && staleReadTime.isEqualTo(nextTime)) {
+      if (debug) System.out.println("earliestStaleReads at " + nextTime + " = " + earliestStaleReads);
       rescheduleStaleTasks(earliestStaleReads);
     } else
     if (timeOfNextJobs.isEqualTo(nextTime) && invalidatedTopics.isEmpty()) {
@@ -705,12 +913,11 @@ public final class SimulationEngine implements AutoCloseable {
         }));
       }
 
-      this.timeline.add(tip, curTime());
+      this.timeline.add(tip, curTime(), stepIndexAtTime);
       updateTaskInfo(tip);
       stepIndexAtTime += 1;
-
-      if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
     }
+    if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
   }
 
   /** Performs a single job. */
@@ -1562,6 +1769,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   private boolean isActivity(final TaskId taskId) {
     if (this.taskInfo.isActivity(taskId)) return true;
+    if (this.daemonTasks.contains(taskId)) return false;
     if (oldEngine == null) return false;
     return this.oldEngine.isActivity(taskId);
   }
@@ -1574,44 +1782,122 @@ public final class SimulationEngine implements AutoCloseable {
     return parent;
   }
 
+  boolean isDaemonTask(TaskId taskId) {
+    if (daemonTasks.contains(taskId)) return true;
+    if (taskInfo.isActivity(taskId)) return false;
+    if (oldEngine != null) {
+      return oldEngine.isDaemonTask(taskId);
+    }
+    return false;
+  }
+
+  public ActivityDirectiveId getActivityDirectiveId(TaskId taskId) {
+    var activityDirectiveId = taskInfo.taskToPlannedDirective.get(taskId.id());
+    if (activityDirectiveId == null && oldEngine != null) {
+      activityDirectiveId = oldEngine.getActivityDirectiveId(taskId);
+    }
+    return activityDirectiveId;
+  }
+
+  public ActivityDirective getActivityDirective(TaskId taskId) {
+    var activityDirectiveId = getActivityDirectiveId(taskId);
+    if (activityDirectiveId == null) return null;
+    ActivityDirective directive = scheduledDirectives.get(activityDirectiveId);
+    if (directive == null && oldEngine != null) {
+      directive = oldEngine.getActivityDirective(taskId);
+    }
+    return directive;
+  }
+
+  public SerializedActivity getSerializedActivity(TaskId taskId) {
+    SerializedActivity serializedActivity = this.taskInfo.input.get(taskId.id());
+    if (serializedActivity == null && oldEngine != null) {
+      serializedActivity = oldEngine.getSerializedActivity(taskId);
+    }
+    return serializedActivity;
+  }
+
+  public String getActivityTypeName(TaskId taskId) {
+    SerializedActivity act = getSerializedActivity(taskId);
+    if (act != null) return act.getTypeName();
+    var directive = getActivityDirective(taskId);
+    if (directive != null) {
+      return directive.serializedActivity().getTypeName();
+    }
+    return null;
+  }
+
+  public String getNameForTask(TaskId taskId) {
+    if (isDaemonTask(taskId)) {
+      TaskFactory<?> factory = getFactoryForTaskId(taskId);
+      if (factory == null) {
+        return "unknown daemon task";
+      }
+      String daemonId = missionModel.getDaemonId(factory);
+      if (daemonId == null) return "unknown daemon task";
+      return daemonId;
+    }
+    if (isActivity(taskId)) {
+      String name = getActivityTypeName(taskId);
+      if (name != null) return name;
+      return "unknown activity";
+    }
+    return "unknown task";
+  }
+
+  public Set<TaskId> getTaskChildren(TaskId taskId) {
+    var children = this.taskChildren.get(taskId);
+    if (children == null && oldEngine != null) {
+      children = oldEngine.getTaskChildren(taskId);
+    }
+    return children;
+  }
+
   public void rescheduleTask(TaskId taskId, Duration startOffset) {
     //Look for serialized activity for task
     // If no parent is an activity, then see if it is a daemon task.
     // If it's not an activity or daemon task, report an error somehow (e.g., exception or log.error()).
-    TaskId activityId = null;
-    TaskId lastId = taskId;
-    boolean isAct = false;
-    boolean isDaemon = true;
-    while (true) {
-      if (oldEngine.isActivity(lastId)) {
-        isAct = true;
-        activityId = lastId;
-        isDaemon = false;
-        break;
-      }
-      var tempId = oldEngine.getTaskParent(lastId);
-      if (tempId == null) {
-        break;
-      }
-      lastId = tempId;
-    }
+//    TaskId activityId = null;
+//    TaskId daemonTaskId = taskId;
+//    TaskId lastId = taskId;
+//    boolean isAct = false;
+//    boolean isDaemon = false;
+//    while (true) {
+//      if (oldEngine.isActivity(lastId)) {
+//        isAct = true;
+//        activityId = lastId;
+//        isDaemon = false;
+//        break;
+//      }
+//      if (oldEngine.isDaemonTask(lastId)) {
+//        isDaemon = true;
+//        daemonTaskId = lastId;
+//        break;
+//      }
+//      if (oldEngine.getFactoryForTaskId(lastId) != null) {
+//        break;
+//      }
+//      var tempId = oldEngine.getTaskParent(lastId);
+//      if (tempId == null) {
+//        break;
+//      }
+//      lastId = tempId;
+//    }
 
-    if (isDaemon) {
-      if (!daemonTasks.contains(taskId)) {
-        throw new RuntimeException("WARNING: Expected TaskId to be a daemon task: " + taskId);
-      }
+    if (oldEngine.isDaemonTask(taskId)) {
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
         scheduleTask(startOffset, factory, taskId);  // TODO: Emit something like with emitAndThen() in the isAct case below?
       } else {
-        throw new RuntimeException("Can't reschedule task " + taskId + " at time offset " + startOffset +
+        String daemonId = missionModel.getDaemonId(factory);
+        throw new RuntimeException("Can't reschedule daemon task " + daemonId + " (" + taskId + ") at time offset " + startOffset +
                                    (factory == null ? " because there is no TaskFactory." : "."));
       }
-    } else if (isAct) {
+    } else if (oldEngine.isActivity(taskId)) {
       // Get the SerializedActivity for the taskId.
       // If an activity is found, see if it is associated with a directive and, if so, use the directive instead.
-      SerializedActivity serializedActivity = this.taskInfo.input.get(activityId.id());
-      var activityDirectiveId = taskInfo.taskToPlannedDirective.get(activityId.id());
+      SerializedActivity serializedActivity = this.taskInfo.input.get(taskId.id());
+      var activityDirectiveId = taskInfo.taskToPlannedDirective.get(taskId.id());
       SimulatedActivity simulatedActivity = simulatedActivities.get(activityDirectiveId);
       if (startOffset == null || startOffset == Duration.MAX_VALUE) {
         if (simulatedActivity != null) {
@@ -1630,7 +1916,16 @@ public final class SimulationEngine implements AutoCloseable {
                             .formatted(serializedActivity.getTypeName(), ex.toString()));
       }
       // TODO: What if there is no activityDirectiveId?
-      scheduleTask(startOffset, emitAndThen(activityDirectiveId, defaultActivityTopic, task), activityId);
+      scheduleTask(startOffset, emitAndThen(activityDirectiveId, defaultActivityTopic, task), taskId);
+    } else {
+      // We have a TaskFactory even though it's not an activity or daemon -- maybe a cached TaskFactory to avoid rerunning parents
+      TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
+      if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
+        scheduleTask(startOffset, factory, taskId);  // TODO: Emit something like with emitAndThen() in the isAct case below?
+      } else {
+        throw new RuntimeException("Can't reschedule task " + taskId + " at time offset " + startOffset +
+                                   (factory == null ? " because there is no TaskFactory." : "."));
+      }
     }
   }
 

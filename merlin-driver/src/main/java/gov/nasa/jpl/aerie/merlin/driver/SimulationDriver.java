@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 public final class SimulationDriver<Model> {
 
-  private static boolean debug = false;
+  private static boolean debug = true;
 
   public static final boolean defaultUseResourceTracker = false;
 
@@ -249,7 +249,7 @@ public final class SimulationDriver<Model> {
       Instant planStartTime,
       Duration planDuration) {
     return diffAndSimulate(activityDirectives, simulationStartTime,simulationDuration, planStartTime, planDuration,
-                           true);
+                           true, $ -> {});
   }
 
   public SimulationResultsInterface diffAndSimulate(
@@ -258,7 +258,8 @@ public final class SimulationDriver<Model> {
       Duration simulationDuration,
       Instant planStartTime,
       Duration planDuration,
-      boolean doComputeResults) {
+      boolean doComputeResults,
+      final Consumer<Duration> simulationExtentConsumer) {
     Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
     engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
     if (engine.oldEngine != null) {
@@ -267,11 +268,11 @@ public final class SimulationDriver<Model> {
       engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
       directives = new HashMap<>(engine.directivesDiff.get("added"));
       directives.putAll(engine.directivesDiff.get("modified"));
-      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), Duration.MIN_VALUE));
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
     }
-    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, $ -> {});
+    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationExtentConsumer);
   }
 
   public <Return> //static <Model, Return>

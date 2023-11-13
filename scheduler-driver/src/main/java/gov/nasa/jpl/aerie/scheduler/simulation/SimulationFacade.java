@@ -225,6 +225,7 @@ public class SimulationFacade implements AutoCloseable{
       earliestActStartTime = Duration.min(earliestActStartTime, act.startOffset());
     }
     if(allActivitiesToSimulate.isEmpty() && !atLeastOneActualRemoval) return;
+    // TODO -- SCHEDULING -- Do not flush driver (or try not to).
     //reset resumable simulation
     if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(this.driver.getCurrentSimulationEndTime())){
       allActivitiesToSimulate.addAll(insertedActivities.keySet());

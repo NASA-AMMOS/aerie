@@ -86,8 +86,8 @@ public final class MissionModel<Model> {
    * @return whether daemons should be rerun when reusing a past simulation.
    */
   public boolean rerunDaemons() {
-    return true;  // TODO: This should be specified in the adaptation somehow.
-                  //       Default should be false, but unit tests need it true.
+    return false;  // TODO: This should be specified in the adaptation somehow.
+                   //       Default should be false, but unit tests need it true.
   }
 
   public Map<String, Resource<?>> getResources() {

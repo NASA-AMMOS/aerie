@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -46,6 +45,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
+      //return "EventGraph(" + hashCode() + ", " + EffectExpressionDisplay.displayGraph(this) + ")";
     }
     @Override
     public boolean equals(Object o) {
@@ -59,6 +59,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
+      //return "EventGraph(" + hashCode() + ", " + EffectExpressionDisplay.displayGraph(this) + ")";
     }
     @Override
     public boolean equals(Object o) {
@@ -71,6 +72,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
+      //return "EventGraph(" + hashCode() + ", " + EffectExpressionDisplay.displayGraph(this) + ")";
     }
     @Override
     public boolean equals(Object o) {
@@ -83,6 +85,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
+      //return "EventGraph(" + hashCode() + ", " + EffectExpressionDisplay.displayGraph(this) + ")";
     }
     @Override
     public boolean equals(Object o) {
@@ -107,6 +110,35 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
       throw new IllegalArgumentException();
     }
   }
+
+  default long count() {
+    if (this instanceof EventGraph.Empty) {
+      return 1;
+    } else if (this instanceof EventGraph.Atom<Event> g) {
+      return 1;
+    } else if (this instanceof EventGraph.Sequentially<Event> g) {
+      return g.prefix.count() + g.suffix.count();
+    } else if (this instanceof EventGraph.Concurrently<Event> g) {
+      return g.left.count() + g.right.count();
+    } else {
+      throw new IllegalArgumentException();
+    }
+  }
+
+  default long countNonEmpty() {
+    if (this instanceof EventGraph.Empty) {
+      return 0;
+    } else if (this instanceof EventGraph.Atom<Event> g) {
+      return 1;
+    } else if (this instanceof EventGraph.Sequentially<Event> g) {
+      return g.prefix.countNonEmpty() + g.suffix.countNonEmpty();
+    } else if (this instanceof EventGraph.Concurrently<Event> g) {
+      return g.left.countNonEmpty() + g.right.countNonEmpty();
+    } else {
+      throw new IllegalArgumentException();
+    }
+  }
+
 
   /**
    * Return a subset of the graph filtering on events.

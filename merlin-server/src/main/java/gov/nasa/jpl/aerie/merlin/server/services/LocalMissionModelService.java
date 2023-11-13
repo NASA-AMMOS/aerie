@@ -285,7 +285,9 @@ public final class LocalMissionModelService implements MissionModelService {
                                     message.simulationStartTime(),
                                     message.simulationDuration(),
                                     message.planStartTime(),
-                                    message.planDuration());
+                                    message.planDuration(),
+                                    true,
+                                    simulationExtentConsumer);
     }
 
   }

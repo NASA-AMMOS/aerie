@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
@@ -272,6 +273,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    */
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
+    diffAndSimulate(schedule);
+  }
+  private void reallySimulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
+  {
     if (debug) System.out.println("ResumableSimulationDriver.simulate(" + schedule + ")");
 
     if (schedule.isEmpty()) {
@@ -326,6 +331,27 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       engine.generateResourceProfiles(curTime());
     }
     lastSimResults = null;
+  }
+
+  public void diffAndSimulate(
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives) {
+    Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
+    engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
+    if (engine.oldEngine != null) {
+      engine.directivesDiff = engine.oldEngine.diffDirectives(activityDirectives);
+      if (debug) System.out.println("SimulationDriver: engine.directivesDiff = " + engine.directivesDiff);
+      engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
+      directives = new HashMap<>(engine.directivesDiff.get("added"));
+      directives.putAll(engine.directivesDiff.get("modified"));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), Duration.MIN_VALUE));
+      //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
+    }
+    if (directives.isEmpty()) {
+      this.simulateUntil(this.planDuration);
+    } else {
+      this.reallySimulateSchedule(directives); //, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationExtentConsumer);
+    }
   }
 
   /**
