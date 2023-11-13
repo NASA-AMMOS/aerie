@@ -141,6 +141,7 @@ public abstract sealed class MapperMethodMaker permits
             TypeName.get(inputType.declaration().asType()),
             "input",
             Modifier.FINAL)
+        .beginControlFlow("try")
         .addStatement(
             "final var $L = new $T()",
             "notices",
@@ -173,6 +174,9 @@ public abstract sealed class MapperMethodMaker permits
         .addStatement(
             "return $L",
             "notices")
+        .nextControlFlow("catch ($T ex)", Throwable.class)
+        .addStatement("return $T.of(new $T($T.of(), ex.toString()))", List.class, ValidationNotice.class, List.class)
+        .endControlFlow()
         .build();
   }
 
