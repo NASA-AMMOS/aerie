@@ -164,6 +164,8 @@ public final class LocalMissionModelService implements MissionModelService {
             : new BulkArgumentValidationResponse.Validation(notices);
       } catch (InstantiationException e) {
         return new BulkArgumentValidationResponse.InstantiationError(e);
+      } catch (Throwable t) {
+        return new BulkArgumentValidationResponse.RuntimeException(t);
       }
     }).collect(Collectors.toList());
   }

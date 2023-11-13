@@ -109,5 +109,6 @@ public interface MissionModelService {
     record Validation(List<ValidationNotice> notices) implements BulkArgumentValidationResponse { }
     record NoSuchActivityError(NoSuchActivityTypeException ex) implements BulkArgumentValidationResponse { }
     record InstantiationError(InstantiationException ex) implements BulkArgumentValidationResponse { }
+    record RuntimeException(Throwable t) implements BulkArgumentValidationResponse { }
   }
 }

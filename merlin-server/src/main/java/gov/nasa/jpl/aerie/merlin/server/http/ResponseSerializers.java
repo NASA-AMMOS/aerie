@@ -189,12 +189,22 @@ public final class ResponseSerializers {
       return Json.createObjectBuilder(serializeInstantiationException(f.ex()).asJsonObject())
           .add("type", "INSTANTIATION_ERRORS")
           .build();
+    } else if (response instanceof BulkArgumentValidationResponse.RuntimeException e) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("type", "RUNTIME_EXCEPTION")
+                 .add("errors", Json.createObjectBuilder()
+                     .add("runtimeException", e.t().getMessage())
+                     .build())
+                 .build();
     }
 
     // This should never happen, but we don't have exhaustive pattern matching
     return Json.createObjectBuilder()
                .add("success", JsonValue.FALSE)
-               .add("errors", String.format("Internal error: %s", response))
+               .add("errors", Json.createObjectBuilder()
+                     .add("internalError", response.toString())
+                     .build())
                .build();
   }
 
