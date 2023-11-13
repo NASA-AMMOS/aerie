@@ -11,6 +11,7 @@ public sealed interface ActivityValidation {
   record InstantiationFailure(List<String> extraneousArguments, List<String> missingArguments, List<?> unconstructableArguments) implements ActivityValidation {}
   record ValidationFailure(List<ValidationNotice> notices) implements ActivityValidation {}
   record NoSuchActivityTypeFailure(String message, String activityType) implements ActivityValidation {}
+  record RuntimeError(String message) implements ActivityValidation {}
 
   record ValidationNotice(List<String> subjects, String message) { }
   record UnconstructableArgument(String name, String failure) { }
@@ -44,6 +45,7 @@ public sealed interface ActivityValidation {
                         getStringArray($, "subjects"),
                         $.asJsonObject().getString("message"))));
       case "NO_SUCH_ACTIVITY_TYPE" -> new NoSuchActivityTypeFailure(errors.getJsonObject("noSuchActivityError").getString("message"), errors.getJsonObject("noSuchActivityError").getString("activity_type"));
+      case "RUNTIME_EXCEPTION" -> new RuntimeError(errors.getString("runtimeException"));
       default -> throw new RuntimeException("Unhandled error type: " + type);
     };
   }

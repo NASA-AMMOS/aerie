@@ -77,4 +77,34 @@ public class AutomaticValidationTests {
     final ActivityValidation activityValidation = activityValidations.get((long) activityId);
     assertEquals(new ActivityValidation.Success(), activityValidation);
   }
+
+  @Test
+  void exceptionDuringValidationHandled() throws IOException, InterruptedException {
+    final var exceptionActivityId = hasura.insertActivity(
+        planId,
+        "ExceptionActivity",
+        "1h",
+        Json.createObjectBuilder().add("throwException", true).build());
+
+    // sleep to make sure exception activity is picked up
+    Thread.sleep(1000); // TODO consider a while loop here
+
+    final var biteActivityId = hasura.insertActivity(
+        planId,
+        "BiteBanana",
+        "1h",
+        Json.createObjectBuilder().add("biteSize", 1).build());
+
+    Thread.sleep(1000); // TODO consider a while loop here
+
+    final var activityValidations = hasura.getActivityValidations(planId);
+
+    final ActivityValidation exceptionValidations = activityValidations.get((long) exceptionActivityId);
+    final ActivityValidation biteValidations = activityValidations.get((long) biteActivityId);
+
+    // then make sure the exception was caught and serialized, and didn't crash the worker thread
+    assertEquals(new ActivityValidation.RuntimeError("Throwing runtime exception during validation"), exceptionValidations);
+    // if the above is true, bite banana will have its validation still
+    assertEquals(new ActivityValidation.Success(), biteValidations);
+  }
 }
