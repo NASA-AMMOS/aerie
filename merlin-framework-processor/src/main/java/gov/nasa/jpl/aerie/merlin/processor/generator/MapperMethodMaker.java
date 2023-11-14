@@ -141,7 +141,6 @@ public abstract sealed class MapperMethodMaker permits
             TypeName.get(inputType.declaration().asType()),
             "input",
             Modifier.FINAL)
-        .beginControlFlow("try")
         .addStatement(
             "final var $L = new $T()",
             "notices",
@@ -160,6 +159,7 @@ public abstract sealed class MapperMethodMaker permits
 
                     return CodeBlock
                         .builder()
+                        .beginControlFlow("try")
                         .addStatement(
                             "if (!$L.$L()) notices.add(new $T($T.of($L), $S))",
                             "input",
@@ -167,16 +167,16 @@ public abstract sealed class MapperMethodMaker permits
                             ValidationNotice.class,
                             List.class,
                             subjects,
-                            validation.failureMessage());
+                            validation.failureMessage())
+                        .nextControlFlow("catch ($T ex)", Throwable.class)
+                        .addStatement("return $T.of(new $T($T.of($L), ex.getMessage()))", List.class, ValidationNotice.class, List.class, subjects)
+                        .endControlFlow();
                 })
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                 .build())
         .addStatement(
             "return $L",
             "notices")
-        .nextControlFlow("catch ($T ex)", Throwable.class)
-        .addStatement("return $T.of(new $T($T.of(), ex.getMessage()))", List.class, ValidationNotice.class, List.class)
-        .endControlFlow()
         .build();
   }
 
