@@ -5,6 +5,7 @@
 @WithMetadata(name="unit", annotation=gov.nasa.jpl.aerie.contrib.metadata.Unit.class)
 
 @WithConfiguration(Configuration.class)
+@WithTimeSystem(LmstSimple.class)
 
 @WithActivityType(BiteBananaActivity.class)
 @WithActivityType(PeelBananaActivity.class)
@@ -46,8 +47,10 @@ import gov.nasa.jpl.aerie.banananation.activities.PickBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.RipenBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ThrowBananaActivity;
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
+import gov.nasa.jpl.aerie.contrib.time.LmstSimple;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithMetadata;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithConfiguration;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithTimeSystem;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithMappers;

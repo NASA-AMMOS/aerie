@@ -19,6 +19,12 @@ public @interface MissionModel {
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
+  @interface WithTimeSystem {
+    Class<?> value();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
   @interface AllActivityTypes {
     WithActivityType[] value();
   }
