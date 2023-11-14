@@ -324,7 +324,7 @@ public class SchedulingTests {
     assertEquals("05:00:00", plantSegments.get(2).startOffset()); // GB2 end
 
     final var topics = hasura.getTopicsEvents(datasetId);
-    assertEquals(39, topics.size());
+    assertEquals(41, topics.size());
     // Assert that the keys to be inspected are included
     assertTrue(topics.containsKey("ActivityType.Input.GrowBanana"));
     assertTrue(topics.containsKey("ActivityType.Output.GrowBanana"));
