@@ -80,6 +80,57 @@ public class AutomaticValidationTests {
   }
 
   @Test
+  void noSuchActivityType() throws IOException, InterruptedException {
+    final var activityId = hasura.insertActivity(
+        planId,
+        "NopeBanana",
+        "1h",
+        Json.createObjectBuilder().build());
+    Thread.sleep(1000); // TODO consider a while loop here
+    final var activityValidations = hasura.getActivityValidations(planId);
+    final ActivityValidation activityValidation = activityValidations.get((long) activityId);
+    assertEquals(new ActivityValidation.NoSuchActivityTypeFailure("no such activity type", "NopeBanana"), activityValidation);
+  }
+
+  @Test
+  void validationNotice() throws IOException, InterruptedException {
+    final var activityId = hasura.insertActivity(
+        planId,
+        "BiteBanana",
+        "1h",
+        Json.createObjectBuilder().add("biteSize", 0).build());
+    Thread.sleep(1000); // TODO consider a while loop here
+    final var activityValidations = hasura.getActivityValidations(planId);
+    final ActivityValidation activityValidation = activityValidations.get((long) activityId);
+    assertEquals(new ActivityValidation.ValidationFailure(List.of(
+        new ActivityValidation.ValidationNotice(List.of("biteSize"), "bite size must be positive"))
+    ), activityValidation);
+  }
+
+  @Test
+  void instantiationError() throws IOException, InterruptedException {
+    final var activityId = hasura.insertActivity(
+        planId,
+        "BakeBananaBread",
+        "1h",
+        Json.createObjectBuilder()
+            .add("dontNeed", 0)
+            .add("temperature", "this is a string")
+            .add("tbSugar", 1)
+            .build());
+    Thread.sleep(1000); // TODO consider a while loop here
+    final var activityValidations = hasura.getActivityValidations(planId);
+    final ActivityValidation activityValidation = activityValidations.get((long) activityId);
+    assertEquals(new ActivityValidation.InstantiationFailure(
+        List.of("dontNeed"),
+        List.of("glutenFree"),
+        List.of(new ActivityValidation.UnconstructableArgument(
+            "temperature",
+            "Expected real number, got StringValue[value=this is a string]"))
+    ), activityValidation);
+  }
+
+  @Test
   void exceptionDuringValidationHandled() throws IOException, InterruptedException {
     final var exceptionActivityId = hasura.insertActivity(
         planId,
