@@ -22,11 +22,7 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
 
     if (oldTime != null) removeJobFromQueue(oldTime, job);
 
-    this.queue.compute(time, (t, jobsAtNewTime) -> {
-      if (jobsAtNewTime == null) jobsAtNewTime = new HashSet<>();
-      jobsAtNewTime.add(job);
-      return jobsAtNewTime;
-    });
+    this.queue.computeIfAbsent(time, $ -> new HashSet<>()).add(job);
   }
 
   public void unschedule(final JobRef job) {
