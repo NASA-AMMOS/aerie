@@ -12,7 +12,9 @@ public record AppConfiguration (
     Store store,
     Instant untruePlanStart,
     URI hasuraGraphqlURI,
-    String hasuraGraphQlAdminSecret
+    String hasuraGraphQlAdminSecret,
+    boolean enableContinuousValidationThread,
+    int validationThreadPollingPeriod
 ) {
   public AppConfiguration {
     Objects.requireNonNull(merlinFileStore);

@@ -25,6 +25,7 @@
 @WithActivityType(DurationParameterActivity.class)
 @WithActivityType(ControllableDurationActivity.class)
 @WithActivityType(RipenBananaActivity.class)
+@WithActivityType(ExceptionActivity.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
@@ -38,6 +39,7 @@ import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingSpawnActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DownloadBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DurationParameterActivity;
+import gov.nasa.jpl.aerie.banananation.activities.ExceptionActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.LineCountBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ParameterTestActivity;
