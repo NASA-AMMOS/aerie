@@ -116,6 +116,7 @@ public class MissionModelTests {
         new ValueSchemaStruct(Map.of(
             "duration", VALUE_SCHEMA_DURATION,
             "durationInSeconds", new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "s")).build()), VALUE_SCHEMA_REAL)))));
+    activityTypes.add(new ActivityType("ExceptionActivity", Map.of("throwException", new Parameter(0, VALUE_SCHEMA_BOOLEAN))));
     activityTypes.add(new ActivityType("grandchild", Map.of("counter", new Parameter(0, VALUE_SCHEMA_INT))));
     activityTypes.add(new ActivityType("GrowBanana", Map.of(
         "quantity", new Parameter(0, VALUE_SCHEMA_INT),
