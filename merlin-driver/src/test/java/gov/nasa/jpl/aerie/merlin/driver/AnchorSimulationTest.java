@@ -639,7 +639,8 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays);
+          tenDays,
+          () -> false);
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
     }
@@ -755,7 +756,8 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays);
+          tenDays,
+          () -> false);
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
     }
@@ -913,7 +915,8 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays);
+          tenDays,
+          () -> false);
 
       assertEquals(planStart, actualSimResults.startTime);
       assertTrue(actualSimResults.unfinishedActivities.isEmpty());
@@ -1050,7 +1053,8 @@ public final class AnchorSimulationTest {
           planStart,
           tenDays,
           planStart,
-          tenDays);
+          tenDays,
+          () -> false);
 
       assertEquals(3906, expectedSimResults.simulatedActivities.size());
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);

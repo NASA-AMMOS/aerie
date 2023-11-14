@@ -126,7 +126,8 @@ public class TemporalSubsetSimulationTests {
         planStart,
         fiveDays,
         planStart,
-        tenDays);
+        tenDays,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -177,7 +178,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(5, ChronoUnit.DAYS),
         fiveDays,
         planStart,
-        tenDays);
+        tenDays,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -246,7 +248,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(3, ChronoUnit.DAYS),
         fiveDays,
         planStart,
-        tenDays);
+        tenDays,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -309,7 +312,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(-2, ChronoUnit.DAYS),
         fiveDays,
         planStart,
-        tenDays);
+        tenDays,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -361,7 +365,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(8, ChronoUnit.DAYS),
         fiveDays,
         planStart,
-        tenDays);
+        tenDays,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -601,7 +606,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
         planStart,
-        oneDay);
+        oneDay,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -761,7 +767,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
         planStart,
-        oneDay);
+        oneDay,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -955,7 +962,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
         planStart,
-        oneDay);
+        oneDay,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
@@ -999,7 +1007,8 @@ public class TemporalSubsetSimulationTests {
         planStart.plus(12, ChronoUnit.HOURS),
         Duration.ZERO,
         planStart,
-        oneDay);
+        oneDay,
+        () -> false);
 
     assertEqualsSimulationResults(expectedSimResults, actualSimResults);
   }
