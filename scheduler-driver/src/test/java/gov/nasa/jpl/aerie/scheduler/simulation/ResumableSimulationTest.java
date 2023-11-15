@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -80,9 +78,10 @@ public class ResumableSimulationTest {
 
   @Test
   public void testStopsAtEndOfPlanningHorizon(){
+    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
-        new SerializedActivity("ControllableDurationActivity", Map.of("duration", SerializedValue.of(tenHours.in(MICROSECOND)))),
+        new SerializedActivity("ControllableDurationActivity", Map.of("duration", fooSchedulerModel.serializeDuration(tenHours))),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours);

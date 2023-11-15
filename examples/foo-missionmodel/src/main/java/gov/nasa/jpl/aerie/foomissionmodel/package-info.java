@@ -2,8 +2,8 @@
 
 @WithConfiguration(Configuration.class)
 
-@WithMappers(BasicValueMappers.class)
 @WithMappers(FooValueMappers.class)
+@WithMappers(BasicValueMappers.class)
 
 @WithActivityType(BasicActivity.class)
 @WithActivityType(FooActivity.class)
