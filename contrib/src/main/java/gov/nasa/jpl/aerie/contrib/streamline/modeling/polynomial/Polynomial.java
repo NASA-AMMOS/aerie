@@ -224,10 +224,11 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
     return Arrays.stream(solutions)
                  .filter(solution -> Math.abs(solution.getImaginary()) < ROOT_FINDING_IMAGINARY_COMPONENT_TOLERANCE)
                  .map(Complex::getReal)
-                 .filter(t -> t >= 0)
+                 .filter(t -> t >= 0 && t <= MAX_SECONDS_FOR_DURATION)
                  .sorted()
                  .map(t -> Duration.roundNearest(t, SECOND));
   }
+  private static final double MAX_SECONDS_FOR_DURATION = Duration.MAX_VALUE.ratioOver(SECOND);
 
   /**
    * Get the nth coefficient.

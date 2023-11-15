@@ -198,6 +198,13 @@ public final class DiscreteResources {
   }
 
   /**
+   * Resource-level if-then-else logic.
+   */
+  public static <D> Resource<D> choose(Resource<Discrete<Boolean>> condition, Resource<D> thenCase, Resource<D> elseCase) {
+    return ResourceMonad.bind(condition, c -> c.extract() ? thenCase : elseCase);
+  }
+
+  /**
    * Assert that this resource is always true.
    * Otherwise, this resource fails.
    * Register this resource to detect that failure.

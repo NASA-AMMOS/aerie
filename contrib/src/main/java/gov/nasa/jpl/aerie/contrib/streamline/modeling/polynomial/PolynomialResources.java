@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Domain;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
@@ -30,7 +31,9 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.shift;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.signalling;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bindEffect;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.effect;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.unit;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
@@ -38,6 +41,11 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bi
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.lift;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.or;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.LinearExpression.lx;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources.extend;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
@@ -247,27 +255,43 @@ public final class PolynomialResources {
    */
   public static ClampedIntegrateResult clampedIntegrate(
       Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
-    var cell = cellResource(map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
-    // Erase expiry information when calculating next iteration of integral
-    var nonExpiringCell = eraseExpiry(cell);
-    // Clamp integrand to UB/LB rates as needed
-    var integrandUB = bind(greaterThanOrEquals(nonExpiringCell, upperBound), full -> full.extract() ? differentiate(upperBound) : constant(Double.POSITIVE_INFINITY));
-    var integrandLB = bind(lessThanOrEquals(nonExpiringCell, lowerBound), empty -> empty.extract() ? differentiate(lowerBound) : constant(Double.NEGATIVE_INFINITY));
-    var effectiveIntegrand = clamp(integrand, integrandLB, integrandUB);
-    // Separately, clamp the value to the UB/LB value to account for overshooting due to discrete time
-    // Erase the expiry information from cell to cut the feedback loop there.
-    var effectiveIntegral = map(
-        clamp(nonExpiringCell, lowerBound, upperBound),
-        effectiveIntegrand,
-        (value, rate) -> rate.integral(value.extract()));
-    // Use integrand's expiry but not integral's, since we're refreshing the integral
-    wheneverDynamicsChange(effectiveIntegral, integral -> cell.emit("Update integral", $ -> integral));
-    // Finally, compute the overflow/underflow as the difference between input and output rates:
-    var flowDifference = subtract(differentiate(effectiveIntegral), integrand);
+    LinearBoundaryConsistencySolver rateSolver = new LinearBoundaryConsistencySolver("clampedIntegrate rate solver");
+    var integral = cellResource(polynomial(startingValue));
+
+    // Solve for the rate as a function of value
+    var overflowRate = rateSolver.variable("overflowRate", Domain::lowerBound);
+    var underflowRate = rateSolver.variable("underflowRate", Domain::lowerBound);
+    var rate = rateSolver.variable("rate", Domain::upperBound);
+
+    // Set up slack variables for under-/overflow
+    rateSolver.declare(lx(overflowRate), GreaterThanOrEquals, lx(0));
+    rateSolver.declare(lx(underflowRate), GreaterThanOrEquals, lx(0));
+    rateSolver.declare(lx(rate).add(lx(underflowRate)).subtract(lx(overflowRate)), Equals, lx(integrand));
+
+    // Set up rate clamping conditions
+    var integrandUB = choose(
+        greaterThanOrEquals(integral, upperBound),
+        differentiate(upperBound),
+        constant(Double.POSITIVE_INFINITY));
+    var integrandLB = choose(
+        lessThanOrEquals(integral, lowerBound),
+        differentiate(lowerBound),
+        constant(Double.NEGATIVE_INFINITY));
+
+    rateSolver.declare(lx(rate), LessThanOrEquals, lx(integrandUB));
+    rateSolver.declare(lx(rate), GreaterThanOrEquals, lx(integrandLB));
+
+    // Use a simple feedback loop on volumes to do the integration and clamping.
+    // Clamping here takes care of discrete under-/overflows and overshooting bounds due to discrete time steps.
+    var clampedCell = clamp(integral, lowerBound, upperBound);
+    var correctedCell = bind(clampedCell, v -> map(rate.resource(), r -> r.integral(v.extract())));
+    // Use the corrected integral values to set volumes, but erase expiry information in the process to avoid loops
+    wheneverDynamicsChange(correctedCell, v -> integral.emit("Update clamped integral", $ -> v.map(p -> neverExpiring(p.data()))));
+
     return new ClampedIntegrateResult(
-        effectiveIntegral,
-        max(flowDifference, constant(0)),
-        negate(min(flowDifference, constant(0))));
+        integral,
+        overflowRate.resource(),
+        underflowRate.resource());
   }
 
   /**
@@ -302,19 +326,19 @@ public final class PolynomialResources {
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<Polynomial> p, double threshold) {
-    return bind(p, p$ -> ExpiringToResourceMonad.unit(p$.greaterThan(threshold)));
+    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.greaterThan(threshold))));
   }
 
   public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Polynomial> p, double threshold) {
-    return bind(p, p$ -> ExpiringToResourceMonad.unit(p$.greaterThanOrEquals(threshold)));
+    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.greaterThanOrEquals(threshold))));
   }
 
   public static Resource<Discrete<Boolean>> lessThan(Resource<Polynomial> p, double threshold) {
-    return bind(p, p$ -> ExpiringToResourceMonad.unit(p$.lessThan(threshold)));
+    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.lessThan(threshold))));
   }
 
   public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Polynomial> p, double threshold) {
-    return bind(p, p$ -> ExpiringToResourceMonad.unit(p$.lessThanOrEquals(threshold)));
+    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.lessThanOrEquals(threshold))));
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<Polynomial> p, Resource<Polynomial> q) {
@@ -334,11 +358,11 @@ public final class PolynomialResources {
   }
 
   public static Resource<Polynomial> min(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.min(q$)));
+    return signalling(ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.min(q$))));
   }
 
   public static Resource<Polynomial> max(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.max(q$)));
+    return signalling(ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.max(q$))));
   }
 
   /**
@@ -355,16 +379,13 @@ public final class PolynomialResources {
    * </p>
    */
   public static Resource<Polynomial> clamp(Resource<Polynomial> p, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound) {
+    // Bind an assertion into the resource to error it out if the bounds cross over each other.
+    var result = max(lowerBound, min(upperBound, p));
     return ResourceMonad.bind(
-        lessThan(upperBound, lowerBound),
-        impossible -> {
-          if (impossible.extract()) {
-            throw new IllegalStateException(
-                "Inverted bounds for clamp: maximum %f < minimum %f"
-                    .formatted(currentValue(upperBound), currentValue(lowerBound)));
-          }
-          return max(lowerBound, min(upperBound, p));
-        });
+        assertThat(
+            "Clamp lowerBound must be less than or equal to upperBound",
+             lessThanOrEquals(lowerBound, upperBound)),
+        $ -> result);
   }
 
   private static Polynomial scalePolynomial(Polynomial p, double s) {
