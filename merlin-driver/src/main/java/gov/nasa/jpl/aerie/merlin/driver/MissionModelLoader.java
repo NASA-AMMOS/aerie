@@ -15,8 +15,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.jar.JarFile;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.lang.ref.SoftReference;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class MissionModelLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(MissionModelLoader.class);
+
     public static ModelType<?, ?> loadModelType(final Path path, final String name, final String version)
     throws MissionModelLoadException
     {
@@ -58,6 +68,8 @@ public final class MissionModelLoader {
         }
     }
 
+    private static SoftReference<URLClassLoader> lastClassLoader;
+
     public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)
     throws MissionModelLoadException
     {
@@ -66,7 +78,21 @@ public final class MissionModelLoader {
         final var className = getImplementingClassName(path, name, version);
 
         // Construct a ClassLoader with access to classes in the mission model location.
-        final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)});
+        final var url = missionModelPathToUrl(path);
+
+        // Important optimization: if the last time we were called was for the same mission model then reuse the same
+        // classloader.  In particular this ensures that any static caches (e.g. for memoization optimizations) in the
+        // mission model are not reset across simulation runs.
+        URLClassLoader classLoader = null;
+        URLClassLoader lcl = lastClassLoader != null ? lastClassLoader.get() : null;
+        if (lcl != null && Arrays.stream(lcl.getURLs()).anyMatch(u -> u.equals(url))) {
+          logger.debug("Reusing existing classloader for {}", url);
+          classLoader = lcl;
+        } else {
+          logger.debug("Creating classloader for {}", url);
+          classLoader = new URLClassLoader(new URL[] {url});
+          lastClassLoader = new SoftReference<>(classLoader);
+        }
 
         try {
             final var pluginClass$ = classLoader.loadClass(className);
