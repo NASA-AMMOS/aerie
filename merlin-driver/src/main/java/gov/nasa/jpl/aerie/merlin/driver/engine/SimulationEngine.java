@@ -27,6 +27,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -50,6 +52,11 @@ import java.util.function.Consumer;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+
+  private static final Logger logger = LoggerFactory.getLogger(SimulationEngine.class);
+
+  private static final boolean PROFILE_RESOURCES = false;
+
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
   /** The set of all jobs waiting on a given signal. */
@@ -65,6 +72,12 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+
+  public static class ResourceUpdateStats {
+    public long totalUpdates;
+    public double totalSeconds;
+  }
+  public final Map<ResourceId, ResourceUpdateStats> resourceUpdateStats = new HashMap<>();
 
   /** The task that spawned a given task (if any). */
   private final Map<TaskId, TaskId> taskParent = new HashMap<>();
@@ -326,7 +339,17 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) {
     final var querier = new EngineQuerier(frame);
-    this.resources.get(resource).append(currentTime, querier);
+
+    if (PROFILE_RESOURCES) {
+      final long start = System.nanoTime();
+      this.resources.get(resource).append(currentTime, querier);
+      final long ns = System.nanoTime() - start;
+      final ResourceUpdateStats stats = resourceUpdateStats.computeIfAbsent(resource, $ -> new ResourceUpdateStats());
+      stats.totalUpdates++;
+      stats.totalSeconds +=  ns * 1e-9;
+    } else {
+      this.resources.get(resource).append(currentTime, querier);
+    }
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
 
