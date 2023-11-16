@@ -20,6 +20,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -671,19 +672,28 @@ public class SchedulingTests {
                                              .toList();
       assertEquals(1, findFile.size());
 
-      final var resources = """
-          export type Resource = {
-            "/peel": number,
-            "/my_boolean": boolean,
-            "/fruit": {initial: number, rate: number, },
-            "/data/line_count": number,
-            "/flag/conflicted": boolean,
-            "/plant": number,
-            "/flag": ( | "A" | "B"),
-            "/producer": string,
-          };
-          """;
-      assertTrue(findFile.get(0).content().contains(resources));
+      // Create a list of the exported resource types, one entry per new line
+      final List<String> resourceTypes = Arrays.stream(findFile.get(0)
+                                       .content()
+                                       .split("export type Resource = \\{\\n")[1]
+                                       .split("\\n};")[0] // isolate to export type Resource block
+                                       .split("\\n"))
+                                       .map(String::strip) // remove whitespace
+                                       .toList();
+
+      final var expectedResources = List.of(
+          "\"/data/line_count\": number,",
+          "\"/flag\": ( | \"A\" | \"B\"),",
+          "\"/flag/conflicted\": boolean,",
+          "\"/fruit\": {initial: number, rate: number, },",
+          "\"/my_boolean\": boolean,",
+          "\"/peel\": number,",
+          "\"/plant\": number,",
+          "\"/producer\": string,"
+      );
+
+      assertEquals(expectedResources.size(), resourceTypes.size());
+      assertTrue(resourceTypes.containsAll(expectedResources));
     }
 
     /**

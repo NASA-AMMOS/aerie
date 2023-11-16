@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -37,8 +38,7 @@ public class UncontrollableDurationTest {
   @BeforeEach
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(3000));
-    MissionModel<?> aerieLanderMissionModel = SimulationUtility.getFooMissionModel();
-    problem = new Problem(aerieLanderMissionModel, planningHorizon, new SimulationFacade(planningHorizon, aerieLanderMissionModel), SimulationUtility.getFooSchedulerModel());
+    problem = buildProblemFromFoo(planningHorizon);
     plan = makeEmptyPlan();
   }
 

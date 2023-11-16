@@ -122,7 +122,10 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
-      try(final var simulationFacade = new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel())) {
+      try(final var simulationFacade = new SimulationFacade(
+          planningHorizon,
+          schedulerMissionModel.missionModel(),
+          schedulerMissionModel.schedulerModel())) {
         final var problem = new Problem(
             schedulerMissionModel.missionModel(),
             planningHorizon,
@@ -229,7 +232,8 @@ public record SynchronousSchedulerAgent(
             loadedPlanComponents.idMap(),
             loadedPlanComponents.merlinPlan(),
             solutionPlan,
-            activityToGoalId
+            activityToGoalId,
+            schedulerMissionModel.schedulerModel()
         );
         final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
         final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
@@ -429,11 +433,7 @@ public record SynchronousSchedulerAgent(
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
           final var serializedDuration = activity.serializedActivity().getArguments().get(s.parameterName());
           if (serializedDuration != null) {
-            actDuration = Duration.of(
-                serializedDuration
-                    .asInt()
-                    .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
-                Duration.MICROSECONDS);
+            actDuration = problem.getSchedulerModel().deserializeDuration(serializedDuration);
           }
         } else if (schedulerActType.getDurationType() instanceof DurationType.Fixed fixedDurationType) {
           actDuration = fixedDurationType.duration();
@@ -577,12 +577,13 @@ public record SynchronousSchedulerAgent(
     final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
     final MerlinPlan initialPlan,
     final Plan newPlan,
-    final Map<SchedulingActivityDirective, GoalId> goalToActivity
+    final Map<SchedulingActivityDirective, GoalId> goalToActivity,
+    final SchedulerModel schedulerModel
   ) {
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> {
-          return merlinService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity).getValue();
+          return merlinService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity, schedulerModel).getValue();
         }
         case UpdateInputPlanWithNewActivities -> {
           return merlinService.updatePlanActivityDirectives(
@@ -590,7 +591,8 @@ public record SynchronousSchedulerAgent(
               idsFromInitialPlan,
               initialPlan,
               newPlan,
-              goalToActivity
+              goalToActivity,
+              schedulerModel
           );
         }
         default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);

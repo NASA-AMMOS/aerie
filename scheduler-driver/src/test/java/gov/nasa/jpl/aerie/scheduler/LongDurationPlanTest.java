@@ -26,8 +26,7 @@ public class LongDurationPlanTest {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    final var banananationMissionModel = SimulationUtility.getBananaMissionModel();
-    return new Problem(banananationMissionModel, h, new SimulationFacade(h, banananationMissionModel), SimulationUtility.getBananaSchedulerModel());
+    return SimulationUtility.buildProblemFromBanana(h);
   }
 
   private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2030-005T01:01:01.001"));

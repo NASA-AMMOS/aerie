@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -26,6 +27,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers;
+import gov.nasa.jpl.aerie.scheduler.server.graphql.ProfileParsers;
 import gov.nasa.jpl.aerie.scheduler.server.http.EventGraphFlattener;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
@@ -360,7 +362,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+      final SchedulerModel schedulerModel
   )
   throws IOException, NoSuchPlanException, MerlinServiceException
   {
@@ -368,7 +371,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var planId = createEmptyPlan(
         planName, planMetadata.modelId(),
         planMetadata.horizon().getStartInstant(), planMetadata.horizon().getEndAerie());
-    final Map<SchedulingActivityDirective, ActivityDirectiveId> activityToId = createAllPlanActivityDirectives(planId, plan, activityToGoalId);
+    final Map<SchedulingActivityDirective, ActivityDirectiveId> activityToId = createAllPlanActivityDirectives(planId, plan, activityToGoalId, schedulerModel);
 
     return Pair.of(planId, activityToId);
   }
@@ -413,8 +416,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
-  )
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+      final SchedulerModel schedulerModel
+      )
   throws IOException, NoSuchPlanException, MerlinServiceException
   {
     final var ids = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
@@ -427,7 +431,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         //add duration to parameters if controllable
         if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
           if (!activity.arguments().containsKey(durationType.parameterName())){
-            activity.addArgument(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+            activity.addArgument(durationType.parameterName(), schedulerModel.serializeDuration(activity.duration()));
           }
         }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
@@ -459,7 +463,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     }
 
     //Create
-    ids.putAll(createActivityDirectives(planId, toAdd, activityToGoalId));
+    ids.putAll(createActivityDirectives(planId, toAdd, activityToGoalId, schedulerModel));
 
     return ids;
   }
@@ -522,17 +526,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+      final SchedulerModel schedulerModel
   )
   throws IOException, NoSuchPlanException, MerlinServiceException
   {
-    return createActivityDirectives(planId, plan.getActivitiesByTime(), activityToGoalId);
+    return createActivityDirectives(planId, plan.getActivitiesByTime(), activityToGoalId, schedulerModel);
   }
 
   public Map<SchedulingActivityDirective, ActivityDirectiveId> createActivityDirectives(
       final PlanId planId,
       final List<SchedulingActivityDirective> orderedActivities,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+      final SchedulerModel schedulerModel
   )
   throws IOException, NoSuchPlanException, MerlinServiceException
   {
@@ -564,7 +570,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final var insertionObjectArguments = Json.createObjectBuilder();
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
         if(!act.arguments().containsKey(durationType.parameterName())){
-          insertionObjectArguments.add(durationType.parameterName(), act.duration().in(Duration.MICROSECOND));
+          insertionObjectArguments.add(durationType.parameterName(), serializedValueP.unparse(schedulerModel.serializeDuration(act.duration())));
         }
       }
 

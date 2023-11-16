@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -23,10 +24,7 @@ public class TestRecurrenceGoal {
   @Test
   public void testRecurrence() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -55,13 +53,7 @@ public class TestRecurrenceGoal {
   @Test
   public void testRecurrenceNegative() {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel,
-                                  planningHorizon,
-                                  new SimulationFacade(planningHorizon,
-                                                       fooMissionModel),
-                                  SimulationUtility.getFooSchedulerModel());
-
+    final var problem = buildProblemFromFoo(planningHorizon);
     try {
       final var activityType = problem.getActivityType("ControllableDurationActivity");
       final var goal = new RecurrenceGoal.Builder()
