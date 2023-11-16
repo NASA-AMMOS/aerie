@@ -683,7 +683,9 @@ public class SchedulingTests {
             "/producer": string,
           };
           """;
-      assertTrue(findFile.get(0).content().contains(resources));
+      for(final var resourcesLine: resources.split("\n")){
+        assertTrue(findFile.get(0).content().contains(resourcesLine));
+      }
     }
 
     /**
