@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
-  private static boolean debug = true;
+  private static boolean debug = false;
   private static boolean trace = false;
 
   /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
@@ -188,6 +188,8 @@ public final class SimulationEngine implements AutoCloseable {
 //    return getCombinedCellReadHistory().get(topic);
 //  }
 
+  private static TreeMap<Duration, HashMap<TaskId, Event>> _emptyTreeMap = new TreeMap<>();
+
   public TreeMap<Duration, HashMap<TaskId, Event>> getCombinedCellReadHistory(Topic<?> topic) {
     // check cache
     var inner = _combinedHistory.get(topic);
@@ -197,11 +199,12 @@ public final class SimulationEngine implements AutoCloseable {
     if (oldEngine == null) {
       // If there's no history from an old engine, then just set the cache to the local history
       _combinedHistory = cellReadHistory;
-      if (inner == null) return new TreeMap();
+      if (inner == null) return _emptyTreeMap;
       return inner;
     }
 
     var oldInner = oldEngine.getCombinedCellReadHistory(topic);
+    if (oldInner == null) oldInner = _emptyTreeMap;
     if (oldEngine._combinedHistory.get(topic) == null) {
       oldEngine._combinedHistory.put(topic, oldInner);
       if (oldEngine.oldEngine != null && oldEngine.oldEngine._combinedHistory != null) {
@@ -619,7 +622,7 @@ public final class SimulationEngine implements AutoCloseable {
     var simId = taskToSimulatedActivityId == null ? null : taskToSimulatedActivityId.get(taskId.id());
     if (simId == null && oldEngine != null) {
       // If this activity hasn't been seen in this simulation, it may be in a past one; this check avoids unnecessarily recursing
-      if (!this.isActivity(taskId)) {
+      if (this.isActivity(taskId)) {
         simId = oldEngine.getSimulatedActivityIdForTaskId(taskId);
       }
     }

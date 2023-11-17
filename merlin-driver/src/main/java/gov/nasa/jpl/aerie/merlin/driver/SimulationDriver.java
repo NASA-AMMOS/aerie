@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 public final class SimulationDriver<Model> {
 
-  private static boolean debug = true;
+  private static boolean debug = false;
 
   public static final boolean defaultUseResourceTracker = false;
 

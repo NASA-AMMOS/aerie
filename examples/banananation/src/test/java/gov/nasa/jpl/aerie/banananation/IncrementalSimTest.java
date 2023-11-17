@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class IncrementalSimTest {
-  private static boolean debug = true;
+  private static boolean debug = false;
   @Test
   public void testRemoveAndAddActivity() {
     if (debug) System.out.println("testRemoveAndAddActivity()");

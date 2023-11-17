@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
-  private static boolean debug = true;
+  private static boolean debug = false;
   public LiveCells liveCells;
   private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
@@ -124,7 +124,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     }
     // Add indices for the new and copied commits
     // NOTE: since this is additive, we don't need to worry about replacing the old pre-combined graph's indices
-    if (copyingCommits) {
+    if (copyingCommits && commits != null) {
       commits.forEach(c -> addIndices(c, time, oldTemporalEventSource.getTopicsForEventGraph(c.events)));
     } else {
       addIndices(commit, time, topics);
@@ -753,21 +753,24 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         var minWrtOld = Duration.min(entryTime, oldEntryTime, endTime);
         if (oldCellTime.shorterThan(minWrtOld) && minWrtOld.shorterThan(Duration.MAX_VALUE)) {
           stepped = true;
+          var prevOldCellTime = oldCellTime;
           oldCell.step(minWrtOld.minus(oldCellTime));
           if (debug) System.out.println("" + i + " stepUp(): oldCell.step(minWrtOld=" + minWrtOld + " - oldCellTime=" + oldCellTime + " = " + minWrtOld.minus(oldCellTime) + "), oldCellState = " + oldCell.getState().toString());
           oldCellTime = minWrtOld;
           oldCellSteppedAtTime = 0;
-          oldTemporalEventSource.putCellTime(oldCell, oldCellTime, oldCellSteppedAtTime);
+          oldTemporalEventSource.putCellTime(oldCell, prevOldCellTime, oldCellTime, oldCellSteppedAtTime);
         }
       }
       // step(timeDelta) for new cell if necessary
       var minWrtNew = Duration.min(entryTime, oldEntryTime, endTime);
       if (cellTime.shorterThan(minWrtNew) && minWrtNew.shorterThan(Duration.MAX_VALUE)) {
         stepped = true;
+        var prevCellTime = cellTime;
         cell.step(minWrtNew.minus(cellTime));
         if (debug) System.out.println("" + i + " stepUp(): cell.step(minWrtOld=" + minWrtNew + " - cellTime=" + cellTime + " = " + minWrtNew.minus(cellTime) + "), cellState = " + cell.getState().toString());
         cellTime = minWrtNew;
         cellSteppedAtTime = 0;
+        putCellTime(cell, prevCellTime, cellTime, cellSteppedAtTime);
       }
 
       // check staleness
@@ -790,6 +793,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         var oldEventGraphList = oldEntry.getValue();
         if (stale || unequalGraphs) {
           // If topic is not stale, and old cell is not stepped up, then it was abandoned, and need to create a new one.
+          var prevOldCellTime = oldCellTime;
           if (!stale && unequalGraphs && !oldCellTime.isEqualTo(cellTime)) {
             //cellCache.computeIfAbsent(cell.getTopic(), $ -> new TreeMap<>()).put(oldCellTime, oldCell);
             if (debug) System.out.println("" + i + " stepUp(): oldCell = cell.duplicate()");
@@ -811,7 +815,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
               if (debug) System.out.println("" + i + " stepUp(): oldCell.apply(oldGraph: " + eventGraph + ") oldCellState = " + oldCell);
             }
           }
-          oldTemporalEventSource.putCellTime(oldCell, oldCellTime, oldCellSteppedAtTime);
+          oldTemporalEventSource.putCellTime(oldCell, prevOldCellTime, oldCellTime, oldCellSteppedAtTime);
           oldCellStateChanged = oldCellStateChanged || !oldCell.getState().equals(oldOldState);
         }
 
