@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
@@ -34,11 +35,15 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   private static boolean debug = false;
 
-  public Duration curTime() {
+  public SubInstantDuration curTime() {
     if (engine == null) {
-      return Duration.ZERO;
+      return SubInstantDuration.ZERO;
     }
     return engine.curTime();
+  }
+
+  public void setCurTime(SubInstantDuration time) {
+    this.engine.setCurTime(time);
   }
 
   public void setCurTime(Duration time) {
@@ -121,7 +126,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
-    startDaemons(curTime());
+    startDaemons(curTime().duration());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
     //engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
@@ -165,7 +170,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   private void simulateUntil(Duration endTime){
     if (debug) System.out.println("simulateUntil(" + endTime + ")");
-    assert(endTime.noShorterThan(curTime()));
+    assert(endTime.noShorterThan(curTime().duration()));
     if (endTime.isEqualTo(Duration.MAX_VALUE)) return;
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the endTime.
     //engine.scheduleTask(endTime, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
@@ -202,7 +207,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
     activitiesInserted.put(activityId, activityToSimulate);
-    if(activityToSimulate.startOffset().noLongerThan(curTime())){
+    if(activityToSimulate.startOffset().noLongerThan(curTime().duration())){
       initSimulation();
       simulateSchedule(Map.of(activityId, activityToSimulate));
     } else {
@@ -219,7 +224,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     resolved.get(null).sort(Comparator.comparing(Pair::getRight));
     final var earliestStartOffset = resolved.get(null).get(0);
 
-    if(earliestStartOffset.getRight().noLongerThan(curTime())){
+    if(earliestStartOffset.getRight().noLongerThan(curTime().duration())){
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -234,11 +239,11 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @return the simulation results
    */
   public SimulationResultsInterface getSimulationResults(Instant startTimestamp){
-    return getSimulationResultsUpTo(startTimestamp, curTime());
+    return getSimulationResultsUpTo(startTimestamp, curTime().duration());
   }
 
   public Duration getCurrentSimulationEndTime(){
-    return curTime();
+    return curTime().duration();
   }
 
   /**
@@ -251,7 +256,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     if (debug) System.out.println("getSimulationResultsUpTo(startTimestamp=" + startTimestamp + ", endTime=" + endTime + ")");
     //if previous results cover a bigger period, we return do not regenerate
-    if(endTime.longerThan(curTime())){
+    if(endTime.longerThan(curTime().duration())){
       simulateUntil(endTime);
     }
 
@@ -313,7 +318,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime()) &&
+      if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime().duration()) &&
           plannedDirectiveToTask
           .values()
           .stream()
@@ -328,7 +333,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
-      engine.generateResourceProfiles(curTime());
+      engine.generateResourceProfiles(curTime().duration());
     }
     lastSimResults = null;
   }
@@ -343,7 +348,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
       directives = new HashMap<>(engine.directivesDiff.get("added"));
       directives.putAll(engine.directivesDiff.get("modified"));
-      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), Duration.MIN_VALUE));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE));
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
     }

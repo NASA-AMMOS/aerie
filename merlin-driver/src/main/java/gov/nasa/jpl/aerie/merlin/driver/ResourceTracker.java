@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -97,7 +98,7 @@ public class ResourceTracker {
       var topics = p.topics();
       if (timeline.timeline.oldTemporalEventSource != null) {
         topics = topics.stream().filter(
-            t -> timeline.timeline.isTopicStale(t, elapsedTime)).collect(Collectors.toSet());
+            t -> timeline.timeline.isTopicStale(t, new SubInstantDuration(elapsedTime, 0))).collect(Collectors.toSet());
       }
       expireInvalidatedResources(topics);
     } else {
@@ -160,7 +161,7 @@ public class ResourceTracker {
       this.resourceExpiries.remove(resourceName);
       // Compute the new resource value and add to the Profile
       TaskFrame.run(this.resources.get(resourceName), this.cells, (job, frame) -> {
-        final var querier = engine.new EngineQuerier(this.elapsedTime, frame);
+        final var querier = engine.new EngineQuerier(new SubInstantDuration(this.elapsedTime, 0), frame);
         this.resourceProfiles.get(resourceName).append(resourceQueryTime, querier);
         if (debug) System.out.println("RT profile updated for " + resourceName + ": " + resourceProfiles.get(resourceName));
         this.waitingResources.subscribeQuery(resourceName, querier.referencedTopics);
@@ -225,7 +226,7 @@ public class ResourceTracker {
         public void stepUp(final Cell<?> cell) {
           System.out.println("stepUp(): BEGIN");
           if (brad) {
-            timeline.stepUp(cell, Duration.MAX_VALUE, true);
+            timeline.stepUp(cell, SubInstantDuration.MAX_VALUE);
             return;
           }
           // Extend timeline iterator to the current limit

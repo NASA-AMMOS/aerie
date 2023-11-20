@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -23,11 +24,15 @@ public final class SimulationDriver<Model> {
 
   public static final boolean defaultUseResourceTracker = false;
 
-  public Duration curTime() {
+  public SubInstantDuration curTime() {
     if (engine == null) {
-      return Duration.ZERO;
+      return SubInstantDuration.ZERO;
     }
     return engine.curTime();
+  }
+
+  public void setCurTime(SubInstantDuration time) {
+    this.engine.setCurTime(time);
   }
 
   public void setCurTime(Duration time) {
@@ -89,7 +94,7 @@ public final class SimulationDriver<Model> {
     trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
-    startDaemons(curTime());
+    startDaemons(curTime().duration());
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
     engine.scheduleTask(
@@ -166,7 +171,7 @@ public final class SimulationDriver<Model> {
         engine.scheduledDirectives = new HashMap<>(schedule);
       }
 
-      simulationExtentConsumer.accept(curTime());
+      simulationExtentConsumer.accept(curTime().duration());
 
       // Get all activities as close as possible to absolute time
       // Schedule all activities.
@@ -201,7 +206,7 @@ public final class SimulationDriver<Model> {
         engine.step(simulationDuration, queryTopic, simulationExtentConsumer);
       }
     } catch (Throwable ex) {
-      throw new SimulationException(curTime(), simulationStartTime, ex);
+      throw new SimulationException(curTime().duration(), simulationStartTime, ex);
     }
 
     // A query depends on an event if
@@ -268,7 +273,7 @@ public final class SimulationDriver<Model> {
       engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
       directives = new HashMap<>(engine.directivesDiff.get("added"));
       directives.putAll(engine.directivesDiff.get("modified"));
-      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), Duration.MIN_VALUE));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE));
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
     }
@@ -280,7 +285,7 @@ public final class SimulationDriver<Model> {
     if (debug) System.out.println("SimulationDriver.simulateTask(" + task + ")");
 
     // Schedule all activities.
-    final var taskId = engine.scheduleTask(curTime(), task, null);
+    final var taskId = engine.scheduleTask(curTime().duration(), task, null);
 
     // Drive the engine until we're out of time.
     // TERMINATION: Actually, we might never break if real time never progresses forward.
@@ -288,7 +293,7 @@ public final class SimulationDriver<Model> {
       engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
     }
     if (useResourceTracker) {
-      engine.generateResourceProfiles(curTime());  // REVIEW: Is this necessary?
+      engine.generateResourceProfiles(curTime().duration());  // REVIEW: Is this necessary?
                                                    // Okay to keep here since work is not lost for resourceTracker.
     }
   }

@@ -83,7 +83,7 @@ public final class Cell<State> {
 
   @Override
   public String toString() {
-    return "" + this.state;
+    return "@" + hashCode() + ":" + this.state;
   }
 
   private record GenericCell<Effect, State> (
