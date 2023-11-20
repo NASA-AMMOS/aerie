@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -13,6 +14,8 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import org.apache.commons.collections4.BidiMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -109,7 +112,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * probably be created!)
    */
   @Override
-  public java.util.Collection<Conflict> getConflicts(@NotNull Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
+  public java.util.Collection<Conflict> getConflicts(@NotNull Plan plan, final SimulationResults simulationResults, final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds, final EvaluationEnvironment evaluationEnvironment) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //unwrap temporalContext
@@ -166,7 +169,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
           var planEval = plan.getEvaluation();
           if (!planEval.forGoal(this).getAssociatedActivities().contains(act) && planEval.canAssociateMoreToCreatorOf(
               act)) {
-            conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+            conflicts.add(new MissingAssociationConflict(this, List.of(act), Optional.empty()));
           }
         }
 
@@ -217,7 +220,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
       if(windows.iterateEqualTo(true).iterator().hasNext()){
-        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), evaluationEnvironment, 1, Optional.empty()));
+        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), evaluationEnvironment, 1, Optional.empty(), Optional.empty()));
       }
       else{
         System.out.println();

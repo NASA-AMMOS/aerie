@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * an in-memory solution to a planning problem including a schedule of activities
@@ -153,6 +155,13 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableMap(actsById);
   }
 
+@Override
+  public Set<SchedulingActivityDirectiveId> getAnchorIds() {
+    return actsSet.stream()
+                  .map(SchedulingActivityDirective::anchorId)
+                  .collect(Collectors.toSet());
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -160,6 +169,8 @@ public class PlanInMemory implements Plan {
   public Set<SchedulingActivityDirective> getActivities() {
     return Collections.unmodifiableSet(actsSet);
   }
+
+
 
   /**
    * {@inheritDoc}
@@ -174,7 +185,7 @@ public class PlanInMemory implements Plan {
     LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
-        if (template.matches(act, simulationResults, evaluationEnvironment, true)) {
+        if (template.matches(act, simulationResults, evaluationEnvironment, true, this)) {
           matched.add(act);
         }
       }
@@ -198,4 +209,14 @@ public class PlanInMemory implements Plan {
     return evaluation;
   }
 
+  @Override
+  public Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivityDirective act){
+    if(act == null)
+      return null;
+    if(act.anchorId() != null){
+      SchedulingActivityDirective parent = this.getActivitiesById().get(act.anchorId());
+      return calculateAbsoluteStartOffsetAnchoredActivity(parent).plus(act.anchoredToStart() ? act.startOffset() : act.startOffset().plus(parent.duration()));
+    }
+    return act.startOffset();
+  }
 }

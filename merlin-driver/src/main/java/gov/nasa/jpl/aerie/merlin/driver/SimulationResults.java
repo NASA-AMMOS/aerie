@@ -24,6 +24,7 @@ public final class SimulationResults {
   public final List<Triple<Integer, String, ValueSchema>> topics;
   public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
 
+
     public SimulationResults(
         final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,
         final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles,

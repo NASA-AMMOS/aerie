@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -241,7 +243,9 @@ public record SynchronousSchedulerAgent(
             activityToGoalId,
             schedulerMissionModel.schedulerModel()
         );
-        //jd update the anchors of the new activities with these new instancesToIds
+        List<SchedulingActivityDirective> updatedActs = updateAnchorIds(solutionPlan, instancesToIds);
+        merlinService.updatePlanActivityDirectiveAnchors(updatedActs);
+
         final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
         final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
         //collect results and notify subscribers of success
@@ -285,6 +289,21 @@ public record SynchronousSchedulerAgent(
           .trace(e));
     }
   }
+
+  public List<SchedulingActivityDirective> updateAnchorIds(Plan solutionPlan, Map<SchedulingActivityDirective, ActivityDirectiveId> newIds){
+    ArrayList<SchedulingActivityDirective> updatedActs = new ArrayList<SchedulingActivityDirective>();
+
+    for (SchedulingActivityDirective act : solutionPlan.getActivities()) {
+      if (act.anchorId() != null) {
+        SchedulingActivityDirective actAnchored = solutionPlan.getActivitiesById().get(act.anchorId());
+        SchedulingActivityDirective updatedAct = SchedulingActivityDirective.copyOf(act, new SchedulingActivityDirectiveId(newIds.get(actAnchored).id()), act.startOffset());
+        updatedActs.add(updatedAct);
+      }
+    }
+
+    return updatedActs;
+  }
+
 
   private Optional<SimulationResults> loadSimulationResults(final PlanMetadata planMetadata){
     try {

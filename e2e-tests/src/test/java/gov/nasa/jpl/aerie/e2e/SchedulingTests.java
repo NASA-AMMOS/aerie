@@ -60,6 +60,55 @@ public class SchedulingTests {
           startsAt:TimingConstraint.singleton(WindowProperty.END)
         })
       }""";
+
+  private final String coexistenceGoalWithAnchorsTrueTrueDefinition =
+      """
+      export default function myGoal() {
+        return Goal.CoexistenceGoal({
+          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
+          createPersistentAnchor: true,
+          allowActivityUpdate: true,
+          startsAt:TimingConstraint.singleton(WindowProperty.END)
+        })
+      }""";
+
+  private final String coexistenceGoalWithAnchorsTrueFalseDefinition =
+      """
+      export default function myGoal() {
+        return Goal.CoexistenceGoal({
+          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
+          createPersistentAnchor: true,
+          allowActivityUpdate: false,
+          startsAt:TimingConstraint.singleton(WindowProperty.END)
+        })
+      }""";
+
+  private final String coexistenceGoalWithAnchorsFalseTrueDefinition =
+      """
+      export default function myGoal() {
+        return Goal.CoexistenceGoal({
+          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
+          createPersistentAnchor: false,
+          allowActivityUpdate: true,
+          startsAt:TimingConstraint.singleton(WindowProperty.END)
+        })
+      }""";
+
+  private final String coexistenceGoalWithAnchorsFalseFalseDefinition =
+      """
+      export default function myGoal() {
+        return Goal.CoexistenceGoal({
+          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
+          createPersistentAnchor: false,
+          allowActivityUpdate: false,
+          startsAt:TimingConstraint.singleton(WindowProperty.END)
+        })
+      }""";
+
   private final String plantCountGoalDefinition =
       """
       export default () => Goal.CoexistenceGoal({
@@ -136,6 +185,23 @@ public class SchedulingTests {
     hasura.insertActivity(planId, "GrowBanana", "3h", Json.createObjectBuilder()
                                                           .add("growingDuration", 7200000000L) // 2h
                                                           .build());
+    hasura.updatePlanRevisionSchedulingSpec(planId);
+  }
+
+  private void insertActivitiesAnchorsTest() throws IOException {
+    // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
+    int id1 = hasura.insertActivity(planId, "GrowBanana", "0h",
+                                    Json.createObjectBuilder()
+                                        .add("growingDuration", 10800000L) // 3h
+                                        .build());
+    int id2 = hasura.insertActivity(planId, "GrowBanana", "5h",
+                                    Json.createObjectBuilder()
+                                                          .add("growingDuration", 10800000L) // 3h
+                                                          .build());
+    int id3 = hasura.insertActivity(planId, "GrowBanana", "10h",
+                                    Json.createObjectBuilder()
+                                        .add("growingDuration", 10800000L) // 3h
+                                        .build());
     hasura.updatePlanRevisionSchedulingSpec(planId);
   }
 
@@ -227,6 +293,43 @@ public class SchedulingTests {
 
     } finally {
        // Teardown: Delete Goal
+      hasura.deleteSchedulingGoal(coexistenceGoalId);
+    }
+  }
+
+  @Test
+  void schedulingCoexistenceGoalWithAnchor() throws IOException {
+    // Setup: Add Goal and Activities
+    insertActivitiesAnchorsTest();
+    final int coexistenceGoalId = hasura.insertSchedulingGoal(
+        "Coexistence Scheduling Test Goal",
+        modelId,
+        coexistenceGoalWithAnchorsTrueTrueDefinition);
+    hasura.createSchedulingSpecGoal(coexistenceGoalId, schedulingSpecId, 0);
+
+    try {
+      // Schedule and get Plan
+      hasura.awaitScheduling(schedulingSpecId);
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(4, activities.size());
+
+      // Assert the correct number of each activity type exists
+      int growBananaCount = 0;
+      int biteBananaCount = 0;
+      for (final var activity : activities) {
+        switch (activity.type()) {
+          case "GrowBanana" -> growBananaCount++;
+          case "BiteBanana" -> biteBananaCount++;
+          default -> fail("Encountered unexpected activity type in plan: " + activity.type());
+        }
+      }
+      assertEquals(3, growBananaCount);
+      assertEquals(3, biteBananaCount);
+
+    } finally {
+      // Teardown: Delete Goal
       hasura.deleteSchedulingGoal(coexistenceGoalId);
     }
   }

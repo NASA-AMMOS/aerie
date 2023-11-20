@@ -154,8 +154,8 @@ public class SimulationFacade implements AutoCloseable{
     return new HashMap<>(planActDirectiveIdToSimulationActivityDirectiveId);
   }
 
-  public Map<SchedulingActivityDirectiveId, ActivityDirectiveId> getActivityIdCorrespondenceNew(){
-      return new HashMap<>(mapSchedulingIdsToActivityIds);
+  public BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> getBidiActivityIdCorrespondence(){
+      return mapSchedulingIdsToActivityIds;
   }
 
   // Method to get ActivityDirectiveId by SchedulingActivityDirectiveId
@@ -302,8 +302,8 @@ public class SimulationFacade implements AutoCloseable{
    * @param replacement the replacement activity
    */
   public void replaceActivityFromSimulation(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement){
-    if(toBeReplaced.type() != replacement.type()||
-       toBeReplaced.startOffset() != replacement.startOffset()||
+    if(toBeReplaced.type() != replacement.type() ||
+       ((toBeReplaced.anchorId() == replacement.anchorId()) && toBeReplaced.startOffset() != replacement.startOffset()) ||
        !(toBeReplaced.arguments().equals(replacement.arguments()))) {
       throw new IllegalArgumentException("When replacing an activity, you can only update the duration");
     }
@@ -370,7 +370,7 @@ public class SimulationFacade implements AutoCloseable{
       //compare references
       if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results));
+        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results), Optional.ofNullable(mapSchedulingIdsToActivityIds));
       }
     } catch (SchedulingInterruptedException e){
       throw e; //pass interruption up

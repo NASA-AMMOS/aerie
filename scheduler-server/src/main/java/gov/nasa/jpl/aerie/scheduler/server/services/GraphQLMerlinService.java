@@ -53,6 +53,7 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -465,7 +466,34 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     //Create
     ids.putAll(createActivityDirectives(planId, toAdd, activityToGoalId, schedulerModel));
 
+    //ids.entrySet()
+    //jd todo
+    //function updateanchorids
+    // check for all plan activities, add anchors
+    // for each activity b, updated anchorid with id from a which i can search in ids
+    // graphql
+
     return ids;
+  }
+
+@Override
+  public void updatePlanActivityDirectiveAnchors(List<SchedulingActivityDirective> acts)
+  throws MerlinServiceException, IOException
+  {
+    for (SchedulingActivityDirective act: acts) {
+      final var request = """
+            mutation {
+            update_activity_directive_by_pk(where: {id:{_eq:%d}}, _set: {anchor_id: %d}) {
+              id
+            }
+          }""".formatted(act.id().id(),act.anchorId().id());
+      final var response = postRequest(request);
+    }
+  }
+
+
+  public void updatedAnchors(){
+
   }
 
   /**
@@ -1536,11 +1564,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
                                                               .collect(Collectors.toMap(
                                                                   e -> e.getKey().id(),
                                                                   e -> simulatedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
-      final var allActivityRecords = unfinishedActivities.entrySet().stream()
+      var allActivityRecords = unfinishedActivities.entrySet().stream()
                                                          .collect(Collectors.toMap(
                                                              e -> e.getKey().id(),
                                                              e -> unfinishedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
       allActivityRecords.putAll(simulatedActivityRecords);
+      //jd todo remove if code must be placed in synchronousscheduleragent
+      // this.updateAnchorsInMerlinActivities(allActivityRecords);
       final var simIdToPgId = postSpans(
           datasetId,
           allActivityRecords,
@@ -1550,6 +1580,15 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           simulatedActivityRecords,
           simIdToPgId);
   }
+
+  //jd todo remove if code must be placed in synchronousscheduleragent
+/*  public void updateAnchorsInMerlinActivities(Map<Long, SpanRecord> spans){
+    final var ids = spans.keySet().stream().toList();
+    for (final var id : ids) {
+      final var act = spans.get(id);
+      act
+    }
+  }*/
 
   public void updateSimulatedActivityParentsAction(
     final DatasetId datasetId,

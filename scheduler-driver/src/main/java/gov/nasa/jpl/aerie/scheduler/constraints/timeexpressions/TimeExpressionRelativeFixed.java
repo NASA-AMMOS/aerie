@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 public class TimeExpressionRelativeFixed extends TimeExpression {
 
@@ -18,11 +19,25 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
 
   @Override
   public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+    return computeTimeRelativeAbsolute(interval, true);
+  }
+
+  public Interval computeTimeRelativeAbsolute(final Interval interval, boolean absoluteTime) {
     Duration from = null;
-    if (anchor == TimeAnchor.START) {
-      from = interval.start;
-    } else if (anchor == TimeAnchor.END) {
-      from = interval.end;
+    if(absoluteTime){
+      if (anchor == TimeAnchor.START) {
+        from = interval.start;
+      } else if (anchor == TimeAnchor.END) {
+        from = interval.end;
+      }
+    }
+    else{
+      if (anchor == TimeAnchor.START) {
+        from = Duration.ZERO;
+      } else if (anchor == TimeAnchor.END) {
+        //jd todo chekc if this is interval.duration or interval.end
+        from = interval.duration();
+      }
     }
 
     Duration res = from;

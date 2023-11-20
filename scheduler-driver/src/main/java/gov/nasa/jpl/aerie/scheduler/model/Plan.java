@@ -2,10 +2,12 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,13 +84,19 @@ public interface Plan {
   Set<SchedulingActivityDirective> getActivities();
 
   /**
+  * @return the set of anchors from all activities in the plan
+   */
+  Set<SchedulingActivityDirectiveId> getAnchorIds();
+
+  /**
    * finds activity instances in the plan that meet the given criteria
    *
    * @param template IN the matching criteria to use on activity instances
    * @return collection of instances that match the given template
    */
-  Map<ActivityExpression.ActivityStatus, Collection<SchedulingActivityDirective>> find(
+  Collection<SchedulingActivityDirective> find(
       ActivityExpression template, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
+
   /**
    * adds a new evaluation to the plan
    *
@@ -106,4 +114,5 @@ public interface Plan {
    */
   Evaluation getEvaluation();
 
+  Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivityDirective actAnchorTo);
 }

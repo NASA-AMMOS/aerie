@@ -456,7 +456,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(Duration.MINUTE.in(MICROSECOND))
+                    "growingDuration", SerializedValue.of(Duration.MINUTE.in(Duration.MICROSECOND))
                 ),
                 null,
                 true

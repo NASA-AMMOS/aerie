@@ -11,28 +11,25 @@ import java.util.Optional;
 
 public class MissingAssociationConflict extends Conflict {
   private final Collection<SchedulingActivityDirective> instances;
-  private Optional<SchedulingActivityDirectiveId> anchorToId;
-
+  private final Optional<SchedulingActivityDirectiveId> anchorIdTo;
   /**
    * ctor creates a new conflict
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    * @param instancesToChooseFrom IN the list of instances to choose from to perform the association
    */
-  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom) {
+  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom, Optional<SchedulingActivityDirectiveId> anchorIdTo) {
     super(goal, new EvaluationEnvironment());
     this.instances = instancesToChooseFrom;
-    this.anchorToId = Optional.empty();
-  }
-
-  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom, SchedulingActivityDirectiveId anchorToId) {
-    super(goal, new EvaluationEnvironment());
-    this.instances = instancesToChooseFrom;
-    this.anchorToId = Optional.ofNullable(anchorToId);
+    this.anchorIdTo = anchorIdTo;
   }
 
   public Collection<SchedulingActivityDirective> getActivityInstancesToChooseFrom(){
     return instances;
+  }
+
+  public Optional<SchedulingActivityDirectiveId> getAnchorIdTo() {
+    return anchorIdTo;
   }
 
   @Override

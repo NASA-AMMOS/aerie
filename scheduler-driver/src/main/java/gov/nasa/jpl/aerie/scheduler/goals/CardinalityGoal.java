@@ -4,10 +4,12 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import org.apache.commons.collections4.BidiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
@@ -123,7 +125,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @Override
-  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
+  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds, final EvaluationEnvironment evaluationEnvironment) {
 
     //unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
@@ -195,7 +197,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       for (final var act : acts) {
         if (!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)) {
           //they ALL have to be associated
-          conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+          conflicts.add(new MissingAssociationConflict(this, List.of(act), Optional.empty()));
         }
       }
 
@@ -206,6 +208,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
             this.desiredActTemplate,
             evaluationEnvironment,
             nbToSchedule,
+            Optional.empty(),
             durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
       }
     }

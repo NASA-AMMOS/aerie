@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
@@ -60,8 +61,7 @@ public record ActivityExpression(
     ActivityType type,
     java.util.regex.Pattern nameRe,
     Map<String, ProfileExpression<?>> arguments
-) implements Expression<Spans> {
-
+) implements Expression<Spans>{
 
   /**
    * a fluent builder class for constructing consistent template queries
@@ -340,6 +340,65 @@ public record ActivityExpression(
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
       final var instantiatedArguments = SchedulingActivityDirective
           .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
+      if(matchArgumentsExactly){
+        for (var param : instantiatedArguments.entrySet()) {
+          if (actInstanceArguments.containsKey(param.getKey())) {
+            match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
+          }
+          if (!match) {
+            break;
+          }
+        }
+      } else {
+        match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
+      }
+    }
+    return match;
+  }
+
+  public boolean matches(
+      final @NotNull SchedulingActivityDirective act,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final boolean matchArgumentsExactly, Plan plan) {
+    boolean match = (type == null || type.getName().equals(act.getType().getName()));
+
+    if (match && startRange != null) {
+      final var startT = plan.calculateAbsoluteStartOffsetAnchoredActivity(act);
+      match = (startT != null) && startRange.contains(startT);
+    }
+
+    if (match && endRange != null) {
+      final var endT = act.getEndTime();
+      match = (endT != null) && endRange.contains(endT);
+    }
+
+    if (match && durationRange != null) {
+      final var dur = act.duration();
+      final Optional<Duration> durRequirementLower = this.durationRange.getLeft()
+                                                                       .evaluate(simulationResults, evaluationEnvironment)
+                                                                       .valueAt(Duration.ZERO)
+                                                                       .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      final Optional<Duration> durRequirementUpper = this.durationRange.getRight()
+                                                                       .evaluate(simulationResults, evaluationEnvironment)
+                                                                       .valueAt(Duration.ZERO)
+                                                                       .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      if(durRequirementLower.isEmpty() && durRequirementUpper.isEmpty()){
+        throw new RuntimeException("ActivityExpression is malformed, duration bounds are absent but the range is not null");
+      }
+      if(durRequirementLower.isPresent()){
+        match = dur.noShorterThan(durRequirementLower.get());
+      }
+      if(durRequirementUpper.isPresent()){
+        match = match && dur.noLongerThan(durRequirementUpper.get());
+      }
+    }
+
+    //activity must have all instantiated arguments of template to be compatible
+    if (match && arguments != null) {
+      Map<String, SerializedValue> actInstanceArguments = act.arguments();
+      final var instantiatedArguments = SchedulingActivityDirective
+          .instantiateArguments(arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {
           if (actInstanceArguments.containsKey(param.getKey())) {

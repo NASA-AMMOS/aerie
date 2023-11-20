@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
@@ -1177,6 +1181,56 @@ public class TestApplyWhen {
     assertEquals(startOfActivity, Duration.of(1, Duration.SECONDS));
     assertEquals(act.startOffset(), startOfActivity);
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+  }
+
+  @Test
+  public void testCoexistenceWithAnchors(){
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.HOURS), Duration.of(20, Duration.HOURS));
+
+    final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
+    final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
+    Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+
+    //have some activity already present
+    //  create a PlanInMemory, add ActivityInstances
+    PlanInMemory partialPlan = new PlanInMemory();
+    final var actTypeA = problem.getActivityType("GrowBanana");
+    final var actTypeB = problem.getActivityType("PickBanana");
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(3, Duration.HOURS), null, true));
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)), Duration.of(3, Duration.HOURS), null, true)); //create an activity that's 5 hours long, start 5 hours after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)), Duration.of(3, Duration.HOURS), null, true)); //create an activity that's 5 seconds long, starts 10 hours after start
+
+    //  pass this plan as initialPlan to Problem object
+    problem.setInitialPlan(partialPlan);
+    //want to create another activity for each of the already present activities
+    //  foreach with activityexpression
+    ActivityExpression framework = new ActivityCreationTemplate.Builder()
+        .ofType(actTypeA)
+        .build();
+
+    //and cut off in the middle of one of the already present activities (period ends at 18)
+    CoexistenceGoal goal = new CoexistenceGoal.Builder()
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
+        .forEach(framework)
+        .thereExistsOne(new ActivityCreationTemplate.Builder()
+                            .ofType(actTypeB)
+                            .withArgument("quantity", SerializedValue.of(1))
+                            .build())
+        .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Grow and Pick Bananas")
+        .withinPlanHorizon(planningHorizon)
+        .build();
+
+    problem.setGoals(List.of(goal));
+
+    final var solver = new PrioritySolver(problem);
+    var plan = solver.getNextSolution();
+    for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
+    }
+    assertEquals(6, plan.get().getActivitiesByTime().size());
   }
 
   @Test

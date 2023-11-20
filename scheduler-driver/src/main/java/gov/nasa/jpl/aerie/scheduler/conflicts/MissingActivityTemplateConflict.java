@@ -24,7 +24,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    * @param template  desired activity template
    * @param evaluationEnvironment the evaluation environment at the time of creation so variables can be retrieved later at instantiation
    * @param cardinality the desired number of times the activity template should be inserted
-   * @param SchedulingActivityDirectiveId anchorId,
+   * @param anchorIdTo  represents the id of the activty to which we need to create an anchor
    * @param totalDuration the desired total duration
    */
   public MissingActivityTemplateConflict(
@@ -33,7 +33,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
       ActivityExpression template,
       EvaluationEnvironment evaluationEnvironment,
       int cardinality,
-      Optional<SchedulingActivityDirectiveId> anchorId,
+      Optional<SchedulingActivityDirectiveId> anchorIdTo,
       Optional<Duration> totalDuration)
   {
     super(goal, evaluationEnvironment);
@@ -45,15 +45,15 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
     this.temporalContext = temporalContext;
     this.template = template;
     this.cardinality = cardinality;
-    this.anchorId = anchorId;
+    this.anchorIdTo = anchorIdTo;
     this.totalDuration = totalDuration;
   }
 
   //the number of times the activity needs to be inserted
   int cardinality;
-  Optional<SchedulingActivityDirectiveId> anchorId;
+  Optional<SchedulingActivityDirectiveId> anchorIdTo;
   public Optional<SchedulingActivityDirectiveId> getAnchorId(){
-    return anchorId;
+    return anchorIdTo;
   }
 
   //the desired total duration over the number of activities needed

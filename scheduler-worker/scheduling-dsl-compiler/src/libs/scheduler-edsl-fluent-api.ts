@@ -387,8 +387,8 @@ export class Goal {
     activityFinder?: ActivityExpression<B>
   } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    createNewAnchoredActivity: boolean,
-    allowActivityUpdate: boolean,
+    createPersistentAnchor?: boolean,
+    allowActivityUpdate?: boolean,
     forEach:  ActivityExpression<T>,
     activityFinder?: ActivityExpression<B>
   }) & CoexistenceGoalTimingConstraints): Goal {
@@ -426,13 +426,13 @@ export class Goal {
       activityTemplate = opts.activityTemplate;
     }
 
-    let createNewAnchoredActivitytmp: boolean;
+    let PersistentAnchortmp: boolean;
     let allowActivityUpdatetmp: boolean;
 
-    if ((opts as {createNewAnchoredActivity: boolean}).createNewAnchoredActivity !== undefined)
-      createNewAnchoredActivitytmp = (opts as {createNewAnchoredActivity: boolean}).createNewAnchoredActivity;
+    if ((opts as {createPersistentAnchor: boolean}).createPersistentAnchor !== undefined)
+      PersistentAnchortmp = (opts as {createPersistentAnchor: boolean}).createPersistentAnchor;
     else
-      createNewAnchoredActivitytmp = false;
+      PersistentAnchortmp = false;
 
     if ((opts as {allowActivityUpdate: boolean}).allowActivityUpdate !== undefined)
       allowActivityUpdatetmp = (opts as {allowActivityUpdate: boolean}).allowActivityUpdate;
@@ -444,7 +444,7 @@ export class Goal {
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       alias: alias,
       activityTemplate: activityTemplate,
-      createNewAnchoredActivity: createNewAnchoredActivitytmp,
+      createPersistentAnchor: PersistentAnchortmp,
       allowActivityUpdate: allowActivityUpdatetmp,
       activityFinder: opts.activityFinder?.__astNode,
       forEach: localForEach.__astNode,
@@ -835,15 +835,14 @@ declare global {
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).
      * The activity is placed such that it starts at (startsAt) or ends at (endsAt) a certain offset from the window
      */
-    public static CoexistenceGoal <
-        T extends WindowsEDSL.Gen.ActivityType,
-        S extends WindowsEDSL.Gen.ActivityType,
-        B extends WindowsEDSL.Gen.ActivityType>(opts: ({
+    public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType,  B extends WindowsEDSL.Gen.ActivityType>(opts: ({
       activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-      forEach:  WindowsEDSL.Windows,
+      forEach:  WindowsEDSL.Windows | WindowsEDSL.Interval | Temporal.Instant,
       activityFinder?: ActivityExpression<B>
     } | {
       activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+      createPersistentAnchor?: boolean,
+      allowActivityUpdate?: boolean,
       forEach:  ActivityExpression<T>,
       activityFinder?: ActivityExpression<B>
     }) & CoexistenceGoalTimingConstraints): Goal
