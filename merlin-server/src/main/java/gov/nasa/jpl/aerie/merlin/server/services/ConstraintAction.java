@@ -1,32 +1,20 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
-import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
+import gov.nasa.jpl.aerie.constraints.model.*;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.ConstraintCompilationException;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
-import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
-import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
+import gov.nasa.jpl.aerie.merlin.server.http.Failable;
+import gov.nasa.jpl.aerie.merlin.server.models.*;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ConstraintAction {
   private final ConstraintsDSLCompilationService constraintsDSLCompilationService;
@@ -49,26 +37,31 @@ public class ConstraintAction {
     this.simulationService = simulationService;
   }
 
-  public List<ConstraintResult> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
-      throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException , ConstraintCompilationException{
+  public List<Failable<?>> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
+  throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException
+  {
     final var plan = this.planService.getPlanForValidation(planId);
     final Optional<SimulationResultsHandle> resultsHandle$;
     final SimulationDatasetId simDatasetId;
     if (simulationDatasetId.isPresent()) {
       resultsHandle$ = this.simulationService.get(planId, simulationDatasetId.get());
       simDatasetId = resultsHandle$
-        .map(SimulationResultsHandle::getSimulationDatasetId)
-        .orElseThrow(() -> new InputMismatchException("simulation dataset with id `" + simulationDatasetId.get().id() + "` does not exist"));
+          .map(SimulationResultsHandle::getSimulationDatasetId)
+          .orElseThrow(() -> new InputMismatchException("simulation dataset with id `"
+                                                        + simulationDatasetId.get().id()
+                                                        + "` does not exist"));
     } else {
       final var revisionData = this.planService.getPlanRevisionData(planId);
       resultsHandle$ = this.simulationService.get(planId, revisionData);
       simDatasetId = resultsHandle$
-        .map(SimulationResultsHandle::getSimulationDatasetId)
-        .orElseThrow(() -> new InputMismatchException("plan with id " + planId.id() +" has not yet been simulated at its current revision"));
+          .map(SimulationResultsHandle::getSimulationDatasetId)
+          .orElseThrow(() -> new InputMismatchException("plan with id "
+                                                        + planId.id()
+                                                        + " has not yet been simulated at its current revision"));
     }
 
-
     final var constraintCode = new HashMap<Long, Constraint>();
+    final var constraintResultMap = new HashMap<Long, Failable<?>>();
 
     try {
       constraintCode.putAll(this.missionModelService.getConstraints(plan.missionModelId));
@@ -77,16 +70,18 @@ public class ConstraintAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var violations = new HashMap<Long, ConstraintResult>();
 
-    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode.values().stream().toList(), simDatasetId);
+    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode
+                                                                                      .values()
+                                                                                      .stream()
+                                                                                      .toList(), simDatasetId);
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
       constraintCode.remove(constraintRun.constraintId());
 
       if (constraintRun.result() != null) {
-        violations.put(constraintRun.constraintId(), constraintRun.result());
+        constraintResultMap.put(constraintRun.constraintId(), Failable.of(constraintRun.result()));
       }
     }
 
@@ -152,30 +147,52 @@ public class ConstraintAction {
       final var realProfiles = new HashMap<String, LinearProfile>();
       final var discreteProfiles = new HashMap<String, DiscreteProfile>();
 
+      // try to compile and run the constraint that were not
+      // successful and cached in the past
       for (final var entry : constraintCode.entrySet()) {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
 
         // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
-        final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
-            plan.missionModelId,
-            Optional.of(planId),
-            Optional.of(simDatasetId),
-            constraint.definition()
-        );
+        final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult constraintCompilationResult;
+        try {
+          constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
+              plan.missionModelId,
+              Optional.of(planId),
+              Optional.of(simDatasetId),
+              constraint.definition()
+          );
+        } catch (MissionModelService.NoSuchMissionModelException | NoSuchPlanException ex) {
+          constraintResultMap.put(
+              constraint.id(),
+              Failable.failure(new Error("Constraint " + constraint.name() + ": " + ex.getMessage())));
+          continue;
+        }
 
+        // Try to compile the constraint and capture failures
         if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
           expression = success.constraintExpression();
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-          throw new ConstraintCompilationException(constraint.name(),error);
+          constraintResultMap.put(
+              constraint.id(),
+              Failable.failure(error, "Constraint '" + constraint.name() + "' compilation failed:\n "));
+          continue;
         } else {
-          throw new ConstraintCompilationException(constraint.name(),new ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error(new ArrayList<>(){{
-            add(new ConstraintsCompilationError.UserCodeError(
-                "Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult,
-                "",
-                new ConstraintsCompilationError.CodeLocation(0, 0),
-                ""));
-          }}));
+          constraintResultMap.put(
+              constraint.id(),
+              Failable.failure(
+                  new ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error(
+                      new ArrayList<>() {{
+                        add(new ConstraintsCompilationError.UserCodeError(
+                            "Unhandled variant of ConstraintsDSLCompilationResult: "
+                            + constraintCompilationResult,
+                            "",
+                            new ConstraintsCompilationError.CodeLocation(
+                                0,
+                                0),
+                            ""));
+                      }})));
+          continue;
         }
 
         final var names = new HashSet<String>();
@@ -189,21 +206,28 @@ public class ConstraintAction {
         }
 
         if (!newNames.isEmpty()) {
-          final var newProfiles = resultsHandle$
-              .map($ -> $.getProfiles(new ArrayList<>(newNames)))
-              .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id " + planId.id()));
+          try {
+            final var newProfiles = resultsHandle$
+                .map($ -> $.getProfiles(new ArrayList<>(newNames)))
+                .orElseThrow(() -> new InputMismatchException("no simulation results found for plan id "
+                                                              + planId.id()));
 
-
-          for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
-            if (!realProfiles.containsKey(_entry.getKey())) {
-              realProfiles.put(_entry.getKey(), LinearProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+            for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
+              if (!realProfiles.containsKey(_entry.getKey())) {
+                realProfiles.put(_entry.getKey(), LinearProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+              }
             }
-          }
 
-          for (final var _entry : ProfileSet.unwrapOptional(newProfiles.discreteProfiles()).entrySet()) {
-            if (!discreteProfiles.containsKey(_entry.getKey())) {
-              discreteProfiles.put(_entry.getKey(), DiscreteProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+            for (final var _entry : ProfileSet.unwrapOptional(newProfiles.discreteProfiles()).entrySet()) {
+              if (!discreteProfiles.containsKey(_entry.getKey())) {
+                discreteProfiles.put(
+                    _entry.getKey(),
+                    DiscreteProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+              }
             }
+          } catch (InputMismatchException ex) {
+            constraintResultMap.put(constraint.id(), Failable.failure(ex));
+            continue;
           }
         }
 
@@ -217,22 +241,47 @@ public class ConstraintAction {
 
         ConstraintResult constraintResult = expression.evaluate(preparedResults, environment);
 
-        if (constraintResult.isEmpty()) continue;
-
         constraintResult.constraintName = entry.getValue().name();
         constraintResult.constraintId = entry.getKey();
         constraintResult.constraintType = entry.getValue().type();
         constraintResult.resourceIds = List.copyOf(names);
 
-        violations.put(entry.getKey(), constraintResult);
-      }
+        constraintResultMap.put(entry.getKey(), Failable.of(constraintResult));
 
+
+      }
+      // Filter for constraints that were compiled and ran with results
+      // convert these successful failables to ConstraintResults
+      final var compiledConstraintMap = constraintResultMap.entrySet().stream()
+                                                           .filter(set -> {
+                                                             Failable<?> failable = set.getValue();
+                                                             return !failable.isFailure() && (failable
+                                                                                                  .getOptional()
+                                                                                                  .isPresent()
+                                                                                              && failable
+                                                                                                  .getOptional()
+                                                                                                  .get() instanceof ConstraintResult);
+                                                           })
+                                                           .collect(Collectors.toMap(
+                                                               Map.Entry::getKey,
+                                                               set -> (ConstraintResult) set
+                                                                   .getValue()
+                                                                   .getOptional()
+                                                                   .get()));
+
+      // Use the constraints that were compiled and ran with results
+      // to filter out the constraintCode map to match
+      final var compileConstraintCode =
+          constraintCode.entrySet().stream().filter(set -> compiledConstraintMap.containsKey(set.getKey())).collect(
+              Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+      // Only update the db when constraints were compiled and ran with results.
       constraintService.createConstraintRuns(
-          constraintCode,
-          violations,
+          compileConstraintCode,
+          compiledConstraintMap,
           simDatasetId);
     }
 
-    return violations.values().stream().toList();
+    return constraintResultMap.values().stream().toList();
   }
 }
