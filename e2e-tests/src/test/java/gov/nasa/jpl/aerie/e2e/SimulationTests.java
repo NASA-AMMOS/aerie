@@ -268,17 +268,15 @@ public class SimulationTests {
       fooPlan = hasura.createPlan(
           fooId,
           "Foo Plan - Simulation Tests",
-          "8760:00:00",
+          "1760:00:00",
           planStartTimestamp);
 
-      // Add a Grow Banana every minute
-      for(int i = 0; i < 24*60; ++i) {
-        final int hours = i / 60;
-        final int minutes = i % 60;
-        final var startOffset = (hours<10 ? "0"+hours : hours) + ":"+ (minutes<10 ? "0"+minutes : minutes)+":00";
+      // Add a ControllableDurationActivity every hour
+      for(int i = 0; i < 1760; ++i) {
+        final var startOffset = (i<10 ? "0"+i : i) + ":00:00";
         final var growArgs = Json.createObjectBuilder()
                                  .add("duration", Json.createObjectBuilder()
-                                                      .add("amountInMicroseconds", 60000000))  // 1 min
+                                                      .add("amountInMicroseconds", 60000000*60L))  // 1 hour
                                  .build();
         hasura.insertActivity(fooPlan, "ControllableDurationActivity", startOffset, growArgs);
       }
@@ -316,13 +314,10 @@ public class SimulationTests {
 
       assertNotEquals(planEndTimestamp, reasonData.getString("utcTimeDoy"));
 
+      final var elapsedHours = reasonData.getString("elapsedTime").split(":")[0];
+      final int startedActivities = Integer.parseInt(elapsedHours) + 1; // Hours + 1 (Accounts for 0 index)
 
-      final var elapsedDurationComponents = reasonData.getString("elapsedTime").split("\\.")[0].split(":");
-      final int startedActivities = Integer.parseInt(elapsedDurationComponents[0]) * 60 // Hours
-                                    + Integer.parseInt(elapsedDurationComponents[1]) // Minutes
-                                    + 1; // Account for 0 index
-
-      // There should be as many activities that began simulation as time elapsed
+      // There should be as many activities that began simulation as hours into time elapsed
       assertEquals(startedActivities, results.activities().size());
     }
   }
