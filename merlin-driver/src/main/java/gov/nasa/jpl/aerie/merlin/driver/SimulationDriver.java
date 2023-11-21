@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class SimulationDriver {
   public static <Model>
@@ -26,10 +27,19 @@ public final class SimulationDriver {
       final Instant simulationStartTime,
       final Duration simulationDuration,
       final Instant planStartTime,
-      final Duration planDuration
+      final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled
   )
   {
-    return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, $ -> {});
+    return simulate(
+        missionModel,
+        schedule,
+        simulationStartTime,
+        simulationDuration,
+        planStartTime,
+        planDuration,
+        simulationCanceled,
+        $ -> {});
   }
 
   public static <Model>
@@ -40,6 +50,7 @@ public final class SimulationDriver {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   ) {
     try (final var engine = new SimulationEngine()) {
@@ -76,7 +87,7 @@ public final class SimulationDriver {
         // Using HashMap explicitly because it allows `null` as a key.
         // `null` key means that an activity is not waiting on another activity to finish to know its start time
         HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-        if(resolved.size() != 0) {
+        if(!resolved.isEmpty()) {
           resolved.put(
               null,
               StartOffsetReducer.adjustStartOffset(
@@ -96,9 +107,9 @@ public final class SimulationDriver {
             activityTopic
         );
 
-        // Drive the engine until we're out of time.
+        // Drive the engine until we're out of time or until simulation is canceled.
         // TERMINATION: Actually, we might never break if real time never progresses forward.
-        while (true) {
+        while (!simulationCanceled.get()) {
           final var batch = engine.extractNextJobs(simulationDuration);
 
           // Increment real time, if necessary.
@@ -110,7 +121,8 @@ public final class SimulationDriver {
 
           simulationExtentConsumer.accept(elapsedTime);
 
-          if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
+          if (simulationCanceled.get() ||
+              (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration))) {
             break;
           }
 

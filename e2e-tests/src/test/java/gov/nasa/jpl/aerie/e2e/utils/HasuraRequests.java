@@ -7,6 +7,7 @@ import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.RequestOptions;
 import gov.nasa.jpl.aerie.e2e.types.*;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Assertions;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -247,6 +248,21 @@ public class HasuraRequests implements AutoCloseable {
     return SimulationResponse.fromJSON(makeRequest(GQL.SIMULATE, variables).getJsonObject("simulate"));
   }
 
+  private SimulationDataset cancelSimulation(int simDatasetId, int timeout) throws IOException {
+    final var variables = Json.createObjectBuilder().add("id", simDatasetId).build();
+    makeRequest(GQL.CANCEL_SIMULATION, variables);
+    for(int i = 0; i < timeout; ++i){
+      try {
+        Thread.sleep(1000); //1s
+      } catch (InterruptedException ex) {throw new RuntimeException(ex);}
+      final var response = getSimulationDataset(simDatasetId);
+      // If reason is present, that means that the simulation results have posted
+      // and we are not just seeing the side effects of `GQL.CANCEL_SIMULATION`
+      if(response.canceled() && response.reason().isPresent()) return response;
+    }
+    throw new TimeoutError("Canceling simulation timed out after " + timeout + " seconds");
+  }
+
   /**
    * Simulate the specified plan with a timeout of 30 seconds
    */
@@ -273,6 +289,45 @@ public class HasuraRequests implements AutoCloseable {
           case "complete" -> {
             return response;
           }
+          default -> throw new IOException("Simulation returned bad status " + response.status() + " with reason " +response.reason());
+        }
+    }
+    throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
+  }
+
+  /**
+   * Start and immediately cancel a simulation with a timeout of 30 seconds
+   * @param planId the plan to simulate
+   */
+  public SimulationDataset cancelingSimulation(int planId) throws IOException {
+    return cancelingSimulation(planId, 30);
+  }
+
+  /**
+   * Start and immediately cancel a simulation with a set timeout
+   * @param planId the plan to simulate
+   * @param timeout the length of the timeout, in seconds
+   */
+  public SimulationDataset cancelingSimulation(int planId, int timeout) throws IOException {
+    for(int i = 0; i < timeout; ++i){
+      final var response = simulate(planId);
+        switch (response.status()) {
+          case "pending" -> {
+            try {
+              Thread.sleep(1000); // 1s
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          }
+          case "incomplete" -> {
+            try {
+              Thread.sleep(1000); // 1s to give the simulation time to do some work
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+            return cancelSimulation(response.simDatasetId(), timeout-i);
+          }
+          case "complete" -> Assertions.fail("Simulation completed before it could be canceled");
           default -> throw new IOException("Simulation returned bad status " + response.status() + " with reason " +response.reason());
         }
     }

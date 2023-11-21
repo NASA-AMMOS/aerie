@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
@@ -63,7 +64,8 @@ public final class MerlinWorkerAppDriver {
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
-    final var listenThread = listenAction.registerListener();
+    final var canceledListener = new SimulationCanceledListener();
+    final var listenThread = listenAction.registerListener(canceledListener);
 
     try (final var app = Javalin.create().start(8080)) {
       app.get("/health", ctx -> ctx.status(200));
@@ -74,8 +76,14 @@ public final class MerlinWorkerAppDriver {
         final var planId = new PlanId(notification.planId());
         final var datasetId = notification.datasetId();
 
+        // Register as early as possible to avoid potentially missing a canceled signal
+        canceledListener.register(new DatasetId(datasetId));
+
         final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
-        if (owner.isEmpty()) continue;
+        if (owner.isEmpty()) {
+          canceledListener.unregister();
+          continue;
+        }
 
         final var revisionData = new PostgresPlanRevisionData(
             notification.modelRevision(),
@@ -84,13 +92,16 @@ public final class MerlinWorkerAppDriver {
             notification.simulationTemplateRevision());
         final ResultsProtocol.WriterRole writer = owner.get();
         try {
-          simulationAgent.simulate(planId, revisionData, writer);
+          simulationAgent.simulate(planId, revisionData, writer, canceledListener);
         } catch (final Throwable ex) {
           ex.printStackTrace(System.err);
           writer.failWith(b -> b
               .type("UNEXPECTED_SIMULATION_EXCEPTION")
               .message("Something went wrong while simulating")
               .trace(ex));
+        }
+        finally {
+          canceledListener.unregister();
         }
       }
     } finally {

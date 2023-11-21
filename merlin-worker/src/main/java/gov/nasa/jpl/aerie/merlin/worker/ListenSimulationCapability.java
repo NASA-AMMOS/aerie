@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.worker;
 
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.ListenSimulationStatusAction;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
@@ -28,7 +29,7 @@ public class ListenSimulationCapability {
     this.notificationQueue = notificationQueue;
   }
 
-  public Thread registerListener() {
+  public Thread registerListener(SimulationCanceledListener canceledListener) {
     final var listenThread = new Thread(() -> {
       try (final var connection = this.dataSource.getConnection()) {
         try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
@@ -45,18 +46,24 @@ public class ListenSimulationCapability {
               final var processId = notification.getPID();
               final var channelName = notification.getName();
               final var payload = notification.getParameter();
+
               logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
-              try (final var reader = Json.createReader(new StringReader(payload))) {
-                final var jsonValue = reader.readValue();
-                final var notificationPayload = postgresSimulationNotificationP
-                    .parse(jsonValue)
-                    .getSuccessOrThrow();
-                try {
-                  this.notificationQueue.put(notificationPayload);
-                } catch (InterruptedException e) {
-                  // This thread will be interrupted when the worker's main loop exits, so it should exit gracefully:
-                  logger.info("Listener has been interrupted");
-                  return;
+
+              if (channelName.equals("simulation_cancel")) {
+                canceledListener.receiveSignal(new DatasetId(Long.parseLong(payload)));
+              } else {
+                try (final var reader = Json.createReader(new StringReader(payload))) {
+                  final var jsonValue = reader.readValue();
+                  final var notificationPayload = postgresSimulationNotificationP
+                      .parse(jsonValue)
+                      .getSuccessOrThrow();
+                  try {
+                    this.notificationQueue.put(notificationPayload);
+                  } catch (InterruptedException e) {
+                    // This thread will be interrupted when the worker's main loop exits, so it should exit gracefully:
+                    logger.info("Listener has been interrupted");
+                    return;
+                  }
                 }
               }
             }

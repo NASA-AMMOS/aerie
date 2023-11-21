@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public interface MissionModelService {
   Map<String, MissionModelJar> getMissionModels();
@@ -64,7 +65,7 @@ public interface MissionModelService {
          LocalMissionModelService.MissionModelLoadException,
          InstantiationException;
 
-  SimulationResults runSimulation(CreateSimulationMessage message, Consumer<Duration> writer)
+  SimulationResults runSimulation(CreateSimulationMessage message, Consumer<Duration> writer, Supplier<Boolean> canceledListener)
           throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;

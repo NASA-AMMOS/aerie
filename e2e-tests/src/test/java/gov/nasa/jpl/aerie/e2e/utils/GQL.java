@@ -25,6 +25,15 @@ public enum GQL {
         simulation_template_id
       }
     }"""),
+  CANCEL_SIMULATION("""
+    mutation cancelSimulation($id: Int!) {
+      update_simulation_dataset_by_pk(pk_columns: {id: $id}, _set: {canceled: true}) {
+        simulationDatasetId: id
+        canceled
+        reason
+        status
+      }
+    }"""),
   CHECK_CONSTRAINTS("""
     query checkConstraints($planId: Int!, $simulationDatasetId: Int) {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
@@ -348,6 +357,8 @@ public enum GQL {
   GET_SIMULATION_DATASET("""
     query GetSimulationDataset($id: Int!) {
       simulationDataset: simulation_dataset_by_pk(id: $id) {
+        status
+        reason
         canceled
         simulation_start_time
         simulation_end_time
@@ -365,6 +376,8 @@ public enum GQL {
   GET_SIMULATION_DATASET_BY_DATASET_ID("""
     query GetSimulationDataset($id: Int!) {
       simulation_dataset(where: {dataset_id: {_eq: $id}}) {
+        status
+        reason
         canceled
         simulation_start_time
         simulation_end_time
