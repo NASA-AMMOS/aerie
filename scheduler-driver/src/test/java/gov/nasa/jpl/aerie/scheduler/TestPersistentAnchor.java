@@ -202,7 +202,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -310,7 +310,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -407,7 +407,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -520,7 +520,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -634,7 +634,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -748,7 +748,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -876,7 +876,7 @@ public class TestPersistentAnchor {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1003,7 +1003,7 @@ Template activities start at the end of the "for each" directive
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1129,7 +1129,7 @@ Template activities start at the end of the "for each" directive
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
     Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1270,10 +1270,10 @@ Template activities start at the end of the "for each" directive
 
     final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
-    Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
-
+    Problem problem = new Problem(bananaMissionModel,
+                                  planningHorizon,
+                                  new SimulationFacade(planningHorizon, bananaMissionModel, SimulationUtility.getBananaSchedulerModel()),
+                                  SimulationUtility.getBananaSchedulerModel());
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();

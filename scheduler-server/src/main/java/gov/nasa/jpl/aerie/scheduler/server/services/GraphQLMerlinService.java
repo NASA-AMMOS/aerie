@@ -465,28 +465,20 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
     //Create
     ids.putAll(createActivityDirectives(planId, toAdd, activityToGoalId, schedulerModel));
-
-    //ids.entrySet()
-    //jd todo
-    //function updateanchorids
-    // check for all plan activities, add anchors
-    // for each activity b, updated anchorid with id from a which i can search in ids
-    // graphql
-
     return ids;
   }
 
 @Override
-  public void updatePlanActivityDirectiveAnchors(List<SchedulingActivityDirective> acts)
+  public void updatePlanActivityDirectiveAnchors(PlanId planId, List<SchedulingActivityDirective> acts)
   throws MerlinServiceException, IOException
   {
     for (SchedulingActivityDirective act: acts) {
       final var request = """
-            mutation {
-            update_activity_directive_by_pk(where: {id:{_eq:%d}}, _set: {anchor_id: %d}) {
+          mutation {
+            update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
               id
             }
-          }""".formatted(act.id().id(),act.anchorId().id());
+          }""".formatted(act.id().id(), planId.id() ,act.anchorId().id());
       final var response = postRequest(request);
     }
   }
@@ -1569,8 +1561,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
                                                              e -> e.getKey().id(),
                                                              e -> unfinishedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
       allActivityRecords.putAll(simulatedActivityRecords);
-      //jd todo remove if code must be placed in synchronousscheduleragent
-      // this.updateAnchorsInMerlinActivities(allActivityRecords);
       final var simIdToPgId = postSpans(
           datasetId,
           allActivityRecords,
@@ -1580,15 +1570,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           simulatedActivityRecords,
           simIdToPgId);
   }
-
-  //jd todo remove if code must be placed in synchronousscheduleragent
-/*  public void updateAnchorsInMerlinActivities(Map<Long, SpanRecord> spans){
-    final var ids = spans.keySet().stream().toList();
-    for (final var id : ids) {
-      final var act = spans.get(id);
-      act
-    }
-  }*/
 
   public void updateSimulatedActivityParentsAction(
     final DatasetId datasetId,

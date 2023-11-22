@@ -857,11 +857,10 @@ public class PrioritySolver implements Solver {
             newActs.add(actWithAnchor.get());
           }
           else{
-            //jd todo check if this code is equivalent act.ifPresent(newActs::add);
             newActs.add(act.get());
           }
         }
-
+        //is an exception that act is empty?
       }
 
     }//if(startWindows)

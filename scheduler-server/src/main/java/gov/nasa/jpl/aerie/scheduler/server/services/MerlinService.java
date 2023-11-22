@@ -174,7 +174,7 @@ public interface MerlinService {
      * @throws MerlinServiceException
      * @throws IOException
      */
-    void updatePlanActivityDirectiveAnchors(List<SchedulingActivityDirective> acts)
+    void updatePlanActivityDirectiveAnchors(PlanId planId, List<SchedulingActivityDirective> acts)
     throws MerlinServiceException, IOException;
 
     /**

@@ -21,6 +21,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -61,7 +62,7 @@ public class SchedulingTests {
         })
       }""";
 
-  private final String coexistenceGoalWithAnchorsTrueTrueDefinition =
+  private final String coexistenceGoalWithAnchorsDefinition =
       """
       export default function myGoal() {
         return Goal.CoexistenceGoal({
@@ -69,42 +70,6 @@ public class SchedulingTests {
           activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
           createPersistentAnchor: true,
           allowActivityUpdate: true,
-          startsAt:TimingConstraint.singleton(WindowProperty.END)
-        })
-      }""";
-
-  private final String coexistenceGoalWithAnchorsTrueFalseDefinition =
-      """
-      export default function myGoal() {
-        return Goal.CoexistenceGoal({
-          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
-          createPersistentAnchor: true,
-          allowActivityUpdate: false,
-          startsAt:TimingConstraint.singleton(WindowProperty.END)
-        })
-      }""";
-
-  private final String coexistenceGoalWithAnchorsFalseTrueDefinition =
-      """
-      export default function myGoal() {
-        return Goal.CoexistenceGoal({
-          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
-          createPersistentAnchor: false,
-          allowActivityUpdate: true,
-          startsAt:TimingConstraint.singleton(WindowProperty.END)
-        })
-      }""";
-
-  private final String coexistenceGoalWithAnchorsFalseFalseDefinition =
-      """
-      export default function myGoal() {
-        return Goal.CoexistenceGoal({
-          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
-          createPersistentAnchor: false,
-          allowActivityUpdate: false,
           startsAt:TimingConstraint.singleton(WindowProperty.END)
         })
       }""";
@@ -188,21 +153,28 @@ public class SchedulingTests {
     hasura.updatePlanRevisionSchedulingSpec(planId);
   }
 
-  private void insertActivitiesAnchorsTest() throws IOException {
+  private ArrayList<Integer> insertAnchorActivities() throws IOException {
+    ArrayList<Integer> anchors = new ArrayList<Integer>();
+
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
-    int id1 = hasura.insertActivity(planId, "GrowBanana", "0h",
+    Integer id1 = hasura.insertActivity(planId, "GrowBanana", "0h",
                                     Json.createObjectBuilder()
                                         .add("growingDuration", 10800000L) // 3h
                                         .build());
-    int id2 = hasura.insertActivity(planId, "GrowBanana", "5h",
+    anchors.add(id1);
+    Integer id2 = hasura.insertActivity(planId, "GrowBanana", "5h",
                                     Json.createObjectBuilder()
                                                           .add("growingDuration", 10800000L) // 3h
                                                           .build());
-    int id3 = hasura.insertActivity(planId, "GrowBanana", "10h",
+    anchors.add(id1);
+    Integer id3 = hasura.insertActivity(planId, "GrowBanana", "10h",
                                     Json.createObjectBuilder()
                                         .add("growingDuration", 10800000L) // 3h
                                         .build());
+    anchors.add(id3);
     hasura.updatePlanRevisionSchedulingSpec(planId);
+
+    return anchors;
   }
 
   //reproduces issue #1165
@@ -272,7 +244,7 @@ public class SchedulingTests {
 
     try {
       // Schedule and get Plan
-      hasura.awaitScheduling(schedulingSpecId);
+      hasura.awaitScheduling(schedulingSpecId, 360);
       final var plan = hasura.getPlan(planId);
       final var activities = plan.activityDirectives();
 
@@ -300,11 +272,11 @@ public class SchedulingTests {
   @Test
   void schedulingCoexistenceGoalWithAnchor() throws IOException {
     // Setup: Add Goal and Activities
-    insertActivitiesAnchorsTest();
+    ArrayList<Integer> anchors = insertAnchorActivities();
     final int coexistenceGoalId = hasura.insertSchedulingGoal(
         "Coexistence Scheduling Test Goal",
         modelId,
-        coexistenceGoalWithAnchorsTrueTrueDefinition);
+        coexistenceGoalWithAnchorsDefinition);
     hasura.createSchedulingSpecGoal(coexistenceGoalId, schedulingSpecId, 0);
 
     try {
@@ -313,7 +285,7 @@ public class SchedulingTests {
       final var plan = hasura.getPlan(planId);
       final var activities = plan.activityDirectives();
 
-      assertEquals(4, activities.size());
+      assertEquals(6, activities.size());
 
       // Assert the correct number of each activity type exists
       int growBananaCount = 0;
