@@ -6,10 +6,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.List;
+import java.util.Objects;
 import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.failure;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
@@ -67,10 +66,15 @@ public final class CellRefV2 {
   }
 
   public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> autoEffects() {
+    return autoEffects(testing((CommutativityTestInput<D> input) -> input.leftResult.equals(input.rightResult)));
+  }
+
+  public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> autoEffects(
+      Predicate<CommutativityTestInput<ErrorCatching<Expiring<D>>>> commutativityTest) {
     return resolvingConcurrencyBy((left, right) -> x -> {
       final var lrx = left.apply(right.apply(x));
       final var rlx = right.apply(left.apply(x));
-      if (lrx.equals(rlx)) {
+      if (commutativityTest.test(new CommutativityTestInput<>(x, lrx, rlx))) {
         return lrx;
       } else {
         throw new UnsupportedOperationException(
@@ -78,6 +82,26 @@ public final class CellRefV2 {
       }
     });
   }
+
+
+  /**
+   * Lift a commutativity test from data to dynamics,
+   * correctly comparing expiry and error information in the process.
+   */
+  public static <D> Predicate<CommutativityTestInput<ErrorCatching<Expiring<D>>>> testing(Predicate<CommutativityTestInput<D>> test) {
+    return input -> input.leftResult.match(
+        leftExpiring -> input.rightResult.match(
+            rightExpiring -> leftExpiring.expiry().equals(rightExpiring.expiry()) && test.test(new CommutativityTestInput<>(
+                input.original.match(Expiring::data, $ -> leftExpiring.data()),
+                leftExpiring.data(),
+                rightExpiring.data())),
+            rightError -> false),
+        leftError -> input.rightResult.match(
+            rightExpiring -> false,
+            rightError -> Resources.equivalentExceptions(leftError, rightError)));
+  }
+
+  public record CommutativityTestInput<D>(D original, D leftResult, D rightResult) {}
 
   public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> resolvingConcurrencyBy(BinaryOperator<DynamicsEffect<D>> combineConcurrent) {
     return new EffectTrait<>() {

@@ -30,13 +30,12 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalF
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByOptimization;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.toggle;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.using;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.discreteCellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialEffects.consume;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.asPolynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.asUnitAwarePolynomial;
@@ -45,6 +44,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomi
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.integrate;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThan;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThan$;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.polynomialCellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.unitAware;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Quantities.quantity;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits.*;
@@ -56,15 +56,15 @@ public final class Demo {
   // Unit-naive version of a model, to demonstrate some core concepts:
 
   // Consumable, continuous:
-  CellResource<Polynomial> fuel_kg = cellResource(polynomial(20.0));
+  CellResource<Polynomial> fuel_kg = polynomialCellResource(20.0);
   // Non-consumable, discrete:
-  CellResource<Discrete<Double>> power_w = cellResource(discrete(120.0));
+  CellResource<Discrete<Double>> power_w = discreteCellResource(120.0);
   // Atomic non-consumable:
-  CellResource<Discrete<Integer>> rwaControl = cellResource(discrete(1));
+  CellResource<Discrete<Integer>> rwaControl = discreteCellResource(1);
   // Settable / enum state:
-  CellResource<Discrete<OnOff>> enumSwitch = cellResource(discrete(OnOff.ON));
+  CellResource<Discrete<OnOff>> enumSwitch = discreteCellResource(OnOff.ON);
   // Toggle / flag:
-  CellResource<Discrete<Boolean>> boolSwitch = cellResource(discrete(true));
+  CellResource<Discrete<Boolean>> boolSwitch = discreteCellResource(true);
 
   // Derived states:
   Resource<Discrete<OnOff>> derivedEnumSwitch = map(boolSwitch, b -> b ? OnOff.ON : OnOff.OFF);
@@ -97,12 +97,12 @@ public final class Demo {
   // States without units have been re-used instead of being re-defined
 
   // Consumable, continuous:
-  // CellResource<Polynomial> fuel_kg = cellResource(polynomial(20.0));
+  // CellResource<Polynomial> fuel_kg = polynomialCellResource(20.0);
   UnitAware<CellResource<Polynomial>> fuel = unitAware(
-      cellResource(polynomial(20.0)), KILOGRAM);
+      polynomialCellResource(20.0), KILOGRAM);
   // Non-consumable, discrete:
   UnitAware<CellResource<Discrete<Double>>> power = DiscreteResources.unitAware(
-      cellResource(discrete(120.0)), WATT);
+      discreteCellResource(120.0), WATT);
 
   UnitAware<Resource<Polynomial>> batterySOC = integrate(asUnitAwarePolynomial(power), quantity(100, JOULE));
   UnitAware<Resource<Discrete<Double>>> clampedPower = DiscreteResources.unitAware(map(power.value(WATT), p -> p < 0 ? 0 : p), WATT);
@@ -126,8 +126,8 @@ public final class Demo {
 
   // Example of using unstructured resources + approximation to represent functions that aren't
   // easily represented by analytic derivations
-  Resource<Polynomial> p = cellResource(polynomial(1, 2, 3));
-  Resource<Polynomial> q = cellResource(polynomial(6, 5, 4));
+  Resource<Polynomial> p = polynomialCellResource(1, 2, 3);
+  Resource<Polynomial> q = polynomialCellResource(6, 5, 4);
   Resource<Unstructured<Double>> quotient = UnstructuredResources.map(p, q, (p$, q$) -> p$ / q$);
   Resource<Linear> approxQuotient = approximate(quotient, secantApproximation(IntervalFunctions.<Unstructured<Double>>byBoundingError(
       1e-6, Duration.SECOND, Duration.HOUR.times(24), errorByOptimization())));
@@ -163,8 +163,8 @@ public final class Demo {
 
   // Example of a locking state:
 
-  CellResource<Discrete<Integer>> importantHardware = cellResource(discrete(42));
-  CellResource<Discrete<Optional<Integer>>> importantHardwareLock = cellResource(discrete(Optional.empty()));
+  CellResource<Discrete<Integer>> importantHardware = discreteCellResource(42);
+  CellResource<Discrete<Optional<Integer>>> importantHardwareLock = discreteCellResource(Optional.empty());
   Resource<Discrete<Boolean>> importantHardwareLockAssertion = assertThat(
       "Important hardware does not change state while locked",
       map(importantHardwareLock, importantHardware, (lock, state) -> lock.map(state::equals).orElse(true)));

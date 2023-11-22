@@ -5,18 +5,15 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ErrorCatchingMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Context;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.Cell;
-import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.allocate;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Labelled.labelled;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.unit;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Unit.UNIT;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -79,48 +76,6 @@ public interface CellResource<D extends Dynamics<?, D>> extends Resource<D> {
     };
   }
 
-  static <D extends Dynamics<?, D>> CellResource<D> staticallyCreated(Supplier<CellResource<D>> constructor) {
-    return new CellResource<>() {
-      private CellResource<D> delegate = constructor.get();
-
-      @Override
-      public void emit(final Labelled<DynamicsEffect<D>> effect) {
-        actOnCell(() -> delegate.emit(effect));
-      }
-
-      @Override
-      public ErrorCatching<Expiring<D>> getDynamics() {
-        // Keep the field access using () -> ... form, don't simplify to delegate::getDynamics
-        // Simplifying will access delegate before calling actOnCell, failing if we need to re-allocate delegate.
-        return actOnCell(() -> delegate.getDynamics());
-      }
-
-      @Override
-      public void registerName(final String name) {
-        delegate.registerName(name);
-      }
-
-      private void actOnCell(Runnable action) {
-        actOnCell(() -> {
-          action.run();
-          return UNIT;
-        });
-      }
-
-      private <R> R actOnCell(Supplier<R> action) {
-        try {
-          return action.get();
-        } catch (Scoped.EmptyDynamicCellException | IllegalArgumentException e) {
-          // If we're running unit tests, several simulations can happen without reloading the Resources class.
-          // In that case, we'll have discarded the clock resource we were using, and get the above exception.
-          // REVIEW: Is there a cleaner way to make sure this resource gets (re-)initialized?
-          delegate = constructor.get();
-          return action.get();
-        }
-      }
-    };
-  }
-
   static <D extends Dynamics<?, D>> void set(CellResource<D> resource, D newDynamics) {
     resource.emit("Set " + newDynamics, DynamicsMonad.effect(x -> newDynamics));
   }
@@ -128,4 +83,5 @@ public interface CellResource<D extends Dynamics<?, D>> extends Resource<D> {
   static <D extends Dynamics<?, D>> void set(CellResource<D> resource, Expiring<D> newDynamics) {
     resource.emit("Set " + newDynamics, ErrorCatchingMonad.<Expiring<D>, Expiring<D>>lift($ -> newDynamics)::apply);
   }
+
 }

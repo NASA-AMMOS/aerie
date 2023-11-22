@@ -35,20 +35,40 @@ public class ComparisonsTest {
   private final CellResource<Polynomial> p = cellResource(polynomial(0));
   private final CellResource<Polynomial> q = cellResource(polynomial(0));
 
+  private final Resource<Discrete<Boolean>> p_lt_q = lessThan(p, q);
+  private final Resource<Discrete<Boolean>> p_lte_q = lessThanOrEquals(p, q);
+  private final Resource<Discrete<Boolean>> p_gt_q = greaterThan(p, q);
+  private final Resource<Discrete<Boolean>> p_gte_q = greaterThanOrEquals(p, q);
+
+  private final Resource<Polynomial> min_p_q = min(p, q);
+  private final Resource<Polynomial> min_q_p = min(q, p);
+  private final Resource<Polynomial> max_p_q = max(p, q);
+  private final Resource<Polynomial> max_q_p = max(q, p);
+
   @Test
   void comparing_distinct_constants() {
-    check_comparison(lessThan(constant(0), constant(1)), true, false);
-    check_comparison(lessThanOrEquals(constant(0), constant(1)), true, false);
-    check_comparison(greaterThan(constant(0), constant(1)), false, false);
-    check_comparison(greaterThanOrEquals(constant(0), constant(1)), false, false);
+    setup(() -> {
+      set(p, polynomial(0));
+      set(q, polynomial(1));
+    });
+
+    check_comparison(p_lt_q, true, false);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
+    check_comparison(p_gte_q, false, false);
   }
 
   @Test
   void comparing_equal_constants() {
-    check_comparison(lessThan(constant(1), constant(1)), false, false);
-    check_comparison(lessThanOrEquals(constant(1), constant(1)), true, false);
-    check_comparison(greaterThan(constant(1), constant(1)), false, false);
-    check_comparison(greaterThanOrEquals(constant(1), constant(1)), true, false);
+    setup(() -> {
+      set(p, polynomial(1));
+      set(q, polynomial(1));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
+    check_comparison(p_gte_q, true, false);
   }
 
   @Test
@@ -56,12 +76,12 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1));
       set(q, polynomial(1, 2));
-      delay(ZERO);
     });
-    check_comparison(lessThan(p, q), true, false);
-    check_comparison(lessThanOrEquals(p, q), true, false);
-    check_comparison(greaterThan(p, q), false, false);
-    check_comparison(greaterThanOrEquals(p, q), false, false);
+
+    check_comparison(p_lt_q, true, false);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
+    check_comparison(p_gte_q, false, false);
   }
 
   @Test
@@ -69,12 +89,11 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1));
       set(q, polynomial(2, -1));
-      delay(ZERO);
     });
-    check_comparison(lessThan(p, q), true, true);
-    check_comparison(lessThanOrEquals(p, q), true, true);
-    check_comparison(greaterThan(p, q), false, true);
-    check_comparison(greaterThanOrEquals(p, q), false, true);
+    check_comparison(p_lt_q, true, true);
+    check_comparison(p_lte_q, true, true);
+    check_comparison(p_gt_q, false, true);
+    check_comparison(p_gte_q, false, true);
   }
 
   @Test
@@ -82,12 +101,11 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1));
       set(q, polynomial(0, 1));
-      delay(ZERO);
     });
-    check_comparison(lessThan(p, q), false, false);
-    check_comparison(lessThanOrEquals(p, q), true, false);
-    check_comparison(greaterThan(p, q), false, false);
-    check_comparison(greaterThanOrEquals(p, q), true, false);
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
+    check_comparison(p_gte_q, true, false);
   }
 
   @Test
@@ -95,14 +113,13 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1));
       set(q, polynomial(0, 2));
-      delay(ZERO);
     });
     // Notice that LT is initially false, but will immediately cross over
-    check_comparison(lessThan(p, q), false, true);
-    check_comparison(lessThanOrEquals(p, q), true, false);
-    check_comparison(greaterThan(p, q), false, false);
+    check_comparison(p_lt_q, false, true);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
     // Notice that GTE is initially true, but will immediately cross over
-    check_comparison(greaterThanOrEquals(p, q), true, true);
+    check_comparison(p_gte_q, true, true);
   }
 
   @Test
@@ -110,12 +127,11 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1, 1));
       set(q, polynomial(1, 2, 2));
-      delay(ZERO);
     });
-    check_comparison(lessThan(p, q), true, false);
-    check_comparison(lessThanOrEquals(p, q), true, false);
-    check_comparison(greaterThan(p, q), false, false);
-    check_comparison(greaterThanOrEquals(p, q), false, false);
+    check_comparison(p_lt_q, true, false);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
+    check_comparison(p_gte_q, false, false);
   }
 
   @Test
@@ -123,12 +139,11 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1, 1));
       set(q, polynomial(1, 2, -1));
-      delay(ZERO);
     });
-    check_comparison(lessThan(p, q), true, true);
-    check_comparison(lessThanOrEquals(p, q), true, true);
-    check_comparison(greaterThan(p, q), false, true);
-    check_comparison(greaterThanOrEquals(p, q), false, true);
+    check_comparison(p_lt_q, true, true);
+    check_comparison(p_lte_q, true, true);
+    check_comparison(p_gt_q, false, true);
+    check_comparison(p_gte_q, false, true);
   }
 
   @Test
@@ -136,12 +151,11 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(1, 2, -1));
       set(q, polynomial(1, 2, -1));
-      delay(ZERO);
     });
-    check_comparison(lessThan(p, q), false, false);
-    check_comparison(lessThanOrEquals(p, q), true, false);
-    check_comparison(greaterThan(p, q), false, false);
-    check_comparison(greaterThanOrEquals(p, q), true, false);
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
+    check_comparison(p_gte_q, true, false);
   }
 
   @Test
@@ -149,14 +163,13 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(1, 2, -1));
       set(q, polynomial(1, 2, 1));
-      delay(ZERO);
     });
     // Notice that LT is initially false, but will immediately cross over
-    check_comparison(lessThan(p, q), false, true);
-    check_comparison(lessThanOrEquals(p, q), true, false);
-    check_comparison(greaterThan(p, q), false, false);
+    check_comparison(p_lt_q, false, true);
+    check_comparison(p_lte_q, true, false);
+    check_comparison(p_gt_q, false, false);
     // Notice that GTE is initially true, but will immediately cross over
-    check_comparison(greaterThanOrEquals(p, q), true, true);
+    check_comparison(p_gte_q, true, true);
   }
 
   @Test
@@ -164,10 +177,9 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(1, 2, -1));
       set(q, polynomial(1, 2, -1));
-      delay(ZERO);
     });
 
-    check_extrema(p, q, false);
+    check_extrema(false, false);
   }
 
   @Test
@@ -175,10 +187,9 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1, -1));
       set(q, polynomial(1, 2, 1));
-      delay(ZERO);
     });
 
-    check_extrema(p, q, false);
+    check_extrema(false, false);
   }
 
   @Test
@@ -186,10 +197,9 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 1, 1));
       set(q, polynomial(1, 2, -1));
-      delay(ZERO);
     });
 
-    check_extrema(p, q, true);
+    check_extrema(false, true);
   }
 
   @Test
@@ -197,10 +207,9 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(1, 1, -1));
       set(q, polynomial(1, 2, 1));
-      delay(ZERO);
     });
 
-    check_extrema(p, q, false);
+    check_extrema(false, false);
   }
 
   @Test
@@ -208,10 +217,9 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(1, 2, -1));
       set(q, polynomial(1, 2, 1));
-      delay(ZERO);
     });
 
-    check_extrema(p, q, false);
+    check_extrema(false, false);
   }
 
   @Test
@@ -219,15 +227,76 @@ public class ComparisonsTest {
     setup(() -> {
       set(p, polynomial(0, 2, -1));
       set(q, polynomial(2, -2, 1));
-      delay(ZERO);
     });
 
     // No crossover because curves are tangent at t = 1, but q still dominates p
-    check_extrema(p, q, false);
+    check_extrema(false, false);
     // Explicitly check answer at t = 1, just to be sure:
     reset();
     delay(SECOND);
-    check_extrema(p, q, false);
+    check_extrema(false, false);
+  }
+
+  // "Fine precision":
+  // Due to floating-point precision, it can take more than 1 microsecond
+  // to actually change the value of a polynomial if the rates are sufficiently small.
+  // Implementations of the comparisons and extrema must account for this
+  // for simulations to be fast and stable.
+
+  @Test
+  void comparing_equal_then_diverging_linear_terms_with_fine_precision() {
+    setup(() -> {
+      set(p, polynomial(1000));
+      set(q, polynomial(1000, -1e-20));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, true, true);
+    check_comparison(p_gt_q, false, true);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
+  @Test
+  void comparing_converging_linear_terms_with_fine_precision() {
+    setup(() -> {
+      set(p, polynomial(1000 - 1e-6, 1e-14));
+      set(q, polynomial(1000, -1e-12));
+    });
+
+    check_comparison(p_lt_q, true, true);
+    check_comparison(p_lte_q, true, true);
+    check_comparison(p_gt_q, false, true);
+    check_comparison(p_gte_q, false, true);
+    check_extrema(false, true);
+  }
+
+  @Test
+  void comparing_equal_then_diverging_nonlinear_terms_with_fine_precision() {
+    setup(() -> {
+      set(p, polynomial(1000, -1e-20, 2e-22));
+      set(q, polynomial(1000, -1e-20, 1e-22));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, true, true);
+    check_comparison(p_gt_q, false, true);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
+  @Test
+  void comparing_converging_nonlinear_terms_with_fine_precision() {
+    setup(() -> {
+      set(p, polynomial(1000 - 1e-6, 1e-14, 1e20));
+      set(q, polynomial(1000, -1e-12, -1e20));
+    });
+
+    check_comparison(p_lt_q, true, true);
+    check_comparison(p_lte_q, true, true);
+    check_comparison(p_gt_q, false, true);
+    check_comparison(p_gte_q, false, true);
+    check_extrema(false, true);
   }
 
   private void check_comparison(Resource<Discrete<Boolean>> result, boolean expectedValue, boolean expectCrossover) {
@@ -244,41 +313,40 @@ public class ComparisonsTest {
     }
   }
 
-  private void check_extrema(Resource<Polynomial> expectedMin, Resource<Polynomial> expectedMax, boolean expectCrossover) {
+  private void check_extrema(boolean expect_p_dominates_q, boolean expectCrossover) {
     reset();
-    var lrMin = min(expectedMin, expectedMax);
-    var rlMin = min(expectedMax, expectedMin);
-    var lrMax = max(expectedMin, expectedMax);
-    var rlMax = max(expectedMax, expectedMin);
 
-    var lrMinDynamics = lrMin.getDynamics();
-    var rlMinDynamics = rlMin.getDynamics();
-    var lrMaxDynamics = lrMax.getDynamics();
-    var rlMaxDynamics = rlMax.getDynamics();
+    var minPQDynamics = min_p_q.getDynamics();
+    var minQPDynamics = min_q_p.getDynamics();
+    var maxPQDynamics = max_p_q.getDynamics();
+    var maxQPDynamics = max_q_p.getDynamics();
 
     // min and max are exactly symmetric
-    assertEquals(lrMinDynamics, rlMinDynamics);
-    assertEquals(lrMaxDynamics, rlMaxDynamics);
+    assertEquals(minPQDynamics, minQPDynamics);
+    assertEquals(maxPQDynamics, maxQPDynamics);
 
     // Expiry for min and max are exactly the same
-    Expiry expiry = lrMinDynamics.getOrThrow().expiry();
-    assertEquals(expiry, lrMaxDynamics.getOrThrow().expiry());
+    Expiry expiry = minPQDynamics.getOrThrow().expiry();
+    assertEquals(expiry, maxPQDynamics.getOrThrow().expiry());
     // Expiry is finite iff we expect a crossover
     assertEquals(expectCrossover, !expiry.isNever());
 
+    var expectedMax = expect_p_dominates_q ? p : q;
+    var expectedMin = expect_p_dominates_q ? q : p;
+
     // Data for min and max match their corresponding arguments
-    assertEquals(currentData(expectedMin), currentData(lrMin));
-    assertEquals(currentData(expectedMax), currentData(lrMax));
+    assertEquals(currentData(expectedMin), currentData(min_p_q));
+    assertEquals(currentData(expectedMax), currentData(max_p_q));
 
     if (expectCrossover) {
       // Just before crossover, min and max still match their originally stated arguments
       delay(expiry.value().get().minus(EPSILON));
-      assertEquals(currentData(expectedMin), currentData(lrMin));
-      assertEquals(currentData(expectedMax), currentData(lrMax));
+      assertEquals(currentData(expectedMin), currentData(min_p_q));
+      assertEquals(currentData(expectedMax), currentData(max_p_q));
       // At crossover, min and max swap
       delay(EPSILON);
-      assertEquals(currentData(expectedMax), currentData(lrMin));
-      assertEquals(currentData(expectedMin), currentData(lrMax));
+      assertEquals(currentData(expectedMax), currentData(min_p_q));
+      assertEquals(currentData(expectedMin), currentData(max_p_q));
     }
   }
 
@@ -292,5 +360,6 @@ public class ComparisonsTest {
   }
   private void reset() {
     setupFunction.run();
+    delay(ZERO);
   }
 }

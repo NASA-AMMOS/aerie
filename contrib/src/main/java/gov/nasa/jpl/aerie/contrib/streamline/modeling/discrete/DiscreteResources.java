@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
+import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2;
+import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
@@ -7,6 +9,8 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.utils.DoubleUtils;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
@@ -26,7 +30,8 @@ import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.testing;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.expiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
@@ -42,6 +47,30 @@ import static java.util.Arrays.stream;
 public final class DiscreteResources {
   private DiscreteResources() {}
 
+  public static <T> Resource<Discrete<T>> constant(T value) {
+    return DiscreteResourceMonad.unit(value);
+  }
+
+  // General discrete cell resource constructor
+  public static <T> CellResource<Discrete<T>> discreteCellResource(T initialValue) {
+    return CellResource.cellResource(discrete(initialValue));
+  }
+
+  // Annoyingly, we need to repeat the specialization for integer resources, so that
+  // discreteCellResource(42) doesn't become a double resource, due to the next overload
+  public static CellResource<Discrete<Integer>> discreteCellResource(int initialValue) {
+    return CellResource.cellResource(discrete(initialValue));
+  }
+
+  // specialized constructor for doubles, because they require a toleranced equality comparison
+  public static CellResource<Discrete<Double>> discreteCellResource(double initialValue) {
+    return CellResource.cellResource(discrete(initialValue), autoEffects(testing(
+        (CommutativityTestInput<Discrete<Double>> input) -> DoubleUtils.areEqualResults(
+            input.original().extract(),
+            input.leftResult().extract(),
+            input.rightResult().extract()))));
+  }
+
   /**
    * Returns a condition that's satisfied whenever this resource is true.
    */
@@ -56,7 +85,7 @@ public final class DiscreteResources {
    * Cache resource, updating the cache when updatePredicate(cached value, resource value) is true.
    */
   public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
-    final var cell = cellResource(resource.getDynamics());
+    final var cell = CellResource.cellResource(resource.getDynamics());
     // TODO: Does the update predicate need to propagate expiry information?
     BiPredicate<ErrorCatching<Expiring<Discrete<V>>>, ErrorCatching<Expiring<Discrete<V>>>> liftedUpdatePredicate = (eCurrent, eNew) ->
         eCurrent.match(
@@ -82,7 +111,7 @@ public final class DiscreteResources {
    * Sample valueSupplier once every samplePeriod.
    */
   public static <V, T extends Dynamics<Duration, T>> Resource<Discrete<V>> sampled(Supplier<V> valueSupplier, Resource<T> samplePeriod) {
-    var result = cellResource(discrete(valueSupplier.get()));
+    var result = discreteCellResource(valueSupplier.get());
     every(() -> currentValue(samplePeriod, Duration.MAX_VALUE),
           () -> set(result, valueSupplier.get()));
     return result;

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
+import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2;
+import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
@@ -15,6 +17,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareOperations;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources;
+import gov.nasa.jpl.aerie.contrib.streamline.utils.DoubleUtils;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
@@ -22,8 +25,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.testing;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
@@ -33,10 +39,8 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.shift;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.signalling;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bindEffect;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.effect;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.unit;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.lift;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
@@ -60,6 +64,25 @@ public final class PolynomialResources {
 
   public static UnitAware<Resource<Polynomial>> constant(UnitAware<Double> quantity) {
     return unitAware(constant(quantity.value()), quantity.unit());
+  }
+
+  public static CellResource<Polynomial> polynomialCellResource(double... initialCoefficients) {
+    return polynomialCellResource(polynomial(initialCoefficients));
+  }
+
+  public static CellResource<Polynomial> polynomialCellResource(Polynomial initialDynamics) {
+    return cellResource(initialDynamics, autoEffects(testing(
+        (CommutativityTestInput<Polynomial> input) -> {
+          Polynomial original = input.original();
+          Polynomial left = input.leftResult();
+          Polynomial right = input.rightResult();
+          return left.degree() == right.degree() &&
+                 IntStream.rangeClosed(0, left.degree()).allMatch(
+                     i -> DoubleUtils.areEqualResults(
+                         original.getCoefficient(i),
+                         left.getCoefficient(i),
+                         right.getCoefficient(i)));
+        })));
   }
 
   /**
@@ -326,43 +349,43 @@ public final class PolynomialResources {
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<Polynomial> p, double threshold) {
-    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.greaterThan(threshold))));
+    return greaterThan(p, constant(threshold));
   }
 
   public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Polynomial> p, double threshold) {
-    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.greaterThanOrEquals(threshold))));
+    return greaterThanOrEquals(p, constant(threshold));
   }
 
   public static Resource<Discrete<Boolean>> lessThan(Resource<Polynomial> p, double threshold) {
-    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.lessThan(threshold))));
+    return lessThan(p, constant(threshold));
   }
 
   public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Polynomial> p, double threshold) {
-    return signalling(bind(p, p$ -> ExpiringToResourceMonad.unit(p$.lessThanOrEquals(threshold))));
+    return lessThanOrEquals(p, constant(threshold));
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return greaterThan(subtract(p, q), 0);
+    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ExpiringToResourceMonad.unit(p$.greaterThan(q$))));
   }
 
   public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return greaterThanOrEquals(subtract(p, q), 0);
+    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ExpiringToResourceMonad.unit(p$.greaterThanOrEquals(q$))));
   }
 
   public static Resource<Discrete<Boolean>> lessThan(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return lessThan(subtract(p, q), 0);
+    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ExpiringToResourceMonad.unit(p$.lessThan(q$))));
   }
 
   public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return lessThanOrEquals(subtract(p, q), 0);
+    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ExpiringToResourceMonad.unit(p$.lessThanOrEquals(q$))));
   }
 
   public static Resource<Polynomial> min(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.min(q$))));
+    return signalling(ResourceMonad.bind(p, q, (Polynomial p$, Polynomial q$) -> ExpiringToResourceMonad.unit(p$.min(q$))));
   }
 
   public static Resource<Polynomial> max(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(ResourceMonad.bind(p, q, (p$, q$) -> ExpiringToResourceMonad.unit(p$.max(q$))));
+    return signalling(ResourceMonad.bind(p, q, (Polynomial p$, Polynomial q$) -> ExpiringToResourceMonad.unit(p$.max(q$))));
   }
 
   /**

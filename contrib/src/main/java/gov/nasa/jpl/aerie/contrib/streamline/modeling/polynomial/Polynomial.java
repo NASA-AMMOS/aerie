@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
+import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
@@ -9,9 +10,10 @@ import org.apache.commons.math3.analysis.solvers.LaguerreSolver;
 import org.apache.commons.math3.complex.Complex;
 
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
@@ -141,52 +143,81 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
   }
 
   public double evaluate(Duration t) {
-    return evaluate(t.ratioOver(SECOND));
+    // Although there are more efficient ways to evaluate a polynomial,
+    // it's *very* important to simulation stability that
+    // evaluate(t) agrees exactly with step(t).extract()
+    return step(t).extract();
   }
 
-  public double evaluate(double x) {
-    // Horner's method of polynomial evaluation:
-    // Transforms a_0 + a_1 x + a_2 x^2 + ... + a_n x^n
-    // into a_0 + x (a_1 + x (a_2 + ... x ( a_n ) ... ))
-    // Which can be done with one addition and one multiplication per coefficient,
-    // as opposed to the traditional method, which takes one addition and multiple multiplications.
-    final double[] coefficients = coefficients();
-    double accumulator = coefficients[coefficients.length - 1];
-    for (int i = coefficients.length - 2; i >= 0; --i) {
-      accumulator *= x;
-      accumulator += coefficients[i];
+  /**
+   * Helper method for other comparison methods.
+   * Finds the first time the predicate is true, near the next root of this polynomial.
+   */
+  private Expiry findExpiryNearRoot(Predicate<Duration> expires) {
+    Duration root, start, end;
+    try {
+      var t$ = findFutureRoots().findFirst();
+      if (t$.isEmpty()) return NEVER;
+      root = t$.get();
+
+      // Do an exponential search to bracket the transition time
+      boolean initialTestResult = expires.test(root);
+      Duration rangeSize = EPSILON.times(initialTestResult ? -1 : 1);
+      Duration testPoint = root.plus(rangeSize);
+      while (expires.test(testPoint) == initialTestResult) {
+        rangeSize = rangeSize.times(2);
+        testPoint = root.plus(rangeSize);
+      }
+      if (initialTestResult) {
+        start = testPoint;
+        end = root;
+      } else {
+        start = root;
+        end = testPoint;
+      }
+
+      // TODO: There's an unhandled edge case here, where timePredicate is satisfied in a period we jumped over.
+      //   Maybe try to use the precision of the arguments and the finer resolution polynomial "this"
+      //   to do a more thorough but still efficient search?
+    } catch (ArithmeticException e) {
+      // If we overflowed looking for a bracketing range, it effectively never transitions.
+      return NEVER;
     }
-    return accumulator;
+
+    // Do a binary search to find the exact transition time
+    while (end.longerThan(start.plus(EPSILON))) {
+      Duration midpoint = start.plus(end).dividedBy(2);
+      if (expires.test(midpoint)) {
+        end = midpoint;
+      } else {
+        start = midpoint;
+      }
+    }
+    return Expiry.at(end);
   }
 
-  private Expiring<Discrete<Boolean>> compare(DoublePredicate predicate, double threshold) {
-    return find(t -> predicate.test(evaluate(t)), threshold);
+  private Expiring<Discrete<Boolean>> greaterThan(Polynomial other, boolean strict) {
+    BiPredicate<Double, Double> comp = strict ? (x, y) -> x > y : (x, y) -> x >= y;
+    boolean result = comp.test(this.extract(), other.extract());
+    var expiry = this.subtract(other).findExpiryNearRoot(
+        t -> comp.test(this.evaluate(t), other.evaluate(t)) != result);
+    return expiring(discrete(result), expiry);
   }
 
-  private Expiring<Discrete<Boolean>> find(Predicate<Duration> timePredicate, double target) {
-    final boolean currentValue = timePredicate.test(ZERO);
-    final var expiry = this.isConstant() || this.isNonFinite() ? NEVER : expiry(findFuturePreImage(target)
-        .flatMap(t -> IntStream.rangeClosed(-MAX_RANGE_FOR_ROOT_SEARCH, MAX_RANGE_FOR_ROOT_SEARCH)
-            .mapToObj(i -> t.plus(EPSILON.times(i))))
-        .filter(t -> (timePredicate.test(t) ^ currentValue) && t.isPositive())
-        .findFirst());
-    return expiring(discrete(currentValue), expiry);
+  public Expiring<Discrete<Boolean>> greaterThan(Polynomial other) {
+    return greaterThan(other, true);
   }
 
-  public Expiring<Discrete<Boolean>> greaterThan(double threshold) {
-    return compare(x -> x > threshold, threshold);
+  public Expiring<Discrete<Boolean>> greaterThanOrEquals(Polynomial other) {
+    return greaterThan(other, false);
   }
 
-  public Expiring<Discrete<Boolean>> greaterThanOrEquals(double threshold) {
-    return compare(x -> x >= threshold, threshold);
+  public Expiring<Discrete<Boolean>> lessThan(Polynomial other) {
+    return other.greaterThan(this);
   }
 
-  public Expiring<Discrete<Boolean>> lessThan(double threshold) {
-    return compare(x -> x < threshold, threshold);
-  }
-
-  public Expiring<Discrete<Boolean>> lessThanOrEquals(double threshold) {
-    return compare(x -> x <= threshold, threshold);
+  public Expiring<Discrete<Boolean>> lessThanOrEquals(Polynomial other) {
+    return other.greaterThanOrEquals(this);
   }
 
   private boolean dominates$(Polynomial other) {
@@ -199,7 +230,9 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
   }
 
   private Expiring<Discrete<Boolean>> dominates(Polynomial other) {
-    return this.subtract(other).find(t -> this.step(t).dominates$(other.step(t)), 0);
+    boolean result = this.dominates$(other);
+    var expiry = this.subtract(other).findExpiryNearRoot(t -> this.step(t).dominates$(other.step(t)) != result);
+    return expiring(discrete(result), expiry);
   }
 
   public Expiring<Polynomial> min(Polynomial other) {
@@ -211,16 +244,15 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
   }
 
   /**
-   * Finds all occasions in the future when this function will reach the target value.
+   * Finds all roots of this function in the future
    */
-  private Stream<Duration> findFuturePreImage(double target) {
-    // add a check for an infinite target (i.e. unbounded above/below) or a poorly behaved polynomial
-    if (!Double.isFinite(target) || this.isNonFinite()) {
+  private Stream<Duration> findFutureRoots() {
+    // If this polynomial can never have a root, fail immediately
+    if (this.isNonFinite() || this.isConstant()) {
       return Stream.empty();
     }
 
-    final double[] shiftedCoefficients = add(polynomial(-target)).coefficients();
-    final Complex[] solutions = new LaguerreSolver().solveAllComplex(shiftedCoefficients, 0);
+    final Complex[] solutions = new LaguerreSolver().solveAllComplex(coefficients, 0);
     return Arrays.stream(solutions)
                  .filter(solution -> Math.abs(solution.getImaginary()) < ROOT_FINDING_IMAGINARY_COMPONENT_TOLERANCE)
                  .map(Complex::getReal)
