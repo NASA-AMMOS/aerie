@@ -73,7 +73,8 @@ public final class SchedulerWorkerAppDriver {
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSchedulingRequestNotificationPayload>();
     final var listenAction = new ListenSchedulerCapability(hikariDataSource, notificationQueue);
-    final var listenThread = listenAction.registerListener();
+    final var canceledListener = new SchedulingCanceledListener();
+    final var listenThread = listenAction.registerListener(canceledListener);
 
     try(final var app = Javalin.create().start(8080)) {
       app.get("/health", ctx -> ctx.status(200));
