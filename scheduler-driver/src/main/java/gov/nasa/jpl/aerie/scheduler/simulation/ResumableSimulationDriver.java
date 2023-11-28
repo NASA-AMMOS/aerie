@@ -28,8 +28,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
+  private final Supplier<Boolean> canceledListener;
 
   public long durationSinceRestart = 0;
 
@@ -61,11 +63,16 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   //effectively counting the number of calls to initSimulation()
   private int countSimulationRestarts;
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
+  public ResumableSimulationDriver(
+      MissionModel<Model> missionModel,
+      Duration planDuration,
+      Supplier<Boolean> canceledListener
+  ){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     this.planDuration = planDuration;
     countSimulationRestarts = 0;
+    this.canceledListener = canceledListener;
     initSimulation();
   }
 

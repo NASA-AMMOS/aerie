@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * A facade for simulating plans and processing simulation results.
@@ -31,6 +32,7 @@ import java.util.Optional;
 public class SimulationFacade implements AutoCloseable{
 
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
+  private final Supplier<Boolean> canceledListener;
 
   private final MissionModel<?> missionModel;
   private final SchedulerModel schedulerModel;
@@ -102,12 +104,17 @@ public class SimulationFacade implements AutoCloseable{
     return Optional.of(lastSimulationData.driverResults());
   }
 
-  public SimulationFacade(final PlanningHorizon planningHorizon,
-                          final MissionModel<?> missionModel,
-                          final SchedulerModel schedulerModel) {
+  public Supplier<Boolean> getCanceledListener() {return canceledListener;}
+
+  public SimulationFacade(
+      final PlanningHorizon planningHorizon,
+      final MissionModel<?> missionModel,
+      final SchedulerModel schedulerModel,
+      Supplier<Boolean> canceledListener
+  ) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
+    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), canceledListener);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
@@ -115,6 +122,7 @@ public class SimulationFacade implements AutoCloseable{
     this.initialPlan = new ArrayList<>();
     this.initialSimulationResults = Optional.empty();
     this.schedulerModel = schedulerModel;
+    this.canceledListener = canceledListener;
   }
 
   @Override

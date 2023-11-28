@@ -85,19 +85,28 @@ public final class SchedulerWorkerAppDriver {
         final var specificationRevision = notification.specificationRevision();
         final var specificationId = new SpecificationId(notification.specificationId());
 
+        // Register as early as possible to avoid potentially missing a canceled signal
+        canceledListener.register(specificationId);
+
         final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
-        if (owner.isEmpty()) continue;
+        if (owner.isEmpty()) {
+          canceledListener.unregister();
+          continue;
+        }
 
         final var revisionData = new SpecificationRevisionData(specificationRevision);
         final ResultsProtocol.WriterRole writer = owner.get();
         try {
-          scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer);
+          scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer, canceledListener);
         } catch (final Throwable ex) {
           ex.printStackTrace(System.err);
           writer.failWith(b -> b
               .type("UNEXPECTED_SCHEDULER_EXCEPTION")
               .message("Something went wrong while scheduling")
               .trace(ex));
+        }
+        finally {
+          canceledListener.unregister();
         }
       }
     } finally {
