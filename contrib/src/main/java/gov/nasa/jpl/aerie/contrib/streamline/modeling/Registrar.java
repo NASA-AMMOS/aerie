@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ErrorCatchingToResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ThinResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
@@ -127,7 +127,7 @@ public class Registrar {
 
   private <D extends Dynamics<?, D>> void logErrors(String name, Resource<D> resource) {
     // TODO: Is there any way to avoid computing resources twice, once for sampling and separately for errors?
-    var hasError = ErrorCatchingToResourceMonad.bind(resource, ec -> DiscreteResourceMonad.unit(ec.match(value -> false, error -> true)));
+    Resource<Discrete<Boolean>> hasError = ThinResourceMonad.bind(resource, ec -> DiscreteResourceMonad.pure(ec.match(value -> false, error -> true)))::getDynamics;
     whenever(hasError, () -> {
       resource.getDynamics().match($ -> null, e -> logError(name, e));
       // Avoid infinite loops by waiting for resource to clear before logging a new error.

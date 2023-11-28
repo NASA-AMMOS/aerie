@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
@@ -27,7 +27,7 @@ public final class ClockResources {
   public static Resource<Discrete<Boolean>> lessThan(Resource<Clock> clock, Duration threshold) {
     return bind(clock, c -> {
       final Duration crossoverTime = threshold.minus(c.extract());
-      return ExpiringToResourceMonad.unit(
+      return ResourceMonad.pure(
           crossoverTime.isPositive()
               ? expiring(discrete(true), crossoverTime)
               : neverExpiring(discrete(false)));

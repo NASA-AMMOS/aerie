@@ -1,11 +1,9 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
@@ -48,7 +46,7 @@ public final class DiscreteResources {
   private DiscreteResources() {}
 
   public static <T> Resource<Discrete<T>> constant(T value) {
-    return DiscreteResourceMonad.unit(value);
+    return DiscreteResourceMonad.pure(value);
   }
 
   // General discrete cell resource constructor
@@ -97,7 +95,7 @@ public final class DiscreteResources {
                 newException -> !equivalentExceptions(currentException, newException)));
     whenever(() -> {
       var currentDynamics = resource.getDynamics();
-      return when(() -> DiscreteDynamicsMonad.unit(liftedUpdatePredicate.test(
+      return when(() -> DiscreteDynamicsMonad.pure(liftedUpdatePredicate.test(
           currentDynamics,
           resource.getDynamics())));
     }, () -> {
@@ -130,7 +128,7 @@ public final class DiscreteResources {
       var entry = segments.floorEntry(t);
       var value = entry == null ? valueBeforeFirstEntry : entry.getValue();
       var nextTime = expiry(Optional.ofNullable(segments.higherKey(t)));
-      return ExpiringToResourceMonad.unit(expiring(discrete(value), nextTime.minus(t)));
+      return ResourceMonad.pure(expiring(discrete(value), nextTime.minus(t)));
     });
   }
 
@@ -176,7 +174,7 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting and: Only gets right if left is true
-    return bind(left, l -> l ? right : unit(false));
+    return bind(left, l -> l ? right : pure(false));
   }
 
   /**
@@ -192,7 +190,7 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> and(Stream<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting and to improve efficiency
-    return operands.reduce(unit(true), DiscreteResources::and, DiscreteResources::and);
+    return operands.reduce(pure(true), DiscreteResources::and, DiscreteResources::and);
   }
 
   /**
@@ -200,7 +198,7 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting or: Only gets right if left is false
-    return bind(left, l -> l ? unit(true) : right);
+    return bind(left, l -> l ? pure(true) : right);
   }
 
   /**
@@ -216,7 +214,7 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> or(Stream<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting or to improve efficiency
-    return operands.reduce(unit(false), DiscreteResources::or, DiscreteResources::or);
+    return operands.reduce(pure(false), DiscreteResources::or, DiscreteResources::or);
   }
 
   /**
@@ -259,7 +257,7 @@ public final class DiscreteResources {
    * Add integer resources
    */
   public static Resource<Discrete<Integer>> sumInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    return operands.reduce(unit(0), lift(Integer::sum), lift(Integer::sum)::apply);
+    return operands.reduce(pure(0), map(Integer::sum), map(Integer::sum)::apply);
   }
 
   /**
@@ -281,7 +279,7 @@ public final class DiscreteResources {
    * Multiply integer resources
    */
   public static Resource<Discrete<Integer>> productInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    return operands.reduce(unit(1), lift((x, y) -> x * y), lift((Integer x, Integer y) -> x * y)::apply);
+    return operands.reduce(pure(1), map((x, y) -> x * y), map((Integer x, Integer y) -> x * y)::apply);
   }
 
   /**
@@ -305,7 +303,7 @@ public final class DiscreteResources {
    * Add double resources
    */
   public static Resource<Discrete<Double>> sum(Stream<? extends Resource<Discrete<Double>>> operands) {
-    return operands.reduce(unit(0.0), lift(Double::sum), lift(Double::sum)::apply);
+    return operands.reduce(pure(0.0), map(Double::sum), map(Double::sum)::apply);
   }
 
   /**
@@ -327,7 +325,7 @@ public final class DiscreteResources {
    * Multiply double resources
    */
   public static Resource<Discrete<Double>> product(Stream<? extends Resource<Discrete<Double>>> operands) {
-    return operands.reduce(unit(1.0), lift((x, y) -> x * y), lift((Double x, Double y) -> x * y)::apply);
+    return operands.reduce(pure(1.0), map((x, y) -> x * y), map((Double x, Double y) -> x * y)::apply);
   }
 
   /**

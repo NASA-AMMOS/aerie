@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringToResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -37,7 +36,7 @@ public final class VariableClockResources {
         var T = result ? threshold : threshold.minus(EPSILON);
         expiry = Expiry.at(T.minus(c.extract()).dividedBy(c.multiplier()).plus(EPSILON));
       }
-      return ExpiringToResourceMonad.unit(expiring(discrete(result), expiry));
+      return ResourceMonad.pure(expiring(discrete(result), expiry));
     });
   }
 
