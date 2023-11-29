@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ResourceId;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -154,6 +155,7 @@ public final class IncrementalSimTest {
     final var driver = SimulationUtility.getDriver(simDuration);
 
     final var startTime = Instant.now();
+    if (debug) System.out.println("1st schedule: " + schedule);
     var simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
 
     final Map.Entry<ActivityDirectiveId, ActivityDirective> firstEntry = schedule.entrySet().iterator().next();
@@ -163,10 +165,13 @@ public final class IncrementalSimTest {
     schedule.put(key1, new ActivityDirective(Duration.of(7, SECONDS), directive1.serializedActivity(), directive1.anchorId(), directive1.anchoredToStart()));
 
     driver.initSimulation(simDuration);
+    if (debug) System.out.println("2nd schedule: " + schedule);
     simulationResults = driver.diffAndSimulate(schedule, startTime, simDuration, startTime, simDuration);
 
     assertEquals(2, simulationResults.getSimulatedActivities().size());
     var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    if (debug) System.out.println("fruit profile = " + fruitProfile);
+
     assertEquals(3, fruitProfile.size());
     assertEquals(4.0, fruitProfile.get(0).dynamics().initial);
     assertEquals(3.0, fruitProfile.get(1).dynamics().initial);
@@ -321,6 +326,7 @@ public final class IncrementalSimTest {
     var driver = SimulationUtility.getDriver(simDuration, true);
     var simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
     final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    String correctResProfile = driver.getEngine().resources.get(new ResourceId("/fruit")).profile().segments().toString();
 
     if (debug) System.out.println("schedule = " + simulationResults.getSimulatedActivities());
 
@@ -330,10 +336,12 @@ public final class IncrementalSimTest {
     simulationResults = driver.simulate(emptySchedule, startTime, simDuration, startTime, simDuration);
 
     var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    String fruitResProfile = driver.getEngine().resources.get(new ResourceId("/fruit")).profile().segments().toString();
 
     // now do incremental sim on schedule
     driver.initSimulation(simDuration);
     simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
+    String fruitResProfile2 = driver.getEngine().resources.get(new ResourceId("/fruit")).profile().segments().toString();
     if (debug) System.out.println("correct        fruit profile = " + correctFruitProfile);
     if (debug) System.out.println("empty schedule fruit profile = " + fruitProfile);
 
@@ -341,6 +349,12 @@ public final class IncrementalSimTest {
     if (debug) System.out.println("inc sim        fruit profile = " + fruitProfile);
     List<ProfileSegment<RealDynamics>> diff = subtract(fruitProfile, correctFruitProfile);
     if (debug) System.out.println("inc sim diff   fruit profile = " + diff);
+
+    if (debug) System.out.println("");
+
+    if (debug) System.out.println("correct        fruit profile = " + correctResProfile);
+    if (debug) System.out.println("empty schedule fruit profile = " + fruitResProfile);
+    if (debug) System.out.println("inc sim        fruit profile = " + fruitResProfile2);
   }
 
   private List<ProfileSegment<RealDynamics>> subtract(List<ProfileSegment<RealDynamics>> lps1, List<ProfileSegment<RealDynamics>> lps2) {

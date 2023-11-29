@@ -40,7 +40,7 @@ public final class Event {
 
   @Override
   public String toString() {
-    return "<@%s, %s>".formatted(System.identityHashCode(this.inner.topic), this.inner.event);
+    return "&%s<@%s, %s>".formatted(System.identityHashCode(this),System.identityHashCode(this.inner.topic), this.inner.event);
   }
 
   private record GenericEvent<EventType>(Topic<EventType> topic, EventType event, TaskId provenance) {

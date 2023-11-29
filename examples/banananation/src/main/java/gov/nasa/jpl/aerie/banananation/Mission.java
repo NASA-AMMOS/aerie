@@ -54,7 +54,7 @@ public final class Mission {
     // Load SPICE in the Mission constructor
     try {
       SpiceLoader.loadSpice();
-      System.out.println(CSPICE.ktotal("ALL"));
+      System.out.println(this.getClass().getCanonicalName() + ": CSPICE.ktotal(\"ALL\") = " + CSPICE.ktotal("ALL"));
     } catch (final SpiceErrorException ex) {
       throw new Error(ex);
     }

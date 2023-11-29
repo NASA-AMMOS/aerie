@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public final class CausalEventSource implements EventSource {
-  private Event[] points = new Event[2];
+  public Event[] points = new Event[2];
   private int size = 0;
 
   public void add(final Event point) {

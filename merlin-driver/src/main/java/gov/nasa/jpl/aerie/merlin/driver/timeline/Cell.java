@@ -43,9 +43,10 @@ public final class Cell<State> {
    * @param events the Events that may affect the Cell
    * @param lastEvent a boundary within the graph of Events beyond which Events are not applied
    * @param includeLast whether to apply the Effect of the last Event
+   * @return whether {@code lastEvent} was encountered
    */
-  public void apply(final EventGraph<Event> events, Event lastEvent, boolean includeLast) {
-    this.inner.apply(this.state, events, lastEvent, includeLast);
+  public boolean apply(final EventGraph<Event> events, Event lastEvent, boolean includeLast) {
+    return this.inner.apply(this.state, events, lastEvent, includeLast);
   }
 
   public void apply(final Event event) {
@@ -92,9 +93,11 @@ public final class Cell<State> {
       Selector<Effect> selector,
       EventGraphEvaluator evaluator
   ) {
-    public void apply(final State state, final EventGraph<Event> events, Event lastEvent, boolean includeLast) {
-      final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events, lastEvent, includeLast);
+    public boolean apply(final State state, final EventGraph<Event> events, Event lastEvent, boolean includeLast) {
+      var result = this.evaluator.evaluate(this.algebra, this.selector, events, lastEvent, includeLast);
+      final var effect$ = result.getLeft();
       if (effect$.isPresent()) this.cellType.apply(state, effect$.get());
+      return result.getRight();
     }
 
     public void apply(final State state, final Event event) {

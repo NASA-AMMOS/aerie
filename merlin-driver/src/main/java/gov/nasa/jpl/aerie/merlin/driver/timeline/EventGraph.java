@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +36,15 @@ import java.util.function.Function;
  * @see EffectTrait
  */
 public sealed interface EventGraph<Event> extends EffectExpression<Event> {
+  /**
+   * Compare two events based on their ordering.
+   * @param e1 an event
+   * @param e2 an event
+   * @return an integer less than 0 if e1 is sequentially before e2,
+   *         an integer greater than 0 if the e1 is sequentially after e2,
+   *         else 0.
+   */
+  //int compare(Event e1, Event e2);
   /** Use {@link EventGraph#empty()} instead of instantiating this class directly. */
 
   record Empty<Event>() implements EventGraph<Event> {
@@ -52,6 +62,11 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
       // Making this explicit because a structural equals() is problematic in data structures of these
       return this == o;
     }
+
+    //@Override
+    public int compare(final Event e1, final Event e2) {
+      return 0;
+    }
   }
 
   /** Use {@link EventGraph#atom} instead of instantiating this class directly. */
@@ -64,6 +79,11 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public boolean equals(Object o) {
       return this == o;
+    }
+
+    //@Override
+    public int compare(final Event e1, final Event e2) {
+      return 0;
     }
   }
 
@@ -176,6 +196,60 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
       throw new IllegalArgumentException();
     }
   }
+
+  /**
+   * Return a subset of the graph filtering on events using a Boolean function.  If {@code afterEvent} is not null,
+   * then all events before and including {@code afterEvent} are included or excluded in the resulting graph according
+   * to a flag, {@code includeBefore}.
+   *
+   * @param f a boolean Function testing whether an Event should remain in the graph
+   * @param afterEvent the event after which the filter test is to be applied
+   * @param includeBefore whether to include, else exclude, events prior to and including {@code afterEvent}
+   * @return a filtered event graph paired with a Boolean indicating whether {@code afterEvent} was encountered;
+   *         the returned graph is an empty graph if no events remain, {@code this} graph if no events are removed,
+   *         or else a new graph with filtered events.
+   */
+  default Pair<EventGraph<Event>, Boolean> filter(Function<Event, Boolean> f, Event afterEvent, boolean includeBefore) {
+    // Instead of redefining filter() and evaluate() in each class, they are implemented for each Class here in one function.
+    // This is so it's easier to follow the logic with it all in one place.  For this very situation Java 17 has a preview feature
+    // for Pattern Matching for switch.
+    // Would it be better to create a class implementing EffectTrait<EventGraph> and just call evaluate?
+    // --> No, it would always make a copy of the graph, and we want to preserve it in some cases.
+
+    if (this instanceof EventGraph.Empty) return Pair.of(this, false);
+    if (this instanceof EventGraph.Atom<Event> g) {
+      // afterEvent == null && f(g) ||
+      // afterEvent != null && includeBefore
+      if ((afterEvent != null && includeBefore) || (afterEvent == null && f.apply(g.atom))) return Pair.of(g, afterEvent != null && g.atom == afterEvent);
+      return Pair.of(EventGraph.empty(), afterEvent != null && g.atom == afterEvent);
+    }
+    if (this instanceof EventGraph.Sequentially<Event> g) {
+      var p1 = g.prefix.filter(f, afterEvent, includeBefore);
+      var g1 = p1.getLeft();
+      var foundEvent = p1.getRight();
+      var p2 = g.suffix.filter(f, foundEvent ? null : afterEvent, includeBefore);
+      var g2 = p2.getLeft();
+      foundEvent = foundEvent || p2.getRight();
+      if (g.prefix == g1 && g.suffix == g2) return Pair.of(this, foundEvent);
+      if (g1 instanceof EventGraph.Empty<Event>) return Pair.of(g2, foundEvent);
+      if (g2 instanceof EventGraph.Empty<Event>) return Pair.of(g1, foundEvent);
+      return Pair.of(sequentially(g1, g2), foundEvent);
+    }
+    if (this instanceof EventGraph.Concurrently<Event> g) {
+      var p1 = g.left.filter(f, afterEvent, includeBefore);
+      var g1 = p1.getLeft();
+      var p2 = g.right.filter(f, afterEvent, includeBefore);
+      var g2 = p2.getLeft();
+      var foundEvent = p1.getRight() || p2.getRight();
+      if (g.left == g1 && g.right == g2) return Pair.of(this, foundEvent);
+      if (g1 instanceof EventGraph.Empty<Event>) return Pair.of(g2, foundEvent);
+      if (g2 instanceof EventGraph.Empty<Event>) return Pair.of(g1, foundEvent);
+      return Pair.of(concurrently(g1, g2), foundEvent);
+    } else {
+      throw new IllegalArgumentException();
+    }
+  }
+
 
   /**
    * Remove all occurrences of an Event from the graph, returning {@code this} EventGraph if and

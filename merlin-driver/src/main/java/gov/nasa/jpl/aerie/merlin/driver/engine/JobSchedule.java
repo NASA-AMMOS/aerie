@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
@@ -102,10 +103,14 @@ public final class JobSchedule<JobRef, TimeRef extends SchedulingInstant> {
   }
 
   /** Returns the offset time of the next set of job in the queue. */
-  public Duration timeOfNextJobs() {
-    if (this.queue.isEmpty()) return Duration.MAX_VALUE;
+  public SubInstantDuration timeOfNextJobs() {
+    if (this.queue.isEmpty()) return SubInstantDuration.MAX_VALUE;
     final var time = this.queue.first().getKey().getLeft();
-    return time.project();
+    final JobRef jobRef = this.queue.first().getValue();
+    if (jobRef instanceof SimulationEngine.JobId.ResourceJobId) {
+      return new SubInstantDuration(time.project(), Integer.MAX_VALUE);
+    }
+    return new SubInstantDuration(time.project(), 0);
   }
 
   public Batch<JobRef> extractNextJobs(final Duration maximumTime) {

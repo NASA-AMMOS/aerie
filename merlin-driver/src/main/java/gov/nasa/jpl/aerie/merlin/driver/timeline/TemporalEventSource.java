@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
-  private static boolean debug = true;
+  private static boolean debug = false;
   public LiveCells liveCells;
   private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
@@ -633,22 +633,30 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param includeLast whether to apply the Effect of the last Event
    */
   public void stepUp(final Cell<?> cell, EventGraph<Event> events, final Event lastEvent, final boolean includeLast) {
+    if (debug) System.out.println("" + i + " stepUp to event BEGIN (cell=" + cell + ", events=" + events + ", lastEvent=" + lastEvent + ", includeLast=" + includeLast + ")");
     cell.apply(events, lastEvent, includeLast);
+    if (debug) System.out.println("" + i + " stepUp to event END, cell=" + cell);
   }
 
   /**
    * Step up a cell ignoring the oldTemporalEventSource.  See {@link #stepUp(Cell, SubInstantDuration)}.
    * @param cell the Cell to step up
    * @param endTime the time to which the cell is stepped
+   * @param beforeEvent a boundary within the graph of Events beyond which the cell is not stepped
+   *
+   * Note: If passing beforeEvent, calls to putCellTime() may not accurately reflect the state of the cell since an
+   *       EventGraph may only be partially applied.  Thus, the caller should pass in a duplicated cell, whose cell time
+   *       has been recorded with putCellTime(), and after calling, the duplicated cell's time should be removed.
    */
-  public void stepUpSimple(final Cell<?> cell, final SubInstantDuration endTime) {
-    if (debug) System.out.println("" + i + " stepUpSimple(" + cell + " " + cell.getTopics() + ", " + endTime + ") BEGIN");
+  public boolean stepUpSimple(final Cell<?> cell, final SubInstantDuration endTime, Event beforeEvent) {
+    if (debug) System.out.println("" + i + " stepUpSimple(" + cell + " " + cell.getTopics() + ", " + endTime + ") -- BEGIN");
     final NavigableMap<Duration, List<EventGraph<Event>>> subTimeline;
     var cellTime = getCellTime(cell);
     if (debug) System.out.println("" + i + " cell time: " + cellTime);
     if (cellTime.longerThan(endTime)) {
       throw new UnsupportedOperationException("" + i + " Trying to step cell from the past");
     }
+    boolean foundBeforeEvent = false;
     try {
       final TreeMap<Duration, List<EventGraph<Event>>> eventsByTimeForTopic = eventsByTopic.get(cell.getTopic());
       if (eventsByTimeForTopic == null || eventsByTimeForTopic.isEmpty()) {
@@ -659,14 +667,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
           cellTime = new SubInstantDuration(endTime.duration(), 0);
           putCellTime(cell, prevCellTime, cellTime);
         }
-        if (debug) System.out.println("" + i + " stepUpSimple(" + cell + ", " + endTime + ") END");
-        return;
+        if (debug) System.out.println("" + i + " stepUpSimple(" + cell + ", " + endTime + ") no events -- END");
+        return false;
       }
       subTimeline = eventsByTimeForTopic.subMap(cellTime.duration(), true, endTime.duration(), endTime.index() > 0);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
     for (Entry<Duration, List<EventGraph<Event>>> e : subTimeline.entrySet()) {
+      if (foundBeforeEvent) break;
       final List<EventGraph<Event>> eventGraphList = e.getValue();
       var delta = e.getKey().minus(cellTime.duration());
       if (delta.isPositive()) {
@@ -680,6 +689,12 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       }
 //      cellTimePair = getCellTime(cell);
       var endOfGraphs = new SubInstantDuration(e.getKey(), eventGraphList.size());
+      if (cellTime.longerThan(endOfGraphs) && cellTime.duration().isEqualTo(endOfGraphs.duration()) &&
+          cellTime.index() == Integer.MAX_VALUE) {
+        var prevCellTime = cellTime;
+        cellTime = endOfGraphs;
+        putCellTime(cell, prevCellTime, cellTime);
+      }
       if (cellTime.longerThan(endOfGraphs)) {
         throw new UnsupportedOperationException("" + i + " Trying to step cell from the past");
       }
@@ -692,21 +707,24 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         for (; cellSteppedAtTime < maxStepIndex; ++cellSteppedAtTime) {
           var eventGraph = eventGraphList.get(cellSteppedAtTime);
           if (debug) System.out.println("" + i + " cell.apply(" + eventGraph + ")");
-          cell.apply(eventGraph, null, false);
+          foundBeforeEvent = cell.apply(eventGraph, beforeEvent, false);
+          cellTime = new SubInstantDuration(e.getKey(), cellSteppedAtTime);
+          if (foundBeforeEvent || cellTime.noShorterThan(endTime)) break;
         }
         var prevCellTime = cellTime;
         cellTime = new SubInstantDuration(e.getKey(), cellSteppedAtTime);
         putCellTime(cell, prevCellTime, cellTime);
       }
     }
-    if (endTime.longerThan(cellTime) && endTime.shorterThan(Duration.MAX_VALUE)) {
+    if (endTime.duration().longerThan(cellTime.duration()) && endTime.shorterThan(Duration.MAX_VALUE) && !foundBeforeEvent) {
       if (debug) System.out.println("" + i + " cell.step(" + endTime.duration().minus(cellTime.duration()) + ")");
       cell.step(endTime.duration().minus(cellTime.duration()));
       var prevCellTime = cellTime;
       cellTime = new SubInstantDuration(endTime.duration(), 0);
       putCellTime(cell, prevCellTime, cellTime);
     }
-    if (debug) System.out.println("" + i + " stepUpSimple(" + cell + ", " + endTime + ") END");
+    if (debug) System.out.println("" + i + " stepUpSimple(" + cell + ", " + endTime + ") --> found beforeEvent=" + foundBeforeEvent + " -- END");
+    return foundBeforeEvent;
   }
 
   /**
@@ -717,9 +735,21 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param endTime the time up to which the cell is stepped
    */
   public <D> void stepUp(final Cell<D> cell, final SubInstantDuration endTime) {
+    stepUp(cell, endTime, null);
+  }
+
+  /**
+   * Step up the Cell through the timeline of EventGraphs.  Stepping up means to
+   * apply Effects from Events up to some point in time.
+   *
+   * @param cell the Cell to step up
+   * @param endTime the time up to which the cell is stepped
+   * @param beforeEvent if not null, the event at which stepping stops (without applying the event)
+   */
+  public <D> void stepUp(final Cell<D> cell, final SubInstantDuration endTime, final Event beforeEvent) {
     // Separate out the simpler case of no past simulation for readability
     if (oldTemporalEventSource == null) {
-      stepUpSimple(cell, endTime);
+      stepUpSimple(cell, endTime, beforeEvent);
       return;
     }
 
@@ -765,12 +795,14 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     // An old cell is created and/or stepped just within the old TemporalEventSource to determine if the
     // new cell becomes stale or unstale.  The old cell is abandoned when not stale and when there are no
     // new EventGraphs, which are just changes (additions and replacements) on top of the old.
+    boolean foundBeforeEventInNew = false;
+    boolean foundBeforeEventInOld = false;
     int done = 0;
     while (done < 2) {
       boolean stepped = false;
 
       // step(timeDelta) for oldCell if necessary
-      if (stale) {  // Only step if the topic is stale
+      if (stale && !foundBeforeEventInOld) {  // Only step if the topic is stale
         var minWrtOld = Duration.min(entryTime, oldEntryTime, endTime.duration());
         if (oldCellTime.shorterThan(minWrtOld) && minWrtOld.shorterThan(Duration.MAX_VALUE)) {
           stepped = true;
@@ -783,7 +815,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       }
       // step(timeDelta) for new cell if necessary
       var minWrtNew = Duration.min(entryTime, oldEntryTime, endTime.duration());
-      if (cellTime.shorterThan(minWrtNew) && minWrtNew.shorterThan(Duration.MAX_VALUE)) {
+      if (!foundBeforeEventInNew && cellTime.shorterThan(minWrtNew) && minWrtNew.shorterThan(Duration.MAX_VALUE)) {
         stepped = true;
         var prevCellTime = cellTime;
         cell.step(minWrtNew.minus(cellTime.duration()));
@@ -826,12 +858,14 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
           }
           final var oldOldState = oldCell.getState(); // getState() generates a copy, so oldState won't change
           var oldCellSteppedAtTime = oldCellTime.index();
-          if (oldCellTime.index() < oldEventGraphList.size() &&
+          if (!foundBeforeEventInOld && oldCellTime.index() < oldEventGraphList.size() &&
               (!originalOldCellTime.isEqualTo(oldCellTime.duration()) || originalOldCellTime.index() < oldEventGraphList.size())) {
             for (; oldCellSteppedAtTime < oldEventGraphList.size(); ++oldCellSteppedAtTime) {
               var eventGraph = oldEventGraphList.get(oldCellSteppedAtTime);
-              oldCell.apply(eventGraph, null, false);
+              foundBeforeEventInOld = oldCell.apply(eventGraph, beforeEvent, false);
               if (debug) System.out.println("" + i + " stepUp(): oldCell.apply(oldGraph: " + eventGraph + ") oldCellState = " + oldCell);
+              oldCellTime = new SubInstantDuration(oldCellTime.duration(), oldCellSteppedAtTime);
+              if (foundBeforeEventInOld || oldCellTime.noShorterThan(endTime) ) break;
             }
           }
           oldCellTime = new SubInstantDuration(oldCellTime.duration(), oldCellSteppedAtTime);
@@ -841,13 +875,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
 
         // Step up new cell if no new EventGraph at this time.
         var cellSteppedAtTime = cellTime.index();
-        if (entry == null || entryTime.longerThan(oldEntryTime)) {
+        if (!foundBeforeEventInNew && (entry == null || entryTime.longerThan(oldEntryTime))) {
           final var oldState = cell.getState(); // getState() generates a copy, so oldState won't change
           if (!originalCellTime.isEqualTo(cellTime.duration()) || originalCellTime.index() < oldEventGraphList.size()) {
             for (; cellSteppedAtTime < oldEventGraphList.size(); ++cellSteppedAtTime) {
               var eventGraph = oldEventGraphList.get(cellSteppedAtTime);
-              cell.apply(eventGraph, null, false);
+              foundBeforeEventInNew = cell.apply(eventGraph, beforeEvent, false);
               if (debug) System.out.println("" + i + " stepUp(): cell.apply(oldGraph: " + eventGraph + ") cellState = " + cell);
+              cellTime = new SubInstantDuration(cellTime.duration(), cellSteppedAtTime);
+              if (foundBeforeEventInNew || cellTime.noShorterThan(endTime)) break;
             }
             cellTime = new SubInstantDuration(cellTime.duration(), cellSteppedAtTime);
           }
@@ -859,7 +895,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       }
 
       // Apply new EventGraph
-      if (entry != null && entryTime.isEqualTo(cellTime.duration()) &&
+      if (!foundBeforeEventInNew && entry != null && entryTime.isEqualTo(cellTime.duration()) &&
           cellTime.shorterThan(endTime)) {
         final var newEventGraphList = entry.getValue();
         final var oldState = cell.getState(); // getState() generates a copy, so oldState won't change
@@ -868,8 +904,10 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
             (!originalCellTime.isEqualTo(cellTime) || originalCellTime.index() < newEventGraphList.size())) {
           for (; cellSteppedAtTime < newEventGraphList.size(); ++cellSteppedAtTime) {
             var eventGraph = newEventGraphList.get(cellSteppedAtTime);
-            cell.apply(eventGraph, null, false);
+            foundBeforeEventInNew = cell.apply(eventGraph, beforeEvent, false);
             if (debug) System.out.println("" + i + " stepUp(): cell.apply(newGraph: " + eventGraph + ") cellState = " + cell);
+            cellTime = new SubInstantDuration(cellTime.duration(), cellSteppedAtTime);
+            if (foundBeforeEventInNew || cellTime.noShorterThan(endTime)) break;
           }
           cellTime = new SubInstantDuration(cellTime.duration(), cellSteppedAtTime);
         }
@@ -883,7 +921,8 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       if (timesAreEqual && (stale || cellStateChanged || oldCellStateChanged)) {
         stale = updateStale(cell, oldCell);
       }
-      if ( !( (cellTime.shorterThan(endTime.duration()) || (stale && oldCellTime.shorterThan(endTime.duration()))) &&
+      if ( (foundBeforeEventInNew && foundBeforeEventInOld) ||
+           !( (cellTime.shorterThan(endTime.duration()) || (stale && oldCellTime.shorterThan(endTime.duration()))) &&
               (entry != null || oldEntry != null) ) ) {
         ++done;
       }
@@ -891,6 +930,10 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     }
     var prevCellTime = getCellTime(cell);
     if (prevCellTime == null) prevCellTime = SubInstantDuration.MAX_VALUE;
+    if (cellTime.shorterThan(endTime) && endTime.duration().shorterThan(Duration.MAX_VALUE) &&
+       (endTime.duration().longerThan(cellTime.duration()) || endTime.index() < Integer.MAX_VALUE)) {
+      cellTime = endTime;
+    }
     putCellTime(cell, prevCellTime, cellTime);
     if (debug) System.out.println("" + i + " END stepUp(" + cell.getTopic() + ", " + endTime + "): cellState = " + cell.toString() + ", stale = " + stale + ", cellTime = " + cellTime + ", oldCellState = " + oldCell.getState().toString() + ", oldCellTime = " + oldCellTime);
   }
@@ -965,16 +1008,6 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     return oldTemporalEventSource.liveCells.getCells(cell.getTopic()).stream().findFirst().map(lc -> lc.cell);
   }
 
-//  public Optional<Cell<?>> getOldCell(Cell<?> cell, Duration latest) {
-//    if (oldTemporalEventSource == null) return Optional.empty();
-//    var c = getOldCell(cell);
-//    var p = oldTemporalEventSource.getCellTime(c.get());
-//    if (p.getLeft().noLongerThan(latest)) {
-//      return c;
-//    }
-//    oldTemporalEventSource.getliveCells.
-//  }
-
   public SubInstantDuration getCellTime(Cell<?> cell) {
     var cellTime = cellTimes.get(cell);
     if (cellTime == null) {
@@ -995,23 +1028,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     putCellTime(cell, new SubInstantDuration(oldCellTime, oldCellStepped), new SubInstantDuration(cellTime, cellStepped));
   }
   public void putCellTime(Cell<?> cell, SubInstantDuration oldCellTime, SubInstantDuration cellTime) {
-    // replace cell in cache
-//    if (!oldCellTime.isEqualTo(cellTime)) {
-//      for (var t : cell.getTopics()) {
-//        final TreeMap<SubInstantDuration, Cell<?>> inner = cellCache.computeIfAbsent(t, $ -> new TreeMap<>());
-//        var storedCell = inner.get(oldCellTime);
-//        if (cell == storedCell) {
-//          var existing = inner.remove(oldCellTime);
-//          if (existing != null) {
-//            if (debug) System.out.println("putCellTime(" + cell + ", " + oldCellTime + ", " + cellTime + "): removed from cache " + t + ", " + oldCellTime + ", " + existing);
-//          }
-//        }
-//        if (debug) System.out.println("putCellTime(" + cell + ", " + oldCellTime + ", " + cellTime + "): put in cache " + t + ", " + cellTime + ", " + cell);
-//        inner.put(cellTime, cell);
-//      }
-//    }
     if (debug) System.out.println("putCellTime(" + cell + ", " + oldCellTime + ", " + cellTime + ")");
-    // now put the cell time
     putCellTime(cell, cellTime);
   }
 

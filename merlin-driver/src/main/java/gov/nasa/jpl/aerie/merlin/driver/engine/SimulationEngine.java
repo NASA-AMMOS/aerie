@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
-  private static boolean debug = true;
+  private static boolean debug = false;
   private static boolean trace = false;
 
   /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
@@ -140,6 +140,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** When tasks become stale */
   private final Map<TaskId, SubInstantDuration> staleTasks = new HashMap<>();
+  private final Map<TaskId, Event> staleEvents = new HashMap<>();
+  private final Map<TaskId, Integer> staleCausalEventIndex = new HashMap<>();
 
   /** The execution state for every task. */
   private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
@@ -501,13 +503,17 @@ public final class SimulationEngine implements AutoCloseable {
    * If task is not already stale, record the task's staleness at specified time in this.staleTasks,
    * remove task reads and effects from the timeline and cell read history, and then create the task
    * and schedule a job for it.
+   *
    * @param taskId id of the task being set stale
    * @param time time when the task becomes stale
+   * @param afterEvent
    */
-  public void setTaskStale(TaskId taskId, SubInstantDuration time) {
+  public void setTaskStale(TaskId taskId, SubInstantDuration time, final Event afterEvent) {
     var staleTime = staleTasks.get(taskId);
     if (staleTime != null) {
-      if (staleTime.noLongerThan(time)) {
+      if (staleTime.shorterThan(time) || (staleTime.isEqualTo(time) &&
+                                          (afterEvent == null || staleEvents.get(taskId) == null ||
+                                           eventPrecedes(afterEvent, staleEvents.get(taskId), time)))) {
         // already marked stale by this time; a stale task cannot become unstale because we can't see it's internal state
         String taskName = getNameForTask(taskId);
         System.err.println("WARNING: trying to set stale task stale at earlier time; this should not be possible; cannot re-execute a task more than once: TaskId = " + taskId + ", task name = \"" + taskName + "\"");
@@ -518,6 +524,7 @@ public final class SimulationEngine implements AutoCloseable {
     TaskId parentId = taskId;
     while (parentId != null) {
       staleTasks.put(taskId, time);
+      staleEvents.put(taskId, afterEvent);
       // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
       if (oldEngine.getFactoryForTaskId(parentId) != null) {
         break;
@@ -541,7 +548,18 @@ public final class SimulationEngine implements AutoCloseable {
       throw new RuntimeException("Can't find task start!");
     }
     rescheduleTask(parentId, taskStart);
-    removeTaskHistory(parentId, time);
+    removeTaskHistory(parentId, time, afterEvent);
+  }
+
+  private boolean eventPrecedes(Event e1, Event e2, SubInstantDuration time) {
+    if (e1 == null || e2 == null || time == null) return false;
+    List<TemporalEventSource.TimePoint.Commit> commits = timeline.getCombinedCommitsByTime().get(time.duration());
+    var commit = commits.get(time.index());
+    final Pair<EventGraph<Event>, Boolean> pair = commit.events().filter(e -> e == e2, e1, false);
+    if (pair.getRight() && pair.getLeft().countNonEmpty() > 0) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -555,6 +573,7 @@ public final class SimulationEngine implements AutoCloseable {
    * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
    */
   public void rescheduleStaleTasks(Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
+    if (debug) System.out.println("rescheduleStaleTasks(" + earliestStaleReads + ")");
     // Test to see if read value has changed.  If so, reschedule the affected task
     var timeOfStaleReads = earliestStaleReads.getLeft();
     for (Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>> entry : earliestStaleReads.getRight().entrySet()) {
@@ -566,26 +585,33 @@ public final class SimulationEngine implements AutoCloseable {
         // First, step up the cell to the time before the event graph where the read takes place and then
         // make a duplicate of the cell since partial evaluation of an event graph makes the cell unusable
         // for stepping further.
-        var steppedCell = timeline.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(), Math.max(0, timeOfStaleReads.index()-1)));
+        Cell<?> steppedCell = timeOfStaleReads.index() > 0 ?
+                              timeline.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(),
+                                                                             timeOfStaleReads.index()-1)) :
+                              timeline.liveCells.getCells(topic).stream().findFirst().orElseThrow().cell;
+        if (debug) System.out.println("rescheduleStaleTasks(): steppedCell = " + steppedCell + ", cell time = " + timeline.getCellTime(steppedCell));
         final Cell<?> tempCell = steppedCell.duplicate();
-        List<TemporalEventSource.TimePoint.Commit> events = this.timeline.getCombinedCommitsByTime().get(timeOfStaleReads.duration());
-        if (events == null || events.isEmpty()) throw new RuntimeException("No EventGraph for potentially stale read.");
-        this.timeline.stepUp(tempCell, events.get(events.size()-1).events(), noop, false);
-        // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
-        var oldEvents = this.timeline.oldTemporalEventSource.getCombinedCommitsByTime().get(timeOfStaleReads.duration());
-        if (oldEvents == null || oldEvents.isEmpty()) throw new RuntimeException("No old EventGraph for potentially stale read.");
-        if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
-          // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
-          var tempOldCell = timeline.getOldCell(steppedCell).map(Cell::duplicate);
-          this.timeline.oldTemporalEventSource.stepUp(tempOldCell.orElseThrow(),
-                                                      oldEvents.get(oldEvents.size()-1).events(), noop, false);
-          if (!tempCell.getState().equals(tempOldCell.get().getState())) {
-            if (debug) System.out.println("Stale read: new cell state (" + tempCell.getState() + ") != od cell state (" + tempOldCell.get().getState() + ")");
+        timeline.putCellTime(tempCell,timeline.getCellTime(steppedCell));
+        timeline.stepUp(tempCell, timeOfStaleReads, noop);
+        timeline.putCellTime(tempCell, null);
+
+        Cell<?> oldCell = timeOfStaleReads.index() > 0 ?
+                          timeline.oldTemporalEventSource.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(),
+                                                                                                timeOfStaleReads.index()-1)) :
+                          timeline.oldTemporalEventSource.liveCells.getCells(topic).stream().findFirst().orElseThrow().cell;
+        if (debug) System.out.println("rescheduleStaleTasks(): oldCell = " + oldCell + ", cell time = " + timeline.oldTemporalEventSource.getCellTime(oldCell));
+        final Cell<?> tempOldCell = oldCell.duplicate();
+        timeline.oldTemporalEventSource.putCellTime(tempOldCell,timeline.getCellTime(oldCell));
+        timeline.oldTemporalEventSource.stepUp(tempOldCell, timeOfStaleReads, noop);
+        timeline.oldTemporalEventSource.putCellTime(tempOldCell, null);
+
+          if (!tempCell.getState().equals(tempOldCell.getState())) {
+            if (debug) System.out.println("Stale read: new cell state (" + tempCell + ") != old cell state (" + tempOldCell + ")");
             // Mark stale and reschedule task
-            setTaskStale(taskId, timeOfStaleReads);
+            setTaskStale(taskId, timeOfStaleReads, noop);
             break;  // rescheduled task, so can move on to the next task
           }
-        }
+//        }
       }  // for Pair<Topic<?>, Event>
     }  // for Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>>
   }
@@ -658,12 +684,12 @@ public final class SimulationEngine implements AutoCloseable {
   public void removeActivity(final TaskId taskId) {
     var simId = getSimulatedActivityIdForTaskId(taskId);
     removedActivities.add(simId);
-    removeTaskHistory(taskId, SubInstantDuration.MIN_VALUE);
+    removeTaskHistory(taskId, SubInstantDuration.MIN_VALUE, null);
   }
 
-  public void removeTaskHistory(final TaskId taskId, SubInstantDuration startingAfterTime) { // TODO -- need graph index with time
+  public void removeTaskHistory(final TaskId taskId, SubInstantDuration startingAfterTime, Event afterEvent) { // TODO -- need graph index with time
     // Look for the task's Events in the old and new timelines.
-    if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime + ") BEGIN");
+    if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime + ", afterEvent=" + afterEvent + ") BEGIN");
     final TreeMap<Duration, List<EventGraph<Event>>> graphsForTask = this.timeline.eventsByTask.get(taskId);
     final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.getCombinedEventsByTask(taskId);
     if (debug) System.out.println("old combined graphs = " + oldGraphsForTask);
@@ -680,12 +706,16 @@ public final class SimulationEngine implements AutoCloseable {
       allKeys.addAll(oldGraphsForTask.keySet());
     }
     for (Duration time : allKeys) {
-      if (time.noLongerThan(startingAfterTime.duration())) continue;
+      if (time.shorterThan(startingAfterTime.duration())) continue;
       List<EventGraph<Event>> gl = graphsForTask == null ? null : graphsForTask.get(time); // If old graph is already replaced used the replacement
       if (gl == null || gl.isEmpty()) gl = oldGraphsForTask == null ? null : oldGraphsForTask.get(time);  // else we can replace the old graph
       if (gl == null) continue;
-      int step = time.isEqualTo(startingAfterTime.duration()) ? startingAfterTime.index() : 0;
-      for (; step < gl.size(); ++step) {
+      final int firstStep = time.isEqualTo(startingAfterTime.duration()) ? startingAfterTime.index() : 0;
+//      if (afterEvent != null && (firstStep >= gl.size() || gl.get(firstStep).filter(e -> e == afterEvent).countNonEmpty() != 1)) {
+//        //System.err.println("ERROR! Could not find event " + afterEvent + " in graph for index " + firstStep + " in " + gl);
+//        throw new RuntimeException("Could not find event " + afterEvent + " in graph for index " + firstStep + " in " + gl);
+//      }
+      for (int step=firstStep; step < gl.size(); ++step) {
         var g = gl.get(step);
         SubInstantDuration staleTime = new SubInstantDuration(time, step);
 //        // invalidate topics for cells affected by the task in the old graph so that resource values are checked at
@@ -695,7 +725,8 @@ public final class SimulationEngine implements AutoCloseable {
         //s.forEach(topic -> invalidateTopic(topic, time));
         s.forEach(topic -> timeline.setTopicStale(topic, staleTime));
         // replace the old graph with one without the task's events, updating data structures
-        var newG = g.filter(e -> !taskId.equals(e.provenance()));
+        var pair = g.filter(e -> !taskId.equals(e.provenance()), step == firstStep ? afterEvent : null, true);
+        var newG = pair.getLeft();
         if (newG != g) {
           if (debug) System.out.println("replacing old graph=" + g + " with new graph=" + newG + " at time " + time);
           timeline.replaceEventGraph(g, newG);
@@ -709,14 +740,14 @@ public final class SimulationEngine implements AutoCloseable {
 
     // Remove children, too!
     var children = this.oldEngine.getTaskChildren(taskId);
-    if (children != null) children.forEach(c -> removeTaskHistory(c, startingAfterTime));
+    if (children != null) children.forEach(c -> removeTaskHistory(c, startingAfterTime, afterEvent));
     if (debug) {
       final TreeMap<Duration, List<EventGraph<Event>>> localGraphsForTask = this.timeline.eventsByTask.get(taskId);
       final TreeMap<Duration, List<EventGraph<Event>>> combinedGraphsForTask = this.getCombinedEventsByTask(taskId);
       System.out.println("resulting local graphs = " + localGraphsForTask);
       System.out.println("resulting combined graphs = " + combinedGraphsForTask);
     }
-    if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime +  ") END");
+    if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime + ", afterEvent=" + afterEvent + ") END");
   }
 
   private static ExecutorService getLoomOrFallback() {
@@ -782,6 +813,22 @@ public final class SimulationEngine implements AutoCloseable {
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
   }
 
+  public boolean isTaskStale(TaskId taskId, SubInstantDuration timeOffset, long causalEventIndex) {
+    final SubInstantDuration staleTime = this.staleTasks.get(taskId);
+    if (staleTime == null) {
+      return true;  // This is only asked of scheduled tasks, so if there is no stale time,
+      // then the task must be new or modified by the user, so it should always be considered stale.
+      // NOTE: In the case of a modified task, is it possible to predict that it will have no effect?
+      // NOTE: No, even if only the start time changed, effects could depend on the start time.  A new interface would
+      // NOTE: be needed to convey how to determine staleness.
+    }
+    if (staleTime.shorterThan(timeOffset)) return true;
+//    if (staleTime.isEqualTo(timeOffset)) {
+//      var staleEventIndex = this.staleCausalEventIndex.get(taskId);
+//      if ()
+//    }
+    return staleTime.noLongerThan(timeOffset);
+  }
   public boolean isTaskStale(TaskId taskId, SubInstantDuration timeOffset) {
     final SubInstantDuration staleTime = this.staleTasks.get(taskId);
     if (staleTime == null) {
@@ -819,7 +866,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Returns the offset time of the next batch of scheduled jobs. */
-  public Duration timeOfNextJobs() {
+  public SubInstantDuration timeOfNextJobs() {
     return this.scheduledJobs.timeOfNextJobs();
   }
 
@@ -827,7 +874,9 @@ public final class SimulationEngine implements AutoCloseable {
   public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic,
                    final Consumer<Duration> simulationExtentConsumer) {
     if (debug) System.out.println("step(): begin -- time = " + curTime() + ", step " + stepIndexAtTime);
-    var timeOfNextJobs = new SubInstantDuration(timeOfNextJobs(), stepIndexAtTime);
+    if (stepIndexAtTime == Integer.MAX_VALUE) stepIndexAtTime = 0;
+    var timeOfNextJobs = timeOfNextJobs();
+    timeOfNextJobs = new SubInstantDuration(timeOfNextJobs().duration(), Math.max(timeOfNextJobs.index(), stepIndexAtTime));
     var nextTime = timeOfNextJobs;
 
     Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads = null;
@@ -949,7 +998,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       this.timeline.add(tip, curTime().duration(), stepIndexAtTime);
       updateTaskInfo(tip);
-      stepIndexAtTime += 1;
+      if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
     }
     if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
   }
@@ -1657,6 +1706,9 @@ public final class SimulationEngine implements AutoCloseable {
 
       this.queryTrackingInfo.ifPresent(info -> {
         if (isTaskStale(info.getRight(), currentTime)) {
+          final SubInstantDuration t = staleTasks.get(info.getRight());
+          var causalIndex = this.frame.tip.points.length;
+          var staleIndex = staleCausalEventIndex.get(info.getRight());
           // Create a noop event to mark when the read occurred in the EventGraph
           var noop = Event.create(info.getLeft(), query.topic(), info.getRight());
           this.frame.emit(noop);
@@ -1785,7 +1837,7 @@ public final class SimulationEngine implements AutoCloseable {
             var eventMap = getCombinedEventsByTask(task);
             var lastEventTimePlusE = eventMap == null ? null : new SubInstantDuration(eventMap.lastKey(), eventMap.lastEntry().getValue().size() + 1);
             if (lastEventTimePlusE != null) {
-              setTaskStale(task, lastEventTimePlusE);
+              setTaskStale(task, lastEventTimePlusE, null);
             }
           }
         }
