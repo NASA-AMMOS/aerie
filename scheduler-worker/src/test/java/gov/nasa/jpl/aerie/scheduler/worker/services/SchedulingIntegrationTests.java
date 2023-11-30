@@ -2003,9 +2003,7 @@ public class SchedulingIntegrationTests {
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
     mockMerlinService.setPlanningHorizon(planningHorizon);
-    if(externalProfiles.isPresent()) {
-      mockMerlinService.setExternalDataset(externalProfiles.get());
-    }
+    externalProfiles.ifPresent(mockMerlinService::setExternalDataset);
     final var planId = new PlanId(1L);
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
@@ -2030,7 +2028,7 @@ public class SchedulingIntegrationTests {
         schedulingDSLCompiler);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
-    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer);
+    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer, () -> false);
     assertEquals(1, writer.results.size());
     final var result = writer.results.get(0);
     if (result instanceof MockResultsProtocolWriter.Result.Failure e) {

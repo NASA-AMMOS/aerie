@@ -83,7 +83,7 @@ public class SimulationFacadeTest {
   public void setUp() {
     missionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
-    facade = new SimulationFacade(horizon, missionModel, schedulerModel);
+    facade = new SimulationFacade(horizon, missionModel, schedulerModel, ()-> false);
     problem = new Problem(missionModel, horizon, facade, schedulerModel);
   }
 
@@ -125,7 +125,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void associationToExistingSatisfyingActivity(){
+  public void associationToExistingSatisfyingActivity() throws SchedulingInterruptedException {
     final var plan = makeEmptyPlan();
     final var actTypePeel = problem.getActivityType("PeelBanana");
     final var actTypeBite = problem.getActivityType("BiteBanana");
@@ -166,7 +166,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void getValueAtTimeDoubleOnSimplePlanMidpoint() throws SimulationFacade.SimulationException {
+  public void getValueAtTimeDoubleOnSimplePlanMidpoint()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t1_5));
@@ -175,7 +177,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void getValueAtTimeDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
+  public void getValueAtTimeDoubleOnSimplePlan()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
@@ -185,7 +189,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueAboveDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
+  public void whenValueAboveDoubleOnSimplePlan()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults().get());
@@ -197,7 +203,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueBelowDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
+  public void whenValueBelowDoubleOnSimplePlan()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults().get());
@@ -209,7 +217,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueBetweenDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
+  public void whenValueBetweenDoubleOnSimplePlan()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults().get());
@@ -222,7 +232,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
+  public void whenValueEqualDoubleOnSimplePlan()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults().get());
@@ -235,7 +247,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueNotEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
+  public void whenValueNotEqualDoubleOnSimplePlan()
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  {
     facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults().get());
@@ -248,7 +262,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testCoexistenceGoalWithResourceConstraint() {
+  public void testCoexistenceGoalWithResourceConstraint() throws SchedulingInterruptedException {
     problem.setInitialPlan(makeTestPlanP0B1());
 
     /**
@@ -288,7 +302,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testProceduralGoalWithResourceConstraint() {
+  public void testProceduralGoalWithResourceConstraint() throws SchedulingInterruptedException {
     problem.setInitialPlan(makeTestPlanP0B1());
 
     final var constraint = new And(
@@ -330,7 +344,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testActivityTypeWithResourceConstraint() {
+  public void testActivityTypeWithResourceConstraint() throws SchedulingInterruptedException {
     problem.setInitialPlan(makeTestPlanP0B1());
 
     final var constraint = new And(
