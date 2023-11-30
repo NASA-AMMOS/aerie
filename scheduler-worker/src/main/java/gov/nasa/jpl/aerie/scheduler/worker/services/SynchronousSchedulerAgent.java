@@ -301,8 +301,7 @@ public record SynchronousSchedulerAgent(
 
   private Optional<DatasetId> storeSimulationResults(PlanningHorizon planningHorizon, SimulationFacade simulationFacade, PlanMetadata planMetadata,
                                                      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
-  throws MerlinServiceException, IOException
-  {
+      throws MerlinServiceException, IOException, SchedulingInterruptedException {
     if(!simulationFacade.areInitialSimulationResultsStale()) return Optional.empty();
     //finish simulation until end of horizon before posting results
     try {
