@@ -7,7 +7,6 @@ import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.RequestOptions;
 import gov.nasa.jpl.aerie.e2e.types.*;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.Assertions;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -21,6 +20,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 /**
  * Hasura API request functions
  */
@@ -33,7 +35,7 @@ public class HasuraRequests implements AutoCloseable {
   public HasuraRequests(Playwright playwright) {
     request = playwright.request().newContext(
             new APIRequest.NewContextOptions()
-                    .setBaseURL(BaseURL.HASURA.url));
+                    .setBaseURL(BaseURL.HASURA.url).setTimeout(0));
   }
 
   @Override
@@ -289,7 +291,7 @@ public class HasuraRequests implements AutoCloseable {
           case "complete" -> {
             return response;
           }
-          default -> throw new IOException("Simulation returned bad status " + response.status() + " with reason " +response.reason());
+          default -> fail("Simulation returned bad status " + response.status() + " with reason " +response.reason());
         }
     }
     throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
@@ -327,8 +329,8 @@ public class HasuraRequests implements AutoCloseable {
             }
             return cancelSimulation(response.simDatasetId(), timeout-i);
           }
-          case "complete" -> Assertions.fail("Simulation completed before it could be canceled");
-          default -> throw new IOException("Simulation returned bad status " + response.status() + " with reason " +response.reason());
+          case "complete" -> fail("Simulation completed before it could be canceled");
+          default -> fail("Simulation returned bad status " + response.status() + " with reason " +response.reason());
         }
     }
     throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
@@ -383,6 +385,37 @@ public class HasuraRequests implements AutoCloseable {
     return SchedulingResponse.fromJSON(data);
   }
 
+  private SchedulingRequest cancelSchedulingRun(int analysisId, int timeout) throws IOException {
+    final var variables = Json.createObjectBuilder().add("analysis_id", analysisId).build();
+    //assert that we only canceled one task
+    final var cancelRequest = makeRequest(GQL.CANCEL_SCHEDULING, variables)
+                                .getJsonObject("update_scheduling_request")
+                                .getJsonArray("returning");
+    assertEquals(1, cancelRequest.size());
+    final int specId = cancelRequest.getJsonObject(0).getInt("specification_id");
+    final int specRev = cancelRequest.getJsonObject(0).getInt("specification_revision");
+    for(int i = 0; i <timeout; ++i) {
+      try {
+        Thread.sleep(1000); //1s
+      } catch (InterruptedException ex) {throw new RuntimeException(ex);}
+      final var response = getSchedulingRequest(specId, specRev);
+      // If reason is present, that means that the scheduler has posted
+      // and we are not just seeing the side effects of `GQL.CANCEL_SCHEDULING`
+      if(response.canceled() && response.reason().isPresent()) return response;
+    }
+    throw new TimeoutError("Canceling scheduling timed out after " + timeout + " seconds");
+  }
+
+  private SchedulingRequest getSchedulingRequest(int specificationId, int specificationRevision) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("specificationId", specificationId)
+                              .add("specificationRev", specificationRevision)
+                              .build();
+    final var data = makeRequest(GQL.GET_SCHEDULING_REQUEST, variables).getJsonObject("scheduling_request_by_pk");
+    return SchedulingRequest.fromJSON(data);
+  }
+
+
   /**
    * Run scheduling on the specified scheduling specification with a timeout of 30 seconds
    */
@@ -408,8 +441,43 @@ public class HasuraRequests implements AutoCloseable {
           case "complete" -> {
             return response;
           }
-          default -> throw new IOException("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
+          default -> fail("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
         }
+    }
+    throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
+  }
+
+  /**
+   * Start and immediately cancel a scheduling run with a timeout of 30 seconds
+   * @param schedulingSpecId the scheduling specification to use
+   *
+   */
+  public SchedulingRequest cancelingScheduling(int schedulingSpecId) throws IOException {
+    return cancelingScheduling(schedulingSpecId, 30);
+  }
+
+  /**
+   * Start and immediately cancel a scheduling run with a set timeout
+   * @param schedulingSpecId the scheduling specification to use
+   * @param timeout the length of the timeout, in seconds
+   */
+  public SchedulingRequest cancelingScheduling(int schedulingSpecId, int timeout) throws IOException {
+    for(int i = 0; i < timeout; ++i) {
+      final var response = schedule(schedulingSpecId);
+      switch (response.status()) {
+        case "pending" -> {
+          try {
+            Thread.sleep(1000); //1s
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        case "incomplete" -> {
+          return cancelSchedulingRun(response.analysisId(), timeout - i);
+        }
+        case "complete" -> fail("Scheduling completed before it could be canceled");
+        default -> fail("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
+      }
     }
     throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
   }

@@ -89,8 +89,6 @@ public class SimulationTests {
     assertDoesNotThrow(() -> hasura.awaitSimulation(planId));
   }
 
-
-
   @Nested
   class TemporalSubsetSimulation {
     private int firstHalfActivityId;
@@ -259,7 +257,7 @@ public class SimulationTests {
       // Long Foo plans take long enough to be canceled without risking a race condition like with Banananation
       try (final var gateway = new GatewayRequests(playwright)) {
         fooId = hasura.createMissionModel(
-            gateway.uploadJarFile("../examples/foo-missionmodel/build/libs/foo-missionmodel.jar"),
+            gateway.uploadFooJar(),
             "Foo (e2e tests)",
             "aerie_e2e_tests",
             "Simulation Tests");
