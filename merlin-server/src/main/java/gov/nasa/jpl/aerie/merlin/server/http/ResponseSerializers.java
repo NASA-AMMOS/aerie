@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -216,11 +217,8 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintResult(final ConstraintResult list) {
     return Json
         .createObjectBuilder()
-        .add("constraintId", list.constraintId)
-        .add("constraintName", list.constraintName)
         .add("violations", serializeIterable(ResponseSerializers::serializeConstraintViolation, list.violations))
         .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, list.gaps))
-        .add("type", list.constraintType.name())
         .add("resourceIds", serializeIterable(Json::createValue, list.resourceIds))
         .build();
   }
@@ -315,16 +313,20 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeConstraintResults(final List<Failable<?>> list) {
-    var results = list.stream().map(failable -> {
+  public static JsonValue serializeConstraintResults(final Map<Constraint, Failable<?>> resultMap) {
+    var results = resultMap.entrySet().stream().map(entry -> {
 
-      var failableObject = failable.getOptional();
+      final var constraint = entry.getKey();
+      final var failable = entry.getValue();
 
       // There should always be a failable but this is here
       // just in case
-      if (failableObject.isEmpty()) {
+      if (failable.getOptional().isEmpty()) {
         return Json.createObjectBuilder()
                    .add("success", JsonValue.FALSE)
+                   .add("constraintId", constraint.id())
+                   .add("constraintName", constraint.name())
+                   .add("type",constraint.type().name())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
                            .add("message", "Internal error processing a constraint")
@@ -336,17 +338,20 @@ public final class ResponseSerializers {
 
       // failure was a compilation error
       if (failable.isFailure()
-          && failableObject.get() instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) {
-        return serializeConstraintCompileErrors((Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error>) failable);
+          && failable.getOptional().get() instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) {
+        return serializeConstraintCompileErrors(constraint, (Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error>) failable);
       }
 
       // failure that are errors exceptions that were captured
       if (failable.isFailure()) {
         return Json.createObjectBuilder()
                    .add("success", JsonValue.FALSE)
+                   .add("constraintId", constraint.id())
+                   .add("constraintName", constraint.name())
+                   .add("type",constraint.type().name())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
-                           .add("message", ((Error) failableObject.get()).getMessage())
+                           .add("message", failable.getMessage())
                            .add("stack", "")
                            .add("location", JsonValue.EMPTY_JSON_OBJECT).build()).build())
                    .add("results", JsonValue.EMPTY_JSON_OBJECT)
@@ -354,9 +359,12 @@ public final class ResponseSerializers {
       }
 
       // successful runs
-      var constraintResult = (ConstraintResult) failableObject.get();
+      var constraintResult = (ConstraintResult) failable.getOptional().get();
       return Json.createObjectBuilder()
                  .add("success", JsonValue.TRUE)
+                 .add("constraintId", constraint.id())
+                 .add("constraintName", constraint.name())
+                 .add("type",constraint.type().name())
                  .add("errors", JsonValue.EMPTY_JSON_ARRAY)
                  .add("results", serializeConstraintResult(constraintResult))
                  .build();
@@ -483,7 +491,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeConstraintCompileErrors(final Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error> ex) {
+  public static JsonValue serializeConstraintCompileErrors(final Constraint constraint, final Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error> ex) {
 
     final var userCodeError = ex
         .getOptional()
@@ -504,6 +512,9 @@ public final class ResponseSerializers {
 
     return Json.createObjectBuilder()
                .add("success", JsonValue.FALSE)
+               .add("constraintId", constraint.id())
+               .add("constraintName", constraint.name())
+               .add("type",constraint.type().name())
                .add("errors", userCodeErrorArrayBuilder.build())
                .add("results", Json.createObjectBuilder().build())
                .build();

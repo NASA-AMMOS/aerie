@@ -37,7 +37,7 @@ public class ConstraintAction {
     this.simulationService = simulationService;
   }
 
-  public List<Failable<?>> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
+  public Map<Constraint, Failable<?>> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException
   {
     final var plan = this.planService.getPlanForValidation(planId);
@@ -61,7 +61,7 @@ public class ConstraintAction {
     }
 
     final var constraintCode = new HashMap<Long, Constraint>();
-    final var constraintResultMap = new HashMap<Long, Failable<?>>();
+    final var constraintResultMap = new HashMap<Constraint, Failable<?>>();
 
     try {
       constraintCode.putAll(this.missionModelService.getConstraints(plan.missionModelId));
@@ -78,11 +78,7 @@ public class ConstraintAction {
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
-      constraintCode.remove(constraintRun.constraintId());
-
-      if (constraintRun.result() != null) {
-        constraintResultMap.put(constraintRun.constraintId(), Failable.of(constraintRun.result()));
-      }
+        constraintResultMap.put(constraintCode.remove(constraintRun.constraintId()), Failable.of(constraintRun.result()));
     }
 
     // If the lengths don't match we need check the left-over constraints.
@@ -164,7 +160,7 @@ public class ConstraintAction {
           );
         } catch (MissionModelService.NoSuchMissionModelException | NoSuchPlanException ex) {
           constraintResultMap.put(
-              constraint.id(),
+              constraint,
               Failable.failure(new Error("Constraint " + constraint.name() + ": " + ex.getMessage())));
           continue;
         }
@@ -174,12 +170,12 @@ public class ConstraintAction {
           expression = success.constraintExpression();
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
           constraintResultMap.put(
-              constraint.id(),
+              constraint,
               Failable.failure(error, "Constraint '" + constraint.name() + "' compilation failed:\n "));
           continue;
         } else {
           constraintResultMap.put(
-              constraint.id(),
+              constraint,
               Failable.failure(
                   new ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error(
                       new ArrayList<>() {{
@@ -226,7 +222,7 @@ public class ConstraintAction {
               }
             }
           } catch (InputMismatchException ex) {
-            constraintResultMap.put(constraint.id(), Failable.failure(ex));
+            constraintResultMap.put(constraint, Failable.failure(ex));
             continue;
           }
         }
@@ -246,7 +242,7 @@ public class ConstraintAction {
         constraintResult.constraintType = entry.getValue().type();
         constraintResult.resourceIds = List.copyOf(names);
 
-        constraintResultMap.put(entry.getKey(), Failable.of(constraintResult));
+        constraintResultMap.put(constraint, Failable.of(constraintResult));
 
 
       }
@@ -263,7 +259,7 @@ public class ConstraintAction {
                                                                                                   .get() instanceof ConstraintResult);
                                                            })
                                                            .collect(Collectors.toMap(
-                                                               Map.Entry::getKey,
+                                                               entry -> entry.getKey().id(),
                                                                set -> (ConstraintResult) set
                                                                    .getValue()
                                                                    .getOptional()
@@ -282,6 +278,6 @@ public class ConstraintAction {
           simDatasetId);
     }
 
-    return constraintResultMap.values().stream().toList();
+    return constraintResultMap;
   }
 }

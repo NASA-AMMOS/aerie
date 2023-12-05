@@ -5,12 +5,11 @@ import javax.json.JsonObject;
 import javax.json.JsonString;
 import java.util.List;
 
-public record ConstraintResult(int constraintId,
-                        String constraintName,
-                        String type,
-                        List<String> resourceIds,
-                        List<ConstraintResult.ConstraintViolation> violations,
-                        List<ConstraintResult.Interval> gaps){
+public record ConstraintResult(
+    List<String> resourceIds,
+    List<ConstraintResult.ConstraintViolation> violations,
+    List<ConstraintResult.Interval> gaps
+) {
   public record ConstraintViolation(List<Integer> activityInstanceIds, List<Interval> windows) {
 
     public static ConstraintViolation fromJSON(JsonObject json) {
@@ -34,9 +33,6 @@ public record ConstraintResult(int constraintId,
     final var violations = json.getJsonArray("violations").getValuesAs(ConstraintViolation::fromJSON);
 
     return new ConstraintResult(
-        json.getInt("constraintId"),
-        json.getString("constraintName"),
-        json.getString("type"),
         resourceIds,
         violations,
         gaps

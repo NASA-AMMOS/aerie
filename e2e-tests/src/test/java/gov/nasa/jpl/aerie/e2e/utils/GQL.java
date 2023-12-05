@@ -38,11 +38,11 @@ public enum GQL {
     query checkConstraints($planId: Int!, $simulationDatasetId: Int) {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
         success
+        constraintId
+        constraintName
+        type
         results {
-          constraintId
-          constraintName
           resourceIds
-          type
           gaps {
             end
             start

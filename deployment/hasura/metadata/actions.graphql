@@ -280,6 +280,9 @@ type ResourceSamplesResponse {
 
 type ConstraintResponse {
   success: String!
+  constraintId: Int!,
+  constraintName: String!,
+  type: String!,
   errors: [UserCodeError!]!
   results: [ConstraintResult!]!
 }
@@ -287,9 +290,6 @@ type ConstraintResponse {
 type ConstraintResult {
   violations: [ConstraintViolation!]!,
   gaps: [Interval!]!
-  constraintId: Int!,
-  constraintName: String!,
-  type: String!,
   resourceIds: [String!]!
 }
 
