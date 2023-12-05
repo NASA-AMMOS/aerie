@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.function.BiFunction;
@@ -15,15 +17,10 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverUpdates;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.expires;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.updates;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad.bind;
-import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
-import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Tracing.trace;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.replaying;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.spawn;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 /**
  * General framework for approximating resources.
@@ -42,6 +39,9 @@ public final class Approximation {
     // so that the "updates" condition isn't triggered spuriously.
     wheneverUpdates(resource, newResourceDynamics -> updateApproximation(newResourceDynamics, approximation, result));
     whenever(expires(result), () -> updateApproximation(resource.getDynamics(), approximation, result));
+    // Approximation is often used when registering resources, so result propagates its name to resource.
+    name(resource, "%s", result);
+    addDependency(result, resource);
     return result;
   }
 

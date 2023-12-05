@@ -1,18 +1,18 @@
 package gov.nasa.jpl.aerie.contrib.streamline.core;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ErrorCatchingMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.Objects;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.failure;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Labelled.labelled;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 public final class CellRefV2 {
@@ -21,10 +21,10 @@ public final class CellRefV2 {
   /**
    * Allocate a new resource with an explicitly given effect type and effect trait.
    */
-  public static <D extends Dynamics<?, D>, E extends DynamicsEffect<D>> CellRef<Labelled<E>, Cell<D>> allocate(ErrorCatching<Expiring<D>> initialDynamics, EffectTrait<Labelled<E>> effectTrait) {
+  public static <D extends Dynamics<?, D>, E extends DynamicsEffect<D>> CellRef<E, Cell<D>> allocate(ErrorCatching<Expiring<D>> initialDynamics, EffectTrait<E> effectTrait) {
     return CellRef.allocate(new Cell<>(initialDynamics), new CellType<>() {
       @Override
-      public EffectTrait<Labelled<E>> getEffectType() {
+      public EffectTrait<E> getEffectType() {
         return effectTrait;
       }
 
@@ -34,11 +34,11 @@ public final class CellRefV2 {
       }
 
       @Override
-      public void apply(Cell<D> cell, Labelled<E> effect) {
-        cell.initialDynamics = effect.data().apply(cell.dynamics).match(
+      public void apply(Cell<D> cell, E effect) {
+        cell.initialDynamics = effect.apply(cell.dynamics).match(
             ErrorCatching::success,
             error -> failure(new RuntimeException(
-                "Applying '%s' failed.".formatted(effect.name()), error)));
+                "Applying '%s' failed.".formatted(getEffectName(effect)), error)));
         cell.dynamics = cell.initialDynamics;
         cell.elapsedTime = ZERO;
       }
@@ -54,22 +54,22 @@ public final class CellRefV2 {
     });
   }
 
-  public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> noncommutingEffects() {
+  public static <D extends Dynamics<?, D>> EffectTrait<DynamicsEffect<D>> noncommutingEffects() {
     return resolvingConcurrencyBy((left, right) -> x -> {
           throw new UnsupportedOperationException(
               "Concurrent effects are not supported on this resource.");
         });
   }
 
-  public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> commutingEffects() {
+  public static <D extends Dynamics<?, D>> EffectTrait<DynamicsEffect<D>> commutingEffects() {
     return resolvingConcurrencyBy((left, right) -> x -> right.apply(left.apply(x)));
   }
 
-  public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> autoEffects() {
+  public static <D extends Dynamics<?, D>> EffectTrait<DynamicsEffect<D>> autoEffects() {
     return autoEffects(testing((CommutativityTestInput<D> input) -> input.leftResult.equals(input.rightResult)));
   }
 
-  public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> autoEffects(
+  public static <D extends Dynamics<?, D>> EffectTrait<DynamicsEffect<D>> autoEffects(
       Predicate<CommutativityTestInput<ErrorCatching<Expiring<D>>>> commutativityTest) {
     return resolvingConcurrencyBy((left, right) -> x -> {
       final var lrx = left.apply(right.apply(x));
@@ -103,40 +103,47 @@ public final class CellRefV2 {
 
   public record CommutativityTestInput<D>(D original, D leftResult, D rightResult) {}
 
-  public static <D extends Dynamics<?, D>> EffectTrait<Labelled<DynamicsEffect<D>>> resolvingConcurrencyBy(BinaryOperator<DynamicsEffect<D>> combineConcurrent) {
+  public static <D extends Dynamics<?, D>> EffectTrait<DynamicsEffect<D>> resolvingConcurrencyBy(BinaryOperator<DynamicsEffect<D>> combineConcurrent) {
     return new EffectTrait<>() {
       @Override
-      public Labelled<DynamicsEffect<D>> empty() {
-        return labelled("No-op", x -> x);
+      public DynamicsEffect<D> empty() {
+        final DynamicsEffect<D> result = x -> x;
+        name(result, "No-op");
+        return result;
       }
 
       @Override
-      public Labelled<DynamicsEffect<D>> sequentially(final Labelled<DynamicsEffect<D>> prefix, final Labelled<DynamicsEffect<D>> suffix) {
-        return new Labelled<>(
-            x -> suffix.data().apply(prefix.data().apply(x)),
-            "(%s) then (%s)".formatted(prefix.name(), suffix.name()));
+      public DynamicsEffect<D> sequentially(final DynamicsEffect<D> prefix, final DynamicsEffect<D> suffix) {
+        final DynamicsEffect<D> result = x -> suffix.apply(prefix.apply(x));
+        name(result, "(%s) then (%s)".formatted(getEffectName(prefix), getEffectName(suffix)));
+        return result;
       }
 
       @Override
-      public Labelled<DynamicsEffect<D>> concurrently(final Labelled<DynamicsEffect<D>> left, final Labelled<DynamicsEffect<D>> right) {
+      public DynamicsEffect<D> concurrently(final DynamicsEffect<D> left, final DynamicsEffect<D> right) {
         try {
-          final DynamicsEffect<D> combined = combineConcurrent.apply(left.data(), right.data());
-          return new Labelled<>(
-              x -> {
+          final DynamicsEffect<D> combined = combineConcurrent.apply(left, right);
+          final DynamicsEffect<D> result = x -> {
                 try {
                   return combined.apply(x);
                 } catch (Exception e) {
                   return failure(e);
                 }
-              },
-              "(%s) and (%s)".formatted(left.name(), right.name()));
+              };
+          name(result, "(%s) and (%s)".formatted(getEffectName(left), getEffectName(right)));
+          return result;
         } catch (Throwable e) {
-          return new Labelled<>(
-              $ -> failure(e),
-              "Failed to combine concurrent effects: (%s) and (%s)".formatted(left.name(), right.name()));
+          final DynamicsEffect<D> result = $ -> failure(e);
+          name(result, "Failed to combine concurrent effects: (%s) and (%s)".formatted(
+                  getEffectName(left), getEffectName(right)));
+          return result;
         }
       }
     };
+  }
+
+  private static <D extends Dynamics<?, D>, E extends DynamicsEffect<D>> String getEffectName(E effect) {
+    return getName(effect).orElse("anonymous effect");
   }
 
   public static class Cell<D> {

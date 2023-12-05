@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 
 import java.util.Arrays;
@@ -29,6 +30,9 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad.bind;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.getName;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.GeneralConstraint.constraint;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.InequalityComparison.GreaterThanOrEquals;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.InequalityComparison.LessThanOrEquals;
@@ -51,14 +55,13 @@ import static java.util.stream.Collectors.toMap;
  * </p>
  */
 public final class LinearBoundaryConsistencySolver {
-  private final String name;
   private final List<Resource<Polynomial>> drivenTerms = new LinkedList<>();
   private final List<Variable> variables = new LinkedList<>();
   private final List<DirectionalConstraint> constraints = new LinkedList<>();
   private final Map<Variable, Set<DirectionalConstraint>> neighboringConstraints = new HashMap<>();
 
   public LinearBoundaryConsistencySolver(String name) {
-    this.name = name;
+    name(this, name);
 
     spawn(contextualized(name + " solving", () -> {
       // Don't solve for the first time until sim starts.
@@ -78,9 +81,10 @@ public final class LinearBoundaryConsistencySolver {
   }
 
   public Variable variable(String name, Function<Domain, Expiring<Polynomial>> selectionPolicy) {
-    // TODO: make selectionPolicy (and maybe starting value?) configurable
     var variable = new Variable(name, cellResource(polynomial(0)), selectionPolicy);
     variables.add(variable);
+    // All variables depend on the solver, because all of them change together when the solver runs.
+    addDependency(variable.resource(), this);
     return variable;
   }
 
@@ -92,6 +96,9 @@ public final class LinearBoundaryConsistencySolver {
     var normalizedConstraint = constraint.normalize();
     drivenTerms.add(normalizedConstraint.drivenTerm);
     constraints.addAll(normalizedConstraint.standardize());
+    // The solver depends on the normalized driven term, which will depend on any driven terms in the general constraint,
+    // because any change in any driven term could trigger the solver.
+    addDependency(this, normalizedConstraint.drivenTerm);
   }
 
   private void buildNeighboringConstraints() {
@@ -125,7 +132,7 @@ public final class LinearBoundaryConsistencySolver {
             if (D.isEmpty()) {
               throw new IllegalStateException(
                   "LinearArcConsistencySolver %s failed. Domain for %s is empty: [%s, %s]".formatted(
-                      name, D.variable, D.lowerBound, D.upperBound));
+                      getName(this).orElseThrow(), D.variable, D.lowerBound, D.upperBound));
             }
             // TODO: Make this more efficient by not adding constraints that are already in the queue.
             constraintsLeft.addAll(neighboringConstraints.get(D.variable));
@@ -171,7 +178,6 @@ public final class LinearBoundaryConsistencySolver {
   }
 
   public static final class Variable {
-    private final String name;
     private final CellResource<Polynomial> resource;
     private final Function<Domain, Expiring<Polynomial>> selectionPolicy;
 
@@ -179,14 +185,15 @@ public final class LinearBoundaryConsistencySolver {
         String name,
         CellResource<Polynomial> resource,
         Function<Domain, Expiring<Polynomial>> selectionPolicy) {
-      this.name = name;
+      name(this, name);
+      name(resource, name);
       this.resource = resource;
       this.selectionPolicy = selectionPolicy;
     }
 
     @Override
     public String toString() {
-      return name;
+      return getName(this).orElseThrow();
     }
 
     // Expose resource as Resource, not CellResource,

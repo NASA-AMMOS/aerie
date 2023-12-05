@@ -26,6 +26,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResour
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Tracing.trace;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar.ErrorBehavior.*;
@@ -95,7 +96,7 @@ public class Registrar {
   }
 
   public <Value> void discrete(final String name, final Resource<Discrete<Value>> resource, final ValueMapper<Value> mapper) {
-    resource.registerName(name);
+    name(resource, name);
     var debugResource = debug(name, resource);
     gov.nasa.jpl.aerie.merlin.framework.Resource<Value> registeredResource = switch (errorBehavior) {
       case Log -> () -> currentValue(debugResource, null);
@@ -106,7 +107,7 @@ public class Registrar {
   }
 
   public void real(final String name, final Resource<Linear> resource) {
-    resource.registerName(name);
+    name(resource, name);
     var debugResource = debug(name, resource);
     gov.nasa.jpl.aerie.merlin.framework.Resource<RealDynamics> registeredResource = switch (errorBehavior) {
       case Log -> () -> realDynamics(currentData(debugResource, linear(0, 0)));
@@ -121,8 +122,8 @@ public class Registrar {
   }
 
   private <D> Resource<D> debug(String name, Resource<D> resource) {
-    var tracedResource = trace ? trace(name, resource) : resource;
-    return profile ? profile(name, tracedResource) : tracedResource;
+    var tracedResource = trace ? trace(resource) : resource;
+    return profile ? profile(tracedResource) : tracedResource;
   }
 
   private <D extends Dynamics<?, D>> void logErrors(String name, Resource<D> resource) {

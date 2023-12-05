@@ -32,18 +32,15 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResour
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.shift;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.signalling;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bindEffect;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.map;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.pure;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.argsFormat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.or;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.LinearExpression.lx;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
@@ -54,12 +51,15 @@ public final class PolynomialResources {
   private PolynomialResources() {}
 
   public static Resource<Polynomial> constant(double value) {
-    var dynamics = pure(polynomial(value));
-    return () -> dynamics;
+    var result = pure(polynomial(value));
+    name(result, Double.toString(value));
+    return result;
   }
 
   public static UnitAware<Resource<Polynomial>> constant(UnitAware<Double> quantity) {
-    return unitAware(constant(quantity.value()), quantity.unit());
+    var result = unitAware(constant(quantity.value()), quantity.unit());
+    name(result, quantity.toString());
+    return result;
   }
 
   public static CellResource<Polynomial> polynomialCellResource(double... initialCoefficients) {
@@ -85,7 +85,9 @@ public final class PolynomialResources {
    * Treat a discrete resource as a polynomial with constant profile segments.
    */
   public static Resource<Polynomial> asPolynomial(Resource<Discrete<Double>> discrete) {
-    return map(discrete, d -> polynomial(d.extract()));
+    var result = map(discrete, d -> polynomial(d.extract()));
+    name(result, "%s", discrete);
+    return result;
   }
 
   /**
@@ -132,7 +134,7 @@ public final class PolynomialResources {
       throw new IllegalArgumentException("Segments map must have at least one segment");
     }
     var clock = clock();
-    return ResourceMonad.bind(clock, clock$ -> {
+    return bind(clock, clock$ -> {
       var t = clock$.extract();
       var start = segments.floorEntry(t);
       var end = segments.higherEntry(t);
@@ -149,7 +151,7 @@ public final class PolynomialResources {
         var data = polynomial(start.getValue(), slope).step(t.minus(startTime));
         result = expiring(data, endTime.minus(t));
       }
-      return ResourceMonad.pure(result);
+      return pure(result);
     });
   }
 
@@ -181,21 +183,28 @@ public final class PolynomialResources {
   }
 
   public static Resource<Polynomial> sum(Stream<? extends Resource<Polynomial>> summands) {
-    return summands.reduce(constant(0), ResourceMonad.map(Polynomial::add), ResourceMonad.map(Polynomial::add)::apply);
+    var frozenSummands = summands.toList();
+    var result = frozenSummands.stream().reduce(constant(0), ResourceMonad.map(Polynomial::add), ResourceMonad.map(Polynomial::add)::apply);
+    name(result, "Sum " + argsFormat(frozenSummands), frozenSummands.toArray());
+    return result;
   }
 
   /**
    * Subtract polynomial resources.
    */
   public static Resource<Polynomial> subtract(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return map(p, q, Polynomial::subtract);
+    var result = map(p, q, Polynomial::subtract);
+    name(result, "(%s) - (%s)", p, q);
+    return result;
   }
 
   /**
    * Flip the sign of a polynomial resource.
    */
   public static Resource<Polynomial> negate(Resource<Polynomial> p) {
-    return multiply(constant(-1), p);
+    var result = multiply(constant(-1), p);
+    name(result, "-(%s)", p);
+    return result;
   }
 
   /**
@@ -210,7 +219,10 @@ public final class PolynomialResources {
    * Multiply polynomial resources.
    */
   public static Resource<Polynomial> product(Stream<? extends Resource<Polynomial>> factors) {
-    return factors.reduce(constant(1), ResourceMonad.map(Polynomial::multiply), ResourceMonad.map(Polynomial::multiply)::apply);
+    var frozenFactors = factors.toList();
+    var result = frozenFactors.stream().reduce(constant(1), ResourceMonad.map(Polynomial::multiply), ResourceMonad.map(Polynomial::multiply)::apply);
+    name(result, "Product " + argsFormat(frozenFactors), frozenFactors.toArray());
+    return result;
   }
 
   /**
@@ -220,7 +232,9 @@ public final class PolynomialResources {
    * </p>
    */
   public static Resource<Polynomial> divide(Resource<Polynomial> p, Resource<Discrete<Double>> q) {
-    return map(p, q, (p$, q$) -> p$.divide(q$.extract()));
+    var result = map(p, q, (p$, q$) -> p$.divide(q$.extract()));
+    name(result, "(%s) / (%s)", p, q);
+    return result;
   }
 
   /**
@@ -230,11 +244,13 @@ public final class PolynomialResources {
    * </p>
    */
   public static Resource<Polynomial> integrate(Resource<Polynomial> integrand, double startingValue) {
-    var cell = cellResource(map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
+    var cell = cellResource(DynamicsMonad.map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
     // Use integrand's expiry but not integral's, since we're refreshing the integral
     wheneverDynamicsChange(integrand, integrandDynamics ->
         cell.emit(bindEffect(integral -> DynamicsMonad.map(integrandDynamics, integrand$ ->
             integrand$.integral(integral.extract())))));
+    name(cell, "Integral (%s)", integrand);
+    addDependency(cell, integrand);
     return cell;
   }
 
@@ -302,10 +318,13 @@ public final class PolynomialResources {
     // Use a simple feedback loop on volumes to do the integration and clamping.
     // Clamping here takes care of discrete under-/overflows and overshooting bounds due to discrete time steps.
     var clampedCell = clamp(integral, lowerBound, upperBound);
-    var correctedCell = bind(clampedCell, v -> map(rate.resource(), r -> r.integral(v.extract())));
+    var correctedCell = map(clampedCell, rate.resource(), (v, r) -> r.integral(v.extract()));
     // Use the corrected integral values to set volumes, but erase expiry information in the process to avoid loops
-    wheneverDynamicsChange(correctedCell, v -> integral.emit("Update clamped integral", $ -> v.map(p -> neverExpiring(p.data()))));
+    forward(eraseExpiry(correctedCell), integral);
 
+    name(integral, "Clamped Integral (%s)", integrand);
+    name(overflowRate.resource(), "Overflow of %s", integral);
+    name(underflowRate.resource(), "Underflow of %s", integral);
     return new ClampedIntegrateResult(
         integral,
         overflowRate.resource(),
@@ -331,7 +350,9 @@ public final class PolynomialResources {
    * Returns the derivative of this resource.
    */
   public static Resource<Polynomial> differentiate(Resource<Polynomial> p) {
-    return map(p, Polynomial::derivative);
+    var result = map(p, Polynomial::derivative);
+    name(result, "Derivative (%s)", p);
+    return result;
   }
 
   /**
@@ -340,7 +361,9 @@ public final class PolynomialResources {
   public static Resource<Polynomial> movingAverage(Resource<Polynomial> p, Duration interval) {
     var pIntegral = integrate(p, 0);
     var shiftedIntegral = shift(pIntegral, interval, polynomial(0));
-    return divide(subtract(pIntegral, shiftedIntegral), DiscreteResourceMonad.pure(interval.ratioOver(SECOND)));
+    var result = divide(subtract(pIntegral, shiftedIntegral), DiscreteResourceMonad.pure(interval.ratioOver(SECOND)));
+    name(result, "Moving Average (%s)", p);
+    return result;
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<Polynomial> p, double threshold) {
@@ -360,34 +383,48 @@ public final class PolynomialResources {
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ResourceMonad.pure(p$.greaterThan(q$))));
+    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.greaterThan(q$))));
+    name(result, "(%s) > (%s)", p, q);
+    return result;
   }
 
   public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ResourceMonad.pure(p$.greaterThanOrEquals(q$))));
+    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.greaterThanOrEquals(q$))));
+    name(result, "(%s) >= (%s)", p, q);
+    return result;
   }
 
   public static Resource<Discrete<Boolean>> lessThan(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ResourceMonad.pure(p$.lessThan(q$))));
+    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.lessThan(q$))));
+    name(result, "(%s) < (%s)", p, q);
+    return result;
   }
 
   public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> ResourceMonad.pure(p$.lessThanOrEquals(q$))));
+    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.lessThanOrEquals(q$))));
+    name(result, "(%s) <= (%s)", p, q);
+    return result;
   }
 
   public static Resource<Polynomial> min(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(ResourceMonad.bind(p, q, (Polynomial p$, Polynomial q$) -> ResourceMonad.pure(p$.min(q$))));
+    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.min(q$))));
+    name(result, "Min (%s, %s)", p, q);
+    return result;
   }
 
   public static Resource<Polynomial> max(Resource<Polynomial> p, Resource<Polynomial> q) {
-    return signalling(ResourceMonad.bind(p, q, (Polynomial p$, Polynomial q$) -> ResourceMonad.pure(p$.max(q$))));
+    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.max(q$))));
+    name(result, "Max (%s, %s)", p, q);
+    return result;
   }
 
   /**
    * Absolute value
    */
   public static Resource<Polynomial> abs(Resource<Polynomial> p) {
-    return max(p, negate(p));
+    var result = max(p, negate(p));
+    name(result, "| %s |", p);
+    return result;
   }
 
   /**
@@ -398,12 +435,15 @@ public final class PolynomialResources {
    */
   public static Resource<Polynomial> clamp(Resource<Polynomial> p, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound) {
     // Bind an assertion into the resource to error it out if the bounds cross over each other.
-    var result = max(lowerBound, min(upperBound, p));
-    return ResourceMonad.bind(
-        assertThat(
-            "Clamp lowerBound must be less than or equal to upperBound",
-             lessThanOrEquals(lowerBound, upperBound)),
-        $ -> result);
+    var value = max(lowerBound, min(upperBound, p));
+    var result = map(
+            assertThat(
+                    "Clamp lowerBound must be less than or equal to upperBound",
+                    lessThanOrEquals(lowerBound, upperBound)),
+            value,
+            (a, v) -> v);
+    name(result, "Clamp (%s)", p);
+    return result;
   }
 
   private static Polynomial scalePolynomial(Polynomial p, double s) {

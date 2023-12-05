@@ -4,6 +4,8 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
@@ -28,20 +30,16 @@ public class ErrorTestingModel {
 
   public CellResource<Polynomial> upperBound = polynomialCellResource(5);
   public CellResource<Polynomial> lowerBound = polynomialCellResource(-5);
-  public Resource<Polynomial> clamped = signalling(clamp(constant(10), lowerBound, upperBound));
+  public Resource<Polynomial> clamped = clamp(constant(10), lowerBound, upperBound);
 
   public ErrorTestingModel(final Registrar registrar, final Configuration config) {
     registrar.discrete("errorTesting/bool", bool, new BooleanValueMapper());
     registrar.discrete("errorTesting/counter", counter, new IntegerValueMapper());
     // Explicitly register a name for continuous, because the derived linearized resource can't have effects
-    continuous.registerName("errorTesting/continuous");
     registrar.real("errorTesting/continuous", DataModel.linearize(continuous));
     registrar.real("errorTesting/derived", DataModel.linearize(derived));
-    lowerBound.registerName("errorTesting/lowerBound");
     registrar.real("errorTesting/lowerBound", DataModel.linearize(lowerBound));
-    upperBound.registerName("errorTesting/upperBound");
     registrar.real("errorTesting/upperBound", DataModel.linearize(upperBound));
-    clamped.registerName("errorTesting/clamped");
     registrar.real("errorTesting/clamped", DataModel.linearize(clamped));
   }
 }

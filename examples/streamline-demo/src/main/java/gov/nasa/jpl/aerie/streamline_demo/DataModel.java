@@ -11,8 +11,12 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.forward;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.LinearExpression.lx;
@@ -58,13 +62,13 @@ public class DataModel {
     var clampedVolumeB = clamp(this.volumeB, constant(0), volumeB_ub);
     var volumeC_ub = subtract(volumeB_ub, clampedVolumeB);
     var clampedVolumeC = clamp(this.volumeC, constant(0), volumeC_ub);
-    var correctedVolumeA = bind(clampedVolumeA, v -> map(actualRateA, r -> r.integral(v.extract())));
-    var correctedVolumeB = bind(clampedVolumeB, v -> map(actualRateB, r -> r.integral(v.extract())));
-    var correctedVolumeC = bind(clampedVolumeC, v -> map(actualRateC, r -> r.integral(v.extract())));
+    var correctedVolumeA = map(clampedVolumeA, actualRateA, (v, r) -> r.integral(v.extract()));
+    var correctedVolumeB = map(clampedVolumeB, actualRateB, (v, r) -> r.integral(v.extract()));
+    var correctedVolumeC = map(clampedVolumeC, actualRateC, (v, r) -> r.integral(v.extract()));
     // Use the corrected integral values to set volumes, but erase expiry information in the process to avoid loops:
-    wheneverDynamicsChange(correctedVolumeA, v -> this.volumeA.emit($ -> v.map(p -> neverExpiring(p.data()))));
-    wheneverDynamicsChange(correctedVolumeB, v -> this.volumeB.emit($ -> v.map(p -> neverExpiring(p.data()))));
-    wheneverDynamicsChange(correctedVolumeC, v -> this.volumeC.emit($ -> v.map(p -> neverExpiring(p.data()))));
+    forward(eraseExpiry(correctedVolumeA), this.volumeA);
+    forward(eraseExpiry(correctedVolumeB), this.volumeB);
+    forward(eraseExpiry(correctedVolumeC), this.volumeC);
 
     // Integrate the actual rates.
     totalVolume = add(this.volumeA, this.volumeB, this.volumeC);
@@ -73,24 +77,24 @@ public class DataModel {
 
     // When full, we never write more than the upper bound will tolerate, in total
     var isFull = greaterThanOrEquals(totalVolume, upperBoundOnTotalVolume);
-    var totalRate_ub = bind(isFull, f -> f.extract() ? differentiate(upperBoundOnTotalVolume) : constant(Double.POSITIVE_INFINITY));
+    var totalRate_ub = choose(isFull, differentiate(upperBoundOnTotalVolume), constant(Double.POSITIVE_INFINITY));
     rateSolver.declare(lx(rateA).add(lx(rateB)).add(lx(rateC)), LessThanOrEquals, lx(totalRate_ub));
 
     // We only exceed the desired rate when we try to delete from an empty bucket.
     var isEmptyA = lessThanOrEquals(this.volumeA, 0);
     var isEmptyB = lessThanOrEquals(this.volumeB, 0);
     var isEmptyC = lessThanOrEquals(this.volumeC, 0);
-    var rateA_ub = bind(isEmptyA, e -> e.extract() ? max(desiredRateA, constant(0)) : desiredRateA);
-    var rateB_ub = bind(isEmptyB, e -> e.extract() ? max(desiredRateB, constant(0)) : desiredRateB);
-    var rateC_ub = bind(isEmptyC, e -> e.extract() ? max(desiredRateC, constant(0)) : desiredRateC);
+    var rateA_ub = choose(isEmptyA, max(desiredRateA, constant(0)), desiredRateA);
+    var rateB_ub = choose(isEmptyB, max(desiredRateB, constant(0)), desiredRateB);
+    var rateC_ub = choose(isEmptyC, max(desiredRateC, constant(0)), desiredRateC);
     rateSolver.declare(lx(rateA), LessThanOrEquals, lx(rateA_ub));
     rateSolver.declare(lx(rateB), LessThanOrEquals, lx(rateB_ub));
     rateSolver.declare(lx(rateC), LessThanOrEquals, lx(rateC_ub));
 
     // We cannot delete from an empty bucket
-    var rateA_lb = bind(isEmptyA, e -> e.extract() ? constant(0) : constant(Double.NEGATIVE_INFINITY));
-    var rateB_lb = bind(isEmptyB, e -> e.extract() ? constant(0) : constant(Double.NEGATIVE_INFINITY));
-    var rateC_lb = bind(isEmptyC, e -> e.extract() ? constant(0) : constant(Double.NEGATIVE_INFINITY));
+    var rateA_lb = choose(isEmptyA, constant(0), constant(Double.NEGATIVE_INFINITY));
+    var rateB_lb = choose(isEmptyB, constant(0), constant(Double.NEGATIVE_INFINITY));
+    var rateC_lb = choose(isEmptyC, constant(0), constant(Double.NEGATIVE_INFINITY));
     rateSolver.declare(lx(rateA), GreaterThanOrEquals, lx(rateA_lb));
     rateSolver.declare(lx(rateB), GreaterThanOrEquals, lx(rateB_lb));
     rateSolver.declare(lx(rateC), GreaterThanOrEquals, lx(rateC_lb));
@@ -99,7 +103,6 @@ public class DataModel {
   }
 
   private void registerStates(Registrar registrar, Configuration config) {
-    if (config.traceResources) registrar.setTrace();
     registrar.real("desiredRateA", linearize(desiredRateA));
     registrar.real("desiredRateB", linearize(desiredRateB));
     registrar.real("desiredRateC", linearize(desiredRateC));
@@ -113,22 +116,18 @@ public class DataModel {
     registrar.real("volumeC", linearize(volumeC));
     registrar.real("totalVolume", linearize(totalVolume));
     registrar.real("maxVolume", linearize(upperBoundOnTotalVolume));
-    registrar.discrete(
-        "totalVolumeConstraint",
-        assertThat(
-            "Total volume must not exceed upper bound.",
-            lessThanOrEquals(totalVolume, upperBoundOnTotalVolume)),
-        new BooleanValueMapper());
-    registrar.clearTrace();
   }
 
   static Resource<Linear> linearize(Resource<Polynomial> p) {
-    return map(p, p$ -> {
+    var result = map(p, p$ -> {
       if (p$.degree() <= 1) {
         return linear(p$.getCoefficient(0), p$.getCoefficient(1));
       } else {
         throw new IllegalStateException("Resource was super-linear");
       }
     });
+    // Reverse the normal direction of naming, so that names registered for result propagate back to p
+    name(p, "%s", result);
+    return result;
   }
 }

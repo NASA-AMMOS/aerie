@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Nested
 @ExtendWith(MerlinExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 class DiscreteEffectsTest {

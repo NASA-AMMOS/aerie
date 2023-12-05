@@ -9,6 +9,7 @@ public final class Mission {
 
   public Mission(final gov.nasa.jpl.aerie.merlin.framework.Registrar registrar$, final Configuration config) {
     var registrar = new Registrar(registrar$, Registrar.ErrorBehavior.Log);
+    if (config.traceResources) registrar.setTrace();
     dataModel = new DataModel(registrar, config);
     errorTestingModel = new ErrorTestingModel(registrar, config);
     approximationModel = new ApproximationModel(registrar, config);

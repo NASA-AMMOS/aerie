@@ -19,11 +19,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.NavigableMap;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -36,6 +32,9 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.equivalentExceptions;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.argsFormat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
@@ -46,7 +45,9 @@ public final class DiscreteResources {
   private DiscreteResources() {}
 
   public static <T> Resource<Discrete<T>> constant(T value) {
-    return DiscreteResourceMonad.pure(value);
+    var result = DiscreteResourceMonad.pure(value);
+    name(result, value.toString());
+    return result;
   }
 
   // General discrete cell resource constructor
@@ -73,10 +74,12 @@ public final class DiscreteResources {
    * Returns a condition that's satisfied whenever this resource is true.
    */
   public static Condition when(Resource<Discrete<Boolean>> resource) {
-    return (positive, atEarliest, atLatest) ->
+    Condition result = (positive, atEarliest, atLatest) ->
         resource.getDynamics().match(
             dynamics -> Optional.of(atEarliest).filter($ -> dynamics.data().extract() == positive),
             error -> Optional.empty());
+    name(result, "when %s", resource);
+    return result;
   }
 
   /**
@@ -102,6 +105,8 @@ public final class DiscreteResources {
       final var newDynamics = resource.getDynamics();
       cell.emit($ -> newDynamics);
     });
+    name(cell, "Cache (%s)", resource);
+    addDependency(cell, resource);
     return cell;
   }
 
@@ -166,6 +171,19 @@ public final class DiscreteResources {
     return DiscreteMonad.map(d, $ -> $ * scale);
   }
 
+  // Generally applicable derivations
+
+  public static <A> Resource<Discrete<Boolean>> equals(Resource<Discrete<A>> left, Resource<Discrete<A>> right) {
+    var result = map(left, right, Objects::equals);
+    name(result, "(%s) == (%s)", left, right);
+    return result;
+  }
+
+  public static <A> Resource<Discrete<Boolean>> notEquals(Resource<Discrete<A>> left, Resource<Discrete<A>> right) {
+    var result = not(equals(left, right));
+    name(result, "(%s) != (%s)", left, right);
+    return result;
+  }
 
   // Boolean logic
 
@@ -174,7 +192,12 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting and: Only gets right if left is true
-    return bind(left, l -> l ? right : pure(false));
+    var result = bind(left, l -> l ? right : pure(false));
+    // Manually add dependencies, since short-circuiting will break automatic dependency tracking.
+    addDependency(result, left);
+    addDependency(result, right);
+    name(result, "(%s) and (%s)", left, right);
+    return result;
   }
 
   /**
@@ -198,7 +221,12 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting or: Only gets right if left is false
-    return bind(left, l -> l ? pure(true) : right);
+    var result = bind(left, l -> l ? pure(true) : right);
+    // Manually add dependencies, since short-circuiting will break automatic dependency tracking.
+    addDependency(result, left);
+    addDependency(result, right);
+    name(result, "(%s) or (%s)", left, right);
+    return result;
   }
 
   /**
@@ -221,14 +249,21 @@ public final class DiscreteResources {
    * Logical "not"
    */
   public static Resource<Discrete<Boolean>> not(Resource<Discrete<Boolean>> operand) {
-    return map(operand, $ -> !$);
+    var result = map(operand, $ -> !$);
+    name(result, "not (%s)", operand);
+    return result;
   }
 
   /**
    * Resource-level if-then-else logic.
    */
   public static <D> Resource<D> choose(Resource<Discrete<Boolean>> condition, Resource<D> thenCase, Resource<D> elseCase) {
-    return ResourceMonad.bind(condition, c -> c.extract() ? thenCase : elseCase);
+    var result = ResourceMonad.bind(condition, c -> c.extract() ? thenCase : elseCase);
+    // Manually add dependencies, since short-circuiting will break automatic dependency tracking.
+    addDependency(result, thenCase);
+    addDependency(result, elseCase);
+    name(result, "(%s) ? (%s) : (%s)", condition, thenCase, elseCase);
+    return result;
   }
 
   /**
@@ -237,10 +272,12 @@ public final class DiscreteResources {
    * Register this resource to detect that failure.
    */
   public static Resource<Discrete<Boolean>> assertThat(String description, Resource<Discrete<Boolean>> assertion) {
-    return map(assertion, a -> {
+    var result = map(assertion, a -> {
       if (a) return true;
       throw new AssertionError(description);
     });
+    name(result, "Assertion: " + description);
+    return result;
   }
 
   // Integer arithmetic
@@ -257,14 +294,19 @@ public final class DiscreteResources {
    * Add integer resources
    */
   public static Resource<Discrete<Integer>> sumInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    return operands.reduce(pure(0), map(Integer::sum), map(Integer::sum)::apply);
+    var frozenOperands = operands.toList();
+    var result = frozenOperands.stream().reduce(pure(0), map(Integer::sum), map(Integer::sum)::apply);
+    name(result, "Sum " + argsFormat(frozenOperands), frozenOperands.toArray());
+    return result;
   }
 
   /**
    * Subtract integer resources
    */
   public static Resource<Discrete<Integer>> subtractInt(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
-    return map(left, right, (l, r) -> l - r);
+    var result = map(left, right, (l, r) -> l - r);
+    name(result, "(%s) - (%s)", left, right);
+    return result;
   }
 
   /**
@@ -279,14 +321,19 @@ public final class DiscreteResources {
    * Multiply integer resources
    */
   public static Resource<Discrete<Integer>> productInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    return operands.reduce(pure(1), map((x, y) -> x * y), map((Integer x, Integer y) -> x * y)::apply);
+    var frozenOperands = operands.toList();
+    var result = frozenOperands.stream().reduce(pure(1), map((x, y) -> x * y), map((Integer x, Integer y) -> x * y)::apply);
+    name(result, "Product " + argsFormat(frozenOperands), frozenOperands.toArray());
+    return result;
   }
 
   /**
    * Divide integer resources
    */
   public static Resource<Discrete<Integer>> divideInt(Resource<Discrete<Integer>> left, Resource<Discrete<Integer>> right) {
-    return map(left, right, (l, r) -> l / r);
+    var result = map(left, right, (l, r) -> l / r);
+    name(result, "(%s) / (%s)", left, right);
+    return result;
   }
 
   // Double arithmetic
@@ -303,14 +350,19 @@ public final class DiscreteResources {
    * Add double resources
    */
   public static Resource<Discrete<Double>> sum(Stream<? extends Resource<Discrete<Double>>> operands) {
-    return operands.reduce(pure(0.0), map(Double::sum), map(Double::sum)::apply);
+    var frozenOperands = operands.toList();
+    var result = frozenOperands.stream().reduce(pure(0.0), map(Double::sum), map(Double::sum)::apply);
+    name(result, "Sum " + argsFormat(frozenOperands), frozenOperands.toArray());
+    return result;
   }
 
   /**
    * Subtract double resources
    */
   public static Resource<Discrete<Double>> subtract(Resource<Discrete<Double>> left, Resource<Discrete<Double>> right) {
-    return map(left, right, (l, r) -> l - r);
+    var result = map(left, right, (l, r) -> l - r);
+    name(result, "(%s) - (%s)", left, right);
+    return result;
   }
 
   /**
@@ -325,14 +377,19 @@ public final class DiscreteResources {
    * Multiply double resources
    */
   public static Resource<Discrete<Double>> product(Stream<? extends Resource<Discrete<Double>>> operands) {
-    return operands.reduce(pure(1.0), map((x, y) -> x * y), map((Double x, Double y) -> x * y)::apply);
+    var frozenOperands = operands.toList();
+    var result = frozenOperands.stream().reduce(pure(1.0), map((x, y) -> x * y), map((Double x, Double y) -> x * y)::apply);
+    name(result, "Product " + argsFormat(frozenOperands), frozenOperands.toArray());
+    return result;
   }
 
   /**
    * Divide double resources
    */
   public static Resource<Discrete<Double>> divide(Resource<Discrete<Double>> left, Resource<Discrete<Double>> right) {
-    return map(left, right, (l, r) -> l / r);
+    var result = map(left, right, (l, r) -> l / r);
+    name(result, "(%s) / (%s)", left, right);
+    return result;
   }
 
   // Collections
@@ -341,13 +398,23 @@ public final class DiscreteResources {
    * Returns a resource that's true when the argument is empty
    */
   public static <C extends Collection<?>> Resource<Discrete<Boolean>> isEmpty(Resource<Discrete<C>> resource) {
-    return map(resource, Collection::isEmpty);
+    var result = map(resource, Collection::isEmpty);
+    name(result, "(%s) is empty", resource);
+    return result;
   }
 
   /**
    * Returns a resource that's true when the argument is non-empty
    */
   public static <C extends Collection<?>> Resource<Discrete<Boolean>> isNonEmpty(Resource<Discrete<C>> resource) {
-    return not(isEmpty(resource));
+    var result = not(isEmpty(resource));
+    name(result, "(%s) is not empty", resource);
+    return result;
+  }
+
+  public static <V, C extends Collection<V>> Resource<Discrete<Boolean>> contains(Resource<Discrete<C>> collection, Resource<Discrete<V>> value) {
+    var result = map(collection, value, Collection::contains);
+    name(result, "(%s) contains (%s)", collection, value);
+    return result;
   }
 }
