@@ -127,7 +127,7 @@ public final class PolynomialEffects {
    * restoring the resource to its original profile when the action completes.
    */
   public static void using(CellResource<Polynomial> resource, double amount, Duration time) {
-    using(resource, amount, () -> delay(time));
+    spawn(replaying(() -> using(resource, amount, () -> delay(time))));
   }
 
   /**
@@ -151,7 +151,7 @@ public final class PolynomialEffects {
    * restoring the resource to its original profile when the action completes.
    */
   public static void providing(CellResource<Polynomial> resource, double amount, Duration time) {
-    providing(resource, amount, () -> delay(time));
+    spawn(replaying(() -> providing(resource, amount, () -> delay(time))));
   }
 
   private static void withNonConsumableEffect(String verb, CellResource<Polynomial> resource, Polynomial profile, Runnable action) {
