@@ -58,10 +58,9 @@ class DependenciesTest {
 
   @Test
   void derived_resources_have_their_sources_as_dependencies() {
-    derived.getDynamics();
-    var dependencies = Dependencies.getDependencies(derived, true);
-    assertTrue(dependencies.contains(constantTrue));
-    assertTrue(dependencies.contains(constant1234));
-    assertTrue(dependencies.contains(constant5678));
+    var graphDescription = Dependencies.describeDependencyGraph(derived, true);
+    assertTrue(graphDescription.contains("true"));
+    assertTrue(graphDescription.contains("1234"));
+    assertTrue(graphDescription.contains("5678"));
   }
 }
