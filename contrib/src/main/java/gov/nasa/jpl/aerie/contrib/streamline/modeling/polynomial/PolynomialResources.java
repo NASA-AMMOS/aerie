@@ -4,8 +4,10 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInp
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
@@ -38,6 +40,12 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.argsFormat;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.relative;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableResources.asDifferentiable;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byBoundingError;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
@@ -45,7 +53,8 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBo
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.LinearExpression.lx;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources.extend;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
+import static java.util.Arrays.stream;
 
 public final class PolynomialResources {
   private PolynomialResources() {}
@@ -124,6 +133,72 @@ public final class PolynomialResources {
   }
 
   /**
+   * Assume that polynomial is in fact linear.
+   *
+   * <p>
+   *     This method is very fast, but will throw an error if polynomial is not actually linear.
+   *     To convert polynomials that may not be linear, try {@link PolynomialResources#approximateAsLinear}
+   * </p>
+   */
+  public static Resource<Linear> assumeLinear(Resource<Polynomial> polynomial) {
+    var result = map(polynomial, p -> {
+      if (p.degree() <= 1) {
+        return Linear.linear(p.getCoefficient(0), p.getCoefficient(1));
+      } else {
+        throw new IllegalStateException(
+                "%s was assumed to be linear, but was actually degree %d".formatted(
+                        getName(polynomial).orElse("Anonymous resource"),
+                        p.degree()));
+      }
+    });
+    // Since this method is often used to register a polynomial,
+    // propagate names backwards from the linear result to the polynomial input.
+    name(polynomial, "%s", result);
+    return result;
+  }
+
+  /**
+   * {@link PolynomialResources#approximateAsLinear(Resource, double)}
+   * with relativeError = 1e-6
+   */
+  public static Resource<Linear> approximateAsLinear(Resource<Polynomial> polynomial) {
+    return approximateAsLinear(polynomial, 1e-6);
+  }
+
+  /**
+   * {@link PolynomialResources#approximateAsLinear(Resource, double, double)}
+   * with epsilon = 1e-10
+   */
+  public static Resource<Linear> approximateAsLinear(Resource<Polynomial> polynomial, double relativeError) {
+    return approximateAsLinear(polynomial, relativeError, 1e-10);
+  }
+
+  /**
+   * Builds a linear approximation of polynomial, using generally acceptable default settings.
+   * For more control over the approximation, see {@link Approximation#approximate} and related methods.
+   *
+   * @param polynomial The resource to approximate
+   * @param relativeError The maximum relative error to tolerate in the approximation
+   * @param epsilon The minimum positive value to distinguish from zero. This avoids oversampling near zero.
+   *
+   * @see Approximation#approximate
+   * @see SecantApproximation#secantApproximation
+   * @see IntervalFunctions#byBoundingError
+   * @see IntervalFunctions#byUniformSampling
+   * @see SecantApproximation.ErrorEstimates#errorByQuadraticApproximation()
+   * @see SecantApproximation.ErrorEstimates#errorByOptimization()
+   * @see Approximation#relative
+   */
+  public static Resource<Linear> approximateAsLinear(Resource<Polynomial> polynomial, double relativeError, double epsilon) {
+    return approximate(asDifferentiable(polynomial),
+            secantApproximation(byBoundingError(
+                    relativeError,
+                    MINUTE,
+                    duration(24 * 365, HOUR),
+                    relative(errorByQuadraticApproximation(), epsilon))));
+  }
+
+  /**
    * Returns a continuous resource that follows a precomputed sequence of values.
    * Before the first key in segments, value is the first entry in segments.
    * Between keys in segments, a linear interpolation between the two adjacent entries is used.
@@ -179,14 +254,11 @@ public final class PolynomialResources {
    */
   @SafeVarargs
   public static Resource<Polynomial> add(Resource<Polynomial>... summands) {
-    return sum(Arrays.stream(summands));
+    return sum(stream(summands));
   }
 
   public static Resource<Polynomial> sum(Stream<? extends Resource<Polynomial>> summands) {
-    var frozenSummands = summands.toList();
-    var result = frozenSummands.stream().reduce(constant(0), ResourceMonad.map(Polynomial::add), ResourceMonad.map(Polynomial::add)::apply);
-    name(result, "Sum " + argsFormat(frozenSummands), frozenSummands.toArray());
-    return result;
+    return reduce(summands, constant(0), map(Polynomial::add), "Sum");
   }
 
   /**
@@ -212,17 +284,14 @@ public final class PolynomialResources {
    */
   @SafeVarargs
   public static Resource<Polynomial> multiply(Resource<Polynomial>... factors) {
-    return product(Arrays.stream(factors));
+    return product(stream(factors));
   }
 
   /**
    * Multiply polynomial resources.
    */
   public static Resource<Polynomial> product(Stream<? extends Resource<Polynomial>> factors) {
-    var frozenFactors = factors.toList();
-    var result = frozenFactors.stream().reduce(constant(1), ResourceMonad.map(Polynomial::multiply), ResourceMonad.map(Polynomial::multiply)::apply);
-    name(result, "Product " + argsFormat(frozenFactors), frozenFactors.toArray());
-    return result;
+    return reduce(factors, constant(1), map(Polynomial::multiply), "Product");
   }
 
   /**
@@ -406,16 +475,22 @@ public final class PolynomialResources {
     return result;
   }
 
-  public static Resource<Polynomial> min(Resource<Polynomial> p, Resource<Polynomial> q) {
-    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.min(q$))));
-    name(result, "Min (%s, %s)", p, q);
-    return result;
+  @SafeVarargs
+  public static Resource<Polynomial> min(Resource<Polynomial>... args) {
+    return min(stream(args));
   }
 
-  public static Resource<Polynomial> max(Resource<Polynomial> p, Resource<Polynomial> q) {
-    var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.max(q$))));
-    name(result, "Max (%s, %s)", p, q);
-    return result;
+  public static Resource<Polynomial> min(Stream<Resource<Polynomial>> args) {
+    return signalling(reduce(args, constant(Double.POSITIVE_INFINITY), bind((p, q) -> pure(p.min(q))), "Min"));
+  }
+
+  @SafeVarargs
+  public static Resource<Polynomial> max(Resource<Polynomial>... args) {
+    return max(stream(args));
+  }
+
+  public static Resource<Polynomial> max(Stream<Resource<Polynomial>> args) {
+    return signalling(reduce(args, constant(Double.NEGATIVE_INFINITY), bind((p, q) -> pure(p.max(q))), "Max"));
   }
 
   /**
@@ -473,7 +548,7 @@ public final class PolynomialResources {
       throw new IllegalArgumentException("Cannot perform unit-aware addition of zero arguments.");
     }
     final Unit unit = summands[0].unit();
-    return unitAware(sum(Arrays.stream(summands).map(r -> r.value(unit))), unit);
+    return unitAware(sum(stream(summands).map(r -> r.value(unit))), unit);
   }
 
   /**
@@ -498,8 +573,8 @@ public final class PolynomialResources {
   @SafeVarargs
   public static UnitAware<Resource<Polynomial>> multiply(UnitAware<? extends Resource<Polynomial>>... factors) {
     return unitAware(
-        product(Arrays.stream(factors).map(UnitAware::value)),
-        Arrays.stream(factors).map(UnitAware::unit).reduce(Unit.SCALAR, Unit::multiply));
+        product(stream(factors).map(UnitAware::value)),
+        stream(factors).map(UnitAware::unit).reduce(Unit.SCALAR, Unit::multiply));
   }
 
   /**

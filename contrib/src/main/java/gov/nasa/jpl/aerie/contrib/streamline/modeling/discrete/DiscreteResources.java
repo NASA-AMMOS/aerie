@@ -1,17 +1,13 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
+import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
-import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.utils.DoubleUtils;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources;
@@ -30,11 +26,9 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.expiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.equivalentExceptions;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.argsFormat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
@@ -192,10 +186,7 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting and: Only gets right if left is true
-    var result = bind(left, l -> l ? right : pure(false));
-    // Manually add dependencies, since short-circuiting will break automatic dependency tracking.
-    addDependency(result, left);
-    addDependency(result, right);
+    var result = choose(left, right, constant(false));
     name(result, "(%s) and (%s)", left, right);
     return result;
   }
@@ -204,16 +195,16 @@ public final class DiscreteResources {
    * Reduce operands using short-circuiting logical "and"
    */
   @SafeVarargs
-  public static Resource<Discrete<Boolean>> and(Resource<Discrete<Boolean>>... operands) {
-    return and(stream(operands));
+  public static Resource<Discrete<Boolean>> all(Resource<Discrete<Boolean>>... operands) {
+    return all(stream(operands));
   }
 
   /**
    * Reduce operands using short-circuiting logical "and"
    */
-  public static Resource<Discrete<Boolean>> and(Stream<? extends Resource<Discrete<Boolean>>> operands) {
+  public static Resource<Discrete<Boolean>> all(Stream<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting and to improve efficiency
-    return operands.reduce(pure(true), DiscreteResources::and, DiscreteResources::and);
+    return reduce(operands, constant(true), DiscreteResources::and, "All");
   }
 
   /**
@@ -221,10 +212,7 @@ public final class DiscreteResources {
    */
   public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>> left, Resource<Discrete<Boolean>> right) {
     // Short-circuiting or: Only gets right if left is false
-    var result = bind(left, l -> l ? pure(true) : right);
-    // Manually add dependencies, since short-circuiting will break automatic dependency tracking.
-    addDependency(result, left);
-    addDependency(result, right);
+    var result = choose(left, constant(true), right);
     name(result, "(%s) or (%s)", left, right);
     return result;
   }
@@ -233,16 +221,16 @@ public final class DiscreteResources {
    * Reduce operands using short-circuiting logical "or"
    */
   @SafeVarargs
-  public static Resource<Discrete<Boolean>> or(Resource<Discrete<Boolean>>... operands) {
-    return or(stream(operands));
+  public static Resource<Discrete<Boolean>> any(Resource<Discrete<Boolean>>... operands) {
+    return any(stream(operands));
   }
 
   /**
    * Reduce operands using short-circuiting logical "or"
    */
-  public static Resource<Discrete<Boolean>> or(Stream<? extends Resource<Discrete<Boolean>>> operands) {
+  public static Resource<Discrete<Boolean>> any(Stream<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting or to improve efficiency
-    return operands.reduce(pure(false), DiscreteResources::or, DiscreteResources::or);
+    return reduce(operands, constant(false), DiscreteResources::or, "Any");
   }
 
   /**
@@ -294,10 +282,7 @@ public final class DiscreteResources {
    * Add integer resources
    */
   public static Resource<Discrete<Integer>> sumInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    var frozenOperands = operands.toList();
-    var result = frozenOperands.stream().reduce(pure(0), map(Integer::sum), map(Integer::sum)::apply);
-    name(result, "Sum " + argsFormat(frozenOperands), frozenOperands.toArray());
-    return result;
+    return reduce(operands, constant(0), map(Integer::sum), "Sum");
   }
 
   /**
@@ -321,10 +306,7 @@ public final class DiscreteResources {
    * Multiply integer resources
    */
   public static Resource<Discrete<Integer>> productInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    var frozenOperands = operands.toList();
-    var result = frozenOperands.stream().reduce(pure(1), map((x, y) -> x * y), map((Integer x, Integer y) -> x * y)::apply);
-    name(result, "Product " + argsFormat(frozenOperands), frozenOperands.toArray());
-    return result;
+    return reduce(operands, constant(1), map((x, y) -> x * y), "Product");
   }
 
   /**
@@ -350,10 +332,7 @@ public final class DiscreteResources {
    * Add double resources
    */
   public static Resource<Discrete<Double>> sum(Stream<? extends Resource<Discrete<Double>>> operands) {
-    var frozenOperands = operands.toList();
-    var result = frozenOperands.stream().reduce(pure(0.0), map(Double::sum), map(Double::sum)::apply);
-    name(result, "Sum " + argsFormat(frozenOperands), frozenOperands.toArray());
-    return result;
+    return reduce(operands, constant(0.0), map(Double::sum), "Sum");
   }
 
   /**
@@ -377,10 +356,7 @@ public final class DiscreteResources {
    * Multiply double resources
    */
   public static Resource<Discrete<Double>> product(Stream<? extends Resource<Discrete<Double>>> operands) {
-    var frozenOperands = operands.toList();
-    var result = frozenOperands.stream().reduce(pure(1.0), map((x, y) -> x * y), map((Double x, Double y) -> x * y)::apply);
-    name(result, "Product " + argsFormat(frozenOperands), frozenOperands.toArray());
-    return result;
+    return reduce(operands, constant(1.0), map((x, y) -> x * y), "Product");
   }
 
   /**

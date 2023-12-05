@@ -1,13 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Differentiable;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableDynamics;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DiscreteApproximation;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Unstructured;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
@@ -24,6 +18,8 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableResources.asDifferentiable;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableResources.divide;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DivergenceEstimators.byBoundingError;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byBoundingError;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalFunctions.byUniformSampling;
@@ -145,9 +141,9 @@ public final class Demo {
                   u.getRight().distance(v.getRight()) / v.getRight().getNorm()))));
 
   // Example of the semi-structured "differentiable" resources, and using the additional information to approximate:
-  Resource<Differentiable> pDiff = ResourceMonad.map(p, DifferentiableDynamics::asDifferentiable);
-  Resource<Differentiable> qDiff = ResourceMonad.map(q, DifferentiableDynamics::asDifferentiable);
-  Resource<Differentiable> quotient2 = ResourceMonad.map(pDiff, qDiff, Differentiable::divide);
+  Resource<Differentiable> pDiff = asDifferentiable(p);
+  Resource<Differentiable> qDiff = asDifferentiable(q);
+  Resource<Differentiable> quotient2 = divide(pDiff, qDiff);
   Resource<Linear> approxQuotient2 = approximate(
       quotient2,
       secantApproximation(byBoundingError(

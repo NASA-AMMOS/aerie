@@ -84,6 +84,9 @@ public final class Approximation {
    */
   public static <D extends Dynamics<Double, D>> Function<IntervalFunctions.ErrorEstimateInput<D>, Double> relative(
       Function<IntervalFunctions.ErrorEstimateInput<D>, Double> absoluteErrorEstimate, double epsilon) {
+    if (epsilon <= 0) {
+      throw new IllegalArgumentException("epsilon must be positive");
+    }
     return input -> {
       var d = input.actualDynamics();
       var t = input.intervalInSeconds();

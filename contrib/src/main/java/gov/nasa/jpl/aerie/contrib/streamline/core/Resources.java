@@ -1,22 +1,25 @@
 package gov.nasa.jpl.aerie.contrib.streamline.core;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ThinResourceMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
@@ -292,6 +295,16 @@ public final class Resources {
     Resource<D> result = () -> p.getDynamics().map(e -> neverExpiring(e.data()));
     name(result, "Erase expiry (%s)", p);
     addDependency(result, p);
+    return result;
+  }
+
+  public static <D> Resource<D> reduce(Stream<? extends Resource<D>> operands, Resource<D> identity, BiFunction<Resource<D>, Resource<D>, Resource<D>> operation, String operationName) {
+    return reduce(operands.toList(), identity, operation, operationName);
+  }
+
+  public static <D> Resource<D> reduce(Collection<? extends Resource<D>> operands, Resource<D> identity, BiFunction<Resource<D>, Resource<D>, Resource<D>> operation, String operationName) {
+    var result = operands.stream().reduce(identity, operation, operation::apply);
+    name(result, operationName + argsFormat(operands), operands.toArray());
     return result;
   }
 }

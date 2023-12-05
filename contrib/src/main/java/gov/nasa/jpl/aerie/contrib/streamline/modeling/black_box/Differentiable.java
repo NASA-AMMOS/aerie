@@ -9,6 +9,25 @@ import java.util.function.UnaryOperator;
 public interface Differentiable extends Dynamics<Double, Differentiable> {
   Differentiable derivative();
 
+  static Differentiable constant(double value) {
+    return new Differentiable() {
+      @Override
+      public Differentiable derivative() {
+        return constant(0);
+      }
+
+      @Override
+      public Double extract() {
+        return value;
+      }
+
+      @Override
+      public Differentiable step(Duration t) {
+        return this;
+      }
+    };
+  }
+
   static Differentiable differentiable(Differentiable d, DoubleUnaryOperator f, UnaryOperator<Differentiable> fPrime) {
     return new Differentiable() {
       @Override
