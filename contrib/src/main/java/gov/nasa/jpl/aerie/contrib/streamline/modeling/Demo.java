@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.monads.UnstructuredResourceApplicative;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
@@ -26,6 +26,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalF
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByOptimization;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources.asUnstructured;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.toggle;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.using;
@@ -124,7 +125,7 @@ public final class Demo {
   // easily represented by analytic derivations
   Resource<Polynomial> p = polynomialCellResource(1, 2, 3);
   Resource<Polynomial> q = polynomialCellResource(6, 5, 4);
-  Resource<Unstructured<Double>> quotient = UnstructuredResources.map(p, q, (p$, q$) -> p$ / q$);
+  Resource<Unstructured<Double>> quotient = UnstructuredResourceApplicative.map(asUnstructured(p), asUnstructured(q), (p$, q$) -> p$ / q$);
   Resource<Linear> approxQuotient = approximate(quotient, secantApproximation(IntervalFunctions.<Unstructured<Double>>byBoundingError(
       1e-6, Duration.SECOND, Duration.HOUR.times(24), errorByOptimization())));
 

@@ -42,4 +42,18 @@ public interface Unstructured<T> extends Dynamics<T, Unstructured<T>> {
       }
     };
   }
+
+  static <T, D extends Dynamics<T, D>> Unstructured<T> unstructured(D dynamics) {
+    return new Unstructured<>() {
+      @Override
+      public T extract() {
+        return dynamics.extract();
+      }
+
+      @Override
+      public Unstructured<T> step(Duration t) {
+        return unstructured(dynamics.step(t));
+      }
+    };
+  }
 }

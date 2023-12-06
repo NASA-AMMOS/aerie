@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.monads.UnstructuredResourceApplicative;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 
@@ -14,6 +15,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalF
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByOptimization;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources.asUnstructured;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.*;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
@@ -45,7 +47,7 @@ public class ApproximationModel {
           errorByOptimization())));
 
   public Resource<Polynomial> divisor = constant(2);
-  public Resource<Unstructured<Double>> polynomialOverTwo = UnstructuredResources.map(polynomial, divisor, (p, q) -> p / q);
+  public Resource<Unstructured<Double>> polynomialOverTwo = UnstructuredResourceApplicative.map(asUnstructured(polynomial), asUnstructured(divisor), (p, q) -> p / q);
 
   public Resource<Linear> uniformApproximation2 = approximate(
       polynomialOverTwo,
