@@ -18,7 +18,9 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApp
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources.approximateAsLinear;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources.approximateAsLinear;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.UnstructuredResources.asUnstructured;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.monads.UnstructuredResourceApplicative.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.approximateAsLinear;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
@@ -29,15 +31,20 @@ public class ApproximationModel {
 
   public CellResource<Polynomial> polynomial;
   public CellResource<Polynomial> divisor;
+
   public Resource<Linear> assumedLinear;
   public Resource<Linear> uniformApproximation;
   public Resource<Linear> differentiableApproximation;
   public Resource<Linear> directApproximation;
   public Resource<Linear> defaultApproximation;
+
   public Resource<Unstructured<Double>> rationalFunction;
   public Resource<Linear> uniformApproximation2;
   public Resource<Linear> directApproximation2;
   public Resource<Linear> defaultApproximation2;
+
+  public Resource<Unstructured<Double>> trigFunction;
+  public Resource<Linear> trigDefaultApproximation;
 
   public ApproximationModel(final Registrar registrar, final Configuration config) {
     final double tolerance = config.approximationTolerance;
@@ -65,7 +72,7 @@ public class ApproximationModel {
             HOUR.times(24),
             Approximation.<Polynomial>relative(errorByOptimization(), EPSILON))));
 
-    rationalFunction = UnstructuredResourceApplicative.map(
+    rationalFunction = map(
             asUnstructured(polynomial), asUnstructured(divisor), (p, q) -> p / q);
 
     defaultApproximation2 = approximateAsLinear(rationalFunction, tolerance);
@@ -78,13 +85,20 @@ public class ApproximationModel {
                     HOUR.times(24),
                     Approximation.<Unstructured<Double>>relative(errorByOptimization(), EPSILON))));
 
+    trigFunction = map(asUnstructured(polynomial), asUnstructured(divisor),
+            (p, q) -> Math.sin(p * Math.exp(-q / Math.PI)));
+    trigDefaultApproximation = approximateAsLinear(trigFunction, tolerance);
+
     registrar.real("approximation/polynomial/assumedLinear", assumedLinear);
     registrar.real("approximation/polynomial/default", defaultApproximation);
     registrar.real("approximation/polynomial/uniform", uniformApproximation);
     registrar.real("approximation/polynomial/differentiable", differentiableApproximation);
     registrar.real("approximation/polynomial/direct", directApproximation);
+
     registrar.real("approximation/rational/default", defaultApproximation2);
     registrar.real("approximation/rational/uniform", uniformApproximation2);
     registrar.real("approximation/rational/direct", directApproximation2);
+
+    registrar.real("approximation/trig/default", trigDefaultApproximation);
   }
 }
