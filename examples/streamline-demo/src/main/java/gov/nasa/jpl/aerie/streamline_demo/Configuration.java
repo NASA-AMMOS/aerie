@@ -6,4 +6,7 @@ public final class Configuration {
   @Parameter
   public boolean traceResources = false;
 
+  @Parameter
+  public double approximationTolerance = 1e-2;
+
 }

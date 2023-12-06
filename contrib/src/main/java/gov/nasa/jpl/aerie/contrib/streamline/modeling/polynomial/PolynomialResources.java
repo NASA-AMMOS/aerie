@@ -39,7 +39,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bi
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.argsFormat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.relative;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.DifferentiableResources.asDifferentiable;
@@ -194,7 +193,7 @@ public final class PolynomialResources {
             secantApproximation(byBoundingError(
                     relativeError,
                     MINUTE,
-                    duration(24 * 365, HOUR),
+                    duration(24 * 30, HOUR),
                     relative(errorByQuadraticApproximation(), epsilon))));
   }
 
