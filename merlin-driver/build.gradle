@@ -17,6 +17,9 @@ test {
   useJUnitPlatform {
     includeEngines 'jqwik', 'junit-jupiter'
   }
+  environment 'AERIE_ROOT', rootDir.toString()
+  maxHeapSize = "20g"
+
 }
 
 jacocoTestReport {
@@ -43,6 +46,8 @@ dependencies {
   testImplementation project(':contrib')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation "net.jqwik:jqwik:1.6.5"
+  testImplementation 'org.postgresql:postgresql:42.6.0'
+
 }
 
 publishing {
