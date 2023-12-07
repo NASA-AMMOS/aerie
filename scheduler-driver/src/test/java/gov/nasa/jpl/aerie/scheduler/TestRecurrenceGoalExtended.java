@@ -22,7 +22,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that a number activities are placed in the plan. VV
    */
   @Test
-  public void testRecurrence() {
+  public void testRecurrence() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -54,7 +54,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that only one activity is placed as the second one would exceed the goal window and the plan horizon. VV
    */
   @Test
-  public void testRecurrenceSecondGoalOutOfWindowAndPlanHorizon() {
+  public void testRecurrenceSecondGoalOutOfWindowAndPlanHorizon() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -83,7 +83,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the repeat interval is larger than the window where the goal can be placed, the scheduler still manages to place one activity. VV
    */
   @Test
-  public void testRecurrenceRepeatIntervalLargerThanGoalWindow() {
+  public void testRecurrenceRepeatIntervalLargerThanGoalWindow() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -112,7 +112,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the window where the goal can be placed is larger than the plan horizon, then the window is updated to the plan horizon size. xx
    */
   @Test
-  public void testGoalWindowLargerThanPlanHorizon() {
+  public void testGoalWindowLargerThanPlanHorizon() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(5),TestUtility.timeFromEpochSeconds(15));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -148,7 +148,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the goal duration is larger than goal window, no activity is added to the plan. VV
    */
   @Test
-  public void testGoalDurationLargerGoalWindow() {
+  public void testGoalDurationLargerGoalWindow() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -178,7 +178,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the goal repeat cycle is shorter than the goal duration, then no activity is added to the plan. VV
    */
   @Test
-  public void testGoalDurationLargerRepeatInterval() {
+  public void testGoalDurationLargerRepeatInterval() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -208,7 +208,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks the behaviour when activity is added to a non-empty plan. How is distance preserved? What happens if activity already existing is deleted?
    */
   @Test
-  public void testAddActivityNonEmptyPlan() {
+  public void testAddActivityNonEmptyPlan() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");

@@ -5,11 +5,12 @@ import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Supplier;
 
 public final class ThreadedSchedulerAgent implements SchedulerAgent {
 
   private sealed interface SchedulingRequest {
-    record Schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer) implements SchedulingRequest {}
+    record Schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer, Supplier<Boolean> canceledListener) implements SchedulingRequest {}
 
     record Terminate() implements SchedulingRequest {}
   }
@@ -21,10 +22,13 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
   }
 
   @Override
-  public void schedule(final ScheduleRequest request, final ResultsProtocol.WriterRole writer)
-  throws InterruptedException
+  public void schedule(
+      final ScheduleRequest request,
+      final ResultsProtocol.WriterRole writer,
+      final Supplier<Boolean> canceledListener
+  ) throws InterruptedException
   {
-    this.requestQueue.put(new SchedulingRequest.Schedule(request, writer));
+    this.requestQueue.put(new SchedulingRequest.Schedule(request, writer, canceledListener));
   }
 
   public void terminate() throws InterruptedException {
@@ -61,7 +65,7 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
 
           if (request instanceof SchedulingRequest.Schedule req) {
             try {
-              this.schedulerAgent.schedule(req.request(), req.writer());
+              this.schedulerAgent.schedule(req.request(), req.writer(), req.canceledListener);
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
               req.writer().failWith(b -> b

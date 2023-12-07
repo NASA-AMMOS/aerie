@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
+  private final Supplier<Boolean> canceledListener;
 
   public long durationSinceRestart = 0;
 
@@ -61,11 +64,16 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   //effectively counting the number of calls to initSimulation()
   private int countSimulationRestarts;
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
+  public ResumableSimulationDriver(
+      MissionModel<Model> missionModel,
+      Duration planDuration,
+      Supplier<Boolean> canceledListener
+  ){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     this.planDuration = planDuration;
     countSimulationRestarts = 0;
+    this.canceledListener = canceledListener;
     initSimulation();
   }
 
@@ -130,7 +138,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     this.engine.close();
   }
 
-  private void simulateUntil(Duration endTime){
+  private void simulateUntil(Duration endTime) throws SchedulingInterruptedException{
     long before = System.nanoTime();
     logger.info("Simulating until "+endTime);
     assert(endTime.noShorterThan(curTime));
@@ -139,6 +147,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       }
       // Increment real time, if necessary.
       while(!batch.offsetFromStart().longerThan(endTime) && !endTime.isEqualTo(Duration.MAX_VALUE)) {
+        if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
         //by default, curTime is negative to signal we have not started simulation yet. We set it to 0 when we start.
         final var delta = batch.offsetFromStart().minus(curTime.isNegative() ? Duration.ZERO : curTime);
         curTime = batch.offsetFromStart();
@@ -162,7 +171,13 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param anchoredToStart toggle for if the activity is anchored to the start or end of its anchor
    * @param activityId the activity id for the activity to simulate
    */
-  public void simulateActivity(final Duration startOffset, final SerializedActivity activity, final ActivityDirectiveId anchorId, final boolean anchoredToStart, final ActivityDirectiveId activityId) {
+  public void simulateActivity(
+      final Duration startOffset,
+      final SerializedActivity activity,
+      final ActivityDirectiveId anchorId,
+      final boolean anchoredToStart,
+      final ActivityDirectiveId activityId
+  ) throws SchedulingInterruptedException {
     simulateActivity(new ActivityDirective(startOffset, activity, anchorId, anchoredToStart), activityId);
   }
 
@@ -172,11 +187,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param activityId the ActivityDirectiveId for the activity to simulate
    */
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
-  {
+  throws SchedulingInterruptedException {
     simulateActivities(Map.of(activityId, activityToSimulate));
   }
 
-  public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate) {
+  public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate)
+  throws SchedulingInterruptedException {
     if(activitiesToSimulate.isEmpty()) return;
 
     activitiesInserted.putAll(activitiesToSimulate);
@@ -200,7 +216,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResults(Instant startTimestamp){
+  public SimulationResults getSimulationResults(Instant startTimestamp) throws SchedulingInterruptedException {
     return getSimulationResultsUpTo(startTimestamp, curTime);
   }
 
@@ -215,7 +231,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param endTime the end timepoint. The simulation results will be computed up to this point.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
+  public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime)
+  throws SchedulingInterruptedException {
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
       logger.info("Simulating from " + curTime + " to " + endTime + " to get simulation results");
@@ -225,6 +242,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     }
     final var before = System.nanoTime();
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
+      if(canceledListener.get()) throw new SchedulingInterruptedException("computing simulation results");
       lastSimResults = SimulationEngine.computeResults(
           engine,
           startTimestamp,
@@ -241,7 +259,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   }
 
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
-  {
+  throws SchedulingInterruptedException {
     final var before = System.nanoTime();
     if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
@@ -274,6 +292,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
     //once all tasks are finished, we need to wait for events triggered at the same time
     while (!allTaskFinished || delta.isZero()) {
+      if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
+
       curTime = batch.offsetFromStart();
       timeline.add(delta);
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,

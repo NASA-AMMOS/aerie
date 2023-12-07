@@ -41,7 +41,8 @@ public final class SimulationUtility {
         new SimulationFacade(
             planningHorizon,
             fooMissionModel,
-            fooSchedulerModel),
+            fooSchedulerModel,
+            ()->false),
         fooSchedulerModel);
   }
 
@@ -54,7 +55,8 @@ public final class SimulationUtility {
         new SimulationFacade(
             planningHorizon,
             fooMissionModel,
-            fooSchedulerModel),
+            fooSchedulerModel,
+            ()->false),
         fooSchedulerModel);
   }
 

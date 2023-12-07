@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.server;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
@@ -77,23 +79,17 @@ public final class ResultsProtocol {
    * producer for a scheduling result
    */
   public interface WriterRole {
-
-    /**
-     * flag to check to see if all interest in the result has been cancelled
-     *
-     * the producer should still call failWith() after it notices a cancellation
-     *
-     * @return true iff a cancel has been invoked on the corresponding reader
-     */
-    //TODO: determine if this also kills the actual run itself (ie should plan possibly mutate after a cancel?)
-    boolean isCanceled();
-
     /**
      * mark the scheduling run as fully complete and attach the given results
      *
      * @param results the summary results of the scheduling run, including satisfaction metrics etc
      */
     void succeedWith(ScheduleResults results, Optional<DatasetId> datasetId);
+
+    /**
+     * Mark that the scheduler has acknowledged the cancellation
+     */
+    void reportCanceled(final SchedulingInterruptedException e);
 
     /**
      * mark the scheduling run as having failed with the given reason

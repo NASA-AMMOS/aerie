@@ -25,6 +25,19 @@ public enum GQL {
         simulation_template_id
       }
     }"""),
+  CANCEL_SCHEDULING("""
+    mutation cancelScheduling($analysis_id: Int!) {
+      update_scheduling_request(where: {analysis_id: {_eq: $analysis_id}}, _set: {canceled: true}) {
+        returning {
+          analysis_id
+          specification_id
+          specification_revision
+          canceled
+          reason
+          status
+        }
+      }
+    }"""),
   CANCEL_SIMULATION("""
     mutation cancelSimulation($id: Int!) {
       update_simulation_dataset_by_pk(pk_columns: {id: $id}, _set: {canceled: true}) {
@@ -352,6 +365,17 @@ public enum GQL {
           filePath
           content
         }
+      }
+    }"""),
+  GET_SCHEDULING_REQUEST("""
+    query GetSchedulingRequest($specificationId: Int!, $specificationRev: Int!) {
+      scheduling_request_by_pk(specification_id: $specificationId, specification_revision: $specificationRev) {
+        specification_id
+        specification_revision
+        analysis_id
+        canceled
+        reason
+        status
       }
     }"""),
   GET_SIMULATION_DATASET("""

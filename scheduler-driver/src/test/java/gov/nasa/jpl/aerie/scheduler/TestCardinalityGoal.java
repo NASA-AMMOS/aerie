@@ -16,12 +16,11 @@ import java.util.List;
 
 import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCardinalityGoal {
 
   @Test
-  public void testone() {
+  public void testone() throws SchedulingInterruptedException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
@@ -45,7 +44,7 @@ public class TestCardinalityGoal {
 
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
-    assertTrue(plan.get().getActivitiesByTime().size() == 6);
+    assertEquals(6, plan.get().getActivitiesByTime().size());
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));

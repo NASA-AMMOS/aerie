@@ -17,7 +17,6 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -72,7 +71,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testAndWithoutBackTrack(){
+  public void testAndWithoutBackTrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -107,7 +106,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testAndWithBackTrack(){
+  public void testAndWithBackTrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -140,7 +139,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testOrWithoutBacktrack(){
+  public void testOrWithoutBacktrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -180,7 +179,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testOrWithBacktrack(){
+  public void testOrWithBacktrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -215,7 +214,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testCardinalityBacktrack() {
+  public void testCardinalityBacktrack() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
 
     final var problem = buildProblemFromFoo(planningHorizon);

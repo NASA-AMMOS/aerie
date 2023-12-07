@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
@@ -50,7 +49,7 @@ public class LongDurationPlanTest {
   }
 
   @Test
-  public void getNextSolution_initialPlanInOutput() {
+  public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     problem.setInitialPlan(makePlanA012(problem));
@@ -64,7 +63,7 @@ public class LongDurationPlanTest {
   }
 
   @Test
-  public void getNextSolution_proceduralGoalCreatesActivities() {
+  public void getNextSolution_proceduralGoalCreatesActivities() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
