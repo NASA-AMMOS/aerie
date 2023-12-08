@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.Stack;
 import java.util.function.Supplier;
@@ -47,7 +48,11 @@ public final class Tracing {
 
       @Override
       public void emit(final DynamicsEffect<D> effect) {
-        resource.emit(effect);
+        traceAction(
+                () -> String.format("Emit '%s' on %s",
+                        Naming.getName(effect).orElse("anonymous effect"),
+                        name.get()),
+                () -> { resource.emit(effect); return Unit.UNIT; });
       }
 
       @Override

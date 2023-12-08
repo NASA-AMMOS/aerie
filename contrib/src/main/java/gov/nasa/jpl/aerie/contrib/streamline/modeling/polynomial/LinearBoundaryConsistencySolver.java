@@ -131,7 +131,7 @@ public final class LinearBoundaryConsistencySolver {
           if (domainChanged) {
             if (D.isEmpty()) {
               throw new IllegalStateException(
-                  "LinearArcConsistencySolver %s failed. Domain for %s is empty: [%s, %s]".formatted(
+                  "LinearBoundaryConsistencySolver %s failed. Domain for %s is empty: [%s, %s]".formatted(
                       getName(this).orElseThrow(), D.variable, D.lowerBound, D.upperBound));
             }
             // TODO: Make this more efficient by not adding constraints that are already in the queue.
