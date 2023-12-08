@@ -158,10 +158,10 @@ public final class PolynomialResources {
 
   /**
    * {@link PolynomialResources#approximateAsLinear(Resource, double)}
-   * with relativeError = 1e-6
+   * with relativeError = 1e-2
    */
   public static Resource<Linear> approximateAsLinear(Resource<Polynomial> polynomial) {
-    return approximateAsLinear(polynomial, 1e-6);
+    return approximateAsLinear(polynomial, 1e-2);
   }
 
   /**

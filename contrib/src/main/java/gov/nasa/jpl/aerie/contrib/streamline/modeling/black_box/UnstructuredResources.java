@@ -38,10 +38,10 @@ public final class UnstructuredResources {
 
   /**
    * {@link UnstructuredResources#approximateAsLinear(Resource, double)}
-   * with relativeError = 1e-6
+   * with relativeError = 1e-2
    */
   public static Resource<Linear> approximateAsLinear(Resource<Unstructured<Double>> resource) {
-    return approximateAsLinear(resource, 1e-6);
+    return approximateAsLinear(resource, 1e-2);
   }
 
   /**
