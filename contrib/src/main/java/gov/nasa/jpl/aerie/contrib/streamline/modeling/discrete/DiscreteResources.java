@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
@@ -27,6 +28,8 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.expiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.pure;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
@@ -122,13 +125,13 @@ public final class DiscreteResources {
   public static <V> Resource<Discrete<V>> precomputed(
       final V valueBeforeFirstEntry, final NavigableMap<Duration, V> segments) {
     var clock = clock();
-    return ResourceMonad.bind(clock, clock$ -> {
+    return signalling(bind(clock, (Clock clock$) -> {
       var t = clock$.extract();
       var entry = segments.floorEntry(t);
       var value = entry == null ? valueBeforeFirstEntry : entry.getValue();
       var nextTime = expiry(Optional.ofNullable(segments.higherKey(t)));
-      return ResourceMonad.pure(expiring(discrete(value), nextTime.minus(t)));
-    });
+      return pure(expiring(discrete(value), nextTime.minus(t)));
+    }));
   }
 
   /**
@@ -246,7 +249,7 @@ public final class DiscreteResources {
    * Resource-level if-then-else logic.
    */
   public static <D> Resource<D> choose(Resource<Discrete<Boolean>> condition, Resource<D> thenCase, Resource<D> elseCase) {
-    var result = ResourceMonad.bind(condition, c -> c.extract() ? thenCase : elseCase);
+    var result = bind(condition, c -> c.extract() ? thenCase : elseCase);
     // Manually add dependencies, since short-circuiting will break automatic dependency tracking.
     addDependency(result, thenCase);
     addDependency(result, elseCase);

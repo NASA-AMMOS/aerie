@@ -486,7 +486,7 @@ public final class PolynomialResources {
    *             The next entry in the map is the exclusive upper bound of that range.
    */
   public static <A> Resource<Discrete<A>> binned(Resource<Polynomial> p, Resource<Discrete<NavigableMap<Double, A>>> bins) {
-    return signalling(ResourceMonad.bind(p, bins, (p$, bins$) -> {
+    return signalling(bind(p, bins, (Polynomial p$, Discrete<NavigableMap<Double, A>> bins$) -> {
       var entry = bins$.extract().floorEntry(p$.extract());
       if (entry == null) {
         throw new IllegalStateException(
