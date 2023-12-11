@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
@@ -23,6 +24,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
@@ -33,6 +35,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.testing;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bindEffect;
@@ -46,6 +49,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.IntervalF
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates.errorByQuadraticApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.secantApproximation;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
@@ -472,6 +476,27 @@ public final class PolynomialResources {
     var result = signalling(bind(p, q, (Polynomial p$, Polynomial q$) -> pure(p$.lessThanOrEquals(q$))));
     name(result, "(%s) <= (%s)", p, q);
     return result;
+  }
+
+  /**
+   * Bin values of p like a histogram.
+   *
+   * @param p Polynomial to use as a key
+   * @param bins Map from inclusive lower bound of a range, to the label for that range.
+   *             The next entry in the map is the exclusive upper bound of that range.
+   */
+  public static <A> Resource<Discrete<A>> binned(Resource<Polynomial> p, Resource<Discrete<NavigableMap<Double, A>>> bins) {
+    return signalling(ResourceMonad.bind(p, bins, (p$, bins$) -> {
+      var entry = bins$.extract().floorEntry(p$.extract());
+      if (entry == null) {
+        throw new IllegalStateException(
+                "%s did not contain an entry for value %f".formatted(
+                        Naming.getName(bins).orElse("Bins"), p$.extract()));
+      }
+      Double cutoff = bins$.extract().higherKey(p$.extract());
+      var expiry = cutoff == null ? NEVER : p$.greaterThanOrEquals(polynomial(cutoff)).expiry();
+      return pure(expiring(discrete(entry.getValue()), expiry));
+    }));
   }
 
   @SafeVarargs
