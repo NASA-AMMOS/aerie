@@ -8,9 +8,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.signalling;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.not;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
@@ -24,26 +26,26 @@ public final class ClockResources {
     return cellResource(Clock.clock(ZERO));
   }
 
-  public static Resource<Discrete<Boolean>> lessThan(Resource<Clock> clock, Duration threshold) {
-    return bind(clock, c -> {
-      final Duration crossoverTime = threshold.minus(c.extract());
+  public static Resource<Discrete<Boolean>> lessThan(Resource<Clock> clock, Resource<Discrete<Duration>> threshold) {
+    return signalling(bind(clock, threshold, (Clock c, Discrete<Duration> t) -> {
+      final Duration crossoverTime = t.extract().minus(c.extract());
       return ResourceMonad.pure(
-          crossoverTime.isPositive()
-              ? expiring(discrete(true), crossoverTime)
-              : neverExpiring(discrete(false)));
-    });
+              crossoverTime.isPositive()
+                      ? expiring(discrete(true), crossoverTime)
+                      : neverExpiring(discrete(false)));
+    }));
   }
 
-  public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Clock> clock, Duration threshold) {
+  public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Clock> clock, Resource<Discrete<Duration>> threshold) {
     // Since Duration is an integral type, implement strictness through EPSILON stepping
-    return lessThan(clock, threshold.plus(EPSILON));
+    return lessThan(clock, map(threshold, EPSILON::plus));
   }
 
-  public static Resource<Discrete<Boolean>> greaterThan(Resource<Clock> clock, Duration threshold) {
+  public static Resource<Discrete<Boolean>> greaterThan(Resource<Clock> clock, Resource<Discrete<Duration>> threshold) {
     return not(lessThanOrEquals(clock, threshold));
   }
 
-  public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Clock> clock, Duration threshold) {
+  public static Resource<Discrete<Boolean>> greaterThanOrEquals(Resource<Clock> clock, Resource<Discrete<Duration>> threshold) {
     return not(lessThan(clock, threshold));
   }
 
