@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.effect;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
@@ -12,7 +12,7 @@ public final class ClockEffects {
   /**
    * Reset clock to zero elapsed time.
    */
-  public static void restart(CellResource<Clock> stopwatch) {
+  public static void restart(MutableResource<Clock> stopwatch) {
     stopwatch.emit("Restart", effect(c -> clock(ZERO)));
   }
 }

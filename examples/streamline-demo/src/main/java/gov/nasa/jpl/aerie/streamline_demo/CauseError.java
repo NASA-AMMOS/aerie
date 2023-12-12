@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.streamline_demo;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.DynamicsEffect;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
@@ -44,15 +44,15 @@ public class CauseError {
           }));
         }
         case DoomedClamp -> {
-          CellResource.set(mission.errorTestingModel.lowerBound, polynomial(-20, 0.001));
-          CellResource.set(mission.errorTestingModel.upperBound, polynomial(20, -0.001));
+          MutableResource.set(mission.errorTestingModel.lowerBound, polynomial(-20, 0.001));
+          MutableResource.set(mission.errorTestingModel.upperBound, polynomial(20, -0.001));
         }
       }
       delay(HOUR);
     });
   }
 
-  private <D extends Dynamics<?, D>> void causeError(CellResource<D> resource) {
+  private <D extends Dynamics<?, D>> void causeError(MutableResource<D> resource) {
     DynamicsEffect<D> effect = effect($ -> {
       throw new IllegalStateException("Pretend this is a more informative error message.");
     });

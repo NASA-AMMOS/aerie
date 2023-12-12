@@ -1,21 +1,18 @@
 package gov.nasa.jpl.aerie.streamline_demo;
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Domain;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.forward;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
@@ -27,17 +24,17 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomi
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.greaterThanOrEquals;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThanOrEquals;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.max;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.polynomialCellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.polynomialMutableResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.subtract;
 
 public class DataModel {
-  public CellResource<Polynomial> desiredRateA = polynomialCellResource(0);
-  public CellResource<Polynomial> desiredRateB = polynomialCellResource(0);
-  public CellResource<Polynomial> desiredRateC = polynomialCellResource(0);
-  public CellResource<Polynomial> upperBoundOnTotalVolume = polynomialCellResource(10);
+  public MutableResource<Polynomial> desiredRateA = PolynomialResources.polynomialMutableResource(0);
+  public MutableResource<Polynomial> desiredRateB = PolynomialResources.polynomialMutableResource(0);
+  public MutableResource<Polynomial> desiredRateC = PolynomialResources.polynomialMutableResource(0);
+  public MutableResource<Polynomial> upperBoundOnTotalVolume = PolynomialResources.polynomialMutableResource(10);
 
   public Resource<Polynomial> actualRateA, actualRateB, actualRateC;
-  public CellResource<Polynomial> volumeA, volumeB, volumeC;
+  public MutableResource<Polynomial> volumeA, volumeB, volumeC;
   public Resource<Polynomial> totalVolume;
 
   public DataModel(final Registrar registrar, final Configuration config) {
@@ -54,9 +51,9 @@ public class DataModel {
     this.actualRateC = rateC.resource();
 
     // Use a simple feedback loop on volumes to do the integration and clamping.
-    this.volumeA = polynomialCellResource(0);
-    this.volumeB = polynomialCellResource(0);
-    this.volumeC = polynomialCellResource(0);
+    this.volumeA = PolynomialResources.polynomialMutableResource(0);
+    this.volumeB = PolynomialResources.polynomialMutableResource(0);
+    this.volumeC = PolynomialResources.polynomialMutableResource(0);
     var clampedVolumeA = clamp(this.volumeA, constant(0), upperBoundOnTotalVolume);
     var volumeB_ub = subtract(upperBoundOnTotalVolume, clampedVolumeA);
     var clampedVolumeB = clamp(this.volumeB, constant(0), volumeB_ub);

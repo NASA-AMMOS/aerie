@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.streamline_demo;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.set;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 
 @ActivityType("ChangeApproximationInput")

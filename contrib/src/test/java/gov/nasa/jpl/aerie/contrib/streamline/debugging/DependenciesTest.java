@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.debugging;
 
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.constant;
@@ -23,7 +24,7 @@ class DependenciesTest {
   Resource<Discrete<Boolean>> constantTrue = DiscreteResources.constant(true);
   Resource<Polynomial> constant1234 = constant(1234);
   Resource<Polynomial> constant5678 = constant(5678);
-  Resource<Polynomial> polynomialCell = cellResource(polynomial(1));
+  Resource<Polynomial> polynomialCell = resource(polynomial(1));
   Resource<Polynomial> derived = map(constantTrue, constant1234, constant5678,
                                      (b, x, y) -> b.extract() ? x : y);
 

@@ -1,13 +1,12 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 
 import java.util.Arrays;
@@ -21,7 +20,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.failure;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.success;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
@@ -81,7 +80,7 @@ public final class LinearBoundaryConsistencySolver {
   }
 
   public Variable variable(String name, Function<Domain, Expiring<Polynomial>> selectionPolicy) {
-    var variable = new Variable(name, cellResource(polynomial(0)), selectionPolicy);
+    var variable = new Variable(name, resource(polynomial(0)), selectionPolicy);
     variables.add(variable);
     // All variables depend on the solver, because all of them change together when the solver runs.
     addDependency(variable.resource(), this);
@@ -178,12 +177,12 @@ public final class LinearBoundaryConsistencySolver {
   }
 
   public static final class Variable {
-    private final CellResource<Polynomial> resource;
+    private final MutableResource<Polynomial> resource;
     private final Function<Domain, Expiring<Polynomial>> selectionPolicy;
 
     public Variable(
         String name,
-        CellResource<Polynomial> resource,
+        MutableResource<Polynomial> resource,
         Function<Domain, Expiring<Polynomial>> selectionPolicy) {
       name(this, name);
       name(resource, name);

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.commutingEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.noncommutingEffects;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
@@ -21,7 +21,7 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.spawn;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static org.junit.jupiter.api.Assertions.*;
 
-class CellResourceTest {
+class MutableResourceTest {
   @Nested
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
@@ -30,7 +30,7 @@ class CellResourceTest {
       Resources.init();
     }
 
-    private final CellResource<Discrete<Integer>> cell = cellResource(discrete(42), noncommutingEffects());
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), noncommutingEffects());
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {
@@ -69,7 +69,7 @@ class CellResourceTest {
       Resources.init();
     }
 
-    private final CellResource<Discrete<Integer>> cell = cellResource(discrete(42), commutingEffects());
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), commutingEffects());
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {
@@ -112,7 +112,7 @@ class CellResourceTest {
       Resources.init();
     }
 
-    private final CellResource<Discrete<Integer>> cell = cellResource(discrete(42), autoEffects());
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), autoEffects());
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {

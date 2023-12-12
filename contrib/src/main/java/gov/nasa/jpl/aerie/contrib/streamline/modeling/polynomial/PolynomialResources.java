@@ -1,12 +1,10 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
@@ -23,8 +21,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
@@ -32,7 +28,7 @@ import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.testing;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
@@ -74,12 +70,12 @@ public final class PolynomialResources {
     return result;
   }
 
-  public static CellResource<Polynomial> polynomialCellResource(double... initialCoefficients) {
-    return polynomialCellResource(polynomial(initialCoefficients));
+  public static MutableResource<Polynomial> polynomialMutableResource(double... initialCoefficients) {
+    return polynomialMutableResource(polynomial(initialCoefficients));
   }
 
-  public static CellResource<Polynomial> polynomialCellResource(Polynomial initialDynamics) {
-    return cellResource(initialDynamics, autoEffects(testing(
+  public static MutableResource<Polynomial> polynomialMutableResource(Polynomial initialDynamics) {
+    return resource(initialDynamics, autoEffects(testing(
         (CommutativityTestInput<Polynomial> input) -> {
           Polynomial original = input.original();
           Polynomial left = input.leftResult();
@@ -320,7 +316,7 @@ public final class PolynomialResources {
    * </p>
    */
   public static Resource<Polynomial> integrate(Resource<Polynomial> integrand, double startingValue) {
-    var cell = cellResource(DynamicsMonad.map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
+    var cell = resource(DynamicsMonad.map(integrand.getDynamics(), (Polynomial $) -> $.integral(startingValue)));
     // Use integrand's expiry but not integral's, since we're refreshing the integral
     wheneverDynamicsChange(integrand, integrandDynamics ->
         cell.emit(bindEffect(integral -> DynamicsMonad.map(integrandDynamics, integrand$ ->
@@ -366,7 +362,7 @@ public final class PolynomialResources {
   public static ClampedIntegrateResult clampedIntegrate(
       Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
     LinearBoundaryConsistencySolver rateSolver = new LinearBoundaryConsistencySolver("clampedIntegrate rate solver");
-    var integral = cellResource(polynomial(startingValue));
+    var integral = resource(polynomial(startingValue));
 
     // Solve for the rate as a function of value
     var overflowRate = rateSolver.variable("overflowRate", Domain::lowerBound);
@@ -563,7 +559,7 @@ public final class PolynomialResources {
   /**
    * Add units to a polynomial resource.
    */
-  public static UnitAware<CellResource<Polynomial>> unitAware(CellResource<Polynomial> p, Unit unit) {
+  public static UnitAware<MutableResource<Polynomial>> unitAware(MutableResource<Polynomial> p, Unit unit) {
     return UnitAwareResources.unitAware(p, unit, PolynomialResources::scalePolynomial);
   }
 

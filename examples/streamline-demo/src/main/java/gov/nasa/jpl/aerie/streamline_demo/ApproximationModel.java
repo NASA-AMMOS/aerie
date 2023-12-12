@@ -1,11 +1,9 @@
 package gov.nasa.jpl.aerie.streamline_demo;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.monads.UnstructuredResourceApplicative;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 
@@ -29,8 +27,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 public class ApproximationModel {
   private static final double EPSILON = 1e-10;
 
-  public CellResource<Polynomial> polynomial;
-  public CellResource<Polynomial> divisor;
+  public MutableResource<Polynomial> polynomial;
+  public MutableResource<Polynomial> divisor;
 
   public Resource<Linear> assumedLinear;
   public Resource<Linear> uniformApproximation;
@@ -49,8 +47,8 @@ public class ApproximationModel {
   public ApproximationModel(final Registrar registrar, final Configuration config) {
     final double tolerance = config.approximationTolerance;
 
-    polynomial = polynomialCellResource(1);
-    divisor = polynomialCellResource(1);
+    polynomial = polynomialMutableResource(1);
+    divisor = polynomialMutableResource(1);
 
     assumedLinear = assumeLinear(polynomial);
     defaultApproximation = approximateAsLinear(polynomial, tolerance);

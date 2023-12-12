@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.contrib.streamline.core;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
@@ -10,11 +9,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
@@ -45,7 +43,7 @@ public final class Resources {
     currentTime();
   }
 
-  private static Resource<Clock> CLOCK = cellResource(clock(ZERO));
+  private static Resource<Clock> CLOCK = resource(clock(ZERO));
   public static Duration currentTime() {
     try {
       return currentValue(CLOCK);
@@ -53,7 +51,7 @@ public final class Resources {
       // If we're running unit tests, several simulations can happen without reloading the Resources class.
       // In that case, we'll have discarded the clock resource we were using, and get the above exception.
       // REVIEW: Is there a cleaner way to make sure this resource gets (re-)initialized?
-      CLOCK = cellResource(clock(ZERO));
+      CLOCK = resource(clock(ZERO));
       return currentValue(CLOCK);
     }
   }
@@ -181,7 +179,7 @@ public final class Resources {
    * Use a reaction loop to synchronize destination with source.
    * This is used primarily for building feedback loops in a resource derivation.
    */
-  public static <D extends Dynamics<?, D>> void forward(Resource<D> source, CellResource<D> destination) {
+  public static <D extends Dynamics<?, D>> void forward(Resource<D> source, MutableResource<D> destination) {
     wheneverDynamicsChange(source, s -> destination.emit(
             "Forward %s dynamics: %s".formatted(getName(source).orElse("anonymous"), s),
             $ -> s));
@@ -217,7 +215,7 @@ public final class Resources {
    * </p>
    */
   public static <D extends Dynamics<?, D>> Resource<D> cache(Resource<D> resource) {
-    var cell = cellResource(resource.getDynamics());
+    var cell = resource(resource.getDynamics());
     forward(resource, cell);
     name(cell, "Cache (%s)", resource);
     return cell;
@@ -253,7 +251,7 @@ public final class Resources {
   // in favor of allowing resources to report expiry information directly.
   // This would be cleaner and potentially more performant.
   public static <D extends Dynamics<?, D>> Resource<D> signalling(Resource<D> resource) {
-    var cell = cellResource(discrete(Unit.UNIT));
+    var cell = resource(discrete(Unit.UNIT));
     wheneverDynamicsChange(resource, ignored -> cell.emit($ -> $));
     Resource<D> result = () -> {
       cell.getDynamics();
@@ -265,7 +263,7 @@ public final class Resources {
   }
 
   public static <D extends Dynamics<?, D>> Resource<D> shift(Resource<D> resource, Duration interval, D initialDynamics) {
-    var cell = cellResource(initialDynamics);
+    var cell = resource(initialDynamics);
     delayedSet(cell, resource.getDynamics(), interval);
     wheneverDynamicsChange(resource, newDynamics ->
         delayedSet(cell, newDynamics, interval));
@@ -275,7 +273,7 @@ public final class Resources {
   }
 
   private static <D extends Dynamics<?, D>> void delayedSet(
-      CellResource<D> cell, ErrorCatching<Expiring<D>> newDynamics, Duration interval)
+          MutableResource<D> cell, ErrorCatching<Expiring<D>> newDynamics, Duration interval)
   {
     spawn(replaying(() -> {
       delay(interval);

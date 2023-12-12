@@ -99,8 +99,8 @@ public final class Profiling {
   }
 
   private static long ANONYMOUS_CELL_RESOURCE_ID = 0;
-  public static <D extends Dynamics<?, D>> CellResource<D> profileEffects(CellResource<D> resource) {
-    return new CellResource<>() {
+  public static <D extends Dynamics<?, D>> MutableResource<D> profileEffects(MutableResource<D> resource) {
+    return new MutableResource<>() {
       private String name = null;
       @Override
       public void emit(DynamicsEffect<D> effect) {

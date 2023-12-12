@@ -1,18 +1,16 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverUpdates;
@@ -34,7 +32,7 @@ public final class Approximation {
    */
   public static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> Resource<E> approximate(
       Resource<D> resource, Function<Expiring<D>, Expiring<E>> approximation) {
-    var result = cellResource(resource.getDynamics().map(approximation));
+    var result = resource(resource.getDynamics().map(approximation));
     // Register the "updates" and "expires" conditions separately
     // so that the "updates" condition isn't triggered spuriously.
     wheneverUpdates(resource, newResourceDynamics -> updateApproximation(newResourceDynamics, approximation, result));
@@ -46,7 +44,7 @@ public final class Approximation {
   }
 
   private static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> void updateApproximation(
-      ErrorCatching<Expiring<D>> resourceDynamics, Function<Expiring<D>, Expiring<E>> approximation, CellResource<E> result) {
+      ErrorCatching<Expiring<D>> resourceDynamics, Function<Expiring<D>, Expiring<E>> approximation, MutableResource<E> result) {
     var newDynamics = resourceDynamics.map(approximation);
     result.emit("Update approximation to " + newDynamics, $ -> newDynamics);
   }

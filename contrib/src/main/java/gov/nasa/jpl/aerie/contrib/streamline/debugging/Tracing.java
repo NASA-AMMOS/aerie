@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.debugging;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.DynamicsEffect;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
@@ -34,16 +34,16 @@ public final class Tracing {
     return () -> traceAction(name, resource::getDynamics);
   }
 
-  public static <D extends Dynamics<?, D>> CellResource<D> trace(CellResource<D> resource) {
+  public static <D extends Dynamics<?, D>> MutableResource<D> trace(MutableResource<D> resource) {
     return trace(() -> Naming.getName(resource).orElse("anonymous resource"), resource);
   }
 
-  public static <D extends Dynamics<?, D>> CellResource<D> trace(String name, CellResource<D> resource) {
+  public static <D extends Dynamics<?, D>> MutableResource<D> trace(String name, MutableResource<D> resource) {
     return trace(() -> name, resource);
   }
 
-  public static <D extends Dynamics<?, D>> CellResource<D> trace(Supplier<String> name, CellResource<D> resource) {
-    return new CellResource<>() {
+  public static <D extends Dynamics<?, D>> MutableResource<D> trace(Supplier<String> name, MutableResource<D> resource) {
+    return new MutableResource<>() {
       private final Resource<D> tracedResoure = trace(name, (Resource<D>) resource);
 
       @Override

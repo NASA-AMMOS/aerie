@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.unit_aware;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -24,9 +23,9 @@ public final class UnitAwareResources {
     return UnitAware.unitAware(resource, unit, extend(scaling, ResourceMonad::map));
   }
 
-  public static <D extends Dynamics<?, D>> UnitAware<CellResource<D>> unitAware(CellResource<D> resource, Unit unit, BiFunction<D, Double, D> scaling) {
+  public static <D extends Dynamics<?, D>> UnitAware<MutableResource<D>> unitAware(MutableResource<D> resource, Unit unit, BiFunction<D, Double, D> scaling) {
     final BiFunction<ErrorCatching<Expiring<D>>, Double, ErrorCatching<Expiring<D>>> extendedScaling = extend(scaling, DynamicsMonad::map);
-    return UnitAware.unitAware(resource, unit, (cellResource, scale) -> new CellResource<D>() {
+    return UnitAware.unitAware(resource, unit, (cellResource, scale) -> new MutableResource<D>() {
       @Override
       public void emit(final DynamicsEffect<D> effect) {
         // Use an effect in the scaled domain by first scaling the dynamics,

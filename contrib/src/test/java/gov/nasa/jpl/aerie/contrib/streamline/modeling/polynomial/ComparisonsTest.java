@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
@@ -13,8 +13,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.set;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
@@ -32,8 +32,8 @@ public class ComparisonsTest {
     Resources.init();
   }
 
-  private final CellResource<Polynomial> p = cellResource(polynomial(0));
-  private final CellResource<Polynomial> q = cellResource(polynomial(0));
+  private final MutableResource<Polynomial> p = resource(polynomial(0));
+  private final MutableResource<Polynomial> q = resource(polynomial(0));
 
   private final Resource<Discrete<Boolean>> p_lt_q = lessThan(p, q);
   private final Resource<Discrete<Boolean>> p_lte_q = lessThanOrEquals(p, q);

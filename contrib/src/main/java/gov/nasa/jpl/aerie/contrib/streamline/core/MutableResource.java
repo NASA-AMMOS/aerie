@@ -19,30 +19,30 @@ import static java.util.stream.Collectors.joining;
  * Effects can be applied to this resource.
  * Effect names are augmented with this resource's name(s).
  */
-public interface CellResource<D extends Dynamics<?, D>> extends Resource<D> {
+public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
   void emit(DynamicsEffect<D> effect);
   default void emit(String effectName, DynamicsEffect<D> effect) {
     name(effect, effectName);
     emit(effect);
   }
 
-  static <D extends Dynamics<?, D>> CellResource<D> cellResource(D initial) {
-    return cellResource(pure(initial));
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial) {
+    return resource(pure(initial));
   }
 
-  static <D extends Dynamics<?, D>> CellResource<D> cellResource(D initial, EffectTrait<DynamicsEffect<D>> effectTrait) {
-    return cellResource(pure(initial), effectTrait);
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial, EffectTrait<DynamicsEffect<D>> effectTrait) {
+    return resource(pure(initial), effectTrait);
   }
 
-  static <D extends Dynamics<?, D>> CellResource<D> cellResource(ErrorCatching<Expiring<D>> initial) {
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(ErrorCatching<Expiring<D>> initial) {
     // Use autoEffects for a generic CellResource, on the theory that most resources
     // have relatively few effects, and even fewer concurrent effects, so this is performant enough.
     // If that doesn't hold, a more specialized solution can be constructed directly.
-    return cellResource(initial, autoEffects());
+    return resource(initial, autoEffects());
   }
 
-  static <D extends Dynamics<?, D>> CellResource<D> cellResource(ErrorCatching<Expiring<D>> initial, EffectTrait<DynamicsEffect<D>> effectTrait) {
-    CellResource<D> result = new CellResource<>() {
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(ErrorCatching<Expiring<D>> initial, EffectTrait<DynamicsEffect<D>> effectTrait) {
+    MutableResource<D> result = new MutableResource<>() {
       private final CellRef<DynamicsEffect<D>, Cell<D>> cell = allocate(initial, effectTrait);
 
       @Override
@@ -69,11 +69,11 @@ public interface CellResource<D extends Dynamics<?, D>> extends Resource<D> {
     return result;
   }
 
-  static <D extends Dynamics<?, D>> void set(CellResource<D> resource, D newDynamics) {
+  static <D extends Dynamics<?, D>> void set(MutableResource<D> resource, D newDynamics) {
     resource.emit("Set " + newDynamics, DynamicsMonad.effect(x -> newDynamics));
   }
 
-  static <D extends Dynamics<?, D>> void set(CellResource<D> resource, Expiring<D> newDynamics) {
+  static <D extends Dynamics<?, D>> void set(MutableResource<D> resource, Expiring<D> newDynamics) {
     resource.emit("Set " + newDynamics, ErrorCatchingMonad.<Expiring<D>, Expiring<D>>map($ -> newDynamics)::apply);
   }
 

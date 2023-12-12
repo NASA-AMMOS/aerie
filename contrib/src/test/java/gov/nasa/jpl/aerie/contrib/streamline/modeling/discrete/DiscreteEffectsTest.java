@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
@@ -8,13 +8,12 @@ import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentTime;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
@@ -45,7 +44,7 @@ class DiscreteEffectsTest {
     Resources.init();
   }
 
-  private final CellResource<Discrete<Integer>> settable = cellResource(discrete(42));
+  private final MutableResource<Discrete<Integer>> settable = resource(discrete(42));
 
   @Test
   void set_effect_changes_to_new_value() {
@@ -69,7 +68,7 @@ class DiscreteEffectsTest {
     assertEquals(789, currentValue(settable));
   }
 
-  private final CellResource<Discrete<Boolean>> flag = cellResource(discrete(false));
+  private final MutableResource<Discrete<Boolean>> flag = resource(discrete(false));
 
   @Test
   void flag_set_makes_value_true() {
@@ -93,7 +92,7 @@ class DiscreteEffectsTest {
     assertTrue(currentValue(flag));
   }
 
-  private final CellResource<Discrete<Integer>> counter = cellResource(discrete(0));
+  private final MutableResource<Discrete<Integer>> counter = resource(discrete(0));
 
   @Test
   void increment_increases_value_by_1() {
@@ -123,7 +122,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue - 3, currentValue(counter));
   }
 
-  private final CellResource<Discrete<Double>> consumable = cellResource(discrete(10.0));
+  private final MutableResource<Discrete<Double>> consumable = resource(discrete(10.0));
 
   @Test
   void consume_decreases_value_by_amount() {
@@ -148,7 +147,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue - 2.7 + 5.6, currentValue(consumable));
   }
 
-  private final CellResource<Discrete<Double>> nonconsumable = cellResource(discrete(10.0));
+  private final MutableResource<Discrete<Double>> nonconsumable = resource(discrete(10.0));
 
   @Test
   void using_decreases_value_while_action_is_running() {
@@ -159,7 +158,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue, currentValue(nonconsumable));
   }
 
-  CellResource<Clock> DEBUG_clock = cellResource(new Clock(ZERO));
+  MutableResource<Clock> DEBUG_clock = resource(new Clock(ZERO));
 
   @Test
   void using_runs_synchronously() {
@@ -188,7 +187,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue, currentValue(nonconsumable));
   }
 
-  UnitAware<CellResource<Discrete<Double>>> settableDataVolume = unitAware(cellResource(discrete(10.0)), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> settableDataVolume = unitAware(resource(discrete(10.0)), BIT);
 
   @Test
   void unit_aware_set_converts_to_resource_unit() {
@@ -201,7 +200,7 @@ class DiscreteEffectsTest {
     assertThrows(IllegalArgumentException.class, () -> set(settableDataVolume, quantity(2, METER)));
   }
 
-  UnitAware<CellResource<Discrete<Double>>> consumableDataVolume = unitAware(cellResource(discrete(10.0)), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> consumableDataVolume = unitAware(resource(discrete(10.0)), BIT);
 
   @Test
   void unit_aware_consume_converts_to_resource_unit() {
@@ -229,7 +228,7 @@ class DiscreteEffectsTest {
     assertThrows(IllegalArgumentException.class, () -> restore(consumableDataVolume, quantity(1, METER)));
   }
 
-  UnitAware<CellResource<Discrete<Double>>> nonconsumableDataVolume = unitAware(cellResource(discrete(10.0)), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> nonconsumableDataVolume = unitAware(resource(discrete(10.0)), BIT);
 
   @Test
   void unit_aware_using_converts_to_resource_unit() {

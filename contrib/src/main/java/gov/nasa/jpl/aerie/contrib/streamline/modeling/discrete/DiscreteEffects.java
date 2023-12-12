@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 
 import java.util.LinkedList;
@@ -18,7 +18,7 @@ public final class DiscreteEffects {
   /**
    * Set the resource to the given value.
    */
-  public static <A> void set(CellResource<Discrete<A>> resource, A newValue) {
+  public static <A> void set(MutableResource<Discrete<A>> resource, A newValue) {
     resource.emit("Set " + newValue, effect(x -> newValue));
   }
 
@@ -27,21 +27,21 @@ public final class DiscreteEffects {
   /**
    * Set the resource to true.
    */
-  public static void turnOn(CellResource<Discrete<Boolean>> resource) {
+  public static void turnOn(MutableResource<Discrete<Boolean>> resource) {
     set(resource, true);
   }
 
   /**
    * Set the resource to false.
    */
-  public static void turnOff(CellResource<Discrete<Boolean>> resource) {
+  public static void turnOff(MutableResource<Discrete<Boolean>> resource) {
     set(resource, false);
   }
 
   /**
    * Toggle the resource value.
    */
-  public static void toggle(CellResource<Discrete<Boolean>> resource) {
+  public static void toggle(MutableResource<Discrete<Boolean>> resource) {
     resource.emit("Toggle", effect(x -> !x));
   }
 
@@ -50,28 +50,28 @@ public final class DiscreteEffects {
   /**
    * Add one to the resource's value.
    */
-  public static void increment(CellResource<Discrete<Integer>> resource) {
+  public static void increment(MutableResource<Discrete<Integer>> resource) {
     increment(resource, 1);
   }
 
   /**
    * Add the given amount to the resource's value.
    */
-  public static void increment(CellResource<Discrete<Integer>> resource, int amount) {
+  public static void increment(MutableResource<Discrete<Integer>> resource, int amount) {
     resource.emit("Increment by " + amount, effect(x -> x + amount));
   }
 
   /**
    * Subtract one from the resource's value.
    */
-  public static void decrement(CellResource<Discrete<Integer>> resource) {
+  public static void decrement(MutableResource<Discrete<Integer>> resource) {
     decrement(resource, 1);
   }
 
   /**
    * Subtract the given amount from the resource's value.
    */
-  public static void decrement(CellResource<Discrete<Integer>> resource, int amount) {
+  public static void decrement(MutableResource<Discrete<Integer>> resource, int amount) {
     resource.emit("Decrement by " + amount, effect(x -> x - amount));
   }
 
@@ -80,14 +80,14 @@ public final class DiscreteEffects {
   /**
    * Add amount to resource's value
    */
-  public static void increase(CellResource<Discrete<Double>> resource, double amount) {
+  public static void increase(MutableResource<Discrete<Double>> resource, double amount) {
     resource.emit("Increase by " + amount, effect(x -> x + amount));
   }
 
   /**
    * Subtract amount from resource's value
    */
-  public static void decrease(CellResource<Discrete<Double>> resource, double amount) {
+  public static void decrease(MutableResource<Discrete<Double>> resource, double amount) {
     resource.emit("Decrease by " + amount, effect(x -> x - amount));
   }
 
@@ -96,7 +96,7 @@ public final class DiscreteEffects {
   /**
    * Add element to the end of the queue resource
    */
-  public static <T> void add(CellResource<Discrete<List<T>>> resource, T element) {
+  public static <T> void add(MutableResource<Discrete<List<T>>> resource, T element) {
     resource.emit("Add %s to queue".formatted(element), effect(q -> {
       var q$ = new LinkedList<>(q);
       q$.add(element);
@@ -110,7 +110,7 @@ public final class DiscreteEffects {
    *   Returns that element, or empty if the queue was already empty.
    * </p>
    */
-  public static <T> Optional<T> remove(CellResource<Discrete<List<T>>> resource) {
+  public static <T> Optional<T> remove(MutableResource<Discrete<List<T>>> resource) {
     final var currentQueue = currentValue(resource);
     if (currentQueue.isEmpty()) return Optional.empty();
 
@@ -131,14 +131,14 @@ public final class DiscreteEffects {
   /**
    * Subtract the given amount from resource.
    */
-  public static void consume(CellResource<Discrete<Double>> resource, double amount) {
+  public static void consume(MutableResource<Discrete<Double>> resource, double amount) {
     resource.emit("Consume " + amount, effect(x -> x - amount));
   }
 
   /**
    * Add the given amount to resource.
    */
-  public static void restore(CellResource<Discrete<Double>> resource, double amount) {
+  public static void restore(MutableResource<Discrete<Double>> resource, double amount) {
     resource.emit("Restore " + amount, effect(x -> x + amount));
   }
 
@@ -147,7 +147,7 @@ public final class DiscreteEffects {
   /**
    * Decrease resource by amount while action is running.
    */
-  public static void using(CellResource<Discrete<Double>> resource, double amount, Runnable action) {
+  public static void using(MutableResource<Discrete<Double>> resource, double amount, Runnable action) {
     consume(resource, amount);
     action.run();
     restore(resource, amount);
@@ -158,7 +158,7 @@ public final class DiscreteEffects {
   /**
    * Decrease resource by one while action is running.
    */
-  public static void using(CellResource<Discrete<Integer>> resource, Runnable action) {
+  public static void using(MutableResource<Discrete<Integer>> resource, Runnable action) {
     decrement(resource);
     action.run();
     increment(resource);
@@ -171,7 +171,7 @@ public final class DiscreteEffects {
   /**
    * Set the resource to the given value.
    */
-  public static <A> void set(UnitAware<CellResource<Discrete<A>>> resource, UnitAware<A> newValue) {
+  public static <A> void set(UnitAware<MutableResource<Discrete<A>>> resource, UnitAware<A> newValue) {
     set(resource.value(), newValue.value(resource.unit()));
   }
 
@@ -180,14 +180,14 @@ public final class DiscreteEffects {
   /**
    * Subtract the given amount from resource.
    */
-  public static void consume(UnitAware<CellResource<Discrete<Double>>> resource, UnitAware<Double> amount) {
+  public static void consume(UnitAware<MutableResource<Discrete<Double>>> resource, UnitAware<Double> amount) {
     consume(resource.value(), amount.value(resource.unit()));
   }
 
   /**
    * Add the given amount to resource.
    */
-  public static void restore(UnitAware<CellResource<Discrete<Double>>> resource, UnitAware<Double> amount) {
+  public static void restore(UnitAware<MutableResource<Discrete<Double>>> resource, UnitAware<Double> amount) {
     restore(resource.value(), amount.value(resource.unit()));
   }
 
@@ -196,7 +196,7 @@ public final class DiscreteEffects {
   /**
    * Decrease resource by amount while action is running.
    */
-  public static void using(UnitAware<CellResource<Discrete<Double>>> resource, UnitAware<Double> amount, Runnable action) {
+  public static void using(UnitAware<MutableResource<Discrete<Double>>> resource, UnitAware<Double> amount, Runnable action) {
     consume(resource, amount);
     action.run();
     restore(resource, amount);

@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
-import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteMonad;
@@ -25,6 +24,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.testing;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.expiry;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.every;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
@@ -48,19 +48,19 @@ public final class DiscreteResources {
   }
 
   // General discrete cell resource constructor
-  public static <T> CellResource<Discrete<T>> discreteCellResource(T initialValue) {
-    return CellResource.cellResource(discrete(initialValue));
+  public static <T> MutableResource<Discrete<T>> discreteMutableResource(T initialValue) {
+    return resource(discrete(initialValue));
   }
 
   // Annoyingly, we need to repeat the specialization for integer resources, so that
-  // discreteCellResource(42) doesn't become a double resource, due to the next overload
-  public static CellResource<Discrete<Integer>> discreteCellResource(int initialValue) {
-    return CellResource.cellResource(discrete(initialValue));
+  // discreteMutableResource(42) doesn't become a double resource, due to the next overload
+  public static MutableResource<Discrete<Integer>> discreteMutableResource(int initialValue) {
+    return resource(discrete(initialValue));
   }
 
   // specialized constructor for doubles, because they require a toleranced equality comparison
-  public static CellResource<Discrete<Double>> discreteCellResource(double initialValue) {
-    return CellResource.cellResource(discrete(initialValue), autoEffects(testing(
+  public static MutableResource<Discrete<Double>> discreteMutableResource(double initialValue) {
+    return resource(discrete(initialValue), autoEffects(testing(
         (CommutativityTestInput<Discrete<Double>> input) -> DoubleUtils.areEqualResults(
             input.original().extract(),
             input.leftResult().extract(),
@@ -83,7 +83,7 @@ public final class DiscreteResources {
    * Cache resource, updating the cache when updatePredicate(cached value, resource value) is true.
    */
   public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
-    final var cell = CellResource.cellResource(resource.getDynamics());
+    final var cell = resource(resource.getDynamics());
     // TODO: Does the update predicate need to propagate expiry information?
     BiPredicate<ErrorCatching<Expiring<Discrete<V>>>, ErrorCatching<Expiring<Discrete<V>>>> liftedUpdatePredicate = (eCurrent, eNew) ->
         eCurrent.match(
@@ -111,7 +111,7 @@ public final class DiscreteResources {
    * Sample valueSupplier once every samplePeriod.
    */
   public static <V, T extends Dynamics<Duration, T>> Resource<Discrete<V>> sampled(Supplier<V> valueSupplier, Resource<T> samplePeriod) {
-    var result = discreteCellResource(valueSupplier.get());
+    var result = discreteMutableResource(valueSupplier.get());
     every(() -> currentValue(samplePeriod, Duration.MAX_VALUE),
           () -> set(result, valueSupplier.get()));
     return result;
@@ -160,7 +160,7 @@ public final class DiscreteResources {
   /**
    * Add units to a discrete double resource.
    */
-  public static UnitAware<CellResource<Discrete<Double>>> unitAware(CellResource<Discrete<Double>> resource, Unit unit) {
+  public static UnitAware<MutableResource<Discrete<Double>>> unitAware(MutableResource<Discrete<Double>> resource, Unit unit) {
     return UnitAwareResources.unitAware(resource, unit, DiscreteResources::discreteScaling);
   }
 

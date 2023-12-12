@@ -10,7 +10,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.LinearExpression.*;
@@ -25,7 +25,7 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class SingleVariableSingleConstraint {
-    CellResource<Polynomial> driver = cellResource(polynomial(10));
+    MutableResource<Polynomial> driver = resource(polynomial(10));
     Resource<Polynomial> result;
 
     public SingleVariableSingleConstraint() {
@@ -65,9 +65,9 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class SingleVariableMultipleConstraint {
-    CellResource<Polynomial> lowerBound1 = cellResource(polynomial(10));
-    CellResource<Polynomial> lowerBound2 = cellResource(polynomial(20));
-    CellResource<Polynomial> upperBound = cellResource(polynomial(30));
+    MutableResource<Polynomial> lowerBound1 = resource(polynomial(10));
+    MutableResource<Polynomial> lowerBound2 = resource(polynomial(20));
+    MutableResource<Polynomial> upperBound = resource(polynomial(30));
     Resource<Polynomial> result;
 
     public SingleVariableMultipleConstraint() {
@@ -141,7 +141,7 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class ScalingConstraint {
-    CellResource<Polynomial> driver = cellResource(polynomial(10));
+    MutableResource<Polynomial> driver = resource(polynomial(10));
     Resource<Polynomial> result;
 
     public ScalingConstraint() {
@@ -171,8 +171,8 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class MultipleVariables {
-    CellResource<Polynomial> upperBound = cellResource(polynomial(10));
-    CellResource<Polynomial> upperBoundOnC = cellResource(polynomial(5));
+    MutableResource<Polynomial> upperBound = resource(polynomial(10));
+    MutableResource<Polynomial> upperBoundOnC = resource(polynomial(5));
     Resource<Polynomial> a, b, c;
 
     public MultipleVariables() {

@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.NullableValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
-import gov.nasa.jpl.aerie.contrib.streamline.core.CellResource;
+import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.CellResource.cellResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
@@ -42,7 +42,7 @@ public class Registrar {
   private final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar;
   private boolean trace = false;
   private boolean profile = false;
-  private final CellResource<Discrete<Map<Throwable, Set<String>>>> errors;
+  private final MutableResource<Discrete<Map<Throwable, Set<String>>>> errors;
   private final ErrorBehavior errorBehavior;
 
   public enum ErrorBehavior {
@@ -61,7 +61,7 @@ public class Registrar {
     Resources.init();
     this.baseRegistrar = baseRegistrar;
     this.errorBehavior = errorBehavior;
-    errors = cellResource(Discrete.discrete(Map.of()));
+    errors = resource(Discrete.discrete(Map.of()));
     var errorString = map(errors, errors$ -> errors$.entrySet().stream().map(entry -> formatError(entry.getKey(), entry.getValue())).collect(joining("\n\n")));
     discrete("errors", errorString, new StringValueMapper());
     discrete("numberOfErrors", map(errors, Map::size), new IntegerValueMapper());
