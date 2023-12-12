@@ -282,6 +282,10 @@ public final class PolynomialResources {
     return result;
   }
 
+  public static Resource<Polynomial> scale(Resource<Polynomial> p, double scalar) {
+    return multiply(p, constant(scalar));
+  }
+
   /**
    * Multiply polynomial resources.
    */
