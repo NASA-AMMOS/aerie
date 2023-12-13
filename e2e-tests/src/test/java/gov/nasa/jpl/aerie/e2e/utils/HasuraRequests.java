@@ -420,7 +420,7 @@ public class HasuraRequests implements AutoCloseable {
    * Run scheduling on the specified scheduling specification with a timeout of 30 seconds
    */
   public SchedulingResponse awaitScheduling(int schedulingSpecId) throws IOException {
-    return awaitScheduling(schedulingSpecId, 30);
+    return awaitScheduling(schedulingSpecId, 30000);
   }
 
   /**

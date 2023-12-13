@@ -155,19 +155,16 @@ public class SimulationFacade implements AutoCloseable{
     return new HashMap<>(mapSchedulingIdsToActivityIds);
   }
 
-  public BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> getBidiActivityIdCorrespondence(){
-      return mapSchedulingIdsToActivityIds;
+  public Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> getBidiActivityIdCorrespondence(){
+    if(initialSimulationResults.isEmpty() || initialPlanHasBeenModified)
+      return Optional.ofNullable(mapSchedulingIdsToActivityIds);
+    else if(initialSimulationResults.isPresent())
+      return initialSimulationResults.get().mapSchedulingIdsToActivityIds();
+    else
+      return Optional.empty();
   }
 
-  // Method to get ActivityDirectiveId by SchedulingActivityDirectiveId
-  public ActivityDirectiveId getActivityDirectiveId(SchedulingActivityDirectiveId schedulingActivityDirectiveId) {
-    return mapSchedulingIdsToActivityIds.get(schedulingActivityDirectiveId);
-  }
 
-  // Method to get SchedulingActivityDirectiveId by ActivityDirectiveId
-  public SchedulingActivityDirectiveId getSchedulingActivityDirectiveId(ActivityDirectiveId activityDirectiveId) {
-    return mapSchedulingIdsToActivityIds.inverseBidiMap().get(activityDirectiveId);
-  }
 
   /**
    * Fetches activity instance durations from last simulation

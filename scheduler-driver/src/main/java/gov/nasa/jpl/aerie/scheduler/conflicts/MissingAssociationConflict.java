@@ -11,17 +11,25 @@ import java.util.Optional;
 
 public class MissingAssociationConflict extends Conflict {
   private final Collection<SchedulingActivityDirective> instances;
+
+  private final Optional<Boolean> anchorToStart;
   private final Optional<SchedulingActivityDirectiveId> anchorIdTo;
   /**
    * ctor creates a new conflict
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    * @param instancesToChooseFrom IN the list of instances to choose from to perform the association
+   * @param anchorToStart
    */
-  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom, Optional<SchedulingActivityDirectiveId> anchorIdTo) {
+  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom,
+                                    final Optional<SchedulingActivityDirectiveId> anchorIdTo,
+                                    final Optional<Boolean> anchorToStart) {
+
+
     super(goal, new EvaluationEnvironment());
     this.instances = instancesToChooseFrom;
     this.anchorIdTo = anchorIdTo;
+    this.anchorToStart = anchorToStart;
   }
 
   public Collection<SchedulingActivityDirective> getActivityInstancesToChooseFrom(){
@@ -30,6 +38,10 @@ public class MissingAssociationConflict extends Conflict {
 
   public Optional<SchedulingActivityDirectiveId> getAnchorIdTo() {
     return anchorIdTo;
+  }
+
+  public Optional<Boolean> getAnchorToStart() {
+    return anchorToStart;
   }
 
   @Override

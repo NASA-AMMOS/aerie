@@ -169,7 +169,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
           var planEval = plan.getEvaluation();
           if (!planEval.forGoal(this).getAssociatedActivities().contains(act) && planEval.canAssociateMoreToCreatorOf(
               act)) {
-            conflicts.add(new MissingAssociationConflict(this, List.of(act), Optional.empty()));
+            conflicts.add(new MissingAssociationConflict(this, List.of(act), Optional.empty(), Optional.empty()));
           }
         }
 
@@ -220,7 +220,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
       if(windows.iterateEqualTo(true).iterator().hasNext()){
-        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), evaluationEnvironment, 1, Optional.empty(), Optional.empty()));
+        conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), evaluationEnvironment, 1,Optional.empty(), Optional.empty(), Optional.empty()));
       }
       else{
         System.out.println();

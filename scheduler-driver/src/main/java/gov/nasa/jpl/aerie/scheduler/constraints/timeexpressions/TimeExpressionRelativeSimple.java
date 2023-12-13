@@ -5,39 +5,36 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
-public class TimeExpressionRelativeFixed extends TimeExpression {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+public class TimeExpressionRelativeSimple extends TimeExpressionRelative {
   protected final TimeAnchor anchor;
   protected boolean fixed = true;
 
-  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed) {
-    this.fixed = fixed;
+  public TimeExpressionRelativeSimple(final TimeAnchor anchor, final boolean fixed) {
     this.anchor = anchor;
+    this.fixed = fixed;
   }
 
   @Override
   public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
-    return computeTimeRelativeAbsolute(interval, true);
+    return computeTimeRelativeAbsolute(interval);
   }
 
-  public Interval computeTimeRelativeAbsolute(final Interval interval, boolean absoluteTime) {
+  @Override
+  public TimeAnchor getAnchor() {
+    return anchor;
+  }
+
+  public Interval computeTimeRelativeAbsolute(final Interval interval) {
     Duration from = null;
-    if(absoluteTime){
-      if (anchor == TimeAnchor.START) {
-        from = interval.start;
-      } else if (anchor == TimeAnchor.END) {
-        from = interval.end;
-      }
-    }
-    else{
-      if (anchor == TimeAnchor.START) {
-        from = Duration.ZERO;
-      } else if (anchor == TimeAnchor.END) {
-        //jd todo chekc if this is interval.duration or interval.end
-        from = interval.duration();
-      }
+    if (anchor == TimeAnchor.START) {
+      from = interval.start;
+    } else if (anchor == TimeAnchor.END) {
+      from = interval.end;
     }
 
     Duration res = from;

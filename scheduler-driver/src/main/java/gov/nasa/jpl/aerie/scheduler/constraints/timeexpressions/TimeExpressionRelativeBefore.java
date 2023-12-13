@@ -6,12 +6,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-public class TimeExpressionBefore extends TimeExpression {
+public class TimeExpressionRelativeBefore extends TimeExpressionRelative {
 
   protected final String name;
-  protected final TimeExpression expr;
+  protected final TimeExpressionRelative expr;
 
-  public TimeExpressionBefore(final TimeExpression expr, final String name) {
+  public TimeExpressionRelativeBefore(final TimeExpressionRelative expr, final String name) {
     this.name = name;
     this.expr = expr;
   }
@@ -31,4 +31,9 @@ public class TimeExpressionBefore extends TimeExpression {
         Interval.between(from, res) :
         Interval.between(res, from);
   }
+
+    @Override
+    public TimeAnchor getAnchor() {
+      return null;
+    }
 }

@@ -15,8 +15,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionBetween;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeBinary;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeSimple;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -75,7 +75,7 @@ public class GoalBuilder {
         if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
           builder.startsAt(makeTimeExpressionRelativeFixed(s));
         } else if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange s) {
-          builder.startsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(s.lowerBound()), makeTimeExpressionRelativeFixed(s.upperBound())));
+          builder.startsAt(new TimeExpressionRelativeBinary(makeTimeExpressionRelativeFixed(s.lowerBound()), makeTimeExpressionRelativeFixed(s.upperBound())));
         } else {
           throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, startConstraint);
         }
@@ -85,7 +85,7 @@ public class GoalBuilder {
         if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint e) {
           builder.endsAt(makeTimeExpressionRelativeFixed(e));
         } else if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange e) {
-          builder.endsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
+          builder.endsAt(new TimeExpressionRelativeBinary(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
         } else {
           throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, endConstraint);
         }
@@ -156,8 +156,8 @@ public class GoalBuilder {
   }
 
   @NotNull
-  private static TimeExpressionRelativeFixed makeTimeExpressionRelativeFixed(final SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
-    final var timeExpression = new TimeExpressionRelativeFixed(
+  private static TimeExpressionRelativeSimple makeTimeExpressionRelativeFixed(final SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
+    final var timeExpression = new TimeExpressionRelativeSimple(
         s.windowProperty(),
         s.singleton()
     );

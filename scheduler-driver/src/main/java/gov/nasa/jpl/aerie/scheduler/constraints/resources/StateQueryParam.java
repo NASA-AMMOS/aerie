@@ -6,8 +6,8 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.VariableArgumentComputer;
 import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
@@ -18,9 +18,9 @@ import java.util.stream.StreamSupport;
 public class StateQueryParam implements VariableArgumentComputer {
 
   public final String resourceName;
-  public final TimeExpression timeExpr;
+  public final TimeExpressionRelative timeExpr;
 
-  public StateQueryParam(String resourceName, TimeExpression timeExpression) {
+  public StateQueryParam(String resourceName, TimeExpressionRelative timeExpression) {
     this.resourceName = resourceName;
     this.timeExpr = timeExpression;
   }

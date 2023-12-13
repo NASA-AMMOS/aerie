@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -43,7 +44,7 @@ public class ParametricDurationTest {
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .build();
 
-    final var start = TimeExpression.atStart();
+    final var start = TimeExpressionRelative.atStart();
     final var coexistence = new CoexistenceGoal.Builder()
         .thereExistsOne(parameterizedDurationActivityTemplate)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
@@ -78,7 +79,7 @@ public class ParametricDurationTest {
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .forEach(new SpansFromWindows(new WindowsWrapperExpression(new Windows(false).set(Interval.between(10, 13, Duration.MINUTE), true))))
         .endsBeforeEnd()
-        .startsAt(TimeExpression.offsetByBeforeStart(Duration.of(8, Duration.MINUTE)))
+        .startsAt(TimeExpressionRelative.offsetByBeforeStart(Duration.of(8, Duration.MINUTE)))
         .named("ParamDurationCoexistenceGoal")
         .aliasForAnchors("its a me")
         .withinPlanHorizon(planningHorizon)

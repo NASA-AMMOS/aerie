@@ -469,7 +469,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
 @Override
-  public void updatePlanActivityDirectiveAnchors(PlanId planId, List<SchedulingActivityDirective> acts)
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
   throws MerlinServiceException, IOException
   {
     for (SchedulingActivityDirective act: acts) {
@@ -478,14 +478,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
             update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
               id
             }
-          }""".formatted(act.id().id(), planId.id() ,act.anchorId().id());
+          }""".formatted(instancesToIds.get(act).id(), planId.id(), act.anchorId().id());
       final var response = postRequest(request);
     }
-  }
-
-
-  public void updatedAnchors(){
-
   }
 
   /**
@@ -584,7 +579,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           .createObjectBuilder()
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
-          .add("start_offset", act.startOffset().toString());
+          .add("start_offset", act.startOffset().toString())
+          .add("anchored_to_start", act.anchoredToStart());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();

@@ -60,6 +60,13 @@ public interface Plan {
    *
    * @return set of all activities in the plan ordered by start time
    */
+  /**
+   * replace and old activity by a new one
+   * @param oldAct Old Activity
+   * @param newAct New Activity
+   */
+  void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct);
+
   List<SchedulingActivityDirective> getActivitiesByTime();
 
   /**

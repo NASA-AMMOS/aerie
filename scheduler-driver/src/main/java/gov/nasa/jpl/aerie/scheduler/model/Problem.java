@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -10,6 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
+import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -138,12 +140,12 @@ public class Problem {
    * @param initialSimulationResults optional initial simulation results associated to the initial plan
    * @param plan the initial seed plan that schedulers may start from
    */
-  public void setInitialPlan(final Plan plan, final Optional<SimulationResults> initialSimulationResults) {
+  public void setInitialPlan(final Plan plan, final Optional<SimulationResults> initialSimulationResults, final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
         simulationResults,
         SimulationResultsConverter.convertToConstraintModelResults(
-            simulationResults), Optional.ofNullable(simulationFacade.getBidiActivityIdCorrespondence())));
+            simulationResults), Optional.ofNullable(mapSchedulingIdsToActivityIds)));
   }
 
   /**
@@ -152,7 +154,7 @@ public class Problem {
    * @param plan the initial seed plan that schedulers may start from
    */
   public void setInitialPlan(final Plan plan) {
-    setInitialPlan(plan, Optional.empty());
+    setInitialPlan(plan, Optional.empty(), null);
   }
 
   public Optional<SimulationData> getInitialSimulationResults(){ return initialSimulationResults; }

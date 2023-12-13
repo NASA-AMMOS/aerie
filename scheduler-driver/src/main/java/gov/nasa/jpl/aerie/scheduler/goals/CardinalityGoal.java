@@ -197,7 +197,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       for (final var act : acts) {
         if (!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)) {
           //they ALL have to be associated
-          conflicts.add(new MissingAssociationConflict(this, List.of(act), Optional.empty()));
+          conflicts.add(new MissingAssociationConflict(this, List.of(act), Optional.empty(), Optional.empty()));
         }
       }
 
@@ -208,6 +208,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
             this.desiredActTemplate,
             evaluationEnvironment,
             nbToSchedule,
+            Optional.empty(),
             Optional.empty(),
             durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
       }

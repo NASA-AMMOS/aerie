@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
@@ -28,8 +28,8 @@ import java.util.Optional;
  */
 public class CoexistenceGoal extends ActivityTemplateGoal {
 
-  private TimeExpression startExpr;
-  private TimeExpression endExpr;
+  private TimeExpressionRelative startExpr;
+  private TimeExpressionRelative endExpr;
   private DurationExpression durExpr;
   private String alias;
   private boolean createPersistentAnchor;
@@ -55,8 +55,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
     protected Expression<Spans> forEach;
 
-    public Builder startsAt(TimeExpression timeExpression) {
-      startExpr = timeExpression;
+    public Builder startsAt(TimeExpressionRelative TimeExpressionRelative) {
+      startExpr = TimeExpressionRelative;
       return getThis();
     }
 
@@ -66,48 +66,48 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    protected TimeExpression startExpr;
+    protected TimeExpressionRelative startExpr;
 
-    public Builder endsAt(TimeExpression timeExpression) {
-      endExpr = timeExpression;
+    public Builder endsAt(TimeExpressionRelative TimeExpressionRelative) {
+      endExpr = TimeExpressionRelative;
       return getThis();
     }
 
-    protected TimeExpression endExpr;
+    protected TimeExpressionRelative endExpr;
 
 
     public Builder startsAt(TimeAnchor anchor) {
-      startExpr = TimeExpression.fromAnchor(anchor);
+      startExpr = TimeExpressionRelative.fromAnchor(anchor);
       return getThis();
     }
 
     public Builder endsAt(TimeAnchor anchor) {
-      endExpr = TimeExpression.fromAnchor(anchor);
+      endExpr = TimeExpressionRelative.fromAnchor(anchor);
       return getThis();
     }
 
-    public Builder endsBefore(TimeExpression expr) {
-      endExpr = TimeExpression.endsBefore(expr);
+    public Builder endsBefore(TimeExpressionRelative expr) {
+      endExpr = TimeExpressionRelative.endsBefore(expr);
       return getThis();
     }
 
     public Builder startsAfterEnd() {
-      startExpr = TimeExpression.afterEnd();
+      startExpr = TimeExpressionRelative.afterEnd();
       return getThis();
     }
 
     public Builder startsAfterStart() {
-      startExpr = TimeExpression.afterStart();
+      startExpr = TimeExpressionRelative.afterStart();
       return getThis();
     }
 
     public Builder endsBeforeEnd() {
-      endExpr = TimeExpression.beforeEnd();
+      endExpr = TimeExpressionRelative.beforeEnd();
       return getThis();
     }
 
     public Builder endsAfterEnd() {
-      endExpr = TimeExpression.afterEnd();
+      endExpr = TimeExpressionRelative.afterEnd();
       return getThis();
     }
 
@@ -298,7 +298,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
          */
         for (var act : activitiesFound) {
           if (planEvaluation.canAssociateMoreToCreatorOf(act)) {
-            if (anchorIdTo != null && act.anchorId() == anchorIdTo)
+            if (anchorIdTo != null && act.anchorId().id() == anchorIdTo.id())
               missingActAssociationsWithAnchor.add(act);
             else
               missingActAssociationsWithoutAnchor.add(act);
@@ -308,7 +308,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         /* The truth table that determines the type of conflict is shown below
         createPersistentAnchor	allowActivityUpdate	missingActAssociationsWithAnchor	missingActAssociationsWithoutAnchor 	type conflict
               0	                      0	                  0	                                0	                              MissingActivityTemplateConflict
-              0	                      0	                  0	                                1	                              MissingActivityTemplateConflict
+              0	                      0	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               0	                      0	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               0	                      0	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               0	                      1	                  0	                                0	                              MissingActivityTemplateConflict
@@ -316,7 +316,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
               0	                      1	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               0	                      1	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               1	                      0	                  0	                                0	                              MissingActivityTemplateConflict
-              1	                      0	                  0	                                1	                              MissingActivityTemplateConflict
+              1	                      0	                  0	                                1	                              MissingActivityTemplateConflict - Notice that case 0 0 0 1 is solved with MissingAssociationConflict because user doesn't want to create anchors, so no new activity is required
               1	                      0	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               1	                      0	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty())
               1	                      1	                  0	                                0	                              MissingActivityTemplateConflict
@@ -327,7 +327,40 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
         // Cover cases in which there are no "associable" activities with anchor, and it is false that allowActivityUpdate is true and there are "associable" activities without anchor
         // Cases: 0 0 0 0 / 0 0 0 1 / 0 1 0 0 / 1 0 0 0 / 1 0 0 1 / 1 1 0 0
-        if (missingActAssociationsWithAnchor.isEmpty() && !(allowActivityUpdate && !missingActAssociationsWithoutAnchor.isEmpty())) {
+        // jd todo update comments
+        // jd todo replace for final var
+        if (missingActAssociationsWithAnchor.isEmpty()) {
+          if (allowActivityUpdate && !missingActAssociationsWithoutAnchor.isEmpty()) {
+            conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,
+                                                         anchorIdTo == null ? Optional.empty() : Optional.of(anchorIdTo),
+                          Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)))
+            );
+          } else if (!missingActAssociationsWithoutAnchor.isEmpty()) {
+            conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,
+                                                         Optional.empty(),
+                          Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)))
+            );
+          } else {
+            conflicts.add(new MissingActivityTemplateConflict(
+                this,
+                this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
+                activityCreationTemplate.build(),
+                createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+                1,
+                anchorIdTo == null ? Optional.empty() : Optional.of(anchorIdTo),
+                Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)),
+                Optional.empty()
+            ));
+          }
+        } else {
+          conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithAnchor,
+                                                       Optional.empty(),
+                                                       Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START))));
+        }
+
+        // Cover cases in which there are no "associable" activities with anchor, and it is false that allowActivityUpdate is true and there are "associable" activities without anchor
+        // Cases: 0 0 0 0 / 0 0 0 1 / 0 1 0 0 / 1 0 0 0 / 1 0 0 1 / 1 1 0 0
+        /*if (missingActAssociationsWithAnchor.isEmpty() && !(allowActivityUpdate && !missingActAssociationsWithoutAnchor.isEmpty())) {
           conflicts.add(new MissingActivityTemplateConflict(
               this,
               this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
@@ -350,7 +383,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         // Cover all remaining cases "x x 1 0": missingActAssociationsWithAnchor (the list of activities that fully satisfy the goal, including the appropriate anchor) is not empty
         else{
           conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithAnchor, Optional.empty()));
-        }
+        }*/
       }
     }
     return conflicts;

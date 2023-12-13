@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -98,6 +99,7 @@ public class Evaluation {
       this.acts.entrySet().removeIf(act -> acts.contains(act.getKey()));
     }
 
+
     /**
      * fetches the set of all activities that contributed to the evaluation
      *
@@ -181,6 +183,23 @@ public class Evaluation {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Replace an old activity by a new one in every goal
+   * @param oldAct Old Activity
+   * @param newAct New Activity
+   * todo jd make params final
+   * todo jd boolean should be final var
+   */
+  public void updateGoalEvals(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct) {
+    for (GoalEvaluation goalEval : goalEvals.values()) {
+      if (goalEval.acts.containsKey(oldAct)) {
+        Boolean value = goalEval.acts.get(oldAct);
+        goalEval.acts.remove(oldAct);
+        goalEval.acts.put(newAct, value);
+      }
+    }
   }
 
 }

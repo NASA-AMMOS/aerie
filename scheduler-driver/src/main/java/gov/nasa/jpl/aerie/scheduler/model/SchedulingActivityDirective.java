@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -132,7 +133,7 @@ public record SchedulingActivityDirective(
         activityInstance.anchoredToStart);
   }
 
-  public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, SchedulingActivityDirectiveId anchorId, Duration startOffset){
+  public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, Duration startOffset){
     return SchedulingActivityDirective.of(
         activityInstance.id,
         activityInstance.type,
@@ -141,7 +142,7 @@ public record SchedulingActivityDirective(
         new HashMap<>(activityInstance.arguments),
         activityInstance.topParent,
         anchorId,
-        false);
+        anchoredToStart);
   }
 
   /**

@@ -142,6 +142,12 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableList(orderedActs);
   }
 
+  public void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct){
+    this.remove(oldAct);
+    this.add(newAct);
+    this.evaluation.updateGoalEvals(oldAct, newAct);
+  }
+
   /**
    * {@inheritDoc}
    */

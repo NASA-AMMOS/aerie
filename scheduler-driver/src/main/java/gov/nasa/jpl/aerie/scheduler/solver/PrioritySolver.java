@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -16,11 +17,11 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAnchorConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -33,6 +34,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,8 +197,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts)
-  throws SchedulingInterruptedException {
+  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts, boolean actsFromInitialPlan) throws SchedulingInterruptedException{
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
     logger.info("Inserting new activities in the plan to check plan validity");
@@ -235,7 +236,7 @@ public class PrioritySolver implements Solver {
 
     if(allGood) {
       logger.info("New activities have been inserted in the plan successfully");
-      if(!acts.isEmpty()) simulationFacade.initialSimulationResultsAreStale();
+      if(!acts.isEmpty() && !actsFromInitialPlan) simulationFacade.initialSimulationResultsAreStale();
       //update plan with regard to simulation
       for(var act: acts) {
         plan.add(act);
@@ -288,7 +289,7 @@ public class PrioritySolver implements Solver {
     //turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
-    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime());
+    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime(), true);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
@@ -483,7 +484,7 @@ public class PrioritySolver implements Solver {
             //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
             evaluation.forGoal(goal).associate(act, false);
           }
-          final var insertionResult = checkAndInsertActs(actsToInsert);
+          final var insertionResult = checkAndInsertActs(actsToInsert, false);
           if(insertionResult.success()) {
             for(var act: insertionResult.activitiesInserted()){
               evaluation.forGoal(goal).associate(act, false);
@@ -623,7 +624,7 @@ public class PrioritySolver implements Solver {
         //add the activities to the output plan
         if (!acts.isEmpty()) {
           logger.info("Found activity to satisfy missing activity instance conflict");
-          final var insertionResult = checkAndInsertActs(acts);
+          final var insertionResult = checkAndInsertActs(acts, false);
           if(insertionResult.success){
             evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
             itConflicts.remove();
@@ -648,7 +649,7 @@ public class PrioritySolver implements Solver {
           //add the activities to the output plan
           if (!acts.isEmpty()) {
             logger.info("Found activity to satisfy missing activity template conflict");
-            final var insertionResult = checkAndInsertActs(acts);
+            final var insertionResult = checkAndInsertActs(acts, false);
             if(insertionResult.success()){
 
               evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
@@ -690,6 +691,7 @@ public class PrioritySolver implements Solver {
               var replacementAct = SchedulingActivityDirective.copyOf(
                   act,
                   missingAssociationConflict.getAnchorIdTo().get(),
+                  missingAssociationConflict.getAnchorToStart().get(),
                   startOffset
               );
               replaceActivity(act,replacementAct);
@@ -739,7 +741,8 @@ public class PrioritySolver implements Solver {
     final var lastSimulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie());
     synchronizeSimulationWithSchedulerPlan();
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
-    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, Optional.ofNullable(simulationFacade.getBidiActivityIdCorrespondence()), evaluationEnvironment);
+    Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds = simulationFacade.getBidiActivityIdCorrespondence();
+    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, mapSchedulingIdsToActivityIds, evaluationEnvironment);
     assert rawConflicts != null;
     return rawConflicts;
   }
@@ -852,8 +855,14 @@ public class PrioritySolver implements Solver {
         if(act.isPresent()){
           if (missingTemplate.getAnchorId().isPresent()) {
             SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
-            Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor));
-            final var actWithAnchor = Optional.of(SchedulingActivityDirective.copyOf(act.get(), missingTemplate.getAnchorId().get(), startOffset));
+
+            int includePredDuration = 0;
+            if (missingTemplate.getAnchorToStart().isPresent()) {
+              includePredDuration = missingTemplate.getAnchorToStart().get() ? 0 : 1;
+            }
+            Duration dur = predecessor.duration().times(includePredDuration);
+            Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
+            final var actWithAnchor = Optional.of(SchedulingActivityDirective.copyOf(act.get(), missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
             newActs.add(actWithAnchor.get());
           }
           else{
