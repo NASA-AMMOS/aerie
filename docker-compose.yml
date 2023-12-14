@@ -1,11 +1,15 @@
 version: "3.7"
 services:
   aerie_gateway:
+    build:
+      context: ../aerie-gateway
     container_name: aerie_gateway
     depends_on: ["postgres"]
     environment:
-      AUTH_TYPE: none
+      AUTH_TYPE: cam
       AUTH_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
+      AUTH_UI_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-ui
+      AUTH_SSO_TOKEN_NAME: iPlanetDirectoryPro
       GQL_API_URL: http://localhost:8080/v1/graphql
       HASURA_GRAPHQL_JWT_SECRET: "${HASURA_GRAPHQL_JWT_SECRET}"
       LOG_FILE: console
@@ -17,7 +21,6 @@ services:
       POSTGRES_PASSWORD: "${AERIE_PASSWORD}"
       POSTGRES_PORT: 5432
       POSTGRES_USER: "${AERIE_USERNAME}"
-    image: "ghcr.io/nasa-ammos/aerie-gateway:develop"
     ports: ["9000:9000"]
     restart: always
     volumes:
