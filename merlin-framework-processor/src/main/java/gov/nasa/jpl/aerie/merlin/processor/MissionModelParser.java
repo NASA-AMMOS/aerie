@@ -502,6 +502,10 @@ import java.util.stream.Collectors;
     for (final var element : exportTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(Export.Validation.class) == null) continue;
 
+      // Is there a way to tie this to the actual class rather than the string?
+      boolean isSimpleValidation = !(element.getKind() == ElementKind.METHOD &&
+          ((ExecutableElement) element).getReturnType().toString().equals("gov.nasa.jpl.aerie.contrib.models.ValidationResult"));
+
       final var name = element.getSimpleName().toString();
       final var message = element.getAnnotation(Export.Validation.class).value();
       final var subjects = element.getAnnotation(Export.Validation.Subject.class) == null ?
@@ -519,7 +523,7 @@ import java.util.stream.Collectors;
                 .formatted(name, missingSubjects$.get()), exportTypeElement);
       }
 
-      validations.add(new ParameterValidationRecord(name, subjects, message));
+      validations.add(new ParameterValidationRecord(name, subjects, message, isSimpleValidation));
     }
 
     return validations;
