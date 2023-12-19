@@ -21,6 +21,13 @@ public final class DecomposingActivity {
       delay(30*24, HOURS);
       call(mission, new ChildActivity(2));
     }
+
+    @Override
+    public String toString() {
+      return "ParentActivity{" +
+             "label='" + label + '\'' +
+             '}';
+    }
   }
 
   @ActivityType("child")
@@ -40,6 +47,13 @@ public final class DecomposingActivity {
       delay(15*24, HOURS);
       call(mission, new GrandchildActivity(2));
     }
+
+    @Override
+    public String toString() {
+      return "ChildActivity{" +
+             "counter=" + counter +
+             '}';
+    }
   }
 
   @ActivityType("grandchild")
@@ -56,6 +70,13 @@ public final class DecomposingActivity {
     @EffectModel
     public void run(final Mission mission) {
       delay(6*24, HOURS);
+    }
+
+    @Override
+    public String toString() {
+      return "GrandchildActivity{" +
+             "counter=" + counter +
+             '}';
     }
   }
 }

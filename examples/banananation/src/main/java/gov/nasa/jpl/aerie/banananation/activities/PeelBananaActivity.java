@@ -34,4 +34,26 @@ public final class PeelBananaActivity {
     }
     mission.peel.subtract(1.0);
   }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    PeelBananaActivity that = (PeelBananaActivity) o;
+
+    return peelDirection == that.peelDirection;
+  }
+
+  @Override
+  public int hashCode() {
+    return peelDirection != null ? peelDirection.hashCode() : 0;
+  }
+
+  @Override
+  public String toString() {
+    return "PeelBananaActivity{" +
+           "peelDirection=" + peelDirection +
+           '}';
+  }
 }

@@ -42,4 +42,27 @@ public final class BiteBananaActivity {
 
   @AutoValueMapper.Record
   public record ComputedAttributes(boolean biteSizeWasBig, Flag newFlag) {}
+
+  @Override
+  public String toString() {
+    return "BiteBananaActivity{" +
+           "biteSize=" + biteSize +
+           '}';
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    BiteBananaActivity that = (BiteBananaActivity) o;
+
+    return Double.compare(that.biteSize, biteSize) == 0;
+  }
+
+  @Override
+  public int hashCode() {
+    long temp = Double.doubleToLongBits(biteSize);
+    return (int) (temp ^ (temp >>> 32));
+  }
 }
