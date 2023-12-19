@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
+import java.util.Objects;
+
 public interface Task<Return> {
   /**
    * Perform one step of the task, returning the next step of the task and the conditions under which to perform it.
@@ -23,4 +25,17 @@ public interface Task<Return> {
    * nor shall {@link #step(Scheduler)} be called after this method.</p>
    */
   default void release() {}
+
+  interface Key {
+    boolean match(Key other);
+  }
+
+  default Key getKey() {
+    return new Key() {
+      @Override
+      public boolean match(final Key other) {
+        return Objects.equals(this, other);
+      }
+    };
+  }
 }

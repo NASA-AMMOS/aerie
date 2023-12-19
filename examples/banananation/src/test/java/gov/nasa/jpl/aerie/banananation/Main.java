@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.framework.TaskTrace;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -21,7 +23,7 @@ public final class Main {
             new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(1.5)))),
         Pair.of(
             duration(700, MILLISECONDS),
-            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(0.5)))),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(1.5)))),
         Pair.of(
             duration(1100, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(2.0)))),
@@ -31,12 +33,21 @@ public final class Main {
                 "tbSugar", SerializedValue.of(42),
                 "glutenFree", SerializedValue.of(true)))),
         Pair.of(
+            duration(1500, MILLISECONDS),
+            new SerializedActivity("parent", Map.of())),
+        Pair.of(
             duration(1900, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of())));
 
-    final var simulationDuration = duration(5, SECONDS);
+    final var simulationDuration = duration(1000000, Duration.HOUR);
 
     final var simulationResults = SimulationUtility.simulate(schedule, simulationDuration);
+
+    System.out.println("--- Completed simulation ---");
+
+    for (final var writer : TaskTrace.writers) {
+      System.out.println(writer.get() + "\n");
+    }
 
     System.out.println(simulationResults.discreteProfiles);
     System.out.println(simulationResults.realProfiles);

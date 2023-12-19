@@ -7,6 +7,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.function.Supplier;
 
+import static gov.nasa.jpl.aerie.merlin.framework.TracedTaskFactory.trace;
+
 public /*non-final*/ class ModelActions {
   protected ModelActions() {}
 
@@ -15,7 +17,7 @@ public /*non-final*/ class ModelActions {
 
 
   public static <T> TaskFactory<T> threaded(final Supplier<T> task) {
-    return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
+    return trace(executor -> new ThreadedTask<>(executor, ModelActions.context, task));
   }
 
   public static TaskFactory<Unit> threaded(final Runnable task) {
@@ -26,7 +28,7 @@ public /*non-final*/ class ModelActions {
   }
 
   public static <T> TaskFactory<T> replaying(final Supplier<T> task) {
-    return executor -> new ReplayingTask<>(ModelActions.context, task);
+    return trace(executor -> new ReplayingTask<>(ModelActions.context, task));
   }
 
   public static TaskFactory<Unit> replaying(final Runnable task) {

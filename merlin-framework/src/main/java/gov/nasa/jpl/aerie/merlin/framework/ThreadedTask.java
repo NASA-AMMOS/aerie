@@ -245,4 +245,9 @@ public final class ThreadedTask<Return> implements Task<Return> {
       super(null, null, /* capture suppressed exceptions? */ true, /* capture stack trace? */ false);
     }
   }
+
+  @Override
+  public Key getKey() {
+    return TaskKey.of(this.task);
+  }
 }
