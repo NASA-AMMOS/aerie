@@ -606,6 +606,91 @@ describe('getEdslForSeqJson', () => {
     ]),
   });`);
   });
+
+  it('should create variable reference in edsl', async () => {
+    const res = await graphqlClient.request<{
+      getEdslForSeqJson: string;
+    }>(
+        gql`
+        query GetEdslForSeqJson($seqJson: SequenceSeqJson!) {
+          getEdslForSeqJson(seqJson: $seqJson)
+        }
+      `,
+        {
+          seqJson: {
+            id: '',
+            locals: [
+              {
+                name: 'LOOFLOAT',
+                type: 'FLOAT',
+              },
+            ],
+            metadata: {},
+            parameters: [
+              {
+                name: 'LOOINT',
+                type: 'INT',
+              },
+            ],
+            steps: [
+              {
+                args: [
+                  {
+                    name: 'temperature',
+                    type: 'string',
+                    value: 'LOOINT',
+                  },
+                ],
+                stem: 'PREHEAT_OVEN',
+                time: {
+                  type: 'COMMAND_COMPLETE',
+                },
+                type: 'command',
+              },
+              {
+                args: [
+                  {
+                    name: 'tb_sugar',
+                    type: 'string',
+                    value: 'LOOFLOAT',
+                  },
+                  {
+                    name: 'gluten_free',
+                    type: 'string',
+                    value: 'FALSE',
+                  },
+                ],
+                stem: 'PREPARE_LOAF',
+                time: {
+                  type: 'COMMAND_COMPLETE',
+                },
+                type: 'command',
+              },
+            ],
+          },
+        },
+    );
+
+    expect(res.getEdslForSeqJson).toEqual(`export default () =>
+  Sequence.new({
+    seqId: '',
+    metadata: {},
+    locals: [
+      FLOAT('LOOFLOAT')
+    ],
+    parameters: [
+      INT('LOOINT')
+    ],
+    steps: ({ locals, parameters }) => ([
+      C.PREHEAT_OVEN(
+      REF(parameters.LOOINT) --> "VERIFY: 'parameters.LOOINT' is a Variable References"
+      ),
+      C.PREPARE_LOAF(
+      REF(locals.LOOFLOAT) --> "VERIFY: 'locals.LOOFLOAT' is a Variable References"
+      ,'FALSE'),
+    ]),
+  });`);
+  });
 });
 
 describe('getEdslForSeqJsonBulk', () => {
