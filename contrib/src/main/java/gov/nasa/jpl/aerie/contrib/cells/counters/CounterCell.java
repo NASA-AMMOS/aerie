@@ -31,7 +31,8 @@ public final class CounterCell<T> {
     return CellRef.allocate(
         new CounterCell<>(initialValue, adder, duplicator),
         new CounterCellType<>(zero, adder),
-        interpreter);
+        interpreter,
+        "CounterCell");
   }
 
   public T getValue() {

@@ -25,7 +25,8 @@ public final class RegisterCell<T> {
     return CellRef.allocate(
         new RegisterCell<>(duplicator, initialValue, false),
         new RegisterCellType<>(),
-        interpreter);
+        interpreter,
+        "RegisterCell");
   }
 
   public T getValue() {

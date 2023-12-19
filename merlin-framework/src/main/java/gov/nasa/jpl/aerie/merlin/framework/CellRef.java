@@ -31,14 +31,15 @@ public final class CellRef<Event, State> {
   CellRef<Event, State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
-      final Function<Event, Effect> eventToEffect
+      final Function<Event, Effect> eventToEffect,
+      final String displayName
   ) {
-    return CellRef.allocate(initialState, cellType, eventToEffect, new Topic<>());
+    return CellRef.allocate(initialState, cellType, eventToEffect, new Topic<>(displayName));
   }
 
   public static <Effect, State>
-  CellRef<Effect, State> allocate(final State initialState, final CellType<Effect, State> applicator) {
-    return allocate(initialState, applicator, $ -> $);
+  CellRef<Effect, State> allocate(final State initialState, final CellType<Effect, State> applicator, final String displayName) {
+    return allocate(initialState, applicator, $ -> $, displayName);
   }
 
   public State get() {

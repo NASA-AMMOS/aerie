@@ -32,7 +32,7 @@ public final class DurativeRealCell {
 
   public static <Event>
   CellRef<Event, DurativeRealCell> allocate(final Function<Event, Collection<Pair<Duration, RealDynamics>>> interpreter) {
-    return CellRef.allocate(new DurativeRealCell(), new DurativeCellType(), interpreter);
+    return CellRef.allocate(new DurativeRealCell(), new DurativeCellType(), interpreter, "DurativeRealCell");
   }
 
   public RealDynamics getValue() {

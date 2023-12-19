@@ -9,8 +9,19 @@ import gov.nasa.jpl.aerie.merlin.protocol.Capability;
  */
 @Capability
 public final class Topic<EventType> {
+  private final String displayName;
+
+  public Topic(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public Topic() {
+    this.displayName = null;
+  }
+
   @Override
   public String toString() {
-    return "@" + System.identityHashCode(this);
+    if (displayName == null) return "@" + System.identityHashCode(this);
+    return displayName;
   }
 }

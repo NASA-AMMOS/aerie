@@ -101,7 +101,7 @@ public final class SimulationEngine implements AutoCloseable {
   public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
-    final var task = TaskId.generate();
+    final var task = TaskId.generate(state.toString());
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
@@ -240,7 +240,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
-      final var target = TaskId.generate();
+      final var target = TaskId.generate(s.child().toString());
       SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
       SimulationEngine.this.taskParent.put(target, task);
       SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
@@ -733,11 +733,12 @@ public final class SimulationEngine implements AutoCloseable {
 
     @Override
     public void spawn(final TaskFactory<?> state) {
-      final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      this.frame.signal(JobId.forTask(task));
+      final Task<?> newTask = state.create(SimulationEngine.this.executor);
+      final var taskId = TaskId.generate(newTask.toString());
+      SimulationEngine.this.tasks.put(taskId, new ExecutionState.InProgress<>(this.currentTime, newTask));
+      SimulationEngine.this.taskParent.put(taskId, this.activeTask);
+      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(taskId);
+      this.frame.signal(JobId.forTask(taskId));
     }
   }
 

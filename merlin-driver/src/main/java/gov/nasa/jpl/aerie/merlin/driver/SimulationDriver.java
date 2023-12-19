@@ -71,7 +71,7 @@ public final class SimulationDriver {
       }
 
       // Specify a topic on which tasks can log the activity they're associated with.
-      final var activityTopic = new Topic<ActivityDirectiveId>();
+      final var activityTopic = new Topic<ActivityDirectiveId>("ActivityTopic");
 
       try {
         // Start daemon task(s) immediately, before anything else happens.

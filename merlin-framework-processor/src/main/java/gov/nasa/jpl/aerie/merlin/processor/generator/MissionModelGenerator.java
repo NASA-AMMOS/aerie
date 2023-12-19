@@ -736,7 +736,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     "inputTopic",
                     Modifier.PRIVATE,
                     Modifier.FINAL)
-                .initializer("new $T<>()", ClassName.get(Topic.class))
+                .initializer("new $T<>($S)", ClassName.get(Topic.class), activityType.name() + "_inputTopic")
                 .build())
         .addField(
             FieldSpec
@@ -747,7 +747,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     "outputTopic",
                     Modifier.PRIVATE,
                     Modifier.FINAL)
-                .initializer("new $T<>()", ClassName.get(Topic.class))
+                .initializer("new $T<>($S)", ClassName.get(Topic.class), activityType.name() + "_outputTopic")
                 .build())
         .addMethod(MethodSpec
             .methodBuilder("getInputType")

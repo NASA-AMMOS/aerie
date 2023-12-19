@@ -31,7 +31,8 @@ public final class LinearIntegrationCell {
     return CellRef.allocate(
         new LinearIntegrationCell(initialVolume, rate),
         new LinearIntegrationCellType(),
-        interpreter);
+        interpreter,
+        "LinearIntegrationCell");
   }
 
   public RealDynamics getVolume() {
