@@ -10,8 +10,6 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 
-import java.util.Optional;
-
 /**
  * Bite a banana.
  *
