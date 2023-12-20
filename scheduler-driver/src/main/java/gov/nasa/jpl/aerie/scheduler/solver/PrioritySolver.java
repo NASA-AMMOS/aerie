@@ -1028,7 +1028,7 @@ public class PrioritySolver implements Solver {
             if(computedDuration.isPresent()) {
               history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(computedDuration.get())), new ActivityMetadata(actToSim));
             } else{
-              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
+              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity or activity outside plan bounds.");
               history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start,  null), new ActivityMetadata(actToSim));
             }
           } catch (SimulationFacade.SimulationException e) {
