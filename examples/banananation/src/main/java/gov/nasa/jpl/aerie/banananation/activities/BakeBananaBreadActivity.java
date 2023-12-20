@@ -15,12 +15,12 @@ public record BakeBananaBreadActivity(double temperature, int tbSugar, boolean g
   @Validation
   public ValidationResult validateTemperatures() {
     if (this.temperature < 0) {
-      return new ValidationResult(false, "temperature", Optional.of("Temperature must be positive"));
+      return new ValidationResult(false, "temperature", "Temperature must be positive");
     }
 
     return new ValidationResult(!glutenFree || temperature >= 100,
       "glutenFree",
-      Optional.of("Gluten-free bread must be baked at a temperature >= 100"));
+      "Gluten-free bread must be baked at a temperature >= 100");
   }
 
   @EffectModel

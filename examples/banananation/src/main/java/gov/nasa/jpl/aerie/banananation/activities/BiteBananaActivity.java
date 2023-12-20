@@ -30,7 +30,7 @@ public final class BiteBananaActivity {
 
   @Validation
   public ValidationResult validateBiteSize() {
-    return new ValidationResult(this.biteSize > 0, "biteSize", Optional.of("bite size must be positive"));
+    return new ValidationResult(this.biteSize > 0, "biteSize", "bite size must be positive");
   }
 
   @EffectModel

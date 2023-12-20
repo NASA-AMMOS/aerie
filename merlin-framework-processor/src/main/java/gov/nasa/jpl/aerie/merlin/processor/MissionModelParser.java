@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
+import gov.nasa.jpl.aerie.contrib.models.ValidationResult;
 import gov.nasa.jpl.aerie.merlin.framework.MetadataValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
@@ -502,9 +503,8 @@ import java.util.stream.Collectors;
     for (final var element : exportTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(Export.Validation.class) == null) continue;
 
-      // Is there a way to tie this to the actual class rather than the string?
       boolean isSimpleValidation = !(element.getKind() == ElementKind.METHOD &&
-          ((ExecutableElement) element).getReturnType().toString().equals("gov.nasa.jpl.aerie.contrib.models.ValidationResult"));
+          ((ExecutableElement) element).getReturnType().toString().equals(ValidationResult.class.getTypeName()));
 
       final var name = element.getSimpleName().toString();
       final var message = element.getAnnotation(Export.Validation.class).value();

@@ -182,7 +182,7 @@ public abstract sealed class MapperMethodMaker permits
                     }
 
                     codeBlock.addStatement(
-                      "if (!$L.$L().$L()) notices.add(new $T($T.of($L.$L().$L()), $L.$L().$L().orElse(null)))",
+                      "if (!$L.$L().$L()) notices.add(new $T($T.of($L.$L().$L()), $L.$L().$L()))",
                       "input",
                       validation.methodName(),
                       "success",
