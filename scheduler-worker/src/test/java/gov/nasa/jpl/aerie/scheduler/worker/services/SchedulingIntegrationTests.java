@@ -2695,15 +2695,14 @@ public class SchedulingIntegrationTests {
             new ActivityDirectiveId(2L),
             new ActivityDirective(
                 tenMinutes,
-                "GrowBanana",
+                "PickBanana",
                 Map.of(
-                    "quantity", SerializedValue.of(1),
-                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
+                    "quantity", SerializedValue.of(1)),
                 new ActivityDirectiveId(1L),
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
-            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            forEach: ActivityExpression.ofType(ActivityTypes.PickBanana),
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
             startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes : 5}))
           })
@@ -2724,20 +2723,20 @@ public class SchedulingIntegrationTests {
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var peelBananas = planByActivityType.get("PeelBanana");
-    final var growBananas = planByActivityType.get("GrowBanana");
+    final var pickBananas = planByActivityType.get("PickBanana");
     final var durationParamActivities = planByActivityType.get("DurationParameterActivity");
 
     assertEquals(1, peelBananas.size());
-    assertEquals(1, growBananas.size());
+    assertEquals(1, pickBananas.size());
     assertEquals(1, durationParamActivities.size());
     final var peelBanana = peelBananas.iterator().next();
-    final var growBanana = growBananas.iterator().next();
+    final var pickBanana = pickBananas.iterator().next();
     final var durationParamActivity = durationParamActivities.iterator().next();
 
     assertEquals(Duration.ZERO, durationParamActivity.startOffset());
 
-    assertEquals(tenMinutes, growBanana.startOffset());
-    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
+    assertEquals(tenMinutes, pickBanana.startOffset());
+    assertEquals(SerializedValue.of(1), pickBanana.serializedActivity().getArguments().get("quantity"));
 
     assertEquals(Duration.of(15, Duration.MINUTES), peelBanana.startOffset());
     assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
