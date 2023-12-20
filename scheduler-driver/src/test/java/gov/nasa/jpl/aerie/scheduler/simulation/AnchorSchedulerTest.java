@@ -340,6 +340,21 @@ public class AnchorSchedulerTest {
     }
 
     @Test
+    @DisplayName("Reference to anchored activities are correctly maintained by the driver")
+    public void activitiesAnchoredToOtherActivitiesSimple() throws SchedulingInterruptedException {
+      final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(2);
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(0),
+          new ActivityDirective(oneMinute, serializedDelayDirective, null, true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(1),
+          new ActivityDirective(oneMinute, serializedDelayDirective, new ActivityDirectiveId(0), false));
+      driver.simulateActivities(activitiesToSimulate);
+      final var durationOfAnchoredActivity = driver.getActivityDuration(new ActivityDirectiveId(1));
+      assertTrue(durationOfAnchoredActivity.isPresent());
+    }
+
+    @Test
     @DisplayName("Decomposition and anchors do not interfere with each other")
     public void decomposingActivitiesAndAnchors() throws SchedulingInterruptedException{
       // Given positions Left, Center, Right in an anchor chain, where each position can either contain a Non-Decomposition (ND) activity or a Decomposition (D) activity,
