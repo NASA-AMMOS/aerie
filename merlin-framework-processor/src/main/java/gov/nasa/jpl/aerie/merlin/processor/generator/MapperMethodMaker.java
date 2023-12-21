@@ -12,8 +12,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -151,26 +153,58 @@ public abstract sealed class MapperMethodMaker permits
             inputType.validations()
                 .stream()
                 .map(validation -> {
-                    final var subjects = Arrays.stream(validation.subjects())
-                        .map(subject -> CodeBlock.builder().add("$S", subject))
-                        .reduce((x, y) -> x.add(", ").add(y.build()))
-                        .orElse(CodeBlock.builder())
-                        .build();
+                    CodeBlock.Builder codeBlock = CodeBlock.builder().beginControlFlow("try");
 
-                    return CodeBlock
-                        .builder()
-                        .beginControlFlow("try")
-                        .addStatement(
-                            "if (!$L.$L()) notices.add(new $T($T.of($L), $S))",
-                            "input",
-                            validation.methodName(),
-                            ValidationNotice.class,
-                            List.class,
-                            subjects,
-                            validation.failureMessage())
-                        .nextControlFlow("catch ($T ex)", Throwable.class)
-                        .addStatement("notices.add(new $T($T.of($L), ex.getMessage()))", ValidationNotice.class, List.class, subjects)
-                        .endControlFlow();
+                    if (validation.isSimpleValidation()) {
+                        final var subjects = Arrays.stream(validation.subjects())
+                          .map(subject -> CodeBlock.builder().add("$S", subject))
+                          .reduce((x, y) -> x.add(", ").add(y.build()))
+                          .orElse(CodeBlock.builder())
+                          .build();
+
+                        codeBlock.addStatement(
+                          "if (!$L.$L()) notices.add(new $T($T.of($L), $S))",
+                          "input",
+                          validation.methodName(),
+                          ValidationNotice.class,
+                          List.class,
+                          subjects,
+                          validation.failureMessage());
+
+                        return codeBlock
+                          .nextControlFlow("catch ($T ex)", Throwable.class)
+                          .addStatement(
+                              "notices.add(new $T($T.of($L), ex.getMessage()))",
+                              ValidationNotice.class,
+                              List.class,
+                              subjects)
+                          .endControlFlow();
+                    }
+
+                    codeBlock.addStatement(
+                      "if (!$L.$L().$L()) notices.add(new $T($T.of($L.$L().$L()), $L.$L().$L()))",
+                      "input",
+                      validation.methodName(),
+                      "success",
+                      ValidationNotice.class,
+                      List.class,
+                      "input",
+                      validation.methodName(),
+                      "subject",
+                      "input",
+                      validation.methodName(),
+                      "message");
+
+                    return codeBlock
+                      .nextControlFlow("catch ($T ex)", Throwable.class)
+                      .addStatement(
+                          "notices.add(new $T($T.of($L.$L().$L()), ex.getMessage()))",
+                          ValidationNotice.class,
+                          List.class,
+                          "input",
+                          validation.methodName(),
+                          "subject")
+                      .endControlFlow();
                 })
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                 .build())

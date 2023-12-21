@@ -31,7 +31,7 @@ public @interface Export {
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
   @interface Validation {
-    String value();
+    String value() default "";
 
     @Retention(RetentionPolicy.CLASS)
     @Target(ElementType.METHOD)

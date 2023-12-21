@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
+import gov.nasa.jpl.aerie.contrib.models.ValidationResult;
 import gov.nasa.jpl.aerie.merlin.framework.MetadataValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
@@ -502,6 +503,9 @@ import java.util.stream.Collectors;
     for (final var element : exportTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(Export.Validation.class) == null) continue;
 
+      boolean isSimpleValidation = !(element.getKind() == ElementKind.METHOD &&
+          ((ExecutableElement) element).getReturnType().toString().equals(ValidationResult.class.getTypeName()));
+
       final var name = element.getSimpleName().toString();
       final var message = element.getAnnotation(Export.Validation.class).value();
       final var subjects = element.getAnnotation(Export.Validation.Subject.class) == null ?
@@ -519,7 +523,7 @@ import java.util.stream.Collectors;
                 .formatted(name, missingSubjects$.get()), exportTypeElement);
       }
 
-      validations.add(new ParameterValidationRecord(name, subjects, message));
+      validations.add(new ParameterValidationRecord(name, subjects, message, isSimpleValidation));
     }
 
     return validations;
