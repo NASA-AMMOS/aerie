@@ -6,9 +6,6 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -30,34 +27,6 @@ public final class SimulationUtility {
     final var builder = new MissionModelBuilder();
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
     return builder.build(model, registry);
-  }
-
-  public static Problem buildProblemFromFoo(final PlanningHorizon planningHorizon){
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
-    return new Problem(
-        fooMissionModel,
-        planningHorizon,
-        new SimulationFacade(
-            planningHorizon,
-            fooMissionModel,
-            fooSchedulerModel,
-            ()->false),
-        fooSchedulerModel);
-  }
-
-  public static Problem buildProblemFromBanana(final PlanningHorizon planningHorizon){
-    final var fooMissionModel = SimulationUtility.getBananaMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getBananaSchedulerModel();
-    return new Problem(
-        fooMissionModel,
-        planningHorizon,
-        new SimulationFacade(
-            planningHorizon,
-            fooMissionModel,
-            fooSchedulerModel,
-            ()->false),
-        fooSchedulerModel);
   }
 
   public static SchedulerModel getFooSchedulerModel(){

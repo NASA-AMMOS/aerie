@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
-import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
@@ -24,11 +23,9 @@ import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
@@ -158,10 +155,9 @@ public class PrioritySolver implements Solver {
    * this solver is expended after one solution request; all subsequent
    * requests will return no solution
    */
-  public Optional<Plan> getNextSolution() throws SchedulingInterruptedException {
+  public Optional<Plan> getNextSolution() {
     if (plan == null) {
       //on first call to solver; setup fresh solution workspace for problem
-      if(simulationFacade.getCanceledListener().get()) throw new SchedulingInterruptedException("initializing plan");
       try {
         initializePlan();
         if(problem.getInitialSimulationResults().isPresent()) {
@@ -194,8 +190,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts)
-  throws SchedulingInterruptedException {
+  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
     logger.info("Inserting new activities in the plan to check plan validity");
@@ -264,8 +259,7 @@ public class PrioritySolver implements Solver {
    * This method should be called only when the state of the plan is considered safe, i.e. not during rootfinding
    * @return a map of scheduling activity directives (old -> new) that have been replaced in the plan due to updated durations
    */
-  private Map<SchedulingActivityDirective, SchedulingActivityDirective> synchronizeSimulationWithSchedulerPlan()
-  throws SchedulingInterruptedException {
+  private Map<SchedulingActivityDirective, SchedulingActivityDirective> synchronizeSimulationWithSchedulerPlan() {
     final Map<SchedulingActivityDirective, SchedulingActivityDirective> replacedInPlan;
     try {
       final var allGeneratedActivities =
@@ -281,7 +275,7 @@ public class PrioritySolver implements Solver {
   /**
    * creates internal storage space to build up partial solutions in
    **/
-  public void initializePlan() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
+  public void initializePlan() throws SimulationFacade.SimulationException {
     plan = new PlanInMemory();
 
     //turn off simulation checking for initial plan contents (must accept user input regardless)
@@ -376,7 +370,7 @@ public class PrioritySolver implements Solver {
    *
    * the output plan member is updated directly with the devised solution
    */
-  private void solve() throws SchedulingInterruptedException{
+  private void solve() {
     //construct a priority sorted goal container
     final var goalQ = getGoalQueue();
     assert goalQ != null;
@@ -422,8 +416,7 @@ public class PrioritySolver implements Solver {
     return goalQ;
   }
 
-  private void satisfyGoal(Goal goal) throws SchedulingInterruptedException{
-    if(simulationFacade.getCanceledListener().get()) throw new SchedulingInterruptedException("satisfying goal");
+  private void satisfyGoal(Goal goal) {
     final boolean checkSimConfig = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = goal.simulateAfter;
     if (goal instanceof CompositeAndGoal) {
@@ -438,7 +431,7 @@ public class PrioritySolver implements Solver {
   }
 
 
-  private void satisfyOptionGoal(OptionGoal goal) throws SchedulingInterruptedException{
+  private void satisfyOptionGoal(OptionGoal goal) {
       if (goal.hasOptimizer()) {
         //try to satisfy all and see what is best
         Goal currentSatisfiedGoal = null;
@@ -520,7 +513,7 @@ public class PrioritySolver implements Solver {
     evalForGoal.setScore(-(evalForGoal.getNbConflictsDetected().orElse(1)));
   }
 
-  private void satisfyCompositeGoal(CompositeAndGoal goal) throws SchedulingInterruptedException{
+  private void satisfyCompositeGoal(CompositeAndGoal goal) {
     assert goal != null;
     assert plan != null;
 
@@ -581,7 +574,7 @@ public class PrioritySolver implements Solver {
    *
    * @param goal IN the single goal to address with plan modifications
    */
-  private void satisfyGoalGeneral(Goal goal) throws SchedulingInterruptedException{
+  private void satisfyGoalGeneral(Goal goal) {
 
     assert goal != null;
     assert plan != null;
@@ -697,7 +690,8 @@ public class PrioritySolver implements Solver {
    * @return the set of missing activity conflicts in the current solution
    *     plan due to the specified goal
    */
-  private Collection<Conflict> getConflicts(Goal goal) throws SchedulingInterruptedException
+  private Collection<Conflict>
+  getConflicts(Goal goal)
   {
     assert goal != null;
     assert plan != null;
@@ -747,8 +741,9 @@ public class PrioritySolver implements Solver {
    *     added to the plan to best satisfy the conflict without disrupting
    *     the rest of the plan, or null if there are no such suggestions
    */
-  private Collection<SchedulingActivityDirective> getBestNewActivities(MissingActivityConflict missing)
-  throws SchedulingInterruptedException {
+  private Collection<SchedulingActivityDirective>
+  getBestNewActivities(MissingActivityConflict missing)
+  {
     assert missing != null;
     var newActs = new LinkedList<SchedulingActivityDirective>();
 
@@ -840,10 +835,9 @@ public class PrioritySolver implements Solver {
    * @param constraints IN the constraints to use to narrow the windows,
    *     may be empty (but not null)
    */
-  private Windows narrowByResourceConstraints(
-      Windows windows,
-      Collection<Expression<Windows>> constraints
-  ) throws SchedulingInterruptedException {
+  private Windows narrowByResourceConstraints(Windows windows,
+                                              Collection<Expression<Windows>> constraints)
+  {
     assert windows != null;
     assert constraints != null;
     Windows ret = windows;
@@ -873,7 +867,8 @@ public class PrioritySolver implements Solver {
   }
 
 
-  private SimulationResults getLatestSimResultsUpTo(Duration time) throws SchedulingInterruptedException {
+  private SimulationResults getLatestSimResultsUpTo(Duration time){
+    SimulationResults lastSimulationResults = null;
     var lastSimResultsFromFacade = this.simulationFacade.getLatestConstraintSimulationResults();
     if (lastSimResultsFromFacade.isEmpty() || lastSimResultsFromFacade.get().bounds.end.shorterThan(time)) {
       try {
@@ -882,7 +877,8 @@ public class PrioritySolver implements Solver {
         throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
       }
     }
-    return this.simulationFacade.getLatestConstraintSimulationResults().get();
+    lastSimulationResults = this.simulationFacade.getLatestConstraintSimulationResults().get();
+    return lastSimulationResults;
   }
 
   private Windows narrowGlobalConstraints(
@@ -890,8 +886,7 @@ public class PrioritySolver implements Solver {
       MissingActivityConflict mac,
       Windows windows,
       Collection<GlobalConstraint> constraints,
-      EvaluationEnvironment evaluationEnvironment
-  ) throws SchedulingInterruptedException {
+      EvaluationEnvironment evaluationEnvironment) {
     Windows tmp = windows;
     if(tmp.stream().noneMatch(Segment::value)){
       return tmp;
@@ -927,8 +922,7 @@ public class PrioritySolver implements Solver {
       final ActivityExpression activityExpression,
       final String name,
       final Windows windows,
-      final EvaluationEnvironment evaluationEnvironment
-  ) throws SchedulingInterruptedException {
+      final EvaluationEnvironment evaluationEnvironment) {
     //REVIEW: how to properly export any flexibility to instance?
     logger.info("Trying to create one activity, will loop through possible windows");
     for (var window : windows.iterateEqualTo(true)) {
@@ -944,8 +938,7 @@ public class PrioritySolver implements Solver {
       final ActivityExpression activityExpression,
       final String name,
       final Interval interval,
-      final EvaluationEnvironment evaluationEnvironment
-  ) throws SchedulingInterruptedException {
+      final EvaluationEnvironment evaluationEnvironment) {
     final var planningHorizon = this.problem.getPlanningHorizon();
     final var taskNetwork = new TaskNetworkAdapter(new TaskNetwork());
     taskNetwork.addAct(name);
@@ -1002,7 +995,7 @@ public class PrioritySolver implements Solver {
       final var f = new EquationSolvingAlgorithms.Function<Duration, ActivityMetadata>(){
         @Override
         public Duration valueAt(Duration start, final EquationSolvingAlgorithms.History<Duration, ActivityMetadata> history)
-        throws EquationSolvingAlgorithms.DiscontinuityException, SchedulingInterruptedException
+        throws EquationSolvingAlgorithms.DiscontinuityException
         {
           final var latestConstraintsSimulationResults = getLatestSimResultsUpTo(start);
           final var actToSim = SchedulingActivityDirective.of(
@@ -1028,7 +1021,7 @@ public class PrioritySolver implements Solver {
             if(computedDuration.isPresent()) {
               history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(computedDuration.get())), new ActivityMetadata(actToSim));
             } else{
-              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity or activity outside plan bounds.");
+              logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity.");
               history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start,  null), new ActivityMetadata(actToSim));
             }
           } catch (SimulationFacade.SimulationException e) {
@@ -1055,7 +1048,9 @@ public class PrioritySolver implements Solver {
       //handle variable duration parameter here
       final Duration setActivityDuration;
       if (instantiatedArguments.containsKey(durationParameterName)) {
-        final var argumentDuration = problem.getSchedulerModel().deserializeDuration(instantiatedArguments.get(durationParameterName));
+        final var argumentDuration = Duration.of(
+            instantiatedArguments.get(durationParameterName).asInt().get(),
+            Duration.MICROSECOND);
         if (solved.duration().contains(argumentDuration)) {
           setActivityDuration = argumentDuration;
         } else {
@@ -1107,8 +1102,7 @@ public class PrioritySolver implements Solver {
       final var history = new HistoryWithActivity();
       final var f = new EquationSolvingAlgorithms.Function<Duration, ActivityMetadata>() {
         @Override
-        public Duration valueAt(final Duration start, final EquationSolvingAlgorithms.History<Duration, ActivityMetadata> history)
-        throws SchedulingInterruptedException {
+        public Duration valueAt(final Duration start, final EquationSolvingAlgorithms.History<Duration, ActivityMetadata> history) {
           final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
               activityExpression.arguments(),
               start,
@@ -1143,8 +1137,7 @@ public class PrioritySolver implements Solver {
   private  Optional<SchedulingActivityDirective> rootFindingHelper(
       final EquationSolvingAlgorithms.Function<Duration, ActivityMetadata> f,
       final HistoryWithActivity history,
-      final TaskNetworkAdapter.TNActData solved
-  ) throws SchedulingInterruptedException {
+      final TaskNetworkAdapter.TNActData solved) {
     try {
       var endInterval = solved.end();
       var startInterval = solved.start();

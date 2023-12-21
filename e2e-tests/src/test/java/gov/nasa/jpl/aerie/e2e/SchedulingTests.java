@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput.ProfileSegmentInput;
 import gov.nasa.jpl.aerie.e2e.types.Plan;
 import gov.nasa.jpl.aerie.e2e.types.ProfileSegment;
-import gov.nasa.jpl.aerie.e2e.types.SchedulingRequest.SchedulingStatus;
 import gov.nasa.jpl.aerie.e2e.types.ValueSchema;
 import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
@@ -21,7 +20,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -673,28 +671,19 @@ public class SchedulingTests {
                                              .toList();
       assertEquals(1, findFile.size());
 
-      // Create a list of the exported resource types, one entry per new line
-      final List<String> resourceTypes = Arrays.stream(findFile.get(0)
-                                       .content()
-                                       .split("export type Resource = \\{\\n")[1]
-                                       .split("\\n};")[0] // isolate to export type Resource block
-                                       .split("\\n"))
-                                       .map(String::strip) // remove whitespace
-                                       .toList();
-
-      final var expectedResources = List.of(
-          "\"/data/line_count\": number,",
-          "\"/flag\": ( | \"A\" | \"B\"),",
-          "\"/flag/conflicted\": boolean,",
-          "\"/fruit\": {initial: number, rate: number, },",
-          "\"/my_boolean\": boolean,",
-          "\"/peel\": number,",
-          "\"/plant\": number,",
-          "\"/producer\": string,"
-      );
-
-      assertEquals(expectedResources.size(), resourceTypes.size());
-      assertTrue(resourceTypes.containsAll(expectedResources));
+      final var resources = """
+          export type Resource = {
+            "/peel": number,
+            "/my_boolean": boolean,
+            "/fruit": {initial: number, rate: number, },
+            "/data/line_count": number,
+            "/flag/conflicted": boolean,
+            "/plant": number,
+            "/flag": ( | "A" | "B"),
+            "/producer": string,
+          };
+          """;
+      assertTrue(findFile.get(0).content().contains(resources));
     }
 
     /**
@@ -711,88 +700,6 @@ public class SchedulingTests {
       assertEquals("BiteBanana", activity.type());
       assertEquals("02:00:00", activity.startOffset());
       assertEquals(Json.createObjectBuilder().add("biteSize", 1).build(), activity.arguments());
-    }
-  }
-
-  @Nested
-  class CancelingScheduling {
-    private int fooId;
-    private int fooPlan;
-    private int fooSchedulingSpecId;
-    private int fooGoalId;
-
-    @BeforeEach
-    void beforeEach() throws IOException, InterruptedException {
-      // Insert the Mission Model
-      // Long Foo plans take long enough to be canceled without risking a race condition like with Banananation
-      try (final var gateway = new GatewayRequests(playwright)) {
-        fooId = hasura.createMissionModel(
-            gateway.uploadFooJar(),
-            "Foo (e2e tests)",
-            "aerie_e2e_tests",
-            "Simulation Tests");
-      }
-      // Insert the Plan
-      fooPlan = hasura.createPlan(
-          fooId,
-          "Foo Plan - Simulation Tests",
-          "720:00:00",
-          planStartTimestamp);
-
-      // Insert Scheduling Spec
-      fooSchedulingSpecId = hasura.insertSchedulingSpecification(
-          fooPlan,
-          hasura.getPlanRevision(fooPlan),
-          planStartTimestamp,
-          "2023-01-31T00:00:00+00:00",
-          JsonValue.EMPTY_JSON_OBJECT,
-          false);
-
-      // Add Goal
-      fooGoalId = hasura.insertSchedulingGoal(
-          "Foo Recurrence Test Goal",
-          fooId,
-          """
-          export default function recurrenceGoalExample() {
-            return Goal.ActivityRecurrenceGoal({
-              activityTemplate: ActivityTemplates.bar(),
-              interval: Temporal.Duration.from({ hours: 2 }),
-            });
-          }""");
-      hasura.createSchedulingSpecGoal(fooGoalId, fooSchedulingSpecId, 0);
-    }
-
-    @AfterEach
-    void afterEach() throws IOException {
-      // Remove Goal
-      hasura.deleteSchedulingGoal(fooGoalId);
-
-      // Remove Model and Plan
-      hasura.deletePlan(fooPlan);
-      hasura.deleteMissionModel(fooId);
-    }
-
-    /**
-     * Cancelling a scheduling run causes the "Reason" field to report that the run was canceled
-     */
-    @Test
-    void cancelingSchedulingUpdatesRequestReason() throws IOException {
-      final var results = hasura.cancelingScheduling(fooSchedulingSpecId);
-      // Assert that the run was incomplete
-      assertEquals(SchedulingStatus.incomplete, results.status());
-
-      // Assert reason
-      assertTrue(results.reason().isPresent());
-      final var reason = results.reason().get();
-      assertEquals("SCHEDULING_CANCELED", reason.type());
-      assertEquals("Scheduling run was canceled", reason.message());
-      assertEquals("", reason.trace());
-
-      // Assert the data in the reason
-      final var reasonData = reason.data();
-      assertEquals(2, reasonData.size());
-      assertTrue(reasonData.containsKey("location"));
-      assertEquals("Scheduling was interrupted while "+ reasonData.getString("location"), reasonData.getString("message"));
     }
   }
 }

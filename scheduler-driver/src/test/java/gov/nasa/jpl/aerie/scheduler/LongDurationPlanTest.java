@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,8 @@ public class LongDurationPlanTest {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    return SimulationUtility.buildProblemFromBanana(h);
+    final var banananationMissionModel = SimulationUtility.getBananaMissionModel();
+    return new Problem(banananationMissionModel, h, new SimulationFacade(h, banananationMissionModel), SimulationUtility.getBananaSchedulerModel());
   }
 
   private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2030-005T01:01:01.001"));
@@ -49,7 +51,7 @@ public class LongDurationPlanTest {
   }
 
   @Test
-  public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException {
+  public void getNextSolution_initialPlanInOutput() {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     problem.setInitialPlan(makePlanA012(problem));
@@ -63,7 +65,7 @@ public class LongDurationPlanTest {
   }
 
   @Test
-  public void getNextSolution_proceduralGoalCreatesActivities() throws SchedulingInterruptedException {
+  public void getNextSolution_proceduralGoalCreatesActivities() {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()

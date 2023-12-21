@@ -38,12 +38,11 @@ public class EquationSolvingAlgorithms {
                                                        InfiniteDerivativeException,
                                                        DivergenceException,
                                                        ExceededMaxIterationException,
-                                                       NoSolutionException,
-                                                       SchedulingInterruptedException;
+                                                       NoSolutionException;
   }
 
   public interface Function<T, Metadata> {
-    T valueAt(T x, History<T, Metadata> history) throws DiscontinuityException, SchedulingInterruptedException;
+    T valueAt(T x, History<T, Metadata> history) throws DiscontinuityException;
   }
 
   public interface History<T, Metadata>{
@@ -125,7 +124,7 @@ public class EquationSolvingAlgorithms {
         final Duration max,
         final History<Duration, Metadata> history,
         final int maxIteration)
-    throws ExceededMaxIterationException, SchedulingInterruptedException
+    throws ExceededMaxIterationException
     {
       var cur = init;
       int i = 0;
@@ -175,12 +174,11 @@ public class EquationSolvingAlgorithms {
         final Duration xHigh,
         final int maxNbIterations)
     throws ZeroDerivativeException, NoSolutionException, ExceededMaxIterationException, DivergenceException,
-           InfiniteDerivativeException, SchedulingInterruptedException
+           InfiniteDerivativeException
     {
       final var ff = new EquationSolvingAlgorithms.Function<Duration, Metadata>(){
         @Override
-        public Duration valueAt(final Duration x, final History<Duration, Metadata> history)
-        throws EquationSolvingAlgorithms.DiscontinuityException, SchedulingInterruptedException
+        public Duration valueAt(final Duration x, final History<Duration, Metadata> history) throws EquationSolvingAlgorithms.DiscontinuityException
         {
           return f.valueAt(x, history).minus(y);
         }
@@ -212,8 +210,7 @@ public class EquationSolvingAlgorithms {
         final Duration xLow,
         final Duration xHigh,
         final int maxNbIterations)
-    throws ZeroDerivativeException, InfiniteDerivativeException, ExceededMaxIterationException,
-           SchedulingInterruptedException
+    throws ZeroDerivativeException, InfiniteDerivativeException, ExceededMaxIterationException
     {
       final var xLow_long = xLow.in(Duration.MICROSECONDS);
       final var xHigh_long = xHigh.in(Duration.MICROSECONDS);

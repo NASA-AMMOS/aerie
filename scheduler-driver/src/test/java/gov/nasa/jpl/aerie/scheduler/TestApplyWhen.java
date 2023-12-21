@@ -46,8 +46,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -58,9 +58,12 @@ public class TestApplyWhen {
 
   ////////////////////////////////////////////RECURRENCE////////////////////////////////////////////
   @Test
-  public void testRecurrenceCutoff1() throws SchedulingInterruptedException {
+  public void testRecurrenceCutoff1() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -91,9 +94,12 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceCutoff2() throws SchedulingInterruptedException {
+  public void testRecurrenceCutoff2() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -124,9 +130,12 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceShorterWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceShorterWindow() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -157,9 +166,12 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceLongerWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceLongerWindow() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -190,7 +202,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceBabyWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceBabyWindow() {
     /*
     The plan horizon ranges from [0,20).
     The recurrent activities can be placed inside the following window: [1,2). That is, there is exactly 1 unit of time where an activity can be placed
@@ -205,7 +217,10 @@ public class TestApplyWhen {
     RESULT: [+-------------------]
     */
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -236,13 +251,16 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindows() throws SchedulingInterruptedException {
+  public void testRecurrenceWindows() {
     // RECURRENCE WINDOW: [++---++---++---++---]
     // GOAL WINDOW:       [++++++----+++++++---]
     // RESULT:            [++--------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(Arrays.asList(
@@ -279,13 +297,16 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindowsCutoffMidInterval() throws SchedulingInterruptedException {
+  public void testRecurrenceWindowsCutoffMidInterval() {
     // RECURRENCE WINDOW: [++---++---++---++---]
     // GOAL WINDOW:       [++++------+++-------]
     // RESULT:            [++--------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(Arrays.asList(
@@ -322,14 +343,17 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindowsGlobalCheck() throws SchedulingInterruptedException {
+  public void testRecurrenceWindowsGlobalCheck() {
     //                     123456789012345678901
     // RECURRENCE WINDOW: [++-++-++-++-++-++-++-] (if global)
     // GOAL WINDOW:       [+++++--++++++++-++++-] (if interval is same length as recurrence interval, fails)
     // RESULT:            [++-----++-++----~~---] (if not global)
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -367,14 +391,17 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindowsCutoffMidActivity() throws SchedulingInterruptedException {
+  public void testRecurrenceWindowsCutoffMidActivity() {
     //                     12345678901234567890
     // RECURRENCE WINDOW: [++---++---++---++---]
     // GOAL WINDOW:       [+-----+++-+++-------]
     // RESULT:            [----------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -412,9 +439,12 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceCutoffUncontrollable() throws SchedulingInterruptedException {
+  public void testRecurrenceCutoffUncontrollable() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(21));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("BasicActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -447,12 +477,14 @@ public class TestApplyWhen {
   ////////////////////////////////////////////CARDINALITY////////////////////////////////////////////
 
   @Test
-  public void testCardinality() throws SchedulingInterruptedException {
+  public void testCardinality() {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(5, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
@@ -486,14 +518,17 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCardinalityWindows() throws SchedulingInterruptedException {
+  public void testCardinalityWindows() {
     // DURATION:    [++]
     // GOAL WINDOW: [++++------++++------]
     // RESULT:      [++++------++++------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
 
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -533,14 +568,17 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCardinalityWindowsCutoffMidActivity() throws SchedulingInterruptedException {
+  public void testCardinalityWindowsCutoffMidActivity() {
     // DURATION:    [++]
     // GOAL WINDOW: [+-----++--+++-------]
     // RESULT:      [------++--++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
 
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -581,7 +619,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCardinalityUncontrollable() throws SchedulingInterruptedException { //ruled unpredictable for now
+  public void testCardinalityUncontrollable() { //ruled unpredictable for now
     /*
       Expect 5 to get scheduled just in a row, as basicactivity's duration should allow that.
      */
@@ -589,7 +627,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
 
     final var activityType = problem.getActivityType("BasicActivity");
@@ -628,13 +668,15 @@ public class TestApplyWhen {
   ////////////////////////////////////////////COEXISTENCE////////////////////////////////////////////
 
   @Test
-  public void testCoexistenceWindowCutoff() throws SchedulingInterruptedException {
+  public void testCoexistenceWindowCutoff() {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -677,7 +719,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceJustFits() throws SchedulingInterruptedException {
+  public void testCoexistenceJustFits() {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));//13, so it just fits in
 
@@ -687,7 +729,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -730,7 +774,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceUncontrollableCutoff() throws SchedulingInterruptedException { //ruled unpredictable for now
+  public void testCoexistenceUncontrollableCutoff() { //ruled unpredictable for now
     /*
                      123456789012345678901234
        GOAL WINDOW: [+++++++++++++-- ---------]
@@ -747,7 +791,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -792,7 +838,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindows() throws SchedulingInterruptedException {
+  public void testCoexistenceWindows() {
     // COEXISTENCE LATCH POINTS:
     //    (seek to add Duration 2 activities to each of these)
     //               1234567890123456789012
@@ -802,7 +848,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -857,7 +905,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindowsCutoffMidActivity() throws SchedulingInterruptedException {
+  public void testCoexistenceWindowsCutoffMidActivity() {
     // COEXISTENCE LATCH POINTS:
     //    (seek to add Duration [++] activities to each of these)
     //               1234567890123456789012345678
@@ -867,7 +915,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(28)); //this boundary is inclusive.
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -931,7 +981,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindowsBisect() throws SchedulingInterruptedException { //bad, should fail completely. worth investigating.
+  public void testCoexistenceWindowsBisect() { //bad, should fail completely. worth investigating.
     /*
        COEXISTENCE LATCH POINTS:
        (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a interval)
@@ -944,7 +994,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(12));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -998,7 +1050,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindowsBisect2() throws SchedulingInterruptedException { //corrected. Bisection does work successfully.
+  public void testCoexistenceWindowsBisect2() { //corrected. Bisection does work successfully.
     /*
        COEXISTENCE LATCH POINTS:
           (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a interval)
@@ -1010,7 +1062,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(16));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1064,7 +1118,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceUncontrollableJustFits() throws SchedulingInterruptedException {
+  public void testCoexistenceUncontrollableJustFits() {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
@@ -1074,7 +1128,9 @@ public class TestApplyWhen {
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1117,23 +1173,16 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceExternalResource() throws SchedulingInterruptedException {
+  public void testCoexistenceExternalResource() {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(25, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerMissionModel = SimulationUtility.getFooSchedulerModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(
-        fooMissionModel,
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        new SimulationFacade(
-            planningHorizon,
-            fooMissionModel,
-            fooSchedulerMissionModel,
-            () -> false),
-        fooSchedulerMissionModel);
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
-    final var r3Value = Map.of("amountInMicroseconds", SerializedValue.of(6));
+    final var r3Value = 6;
     final var r1 = new LinearProfile(new Segment<>(Interval.between(Duration.ZERO, Duration.SECONDS.times(5)), new LinearEquation(Duration.ZERO, 5, 1)));
     final var r2 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(5)));
     final var r3 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(r3Value)));
@@ -1177,18 +1226,21 @@ public class TestApplyWhen {
     final var startOfActivity =   cond.evaluate(emptySimulationResults, Interval.FOREVER, new EvaluationEnvironment(externalRealProfiles, externalDiscreteProfiles)).iterateEqualTo(true).iterator().next().start;
     assertEquals(1, plan.get().getActivitiesByTime().size());
     final var act = plan.get().getActivitiesByTime().get(0);
-    assertEquals(act.duration(), Duration.of(r3Value.get("amountInMicroseconds").asInt().get(), Duration.MICROSECONDS));
+    assertEquals(act.duration(), Duration.of(r3Value, Duration.MICROSECONDS));
     assertEquals(startOfActivity, Duration.of(1, Duration.SECONDS));
     assertEquals(act.startOffset(), startOfActivity);
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
-  public void changingForAllTimeIn() throws SchedulingInterruptedException {
+  public void changingForAllTimeIn() {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(hor);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, hor, new SimulationFacade(
+        hor,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
@@ -1258,11 +1310,14 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void changingForAllTimeInCutoff() throws SchedulingInterruptedException {
+  public void changingForAllTimeInCutoff() {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(18));
-    final var problem = buildProblemFromFoo(hor);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, hor, new SimulationFacade(
+        hor,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
@@ -1333,11 +1388,14 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void changingForAllTimeInAlternativeCutoff() throws SchedulingInterruptedException {
+  public void changingForAllTimeInAlternativeCutoff() {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(hor);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, hor, new SimulationFacade(
+        hor,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());

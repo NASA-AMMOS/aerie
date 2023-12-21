@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.function.Supplier;
 
 /**
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
@@ -283,10 +282,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(
-      final CreateSimulationMessage message,
-      final Consumer<Duration> simulationExtentConsumer,
-      final Supplier<Boolean> canceledListener)
+  public SimulationResults runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
   throws NoSuchMissionModelException
   {
     final var config = message.configuration();
@@ -306,7 +302,6 @@ public final class LocalMissionModelService implements MissionModelService {
         message.simulationDuration(),
         message.planStartTime(),
         message.planDuration(),
-        canceledListener,
         simulationExtentConsumer);
   }
 

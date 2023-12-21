@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -125,8 +124,7 @@ public interface MerlinService {
     Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
         final PlanMetadata planMetadata,
         final Plan plan,
-        final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
-        final SchedulerModel schedulerModel
+        final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, MerlinServiceException;
 
@@ -160,8 +158,7 @@ public interface MerlinService {
         Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
         MerlinPlan initialPlan,
         Plan plan,
-        Map<SchedulingActivityDirective, GoalId> activityToGoalId,
-        SchedulerModel schedulerModel
+        Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, MerlinServiceException, NoSuchActivityInstanceException;
 
@@ -191,8 +188,7 @@ public interface MerlinService {
     Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
         final PlanId planId,
         final Plan plan,
-        final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
-        final SchedulerModel schedulerModel
+        final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, MerlinServiceException;
 

@@ -93,7 +93,7 @@ comment on column simulation_dataset.requested_at is e''
 -- Dataset management triggers
 -- These triggers create and delete datasets along with the insert/delete of a simulation_dataset
 
-create function set_revisions_and_initialize_dataset_on_insert()
+create or replace function set_revisions_and_initialize_dataset_on_insert()
 returns trigger
 security definer
 language plpgsql as $$
@@ -123,7 +123,7 @@ begin
 return new;
 end$$;
 
-create function delete_dataset_on_delete()
+create or replace function delete_dataset_on_delete()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -150,10 +150,97 @@ exception
   when duplicate_object then null;
 end $$;
 
+-- Revision-based triggers
+-- These triggers cancel datasets when they became outdated
+
+create or replace function cancel_on_mission_model_update()
+returns trigger
+security definer
+language plpgsql as $$begin
+  with
+    sim_info as
+      ( select
+          sim.id as sim_id,
+          model.id as model_id
+        from simulation as sim
+        left join plan on sim.plan_id = plan.id
+        left join mission_model as model on plan.model_id = model.id)
+  update simulation_dataset
+  set canceled = true
+  where simulation_id in (select sim_id from sim_info where model_id = new.id);
+return new;
+end$$;
+
+create or replace function cancel_on_plan_update()
+returns trigger
+security definer
+language plpgsql as $$begin
+  update simulation_dataset
+  set canceled = true
+  where simulation_id in (select id from simulation where plan_id = new.id);
+return new;
+end$$;
+
+create or replace function cancel_on_simulation_update()
+returns trigger
+security definer
+language plpgsql as $$begin
+  update simulation_dataset
+  set canceled = true
+  where simulation_id = new.id;
+return new;
+end$$;
+
+create or replace function cancel_on_simulation_template_update()
+returns trigger
+security definer
+language plpgsql as $$begin
+  update simulation_dataset
+  set canceled = true
+  where simulation_id in (select id from simulation where simulation_template_id = new.id);
+return new;
+end$$;
+
+do $$ begin
+create trigger cancel_on_mission_model_update_trigger
+  after update on mission_model
+  for each row
+  execute function cancel_on_mission_model_update();
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+create trigger cancel_on_plan_update_trigger
+  after update on plan
+  for each row
+  execute function cancel_on_plan_update();
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+create trigger cancel_on_simulation_update_trigger
+  after update on simulation
+  for each row
+  execute function cancel_on_simulation_update();
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+create trigger cancel_on_simulation_template_update_trigger
+  after update on simulation_template
+  for each row
+  execute function cancel_on_simulation_template_update();
+exception
+  when duplicate_object then null;
+end $$;
+
 -- Simulation dataset NOTIFY triggers
 -- These triggers NOTIFY LISTEN(ing) merlin worker clients of pending simulation requests
 
-create function notify_simulation_workers ()
+create or replace function notify_simulation_workers ()
 returns trigger
 security definer
 language plpgsql as $$
@@ -185,26 +272,12 @@ begin
   return null;
 end$$;
 
+do $$ begin
 create trigger notify_simulation_workers
   after insert on simulation_dataset
   for each row
   execute function notify_simulation_workers();
-
-create function notify_simulation_workers_cancel()
-returns trigger
-security definer
-language plpgsql as $$
-begin
-  perform pg_notify('simulation_cancel', '' || new.dataset_id);
-  return null;
-end
-$$;
-
-create trigger notify_simulation_workers_cancel
-after update of canceled on simulation_dataset
-for each row
-when ((old.status != 'success' or old.status != 'failed') and new.canceled)
-execute function notify_simulation_workers_cancel();
+end $$;
 
 create function update_offset_from_plan_start()
 returns trigger

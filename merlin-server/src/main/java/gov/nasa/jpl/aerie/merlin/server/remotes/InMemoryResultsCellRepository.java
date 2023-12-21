@@ -135,11 +135,6 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void reportIncompleteResults(final SimulationResults results) {
-      this.state = new ResultsProtocol.State.Incomplete(0);
-    }
-
-    @Override
     public void reportSimulationExtent(final Duration extent) {
       System.out.println("Simulation extent: " + extent);
     }

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.e2e;
 
 import com.microsoft.playwright.Playwright;
 import gov.nasa.jpl.aerie.e2e.types.ConstraintError;
+import gov.nasa.jpl.aerie.e2e.types.ConstraintResult;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput.ProfileSegmentInput;
 import gov.nasa.jpl.aerie.e2e.types.ValueSchema;
@@ -104,15 +105,13 @@ public class ConstraintsTests {
     final var constraintsResponses = hasura.checkConstraints(planId);
     assertEquals(1, constraintsResponses.size());
 
-    // Check the Response
-    final var constraintResponse = constraintsResponses.get(0);
-    assertTrue(constraintResponse.success());
-    assertEquals(constraintId, constraintResponse.constraintId());
-    assertEquals(constraintName, constraintResponse.constraintName());
-    assertEquals("plan", constraintResponse.type());
     // Check the Result
-    assertTrue(constraintResponse.result().isPresent());
-    final var constraintResult = constraintResponse.result().get();
+    final var constraintResponse = constraintsResponses.get(0);
+    assertEquals(true,constraintResponse.success());
+    final ConstraintResult constraintResult = constraintResponse.result();
+    assertEquals(constraintId, constraintResult.constraintId());
+    assertEquals(constraintName, constraintResult.constraintName());
+
     // Resources
     final var resources = constraintResult.resourceIds();
     assertEquals(2, resources.size());
@@ -137,27 +136,19 @@ public class ConstraintsTests {
     // Delete activity to avoid violation
     hasura.deleteActivity(planId, activityId);
     hasura.awaitSimulation(planId);
-    final var constraintResponses = hasura.checkConstraints(planId);
-
-    assertEquals(1, constraintResponses.size());
-    assertTrue(constraintResponses.get(0).success());
-    assertEquals(constraintId, constraintResponses.get(0).constraintId());
-    assertEquals(constraintName, constraintResponses.get(0).constraintName());
-    assertEquals("plan", constraintResponses.get(0).type());
-    assertTrue( constraintResponses.get(0).result().isPresent());
-    assertEquals(0, constraintResponses.get(0).result().get().violations().size());
+    final var constraintsResults = hasura.checkConstraints(planId);
+    assertEquals(0, constraintsResults.size());
   }
 
   @Test
   void constraintCachedViolation() throws IOException {
     final var simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
-    final var constraintResponses = hasura.checkConstraints(planId);
+    final var constraintRuns = hasura.checkConstraints(planId);
     final var cachedRuns = hasura.getConstraintRuns(simDatasetId);
 
     // There's the correct number of results
     assertEquals(1, cachedRuns.size());
-    assertEquals(1, constraintResponses.size());
-    assertEquals(cachedRuns.get(0).constraintId(),constraintId);
+    assertEquals(1, constraintRuns.size());
 
     // Check properties
     final var cachedRun = cachedRuns.get(0);
@@ -168,10 +159,9 @@ public class ConstraintsTests {
 
     // Check results
     assertTrue(cachedRun.results().isPresent());
-    final var constraintResponse = constraintResponses.get(0);
-    assertTrue(constraintResponse.success());
-    assertTrue(constraintResponse.result().isPresent());
-    assertEquals(constraintResponse.result().get(), cachedRun.results().get());
+    final var constraintResponse = constraintRuns.get(0);
+    assertEquals(true,constraintResponse.success());
+    assertEquals(constraintResponse.result(), cachedRun.results().get());
   }
 
   @Test
@@ -193,13 +183,7 @@ public class ConstraintsTests {
     assertEquals(constraintDefinition, cachedRun.constraintDefinition());
 
     // Check results
-    assertTrue(cachedRun.results().isPresent());
-    final var results = cachedRun.results().get();
-    assertEquals(2,results.resourceIds().size());
-    assertEquals("/peel",results.resourceIds().get(0));
-    assertEquals("/fruit",results.resourceIds().get(1));
-    assertEquals(0,results.violations().size());
-    assertEquals(0,results.gaps().size());
+    assertTrue(cachedRun.results().isEmpty());
   }
 
   @Test
@@ -242,16 +226,12 @@ public class ConstraintsTests {
     final var constraintsResponses = hasura.checkConstraints(planId);
     assertEquals(1, constraintsResponses.size());
 
-    // Check the Response
+    // Check the Result
     final var constraintResponse = constraintsResponses.get(0);
-    assertTrue(constraintResponse.success());
-    assertEquals(constraintId,constraintResponse.constraintId());
-    assertEquals(constraintName, constraintResponse.constraintName());
-    assertEquals("plan", constraintResponse.type());
-
-    //Check Result
-    assertTrue(constraintResponse.result().isPresent());
-    final var constraintResult = constraintResponse.result().get();
+    assertEquals(true,constraintResponse.success());
+    final var constraintResult = constraintResponse.result();
+    assertEquals(constraintId, constraintResult.constraintId());
+    assertEquals(constraintName, constraintResult.constraintName());
 
     // Resources
     final var resources = constraintResult.resourceIds();
@@ -277,15 +257,8 @@ public class ConstraintsTests {
     final int newSimDatasetId = hasura.awaitSimulation(planId).simDatasetId();
 
     // Expect no violations on the new simulation
-    final var newConstraintResponses = hasura.checkConstraints(planId, newSimDatasetId);
-    assertEquals(1, newConstraintResponses.size());
-    assertEquals(constraintId, newConstraintResponses.get(0).constraintId());
-    assertEquals(constraintName, newConstraintResponses.get(0).constraintName());
-    assertEquals("plan", newConstraintResponses.get(0).type());
-    assertTrue(newConstraintResponses.get(0).result().isPresent());
-    final var newConstraintResult = newConstraintResponses.get(0).result().get();
-    assertTrue(newConstraintResult.violations().isEmpty());
-
+    final var newConstraintResults = hasura.checkConstraints(planId, newSimDatasetId);
+    assertEquals(0, newConstraintResults.size());
 
     // Expect one violation on the old simulation
     final var oldConstraintsResponses = hasura.checkConstraints(planId, oldSimDatasetId);
@@ -293,12 +266,11 @@ public class ConstraintsTests {
 
     // Check the Result
     final var oldConstraintResponse = oldConstraintsResponses.get(0);
-    assertTrue(oldConstraintResponse.success());
-    assertEquals(constraintId, oldConstraintResponse.constraintId());
-    assertEquals(constraintName, oldConstraintResponse.constraintName());
-    assertEquals("plan", oldConstraintResponse.type());
-    assertTrue(oldConstraintResponse.result().isPresent());
-    final var constraintResult = oldConstraintResponse.result().get();
+    assertEquals(true,oldConstraintResponse.success());
+    final var constraintResult = oldConstraintResponse.result();
+
+    assertEquals(constraintId, constraintResult.constraintId());
+    assertEquals(constraintName, constraintResult.constraintName());
 
     // Resources
     final var resources = constraintResult.resourceIds();
@@ -348,14 +320,12 @@ public class ConstraintsTests {
             new ProfileSegmentInput(3600000000L, JsonValue.TRUE), // 1hr in micros
             new ProfileSegmentInput(3600000000L, JsonValue.FALSE)));
 
-    public static final String constraintDefinition = "export default (): Constraint => Discrete.Resource(\"/my_boolean\").equal(true)";
-
     @BeforeEach
     void beforeEach() throws IOException {
       // Change Constraint to be about MyBoolean
       hasura.updateConstraint(
           constraintId,
-          constraintDefinition);
+          "export default (): Constraint => Discrete.Resource(\"/my_boolean\").equal(true)");
       // Simulate Plan
       simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
       // Add Simulation-Associated External Dataset
@@ -377,36 +347,32 @@ public class ConstraintsTests {
     @DisplayName("Simulation-Associated External Datasets are loaded when Simulation is current")
     void oneViolationCurrentSimulation() throws IOException {
       // Constraint Results w/o SimDatasetId
-      final var noDatasetResponses = hasura.checkConstraints(planId);
-      assertEquals(1, noDatasetResponses.size());
-      assertTrue(noDatasetResponses.get(0).success());
-      assertEquals(constraintId, noDatasetResponses.get(0).constraintId());
-      assertEquals(constraintName, noDatasetResponses.get(0).constraintName());
-      assertEquals("plan", noDatasetResponses.get(0).type());
-      assertTrue(noDatasetResponses.get(0).result().isPresent());
-      final var nRecordResults = noDatasetResponses.get(0).result().get();
+      final var noDatasetResults = hasura.checkConstraints(planId);
+      assertEquals(1, noDatasetResults.size());
+      assertEquals(true,  noDatasetResults.get(0).success());
+
+      final var ndRecord = noDatasetResults.get(0).result();
 
       // Constraint Results w/ SimDatasetId
-      final var withDatasetResponses = hasura.checkConstraints(planId, simDatasetId);
-      assertEquals(1, withDatasetResponses.size());
-      assertTrue(withDatasetResponses.get(0).success());
-      assertEquals(constraintId, withDatasetResponses.get(0).constraintId());
-      assertEquals(constraintName, withDatasetResponses.get(0).constraintName());
-      assertEquals("plan", withDatasetResponses.get(0).type());
-      assertTrue(withDatasetResponses.get(0).result().isPresent());
-      final var wRecordResults = withDatasetResponses.get(0).result().get();
+      final var withDatasetResults = hasura.checkConstraints(planId, simDatasetId);
+      assertEquals(1, withDatasetResults.size());
+      assertEquals(true,  withDatasetResults.get(0).success());
+      final var wdRecord = withDatasetResults.get(0).result();
 
       // The results should be the same
-      assertEquals(nRecordResults, wRecordResults);
+      assertEquals(ndRecord, wdRecord);
 
+      // Check the Result
+      assertEquals(constraintName, ndRecord.constraintName());
+      assertEquals(constraintId, ndRecord.constraintId());
 
       // Resources
-      assertEquals(1, nRecordResults.resourceIds().size());
-      assertTrue(nRecordResults.resourceIds().contains("/my_boolean"));
+      assertEquals(1, ndRecord.resourceIds().size());
+      assertTrue(ndRecord.resourceIds().contains("/my_boolean"));
 
       // Violation
-      assertEquals(1, nRecordResults.violations().size());
-      final var violation = nRecordResults.violations().get(0);
+      assertEquals(1, ndRecord.violations().size());
+      final var violation = ndRecord.violations().get(0);
       assertEquals(1, violation.windows().size());
 
       final long falseBeginMicros = 7 * 60 * 60 * 1000000L; // 7h in micros
@@ -418,15 +384,15 @@ public class ConstraintsTests {
       // Gaps
       // Two are expected: 1 from plan start to the external dataset start
       // and 1 from the external dataset end to plan end
-      assertEquals(2, nRecordResults.gaps().size());
+      assertEquals(2, ndRecord.gaps().size());
       final long datasetOffsetMicros = 6 * 60 * 60 * 1000000L; // 6h in micros
       final long planDuration = 1212 * 60 * 60 * 1000000L; // 1212h in micros
 
-      final var firstGap = nRecordResults.gaps().get(0);
+      final var firstGap = ndRecord.gaps().get(0);
       assertEquals(0, firstGap.start());
       assertEquals(datasetOffsetMicros, firstGap.end());
 
-      final var secondGap = nRecordResults.gaps().get(1);
+      final var secondGap = ndRecord.gaps().get(1);
       assertEquals(datasetEndMicros, secondGap.start());
       assertEquals(planDuration, secondGap.end());
     }
@@ -442,12 +408,12 @@ public class ConstraintsTests {
       assertEquals(1, constraintResponses.size());
 
       final var constraintResponse = constraintResponses.get(0);
-      assertTrue(constraintResponse.success());
-      assertEquals(constraintId, constraintResponse.constraintId());
-      assertEquals(constraintName, constraintResponse.constraintName());
-      assertEquals("plan", constraintResponse.type());
-      assertTrue(constraintResponse.result().isPresent());
-      final var record = constraintResponse.result().get();
+      assertEquals(true,constraintResponse.success());
+      final var record = constraintResponse.result();
+
+      // Check the Result
+      assertEquals(constraintName, record.constraintName());
+      assertEquals(constraintId, record.constraintId());
 
       // Resources
       assertEquals(1, record.resourceIds().size());
@@ -488,18 +454,13 @@ public class ConstraintsTests {
       final int newSimDatasetId = hasura.awaitSimulation(planId).simDatasetId();
       // This test causes the endpoint to throw an exception when it fails to compile the constraint,
       // as it cannot find the external dataset resource in the set of known resource types.
-      final var constraintResponses = hasura.checkConstraints(planId, newSimDatasetId);
+      final var constraintResponses = hasura.checkConstraints(planId);
       assertEquals(1,constraintResponses.size());
-      final var constraintResponse = constraintResponses.get(0);
-      assertEquals(constraintId, constraintResponse.constraintId());
-      assertEquals(constraintName, constraintResponse.constraintName());
-      assertEquals("plan", constraintResponse.type());
-      assertFalse(constraintResponse.success());
-      assertTrue(constraintResponse.result().isEmpty());
-      assertEquals(1,constraintResponse.errors().size());
-      final var error = constraintResponse.errors().get(0);
-      assertEquals("Constraint 'fruit_equal_peel' compilation failed:\n"
-                   + " TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
+      final var constraintRepsonse = constraintResponses.get(0);
+      assertEquals(false,constraintRepsonse.success());
+      assertEquals(1,constraintRepsonse.errors().size());
+      final ConstraintError error = constraintRepsonse.errors().get(0);
+      assertEquals("Constraint 'fruit_equal_peel': TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
     }
 
     @Test
@@ -513,66 +474,12 @@ public class ConstraintsTests {
       // DSL isn't being generated for datasets that are outdated.
       final var constraintResponses = hasura.checkConstraints(planId);
       assertEquals(1,constraintResponses.size());
-      final var constraintResponse = constraintResponses.get(0);
-      assertFalse(constraintResponse.success());
-      assertEquals(constraintId, constraintResponse.constraintId());
-      assertEquals(constraintName, constraintResponse.constraintName());
-      assertEquals("plan", constraintResponse.type());
-      assertTrue(constraintResponse.result().isEmpty());
-      assertEquals(1,constraintResponse.errors().size());
-      final ConstraintError error = constraintResponse.errors().get(0);
-      assertEquals("Constraint 'fruit_equal_peel' compilation failed:\n"
-                   + " TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
+      final var constraintRepsonse = constraintResponses.get(0);
+      assertEquals(false,constraintRepsonse.success());
+      assertEquals(1,constraintRepsonse.errors().size());
+      final ConstraintError error = constraintRepsonse.errors().get(0);
+      assertEquals("Constraint 'fruit_equal_peel': TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
 
     }
-
-    /**
-     *  This test case evaluates the scenario where a user initially has a functioning constraint.
-     *  However, during the modification process, they introduce a compilation error.
-     *  The goal is to confirm that the user can successfully fix the compilation error,
-     *  ensuring that the constraint compiles correctly and returns a valid response.
-     */
-    @Test
-    @DisplayName("If a constraint is updated and then reverted, Constraints will load the cached value from before the update.")
-    void constraintInvalidModification() throws IOException {
-      // Simulate the plan to insure a new simulation set
-      hasura.awaitSimulation(planId);
-
-      // Check the initial constraints responses it should compile
-      final var constraintsResponses = hasura.checkConstraints(planId);
-      assertEquals(1, constraintsResponses.size());
-      assertTrue(constraintsResponses.get(0).success());
-      assertEquals(constraintId, constraintsResponses.get(0).constraintId());
-      assertEquals(constraintName, constraintsResponses.get(0).constraintName());
-      assertEquals("plan", constraintsResponses.get(0).type());
-      // Attempt to update a constraint with an invalid syntax and capture the error response
-      hasura.updateConstraint(
-          constraintId,
-          WithExternalDatasets.constraintDefinition + "; error");
-
-      // Check the constraints response after the invalid modification
-      final var constraintsErrorResponses = hasura.checkConstraints(planId);
-      assertEquals(1, constraintsErrorResponses.size());
-      assertFalse(constraintsErrorResponses.get(0).success());
-      assertEquals(constraintId, constraintsErrorResponses.get(0).constraintId());
-      assertEquals(constraintName, constraintsErrorResponses.get(0).constraintName());
-      assertEquals("plan", constraintsErrorResponses.get(0).type());
-      assertTrue(constraintsErrorResponses.get(0).result().isEmpty());
-      assertEquals(1, constraintsErrorResponses.get(0).errors().size());
-
-      // Restore the original valid constraint
-      hasura.updateConstraint(
-          constraintId,
-          WithExternalDatasets.constraintDefinition);
-
-      // Check the constraints response after reverting to the valid constraint
-      final var constraintsCacheResponses = hasura.checkConstraints(planId);
-      assertEquals(1, constraintsCacheResponses.size());
-      assertTrue(constraintsCacheResponses.get(0).success());
-
-      // Ensure that the constraints responses are the same before and after the invalid modification
-      assertEquals(constraintsResponses, constraintsCacheResponses);
-    }
-
   }
 }

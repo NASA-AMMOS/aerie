@@ -7,12 +7,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -20,9 +21,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class TestRecurrenceGoal {
 
   @Test
-  public void testRecurrence() throws SchedulingInterruptedException {
+  public void testRecurrence() {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -51,7 +55,13 @@ public class TestRecurrenceGoal {
   @Test
   public void testRecurrenceNegative() {
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel,
+                                  planningHorizon,
+                                  new SimulationFacade(planningHorizon,
+                                                       fooMissionModel),
+                                  SimulationUtility.getFooSchedulerModel());
+
     try {
       final var activityType = problem.getActivityType("ControllableDurationActivity");
       final var goal = new RecurrenceGoal.Builder()

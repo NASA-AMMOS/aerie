@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import javax.json.Json;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public record SynchronousSimulationAgent (
@@ -26,11 +25,7 @@ public record SynchronousSimulationAgent (
   }
 
   @Override
-  public void simulate(
-      final PlanId planId,
-      final RevisionData revisionData,
-      final ResultsProtocol.WriterRole writer,
-      final Supplier<Boolean> canceledListener) {
+  public void simulate(final PlanId planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
       plan = this.planService.getPlanForSimulation(planId);
@@ -89,7 +84,7 @@ public record SynchronousSimulationAgent (
             plan.startTimestamp.toInstant(),
             planDuration,
             plan.activityDirectives,
-            plan.configuration), extentListener::updateValue, canceledListener);
+            plan.configuration), extentListener::updateValue);
       }
     } catch (SimulationException ex) {
       writer.failWith(b -> b
@@ -116,10 +111,6 @@ public record SynchronousSimulationAgent (
       return;
     }
 
-    if(canceledListener.get()) {
-      writer.reportIncompleteResults(results);
-    } else {
-      writer.succeedWith(results);
-    }
+    writer.succeedWith(results);
   }
 }

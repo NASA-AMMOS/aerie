@@ -8,8 +8,8 @@ public record SimulationStateRecord(Status status, Optional<SimulationFailure> r
     return new SimulationStateRecord(Status.PENDING, Optional.empty());
   }
 
-  public static SimulationStateRecord incomplete(SimulationFailure reason) {
-    return new SimulationStateRecord(Status.INCOMPLETE, Optional.of(reason));
+  public static SimulationStateRecord incomplete() {
+    return new SimulationStateRecord(Status.INCOMPLETE, Optional.empty());
   }
 
   public static SimulationStateRecord failed(final SimulationFailure reason) {

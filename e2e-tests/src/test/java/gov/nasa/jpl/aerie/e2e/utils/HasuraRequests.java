@@ -20,9 +20,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-
 /**
  * Hasura API request functions
  */
@@ -35,7 +32,7 @@ public class HasuraRequests implements AutoCloseable {
   public HasuraRequests(Playwright playwright) {
     request = playwright.request().newContext(
             new APIRequest.NewContextOptions()
-                    .setBaseURL(BaseURL.HASURA.url).setTimeout(0));
+                    .setBaseURL(BaseURL.HASURA.url));
   }
 
   @Override
@@ -250,21 +247,6 @@ public class HasuraRequests implements AutoCloseable {
     return SimulationResponse.fromJSON(makeRequest(GQL.SIMULATE, variables).getJsonObject("simulate"));
   }
 
-  private SimulationDataset cancelSimulation(int simDatasetId, int timeout) throws IOException {
-    final var variables = Json.createObjectBuilder().add("id", simDatasetId).build();
-    makeRequest(GQL.CANCEL_SIMULATION, variables);
-    for(int i = 0; i < timeout; ++i){
-      try {
-        Thread.sleep(1000); //1s
-      } catch (InterruptedException ex) {throw new RuntimeException(ex);}
-      final var response = getSimulationDataset(simDatasetId);
-      // If reason is present, that means that the simulation results have posted
-      // and we are not just seeing the side effects of `GQL.CANCEL_SIMULATION`
-      if(response.canceled() && response.reason().isPresent()) return response;
-    }
-    throw new TimeoutError("Canceling simulation timed out after " + timeout + " seconds");
-  }
-
   /**
    * Simulate the specified plan with a timeout of 30 seconds
    */
@@ -291,46 +273,7 @@ public class HasuraRequests implements AutoCloseable {
           case "complete" -> {
             return response;
           }
-          default -> fail("Simulation returned bad status " + response.status() + " with reason " +response.reason());
-        }
-    }
-    throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
-  }
-
-  /**
-   * Start and immediately cancel a simulation with a timeout of 30 seconds
-   * @param planId the plan to simulate
-   */
-  public SimulationDataset cancelingSimulation(int planId) throws IOException {
-    return cancelingSimulation(planId, 30);
-  }
-
-  /**
-   * Start and immediately cancel a simulation with a set timeout
-   * @param planId the plan to simulate
-   * @param timeout the length of the timeout, in seconds
-   */
-  public SimulationDataset cancelingSimulation(int planId, int timeout) throws IOException {
-    for(int i = 0; i < timeout; ++i){
-      final var response = simulate(planId);
-        switch (response.status()) {
-          case "pending" -> {
-            try {
-              Thread.sleep(1000); // 1s
-            } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
-          }
-          case "incomplete" -> {
-            try {
-              Thread.sleep(1000); // 1s to give the simulation time to do some work
-            } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
-            return cancelSimulation(response.simDatasetId(), timeout-i);
-          }
-          case "complete" -> fail("Simulation completed before it could be canceled");
-          default -> fail("Simulation returned bad status " + response.status() + " with reason " +response.reason());
+          default -> throw new IOException("Simulation returned bad status " + response.status() + " with reason " +response.reason());
         }
     }
     throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
@@ -385,37 +328,6 @@ public class HasuraRequests implements AutoCloseable {
     return SchedulingResponse.fromJSON(data);
   }
 
-  private SchedulingRequest cancelSchedulingRun(int analysisId, int timeout) throws IOException {
-    final var variables = Json.createObjectBuilder().add("analysis_id", analysisId).build();
-    //assert that we only canceled one task
-    final var cancelRequest = makeRequest(GQL.CANCEL_SCHEDULING, variables)
-                                .getJsonObject("update_scheduling_request")
-                                .getJsonArray("returning");
-    assertEquals(1, cancelRequest.size());
-    final int specId = cancelRequest.getJsonObject(0).getInt("specification_id");
-    final int specRev = cancelRequest.getJsonObject(0).getInt("specification_revision");
-    for(int i = 0; i <timeout; ++i) {
-      try {
-        Thread.sleep(1000); //1s
-      } catch (InterruptedException ex) {throw new RuntimeException(ex);}
-      final var response = getSchedulingRequest(specId, specRev);
-      // If reason is present, that means that the scheduler has posted
-      // and we are not just seeing the side effects of `GQL.CANCEL_SCHEDULING`
-      if(response.canceled() && response.reason().isPresent()) return response;
-    }
-    throw new TimeoutError("Canceling scheduling timed out after " + timeout + " seconds");
-  }
-
-  private SchedulingRequest getSchedulingRequest(int specificationId, int specificationRevision) throws IOException {
-    final var variables = Json.createObjectBuilder()
-                              .add("specificationId", specificationId)
-                              .add("specificationRev", specificationRevision)
-                              .build();
-    final var data = makeRequest(GQL.GET_SCHEDULING_REQUEST, variables).getJsonObject("scheduling_request_by_pk");
-    return SchedulingRequest.fromJSON(data);
-  }
-
-
   /**
    * Run scheduling on the specified scheduling specification with a timeout of 30 seconds
    */
@@ -441,43 +353,8 @@ public class HasuraRequests implements AutoCloseable {
           case "complete" -> {
             return response;
           }
-          default -> fail("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
+          default -> throw new IOException("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
         }
-    }
-    throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
-  }
-
-  /**
-   * Start and immediately cancel a scheduling run with a timeout of 30 seconds
-   * @param schedulingSpecId the scheduling specification to use
-   *
-   */
-  public SchedulingRequest cancelingScheduling(int schedulingSpecId) throws IOException {
-    return cancelingScheduling(schedulingSpecId, 30);
-  }
-
-  /**
-   * Start and immediately cancel a scheduling run with a set timeout
-   * @param schedulingSpecId the scheduling specification to use
-   * @param timeout the length of the timeout, in seconds
-   */
-  public SchedulingRequest cancelingScheduling(int schedulingSpecId, int timeout) throws IOException {
-    for(int i = 0; i < timeout; ++i) {
-      final var response = schedule(schedulingSpecId);
-      switch (response.status()) {
-        case "pending" -> {
-          try {
-            Thread.sleep(1000); //1s
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-          }
-        }
-        case "incomplete" -> {
-          return cancelSchedulingRun(response.analysisId(), timeout - i);
-        }
-        case "complete" -> fail("Scheduling completed before it could be canceled");
-        default -> fail("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
-      }
     }
     throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
   }

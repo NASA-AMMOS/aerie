@@ -8,8 +8,7 @@ import java.sql.SQLException;
 
 /*package local*/ public class ListenSimulationStatusAction implements AutoCloseable{
   private static final @Language("SQL") String sql = """
-    LISTEN "simulation_notification";
-    LISTEN "simulation_cancel";
+    LISTEN "simulation_notification"
   """;
 
   private final PreparedStatement statement;

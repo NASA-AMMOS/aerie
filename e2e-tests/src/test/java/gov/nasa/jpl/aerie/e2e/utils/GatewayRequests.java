@@ -35,13 +35,6 @@ public class GatewayRequests implements AutoCloseable {
   }
 
   /**
-   * Uploads the Foo JAR
-   */
-  public int uploadFooJar() throws IOException {
-    return uploadJarFile("../examples/foo-missionmodel/build/libs/foo-missionmodel.jar");
-  }
-
-  /**
    * Uploads the JAR found at searchPath
    * @param jarPath is relative to the e2e-tests directory.
    */

@@ -7,25 +7,30 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
-import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCardinalityGoal {
 
   @Test
-  public void testone() throws SchedulingInterruptedException {
+  public void testone() {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
-
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(12, Duration.SECONDS), Duration.of(15, Duration.SECONDS)))
@@ -44,7 +49,7 @@ public class TestCardinalityGoal {
 
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
-    assertEquals(6, plan.get().getActivitiesByTime().size());
+    assertTrue(plan.get().getActivitiesByTime().size() == 6);
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));

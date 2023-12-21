@@ -14,7 +14,7 @@ Aerie is a software framework for modeling spacecraft. Its main features include
 - An embedded TypeScript DSL for defining and executing constraints
 - An embedded TypeScript DSL for defining and executing activity command expansions
 - An embedded TypeScript DSL for defining sequences
-- A [GraphQL API](https://nasa-ammos.github.io/aerie-docs/api/introduction)
+- A GraphQL API
 - A web-based [client application][ui-repo]
 
 ## Getting Started

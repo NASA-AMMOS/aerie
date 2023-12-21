@@ -31,13 +31,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
     return new PrioritySolver(
             new Problem(
                     bananaMissionModel,
                     h,
-                    new SimulationFacade(h, bananaMissionModel, schedulerModel, () -> false),
-                    schedulerModel));
+                    new SimulationFacade(h, bananaMissionModel),
+                    SimulationUtility.getBananaSchedulerModel()));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {
@@ -55,9 +54,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_onEmptyProblemGivesEmptyPlanAndOneEmptyEvaluation()
-  throws SchedulingInterruptedException
-  {
+  public void getNextSolution_onEmptyProblemGivesEmptyPlanAndOneEmptyEvaluation() {
     final var solver = makeEmptyProblemSolver();
     final var plan = solver.getNextSolution();
 
@@ -67,7 +64,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_givesNoSolutionOnSubsequentCall() throws SchedulingInterruptedException {
+  public void getNextSolution_givesNoSolutionOnSubsequentCall() {
     final var solver = makeEmptyProblemSolver();
     solver.getNextSolution();
     final var plan1 = solver.getNextSolution();
@@ -78,8 +75,7 @@ public class PrioritySolverTest {
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
-    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel, fooSchedulerModel, ()-> false), fooSchedulerModel);
+    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel), SimulationUtility.getFooSchedulerModel());
   }
 
   private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2025-005T01:01:01.001"));
@@ -88,6 +84,7 @@ public class PrioritySolverTest {
   private final static Duration d1hr = Duration.of(1, Duration.HOUR);
   private final static Duration t1hr = t0.plus(d1hr);
   private final static Duration t2hr = t0.plus(d1hr.times(2));
+  private final static Duration t3hr = t0.plus(d1hr.times(2));
 
   private static final NullPointerTester NULL_POINTER_TESTER = new NullPointerTester()
       .setDefault(Problem.class, new Problem(null, h, null, null));
@@ -120,7 +117,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException {
+  public void getNextSolution_initialPlanInOutput() {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     problem.setInitialPlan(makePlanA012(problem));
@@ -134,7 +131,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_proceduralGoalCreatesActivities() throws SchedulingInterruptedException {
+  public void getNextSolution_proceduralGoalCreatesActivities() {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
@@ -153,7 +150,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_proceduralGoalAttachesActivitiesToEvaluation() throws SchedulingInterruptedException {
+  public void getNextSolution_proceduralGoalAttachesActivitiesToEvaluation() {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
@@ -175,7 +172,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_recurrenceGoalWorks() throws SchedulingInterruptedException {
+  public void getNextSolution_recurrenceGoalWorks() {
     final var problem = makeTestMissionAB();
     final var goal = new RecurrenceGoal.Builder()
         .named("g0")
@@ -203,7 +200,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_coexistenceGoalOnActivityWorks() throws SchedulingInterruptedException {
+  public void getNextSolution_coexistenceGoalOnActivityWorks() {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA012(problem));
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
@@ -240,15 +237,11 @@ public class PrioritySolverTest {
    */
   @Test
   public void getNextSolution_coexistenceGoalOnActivityWorks_withInitialSimResults()
-  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  throws SimulationFacade.SimulationException
   {
     final var problem = makeTestMissionAB();
 
-    final var adHocFacade = new SimulationFacade(
-        problem.getPlanningHorizon(),
-        problem.getMissionModel(),
-        problem.getSchedulerModel(),
-        ()-> false);
+    final var adHocFacade = new SimulationFacade(problem.getPlanningHorizon(), problem.getMissionModel());
     adHocFacade.insertActivitiesIntoSimulation(makePlanA012(problem).getActivities());
     adHocFacade.computeSimulationResultsUntil(problem.getPlanningHorizon().getEndAerie());
     final var simResults = adHocFacade.getLatestDriverSimulationResults().get();
@@ -279,20 +272,13 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void testCardGoalWithApplyWhen() throws SchedulingInterruptedException {
+  public void testCardGoalWithApplyWhen(){
     var planningHorizon = h;
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
-    Problem problem = new Problem(
-        fooMissionModel,
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
-        new SimulationFacade(
-            planningHorizon,
-            fooMissionModel,
-            fooSchedulerModel,
-            ()-> false),
-        SimulationUtility.getFooSchedulerModel());
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     //act at t=1hr and at t=2hrs

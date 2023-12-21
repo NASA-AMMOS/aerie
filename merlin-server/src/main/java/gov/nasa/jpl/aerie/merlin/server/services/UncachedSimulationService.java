@@ -21,7 +21,7 @@ public record UncachedSimulationService (
     final var cell = new InMemoryCell(planId, inMemoryRevisionData.planRevision());
 
     try {
-      this.agent.simulate(planId, revisionData, cell, () -> false);
+      this.agent.simulate(planId, revisionData, cell);
     } catch (final InterruptedException ex) {
       // Do nothing. We'll get the current result (probably an Incomplete)
       // and throw away the cell anyway.

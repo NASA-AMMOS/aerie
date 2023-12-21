@@ -14,4 +14,3 @@ call migrations.mark_migration_applied('8');
 call migrations.mark_migration_applied('9');
 call migrations.mark_migration_applied('10');
 call migrations.mark_migration_applied('11');
-call migrations.mark_migration_applied('12');

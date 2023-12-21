@@ -32,7 +32,6 @@ task e2eTest(type: Test) {
   }
 
   dependsOn ":examples:banananation:assemble"
-  dependsOn ":examples:foo-missionmodel:assemble"
 
   if(file('.env').exists()) {
     parseEnvFile('.env')

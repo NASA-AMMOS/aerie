@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.ConstraintCompilationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
@@ -239,6 +240,8 @@ public final class MerlinBindings implements Plugin {
       final var constraintViolations = this.constraintAction.getViolations(planId, simulationDatasetId);
 
       ctx.result(ResponseSerializers.serializeConstraintResults(constraintViolations).toString());
+    } catch (ConstraintCompilationException ex) {
+      ctx.result((ResponseSerializers.serializeConstraintCompileException(ex)).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {

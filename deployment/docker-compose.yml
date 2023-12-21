@@ -142,7 +142,6 @@ services:
     depends_on: ["postgres"]
     environment:
       ORIGIN: http://localhost
-      PUBLIC_AERIE_FILE_STORE_PREFIX: "/usr/src/app/merlin_file_store/"
       PUBLIC_LOGIN_PAGE: "enabled"
       PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
       PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000

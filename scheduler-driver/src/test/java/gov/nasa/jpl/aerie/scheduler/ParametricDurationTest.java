@@ -31,11 +31,11 @@ public class ParametricDurationTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochDays(3));
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel, SimulationUtility.getBananaSchedulerModel(), ()-> false), SimulationUtility.getBananaSchedulerModel());
+    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
   }
 
   @Test
-  public void testStartConstraint() throws SchedulingInterruptedException {
+  public void testStartConstraint() {
 
     final var parameterizedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("DownloadBanana"))
@@ -65,7 +65,7 @@ public class ParametricDurationTest {
   }
 
   @Test
-  public void testEndConstraint() throws SchedulingInterruptedException {
+  public void testEndConstraint() {
 
     final var parameterizedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("DownloadBanana"))

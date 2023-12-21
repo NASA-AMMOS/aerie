@@ -2,8 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 
-import java.util.function.Supplier;
-
 /**
  * agent that can handle posed scheduling requests
  */
@@ -20,9 +18,6 @@ public interface SchedulerAgent {
    * @param request details of scheduling request, including target plan version
    * @param writer object representing the request for scheduling results, including space to store results
    */
-  void schedule(
-      ScheduleRequest request,
-      ResultsProtocol.WriterRole writer,
-      Supplier<Boolean> canceledListener
-  ) throws InterruptedException;
+  void schedule(ScheduleRequest request, ResultsProtocol.WriterRole writer) throws InterruptedException;
+
 }

@@ -2003,7 +2003,9 @@ public class SchedulingIntegrationTests {
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
     mockMerlinService.setPlanningHorizon(planningHorizon);
-    externalProfiles.ifPresent(mockMerlinService::setExternalDataset);
+    if(externalProfiles.isPresent()) {
+      mockMerlinService.setExternalDataset(externalProfiles.get());
+    }
     final var planId = new PlanId(1L);
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
@@ -2028,7 +2030,7 @@ public class SchedulingIntegrationTests {
         schedulingDSLCompiler);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
-    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer, () -> false);
+    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer);
     assertEquals(1, writer.results.size());
     final var result = writer.results.get(0);
     if (result instanceof MockResultsProtocolWriter.Result.Failure e) {
@@ -2695,14 +2697,15 @@ public class SchedulingIntegrationTests {
             new ActivityDirectiveId(2L),
             new ActivityDirective(
                 tenMinutes,
-                "PickBanana",
+                "GrowBanana",
                 Map.of(
-                    "quantity", SerializedValue.of(1)),
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
                 new ActivityDirectiveId(1L),
                 true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
-            forEach: ActivityExpression.ofType(ActivityTypes.PickBanana),
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
             startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes : 5}))
           })
@@ -2723,20 +2726,20 @@ public class SchedulingIntegrationTests {
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var peelBananas = planByActivityType.get("PeelBanana");
-    final var pickBananas = planByActivityType.get("PickBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
     final var durationParamActivities = planByActivityType.get("DurationParameterActivity");
 
     assertEquals(1, peelBananas.size());
-    assertEquals(1, pickBananas.size());
+    assertEquals(1, growBananas.size());
     assertEquals(1, durationParamActivities.size());
     final var peelBanana = peelBananas.iterator().next();
-    final var pickBanana = pickBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
     final var durationParamActivity = durationParamActivities.iterator().next();
 
     assertEquals(Duration.ZERO, durationParamActivity.startOffset());
 
-    assertEquals(tenMinutes, pickBanana.startOffset());
-    assertEquals(SerializedValue.of(1), pickBanana.serializedActivity().getArguments().get("quantity"));
+    assertEquals(tenMinutes, growBanana.startOffset());
+    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
 
     assertEquals(Duration.of(15, Duration.MINUTES), peelBanana.startOffset());
     assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));

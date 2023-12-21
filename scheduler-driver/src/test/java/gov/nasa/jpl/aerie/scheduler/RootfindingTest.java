@@ -19,7 +19,7 @@ public class RootfindingTest {
   void testHighlyDiscontinuous()
   throws EquationSolvingAlgorithms.ZeroDerivativeException, EquationSolvingAlgorithms.NoSolutionException,
          EquationSolvingAlgorithms.ExceededMaxIterationException, EquationSolvingAlgorithms.DivergenceException,
-         EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
+         EquationSolvingAlgorithms.InfiniteDerivativeException
   {
     final var durationFunctionDiscontinuousAtEverySecond =
         new EquationSolvingAlgorithms.Function<Duration, PrioritySolver.ActivityMetadata>() {
@@ -60,7 +60,7 @@ public class RootfindingTest {
   public void testSimpleDiscontinuous()
   throws EquationSolvingAlgorithms.ZeroDerivativeException, EquationSolvingAlgorithms.NoSolutionException,
          EquationSolvingAlgorithms.ExceededMaxIterationException, EquationSolvingAlgorithms.DivergenceException,
-         EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
+         EquationSolvingAlgorithms.InfiniteDerivativeException
   {
     final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
 
@@ -101,7 +101,7 @@ public class RootfindingTest {
   public void squareZeros()
   throws EquationSolvingAlgorithms.ZeroDerivativeException,
          EquationSolvingAlgorithms.ExceededMaxIterationException,
-         EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
+         EquationSolvingAlgorithms.InfiniteDerivativeException
   {
     final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
     //f(x) = x^2
@@ -136,7 +136,7 @@ public class RootfindingTest {
   public void floorZeros()
   throws EquationSolvingAlgorithms.ZeroDerivativeException,
          EquationSolvingAlgorithms.ExceededMaxIterationException,
-         EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
+         EquationSolvingAlgorithms.InfiniteDerivativeException
   {
     final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
     final var floorFunc =

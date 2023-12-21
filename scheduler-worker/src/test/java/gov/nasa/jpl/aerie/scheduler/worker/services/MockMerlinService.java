@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.scheduler.worker.services;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -107,8 +106,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoal,
-      final SchedulerModel schedulerModel
+      final Map<SchedulingActivityDirective, GoalId> activityToGoal
   )
   {
     return null;
@@ -126,11 +124,10 @@ class MockMerlinService implements MerlinService.OwnerRole {
       final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoal,
-      final SchedulerModel schedulerModel
+      final Map<SchedulingActivityDirective, GoalId> activityToGoal
   )
   {
-    this.updatedPlan = extractActivityDirectives(plan, schedulerModel);
+    this.updatedPlan = extractActivityDirectives(plan);
     this.plan = plan;
     final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
     for (final var activity : plan.getActivities()) {
@@ -171,9 +168,8 @@ class MockMerlinService implements MerlinService.OwnerRole {
   public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
-      final SchedulerModel schedulerModel
-      )
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
+  )
   {
     return null;
   }
@@ -202,7 +198,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
 
-  private static Collection<ActivityDirective> extractActivityDirectives(final Plan plan, final SchedulerModel schedulerModel) {
+  private static Collection<ActivityDirective> extractActivityDirectives(final Plan plan) {
     final var activityDirectives = new ArrayList<ActivityDirective>();
     for (final var activity : plan.getActivities()) {
       final var type = activity.getType();
@@ -210,9 +206,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
       if(type.getDurationType() instanceof DurationType.Controllable durationType){
         //detect duration parameter and add it to parameters
         if(!arguments.containsKey(durationType.parameterName())){
-          arguments.put(
-              durationType.parameterName(),
-              schedulerModel.serializeDuration(activity.duration()));
+          arguments.put(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
         }
       }
       activityDirectives.add(new ActivityDirective(

@@ -29,11 +29,11 @@ public class FixedDurationTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochDays(3));
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel, SimulationUtility.getBananaSchedulerModel(), ()-> false), SimulationUtility.getBananaSchedulerModel());
+    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
   }
 
   @Test
-  public void testFieldAnnotation() throws SchedulingInterruptedException {
+  public void testFieldAnnotation(){
 
     final var fixedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("BananaNap"))
@@ -63,7 +63,7 @@ public class FixedDurationTest {
 
 
   @Test
-  public void testMethodAnnotation() throws SchedulingInterruptedException {
+  public void testMethodAnnotation(){
 
     final var fixedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("RipenBanana"))

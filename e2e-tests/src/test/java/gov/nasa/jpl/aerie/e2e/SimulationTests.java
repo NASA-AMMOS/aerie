@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.e2e;
 
 import com.microsoft.playwright.Playwright;
-import gov.nasa.jpl.aerie.e2e.types.SimulationDataset;
 import gov.nasa.jpl.aerie.e2e.types.SimulationDataset.SimulatedActivity;
 import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
@@ -20,10 +19,7 @@ import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SimulationTests {
@@ -243,80 +239,6 @@ public class SimulationTests {
       assertEquals("03:00:00", thirdActivity.duration());
       assertEquals("14:00:00", thirdActivity.startOffset());
       assertEquals(secondHalfActivityStartTime, thirdActivity.startTime());
-    }
-  }
-
-  @Nested
-  class CancelingSimulation {
-    private int fooId;
-    private int fooPlan;
-
-    @BeforeEach
-    void beforeEach() throws IOException, InterruptedException {
-      // Insert the Mission Model
-      // Long Foo plans take long enough to be canceled without risking a race condition like with Banananation
-      try (final var gateway = new GatewayRequests(playwright)) {
-        fooId = hasura.createMissionModel(
-            gateway.uploadFooJar(),
-            "Foo (e2e tests)",
-            "aerie_e2e_tests",
-            "Simulation Tests");
-      }
-      // Insert the Plan
-      fooPlan = hasura.createPlan(
-          fooId,
-          "Foo Plan - Simulation Tests",
-          "1760:00:00",
-          planStartTimestamp);
-
-      // Add a ControllableDurationActivity every hour
-      for(int i = 0; i < 1760; ++i) {
-        final var startOffset = (i<10 ? "0"+i : i) + ":00:00";
-        final var growArgs = Json.createObjectBuilder()
-                                 .add("duration", Json.createObjectBuilder()
-                                                      .add("amountInMicroseconds", 60000000*60L))  // 1 hour
-                                 .build();
-        hasura.insertActivity(fooPlan, "ControllableDurationActivity", startOffset, growArgs);
-      }
-    }
-
-    @AfterEach
-    void afterEach() throws IOException {
-      // Remove Model and Plan
-      hasura.deletePlan(fooPlan);
-      hasura.deleteMissionModel(fooId);
-    }
-
-    /**
-     * Cancelling a simulation returns results up to that point
-     */
-    @Test
-    void cancelingSimReturnsPartialResults() throws IOException {
-      final var results = hasura.cancelingSimulation(fooPlan);
-      // Assert that the simulation was incomplete
-      assertEquals(SimulationDataset.SimulationStatus.incomplete, results.status());
-
-      // Assert reason
-      assertTrue(results.reason().isPresent());
-      final var reason = results.reason().get();
-      assertEquals("SIMULATION_CANCELED", reason.type());
-      assertEquals("Simulation run was canceled", reason.message());
-      assertEquals("", reason.trace());
-      assertNotNull(reason.timestamp());
-
-      // Assert the data in the reason
-      final var reasonData = reason.data();
-      assertEquals(2, reasonData.size());
-      assertTrue(reasonData.containsKey("utcTimeDoy"));
-      assertTrue(reasonData.containsKey("elapsedTime"));
-
-      assertNotEquals(planEndTimestamp, reasonData.getString("utcTimeDoy"));
-
-      final var elapsedHours = reasonData.getString("elapsedTime").split(":")[0];
-      final int startedActivities = Integer.parseInt(elapsedHours) + 1; // Hours + 1 (Accounts for 0 index)
-
-      // There should be as many activities that began simulation as hours into time elapsed
-      assertEquals(startedActivities, results.activities().size());
     }
   }
 }

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
@@ -29,7 +28,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -70,6 +68,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.Solver;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -108,11 +107,7 @@ public record SynchronousSchedulerAgent(
    * any remaining exceptions passed upward represent fatal service configuration problems
    */
   @Override
-  public void schedule(
-      final ScheduleRequest request,
-      final ResultsProtocol.WriterRole writer,
-      final Supplier<Boolean> canceledListener
-  ) {
+  public void schedule(final ScheduleRequest request, final ResultsProtocol.WriterRole writer) {
     try {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
@@ -127,11 +122,7 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
-      try(final var simulationFacade = new SimulationFacade(
-          planningHorizon,
-          schedulerMissionModel.missionModel(),
-          schedulerMissionModel.schedulerModel(),
-          canceledListener)) {
+      try(final var simulationFacade = new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel())) {
         final var problem = new Problem(
             schedulerMissionModel.missionModel(),
             planningHorizon,
@@ -219,7 +210,7 @@ public record SynchronousSchedulerAgent(
         }
         problem.setGoals(orderedGoals);
 
-        final var scheduler = new PrioritySolver(problem, specification.analysisOnly());
+        final var scheduler = createScheduler(planMetadata, problem, specification.analysisOnly());
         //run the scheduler to find a solution to the posed problem, if any
         final var solutionPlan = scheduler.getNextSolution().orElseThrow(
             () -> new ResultsProtocolFailure("scheduler returned no solution"));
@@ -238,16 +229,13 @@ public record SynchronousSchedulerAgent(
             loadedPlanComponents.idMap(),
             loadedPlanComponents.merlinPlan(),
             solutionPlan,
-            activityToGoalId,
-            schedulerMissionModel.schedulerModel()
+            activityToGoalId
         );
         final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
         final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
         //collect results and notify subscribers of success
         final var results = collectResults(solutionPlan, instancesToIds, goals);
         writer.succeedWith(results, datasetId);
-      } catch (SchedulingInterruptedException e) {
-          writer.reportCanceled(e);
       }
     } catch (final SpecificationLoadException e) {
       writer.failWith(b -> b
@@ -301,7 +289,8 @@ public record SynchronousSchedulerAgent(
 
   private Optional<DatasetId> storeSimulationResults(PlanningHorizon planningHorizon, SimulationFacade simulationFacade, PlanMetadata planMetadata,
                                                      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
-      throws MerlinServiceException, IOException, SchedulingInterruptedException {
+  throws MerlinServiceException, IOException
+  {
     if(!simulationFacade.areInitialSimulationResultsStale()) return Optional.empty();
     //finish simulation until end of horizon before posting results
     try {
@@ -394,6 +383,20 @@ public record SynchronousSchedulerAgent(
   }
 
   /**
+   * create a scheduler that is tuned to solve the posed problem
+   *
+   * @param planMetadata details of the plan container that scheduling is occurring from/into
+   * @param problem specification of the scheduling problem that needs to be solved
+   * @return a new scheduler that is set up to begin providing solutions to the problem
+   */
+  private Solver createScheduler(final PlanMetadata planMetadata, final Problem problem, final boolean analysisOnly) {
+    //TODO: allow for separate control of windows for constraint analysis vs ability to schedule activities
+    //      (eg constraint may need view into immutable past to know how to schedule things in the future)
+    final var solver = new PrioritySolver(problem, analysisOnly);
+    return solver;
+  }
+
+  /**
    * load the activity instance content of the specified merlin plan into scheduler-ready objects
    *
    * @param planMetadata metadata of plan container to load from
@@ -426,7 +429,11 @@ public record SynchronousSchedulerAgent(
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
           final var serializedDuration = activity.serializedActivity().getArguments().get(s.parameterName());
           if (serializedDuration != null) {
-            actDuration = problem.getSchedulerModel().deserializeDuration(serializedDuration);
+            actDuration = Duration.of(
+                serializedDuration
+                    .asInt()
+                    .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
+                Duration.MICROSECONDS);
           }
         } else if (schedulerActType.getDurationType() instanceof DurationType.Fixed fixedDurationType) {
           actDuration = fixedDurationType.duration();
@@ -570,13 +577,12 @@ public record SynchronousSchedulerAgent(
     final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
     final MerlinPlan initialPlan,
     final Plan newPlan,
-    final Map<SchedulingActivityDirective, GoalId> goalToActivity,
-    final SchedulerModel schedulerModel
+    final Map<SchedulingActivityDirective, GoalId> goalToActivity
   ) {
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> {
-          return merlinService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity, schedulerModel).getValue();
+          return merlinService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity).getValue();
         }
         case UpdateInputPlanWithNewActivities -> {
           return merlinService.updatePlanActivityDirectives(
@@ -584,8 +590,7 @@ public record SynchronousSchedulerAgent(
               idsFromInitialPlan,
               initialPlan,
               newPlan,
-              goalToActivity,
-              schedulerModel
+              goalToActivity
           );
         }
         default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);

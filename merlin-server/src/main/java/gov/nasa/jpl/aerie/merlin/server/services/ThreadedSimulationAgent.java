@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.Supplier;
 
 public final class ThreadedSimulationAgent implements SimulationAgent {
   private /*sealed*/ interface SimulationRequest {
@@ -33,11 +32,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
   }
 
   @Override
-  public void simulate(
-      final PlanId planId,
-      final RevisionData revisionData,
-      final ResultsProtocol.WriterRole writer,
-      final Supplier<Boolean> canceledListener)
+  public void simulate(final PlanId planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer)
   throws InterruptedException
   {
     this.requestQueue.put(new SimulationRequest.Simulate(planId, revisionData, writer));
@@ -67,11 +62,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
             if (request instanceof SimulationRequest.Simulate req) {
               try {
-                this.simulationAgent.simulate(
-                    req.planId(),
-                    req.revisionData(),
-                    req.writer(),
-                    () -> false);
+                this.simulationAgent.simulate(req.planId(), req.revisionData(), req.writer());
               } catch (final Throwable ex) {
                 ex.printStackTrace(System.err);
                 req.writer().failWith(b -> b

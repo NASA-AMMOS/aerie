@@ -7,8 +7,7 @@ import org.intellij.lang.annotations.Language;
 
 /*package local*/ public class ListenSchedulingRequestStatusAction implements AutoCloseable{
   private static final @Language("SQL") String sql = """
-    LISTEN "scheduling_request_notification";
-    LISTEN "scheduling_cancel";
+    LISTEN "scheduling_request_notification"
   """;
 
   private final PreparedStatement statement;

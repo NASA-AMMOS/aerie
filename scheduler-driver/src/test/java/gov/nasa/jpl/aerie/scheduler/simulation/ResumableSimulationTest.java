@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -27,16 +28,16 @@ public class ResumableSimulationTest {
   private final Duration fiveHours = Duration.of(5, Duration.HOURS);
 
   @BeforeEach
-  public void init() throws SchedulingInterruptedException {
+  public void init() {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours, ()-> false);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours);
     for (var act : acts) {
       resumableSimulationDriver.simulateActivity(act.start, act.activity, null, true, act.id);
     }
   }
   @Test
-  public void simulationResultsTest() throws SchedulingInterruptedException {
+  public void simulationResultsTest(){
     final var now = Instant.now();
     //ensures that simulation results are generated until the end of the last act;
     var simResults = resumableSimulationDriver.getSimulationResults(now);
@@ -48,7 +49,7 @@ public class ResumableSimulationTest {
   }
 
   @Test
-  public void simulationResultsTest2() throws SchedulingInterruptedException{
+  public void simulationResultsTest2(){
     /* ensures that when the passed start epoch is not equal to the one used for previously computed results, the results are re-computed */
     var simResults = resumableSimulationDriver.getSimulationResults(Instant.now());
     assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
@@ -57,7 +58,7 @@ public class ResumableSimulationTest {
   }
 
   @Test
-  public void simulationResultsTest3() throws SchedulingInterruptedException{
+  public void simulationResultsTest3(){
      /* ensures that when current simulation results cover less than the asked period and that nothing has happened
     between two requests, the results are re-computed */
     final var now = Instant.now();
@@ -78,14 +79,13 @@ public class ResumableSimulationTest {
   }
 
   @Test
-  public void testStopsAtEndOfPlanningHorizon() throws SchedulingInterruptedException {
-    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
+  public void testStopsAtEndOfPlanningHorizon(){
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
-        new SerializedActivity("ControllableDurationActivity", Map.of("duration", fooSchedulerModel.serializeDuration(tenHours))),
+        new SerializedActivity("ControllableDurationActivity", Map.of("duration", SerializedValue.of(tenHours.in(MICROSECOND)))),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours, ()-> false);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, fiveHours);
     resumableSimulationDriver.initSimulation();
     resumableSimulationDriver.clearActivitiesInserted();
     resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
@@ -94,13 +94,13 @@ public class ResumableSimulationTest {
   }
 
   @Test
-  public void testThreadsReleased() throws SchedulingInterruptedException {
+  public void testThreadsReleased() {
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, ()-> false);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours);
     try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
       for (var i = 0; i < 20000; i++) {
         resumableSimulationDriver.initSimulation();

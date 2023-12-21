@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.worker;
 
-import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.scheduler.worker.postgres.ListenSchedulingRequestStatusAction;
 import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNotificationPayload;
@@ -29,7 +28,7 @@ public class ListenSchedulerCapability {
     this.notificationQueue = notificationQueue;
   }
 
-  public Thread registerListener(SchedulingCanceledListener canceledListener) {
+  public Thread registerListener() {
     final var listenerThread = new Thread(() -> {
       try (final var connection = this.dataSource.getConnection()) {
         try (final var listenSimulationStatusAction = new ListenSchedulingRequestStatusAction(connection)) {
@@ -46,24 +45,18 @@ public class ListenSchedulerCapability {
               final var processId = notification.getPID();
               final var channelName = notification.getName();
               final var payload = notification.getParameter();
-
               logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
-
-              if (channelName.equals("scheduling_cancel")) {
-                  canceledListener.receiveSignal(new SpecificationId(Long.parseLong(payload)));
-              } else {
-                try (final var reader = Json.createReader(new StringReader(payload))) {
-                  final var jsonValue = reader.readValue();
-                  final var notificationPayload = postgresSchedulingRequestNotificationP
-                      .parse(jsonValue)
-                      .getSuccessOrThrow();
-                  try {
-                    this.notificationQueue.put(notificationPayload);
-                  } catch (InterruptedException e) {
-                    // This thread will be interrupted when the worker's main loop exits, so it should exit gracefully:
-                    logger.info("Listener has been interrupted");
-                    return;
-                  }
+              try (final var reader = Json.createReader(new StringReader(payload))) {
+                final var jsonValue = reader.readValue();
+                final var notificationPayload = postgresSchedulingRequestNotificationP
+                    .parse(jsonValue)
+                    .getSuccessOrThrow();
+                try {
+                  this.notificationQueue.put(notificationPayload);
+                } catch (InterruptedException e) {
+                  // This thread will be interrupted when the worker's main loop exits, so it should exit gracefully:
+                  logger.info("Listener has been interrupted");
+                  return;
                 }
               }
             }

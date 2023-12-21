@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class BasicValueMappers {
-
   // Unit is an enum, so `$unit` needs to be defined before `$enum()`
   // in order to override the latter's representation.
   public static ValueMapper<Unit> $unit() { return new UnitValueMapper(); }

@@ -33,8 +33,7 @@ public final class SimulationUtility {
         startTime,
         simulationDuration,
         startTime,
-        simulationDuration,
-        () -> false);
+        simulationDuration);
   }
 
   @SafeVarargs
