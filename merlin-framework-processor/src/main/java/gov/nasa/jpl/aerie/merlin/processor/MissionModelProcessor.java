@@ -15,7 +15,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -91,30 +90,34 @@ public final class MissionModelProcessor implements Processor {
 
     // Iterate over all elements annotated with @MissionModel
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
-      final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
+      final var recordAutoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
+      final var annotationAutoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Annotation.class);
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
 
-        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
-        for (final var request : autoValueMapperRequests) {
-          concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
+        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules());
+        for (final var request : recordAutoValueMapperRequests) {
+          concatenatedTypeRules.add(AutoValueMappers.recordTypeRule(request, missionModelRecord$.getAutoValueMappersName()));
+        }
+        for (final var request : annotationAutoValueMapperRequests) {
+          concatenatedTypeRules.add(AutoValueMappers.annotationTypeRule(request, missionModelRecord$.getAutoValueMappersName()));
         }
 
         final var missionModelRecord = new MissionModelRecord(
-            missionModelRecord$.$package,
-            missionModelRecord$.topLevelModel,
-            missionModelRecord$.expectsPlanStart,
-            missionModelRecord$.modelConfigurationType,
+            missionModelRecord$.$package(),
+            missionModelRecord$.topLevelModel(),
+            missionModelRecord$.expectsPlanStart(),
+            missionModelRecord$.modelConfigurationType(),
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes
+            missionModelRecord$.activityTypes()
         );
 
         final var generatedFiles = new ArrayList<>(List.of(
             missionModelGen.generateMerlinPlugin(missionModelRecord),
             missionModelGen.generateSchedulerPlugin(missionModelRecord)));
 
-        missionModelRecord.modelConfigurationType
+        missionModelRecord.modelConfigurationType()
             .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
             .ifPresent(generatedFiles::add);
 
@@ -127,10 +130,11 @@ public final class MissionModelProcessor implements Processor {
 
         final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
             missionModelRecord,
-            autoValueMapperRequests);
+            recordAutoValueMapperRequests,
+            annotationAutoValueMapperRequests);
         generatedFiles.add(autoValueMappers);
 
-        for (final var activityRecord : missionModelRecord.activityTypes) {
+        for (final var activityRecord : missionModelRecord.activityTypes()) {
           this.ownedActivityTypes.add(activityRecord.inputType().declaration());
           if (!activityRecord.inputType().mapper().isCustom) {
             missionModelGen.generateActivityMapper(missionModelRecord, activityRecord).ifPresent(generatedFiles::add);

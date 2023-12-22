@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.json.Json;
@@ -16,10 +17,12 @@ import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.ProductParsers.productP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 
 public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
   public static final JsonParser<ValueSchema> valueSchemaP = new ValueSchemaJsonParser();
@@ -38,7 +41,7 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
     final var type = obj.get("type");
     if (!type.getValueType().equals(JsonValue.ValueType.STRING)) return JsonParseResult.failure("\"type\" field must be a string");
 
-    return switch (obj.getString("type")) {
+    JsonParseResult<ValueSchema> result = switch (obj.getString("type")) {
       case "real" -> JsonParseResult.success(ValueSchema.REAL);
       case "int" -> JsonParseResult.success(ValueSchema.INT);
       case "boolean" -> JsonParseResult.success(ValueSchema.BOOLEAN);
@@ -50,6 +53,13 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
       case "variant" -> parseVariant(obj);
       default -> JsonParseResult.failure("Unrecognized value schema type");
     };
+
+    if (obj.containsKey("metadata")) {
+      final var metadata = mapP(serializedValueP).parse(obj.getJsonObject("metadata"));
+      return result.mapSuccess($ -> new ValueSchema.MetaSchema(metadata.getSuccessOrThrow(), $));
+    }
+
+    return result;
   }
 
   private JsonParseResult<ValueSchema> parseSeries(final JsonObject obj) {
@@ -174,6 +184,14 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
                     .add("label", v.label())
                     .build(),
                 variants))
+            .build();
+      }
+
+      @Override
+      public JsonValue onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) {
+        return Json
+            .createObjectBuilder(target.match(this).asJsonObject())
+            .add("metadata", mapP(new SerializedValueJsonParser()).unparse(metadata))
             .build();
       }
     });

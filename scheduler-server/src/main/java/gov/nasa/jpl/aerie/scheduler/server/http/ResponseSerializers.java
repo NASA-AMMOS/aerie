@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
+import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
@@ -196,89 +197,6 @@ public class ResponseSerializers {
   public static JsonValue serializeValueSchema(final ValueSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
-    return schema.match(new ValueSchemaSerializer());
-  }
-
-  private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
-    @Override
-    public JsonValue onReal() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "real")
-          .build();
-    }
-
-    @Override
-    public JsonValue onInt() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "int")
-          .build();
-    }
-
-    @Override
-    public JsonValue onBoolean() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "boolean")
-          .build();
-    }
-
-    @Override
-    public JsonValue onString() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "string")
-          .build();
-    }
-
-    @Override
-    public JsonValue onDuration() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "duration")
-          .build();
-    }
-
-    @Override
-    public JsonValue onPath() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "path")
-          .build();
-    }
-
-    @Override
-    public JsonValue onSeries(final ValueSchema itemSchema) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "series")
-          .add("items", itemSchema.match(this))
-          .build();
-    }
-
-    @Override
-    public JsonValue onStruct(final Map<String, ValueSchema> parameterSchemas) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "struct")
-          .add("items", serializeMap(x -> x.match(this), parameterSchemas))
-          .build();
-    }
-
-    @Override
-    public JsonValue onVariant(final List<ValueSchema.Variant> variants) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "variant")
-          .add("variants", serializeIterable(
-              v -> Json
-                  .createObjectBuilder()
-                  .add("key", v.key())
-                  .add("label", v.label())
-                  .build(),
-              variants))
-          .build();
-    }
+    return new ValueSchemaJsonParser().unparse(schema);
   }
 }

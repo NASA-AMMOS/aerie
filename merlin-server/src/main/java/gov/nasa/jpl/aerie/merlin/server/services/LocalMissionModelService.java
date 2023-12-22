@@ -18,9 +18,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.function.Supplier;
 
 /**
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
@@ -149,6 +153,43 @@ public final class LocalMissionModelService implements MissionModelService {
     return directiveType.getInputType().validateArguments(activity.getArguments());
   }
 
+  public List<BulkArgumentValidationResponse> validateActivityArgumentsBulk(
+      final MissionModelId modelId,
+      final List<ActivityDirectiveForValidation> activities
+  ) throws NoSuchMissionModelException, MissionModelLoadException {
+    // load mission model once for all activities
+    final var modelType = this.loadMissionModelType(modelId.toString());
+    final var registry = DirectiveTypeRegistry.extract(modelType);
+
+    // map all directives to validation response
+    return activities.stream().map((directive) -> {
+      final var typeName = directive.activity().getTypeName();
+      final var arguments = directive.activity().getArguments();
+
+      try {
+        final var directiveType = registry.directiveTypes().get(typeName);
+        if (directiveType == null) {
+          return new BulkArgumentValidationResponse.NoSuchActivityError(new NoSuchActivityTypeException(typeName));
+        }
+
+        final var notices = directiveType.getInputType().validateArguments(arguments);
+        return notices.isEmpty()
+            ? new BulkArgumentValidationResponse.Success()
+            : new BulkArgumentValidationResponse.Validation(notices);
+      } catch (InstantiationException e) {
+        return new BulkArgumentValidationResponse.InstantiationError(e);
+      }
+    }).collect(Collectors.toList());
+  }
+
+  public Map<MissionModelId, List<ActivityDirectiveForValidation>> getUnvalidatedDirectives() {
+    return missionModelRepository.getUnvalidatedDirectives();
+  }
+
+  public void updateDirectiveValidations(List<Pair<ActivityDirectiveForValidation, BulkArgumentValidationResponse>> updates) {
+    missionModelRepository.updateDirectiveValidations(updates);
+  }
+
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
@@ -257,7 +298,10 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResultsInterface runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
+  public SimulationResultsInterface runSimulation(
+      final CreateSimulationMessage message,
+      final Consumer<Duration> simulationExtentConsumer,
+      final Supplier<Boolean> canceledListener)
   throws NoSuchMissionModelException
   {
     long accumulatedCpuTime = 0;  // nanoseconds
@@ -288,6 +332,7 @@ public final class LocalMissionModelService implements MissionModelService {
           message.planStartTime(),
           message.planDuration(),
           true,
+          canceledListener,
           simulationExtentConsumer);
     } else {
       // Try to reuse past simulation.
@@ -298,6 +343,7 @@ public final class LocalMissionModelService implements MissionModelService {
                                     message.planStartTime(),
                                     message.planDuration(),
                                     true,
+                                    canceledListener,
                                     simulationExtentConsumer);
     }
     accumulatedCpuTime = threadMXBean.getCurrentThreadCpuTime() - initialCpuTime;
@@ -376,14 +422,6 @@ public final class LocalMissionModelService implements MissionModelService {
     } catch (MissionModelRepository.NoSuchMissionModelException e) {
       throw new NoSuchMissionModelException(missionModelId);
     }
-  }
-
-  @Override
-  public void refreshActivityValidations(final String missionModelId, final ActivityDirectiveForValidation directive)
-  throws NoSuchMissionModelException, InstantiationException
-  {
-    final var notices = validateActivityArguments(missionModelId, directive.activity());
-    this.missionModelRepository.updateActivityDirectiveValidations(directive.id(), directive.planId(), directive.argumentsModifiedTime(), notices);
   }
 
   private ModelType<?, ?> loadMissionModelType(final String missionModelId)

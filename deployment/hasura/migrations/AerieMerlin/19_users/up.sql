@@ -296,6 +296,10 @@ comment on column merge_request.requester_username is e''
 comment on column merge_request.reviewer_username is e''
   'The user who reviews this merge request. Is empty until the request enters review.';
 
+-- REMOVE SYSTEM USERS IF THEY WERE MISTAKENLY ADDED ABOVE
+delete from metadata.users
+where username = 'Aerie Legacy' or username = 'Mission Model';
+
 -- UPDATE USERS ALLOWED ROLES
 insert into metadata.users_allowed_roles(username, allowed_role)
   select u.username, roles.role

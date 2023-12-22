@@ -5,13 +5,15 @@ import java.util.Map;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 
 public final class TypescriptCodeGenerationServiceTestFixtures {
 
-  public static final MissionModelService.MissionModelTypes MISSION_MODEL_TYPES =
-      new MissionModelService.MissionModelTypes(
+  public static final MerlinService.MissionModelTypes MISSION_MODEL_TYPES =
+      new MerlinService.MissionModelTypes(
           List.of(
-              new MissionModelService.ActivityType(
+              new ActivityType(
                   "SampleActivity1",
                   Map.of(
                       "variant",
@@ -35,7 +37,7 @@ public final class TypescriptCodeGenerationServiceTestFixtures {
                   ),
                   Map.of()
               ),
-              new MissionModelService.ActivityType(
+              new ActivityType(
                   "SampleActivity2",
                   Map.of(
                       "quantity",
@@ -46,7 +48,7 @@ public final class TypescriptCodeGenerationServiceTestFixtures {
                       Map.of("quantity", SerializedValue.of(5))
                   )
               ),
-              new MissionModelService.ActivityType(
+              new ActivityType(
                   "SampleActivity3",
                   Map.of(
                       "variant",
@@ -60,15 +62,15 @@ public final class TypescriptCodeGenerationServiceTestFixtures {
                       Map.of("variant", SerializedValue.of("option1"))
                   )
               ),
-              new MissionModelService.ActivityType(
+              new ActivityType(
                   "SampleActivityEmpty",
                   Map.of(),
                   Map.of()
               )
           ),
           List.of(
-              new MissionModelService.ResourceType("/sample/resource/1", ValueSchema.REAL),
-              new MissionModelService.ResourceType("/sample/resource/3", ValueSchema.ofVariant(List.of(
+              new ResourceType("/sample/resource/1", ValueSchema.REAL),
+              new ResourceType("/sample/resource/3", ValueSchema.ofVariant(List.of(
                   new ValueSchema.Variant(
                       "option1", "option1"
                   ),
@@ -76,7 +78,7 @@ public final class TypescriptCodeGenerationServiceTestFixtures {
                       "option2", "option2"
                   )
               ))),
-              new MissionModelService.ResourceType("/sample/resource/2", ValueSchema.ofStruct(
+              new ResourceType("/sample/resource/2", ValueSchema.ofStruct(
                   Map.of(
                       "field1", ValueSchema.BOOLEAN,
                       "field2", ValueSchema.ofVariant(List.of(

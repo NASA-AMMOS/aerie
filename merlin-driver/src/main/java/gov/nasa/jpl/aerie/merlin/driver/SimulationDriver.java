@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class SimulationDriver<Model> {
 
@@ -110,10 +111,11 @@ public final class SimulationDriver<Model> {
       final Instant simulationStartTime,
       final Duration simulationDuration,
       final Instant planStartTime,
-      final Duration planDuration)
+      final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled)
   {
     return simulate(missionModel, schedule, simulationStartTime, simulationDuration, planStartTime, planDuration,
-                    defaultUseResourceTracker, $ -> {});
+                    defaultUseResourceTracker, simulationCanceled, $ -> {});
   }
 
   public static <Model> SimulationResultsInterface simulate(
@@ -124,11 +126,12 @@ public final class SimulationDriver<Model> {
       final Instant planStartTime,
       final Duration planDuration,
       final boolean useResourceTracker,
+      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   )
   {
     var driver = new SimulationDriver<>(missionModel, simulationStartTime, simulationDuration, useResourceTracker);
-    return driver.simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, simulationExtentConsumer);
+    return driver.simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, simulationCanceled, simulationExtentConsumer);
   }
 
   public SimulationResultsInterface simulate(
@@ -139,7 +142,7 @@ public final class SimulationDriver<Model> {
       final Duration planDuration
   )
   {
-    return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true, $ -> {});
+    return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true, () -> false, $ -> {});
   }
 
   public SimulationResultsInterface simulate(
@@ -148,10 +151,11 @@ public final class SimulationDriver<Model> {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   )
   {
-    return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true, simulationExtentConsumer);
+    return simulate(schedule, simulationStartTime, simulationDuration, planStartTime, planDuration, true, simulationCanceled, simulationExtentConsumer);
   }
 
   public SimulationResultsInterface simulate(
@@ -161,6 +165,7 @@ public final class SimulationDriver<Model> {
       final Instant planStartTime,
       final Duration planDuration,
       final boolean doComputeResults,
+      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   )
   {
@@ -177,10 +182,8 @@ public final class SimulationDriver<Model> {
       // Schedule all activities.
       // Using HashMap explicitly because it allows `null` as a key.
       // `null` key means that an activity is not waiting on another activity to finish to know its start time
-      HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
-          planDuration,
-          schedule).compute();
-      if (resolved.size() != 0) {
+      HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
+      if(!resolved.isEmpty()) {
         resolved.put(
             null,
             StartOffsetReducer.adjustStartOffset(
@@ -254,7 +257,7 @@ public final class SimulationDriver<Model> {
       Instant planStartTime,
       Duration planDuration) {
     return diffAndSimulate(activityDirectives, simulationStartTime,simulationDuration, planStartTime, planDuration,
-                           true, $ -> {});
+                           true, () -> false, $ -> {});
   }
 
   public SimulationResultsInterface diffAndSimulate(
@@ -264,6 +267,7 @@ public final class SimulationDriver<Model> {
       Instant planStartTime,
       Duration planDuration,
       boolean doComputeResults,
+      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer) {
     Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
     engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
@@ -277,7 +281,7 @@ public final class SimulationDriver<Model> {
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
     }
-    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationExtentConsumer);
+    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationCanceled, simulationExtentConsumer);
   }
 
   public <Return> //static <Model, Return>

@@ -44,7 +44,7 @@ comment on column scheduling_request.requested_at is e''
 -- Scheduling request NOTIFY triggers
 -- These triggers NOTIFY LISTEN(ing) scheduler worker clients of pending scheduling requests
 
-create or replace function notify_scheduler_workers ()
+create function notify_scheduler_workers ()
 returns trigger
 security definer
 language plpgsql as $$
@@ -64,9 +64,41 @@ begin
   return null;
 end$$;
 
-do $$ begin
 create trigger notify_scheduler_workers
   after insert on scheduling_request
   for each row
   execute function notify_scheduler_workers();
-end $$;
+
+create function cancel_pending_scheduling_rqs()
+returns trigger
+security definer
+language plpgsql as $$
+begin
+  update scheduling_request
+  set canceled = true
+  where status = 'pending'
+  and specification_id = new.specification_id;
+  return new;
+end
+$$;
+
+create trigger cancel_pending_scheduling_rqs
+  before insert on scheduling_request
+  for each row
+  execute function cancel_pending_scheduling_rqs();
+
+create function notify_scheduling_workers_cancel()
+returns trigger
+security definer
+language plpgsql as $$
+begin
+  perform pg_notify('scheduling_cancel', '' || new.specification_id);
+  return null;
+end
+$$;
+
+create trigger notify_scheduling_workers_cancel
+after update of canceled on scheduling_request
+for each row
+when ((old.status != 'success' or old.status != 'failed') and new.canceled)
+execute function notify_scheduling_workers_cancel();

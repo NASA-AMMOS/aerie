@@ -108,12 +108,13 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * the plan (and should probably be created). The matching is strict: all
    * arguments must be identical.
    */
-  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  @Override
+  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //run the generator to see what acts are still desired
     //REVIEW: maybe some caching on plan hash here?
-    final var requestedActs = getRelevantGeneratedActivities(plan, simulationResults);
+    final var requestedActs = getRelevantGeneratedActivities(plan, simulationResults, evaluationEnvironment);
 
     //walk each requested act and try to find an exact match in the plan
     for (final var requestedAct : requestedActs) {
@@ -202,13 +203,13 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *     are deemed relevant to this goal (eg within the temporal context
    *     of this goal)
    */
-  private Collection<SchedulingActivityDirective> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults) {
+  private Collection<SchedulingActivityDirective> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
 
     //run the generator in the plan context
     final var allActs = generator.apply(plan);
 
     //filter out acts that don't have a start time within the goal purview
-    final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
+    final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
     final var filteredActs = allActs.stream().filter(
         act -> ((act.startOffset() != null)
                 && evaluatedGoalContext.includes(Interval.at(0, act.startOffset())))

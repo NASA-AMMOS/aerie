@@ -89,7 +89,7 @@ type Query {
 }
 
 type Query {
-  schedulingDslTypescript(missionModelId: Int!): DslTypescriptResponse
+  schedulingDslTypescript(missionModelId: Int!, planId: Int): DslTypescriptResponse
 }
 
 type Query {
@@ -105,7 +105,7 @@ type Query {
 }
 
 type Query {
-  constraintViolations(planId: Int!, simulationDatasetId: Int): [ConstraintResult!]!
+  constraintViolations(planId: Int!, simulationDatasetId: Int): [ConstraintResponse!]!
 }
 
 type Query {
@@ -278,12 +278,18 @@ type ResourceSamplesResponse {
   resourceSamples: ResourceSamples!
 }
 
-type ConstraintResult {
-  violations: [ConstraintViolation!]!,
-  gaps: [Interval!]!
+type ConstraintResponse {
+  success: String!
   constraintId: Int!,
   constraintName: String!,
   type: String!,
+  errors: [UserCodeError!]!
+  results: [ConstraintResult!]!
+}
+
+type ConstraintResult {
+  violations: [ConstraintViolation!]!,
+  gaps: [Interval!]!
   resourceIds: [String!]!
 }
 

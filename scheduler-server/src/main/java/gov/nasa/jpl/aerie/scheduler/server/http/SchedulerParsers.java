@@ -3,14 +3,18 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.json.BasicParsers.*;
+import static gov.nasa.jpl.aerie.json.BasicParsers.anyP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresParsers.pgTimestampP;
@@ -34,6 +38,11 @@ public final class SchedulerParsers {
       . map(
           MissionModelId::new,
           MissionModelId::id);
+  public static final JsonParser<PlanId> planIdP
+      = longP
+      . map(
+          PlanId::new,
+          PlanId::id);
 
   public static final JsonParser<ScheduleFailure> scheduleFailureP = productP
       .field("type", stringP)
@@ -67,29 +76,34 @@ public final class SchedulerParsers {
    * @return a parser that accepts hasura action / session details along with specified input type into a tuple
    *     of the form (name,input,session) ready for application of a mapping
    */
-  private static <I> JsonParser<Pair<Pair<Pair<String, I>, HasuraAction.Session>, String>> hasuraActionP(final JsonParser<I> inputP) {
+  private static <I extends HasuraAction.Input> JsonParser<HasuraAction<I>> hasuraActionF(final JsonParser<I> inputP) {
     return productP
         .field("action", productP.field("name", stringP))
         .field("input", inputP)
         .field("session_variables", hasuraActionSessionP)
-        .field("request_query", stringP);
+        .field("request_query", stringP)
+        .map(
+            untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
+            $ -> tuple($.name(), $.input(), $.session(), ""));
   }
 
   /**
    * parser for a hasura action that accepts a plan id as its sole input, along with normal hasura session details
    */
   public static final JsonParser<HasuraAction<HasuraAction.SpecificationInput>> hasuraSpecificationActionP
-      = hasuraActionP(productP.field("specificationId", specificationIdP))
+      = hasuraActionF(productP.field("specificationId", specificationIdP)
       .map(
-          untuple((name, specificationId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.SpecificationInput(specificationId), session)),
-          action -> tuple(action.name(), action.input().specificationId(), action.session(), ""));
+          untuple(HasuraAction.SpecificationInput::new),
+          HasuraAction.SpecificationInput::specificationId));
 
   /**
    * parser for a hasura action that accepts a mission model id as its sole input, along with normal hasura session details
    */
-  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraMissionModelIdActionP
-      = hasuraActionP(productP.field("missionModelId", missionModelIdP))
+  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraSchedulingDSLTypescriptActionP
+      = hasuraActionF(productP
+                          .field("missionModelId", missionModelIdP)
+                          .optionalField("planId", nullableP(planIdP))
       .map(
-          untuple((name, missionModelId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.MissionModelIdInput(missionModelId), session)),
-          action -> tuple(action.name(), action.input().missionModelId(), action.session(), ""));
+          untuple((missionModelId, planId) -> new HasuraAction.MissionModelIdInput(missionModelId, planId.flatMap($->$))),
+          input -> tuple(input.missionModelId(), Optional.of(input.planId()))));
 }

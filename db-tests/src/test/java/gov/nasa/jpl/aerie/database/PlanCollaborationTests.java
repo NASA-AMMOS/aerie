@@ -104,6 +104,32 @@ public class PlanCollaborationTests {
     }
   }
 
+  private void updateActivityCreatedBy(String newCreator, int activityId, int planId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          // language=sql
+          """
+          update activity_directive
+          set created_by = '%s'
+          where id = %d and plan_id = %d;
+          """.formatted(newCreator, activityId, planId));
+    }
+  }
+
+  private String getActivityCreatedBy(int activityId, int planId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          // language=sql
+          """
+          select created_by
+          from activity_directive
+          where id = %d and plan_id = %d;
+          """.formatted(activityId, planId));
+      res.next();
+      return res.getString("created_by");
+    }
+  }
+
   private void updateActivityLastModifiedBy(String newModifier, int activityId, int planId) throws SQLException {
     try(final var statement = connection.createStatement()) {
       statement.execute(
@@ -146,6 +172,39 @@ public class PlanCollaborationTests {
                                                    """.formatted(planId));
       res.next();
       return res.getInt("id");
+    }
+  }
+
+  int createSnapshot(final int planId, final String snapshot_name, final MerlinDatabaseTestHelper.User user) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          select * from hasura_functions.create_snapshot(%s, '%s', '%s'::json);
+          """.formatted(planId, snapshot_name, user.session()));
+      res.next();
+      return res.getInt(1);
+    }
+  }
+
+  private SnapshotMetadata getSnapshotMetadata(final int snapshotId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+      //language=sql
+      """
+        SELECT *
+        FROM plan_snapshot
+        WHERE snapshot_id = %d;
+      """.formatted(snapshotId));
+      res.next();
+      return new SnapshotMetadata(
+          res.getInt("snapshot_id"),
+          res.getInt("plan_id"),
+          res.getInt("revision"),
+          res.getString("snapshot_name"),
+          res.getString("taken_by"),
+          res.getString("taken_at")
+      );
     }
   }
 
@@ -352,6 +411,7 @@ public class PlanCollaborationTests {
           res.getString("name"),
           res.getInt("source_scheduling_goal_id"),
           res.getString("created_at"),
+          res.getString("created_by"),
           res.getString("last_modified_at"),
           res.getString("last_modified_by"),
           res.getString("start_offset"),
@@ -382,6 +442,7 @@ public class PlanCollaborationTests {
             res.getString("name"),
             res.getInt("source_scheduling_goal_id"),
             res.getString("created_at"),
+            res.getString("created_by"),
             res.getString("last_modified_at"),
             res.getString("last_modified_by"),
             res.getString("start_offset"),
@@ -414,6 +475,7 @@ public class PlanCollaborationTests {
             res.getString("name"),
             res.getInt("source_scheduling_goal_id"),
             res.getString("created_at"),
+            res.getString("created_by"),
             res.getString("last_modified_at"),
             res.getString("last_modified_by"),
             res.getString("start_offset"),
@@ -465,6 +527,7 @@ public class PlanCollaborationTests {
     assertEquals(expected.name, actual.name);
     assertEquals(expected.sourceSchedulingGoalId, actual.sourceSchedulingGoalId);
     assertEquals(expected.createdAt, actual.createdAt);
+    assertEquals(expected.createdBy, actual.createdBy);
     assertEquals(expected.startOffset, actual.startOffset);
     assertEquals(expected.type, actual.type);
     assertEquals(expected.arguments, actual.arguments);
@@ -481,6 +544,7 @@ public class PlanCollaborationTests {
       String name,
       int sourceSchedulingGoalId,
       String createdAt,
+      String createdBy,
       String lastModifiedAt,
       String lastModifiedBy,
       String startOffset,
@@ -491,12 +555,20 @@ public class PlanCollaborationTests {
       String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
       boolean anchoredToStart
   ) {}
+  private record SnapshotMetadata(
+      int snapshot_id,
+      int plan_id,
+      int revision,
+      String snapshot_name,
+      String taken_by,
+      String taken_at) {}
   private record SnapshotActivity(
       int activityId,
       int snapshotId,
       String name,
       int sourceSchedulingGoalId,
       String createdAt,
+      String createdBy,
       String lastModifiedAt,
       String lastModifiedBy,
       String startOffset,
@@ -543,6 +615,7 @@ public class PlanCollaborationTests {
 
         assertEquals(planActivities.get(i).sourceSchedulingGoalId, snapshotActivities.get(i).sourceSchedulingGoalId);
         assertEquals(planActivities.get(i).createdAt, snapshotActivities.get(i).createdAt);
+        assertEquals(planActivities.get(i).createdBy, snapshotActivities.get(i).createdBy);
         assertEquals(planActivities.get(i).lastModifiedAt, snapshotActivities.get(i).lastModifiedAt);
         assertEquals(planActivities.get(i).lastModifiedBy, snapshotActivities.get(i).lastModifiedBy);
         assertEquals(planActivities.get(i).startOffset, snapshotActivities.get(i).startOffset);
@@ -638,6 +711,48 @@ public class PlanCollaborationTests {
         if(!sqlEx.getMessage().contains("Plan 1000 does not exist."))
           throw sqlEx;
       }
+    }
+
+    @Test
+    void createNamedSnapshot() throws SQLException {
+      final var planId = merlinHelper.insertPlan(missionModelId);
+      final SnapshotMetadata snapshot = getSnapshotMetadata(createSnapshot(planId, "Snapshot", merlinHelper.admin));
+      assertEquals(merlinHelper.admin.name(), snapshot.taken_by);
+      assertEquals("Snapshot", snapshot.snapshot_name);
+      assertEquals(planId, snapshot.plan_id);
+      assertEquals(0, snapshot.revision);
+    }
+
+    @Test
+    void namedSnapshotsMustBeUnique() throws SQLException{
+      final var planId = merlinHelper.insertPlan(missionModelId);
+      createSnapshot(planId, "Snapshot", merlinHelper.admin);
+      try {
+        createSnapshot(planId, "Snapshot", merlinHelper.admin);
+      } catch (SQLException ex) {
+        if (!ex.getMessage().contains("duplicate key value violates unique constraint \"snapshot_name_unique_per_plan\"")) {
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void canCreateMultipleNamedSnapshots() throws SQLException{
+      final var planId = merlinHelper.insertPlan(missionModelId, merlinHelper.user.name());
+      final var firstSnapshotId = createSnapshot(planId, "First Snapshot", merlinHelper.admin);
+      final var secondSnapshotId = createSnapshot(planId, "Second Snapshot", merlinHelper.user);
+      final var firstSnapshot = getSnapshotMetadata(firstSnapshotId);
+      final var secondSnapshot = getSnapshotMetadata(secondSnapshotId);
+
+      assertEquals(firstSnapshotId, firstSnapshot.snapshot_id);
+      assertEquals(secondSnapshotId, secondSnapshot.snapshot_id);
+      assertNotEquals(firstSnapshotId, secondSnapshotId);
+
+      assertEquals("First Snapshot", firstSnapshot.snapshot_name);
+      assertEquals("Second Snapshot", secondSnapshot.snapshot_name);
+
+      assertEquals(merlinHelper.admin.name(), firstSnapshot.taken_by);
+      assertEquals(merlinHelper.user.name(), secondSnapshot.taken_by);
     }
   }
 
@@ -1807,6 +1922,45 @@ public class PlanCollaborationTests {
       updateActivityLastModifiedBy(newModifierChild, activityId, childPlan);
       assertEquals(newModifierBase, getActivityLastModifiedBy(activityId, basePlan));
       assertEquals(newModifierChild, getActivityLastModifiedBy(activityId, childPlan));
+
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = merlinHelper.insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(2, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("none", stagedActs.get(0).changeType);
+      assertEquals(noopDodger, stagedActs.get(1).activityId);
+      assertEquals("add", stagedActs.get(1).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void createdByModifyModifyResolvesAsNone() throws SQLException {
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(basePlan);
+      final String originalCreator = "PlanCollaborationTests";
+      final String newCreatorBase = "PlanCollaborationTests Requester";
+      final String newCreatorChild = "PlanCollaborationTests Reviewer";
+
+      // add non-null created_by to base plan before branching
+      updateActivityCreatedBy(originalCreator, activityId, basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+
+      // verify created_by changed as expected
+      assertEquals(originalCreator, getActivityCreatedBy(activityId, basePlan));
+      assertEquals(originalCreator, getActivityCreatedBy(activityId, childPlan));
+      updateActivityCreatedBy(newCreatorBase, activityId, basePlan);
+      updateActivityCreatedBy(newCreatorChild, activityId, childPlan);
+      assertEquals(newCreatorBase, getActivityCreatedBy(activityId, basePlan));
+      assertEquals(newCreatorChild, getActivityCreatedBy(activityId, childPlan));
 
       // Insert to avoid NO-OP case in begin_merge
       final int noopDodger = merlinHelper.insertActivity(childPlan);

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.util.Optional;
@@ -44,6 +45,6 @@ public interface Solver {
    *     previously specified planning problem, or empty if the solver
    *     cannot provide any more solutions right now
    */
-  Optional<Plan> getNextSolution();
+  Optional<Plan> getNextSolution() throws SchedulingInterruptedException;
 
 }

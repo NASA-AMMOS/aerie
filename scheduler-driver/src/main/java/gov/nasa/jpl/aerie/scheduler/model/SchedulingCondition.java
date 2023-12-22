@@ -29,7 +29,7 @@ public record SchedulingCondition(
     if (conflict instanceof MissingActivityInstanceConflict c) {
       type = c.getInstance().getType();
     } else if (conflict instanceof MissingActivityTemplateConflict c) {
-      type = c.getActTemplate().getType();
+      type = c.getActTemplate().type();
     } else {
       throw new Error("Unsupported conflict %s".formatted(conflict));
     }

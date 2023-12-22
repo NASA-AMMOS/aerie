@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
@@ -21,6 +22,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public final class MerlinWorkerAppDriver {
   public static boolean defaultUseResourceTracker = false;
@@ -57,38 +59,57 @@ public final class MerlinWorkerAppDriver {
         configuration.untruePlanStart()
     );
     final var planController = new LocalPlanService(stores.plans());
-    final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController, configuration.simulationProgressPollPeriodMillis(), configuration.useResourceTracker());
+    final var simulationAgent = new SynchronousSimulationAgent(
+        planController,
+        missionModelController,
+        configuration.simulationProgressPollPeriodMillis(),
+        configuration.useResourceTracker());
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
-    listenAction.registerListener();
+    final var canceledListener = new SimulationCanceledListener();
+    final var listenThread = listenAction.registerListener(canceledListener);
 
-    final var app = Javalin.create().start(8080);
-    app.get("/health", ctx -> ctx.status(200));
+    try (final var app = Javalin.create().start(8080)) {
+      app.get("/health", ctx -> ctx.status(200));
 
-    while (true) {
-      final var notification = notificationQueue.take();
-      final var planId = new PlanId(notification.planId());
-      final var datasetId = notification.datasetId();
+      while (listenThread.isAlive()) {
+        final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
+        if(notification == null) continue;
+        final var planId = new PlanId(notification.planId());
+        final var datasetId = notification.datasetId();
 
-      final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
-      if (owner.isEmpty()) continue;
+        // Register as early as possible to avoid potentially missing a canceled signal
+        canceledListener.register(new DatasetId(datasetId));
 
-      final var revisionData = new PostgresPlanRevisionData(
-          notification.modelRevision(),
-          notification.planRevision(),
-          notification.simulationRevision(),
-          notification.simulationTemplateRevision());
-      final ResultsProtocol.WriterRole writer = owner.get();
-      try {
-        simulationAgent.simulate(planId, revisionData, writer);
-      } catch (final Throwable ex) {
-        ex.printStackTrace(System.err);
-        writer.failWith(b -> b
-            .type("UNEXPECTED_SIMULATION_EXCEPTION")
-            .message("Something went wrong while simulating")
-            .trace(ex));
+        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
+        if (owner.isEmpty()) {
+          canceledListener.unregister();
+          continue;
+        }
+
+        final var revisionData = new PostgresPlanRevisionData(
+            notification.modelRevision(),
+            notification.planRevision(),
+            notification.simulationRevision(),
+            notification.simulationTemplateRevision());
+        final ResultsProtocol.WriterRole writer = owner.get();
+        try {
+          simulationAgent.simulate(planId, revisionData, writer, canceledListener);
+        } catch (final Throwable ex) {
+          ex.printStackTrace(System.err);
+          writer.failWith(b -> b
+              .type("UNEXPECTED_SIMULATION_EXCEPTION")
+              .message("Something went wrong while simulating")
+              .trace(ex));
+        }
+        finally {
+          canceledListener.unregister();
+        }
       }
+    } finally {
+      // Kill the listening thread
+      listenThread.interrupt();
     }
   }
 

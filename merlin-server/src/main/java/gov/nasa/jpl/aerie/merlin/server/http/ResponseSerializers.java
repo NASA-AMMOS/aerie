@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -16,11 +17,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkEffectiveArgumentResponse;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkArgumentValidationResponse;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -30,6 +35,7 @@ import javax.json.stream.JsonParsingException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -64,7 +70,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeValueSchema(final ValueSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
-    return schema.match(new ValueSchemaSerializer());
+    return new ValueSchemaJsonParser().unparse(schema);
   }
 
   public static JsonValue serializeParameters(final List<Parameter> parameters) {
@@ -72,7 +78,7 @@ public final class ResponseSerializers {
         .collect(Collectors.toMap(i -> parameters.get(i).name(), i -> Pair.of(i, parameters.get(i))));
 
     return serializeMap(pair -> Json.createObjectBuilder()
-            .add("schema", pair.getRight().schema().match(new ValueSchemaSerializer()))
+            .add("schema", new ValueSchemaJsonParser().unparse(pair.getRight().schema()))
             .add("order", pair.getLeft())
             .build(),
         parameterMap);
@@ -155,6 +161,45 @@ public final class ResponseSerializers {
         .build();
   }
 
+  public static JsonValue serializeBulkArgumentValidationResponseList(final List<BulkArgumentValidationResponse> responses) {
+    return serializeIterable(ResponseSerializers::serializeBulkArgumentValidationResponse, responses);
+  }
+
+  public static JsonValue serializeBulkArgumentValidationResponse(BulkArgumentValidationResponse response) {
+    // TODO use pattern matching in switch statement with JDK 21
+    if (response instanceof BulkArgumentValidationResponse.Success) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.TRUE)
+                 .build();
+    } else if (response instanceof BulkArgumentValidationResponse.Validation v) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("type", "VALIDATION_NOTICES")
+                 .add("errors", Json.createObjectBuilder()
+                     .add("validationNotices", serializeIterable(ResponseSerializers::serializeValidationNotice, v.notices()))
+                     .build())
+                 .build();
+    } else if (response instanceof BulkArgumentValidationResponse.NoSuchActivityError e) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("type", "NO_SUCH_ACTIVITY_TYPE")
+                 .add("errors", Json.createObjectBuilder()
+                     .add("noSuchActivityError", serializeNoSuchActivityTypeException(e.ex()))
+                     .build())
+                 .build();
+    } else if (response instanceof BulkArgumentValidationResponse.InstantiationError f) {
+      return Json.createObjectBuilder(serializeInstantiationException(f.ex()).asJsonObject())
+          .add("type", "INSTANTIATION_ERRORS")
+          .build();
+    }
+
+    // This should never happen, but we don't have exhaustive pattern matching
+    return Json.createObjectBuilder()
+               .add("success", JsonValue.FALSE)
+               .add("errors", String.format("Internal error: %s", response))
+               .build();
+  }
+
   public static JsonValue serializeCreatedDatasetId(final long datasetId) {
     return Json.createObjectBuilder()
         .add("datasetId", datasetId)
@@ -172,11 +217,8 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintResult(final ConstraintResult list) {
     return Json
         .createObjectBuilder()
-        .add("constraintId", list.constraintId)
-        .add("constraintName", list.constraintName)
         .add("violations", serializeIterable(ResponseSerializers::serializeConstraintViolation, list.violations))
         .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, list.gaps))
-        .add("type", list.constraintType.name())
         .add("resourceIds", serializeIterable(Json::createValue, list.resourceIds))
         .build();
   }
@@ -271,8 +313,68 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeConstraintResults(final List<ConstraintResult> list) {
-    return serializeIterable(ResponseSerializers::serializeConstraintResult, list);
+  public static JsonValue serializeConstraintResults(final Map<Constraint, Failable<?>> resultMap) {
+    var results = resultMap.entrySet().stream().map(entry -> {
+
+      final var constraint = entry.getKey();
+      final var failable = entry.getValue();
+
+      // There should always be a failable but this is here
+      // just in case
+      if (failable.getOptional().isEmpty()) {
+        return Json.createObjectBuilder()
+                   .add("success", JsonValue.FALSE)
+                   .add("constraintId", constraint.id())
+                   .add("constraintName", constraint.name())
+                   .add("type",constraint.type().name())
+                   .add("errors", Json.createArrayBuilder().add(
+                       Json.createObjectBuilder()
+                           .add("message", "Internal error processing a constraint")
+                           .add("stack", "")
+                           .add("location", JsonValue.EMPTY_JSON_OBJECT).build()).build())
+                   .add("results", JsonValue.EMPTY_JSON_OBJECT)
+                   .build();
+      }
+
+      // failure was a compilation error
+      if (failable.isFailure()
+          && failable.getOptional().get() instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) {
+        return serializeConstraintCompileErrors(constraint, (Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error>) failable);
+      }
+
+      // failure that are errors exceptions that were captured
+      if (failable.isFailure()) {
+        return Json.createObjectBuilder()
+                   .add("success", JsonValue.FALSE)
+                   .add("constraintId", constraint.id())
+                   .add("constraintName", constraint.name())
+                   .add("type",constraint.type().name())
+                   .add("errors", Json.createArrayBuilder().add(
+                       Json.createObjectBuilder()
+                           .add("message", failable.getMessage())
+                           .add("stack", "")
+                           .add("location", JsonValue.EMPTY_JSON_OBJECT).build()).build())
+                   .add("results", JsonValue.EMPTY_JSON_OBJECT)
+                   .build();
+      }
+
+      // successful runs
+      var constraintResult = (ConstraintResult) failable.getOptional().get();
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.TRUE)
+                 .add("constraintId", constraint.id())
+                 .add("constraintName", constraint.name())
+                 .add("type",constraint.type().name())
+                 .add("errors", JsonValue.EMPTY_JSON_ARRAY)
+                 .add("results", serializeConstraintResult(constraintResult))
+                 .build();
+
+    }).collect(Collectors.toList());
+
+    final var resultsArrayBuilder = Json.createArrayBuilder();
+    results.forEach(resultsArrayBuilder::add);
+
+    return resultsArrayBuilder.build();
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
@@ -389,6 +491,35 @@ public final class ResponseSerializers {
                .build();
   }
 
+  public static JsonValue serializeConstraintCompileErrors(final Constraint constraint, final Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error> ex) {
+
+    final var userCodeError = ex
+        .getOptional()
+        .orElse(new ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error(new ArrayList<>()))
+        .errors()
+        .stream()
+        .map(UserCodeError -> Json.createObjectBuilder()
+                                  .add("stack", UserCodeError.stack())
+                                  .add("message", ex.getMessage() + UserCodeError.message())
+                                  .add("location", Json.createObjectBuilder()
+                                                       .add("line", UserCodeError.location().line())
+                                                       .add("column", UserCodeError.location().column()).build())
+                                  .build())
+        .collect(Collectors.toList());
+
+    final var userCodeErrorArrayBuilder = Json.createArrayBuilder();
+    userCodeError.forEach(userCodeErrorArrayBuilder::add);
+
+    return Json.createObjectBuilder()
+               .add("success", JsonValue.FALSE)
+               .add("constraintId", constraint.id())
+               .add("constraintName", constraint.name())
+               .add("type",constraint.type().name())
+               .add("errors", userCodeErrorArrayBuilder.build())
+               .add("results", Json.createObjectBuilder().build())
+               .build();
+  }
+
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
     return Json.createObjectBuilder()
                .add("kind", "invalid-entity")
@@ -468,86 +599,10 @@ public final class ResponseSerializers {
                .build();
   }
 
-  private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
-    @Override
-    public JsonValue onReal() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "real")
-          .build();
-    }
-
-    @Override
-    public JsonValue onInt() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "int")
-          .build();
-    }
-
-    @Override
-    public JsonValue onBoolean() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "boolean")
-          .build();
-    }
-
-    @Override
-    public JsonValue onString() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "string")
-          .build();
-    }
-
-    @Override
-    public JsonValue onDuration() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "duration")
-          .build();
-    }
-
-    @Override
-    public JsonValue onPath() {
-      return Json
-          .createObjectBuilder()
-          .add("type", "path")
-          .build();
-    }
-
-    @Override
-    public JsonValue onSeries(final ValueSchema itemSchema) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "series")
-          .add("items", itemSchema.match(this))
-          .build();
-    }
-
-    @Override
-    public JsonValue onStruct(final Map<String, ValueSchema> parameterSchemas) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "struct")
-          .add("items", serializeMap(x -> x.match(this), parameterSchemas))
-          .build();
-    }
-
-    @Override
-    public JsonValue onVariant(final List<ValueSchema.Variant> variants) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "variant")
-          .add("variants", serializeIterable(
-              v -> Json
-                  .createObjectBuilder()
-                  .add("key", v.key())
-                  .add("label", v.label())
-                  .build(),
-              variants))
-          .build();
-    }
+  public static JsonValue serializeSimulationDatasetMismatchException(final SimulationDatasetMismatchException ex){
+     return Json.createObjectBuilder()
+               .add("message", "simulation dataset mismatch exception")
+               .add("cause", ex.getMessage())
+               .build();
   }
 }

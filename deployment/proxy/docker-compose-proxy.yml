@@ -1,0 +1,44 @@
+services:
+  aerie_proxy:
+    container_name: aerie_proxy
+    depends_on:
+     - "aerie_ui"
+     - "hasura"
+     - "aerie_gateway"
+    build:
+      context: proxy
+    ports:
+     - "80:80"
+     - "443:443"
+     - "8080:8080"
+     - "9000:9000"
+    environment:
+        NGINX_ENVSUBST_TEMPLATE_SUFFIX: ".template"
+        AERIE_HOST: ${AERIE_HOST}
+    networks:
+      - aerie_net
+  aerie_gateway:
+    ports: !reset []
+    environment:
+      GQL_API_URL: http://hasura:8080/v1/graphql
+  aerie_merlin:
+    ports: !reset []
+  aerie_merlin_worker_1:
+    ports: !reset []
+  aerie_scheduler:
+    ports: !reset []
+  aerie_scheduler_worker_1:
+    ports: !reset []
+  aerie_sequencing:
+    ports: !reset []
+  aerie_ui:
+    ports: !reset []
+    environment:
+      ORIGIN: https://${AERIE_HOST}
+      PUBLIC_GATEWAY_CLIENT_URL: https://${AERIE_HOST}:9000
+      PUBLIC_HASURA_CLIENT_URL: https://${AERIE_HOST}:8080/v1/graphql
+      PUBLIC_HASURA_WEB_SOCKET_URL: wss://${AERIE_HOST}:8080/v1/graphql
+  hasura:
+    ports: !reset []
+  postgres:
+    ports: !reset []

@@ -7,8 +7,7 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -32,13 +31,13 @@ public class ParametricDurationTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochDays(3));
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel), SimulationUtility.getBananaSchedulerModel());
+    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel, SimulationUtility.getBananaSchedulerModel(), ()-> false), SimulationUtility.getBananaSchedulerModel());
   }
 
   @Test
-  public void testStartConstraint() {
+  public void testStartConstraint() throws SchedulingInterruptedException {
 
-    final var parameterizedDurationActivityTemplate = new ActivityCreationTemplate.Builder()
+    final var parameterizedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("DownloadBanana"))
         .withArgument("connection", SerializedValue.of("DietaryFiberOptic"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
@@ -66,9 +65,9 @@ public class ParametricDurationTest {
   }
 
   @Test
-  public void testEndConstraint() {
+  public void testEndConstraint() throws SchedulingInterruptedException {
 
-    final var parameterizedDurationActivityTemplate = new ActivityCreationTemplate.Builder()
+    final var parameterizedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("DownloadBanana"))
         .withArgument("connection", SerializedValue.of("FiberOptic"))
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))

@@ -259,12 +259,10 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public List<Pair<Duration, ProfileSet>> getExternalDatasets(
       final PlanId planId,
-      final Optional<SimulationDatasetId> simulationDatasetId)
+      final SimulationDatasetId simulationDatasetId)
   {
     try (final var connection = this.dataSource.getConnection()) {
-      final var planDatasets = simulationDatasetId.isPresent()
-          ? ProfileRepository.getAllPlanDatasetsForSimDataset(connection, planId, simulationDatasetId.get())
-          : ProfileRepository.getAllPlanDatasetsForPlan(connection, planId);
+      final var planDatasets = ProfileRepository.getPlanDatasetsForPlan(connection, planId, Optional.of(simulationDatasetId));
       final var result = new ArrayList<Pair<Duration, ProfileSet>>();
       for (final var planDataset: planDatasets) {
         result.add(Pair.of(
@@ -280,9 +278,9 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId);
+      final var planDatasets = ProfileRepository.getPlanDatasetsForPlan(connection, planId, simulationDatasetId);
       final var result = new HashMap<String, ValueSchema>();
       for (final var planDataset: planDatasets) {
         final var schemas = ProfileRepository.getProfileSchemas(connection, planDataset.datasetId());

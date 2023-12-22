@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +26,19 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.Set;
+import java.util.function.Supplier;
 
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
+  private final Supplier<Boolean> canceledListener;
+
+  public long durationSinceRestart = 0;
+
   private static final Logger logger = LoggerFactory.getLogger(ResumableSimulationDriver.class);
 
   private static boolean debug = false;
@@ -62,6 +70,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
 
+  //subset of plannedDirectiveToTask to check for scheduling dependent tasks
+  private final Map<ActivityDirectiveId, TaskId> toCheckForDependencyScheduling;
+
   //simulation results so far
   private SimulationResultsInterface lastSimResults;
   //cached simulation results cover the period [Duration.ZERO, lastSimResultsEnd]
@@ -78,37 +89,57 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   // Whether we're rerunning the simulation, in which case we can be lazy about starting up stuff, like daemons
   private boolean rerunning = false;
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, PlanningHorizon horizon, boolean useResourceTracker){
-    this(missionModel, horizon.getStartInstant(), horizon.getAerieHorizonDuration(), useResourceTracker);
+  public ResumableSimulationDriver(MissionModel<Model> missionModel, PlanningHorizon horizon, Supplier<Boolean> canceledListener, boolean useResourceTracker){
+    this(missionModel, horizon.getStartInstant(), horizon.getAerieHorizonDuration(), canceledListener, useResourceTracker);
   }
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration, boolean useResourceTracker){
-    this(missionModel, Instant.now(), planDuration, useResourceTracker);
+  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration, Supplier<Boolean> canceledListener, boolean useResourceTracker){
+    this(missionModel, Instant.now(), planDuration, canceledListener, useResourceTracker);
   }
 
   private ResourceTracker resourceTracker = null;
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, Instant startTime, Duration planDuration, boolean useResourceTracker){
+  public ResumableSimulationDriver(
+      MissionModel<Model> missionModel,
+      Instant startTime,
+      Duration planDuration,
+      Supplier<Boolean> canceledListener,
+      boolean useResourceTracker
+  ){
     this.useResourceTracker = useResourceTracker;
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
-    this.startTime = startTime;
+    toCheckForDependencyScheduling = new HashMap<>();
     this.planDuration = planDuration;
     countSimulationRestarts = 0;
+    this.canceledListener = canceledListener;
     initSimulation();
+  }
+
+
+  private void printTimeSpent(){
+    final var dur = durationSinceRestart/1_000_000_000.;
+    final var average = curTime().shorterThan(Duration.of(1, Duration.SECONDS)) ? 0 : dur/curTime().duration().in(Duration.SECONDS);
+    if(dur != 0) {
+      logger.info("Time spent in the last sim " + dur + "s, average per simulation second " + average + "s. Simulated until " + curTime());
+    }
   }
 
   // This method is currently only used in one test.
   /*package-private*/ void clearActivitiesInserted() {activitiesInserted.clear();}
 
   /*package-private*/ void initSimulation(){
-    logger.warn("Reinitialization of the scheduling simulation");
+    logger.info("Reinitialization of the scheduling simulation");
     if (debug) System.out.println("ResumableSimulationDriver.initSimulation()");
+    printTimeSpent();
+    durationSinceRestart = 0;
     plannedDirectiveToTask.clear();
+    toCheckForDependencyScheduling.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
+    long before = System.nanoTime();
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine, resourceTracker);
@@ -131,6 +162,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
     //engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
 
+    this.durationSinceRestart += System.nanoTime() - before;
     countSimulationRestarts++;
     if (debug) System.out.println("ResumableSimulationDriver::countSimulationRestarts incremented to " + countSimulationRestarts);
 
@@ -165,16 +197,21 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   @Override
   public void close() {
+    logger.debug("Closing sim");
+    printTimeSpent();
     this.engine.close();
   }
 
-  private void simulateUntil(Duration endTime){
+  private void simulateUntil(Duration endTime) throws SchedulingInterruptedException{
     if (debug) System.out.println("simulateUntil(" + endTime + ")");
+    long before = System.nanoTime();
+    logger.info("Simulating until "+endTime);
     assert(endTime.noShorterThan(curTime().duration()));
     if (endTime.isEqualTo(Duration.MAX_VALUE)) return;
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the endTime.
     //engine.scheduleTask(endTime, executor -> $ -> TaskStatus.completed(Unit.UNIT), null);
     while(engine.hasJobsScheduledThrough(endTime)) {
+      if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
       // Run the jobs in this batch.
       engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
     }
@@ -183,6 +220,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       engine.generateResourceProfiles(endTime);
     }
     lastSimResults = null;
+    this.durationSinceRestart += (System.nanoTime() - before);
   }
 
 
@@ -195,7 +233,13 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param anchoredToStart toggle for if the activity is anchored to the start or end of its anchor
    * @param activityId the activity id for the activity to simulate
    */
-  public void simulateActivity(final Duration startOffset, final SerializedActivity activity, final ActivityDirectiveId anchorId, final boolean anchoredToStart, final ActivityDirectiveId activityId) {
+  public void simulateActivity(
+      final Duration startOffset,
+      final SerializedActivity activity,
+      final ActivityDirectiveId anchorId,
+      final boolean anchoredToStart,
+      final ActivityDirectiveId activityId
+  ) throws SchedulingInterruptedException {
     simulateActivity(new ActivityDirective(startOffset, activity, anchorId, anchoredToStart), activityId);
   }
 
@@ -205,17 +249,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param activityId the ActivityDirectiveId for the activity to simulate
    */
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
-  {
-    activitiesInserted.put(activityId, activityToSimulate);
-    if(activityToSimulate.startOffset().noLongerThan(curTime().duration())){
-      initSimulation();
-      simulateSchedule(Map.of(activityId, activityToSimulate));
-    } else {
-      simulateSchedule(Map.of(activityId, activityToSimulate));
-    }
+  throws SchedulingInterruptedException {
+    simulateActivities(Map.of(activityId, activityToSimulate));
   }
 
-  public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate) {
+  public void simulateActivities(@NotNull Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate)
+  throws SchedulingInterruptedException {
     if(activitiesToSimulate.isEmpty()) return;
 
     activitiesInserted.putAll(activitiesToSimulate);
@@ -225,6 +264,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     final var earliestStartOffset = resolved.get(null).get(0);
 
     if(earliestStartOffset.getRight().noLongerThan(curTime().duration())){
+      logger.info("Restarting simulation because earliest start of activity to simulate " + earliestStartOffset.getRight() + " is before current sim time " + curTime());
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -238,7 +278,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
    * @return the simulation results
    */
-  public SimulationResultsInterface getSimulationResults(Instant startTimestamp){
+  public SimulationResultsInterface getSimulationResults(Instant startTimestamp) throws SchedulingInterruptedException {
     return getSimulationResultsUpTo(startTimestamp, curTime().duration());
   }
 
@@ -253,14 +293,19 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param endTime the end timepoint. The simulation results will be computed up to this point.
    * @return the simulation results
    */
-  public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
-    if (debug) System.out.println("getSimulationResultsUpTo(startTimestamp=" + startTimestamp + ", endTime=" + endTime + ")");
+  public SimulationResultsInterface getSimulationResultsUpTo(Instant startTimestamp, Duration endTime)
+  throws SchedulingInterruptedException {
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime().duration())){
+      logger.info("Simulating from " + curTime() + " to " + endTime + " to get simulation results");
       simulateUntil(endTime);
+    } else{
+      logger.info("Not simulating because asked endTime "+endTime+" is before current sim time " + curTime());
     }
 
+    final var before = System.nanoTime();
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.getStartTime()) != 0) {
+      if(canceledListener.get()) throw new SchedulingInterruptedException("computing simulation results");
       lastSimResults = engine.computeResults(
             startTimestamp,
             endTime,
@@ -268,6 +313,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
+    this.durationSinceRestart += System.nanoTime() - before;
+
     return lastSimResults;
   }
 
@@ -277,11 +324,13 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @param schedule the activities to schedule with the times to schedule them
    */
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
+  throws SchedulingInterruptedException
   {
     diffAndSimulate(schedule);
   }
   private void reallySimulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
-  {
+  throws SchedulingInterruptedException {
+    final var before = System.nanoTime();
     if (debug) System.out.println("ResumableSimulationDriver.simulate(" + schedule + ")");
 
     if (schedule.isEmpty()) {
@@ -296,13 +345,13 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         schedule).compute();
     // Filter out activities that are before the plan start
     resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
-
+    final var toSchedule = new HashSet<ActivityDirectiveId>();
+    toSchedule.add(null);
     scheduleActivities(
+        toSchedule,
         schedule,
         resolved,
-        missionModel,
-        engine,
-        activityTopic
+        missionModel
     );
 
     var allTaskFinished = false;
@@ -311,11 +360,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
     //once all tasks are finished, we need to wait for events triggered at the same time
     while (!allTaskFinished) {
-      // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-      //   even if they occur at the same real time.
+      if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
 
       // Run the jobs in this batch.
       engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+
+      scheduleActivities(getSuccessorsToSchedule(engine), schedule, resolved, missionModel);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime().duration()) &&
@@ -336,10 +386,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       engine.generateResourceProfiles(curTime().duration());
     }
     lastSimResults = null;
+    this.durationSinceRestart+= System.nanoTime() - before;
   }
 
   public void diffAndSimulate(
-      Map<ActivityDirectiveId, ActivityDirective> activityDirectives) {
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives) throws SchedulingInterruptedException
+  {
     Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
     engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
     if (engine.oldEngine != null) {
@@ -365,93 +417,64 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
    * @return its duration if the activity has been simulated and has finished simulating, an IllegalArgumentException otherwise
    */
   public Optional<Duration> getActivityDuration(ActivityDirectiveId activityDirectiveId){
+    //potential cause of non presence: (1) activity is outside plan bounds (2) activity has not been simulated yet
+    if(!plannedDirectiveToTask.containsKey(activityDirectiveId)) return Optional.empty();
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityDirectiveId));
   }
 
-  private void scheduleActivities(
-      final Map<ActivityDirectiveId, ActivityDirective> schedule,
-      final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved,
-      final MissionModel<Model> missionModel,
-      final SimulationEngine engine,
-      final Topic<ActivityDirectiveId> activityTopic
-  )
-  {
-    if(resolved.get(null) == null) { return; } // Nothing to simulate
-
-    for (final Pair<ActivityDirectiveId, Duration> directivePair : resolved.get(null)) {
-      final var directiveId = directivePair.getLeft();
-      final var startOffset = directivePair.getRight();
-      final var serializedDirective = schedule.get(directiveId).serializedActivity();
-
-      final TaskFactory<?> task;
-      try {
-        task = missionModel.getTaskFactory(serializedDirective);
-      } catch (final InstantiationException ex) {
-        // All activity instantiations are assumed to be validated by this point
-        throw new Error("Unexpected state: activity instantiation %s failed with: %s"
-                            .formatted(serializedDirective.getTypeName(), ex.toString()));
+  private Set<ActivityDirectiveId> getSuccessorsToSchedule(final SimulationEngine engine) {
+    final var toSchedule = new HashSet<ActivityDirectiveId>();
+    final var iterator = toCheckForDependencyScheduling.entrySet().iterator();
+    while(iterator.hasNext()){
+      final var taskToCheck = iterator.next();
+      if(engine.isTaskComplete(taskToCheck.getValue())){
+        toSchedule.add(taskToCheck.getKey());
+        iterator.remove();
       }
+    }
+    return toSchedule;
+  }
 
-      final var taskId = engine.scheduleTask(startOffset, makeTaskFactory(
-          directiveId,
-          task,
-          schedule,
-          resolved,
-          missionModel,
-          activityTopic
-      ), null);
-      plannedDirectiveToTask.put(directiveId,taskId);
+  private void scheduleActivities(
+      final Set<ActivityDirectiveId> toScheduleNow,
+      final Map<ActivityDirectiveId, ActivityDirective> completeSchedule,
+      final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved,
+      final MissionModel<Model> missionModel){
+    for(final var predecessor: toScheduleNow) {
+      for (final var directivePair : resolved.get(predecessor)) {
+        final var offset = directivePair.getRight();
+        final var directiveIdToSchedule = directivePair.getLeft();
+        final var serializedDirective = completeSchedule.get(directiveIdToSchedule).serializedActivity();
+        final TaskFactory<?> task;
+        try {
+          task = missionModel.getTaskFactory(serializedDirective);
+        } catch (final InstantiationException ex) {
+          // All activity instantiations are assumed to be validated by this point
+          throw new Error("Unexpected state: activity instantiation %s failed with: %s"
+                              .formatted(serializedDirective.getTypeName(), ex.toString()));
+        }
+        Duration computedStartTime = offset;
+        if (predecessor != null) {
+          computedStartTime = (curTime().duration().isEqualTo(Duration.MIN_VALUE) ? Duration.ZERO : curTime().duration()).plus(offset);
+        }
+        final var taskId = engine.scheduleTask(
+            computedStartTime,
+            makeTaskFactory(directiveIdToSchedule, task, activityTopic), null);
+        plannedDirectiveToTask.put(directiveIdToSchedule, taskId);
+        if (resolved.containsKey(directiveIdToSchedule)) {
+          toCheckForDependencyScheduling.put(directiveIdToSchedule, taskId);
+        }
+      }
     }
   }
 
-  private static <Model, Output> TaskFactory<Unit> makeTaskFactory(
+  private static <Output> TaskFactory<Output> makeTaskFactory(
       final ActivityDirectiveId directiveId,
       final TaskFactory<Output> task,
-      final Map<ActivityDirectiveId, ActivityDirective> schedule,
-      final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved,
-      final MissionModel<Model> missionModel,
-      final Topic<ActivityDirectiveId> activityTopic
-  )
-  {
-    // Emit the current activity (defined by directiveId)
-    return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
-      scheduler1.emit(directiveId, activityTopic);
-      return task.create(executor1).step(scheduler1);
-    }), scheduler2 -> {
-      // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
-      final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
-      // Iterate over the dependents
-      for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> scheduler3 ->
-            // Delay until the dependent starts
-            TaskStatus.delayed(dependent.getRight(), scheduler4 -> {
-              final var dependentDirectiveId = dependent.getLeft();
-              final var serializedDependentDirective = schedule.get(dependentDirectiveId).serializedActivity();
-
-              // Initialize the Task for the dependent
-              final TaskFactory<?> dependantTask;
-              try {
-                dependantTask = missionModel.getTaskFactory(serializedDependentDirective);
-              } catch (final InstantiationException ex) {
-                // All activity instantiations are assumed to be validated by this point
-                throw new Error("Unexpected state: activity instantiation %s failed with: %s"
-                                    .formatted(serializedDependentDirective.getTypeName(), ex.toString()));
-              }
-
-              // Schedule the dependent
-              // When it finishes, it will schedule the activities depending on it to know their start time
-              scheduler4.spawn(makeTaskFactory(
-                  dependentDirectiveId,
-                  dependantTask,
-                  schedule,
-                  resolved,
-                  missionModel,
-                  activityTopic
-              ));
-              return TaskStatus.completed(Unit.UNIT);
-            }));
-      }
-      return TaskStatus.completed(Unit.UNIT);
-    });
+      final Topic<ActivityDirectiveId> activityTopic) {
+    return executor -> scheduler -> {
+      scheduler.emit(directiveId, activityTopic);
+      return task.create(executor).step(scheduler);
+    };
   }
 }

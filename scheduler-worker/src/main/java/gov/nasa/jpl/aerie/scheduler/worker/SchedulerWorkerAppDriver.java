@@ -5,6 +5,8 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
@@ -66,7 +68,6 @@ public final class SchedulerWorkerAppDriver {
     final var specificationService = new LocalSpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
         merlinService,
-        merlinService,
         config.merlinFileStore(),
         config.missionRuleJarPath(),
         config.outputMode(),
@@ -75,30 +76,45 @@ public final class SchedulerWorkerAppDriver {
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSchedulingRequestNotificationPayload>();
     final var listenAction = new ListenSchedulerCapability(hikariDataSource, notificationQueue);
-    listenAction.registerListener();
+    final var canceledListener = new SchedulingCanceledListener();
+    final var listenThread = listenAction.registerListener(canceledListener);
 
-    final var app = Javalin.create().start(8080);
-    app.get("/health", ctx -> ctx.status(200));
+    try(final var app = Javalin.create().start(8080)) {
+      app.get("/health", ctx -> ctx.status(200));
 
-    while (true) {
-      final var notification = notificationQueue.take();
-      final var specificationRevision = notification.specificationRevision();
-      final var specificationId = new SpecificationId(notification.specificationId());
+      while (listenThread.isAlive()) {
+        final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
+        if (notification == null) continue;
+        final var specificationRevision = notification.specificationRevision();
+        final var specificationId = new SpecificationId(notification.specificationId());
 
-      final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
-      if (owner.isEmpty()) continue;
+        // Register as early as possible to avoid potentially missing a canceled signal
+        canceledListener.register(specificationId);
 
-      final var revisionData = new SpecificationRevisionData(specificationRevision);
-      final ResultsProtocol.WriterRole writer = owner.get();
-      try {
-        scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer);
-      } catch (final Throwable ex) {
-        ex.printStackTrace(System.err);
-        writer.failWith(b -> b
-            .type("UNEXPECTED_SCHEDULER_EXCEPTION")
-            .message("Something went wrong while scheduling")
-            .trace(ex));
+        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
+        if (owner.isEmpty()) {
+          canceledListener.unregister();
+          continue;
+        }
+
+        final var revisionData = new SpecificationRevisionData(specificationRevision);
+        final ResultsProtocol.WriterRole writer = owner.get();
+        try {
+          scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer, canceledListener);
+        } catch (final Throwable ex) {
+          ex.printStackTrace(System.err);
+          writer.failWith(b -> b
+              .type("UNEXPECTED_SCHEDULER_EXCEPTION")
+              .message("Something went wrong while scheduling")
+              .trace(ex));
+        }
+        finally {
+          canceledListener.unregister();
+        }
       }
+    } finally {
+      // Kill the listen thread
+      listenThread.interrupt();
     }
   }
 

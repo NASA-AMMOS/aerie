@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
@@ -18,14 +17,13 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static com.google.common.truth.Truth.assertThat;
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUnsatisfiableCompositeGoals {
@@ -43,8 +41,7 @@ public class TestUnsatisfiableCompositeGoals {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    return SimulationUtility.buildProblemFromFoo(h);
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
@@ -64,7 +61,7 @@ public class TestUnsatisfiableCompositeGoals {
         .forEach(new ActivityExpression.Builder()
                      .ofType(A)
                      .build())
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(B)
                             .build())
         .startsAt(TimeAnchor.START)
@@ -74,7 +71,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testAndWithoutBackTrack(){
+  public void testAndWithoutBackTrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -109,7 +106,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testAndWithBackTrack(){
+  public void testAndWithBackTrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -138,11 +135,11 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t1hr, actTypeControllable));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeControllable));
     Assertions.assertEquals(plan.getActivities().size(), 2);
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
-  public void testOrWithoutBacktrack(){
+  public void testOrWithoutBacktrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -182,7 +179,7 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testOrWithBacktrack(){
+  public void testOrWithBacktrack() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
@@ -217,13 +214,10 @@ public class TestUnsatisfiableCompositeGoals {
   }
 
   @Test
-  public void testCardinalityBacktrack() {
+  public void testCardinalityBacktrack() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -236,9 +230,9 @@ public class TestUnsatisfiableCompositeGoals {
     CardinalityGoal unsatisfiableGoal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(21, Duration.SECONDS)))
         .occurences(new Range<>(10, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
+        .thereExistsOne(new ActivityExpression.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Duration.of(2, Duration.SECONDS))
+                            .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
@@ -254,7 +248,7 @@ public class TestUnsatisfiableCompositeGoals {
     final var solver = new PrioritySolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
-    assertThat(plan.getActivities().size()).isEqualTo(0);
+    assertEquals(0, plan.getActivities().size());
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

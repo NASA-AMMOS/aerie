@@ -1,5 +1,6 @@
 create table hasura_functions.create_snapshot_return_value(snapshot_id integer);
-create function hasura_functions.create_snapshot(_plan_id integer, _snapshot_name text, hasura_session json)
+-- Description must be the last parameter since it has a default value
+create function hasura_functions.create_snapshot(_plan_id integer, _snapshot_name text, hasura_session json, _description text default null)
   returns hasura_functions.create_snapshot_return_value
   volatile
   language plpgsql as $$
@@ -18,7 +19,7 @@ begin
     raise exception 'Snapshot name cannot be null.';
   end if;
 
-  select create_snapshot(_plan_id, _snapshot_name, _snapshotter) into _snapshot_id;
+  select create_snapshot(_plan_id, _snapshot_name, _description, _snapshotter) into _snapshot_id;
   return row(_snapshot_id)::hasura_functions.create_snapshot_return_value;
 end;
 $$;

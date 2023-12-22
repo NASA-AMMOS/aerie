@@ -52,6 +52,7 @@
 - "!include metadata/tags.yaml"
 - "!include metadata/activity_directive_tags.yaml"
 - "!include metadata/constraint_tags.yaml"
+- "!include metadata/plan_snapshot_tags.yaml"
 - "!include metadata/plan_tags.yaml"
 - "!include metadata/snapshot_activity_tags.yaml"
 - "!include metadata/users_allowed_roles.yaml"

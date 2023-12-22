@@ -35,7 +35,7 @@ public record GenerateConstraintsLibAction(TypescriptCodeGenerationServiceAdapte
       final var constraintsApi = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-edsl-fluent-api.ts"));
       final var constraintsAst = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-ast.ts"));
       final var temporalPolyfillTypes = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "TemporalPolyfillTypes.ts"));
-      final var generated = typescriptCodeGenerationService.generateTypescriptTypes(missionModelId, planId);
+      final var generated = typescriptCodeGenerationService.generateTypescriptTypes(missionModelId, planId, Optional.empty());
       return new Response.Success(
           Map.of("constraints-edsl-fluent-api.ts", constraintsApi,
                  "mission-model-generated-code.ts", generated,

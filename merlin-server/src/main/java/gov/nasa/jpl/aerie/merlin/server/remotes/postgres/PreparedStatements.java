@@ -2,11 +2,11 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
-import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
@@ -83,9 +83,12 @@ public final class PreparedStatements {
     statement.setString(parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
   }
 
-  public static void setValidationNotices(final PreparedStatement statement, final int parameter, final List<ValidationNotice> notices)
-  throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeValidationNotices(notices).toString());
+  public static void setValidationResponse(
+      final PreparedStatement statement,
+      final int parameter,
+      final MissionModelService.BulkArgumentValidationResponse response
+  ) throws SQLException {
+    statement.setString(parameter, ResponseSerializers.serializeBulkArgumentValidationResponse(response).toString());
   }
 
   public static void setFailureReason(final PreparedStatement statement, final int parameter, final SimulationFailure reason)

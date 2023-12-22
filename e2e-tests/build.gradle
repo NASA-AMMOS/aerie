@@ -1,22 +1,56 @@
 plugins {
-  id 'com.github.node-gradle.node' version '5.0.0'
+  id 'java-library'
+  id 'jacoco'
 }
 
-node {
-  version = '16.17.0'
-  npmVersion = '8.15.0'
-  download = true
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(19)
+  }
 }
 
-task assemble {
-  dependsOn npmInstall
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
 }
 
-task build {
-  dependsOn assemble
+task e2eTest(type: Test) {
+  ext.parseEnvFile = { filePath ->
+    file(filePath).readLines().each() {
+      if (!it.isEmpty() && !it.startsWith("#")) {
+        def (key, value) = it.tokenize('=')
+        if (key.startsWith("export ")) {
+          key = key.split("export ")[1];
+        }
+        if (System.getenv(key) == null) {
+          environment key, value
+        }
+      }
+    }
+  }
+
+  dependsOn ":examples:banananation:assemble"
+  dependsOn ":examples:foo-missionmodel:assemble"
+
+  if(file('.env').exists()) {
+    parseEnvFile('.env')
+  } else if(file('../.env').exists()){
+    parseEnvFile('../.env')
+  }
+  environment "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", 1
+  // Run the tests in parallel to improve performance
+  maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+  useJUnitPlatform()
 }
 
-task e2eTest(type: NpmTask) {
-  dependsOn npmInstall
-  args = ['run', 'test']
+dependencies {
+  testImplementation 'com.microsoft.playwright:playwright:1.37.0'
+
+  testImplementation 'org.glassfish:javax.json:1.1.4'
+  testImplementation 'org.apache.commons:commons-lang3:3.13.0'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
 }

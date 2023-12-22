@@ -10,8 +10,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -19,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public interface MissionModelService {
   Map<String, MissionModelJar> getMissionModels();
@@ -66,13 +65,11 @@ public interface MissionModelService {
          LocalMissionModelService.MissionModelLoadException,
          InstantiationException;
 
-  SimulationResultsInterface runSimulation(CreateSimulationMessage message, Consumer<Duration> writer)
+  SimulationResultsInterface runSimulation(CreateSimulationMessage message, Consumer<Duration> writer, Supplier<Boolean> canceledListener)
           throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
-  void refreshActivityValidations(String missionModelId, ActivityDirectiveForValidation directive)
-  throws NoSuchMissionModelException, InstantiationException;
   void refreshResourceTypes(String missionModelId) throws NoSuchMissionModelException;
 
   sealed interface ActivityInstantiationFailure {
@@ -106,5 +103,12 @@ public interface MissionModelService {
     record Success(SerializedActivity activity) implements  BulkEffectiveArgumentResponse { }
     record TypeFailure(NoSuchActivityTypeException ex) implements  BulkEffectiveArgumentResponse { }
     record InstantiationFailure(InstantiationException ex) implements  BulkEffectiveArgumentResponse { }
+  }
+
+  sealed interface BulkArgumentValidationResponse {
+    record Success() implements BulkArgumentValidationResponse { }
+    record Validation(List<ValidationNotice> notices) implements BulkArgumentValidationResponse { }
+    record NoSuchActivityError(NoSuchActivityTypeException ex) implements BulkArgumentValidationResponse { }
+    record InstantiationError(InstantiationException ex) implements BulkArgumentValidationResponse { }
   }
 }

@@ -69,6 +69,48 @@ export class Constraint {
       expression: expression(new ActivityInstance(activityType, alias)).__astNode,
     });
   }
+
+  /**
+   * Detect when a spans object's cumulative duration either exceeds or falls short of a threshold within any interval of a given width.
+   *
+   * Violations can be reported in various ways by setting the `algorithm` argument:
+   * - `ExcessSpans` detects times when the duration exceeds the threshold and highlights the individual spans that
+   *    contributed to the threshold violation.
+   * - `ExcessHull` detects times when the duration exceeds the threshold and highlights the whole group of spans that
+   *    contributed to the threshold violation in one interval.
+   * - `DeficitSpans` detects times when the duration falls short of the threshold and highlights the individual gaps between spans
+   *    that contributed to the threshold violation.
+   * - `DeficitHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
+   *    spans that contributed to the threshold violation in one interval.
+   *
+   * @param spans spans object to detect threshold events on
+   * @param width width of the rolling interval
+   * @param threshold maximum allowable duration within any `width` interval
+   * @param algorithm algorithm for reporting violations
+   * @constructor
+   */
+  public static RollingThreshold(
+      spans: Spans,
+      width: AST.Duration,
+      threshold: AST.Duration,
+      algorithm: RollingThresholdAlgorithm
+  ): Constraint {
+    return new Constraint({
+      kind: AST.NodeKind.RollingThreshold,
+      spans: spans.__astNode,
+      width,
+      threshold,
+      algorithm
+    });
+  }
+}
+
+/** Algorithm to use when reporting violations from rolling threshold */
+export enum RollingThresholdAlgorithm {
+  ExcessSpans = 'ExcessSpans',
+  ExcessHull = 'ExcessHull',
+  DeficitSpans = 'DeficitSpans',
+  DeficitHull = 'DeficitHull'
 }
 
 /** A boolean profile; a function from time to truth values. */
@@ -105,7 +147,7 @@ export class Windows {
   public static During(...activityTypes: Gen.ActivityType[]) : Windows {
     return Windows.Or(
         ...activityTypes.map<Windows>((activityType) =>
-            Spans.ForEachActivity(activityType, (activity) => activity.span()).windows())
+            Spans.ForEachActivity(activityType).windows())
     );
   }
 
@@ -119,6 +161,18 @@ export class Windows {
       kind: AST.NodeKind.WindowsExpressionAnd,
       expressions: [...windows.map(other => other.__astNode)],
     });
+  }
+
+  /**
+   * Selects the ith true window and falsifies the other true segments.
+   * @param i the index of the true segment in the sequence of windows. index(0) will point to the first element, index(-1) to the last element.
+   */
+  public keepTrueSegment(i: number): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionKeepTrueSegment,
+      expression: this.__astNode,
+      index: i
+    })
   }
 
   /**
@@ -238,8 +292,8 @@ export class Windows {
       });
     } else {
       return new Windows({
-        kind: AST.NodeKind.WindowsExpressionShiftBy,
-        windowExpression: this.__astNode,
+        kind: AST.NodeKind.IntervalsExpressionShiftEdges,
+        expression: this.__astNode,
         fromStart,
         fromEnd
       })
@@ -410,6 +464,28 @@ export class Spans {
   }
 
   /**
+   * Connects the end of each of these spans to the start of the nearest span in the argument.
+   *
+   * This operation creates a new spans object. For each span `s` in `this`, it produces a span from
+   * the end of `s` to the start of the first span in `other` that occurs after the end of `s`.
+   *
+   * If `s` and the nearest subsequent span in `other` meet exactly, with no intersection and no
+   * space between them, a singleton span (containing exactly one time) is still created at the meeting point.
+   *
+   * If there are no spans in `other` that occur after `s`, a span is still created from the end of `s` until the
+   * end of the plan.
+   *
+   * @param other
+   */
+  public connectTo(other: Spans): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionConnectTo,
+      from: this.__astNode,
+      to: other.__astNode
+    })
+  }
+
+  /**
    * Replaces each Span with its start point.
    */
   public starts(): Spans {
@@ -426,6 +502,21 @@ export class Spans {
     return new Spans({
       kind: AST.NodeKind.IntervalsExpressionEnds,
       expression: this.__astNode
+    })
+  }
+
+  /**
+   * Shifts the start and end of each Span by a duration.
+   *
+   * @param fromStart duration to shift start by
+   * @param fromEnd duration to shift end by (defaults is `fromStart` if omitted)
+   */
+  public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Spans {
+    return new Spans({
+      kind: AST.NodeKind.IntervalsExpressionShiftEdges,
+      expression: this.__astNode,
+      fromStart,
+      fromEnd: fromEnd !== undefined ? fromEnd : fromStart
     })
   }
 
@@ -464,13 +555,14 @@ export class Spans {
    * Check a constraint for each instance of an activity type.
    *
    * @param activityType activity type to check
-   * @param expression function of an activity instance that returns a Constraint
+   * @param expression function of an activity instance that returns a Constraint; default returns the instance's span.
    * @constructor
    */
   public static ForEachActivity<A extends Gen.ActivityType>(
       activityType: A,
-      expression: (instance: ActivityInstance<A>) => Spans,
+      expression?: (instance: ActivityInstance<A>) => Spans,
   ): Spans {
+    if (expression === undefined) expression = instance => instance.span();
     let alias = 'span activity alias ' + Spans.__numGeneratedAliases;
     Spans.__numGeneratedAliases += 1;
     return new Spans({
@@ -479,6 +571,77 @@ export class Spans {
       alias: alias,
       expression: expression(new ActivityInstance(activityType, alias)).__astNode,
     });
+  }
+
+  /**
+   * Selects only spans that occur during a true segment, removing those that don't.
+   *
+   * Spans that only partially overlap with a true segment will be truncated, and spans
+   * that overlap with multiple true segments will be split.
+   *
+   * @param windows
+   */
+  public selectWhenTrue(windows: Windows): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansSelectWhenTrue,
+      spansExpression: this.__astNode,
+      windowsExpression: windows.__astNode
+    });
+  }
+
+  /**
+   * Creates a windows object that is false when one of these Spans does not contain a child span, and true otherwise.
+   * The parents are the callee and the children are the argument, i.e. `parents.contains(children)`.
+   * The default requirement of one child per parent can be modified.
+   *
+   * More concretely, for the expression `A.contains(B)`, the result is:
+   * - `true` inside any A spans if (by default) they contain at least one B span
+   *   - for counting spans, "contain" means that the entire B span is inside the A span.
+   * - `true` (vacuously) outside the union of all A spans
+   * - `false` inside any A spans that do not contain a B span
+   *
+   * The requirement for one child span can be optionally changed by providing the second argument:
+   * - `{count: n}` requires *exactly* `n` children per parent.
+   * - `{count: {min: n}}` requires at least `n` children per parent.
+   * - `{count: {max: n}}` requires at most `n` children per parent
+   * - `{duration: {min: d}}` requires a total duration of children of at least `d`
+   * - `{duration: {max: d}}` requires a total duration of children of at most `d`
+   *
+   * Both `count` and `duration` can be provided at the same time
+   * (e.g. `{count: 2, duration: {min: Temporal.Duration.from({hours: 1})}}`).
+   * Both `min` and `max` can be provided at the same time (e.g. `{count: {min: 1, max: 3}}`.
+   *
+   * There is no option to require an exact duration, because the implementation uses floating point comparison.
+   * If you need an exact duration, you can approximate it by using a small range around the desired value.
+   *
+   * @param children child spans to check the existence of.
+   * @param requirement what to check for in each parent span.
+   */
+  public contains(children: Spans, requirement?: SpansContainsRequirement): Windows {
+    if (requirement === undefined) requirement = {count: {min: 1}};
+    if (requirement.count === undefined) requirement.count = {};
+    else if (typeof requirement.count === 'number') requirement.count = {
+      min: requirement.count,
+      max: requirement.count
+    };
+    if (requirement.duration === undefined) requirement.duration = {};
+    return new Windows({
+      kind: AST.NodeKind.SpansExpressionContains,
+      parents: this.__astNode,
+      children: children.__astNode,
+      requirement: requirement as {count: {min?: number, max?: number}, duration: {min?: AST.Duration, max?: AST.Duration}}
+    });
+  }
+}
+
+export type SpansContainsRequirement = {
+  count?: number | {
+    min?: number,
+    max?: number
+  },
+  duration?: AST.Duration | {
+    min?: AST.Duration,
+    max?: AST.Duration
   }
 }
 
@@ -1039,8 +1202,8 @@ declare global {
      * @constructor
      */
     public static ForbiddenActivityOverlap(
-      activityType1: Gen.ActivityType,
-      activityType2: Gen.ActivityType,
+        activityType1: Gen.ActivityType,
+        activityType2: Gen.ActivityType,
     ): Constraint;
 
     /**
@@ -1054,6 +1217,40 @@ declare global {
         activityType: A,
         expression: (instance: ActivityInstance<A>) => Constraint,
     ): Constraint;
+
+    /**
+     * Detect when a spans object's cumulative duration either exceeds or falls short of a threshold within any interval of a given width.
+     *
+     * Violations can be reported in various ways by setting the `algorithm` argument:
+     * - `ExcessSpans` detects times when the duration exceeds the threshold and highlights the individual spans that
+     *    contributed to the threshold violation.
+     * - `ExcessHull` detects times when the duration exceeds the threshold and highlights the whole group of spans that
+     *    contributed to the threshold violation in one interval.
+     * - `DeficitSpans` detects times when the duration falls short of the threshold and highlights the individual gaps between spans
+     *    that contributed to the threshold violation.
+     * - `DeficitHull` detects times when the duration falls short of the threshold and highlights the whole group of gaps between
+     *    spans that contributed to the threshold violation in one interval.
+     *
+     * @param spans spans object to detect threshold events on
+     * @param width width of the rolling interval
+     * @param threshold maximum allowable duration within any `width` interval
+     * @param algorithm algorithm for reporting violations
+     * @constructor
+     */
+    public static RollingThreshold(
+        spans: Spans,
+        width: AST.Duration,
+        threshold: AST.Duration,
+        algorithm: RollingThresholdAlgorithm
+    ): Constraint;
+  }
+
+  /** Algorithm to use when reporting violations from rolling threshold */
+  export enum RollingThresholdAlgorithm {
+    ExcessSpans = 'ExcessSpans',
+    ExcessHull = 'ExcessHull',
+    DeficitSpans = 'DeficitSpans',
+    DeficitHull = 'DeficitHull'
   }
 
   /** A boolean profile; a function from time to truth values. */
@@ -1062,6 +1259,12 @@ declare global {
     public readonly __astNode: AST.WindowsExpression;
 
     /**
+     * Selects the ith true window and falsifies the other true segments.
+     * @param i the index of the true segment in the sequence of windows. index(0) will point to the first element, index(-1) to the last element.
+     */
+    public keepTrueSegment(i: number): Windows;
+
+      /**
      * Creates a single window.
      *
      * @param value value for the window segment.
@@ -1228,6 +1431,22 @@ declare global {
     public static FromInterval(interval: Interval): Spans;
 
     /**
+     * Connects the end of each of these spans to the start of the nearest span in the argument.
+     *
+     * This operation creates a new spans object. For each span `s` in `this`, it produces a span from
+     * the end of `s` to the start of the first span in `other` that occurs after the end of `s`.
+     *
+     * If `s` and the nearest subsequent span in `other` meet exactly, with no intersection and no
+     * space between them, a singleton span (containing exactly one time) is still created at the meeting point.
+     *
+     * If there are no spans in `other` that occur after `s`, a span is still created from the end of `s` until the
+     * end of the plan.
+     *
+     * @param other
+     */
+    public connectTo(other: Spans): Spans;
+
+    /**
      * Returns the instantaneous start points of the these spans.
      */
     public starts(): Spans;
@@ -1236,6 +1455,14 @@ declare global {
      * Returns the instantaneous end points of the these spans.
      */
     public ends(): Spans;
+
+    /**
+     * Shifts the start and end of each Span by a duration.
+     *
+     * @param fromStart duration to shift start by
+     * @param fromEnd duration to shift end by (defaults is `fromStart` if omitted)
+     */
+    public shiftBy(fromStart: AST.Duration, fromEnd?: AST.Duration | undefined): Spans;
 
     /**
      * Splits each span into equal sized sub-spans.
@@ -1261,12 +1488,12 @@ declare global {
      * Applies an expression producing spans for each instance of an activity type and returns the aggregated set of spans.
      *
      * @param activityType activity type to check
-     * @param expression function of an activity instance that returns a Spans
+     * @param expression function of an activity instance that returns a Spans; default returns the instance's span.
      * @constructor
      */
     public static ForEachActivity<A extends Gen.ActivityType>(
         activityType: A,
-        expression: (instance: ActivityInstance<A>) => Spans,
+        expression?: (instance: ActivityInstance<A>) => Spans,
     ): Spans;
 
     /**
@@ -1279,6 +1506,57 @@ declare global {
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
     public accumulatedDuration(unit: AST.Duration): Real;
+
+    /**
+     * Selects only spans that occur during a true segment, removing those that don't.
+     *
+     * Spans that only partially overlap with a true segment will be truncated, and spans
+     * that overlap with multiple true segments will be split.
+     *
+     * @param windows
+     */
+    public selectWhenTrue(windows: Windows): Spans;
+
+    /**
+     * Creates a windows object that is false when one of these Spans does not contain a child span, and true otherwise.
+     * The parents are the callee and the children are the argument, i.e. `parents.contains(children)`.
+     * The default requirement of one child per parent can be modified.
+     *
+     * More concretely, for the expression `A.contains(B)`, the result is:
+     * - `true` inside any A spans if (by default) they contain at least one B span
+     *   - for counting spans, "contain" means that the entire B span is inside the A span.
+     * - `true` (vacuously) outside the union of all A spans
+     * - `false` inside any A spans that do not contain a B span
+     *
+     * The requirement for one child span can be optionally changed by providing the second argument:
+     * - `{count: n}` requires *exactly* `n` children per parent.
+     * - `{count: {min: n}}` requires at least `n` children per parent.
+     * - `{count: {max: n}}` requires at most `n` children per parent
+     * - `{duration: {min: d}}` requires a total duration of children of at least `d`
+     * - `{duration: {max: d}}` requires a total duration of children of at most `d`
+     *
+     * Both `count` and `duration` can be provided at the same time
+     * (e.g. `{count: 2, duration: {min: Temporal.Duration.from({hours: 1})}}`).
+     * Both `min` and `max` can be provided at the same time (e.g. `{count: {min: 1, max: 3}}`.
+     *
+     * There is no option to require an exact duration, because the implementation uses floating point comparison.
+     * If you need an exact duration, you can approximate it by using a small range around the desired value.
+     *
+     * @param children child spans to check the existence of.
+     * @param requirement what to check for in each parent span.
+     */
+    public contains(children: Spans, requirement?: SpansContainsRequirement): Windows;
+  }
+
+  export type SpansContainsRequirement = {
+    count?: number | {
+      min?: number,
+      max?: number
+    },
+    duration?: {
+      min?: AST.Duration,
+      max?: AST.Duration
+    }
   }
 
   /**
@@ -1523,4 +1801,4 @@ declare global {
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity, Interval });
+Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity, Interval, RollingThresholdAlgorithm });

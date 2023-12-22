@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.models;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
+import gov.nasa.jpl.aerie.json.Convert;
 import gov.nasa.jpl.aerie.json.JsonObjectParser;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SumParsers;
@@ -11,7 +12,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +57,7 @@ public class SchedulingDSL {
               $ -> tuple($.duration(), $.occurrence()));
 
   private static JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP(
-      MissionModelService.MissionModelTypes activityTypes)
+      MerlinService.MissionModelTypes activityTypes)
   {
     return productP
         .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
@@ -90,18 +92,27 @@ public class SchedulingDSL {
               ConstraintExpression.WindowsExpression::new,
               ConstraintExpression.WindowsExpression::expression));
 
-  public static final JsonParser<ActivityTimingConstraint> activityTimingConstraintP =
+  public static final JsonParser<TimingConstraint.ActivityTimingConstraint> activityTimingConstraintP =
       productP
           .field("windowProperty", enumP(TimeAnchor.class, Enum::name))
           .field("operator", enumP(TimeUtility.Operator.class, Enum::name))
           .field("operand", durationP)
           .field("singleton", boolP)
           .map(
-              untuple(ActivityTimingConstraint::new),
+              untuple(TimingConstraint.ActivityTimingConstraint::new),
               $ -> tuple($.windowProperty(), $.operator(), $.operand(), $.singleton()));
 
+  public static final JsonParser<TimingConstraint.ActivityTimingConstraintFlexibleRange> activityTimingConstraintFlexibleRangeP =
+      productP
+          .field("lowerBound", activityTimingConstraintP)
+          .field("upperBound", activityTimingConstraintP)
+          .field("singleton", boolP)
+          .map(
+              untuple(TimingConstraint.ActivityTimingConstraintFlexibleRange::new),
+              (TimingConstraint.ActivityTimingConstraintFlexibleRange $) -> tuple($.lowerBound(), $.upperBound(), $.singleton()));
+
   private static final JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP(
-  MissionModelService.MissionModelTypes activityTypes)
+  MerlinService.MissionModelTypes activityTypes)
   {
     return
         productP
@@ -109,22 +120,33 @@ public class SchedulingDSL {
             .optionalField("activityFinder", activityExpressionP)
             .field("alias", stringP)
             .field("forEach", constraintExpressionP)
-            .optionalField("startConstraint", activityTimingConstraintP)
-            .optionalField("endConstraint", activityTimingConstraintP)
+            .optionalField("startConstraint", (JsonParser<? extends TimingConstraint>) chooseP(activityTimingConstraintP, activityTimingConstraintFlexibleRangeP))
+            .optionalField("endConstraint", (JsonParser<? extends TimingConstraint>) chooseP(activityTimingConstraintP, activityTimingConstraintFlexibleRangeP))
             .field("shouldRollbackIfUnsatisfied", boolP)
-            .map(
-                untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
-                goalDefinition -> tuple(
-                    goalDefinition.activityTemplate(),
-                    goalDefinition.activityFinder(),
-                    goalDefinition.alias(),
-                    goalDefinition.forEach(),
-                    goalDefinition.startConstraint(),
-                    goalDefinition.endConstraint(),
-                    goalDefinition.shouldRollbackIfUnsatisfied()));
+            .map(coexistenceGoalTransform());
   }
+
+  /**
+   * This convert is in a helper function in order to define the generic variables T1 and T2
+   */
+  private static <T1 extends TimingConstraint, T2 extends TimingConstraint>
+  Convert<
+      Pair<Pair<Pair<Pair<Pair<Pair<ActivityTemplate, Optional<ConstraintExpression.ActivityExpression>>, String>, ConstraintExpression>, Optional<T1>>, Optional<T2>>, Boolean>,
+      GoalSpecifier.CoexistenceGoalDefinition>
+  coexistenceGoalTransform() {
+    return Convert.between(untuple(GoalSpecifier.CoexistenceGoalDefinition::new), (GoalSpecifier.CoexistenceGoalDefinition $) -> tuple(
+        $.activityTemplate(),
+        $.activityFinder(),
+        $.alias,
+        $.forEach,
+        (Optional<T1>) $.startConstraint,
+        (Optional<T2>) $.endConstraint,
+        $.shouldRollbackIfUnsatisfied
+    ));
+  }
+
   private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
-      MissionModelService.MissionModelTypes activityTypes) {
+      MerlinService.MissionModelTypes activityTypes) {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
@@ -173,7 +195,7 @@ public class SchedulingDSL {
   }
 
 
-  private static JsonParser<GoalSpecifier> goalSpecifierF(MissionModelService.MissionModelTypes missionModelTypes) {
+  private static JsonParser<GoalSpecifier> goalSpecifierF(MerlinService.MissionModelTypes missionModelTypes) {
     return recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
         SumParsers.variant(
             "ActivityRecurrenceGoal",
@@ -221,7 +243,7 @@ public class SchedulingDSL {
             globalSchedulingConditionP)
   )));
 
-  public static final JsonParser<GoalSpecifier> schedulingJsonP(MissionModelService.MissionModelTypes missionModelTypes){
+  public static final JsonParser<GoalSpecifier> schedulingJsonP(MerlinService.MissionModelTypes missionModelTypes){
     return goalSpecifierF(missionModelTypes);
   }
 
@@ -248,8 +270,8 @@ public class SchedulingDSL {
         Optional<ConstraintExpression.ActivityExpression> activityFinder,
         String alias,
         ConstraintExpression forEach,
-        Optional<ActivityTimingConstraint> startConstraint,
-        Optional<ActivityTimingConstraint> endConstraint,
+        Optional<? extends TimingConstraint> startConstraint,
+        Optional<? extends TimingConstraint> endConstraint,
         boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
     record CardinalityGoalDefinition(
@@ -277,5 +299,19 @@ public class SchedulingDSL {
     record ActivityExpression(String type, Optional<StructExpressionAt> arguments) implements ConstraintExpression {}
     record WindowsExpression(Expression<Windows> expression) implements ConstraintExpression {}
   }
-  public record ActivityTimingConstraint(TimeAnchor windowProperty, TimeUtility.Operator operator, Duration operand, boolean singleton) {}
+
+  public sealed interface TimingConstraint {
+    record ActivityTimingConstraint(
+        TimeAnchor windowProperty,
+        TimeUtility.Operator operator,
+        Duration operand,
+        boolean singleton
+    ) implements TimingConstraint {}
+
+    record ActivityTimingConstraintFlexibleRange(
+        ActivityTimingConstraint lowerBound,
+        ActivityTimingConstraint upperBound,
+        boolean singleton
+    ) implements TimingConstraint {}
+  }
 }

@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivityViolations;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.KeepTrueSegment;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
@@ -31,10 +32,14 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
-import gov.nasa.jpl.aerie.constraints.tree.ShiftWindowsEdges;
+import gov.nasa.jpl.aerie.constraints.tree.ShiftEdges;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
+import gov.nasa.jpl.aerie.constraints.tree.SpansConnectTo;
+import gov.nasa.jpl.aerie.constraints.tree.SpansContains;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
+import gov.nasa.jpl.aerie.constraints.tree.SpansSelectWhenTrue;
 import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
@@ -55,8 +60,13 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.DeficitHull;
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.DeficitSpans;
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.ExcessHull;
+import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.ExcessSpans;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -82,7 +92,7 @@ class ConstraintsDSLCompilationServiceTests {
   private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint));
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), Optional.empty(), constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -93,7 +103,7 @@ class ConstraintsDSLCompilationServiceTests {
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
-        MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint
+        MISSION_MODEL_ID, Optional.of(PLAN_ID), Optional.empty(), constraint
     ));
     if (actualErrors.errors()
                     .stream()
@@ -495,7 +505,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(minute(2), minute(-20))
             }
         """,
-        new ViolationsOfWindows(new ShiftWindowsEdges(
+        new ViolationsOfWindows(new ShiftEdges<>(
             new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
             new DurationLiteral(Duration.of(2, Duration.MINUTE)),
             new DurationLiteral(Duration.of(-20, Duration.MINUTE)))
@@ -839,6 +849,19 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(new Starts<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
+        )
+    );
+  }
+@Test
+  void testKeepTrueSegment() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).starts().keepTrueSegment(2)
+          }
+        """,
+        new ViolationsOfWindows(
+            new KeepTrueSegment(new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3))), 2)
         )
     );
   }
@@ -1275,4 +1298,232 @@ class ConstraintsDSLCompilationServiceTests {
     );
   }
 
+  @Test
+  void testRollingThreshold() {
+    final var algs = Map.of(
+        "ExcessHull", ExcessHull,
+        "ExcessSpans", ExcessSpans,
+        "DeficitHull", DeficitHull,
+        "DeficitSpans", DeficitSpans
+    );
+    for (final var entry: algs.entrySet()) {
+      checkSuccessfulCompilation(
+          """
+              export default () => {
+                return Constraint.RollingThreshold(
+                  Spans.ForEachActivity(ActivityType.activity),
+                  Temporal.Duration.from({hours: 1}),
+                  Temporal.Duration.from({minutes: 5}),
+                  RollingThresholdAlgorithm.%s
+                );
+              }
+              """.formatted(entry.getKey()),
+          new RollingThreshold(
+              new ForEachActivitySpans(
+                  "activity",
+                  "span activity alias 0",
+                  new ActivitySpan("span activity alias 0")
+              ),
+              new DurationLiteral(Duration.of(1, Duration.HOUR)),
+              new DurationLiteral(Duration.of(5, Duration.MINUTE)),
+              entry.getValue()
+          )
+      );
+    }
+  }
+
+  @Test
+  void testSpansShiftBy() {
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Spans.ForEachActivity(ActivityType.activity, i => i.span()).shiftBy(minute(2)).windows();
+        }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(new ShiftEdges<>(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE))))
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Spans.ForEachActivity(ActivityType.activity, i => i.span()).shiftBy(minute(2), minute(3)).windows();
+        }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(new ShiftEdges<>(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")),
+                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
+                new DurationLiteral(Duration.of(3, Duration.MINUTE))
+            ))
+        )
+    );
+  }
+
+  @Test
+  void testSpansSelectWhenTrue() {
+    checkSuccessfulCompilation(
+        """
+        const minute = (m: number) => Temporal.Duration.from({minutes: m});
+        export default() => {
+          return Spans.ForEachActivity(ActivityType.activity, i => i.span()).selectWhenTrue(Windows.Value(true)).windows()
+        }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(new SpansSelectWhenTrue(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")
+                ),
+                new WindowsValue(true)
+            ))
+        )
+    );
+  }
+  @Test
+  void testSpansConnectTo() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Windows.Value(true).spans().connectTo(
+              Windows.Value(false).spans()
+            ).windows();
+          }
+        """,
+        new ViolationsOfWindows(
+            new WindowsFromSpans(
+                new SpansConnectTo(
+                    new SpansFromWindows(new WindowsValue(true)),
+                    new SpansFromWindows(new WindowsValue(false))
+                )
+            )
+        )
+    );
+  }
+
+  @Test
+  void testSpansContains() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity));
+          }
+        """,
+        new ViolationsOfWindows(
+            new SpansContains(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")
+                ),
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 1",
+                    new ActivitySpan("span activity alias 1")
+                ),
+                SpansContains.Requirement.newDefault()
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity), {count: 3});
+          }
+        """,
+        new ViolationsOfWindows(
+            new SpansContains(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")
+                ),
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 1",
+                    new ActivitySpan("span activity alias 1")
+                ),
+                new SpansContains.Requirement(
+                    Optional.of(3),
+                    Optional.of(3),
+                    Optional.empty(),
+                    Optional.empty()
+                )
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity), {duration: {min: Temporal.Duration.from({minutes: 1})}});
+          }
+        """,
+        new ViolationsOfWindows(
+            new SpansContains(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")
+                ),
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 1",
+                    new ActivitySpan("span activity alias 1")
+                ),
+                new SpansContains.Requirement(
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(new DurationLiteral(Duration.of(1, Duration.MINUTE))),
+                    Optional.empty()
+                )
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity), {
+              count: {min: 1, max: 2},
+              duration: {min: Temporal.Duration.from({minutes: 1}), max: Temporal.Duration.from({minutes: 2})}
+            });
+          }
+        """,
+        new ViolationsOfWindows(
+            new SpansContains(
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 0",
+                    new ActivitySpan("span activity alias 0")
+                ),
+                new ForEachActivitySpans(
+                    "activity",
+                    "span activity alias 1",
+                    new ActivitySpan("span activity alias 1")
+                ),
+                new SpansContains.Requirement(
+                    Optional.of(1),
+                    Optional.of(2),
+                    Optional.of(new DurationLiteral(Duration.of(1, Duration.MINUTE))),
+                    Optional.of(new DurationLiteral(Duration.of(2, Duration.MINUTE)))
+                )
+            )
+        )
+    );
+  }
 }

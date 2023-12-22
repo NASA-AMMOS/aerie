@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -12,7 +14,9 @@ import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -40,6 +44,10 @@ public class Problem {
    */
   private final List<GlobalConstraint> globalConstraints
       = new java.util.LinkedList<>();
+
+  private final Map<String, LinearProfile> realExternalProfiles = new HashMap<>();
+  private final Map<String, DiscreteProfile> discreteExternalProfiles = new HashMap<>();
+
   /**
    * the initial seed plan to start scheduling from
    */
@@ -92,6 +100,8 @@ public class Problem {
     return planningHorizon;
   }
 
+  public SchedulerModel getSchedulerModel() { return schedulerModel; }
+
   /**
    * adds a new global constraint to the mission model
    *
@@ -133,8 +143,7 @@ public class Problem {
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
         simulationResults,
         SimulationResultsConverter.convertToConstraintModelResults(
-            simulationResults),
-        plan.getActivities()));
+            simulationResults)));
   }
 
   /**
@@ -147,6 +156,20 @@ public class Problem {
   }
 
   public Optional<SimulationData> getInitialSimulationResults(){ return initialSimulationResults; }
+
+  public void setExternalProfile(final Map<String, LinearProfile> realExternalProfiles,
+                                  final Map<String, DiscreteProfile> discreteExternalProfiles){
+    this.realExternalProfiles.putAll(realExternalProfiles);
+    this.discreteExternalProfiles.putAll(discreteExternalProfiles);
+  }
+
+  public Map<String, LinearProfile> getRealExternalProfiles(){
+    return this.realExternalProfiles;
+  }
+
+  public Map<String, DiscreteProfile> getDiscreteExternalProfiles(){
+    return this.discreteExternalProfiles;
+  }
 
   public void setGoals(List<Goal> goals){
     goalsOrderedByPriority.clear();

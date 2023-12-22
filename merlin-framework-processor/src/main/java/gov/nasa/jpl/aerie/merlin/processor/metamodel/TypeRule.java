@@ -4,27 +4,34 @@ import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
-public final class TypeRule {
-  public final TypePattern head;
-  public final Set<String> enumBoundedTypeParameters;
-  public final List<TypePattern> parameters;
-  public final ClassName factory;
-  public final String method;
-
+public record TypeRule(
+    TypePattern head,
+    Set<String> enumBoundedTypeParameters,
+    List<TypePattern> parameters,
+    ClassName factory,
+    String method,
+    Optional<String> name
+) {
   public TypeRule(
       final TypePattern head,
       final Set<String> enumBoundedTypeParameters,
       final List<TypePattern> parameters,
       final ClassName factory,
-      final String method
-  ) {
-    this.head = Objects.requireNonNull(head);
-    this.enumBoundedTypeParameters = Objects.requireNonNull(enumBoundedTypeParameters);
-    this.parameters = Objects.requireNonNull(parameters);
-    this.factory = Objects.requireNonNull(factory);
-    this.method = Objects.requireNonNull(method);
+      final String method)
+  {
+    this(head, enumBoundedTypeParameters, parameters, factory, method, Optional.empty());
+  }
+  public TypeRule(
+      final TypePattern head,
+      final Set<String> enumBoundedTypeParameters,
+      final List<TypePattern> parameters,
+      final ClassName factory,
+      final String method,
+      final String name)
+  {
+    this(head, enumBoundedTypeParameters, parameters, factory, method, Optional.of(name));
   }
 }

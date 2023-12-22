@@ -24,11 +24,13 @@ export enum NodeKind {
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
   WindowsExpressionShorterThan = 'WindowsExpressionShorterThan',
-  WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
   SpansExpressionSplit = 'SpansExpressionSplit',
+  SpansExpressionConnectTo = 'SpansExpressionConnectTo',
   SpansExpressionInterval = 'SpansExpressionInterval',
+  SpansSelectWhenTrue = 'SpansSelectWhenTrue',
+  SpansExpressionContains = 'SpansExpressionContains',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -40,6 +42,7 @@ export enum NodeKind {
   WindowsExpressionNot = 'WindowsExpressionNot',
   IntervalsExpressionStarts = 'IntervalsExpressionStarts',
   IntervalsExpressionEnds = 'IntervalsExpressionEnds',
+  IntervalsExpressionShiftEdges = 'IntervalsExpressionShiftEdges',
   ForEachActivitySpans = 'ForEachActivitySpans',
   ForEachActivityViolations = 'ForEachActivityViolations',
   ProfileChanges = 'ProfileChanges',
@@ -47,10 +50,12 @@ export enum NodeKind {
   ViolationsOf = 'ViolationsOf',
   AbsoluteInterval = 'AbsoluteInterval',
   IntervalAlias = 'IntervalAlias',
-  IntervalDuration = 'IntervalDuration'
+  IntervalDuration = 'IntervalDuration',
+  RollingThreshold = 'RollingThreshold',
+  WindowsExpressionKeepTrueSegment = 'WindowsExpressionKeepTrueSegment'
 }
 
-export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints;
+export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints | RollingThreshold;
 
 export interface ViolationsOf {
   kind: NodeKind.ViolationsOf;
@@ -69,6 +74,14 @@ export interface ForEachActivitySpans {
   activityType: string;
   alias: string;
   expression: SpansExpression;
+}
+
+export interface RollingThreshold {
+  kind: NodeKind.RollingThreshold;
+  spans: SpansExpression,
+  width: Duration,
+  threshold: Duration,
+  algorithm: API.RollingThresholdAlgorithm
 }
 
 export interface AssignGapsExpression<P extends ProfileExpression> {
@@ -98,20 +111,32 @@ export type WindowsExpression =
   | WindowsExpressionLongerThan
   | WindowsExpressionShorterThan
   | WindowsExpressionNot
-  | WindowsExpressionShiftBy
+  | IntervalsExpressionShiftEdges
   | WindowsExpressionFromSpans
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
-  | AssignGapsExpression<WindowsExpression>;
+  | AssignGapsExpression<WindowsExpression>
+  | WindowsExpressionKeepTrueSegment
+  | SpansExpressionContains;
+
 
 export type SpansExpression =
   | SpansExpressionActivitySpan
   | SpansExpressionSplit
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
+  | IntervalsExpressionShiftEdges
   | SpansExpressionFromWindows
   | ForEachActivitySpans
+  | SpansSelectWhenTrue
+  | SpansExpressionConnectTo
   | SpansExpressionInterval;
+
+export interface SpansSelectWhenTrue {
+  kind: NodeKind.SpansSelectWhenTrue,
+  spansExpression: SpansExpression
+  windowsExpression: WindowsExpression
+}
 
 export type IntervalsExpression =
   | WindowsExpression
@@ -139,9 +164,31 @@ export interface WindowsExpressionNot {
   expression: WindowsExpression;
 }
 
-export interface WindowsExpressionShiftBy {
-  kind: NodeKind.WindowsExpressionShiftBy,
-  windowExpression: WindowsExpression,
+export interface WindowsExpressionKeepTrueSegment {
+  kind: NodeKind.WindowsExpressionKeepTrueSegment;
+  expression: WindowsExpression;
+  index: number;
+}
+
+export interface SpansExpressionContains {
+  kind: NodeKind.SpansExpressionContains;
+  parents: SpansExpression;
+  children: SpansExpression;
+  requirement: {
+    count: {
+      min?: number,
+      max?: number
+    },
+    duration: {
+      min?: Duration,
+      max?: Duration
+    }
+  };
+}
+
+export interface IntervalsExpressionShiftEdges {
+  kind: NodeKind.IntervalsExpressionShiftEdges,
+  expression: IntervalsExpression,
   fromStart: Duration,
   fromEnd: Duration,
 }
@@ -230,6 +277,12 @@ export interface SpansExpressionSplit {
   numberOfSubIntervals: number,
   internalStartInclusivity: API.Inclusivity,
   internalEndInclusivity: API.Inclusivity
+}
+
+export interface SpansExpressionConnectTo {
+  kind: NodeKind.SpansExpressionConnectTo,
+  from: SpansExpression,
+  to: SpansExpression
 }
 
 export interface SpansExpressionInterval {

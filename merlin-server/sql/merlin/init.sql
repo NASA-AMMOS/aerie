@@ -83,6 +83,7 @@ begin;
   -- Table-specific Metadata
   \ir tables/metadata/activity_directive_tags.sql
   \ir tables/metadata/constraint_tags.sql
+  \ir tables/metadata/plan_snapshot_tags.sql
   \ir tables/metadata/plan_tags.sql
   \ir tables/metadata/snapshot_activity_tags.sql
 
@@ -105,5 +106,8 @@ begin;
   \ir functions/hasura/hasura_functions.sql
   \ir functions/hasura/plan_branching_functions.sql
   \ir functions/hasura/plan_merge_functions.sql
+
+  -- Preload Data
+  \ir default_user_roles.sql;
 
 end;

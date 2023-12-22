@@ -1,5 +1,5 @@
 import http, { RefinedResponse, ResponseType } from "k6/http";
-import * as urls from "../../e2e-tests/src/utilities/urls";
+import * as urls from "../assets/urls";
 import { JSONObject, check } from "k6";
 
 export const req = {

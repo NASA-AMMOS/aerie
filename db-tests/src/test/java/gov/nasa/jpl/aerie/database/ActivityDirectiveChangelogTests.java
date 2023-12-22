@@ -79,6 +79,7 @@ public class ActivityDirectiveChangelogTests {
           res.getString("name"),
           res.getInt("source_scheduling_goal_id"),
           res.getString("created_at"),
+          res.getString("created_by"),
           res.getString("last_modified_at"),
           res.getString("last_modified_by"),
           res.getString("start_offset"),

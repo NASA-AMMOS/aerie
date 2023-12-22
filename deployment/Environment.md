@@ -16,17 +16,19 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 
 ## Aerie Merlin
 
-| Name                 | Description                                                                                                                 | Type     | Default                         |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
-| `JAVA_OPTS`          | Configuration for Merlin's logging level and output file                                                                    | `string` | log level: warn. output: stderr |
-| `MERLIN_PORT`        | Port number for the Merlin server                                                                                           | `number` | 27183                           |
-| `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                                                                                   | `string` | /usr/src/app/merlin_file_store  |
-| `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with                                                                               | `string` |                                 |
-| `MERLIN_DB_PORT`     | The DB instance port number that Merlin will connect with                                                                   | `number` | 5432                            |
-| `MERLIN_DB_USER`     | Username of the DB instance                                                                                                 | `string` |                                 |
-| `MERLIN_DB_PASSWORD` | Password of the DB instance                                                                                                 | `string` |                                 |
-| `MERLIN_DB`          | The DB for Merlin.                                                                                                          | `string` | aerie_merlin                    |
-| `UNTRUE_PLAN_START`  | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on | `string` |                                 |
+| Name                                  | Description                                                                                                                 | Type     | Default                         |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
+| `JAVA_OPTS`                           | Configuration for Merlin's logging level and output file                                                                    | `string` | log level: warn. output: stderr |
+| `MERLIN_PORT`                         | Port number for the Merlin server                                                                                           | `number` | 27183                           |
+| `MERLIN_LOCAL_STORE`                  | Local storage for Merlin in the container                                                                                   | `string` | /usr/src/app/merlin_file_store  |
+| `MERLIN_DB_SERVER`                    | The DB instance that Merlin will connect with                                                                               | `string` |                                 |
+| `MERLIN_DB_PORT`                      | The DB instance port number that Merlin will connect with                                                                   | `number` | 5432                            |
+| `MERLIN_DB_USER`                      | Username of the DB instance                                                                                                 | `string` |                                 |
+| `MERLIN_DB_PASSWORD`                  | Password of the DB instance                                                                                                 | `string` |                                 |
+| `MERLIN_DB`                           | The DB for Merlin.                                                                                                          | `string` | aerie_merlin                    |
+| `UNTRUE_PLAN_START`                   | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on | `string` |                                 |
+| `ENABLE_CONTINUOUS_VALIDATION_THREAD` | Flag to enable a worker thread that continously computes and caches activity directive validation results                   | `boolean`| true                            |
+| `VALIDATION_THREAD_POLLING_PERIOD`    | Number of milliseconds the above worker thread should wait before querying the database for new, unvalidated directives     | `string` | 500                             |
 
 ## Aerie Merlin Worker
 

@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +51,7 @@ public class AnchorSchedulerTest {
 
   @BeforeEach
   void beforeEach() {
-    driver = new ResumableSimulationDriver<>(AnchorTestModel, tenDays, true);
+    driver = new ResumableSimulationDriver<>(AnchorTestModel, tenDays, () -> false, true);
   }
 
   @Nested
@@ -119,7 +120,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities depending on no activities simulate at the correct time")
-    public void activitiesAnchoredToPlan() {
+    public void activitiesAnchoredToPlan() throws SchedulingInterruptedException {
       final var minusOneMinute = Duration.of(-60, Duration.SECONDS);
       final var resolveToPlanStartAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(415);
       final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>(415);
@@ -228,7 +229,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities depending on another activities simulate at the correct time")
-    public void activitiesAnchoredToOtherActivities() {
+    public void activitiesAnchoredToOtherActivities() throws SchedulingInterruptedException {
       final var allEndTimeAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(400);
       final var endTimeAnchorEveryFifth = new HashMap<ActivityDirectiveId, ActivityDirective>(400);
       final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>(800);
@@ -340,8 +341,23 @@ public class AnchorSchedulerTest {
     }
 
     @Test
+    @DisplayName("Reference to anchored activities are correctly maintained by the driver")
+    public void activitiesAnchoredToOtherActivitiesSimple() throws SchedulingInterruptedException {
+      final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(2);
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(0),
+          new ActivityDirective(oneMinute, serializedDelayDirective, null, true));
+      activitiesToSimulate.put(
+          new ActivityDirectiveId(1),
+          new ActivityDirective(oneMinute, serializedDelayDirective, new ActivityDirectiveId(0), false));
+      driver.simulateActivities(activitiesToSimulate);
+      final var durationOfAnchoredActivity = driver.getActivityDuration(new ActivityDirectiveId(1));
+      assertTrue(durationOfAnchoredActivity.isPresent());
+    }
+
+    @Test
     @DisplayName("Decomposition and anchors do not interfere with each other")
-    public void decomposingActivitiesAndAnchors(){
+    public void decomposingActivitiesAndAnchors() throws SchedulingInterruptedException{
       // Given positions Left, Center, Right in an anchor chain, where each position can either contain a Non-Decomposition (ND) activity or a Decomposition (D) activity,
       // and the connection between Center and Left and Right and Center can be either Start (<-s-) or End (<-e-),
       // and two NDs cannot be adjacent to each other, there are 20 permutations.
@@ -584,7 +600,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities arranged in a wide anchor tree simulate at the correct time")
-    public void naryTreeAnchorChain() {
+    public void naryTreeAnchorChain() throws SchedulingInterruptedException{
       // Full and complete 5-ary tree,  6 levels deep
       // Number of activity directives = 5^0 + 5^1 + 5^2 + 5^3 + 5^4 + 5^5 = 3906
 

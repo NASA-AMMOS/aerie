@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.worker;
 
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.ListenSimulationStatusAction;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
@@ -28,8 +29,8 @@ public class ListenSimulationCapability {
     this.notificationQueue = notificationQueue;
   }
 
-  public void registerListener() {
-    new Thread(() -> {
+  public Thread registerListener(SimulationCanceledListener canceledListener) {
+    final var listenThread = new Thread(() -> {
       try (final var connection = this.dataSource.getConnection()) {
         try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
           listenSimulationStatusAction.apply();
@@ -37,7 +38,7 @@ public class ListenSimulationCapability {
           throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
         }
 
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
           final var pgConnection = connection.unwrap(PGConnection.class);
           final var notifications = pgConnection.getNotifications(10000);
           if (notifications != null) {
@@ -45,25 +46,35 @@ public class ListenSimulationCapability {
               final var processId = notification.getPID();
               final var channelName = notification.getName();
               final var payload = notification.getParameter();
+
               logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
-              try (final var reader = Json.createReader(new StringReader(payload))) {
-                final var jsonValue = reader.readValue();
-                final var notificationPayload = postgresSimulationNotificationP
-                    .parse(jsonValue)
-                    .getSuccessOrThrow();
-                try {
-                  this.notificationQueue.put(notificationPayload);
-                } catch (InterruptedException e) {
-                  // We do not expect this thread to be interrupted. If it is, exit gracefully:
-                  return;
+
+              if (channelName.equals("simulation_cancel")) {
+                canceledListener.receiveSignal(new DatasetId(Long.parseLong(payload)));
+              } else {
+                try (final var reader = Json.createReader(new StringReader(payload))) {
+                  final var jsonValue = reader.readValue();
+                  final var notificationPayload = postgresSimulationNotificationP
+                      .parse(jsonValue)
+                      .getSuccessOrThrow();
+                  try {
+                    this.notificationQueue.put(notificationPayload);
+                  } catch (InterruptedException e) {
+                    // This thread will be interrupted when the worker's main loop exits, so it should exit gracefully:
+                    logger.info("Listener has been interrupted");
+                    return;
+                  }
                 }
               }
             }
           }
         }
+        logger.info("Listener has received interrupted signal");
       } catch (SQLException e) {
         throw new DatabaseException("Listener encountered exception", e);
       }
-    }).start();
+    });
+    listenThread.start();
+    return listenThread;
   }
 }

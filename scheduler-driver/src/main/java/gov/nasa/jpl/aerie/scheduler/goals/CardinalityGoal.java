@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -108,6 +107,9 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       if (occurrenceRange != null) {
         goal.occurrenceRange = occurrenceRange;
       }
+      if(name==null){
+        goal.name = "CardinalityGoal_"+"thereExists_"+this.thereExists.type().getName()+"_(duration:"+((this.durationRange != null) ? this.durationRange: "N/A") +", occurrences:" + ((this.occurrenceRange != null) ? this.occurrenceRange: "N/A") +")";
+      }
       return goal;
     }
   }//Builder
@@ -121,10 +123,10 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @Override
-  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
 
     //unwrap temporalContext
-    final var windows = getTemporalContext().evaluate(simulationResults);
+    final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
 
     //make sure it hasn't changed
     if (this.initiallyEvaluatedTemporalContext != null && !windows.equals(this.initiallyEvaluatedTemporalContext)) {
@@ -139,12 +141,13 @@ public class CardinalityGoal extends ActivityTemplateGoal {
 
     for(Interval subInterval : windows.iterateEqualTo(true)) {
       final var subIntervalWindows = new Windows(false).set(subInterval, true);
-      final var actTB =
-          new ActivityExpression.Builder().basedOn(this.matchActTemplate).startsOrEndsIn(subIntervalWindows).build();
-
-      final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
+      final var acts = new LinkedList<SchedulingActivityDirective>();
+      for(final var window : subIntervalWindows.iterateEqualTo(true)){
+        final var actTB =
+            new ActivityExpression.Builder().basedOn(this.matchActTemplate).startsIn(window).build();
+        acts.addAll(plan.find(actTB, simulationResults, evaluationEnvironment));
+      }
       acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
-
       int nbActs = 0;
       Duration total = Duration.ZERO;
       var planEvaluation = plan.getEvaluation();
@@ -202,7 +205,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
             this,
             subIntervalWindows,
             this.desiredActTemplate,
-            new EvaluationEnvironment(),
+            evaluationEnvironment,
             nbToSchedule,
             durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
       }

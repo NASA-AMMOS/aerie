@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import javax.json.Json;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchRequestException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
@@ -69,10 +71,12 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           new SpecificationId(request.specificationId()),
           request.specificationRevision(),
           request.analysisId()));
-    } catch(UnclaimableRequestException ex) {
+    } catch (UnclaimableRequestException ex) {
       return Optional.empty();
     } catch (final NoSuchSpecificationException ex) {
-      throw new Error(String.format("Cannot process scheduling request for nonexistent specification %s%n", specificationId), ex);
+      throw new Error(String.format(
+          "Cannot process scheduling request for nonexistent specification %s%n",
+          specificationId), ex);
     } catch (final SQLException | DatabaseException ex) {
       throw new Error(ex.getMessage());
     }
@@ -112,8 +116,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static SpecificationRecord getSpecification(final Connection connection, final SpecificationId specificationId)
-  throws SQLException, NoSuchSpecificationException {
+  private static SpecificationRecord getSpecification(
+      final Connection connection,
+      final SpecificationId specificationId
+  ) throws SQLException, NoSuchSpecificationException {
     try (final var getSpecificationAction = new GetSpecificationAction(connection)) {
       return getSpecificationAction
           .get(specificationId.id())
@@ -166,10 +172,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   private static void failRequest(
-       final Connection connection,
-       final SpecificationId specId,
-       final long specRevision,
-       final ScheduleFailure reason
+      final Connection connection,
+      final SpecificationId specId,
+      final long specRevision,
+      final ScheduleFailure reason
   ) throws SQLException {
     try (final var setRequestStateAction = new SetRequestStateAction(connection)) {
       setRequestStateAction.apply(
@@ -256,7 +262,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static Optional<ResultsProtocol.State> getRequestState(
       final Connection connection,
       final SpecificationId specId,
-    final long specRevision
+      final long specRevision
   ) throws SQLException {
     final var request$ = getRequest(connection, specId, specRevision);
     if (request$.isEmpty()) return Optional.empty();
@@ -268,11 +274,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           case INCOMPLETE -> new ResultsProtocol.State.Incomplete(request.analysisId());
           case FAILED -> new ResultsProtocol.State.Failed(
               request.reason()
-                  .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(request.status()))),
+                     .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(
+                         request.status()))),
               request.analysisId());
-          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()),
-                                                            request.analysisId(),
-                                                            request.datasetId());
+          case SUCCESS -> new ResultsProtocol.State.Success(
+              getResults(connection, request.analysisId()),
+              request.analysisId(),
+              request.datasetId());
         }
     );
   }
@@ -303,7 +311,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             specId,
             specRevision)
             .orElseThrow(() -> new Error("Scheduling request no longer exists"));
-      } catch(final SQLException ex) {
+      } catch (final SQLException ex) {
         throw new DatabaseException("Failed to get scheduling request status", ex);
       }
     }
@@ -314,19 +322,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         cancelRequest(connection, specId, specRevision);
       } catch (final NoSuchRequestException ex) {
         throw new Error("Scheduling request no longer exists");
-      } catch(final SQLException ex) {
+      } catch (final SQLException ex) {
         throw new DatabaseException("Failed to cancel scheduling request", ex);
-      }
-    }
-
-    @Override
-    public boolean isCanceled() {
-      try (final var connection = dataSource.getConnection()) {
-        return getRequest(connection, specId, specRevision)
-            .map(RequestRecord::canceled)
-            .orElseThrow(() -> new Error("Scheduling request no longer exists"));
-      } catch(final SQLException ex) {
-        throw new DatabaseException("Failed to determine if scheduling request is canceled", ex);
       }
     }
 
@@ -343,6 +340,30 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     public void failWith(final ScheduleFailure reason) {
       try (final var connection = dataSource.getConnection()) {
         failRequest(connection, specId, specRevision, reason);
+      } catch (final SQLException ex) {
+        throw new DatabaseException("Failed to update scheduling request state", ex);
+      }
+    }
+
+    @Override
+    public void reportCanceled(final SchedulingInterruptedException e) {
+      try (final var connection = dataSource.getConnection()) {
+        final var reason = new ScheduleFailure.Builder()
+            .type("SCHEDULING_CANCELED")
+            .data(Json.createObjectBuilder()
+                      .add("location", e.location)
+                      .add("message", e.getMessage())
+                      .build())
+            .message("Scheduling run was canceled")
+            .build();
+        try (final var setRequestStateAction = new SetRequestStateAction(connection)) {
+          setRequestStateAction.apply(
+              specId.id(),
+              specRevision,
+              RequestRecord.Status.INCOMPLETE,
+              reason,
+              Optional.empty());
+        }
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update scheduling request state", ex);
       }

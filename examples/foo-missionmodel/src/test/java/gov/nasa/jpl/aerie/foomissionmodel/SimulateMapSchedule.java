@@ -42,7 +42,8 @@ public class SimulateMapSchedule {
         startTime,
         simulationDuration,
         startTime,
-        simulationDuration);
+        simulationDuration,
+        () -> false);
 
       simulationResults.getRealProfiles().forEach((name, samples) -> {
         System.out.println(name + ":");

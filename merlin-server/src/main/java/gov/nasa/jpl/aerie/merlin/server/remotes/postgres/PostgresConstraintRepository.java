@@ -35,8 +35,9 @@ public class PostgresConstraintRepository implements ConstraintRepository {
 
   @Override
   public Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Long> constraintIds, SimulationDatasetId simulationDatasetId) {
-    try (final var connection = this.dataSource.getConnection()) {
-      final var constraintRuns = new GetValidConstraintRunsAction(connection, constraintIds, simulationDatasetId).get();
+    try (final var connection = this.dataSource.getConnection();
+         final var validConstraintRunAction = new GetValidConstraintRunsAction(connection, constraintIds, simulationDatasetId)) {
+      final var constraintRuns = validConstraintRunAction.get();
       final var validConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
 
       for (final var constraintRun : constraintRuns) {

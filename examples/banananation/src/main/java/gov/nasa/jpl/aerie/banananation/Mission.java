@@ -24,6 +24,8 @@ import java.nio.file.Path;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.discreteResource;
+import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.realResource;
 
 public final class Mission {
   public final Accumulator fruit;
@@ -44,9 +46,9 @@ public final class Mission {
 
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
-    registrar.discrete("/peel", this.peel, new DoubleValueMapper());
-    registrar.real("/fruit", this.fruit);
-    registrar.discrete("/plant", this.plant, new IntegerValueMapper());
+    discreteResource(registrar, "/peel", this.peel, new DoubleValueMapper(), "kg");
+    realResource(registrar, "/fruit", this.fruit, "bananas");
+    discreteResource(registrar, "/plant", this.plant, new IntegerValueMapper(), "count");
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
     registrar.topic("/producer", this.producer.ref, new StringValueMapper());

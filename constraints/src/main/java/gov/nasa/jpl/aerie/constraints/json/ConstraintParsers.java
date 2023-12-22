@@ -12,9 +12,13 @@ import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
+import gov.nasa.jpl.aerie.json.JsonObjectParser;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -260,6 +264,18 @@ public final class ConstraintParsers {
           .map(
               untuple((kind, alias) -> new ActivitySpan(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias));
+
+  static JsonParser<SpansSelectWhenTrue> spansSelectWhenTrueF(JsonParser<Expression<Spans>> spansP, JsonParser<Expression<Windows>> windowsP) {
+    return productP
+        .field("kind", literalP("SpansSelectWhenTrue"))
+        .field("spansExpression", spansP)
+        .field("windowsExpression", windowsP)
+        .map(
+            untuple((kind, spans, windows) -> new SpansSelectWhenTrue(spans, windows)),
+            $ -> tuple(Unit.UNIT, $.spans(), $.windows())
+        );
+  }
+
   static final JsonParser<StartOf> startOfP =
       productP
           .field("kind", literalP("WindowsExpressionStartOf"))
@@ -268,6 +284,15 @@ public final class ConstraintParsers {
               untuple((kind, alias) -> new StartOf(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias));
 
+  static JsonParser<KeepTrueSegment> keepTrueSegmentP(JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionKeepTrueSegment"))
+        .field("expression", windowsExpressionP)
+        .field("index", intP)
+        .map(
+            untuple((kind, expression, index) -> new KeepTrueSegment(expression, index)),
+            $ -> tuple(Unit.UNIT, $.expression, $.i));
+  }
   static final JsonParser<Duration> durationP =
       longP
           .map(
@@ -287,7 +312,7 @@ public final class ConstraintParsers {
 
   public static final JsonParser<Violation> violationP =
       productP
-          .field("violationWindows", listP(intervalP))
+          .field("windows", listP(intervalP))
           .field("activityInstanceIds", listP(longP))
           .map(
               untuple(Violation::new),
@@ -298,8 +323,8 @@ public final class ConstraintParsers {
       productP
           .field("violations", listP(violationP))
           .field("gaps", listP(intervalP))
-          .field("constraintType", enumP(ConstraintType.class, Enum::name))
-          .field("resourceNames", listP(stringP))
+          .field("type", enumP(ConstraintType.class, Enum::name))
+          .field("resourceIds", listP(stringP))
           .field("constraintId", longP)
           .field("constraintName", stringP)
           .map(
@@ -325,6 +350,30 @@ public final class ConstraintParsers {
   static final JsonParser<Expression<Duration>> durationExprP =
       chooseP(intervalDurationP, durationLiteralP);
 
+  static <T> JsonParser<Pair<Optional<T>, Optional<T>>> optionalRangeF(JsonParser<T> boundP) {
+    return productP
+        .optionalField("min", boundP)
+        .optionalField("max", boundP);
+  }
+
+  static JsonObjectParser<SpansContains> spansContainsF(JsonParser<Expression<Spans>> spansExpressionP) {
+    final JsonParser<SpansContains.Requirement> requirementP = productP
+        .field("count", optionalRangeF(intP))
+        .field("duration", optionalRangeF(durationExprP))
+        .map(
+            untuple((count, duration) -> new SpansContains.Requirement(count.getLeft(), count.getRight(), duration.getLeft(), duration.getRight())),
+            $ -> tuple(Pair.of($.minCount(), $.maxCount()), Pair.of($.minDur(), $.maxDur()))
+        );
+    return productP
+        .field("kind", literalP("SpansExpressionContains"))
+        .field("parents", spansExpressionP)
+        .field("children", spansExpressionP)
+        .field("requirement", requirementP)
+        .map(
+            untuple((kind, parents, children, requirement) -> new SpansContains(parents, children, requirement)),
+            $ -> tuple(Unit.UNIT, $.parents(), $.children(), $.requirement()));
+  }
+
   static final JsonParser<WindowsValue> windowsValueP =
       productP
           .field("kind", literalP("WindowsExpressionValue"))
@@ -335,15 +384,15 @@ public final class ConstraintParsers {
               $ -> tuple(Unit.UNIT, $.value(), $.interval())
           );
 
-  static JsonParser<ShiftWindowsEdges> shiftWindowsEdgesF(JsonParser<Expression<Windows>> windowsExpressionP) {
+  static <I extends IntervalContainer<I>> JsonParser<ShiftEdges<I>> shiftEdgesF(final JsonParser<Expression<I>> intervalExpressionP) {
     return productP
-        .field("kind", literalP("WindowsExpressionShiftBy"))
-        .field("windowExpression", windowsExpressionP)
+        .field("kind", literalP("IntervalsExpressionShiftEdges"))
+        .field("expression", intervalExpressionP)
         .field("fromStart", durationExprP)
         .field("fromEnd", durationExprP)
         .map(
-            untuple((kind, windowsExpression, fromStart, fromEnd) -> new ShiftWindowsEdges(windowsExpression, fromStart, fromEnd)),
-            $ -> tuple(Unit.UNIT, $.windows, $.fromStart, $.fromEnd));
+            untuple((kind, expr, fromStart, fromEnd) -> new ShiftEdges<I>(expr, fromStart, fromEnd)),
+            $ -> tuple(Unit.UNIT, $.expression, $.fromStart, $.fromEnd));
   }
   static final JsonParser<EndOf> endOfP =
       productP
@@ -562,13 +611,15 @@ public final class ConstraintParsers {
         andF(selfP),
         orF(selfP),
         notF(selfP),
-        shiftWindowsEdgesF(selfP),
+        shiftEdgesF(selfP),
         startsF(selfP),
         endsF(selfP),
         windowsFromSpansF(spansP),
         activityWindowP,
         assignGapsF(selfP),
-        shiftByF(selfP)
+        shiftByF(selfP),
+        keepTrueSegmentP(selfP),
+        spansContainsF(spansP)
     ));
   }
 
@@ -579,6 +630,17 @@ public final class ConstraintParsers {
         .map(
             untuple((kind, expr) -> new SpansFromWindows(expr)),
             $ -> tuple(Unit.UNIT, $.expression()));
+  }
+
+  static JsonParser<SpansConnectTo> connectTo(JsonParser<Expression<Spans>> spansExpressionP) {
+    return productP
+        .field("kind", literalP("SpansExpressionConnectTo"))
+        .field("from", spansExpressionP)
+        .field("to", spansExpressionP)
+        .map(
+            untuple((kind, from, to) -> new SpansConnectTo(from, to)),
+            $ -> tuple(Unit.UNIT, $.from(), $.to())
+        );
   }
 
   private static final JsonParser<SpansInterval> spansIntervalP =
@@ -595,11 +657,14 @@ public final class ConstraintParsers {
           spansIntervalP,
           startsF(selfP),
           endsF(selfP),
+          connectTo(selfP),
+          shiftEdgesF(selfP),
           splitF(selfP),
           splitF(windowsP),
           spansFromWindowsF(windowsP),
           forEachActivitySpansF(selfP),
-          activitySpanP
+          activitySpanP,
+          spansSelectWhenTrueF(selfP, windowsP)
           ));
   }
 
@@ -617,9 +682,26 @@ public final class ConstraintParsers {
               untuple((kind, expression) -> new ViolationsOfWindows(expression)),
               $ -> tuple(Unit.UNIT, $.expression));
 
+  public static final JsonParser<RollingThreshold.RollingThresholdAlgorithm> rollingThresholdAlgorithmP =
+      enumP(RollingThreshold.RollingThresholdAlgorithm.class, Enum::name);
+
+  static final JsonParser<RollingThreshold> rollingThresholdP =
+      productP
+          .field("kind", literalP("RollingThreshold"))
+          .field("spans", spansExpressionP)
+          .field("width", durationExprP)
+          .field("threshold", durationExprP)
+          .field("algorithm", rollingThresholdAlgorithmP)
+          .map(
+              untuple((kind, spans, width, threshold, alg) -> new RollingThreshold(spans, width, threshold, alg)),
+              $ -> tuple(Unit.UNIT, $.spans(), $.width(), $.threshold(), $.algorithm())
+          );
+
+
   public static final JsonParser<Expression<ConstraintResult>> constraintP =
       recursiveP(selfP -> chooseP(
           forEachActivityViolationsF(selfP),
           windowsExpressionP.map(ViolationsOfWindows::new, $ -> $.expression),
-          violationsOfP));
+          violationsOfP,
+          rollingThresholdP));
 }

@@ -5,12 +5,11 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -25,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * A facade for simulating plans and processing simulation results.
@@ -36,8 +36,10 @@ public class SimulationFacade implements AutoCloseable{
   public static final boolean defaultUseResourceTracker = false;
 
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
+  private final Supplier<Boolean> canceledListener;
 
   private final MissionModel<?> missionModel;
+  private final SchedulerModel schedulerModel;
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
@@ -91,32 +93,50 @@ public class SimulationFacade implements AutoCloseable{
     this.initialPlanHasBeenModified = true;
   }
 
+  /**
+   * @return true if initial simulation results are stale, false otherwise
+   */
+  public boolean areInitialSimulationResultsStale(){
+    return this.initialPlanHasBeenModified;
+  }
+
   public Optional<gov.nasa.jpl.aerie.constraints.model.SimulationResults> getLatestConstraintSimulationResults(){
     if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().constraintsResults());
     if(lastSimulationData == null) return Optional.empty();
     return Optional.of(lastSimulationData.constraintsResults());
   }
 
-  public SimulationResultsInterface getLatestDriverSimulationResults(){
-    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return this.initialSimulationResults.get().driverResults();
-    return lastSimulationData.driverResults();
+  public Optional<SimulationResultsInterface> getLatestDriverSimulationResults(){
+    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().driverResults());
+    if(lastSimulationData == null) return Optional.empty();
+    return Optional.of(lastSimulationData.driverResults());
   }
 
-  public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
-    this(planningHorizon, missionModel, defaultUseResourceTracker);
-  }
+  public Supplier<Boolean> getCanceledListener() {return canceledListener;}
 
-  public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel, final boolean useResourceTracker) {
+  public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel, final SchedulerModel schedulerModel, Supplier<Boolean> canceledListener) {
+      this(planningHorizon, missionModel, schedulerModel, canceledListener, defaultUseResourceTracker);
+    }
+
+  public SimulationFacade(
+      final PlanningHorizon planningHorizon,
+      final MissionModel<?> missionModel,
+      final SchedulerModel schedulerModel,
+      Supplier<Boolean> canceledListener,
+      final boolean useResourceTracker
+  ) {
     this.useResourceTracker = useResourceTracker;
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon, useResourceTracker);
+    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), canceledListener, useResourceTracker);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
     this.pastSimulationRestarts = 0;
     this.initialPlan = new ArrayList<>();
     this.initialSimulationResults = Optional.empty();
+    this.schedulerModel = schedulerModel;
+    this.canceledListener = canceledListener;
   }
 
   @Override
@@ -181,12 +201,19 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
-  throws SimulationException
+  throws SimulationException, SchedulingInterruptedException
   {
-    if(insertedActivities.size() == 0) return Map.of();
-    computeSimulationResultsUntil(endTime);
+    logger.info("Need to compute simulation results until "+ endTime + " for getting child activities");
+    var latestSimulationData = this.getLatestDriverSimulationResults();
+    //if no initial sim results and no sim has been performed, perform a sim and get the sim results
+    if(latestSimulationData.isEmpty()){
+      //useful only if there are activities to simulate for this case of getting child activities
+      if(insertedActivities.size() == 0) return Map.of();
+      computeSimulationResultsUntil(endTime);
+      latestSimulationData = this.getLatestDriverSimulationResults();
+    }
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
-    this.lastSimulationData.driverResults().getSimulatedActivities().forEach( (activityInstanceId, activity) -> {
+    latestSimulationData.get().getSimulatedActivities().forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimulationData.driverResults(), activityInstanceId);
       final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(
@@ -207,8 +234,12 @@ public class SimulationFacade implements AutoCloseable{
 
   public void removeAndInsertActivitiesFromSimulation(
       final Collection<SchedulingActivityDirective> activitiesToRemove,
-      final Collection<SchedulingActivityDirective> activitiesToAdd) throws SimulationException
-  {
+      final Collection<SchedulingActivityDirective> activitiesToAdd
+  ) throws SimulationException, SchedulingInterruptedException {
+    if (canceledListener.get()) throw new SchedulingInterruptedException("removing/adding activities");
+    logger.debug("Removing("+activitiesToRemove.size()+")/Adding("+activitiesToAdd.size()+") activities from simulation");
+    activitiesToRemove.stream().forEach(remove -> logger.debug("Removing act starting at " + remove.startOffset()));
+    activitiesToAdd.stream().forEach(adding -> logger.debug("Adding act starting at " + adding.startOffset()));
     var atLeastOneActualRemoval = false;
     for(final var act: activitiesToRemove){
       if(insertedActivities.containsKey(act)){
@@ -231,18 +262,20 @@ public class SimulationFacade implements AutoCloseable{
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
+      logger.info("(Re)creating simulation driver because at least one removal("+atLeastOneActualRemoval+") or insertion in the past ("+earliestActStartTime+")");
       if (driver != null) {
         if (debug) System.out.println("SimulationFacade::pastSimulationRestarts (" + pastSimulationRestarts + ") += driver.getCountSimulationRestarts() (" + driver.getCountSimulationRestarts() + ") = " + (pastSimulationRestarts + driver.getCountSimulationRestarts()));
         this.pastSimulationRestarts += driver.getCountSimulationRestarts();
         driver.close();
       }
-      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon, useResourceTracker);
+      logger.info("Number of simulation restarts so far: " + this.pastSimulationRestarts);
+      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon, canceledListener, useResourceTracker);
     }
     simulateActivities(allActivitiesToSimulate);
   }
 
   public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities)
-  throws SimulationException
+  throws SimulationException, SchedulingInterruptedException
   {
     removeAndInsertActivitiesFromSimulation(activities, List.of());
   }
@@ -256,7 +289,7 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public void insertActivitiesIntoSimulation(final Collection<SchedulingActivityDirective> activities)
-  throws SimulationException
+  throws SimulationException, SchedulingInterruptedException
   {
     removeAndInsertActivitiesFromSimulation(List.of(), activities);
   }
@@ -283,7 +316,8 @@ public class SimulationFacade implements AutoCloseable{
     this.planActDirectiveIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
   }
 
-  private void simulateActivities(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
+  private void simulateActivities(final Collection<SchedulingActivityDirective> activities)
+  throws SimulationException, SchedulingInterruptedException {
     final var activitiesSortedByStartTime =
         activities.stream().filter(activity -> !(insertedActivities.containsKey(activity)))
                   .sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
@@ -303,10 +337,13 @@ public class SimulationFacade implements AutoCloseable{
       insertedActivities.put(activity, activityDirective);
     }
     try {
-    driver.simulateActivities(directivesToSimulate);
-    } catch(Exception e){
+      driver.simulateActivities(directivesToSimulate);
+    } catch (SchedulingInterruptedException e) {
+      throw e; //pass interruption up
+    } catch (Exception e){
       throw new SimulationException("An exception happened during simulation", e);
     }
+    this.lastSimulationData = null;
   }
 
   public static class SimulationException extends Exception {
@@ -315,7 +352,8 @@ public class SimulationFacade implements AutoCloseable{
     }
   }
 
-  public void computeSimulationResultsUntil(final Duration endTime) throws SimulationException {
+  public void computeSimulationResultsUntil(final Duration endTime)
+  throws SimulationException, SchedulingInterruptedException {
     if(!initialPlan.isEmpty()){
       final var toSimulate = new ArrayList<>(this.initialPlan);
       this.initialPlan.clear();
@@ -326,8 +364,10 @@ public class SimulationFacade implements AutoCloseable{
       //compare references
       if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results), this.insertedActivities.keySet());
+        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results));
       }
+    } catch (SchedulingInterruptedException e){
+      throw e; //pass interruption up
     } catch (Exception e){
       throw new SimulationException("An exception happened during simulation", e);
     }
@@ -345,7 +385,7 @@ public class SimulationFacade implements AutoCloseable{
     if (activity.duration() != null) {
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
-        arguments.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+        arguments.put(dt.parameterName(), this.schedulerModel.serializeDuration(activity.duration()));
       } else if (
           durationType instanceof DurationType.Uncontrollable
           || durationType instanceof DurationType.Fixed
@@ -357,6 +397,9 @@ public class SimulationFacade implements AutoCloseable{
       }
     }
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
+    if(activity.anchorId()!= null && !planActDirectiveIdToSimulationActivityDirectiveId.containsKey(activity.anchorId())){
+      throw new RuntimeException("Activity with id "+ activity.anchorId() + " referenced as an anchor by activity " + activity.toString() + " is not present in the plan");
+    }
     return new ActivityDirective(
         activity.startOffset(),
         serializedActivity,

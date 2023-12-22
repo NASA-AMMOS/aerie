@@ -48,6 +48,8 @@ public final class ResultsProtocol {
       failWith(builder.build());
     }
 
+    void reportIncompleteResults(SimulationResultsInterface results);
+
     void reportSimulationExtent(Duration extent);
   }
 

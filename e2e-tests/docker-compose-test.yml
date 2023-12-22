@@ -46,6 +46,7 @@ services:
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
       UNTRUE_PLAN_START: '2000-01-01T11:58:55.816Z'
+      ENABLE_CONTINUOUS_VALIDATION_THREAD: true
     image: aerie_merlin
     ports: ['27183:27183', '5005:5005']
     restart: always
@@ -105,6 +106,7 @@ services:
     environment:
       NODE_TLS_REJECT_UNAUTHORIZED: '0'
       ORIGIN: http://localhost
+      PUBLIC_AERIE_FILE_STORE_PREFIX: "/usr/src/app/merlin_file_store/"
       PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
       PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000
       PUBLIC_HASURA_CLIENT_URL: http://localhost:8080/v1/graphql

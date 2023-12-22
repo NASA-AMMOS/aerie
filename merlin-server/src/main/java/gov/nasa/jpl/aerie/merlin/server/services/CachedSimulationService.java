@@ -4,7 +4,9 @@ import java.util.Optional;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 
@@ -31,6 +33,15 @@ public record CachedSimulationService (
   @Override
   public Optional<SimulationResultsHandle> get(final PlanId planId, final RevisionData revisionData) {
     return this.store.lookup(planId) // Only return results that have already been cached
+        .map(ResultsProtocol.ReaderRole::get)
+        .map(state -> state instanceof final ResultsProtocol.State.Success s ?
+            s.results() :
+            null);
+  }
+
+  @Override
+  public Optional<SimulationResultsHandle> get(final PlanId planId, final SimulationDatasetId simulationDatasetId) throws SimulationDatasetMismatchException {
+    return this.store.lookup(planId, simulationDatasetId) // Only return results that have already been cached
         .map(ResultsProtocol.ReaderRole::get)
         .map(state -> state instanceof final ResultsProtocol.State.Success s ?
             s.results() :

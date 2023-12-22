@@ -68,7 +68,8 @@ public final class SimulationUtility {
         startTime,
         simulationDuration,
         startTime,
-        simulationDuration);
+        simulationDuration,
+        () -> false);
   }
 
   private static long _counter = 0;

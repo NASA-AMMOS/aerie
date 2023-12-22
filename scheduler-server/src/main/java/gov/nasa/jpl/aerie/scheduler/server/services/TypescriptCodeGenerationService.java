@@ -8,6 +8,8 @@ import java.util.Map;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import org.apache.commons.lang3.tuple.Pair;
 
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
@@ -15,7 +17,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.se
 public final class TypescriptCodeGenerationService {
   private TypescriptCodeGenerationService() { }
 
-  public static String generateTypescriptTypesFromMissionModel(final MissionModelService.MissionModelTypes missionModelTypes) {
+  public static String generateTypescriptTypesFromMissionModel(final MerlinService.MissionModelTypes missionModelTypes) {
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {
       activityTypeCodes.add(getActivityTypeInformation(activityType));
@@ -24,7 +26,7 @@ public final class TypescriptCodeGenerationService {
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
     result.add("import type { Windows } from './constraints-edsl-fluent-api.js';");
-    result.add("import type * as ConstraintEDSL from './constraints-edsl-fluent-api.js'");
+    result.add("import type { ActivityTypeParameterMap } from './mission-model-generated-code.js';");
 
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate<ActivityType.%s> {}".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
@@ -49,7 +51,7 @@ public final class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
+  private static String generateResourceTypes(final Collection<ResourceType> resourceTypes) {
     final var result = new ArrayList<String>();
     result.add("export enum Resource {");
     for (final var resourceType : resourceTypes) {
@@ -80,7 +82,7 @@ export function makeAllDiscreteProfile (argument: any) : any{
      }
   else if(Array.isArray(argument)){
    const arr: any[] = [];
-   argument.every((element) => { arr.push(makeAllDiscreteProfile(element))});
+   argument.forEach((element) => { arr.push(makeAllDiscreteProfile(element))});
    return Discrete.List(arr).__astNode;
  } else if (typeof argument === "object" ){
    const obj: { [k: string]: any } = {};
@@ -113,7 +115,19 @@ return (<T>makeAllDiscreteProfile(args))
         result.add(indent(indent("return { activityType: ActivityType.%s, args: {} };".formatted(activityTypeCode.activityTypeName()))));
         result.add(indent("},"));
       } else {
-        result.add(indent("%s: function %sConstructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
+        final StringBuilder parameters = new StringBuilder();
+        activityTypeCode.parameterTypes.stream().forEach((activityParameter -> parameters.append(activityParameter.name+", ")));
+        if (parameters.length() > 0) {
+          parameters.setLength(parameters.length() - 2); // Remove the last comma and space
+        }
+        result.add(indent("""
+            /**
+            * Creates a %s instance
+            * @param {Object} args - {%s}.
+            * @return A %s instance.
+            */
+        """.formatted(activityTypeCode.activityTypeName,parameters.toString(),activityTypeCode.activityTypeName)));
+        result.add(indent("%s: function %sConstructor(args:  ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
         result.add(indent("): %s {".formatted(activityTypeCode.activityTypeName())));
         result.add(indent("// @ts-ignore"));
         result.add(indent(indent("return { activityType: ActivityType.%s, args: makeArgumentsDiscreteProfiles(args) };".formatted(activityTypeCode.activityTypeName()))));
@@ -216,11 +230,11 @@ return (<T>makeAllDiscreteProfile(args))
     }
   }
 
-  private static ActivityTypeCode getActivityTypeInformation(final MissionModelService.ActivityType activityType) {
+  private static ActivityTypeCode getActivityTypeInformation(final ActivityType activityType) {
     return new ActivityTypeCode(activityType.name(), generateActivityParameterTypes(activityType), activityType.presets());
   }
 
-  private static List<ActivityParameter> generateActivityParameterTypes(final MissionModelService.ActivityType activityType) {
+  private static List<ActivityParameter> generateActivityParameterTypes(final ActivityType activityType) {
     return activityType
         .parameters()
         .entrySet()
@@ -288,6 +302,11 @@ return (<T>makeAllDiscreteProfile(args))
                 .stream()
                 .map(ValueSchema.Variant::label)
                 .toList());
+      }
+
+      @Override
+      public TypescriptType onMeta(final Map<String, SerializedValue> metadata, final ValueSchema target) {
+        return target.match(this);
       }
     });
   }

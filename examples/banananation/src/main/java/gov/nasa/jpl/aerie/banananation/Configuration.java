@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.contrib.metadata.Unit;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 
@@ -7,7 +8,7 @@ import java.nio.file.Path;
 
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Template;
 
-public record Configuration(int initialPlantCount, String initialProducer, Path initialDataPath, InitialConditions initialConditions, boolean runDaemons) {
+public record Configuration(@Unit("count") int initialPlantCount, String initialProducer, Path initialDataPath, InitialConditions initialConditions, boolean runDaemons) {
 
   public static final int DEFAULT_PLANT_COUNT = 200;
   public static final String DEFAULT_PRODUCER = "Chiquita";
@@ -37,5 +38,5 @@ public record Configuration(int initialPlantCount, String initialProducer, Path 
   }
 
   @AutoValueMapper.Record
-  public record InitialConditions(double fruit, double peel, Flag flag) {}
+  public record InitialConditions(@Unit("bananas") double fruit, @Unit("kg") double peel, Flag flag) {}
 }

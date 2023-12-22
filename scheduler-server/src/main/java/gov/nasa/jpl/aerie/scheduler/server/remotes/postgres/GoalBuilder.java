@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -11,8 +14,8 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionBetween;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
@@ -25,6 +28,8 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+import org.apache.commons.lang3.function.TriFunction;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -65,21 +70,23 @@ public class GoalBuilder {
           .aliasForAnchors(g.alias());
       if (g.startConstraint().isPresent()) {
         final var startConstraint = g.startConstraint().get();
-        final var timeExpression = new TimeExpressionRelativeFixed(
-            startConstraint.windowProperty(),
-            startConstraint.singleton()
-        );
-        timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
-        builder.startsAt(timeExpression);
+        if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
+          builder.startsAt(makeTimeExpressionRelativeFixed(s));
+        } else if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange s) {
+          builder.startsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(s.lowerBound()), makeTimeExpressionRelativeFixed(s.upperBound())));
+        } else {
+          throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, startConstraint);
+        }
       }
       if (g.endConstraint().isPresent()) {
-        final var startConstraint = g.endConstraint().get();
-        final var timeExpression = new TimeExpressionRelativeFixed(
-            startConstraint.windowProperty(),
-            startConstraint.singleton()
-        );
-        timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
-        builder.endsAt(timeExpression);
+        final var endConstraint = g.endConstraint().get();
+        if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint e) {
+          builder.endsAt(makeTimeExpressionRelativeFixed(e));
+        } else if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange e) {
+          builder.endsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
+        } else {
+          throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, endConstraint);
+        }
       }
       if (g.startConstraint().isEmpty() && g.endConstraint().isEmpty()) {
         throw new Error("Both start and end constraints were empty. This should have been disallowed at the type level.");
@@ -146,6 +153,16 @@ public class GoalBuilder {
     }
   }
 
+  @NotNull
+  private static TimeExpressionRelativeFixed makeTimeExpressionRelativeFixed(final SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
+    final var timeExpression = new TimeExpressionRelativeFixed(
+        s.windowProperty(),
+        s.singleton()
+    );
+    timeExpression.addOperation(s.operator(), s.operand());
+    return timeExpression;
+  }
+
   private static ActivityExpression buildActivityExpression(SchedulingDSL.ConstraintExpression.ActivityExpression activityExpr,
                                                             final Function<String, ActivityType> lookupActivityType){
     final var builder = new ActivityExpression.Builder().ofType(lookupActivityType.apply(activityExpr.type()));
@@ -159,17 +176,29 @@ public class GoalBuilder {
       final SchedulingDSL.ConstraintExpression constraintExpression) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
       return new ForEachActivitySpans(
-          ($, simResults, environment) -> {
-            final var startTime = $.interval.start;
-            if (!$.type.equals(c.type())) return false;
-            for (final var arg: c
-                .arguments()
-                .map(expr -> expr.evaluateMap(simResults, startTime, environment))
-                .orElse(Map.of())
-                .entrySet()) {
-              if (!arg.getValue().equals($.parameters.get(arg.getKey()))) return false;
+          new TriFunction<>() {
+            @Override
+            public Boolean apply(
+                final ActivityInstance activityInstance,
+                final SimulationResults simResults,
+                final EvaluationEnvironment environment)
+            {
+              final var startTime = activityInstance.interval.start;
+              if (!activityInstance.type.equals(c.type())) return false;
+              for (final var arg : c
+                  .arguments()
+                  .map(expr -> expr.evaluateMap(simResults, startTime, environment))
+                  .orElse(Map.of())
+                  .entrySet()) {
+                if (!arg.getValue().equals(activityInstance.parameters.get(arg.getKey()))) return false;
+              }
+              return true;
             }
-            return true;
+
+            @Override
+            public String toString() {
+              return "(filter by ActivityExpression)";
+            }
           },
           "alias" + c.type(),
           new ActivitySpan("alias" + c.type())
@@ -181,17 +210,17 @@ public class GoalBuilder {
     }
   }
 
-  private static ActivityCreationTemplate makeActivityTemplate(
+  private static ActivityExpression makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {
-    var builder = new ActivityCreationTemplate.Builder();
+    var builder = new ActivityExpression.Builder();
     final var type = lookupActivityType.apply(activityTemplate.activityType());
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
       if(activityTemplate.arguments().fields().containsKey(durationType.parameterName())){
         final var argument = activityTemplate.arguments().fields().get(durationType.parameterName());
         if(argument != null){
-          builder.duration(argument.expression);
+          builder.durationIn(argument.expression);
           activityTemplate.arguments().fields().remove(durationType.parameterName());
         } else {
           //nothing, other cases will be handled by below section

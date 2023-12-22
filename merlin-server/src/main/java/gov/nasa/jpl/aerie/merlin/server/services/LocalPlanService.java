@@ -68,13 +68,13 @@ public final class LocalPlanService implements PlanService {
   @Override
   public List<Pair<Duration, ProfileSet>> getExternalDatasets(
       final PlanId planId,
-      final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException
+      final SimulationDatasetId simulationDatasetId) throws NoSuchPlanException
   {
     return this.planRepository.getExternalDatasets(planId, simulationDatasetId);
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
-    return this.planRepository.getExternalResourceSchemas(planId);
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException {
+    return this.planRepository.getExternalResourceSchemas(planId, simulationDatasetId);
   }
 }

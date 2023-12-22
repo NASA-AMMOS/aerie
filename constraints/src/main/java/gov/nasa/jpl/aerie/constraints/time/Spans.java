@@ -216,6 +216,17 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
   }
 
   @Override
+  public Spans shiftEdges(final Duration fromStart, final Duration fromEnd) {
+    return this.map($ -> Interval.between($.start.plus(fromStart), $.startInclusivity, $.end.plus(fromEnd), $.endInclusivity))
+        .filter($ -> !$.isEmpty());
+  }
+
+  @Override
+  public Spans select(final Interval... intervals) {
+    return this.flatMap($ -> Arrays.stream(intervals).map(selection -> Interval.intersect($, selection)));
+  }
+
+  @Override
   public boolean equals(final Object obj) {
     if (!(obj instanceof final Spans spans)) return false;
 

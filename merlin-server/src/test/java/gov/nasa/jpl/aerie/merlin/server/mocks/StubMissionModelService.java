@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class StubMissionModelService implements MissionModelService {
   public static final String EXISTENT_MISSION_MODEL_ID = "abc";
@@ -200,7 +201,11 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public SimulationResultsInterface runSimulation(final CreateSimulationMessage message, Consumer<Duration> simulationExtentConsumer) throws NoSuchMissionModelException {
+  public SimulationResultsInterface runSimulation(
+      final CreateSimulationMessage message,
+      Consumer<Duration> simulationExtentConsumer,
+      Supplier<Boolean> canceledListener)
+  throws NoSuchMissionModelException {
     if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(message.missionModelId());
     }
@@ -213,9 +218,6 @@ public final class StubMissionModelService implements MissionModelService {
 
   @Override
   public void refreshActivityTypes(final String missionModelId) throws NoSuchMissionModelException {}
-
-  @Override
-  public void refreshActivityValidations(final String missionModelId, final ActivityDirectiveForValidation directive) {}
 
   @Override
   public void refreshResourceTypes(final String missionModelId) throws NoSuchMissionModelException {}

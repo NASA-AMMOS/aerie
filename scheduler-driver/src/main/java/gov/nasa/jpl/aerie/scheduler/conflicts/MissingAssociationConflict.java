@@ -29,4 +29,10 @@ public class MissingAssociationConflict extends Conflict {
   public Windows getTemporalContext() {
     return null;
   }
+
+  @Override
+  public String toString(){
+    return "Conflict: missing association between goal and 1 activity of following set: "
+           + this.getActivityInstancesToChooseFrom() + ". Produced by goal " + getGoal().getName();
+  }
 }

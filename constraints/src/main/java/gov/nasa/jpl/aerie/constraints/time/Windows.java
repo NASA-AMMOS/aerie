@@ -342,6 +342,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @param fromEnd duration to shift true -> false falling edges
    * @return a new Windows
    */
+  @Override
   public Windows shiftEdges(Duration fromStart, Duration fromEnd) {
     final var builder = IntervalMap.<Boolean>builder();
 
@@ -622,6 +623,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   }
 
   /** Delegated to {@link IntervalMap#select(Interval...)} */
+  @Override
   public Windows select(final Interval... intervals) {
     return new Windows(segments.select(intervals));
   }
@@ -671,5 +673,16 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   @Override
   public String toString() {
     return segments.toString();
+  }
+
+  /**
+   * toString only for the true segments
+   */
+  public String trueSegmentsToString(){
+    final var sb = new StringBuilder();
+    sb.append("[");
+    this.iterateEqualTo(true).forEach(w -> sb.append(w.toString()));
+    sb.append("]");
+    return sb.toString();
   }
 }

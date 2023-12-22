@@ -61,6 +61,11 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
   }
 
+  @Override
+  public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId, final SimulationDatasetId simulationDatasetId) {
+    return lookup(planId);
+  }
+
   public boolean isEqualTo(final InMemoryResultsCellRepository other) {
     return this.cells.equals(other.cells);
   }
@@ -127,6 +132,11 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
       }
 
       this.state = new ResultsProtocol.State.Failed(0, reason);
+    }
+
+    @Override
+    public void reportIncompleteResults(final SimulationResultsInterface results) {
+      this.state = new ResultsProtocol.State.Incomplete(0);
     }
 
     @Override
