@@ -440,7 +440,7 @@ public final class IncrementalSimTest {
 
       var timer = new Timer(INIT_SIM + " " + numActs, false);
       final var driver = SimulationUtility.getDriver(simDuration);
-      driver.simulate(schedule, startTime, simDuration, startTime, simDuration, false, $ -> {});
+      driver.simulate(schedule, startTime, simDuration, startTime, simDuration, () -> false, $ -> {});
       timer.stop(false);
 
       timer = new Timer(COMP_RESULTS + " " + numActs, false);
@@ -541,7 +541,7 @@ public final class IncrementalSimTest {
 
       var timer = new Timer(INIT_SIM + " " + numActs, false);
       final var driver = SimulationUtility.getDriver(simDuration);
-      driver.simulate(schedule, startTime, simDuration, startTime, simDuration, false, $ -> {});
+      driver.simulate(schedule, startTime, simDuration, startTime, simDuration, () -> false, $ -> {});
       timer.stop(false);
 
       timer = new Timer(COMP_RESULTS + " " + numActs, false);
