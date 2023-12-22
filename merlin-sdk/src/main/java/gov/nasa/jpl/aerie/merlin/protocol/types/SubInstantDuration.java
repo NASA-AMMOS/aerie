@@ -106,4 +106,67 @@ public record SubInstantDuration(Duration duration, Integer index) implements Co
   public static SubInstantDuration max(SubInstantDuration d1, SubInstantDuration d2) {
     return d1.shorterThan(d2) ? d2 : d1;
   }
+
+  // TODO: Should handle Integer.MIN_VALUE and negative this.index
+  // TODO: Enforce index >= 0 or else isEqualTo() should check for index < 0
+  // TODO: REVIEW -- Should Integer.MAX_VALUE be considered Inf, in which case Integer.MAX_VALUE == Integer.MAX_VALUE + 1?
+  // TODO: Should handle Duration.MIN_VALUE
+
+  public SubInstantDuration plus(SubInstantDuration d) {
+    if (d.index < 0) {
+      return this.plus(d.duration).plus(-d.index);
+    }
+    var newDuration = duration.plus(d.duration);
+    if (Integer.MAX_VALUE - index < d.index) {
+      if (newDuration.isEqualTo(Duration.MAX_VALUE)) {
+        return MAX_VALUE;
+      }
+      return new SubInstantDuration(newDuration.plus(Duration.EPSILON), (index - Integer.MAX_VALUE) + d.index);
+    }
+    return new SubInstantDuration(duration.plus(d.duration), index + d.index);
+  }
+  public SubInstantDuration plus(Duration d) {
+    return new SubInstantDuration(duration.plus(d), index);
+  }
+  public SubInstantDuration plus(Integer i) {
+    if (i < 0) {
+      return this.minus(-i);
+    }
+    if (Integer.MAX_VALUE - index < i) {
+      if (duration.isEqualTo(Duration.MAX_VALUE)) {
+        return MAX_VALUE;
+      }
+      return new SubInstantDuration(duration.plus(Duration.EPSILON), (index - Integer.MAX_VALUE) + i);
+    }
+    return new SubInstantDuration(duration, index + i);
+  }
+  public SubInstantDuration minus(SubInstantDuration d) {
+    if (d.index < 0) {
+      return this.minus(d.duration).plus(-d.index);
+    }
+    var newDuration = duration.minus(d.duration);
+    if (index - d.index < 0) {
+      if (newDuration.isEqualTo(Duration.MIN_VALUE)) {
+        return MIN_VALUE;
+      }
+      return new SubInstantDuration(newDuration.minus(Duration.EPSILON), Integer.MAX_VALUE + (index - d.index));
+    }
+    return new SubInstantDuration(newDuration, index - d.index);
+  }
+  public SubInstantDuration minus(Duration d) {
+    return new SubInstantDuration(duration.minus(d), index);
+  }
+  public SubInstantDuration minus(Integer i) {
+    if (i < 0) {
+      return this.plus(-i);
+    }
+    if (index - i < 0) {
+      if (duration.isEqualTo(Duration.MIN_VALUE)) {
+        return MIN_VALUE;
+      }
+      //System.out.println(this + " - " + i + " = SubInstantDuration(" + duration.minus(Duration.EPSILON) + ", " + Integer.MAX_VALUE + (index - i) + ")");
+      return new SubInstantDuration(duration.minus(Duration.EPSILON), Integer.MAX_VALUE + (index - i));
+    }
+    return new SubInstantDuration(duration, index - i);
+  }
 }

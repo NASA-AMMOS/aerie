@@ -59,6 +59,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration.max;
+
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
@@ -350,7 +352,13 @@ public final class SimulationEngine implements AutoCloseable {
       }
       for (var entry : topicReadsAfter.entrySet()) {
         var d = entry.getKey();
-        HashMap<TaskId, Event> taskIds = entry.getValue();
+        HashMap<TaskId, Event> taskIds = new HashMap<>();
+        // Don't include tasks which are being re-executed
+        for (var e :  entry.getValue().entrySet()) {
+          if (!staleTasks.containsKey(e.getKey())) {
+            taskIds.put(e.getKey(), e.getValue());
+          }
+        }
 //        // filter out tasks of removed activities
 //        // Moved and removed activities have
 //        var filteredStream = entry.getValue().entrySet().stream().filter(e -> !removedActivities.contains(e.getKey()) &&
@@ -384,11 +392,12 @@ public final class SimulationEngine implements AutoCloseable {
     var earliest = before;
     for (var entry : timeline.staleTopics.entrySet()) {
       Topic<?> topic = entry.getKey();
-      Optional<SubInstantDuration> nextStale = timeline.whenIsTopicStale(topic, after, before);
+      Optional<SubInstantDuration> nextStale = timeline.whenIsTopicStale(topic, after.plus(1), before);
       if (nextStale.isEmpty()) continue;
       TreeMap<Duration, List<EventGraph<Event>>> eventsByTime =
           timeline.oldTemporalEventSource.getCombinedEventsByTopic().get(topic);
       if (eventsByTime == null) continue;
+      if (nextStale.get().longerThan(earliest)) continue;
       var subMap = eventsByTime.subMap(nextStale.get().duration(), true, earliest.duration(), true);
       SubInstantDuration time = null;
       for (var e : subMap.entrySet()) {
@@ -397,9 +406,10 @@ public final class SimulationEngine implements AutoCloseable {
         if (events == null || events.isEmpty()) continue;
 //        int step = d.isEqualTo(after.duration()) ? after.index() : 0;
         int step = d.isEqualTo(nextStale.get().duration()) ? nextStale.get().index() : 0;
-        for (; step < events.size(); ++step) {
+        int maxSteps = Math.min(events.size(), before.duration().isEqualTo(nextStale.get().duration()) ? before.index() : Integer.MAX_VALUE);
+        for (; step < maxSteps; ++step) {
           var graph = events.get(step);
-          if (timeline.oldTemporalEventSource.topicsForEventGraph.get(graph).contains(topic)) {
+          if (timeline.oldTemporalEventSource.getTopicsForEventGraph(graph).contains(topic)) {
             time = new SubInstantDuration(d, step);
             if (time.longerThan(after) && timeline.isTopicStale(topic, time) ) {
               break;
@@ -425,6 +435,9 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Get the earliest time that topics become stale and return those topics with the time */
   public Pair<List<Topic<?>>, SubInstantDuration> earliestStaleTopics(SubInstantDuration after, SubInstantDuration before) {
+    if (before.noLongerThan(after)) {
+      return Pair.of(Collections.emptyList(), SubInstantDuration.MAX_VALUE);
+    }
     var list = new ArrayList<Topic<?>>();
     var earliest = before;
     for (var entry : timeline.staleTopics.entrySet()) {
@@ -452,6 +465,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public Pair<List<Topic<?>>, SubInstantDuration> earliestConditionTopics(SubInstantDuration after, SubInstantDuration before) {
+    if (before.noLongerThan(after)) {
+      return Pair.of(Collections.emptyList(), SubInstantDuration.MAX_VALUE);
+    }
     var list = new ArrayList<Topic<?>>();
     var earliest = before;
     for (Topic topic : this.waitingConditions.getTopics()) {
@@ -469,10 +485,10 @@ public final class SimulationEngine implements AutoCloseable {
           var topicForGraph = getTopicsForEventGraph(graph);
           if (topicForGraph.contains(topic)) {
             time = new SubInstantDuration(d, step);
-            if (timeline.isTopicStale(topic, time)) {
+//            if (timeline.isTopicStale(topic, time)) {
               break;
-            }
-            time = null;
+//            }
+//            time = null;
           }
         }
         if (time != null) break;
@@ -601,12 +617,12 @@ public final class SimulationEngine implements AutoCloseable {
                           timeline.oldTemporalEventSource.liveCells.getCells(topic).stream().findFirst().orElseThrow().cell;
         if (debug) System.out.println("rescheduleStaleTasks(): oldCell = " + oldCell + ", cell time = " + timeline.oldTemporalEventSource.getCellTime(oldCell));
         final Cell<?> tempOldCell = oldCell.duplicate();
-        timeline.oldTemporalEventSource.putCellTime(tempOldCell,timeline.getCellTime(oldCell));
+        timeline.oldTemporalEventSource.putCellTime(tempOldCell,timeline.oldTemporalEventSource.getCellTime(oldCell));
         timeline.oldTemporalEventSource.stepUp(tempOldCell, timeOfStaleReads, noop);
         timeline.oldTemporalEventSource.putCellTime(tempOldCell, null);
 
           if (!tempCell.getState().equals(tempOldCell.getState())) {
-            if (debug) System.out.println("Stale read: new cell state (" + tempCell + ") != old cell state (" + tempOldCell + ")");
+            if (debug) System.out.println("rescheduleStaleTasks(): Stale read: new cell state (" + tempCell + ") != old cell state (" + tempOldCell + ")");
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads, noop);
             break;  // rescheduled task, so can move on to the next task
@@ -652,15 +668,27 @@ public final class SimulationEngine implements AutoCloseable {
     var newEvents = this.timeline.eventsByTask.get(taskId);
     if (oldEngine == null) return newEvents;
     SimulationEngine engine = this;
+    ArrayList<SimulationEngine> engines = new ArrayList<>();
     TreeMap<Duration, List<EventGraph<Event>>> oldEvents = null;
-    while (oldEvents == null && engine != null) {
-      oldEvents = engine._oldEventsByTask.get(taskId);
+    // Find the shallowest engine that saved old events
+    while (engine != null) {
+      engines.add(engine);
+      if (engine._oldEventsByTask.containsKey(taskId)) {
+        oldEvents = engine._oldEventsByTask.get(taskId);
+        if (engine != this) engine._oldEventsByTask.remove(taskId); // purge old caches being replaced by new cache
+        break;
+      }
       engine = engine.oldEngine;
     }
-    if (oldEvents != null) {
-      this._oldEventsByTask.put(taskId, oldEvents);
+    // Walk backwards, combining graphs
+    for (int i=engines.size()-1; i >= 0; --i) {
+      engine = engines.get(i);
+      if (i == 0) engine._oldEventsByTask.put(taskId, oldEvents); // only update this engine's cache
+      newEvents = engine.timeline.eventsByTask.get(taskId);
+      var tmp_old = TemporalEventSource.mergeMapsFirstWins(newEvents, oldEvents);
+      oldEvents = tmp_old;
     }
-    return TemporalEventSource.mergeMapsFirstWins(newEvents, oldEvents);
+    return oldEvents;
   }
   private HashMap<TaskId, TreeMap<Duration, List<EventGraph<Event>>>> _oldEventsByTask = new HashMap<>();
 
@@ -693,10 +721,10 @@ public final class SimulationEngine implements AutoCloseable {
     final TreeMap<Duration, List<EventGraph<Event>>> graphsForTask = this.timeline.eventsByTask.get(taskId);
     final TreeMap<Duration, List<EventGraph<Event>>> oldGraphsForTask = this.oldEngine.getCombinedEventsByTask(taskId);
     if (debug) System.out.println("old combined graphs = " + oldGraphsForTask);
-    if (debug) System.out.println("new local graphs = " + graphsForTask);
+    if (debug) System.out.println("new local graphs =    " + graphsForTask);
     if (debug) {
       final TreeMap<Duration, List<EventGraph<Event>>> combinedGraphsForTask = this.getCombinedEventsByTask(taskId);
-      if (debug) System.out.println("new combined graphs = " + graphsForTask);
+      if (debug) System.out.println("new combined graphs = " + combinedGraphsForTask);
     }
     var allKeys = new TreeSet<Duration>();
     if (graphsForTask != null) {
@@ -705,8 +733,8 @@ public final class SimulationEngine implements AutoCloseable {
     if (oldGraphsForTask != null) {
       allKeys.addAll(oldGraphsForTask.keySet());
     }
-    for (Duration time : allKeys) {
-      if (time.shorterThan(startingAfterTime.duration())) continue;
+    for (Duration time : allKeys.tailSet(startingAfterTime.duration(), true)) {
+      //if (time.shorterThan(startingAfterTime.duration())) continue;
       List<EventGraph<Event>> gl = graphsForTask == null ? null : graphsForTask.get(time); // If old graph is already replaced used the replacement
       if (gl == null || gl.isEmpty()) gl = oldGraphsForTask == null ? null : oldGraphsForTask.get(time);  // else we can replace the old graph
       if (gl == null) continue;
@@ -715,6 +743,7 @@ public final class SimulationEngine implements AutoCloseable {
 //        //System.err.println("ERROR! Could not find event " + afterEvent + " in graph for index " + firstStep + " in " + gl);
 //        throw new RuntimeException("Could not find event " + afterEvent + " in graph for index " + firstStep + " in " + gl);
 //      }
+      //if (debug) System.out.println("comparing old graphs replacing old graph=" + g + " with new graph=" + newG + " at time " + time);
       for (int step=firstStep; step < gl.size(); ++step) {
         var g = gl.get(step);
         SubInstantDuration staleTime = new SubInstantDuration(time, step);
@@ -725,7 +754,9 @@ public final class SimulationEngine implements AutoCloseable {
         //s.forEach(topic -> invalidateTopic(topic, time));
         s.forEach(topic -> timeline.setTopicStale(topic, staleTime));
         // replace the old graph with one without the task's events, updating data structures
-        var pair = g.filter(e -> !taskId.equals(e.provenance()), step == firstStep ? afterEvent : null, true);
+        var pair = g.filter(e -> !taskId.equals(e.provenance()),
+                            step == firstStep && time.isEqualTo(startingAfterTime.duration()) ? afterEvent : null,
+                            true);
         var newG = pair.getLeft();
         if (newG != g) {
           if (debug) System.out.println("replacing old graph=" + g + " with new graph=" + newG + " at time " + time);
@@ -890,14 +921,16 @@ public final class SimulationEngine implements AutoCloseable {
 
     if (oldEngine != null && nextTime.noShorterThan(curTime().duration())) {
       if (resourceTracker == null) {
-        earliestStaleTopics = earliestStaleTopics(curTime(), nextTime);  // might want to not limit by nextTime and cache for future iterations
-        //if (debug) System.out.println("earliestStaleTopics(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopics);
-        staleTopicTime = earliestStaleTopics.getRight();
+        // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
+        // by index=1, and the window searched must be 1 index before the current time.
+        earliestStaleTopics = earliestStaleTopics(curTime().minus(1), nextTime);  // TODO: might want to not limit by nextTime and cache for future iterations
+        if (debug) System.out.println("earliestStaleTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestStaleTopics);
+        staleTopicTime = earliestStaleTopics.getRight().plus(1);
         nextTime = SubInstantDuration.min(nextTime, staleTopicTime);
 
-        earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime(), SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)));
-        //if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime() + ", " + Duration.min(nextTime, maximumTime) + ") = " + earliestStaleTopicOldEvents);
-        staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight();
+        earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime().minus(1), SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)));
+        if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime().minus(1) + ", " + SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)) + ") = " + earliestStaleTopicOldEvents);
+        staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight().plus(1);
         nextTime = SubInstantDuration.min(nextTime, staleTopicOldEventTime);
       }
 
@@ -907,8 +940,11 @@ public final class SimulationEngine implements AutoCloseable {
       staleReadTime = earliestStaleReads.getLeft();
       nextTime = SubInstantDuration.min(nextTime, staleReadTime);
 
-      earliestConditionTopics = earliestConditionTopics(curTime(), nextTime);
-      conditionTime = earliestConditionTopics.getRight();
+      // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
+      // by index=1, and the window searched must be 1 index before the current time.
+      earliestConditionTopics = earliestConditionTopics(curTime().minus(1), nextTime);
+      if (debug) System.out.println("earliestConditionTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestConditionTopics);
+      conditionTime = earliestConditionTopics.getRight().plus(1);
       nextTime = SubInstantDuration.min(nextTime, conditionTime);
     }
 
@@ -957,7 +993,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       if (conditionTime.isEqualTo(nextTime)) {
-        if (debug) System.out.println("earliestConditionTopics at " + nextTime + " = " + earliestConditionTopics);
+        //if (debug) System.out.println("earliestConditionTopics at " + nextTime + " = " + earliestConditionTopics);
         for (Topic<?> topic : earliestConditionTopics
             .getLeft()
             .stream()
@@ -1090,7 +1126,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.conditions.put(condition, s.condition());
       var jid = JobId.forCondition(condition);
       var t = SubInstant.Conditions.at(currentTime.duration());
-      if (trace) System.out.println("stepEffectModel(TaskId=" + task + "): conditionId = " + condition + ", AwaitingCondition s = " + s + ", ConditionJobId = " + jid + ", at time " + t);
+      if (trace) System.out.println("stepEffectModel(TaskId=" + task + "): scheduling Condition job with conditionId = " + condition + ", AwaitingCondition s = " + s + ", condition = " + s.condition() + ", ConditionJobId = " + jid + ", at time " + t);
       this.scheduledJobs.schedule(jid, t);
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
@@ -1147,6 +1183,8 @@ public final class SimulationEngine implements AutoCloseable {
         .get(condition)
         .nextSatisfied(querier, Duration.MAX_VALUE) //horizonTime.minus(currentTime)
         .map(currentTime.duration()::plus);
+
+    if (trace) System.out.println("updateCondition(): prediction = " + prediction);
 
     if (trace) System.out.println("updateCondition(): waitingConditions.subscribeQuery(conditionId=" + condition + ", querier.referencedTopics=" + querier.referencedTopics + ")");
     this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);
