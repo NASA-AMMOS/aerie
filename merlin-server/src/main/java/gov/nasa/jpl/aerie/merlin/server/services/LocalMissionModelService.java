@@ -24,8 +24,14 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -241,6 +247,8 @@ public final class LocalMissionModelService implements MissionModelService {
         .getEffectiveArguments(arguments);
   }
 
+  protected static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
@@ -252,6 +260,8 @@ public final class LocalMissionModelService implements MissionModelService {
   public SimulationResultsInterface runSimulation(final CreateSimulationMessage message, final Consumer<Duration> simulationExtentConsumer)
   throws NoSuchMissionModelException
   {
+    long accumulatedCpuTime = 0;  // nanoseconds
+    long initialCpuTime = threadMXBean.getCurrentThreadCpuTime();  // nanoseconds
     final var config = message.configuration();
     if (config.isEmpty()) {
       log.warn(
@@ -265,12 +275,13 @@ public final class LocalMissionModelService implements MissionModelService {
     var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
     SimulationDriver<?> driver = simulationDrivers.get(planInfo);
 
+    SimulationResultsInterface results;
     if (driver == null || !doingIncrementalSim) {
       driver = new SimulationDriver<>(missionModel, message.planStartTime(), message.planDuration(),
                                       message.useResourceTracker());
       simulationDrivers.put(planInfo, driver);
       // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-      return driver.simulate(
+      results = driver.simulate(
           message.activityDirectives(),
           message.simulationStartTime(),
           message.simulationDuration(),
@@ -281,7 +292,7 @@ public final class LocalMissionModelService implements MissionModelService {
     } else {
       // Try to reuse past simulation.
       driver.initSimulation(message.simulationDuration());
-      return driver.diffAndSimulate(message.activityDirectives(),
+      results = driver.diffAndSimulate(message.activityDirectives(),
                                     message.simulationStartTime(),
                                     message.simulationDuration(),
                                     message.planStartTime(),
@@ -289,9 +300,39 @@ public final class LocalMissionModelService implements MissionModelService {
                                     true,
                                     simulationExtentConsumer);
     }
-
+    accumulatedCpuTime = threadMXBean.getCurrentThreadCpuTime() - initialCpuTime;
+    System.out.println("LocalMissionModelService.runSimulation() CPU time: " + formatTimestamp(accumulatedCpuTime));
+    return results;
   }
 
+  /**
+   * ISO timestamp format
+   */
+  public static final DateTimeFormatter format =
+      new DateTimeFormatterBuilder()
+          .appendPattern("uuuu-DDD'T'HH:mm:ss")
+          .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
+          .toFormatter();
+
+  /**
+   * Format Instant into a date-timestamp.
+   *
+   * @param instant
+   * @return formatted string
+   */  protected static String formatTimestamp(Instant instant) {
+    return format.format(instant.atZone(ZoneOffset.UTC));
+  }
+
+  /**
+   * Format nanoseconds into a date-timestamp.
+   *
+   * @param nanoseconds since the Java epoch, Jan 1, 1970
+   * @return formatted string
+   */
+  protected static String formatTimestamp(long nanoseconds) {
+    System.nanoTime();
+    return formatTimestamp(Instant.ofEpochSecond(0L, nanoseconds));
+  }
   @Override
   public void refreshModelParameters(final String missionModelId)
   throws NoSuchMissionModelException
