@@ -33,7 +33,7 @@ public class SimulateMapSchedule {
     final var config = new Configuration();
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
+    final MissionModel<Mission> missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
     final var schedule = loadSchedule();
     final var simulationResults = SimulationDriver.simulate(
