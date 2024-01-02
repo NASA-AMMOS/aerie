@@ -1032,7 +1032,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       this.timeline.add(tip, curTime().duration(), stepIndexAtTime, missionModel.queryTopic);
-      updateTaskInfo(tip);
+      //updateTaskInfo(tip);
       if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
     }
     if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
