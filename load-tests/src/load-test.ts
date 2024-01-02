@@ -1,16 +1,20 @@
-import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Trend } from 'k6/metrics';
-import { Options } from 'k6/options';
+import type {Options} from 'k6/options';
 import { req } from './requests';
 import gql from '../assets/gql';
-import * as urls from '../assets/urls';
+import type {User} from "./types/auth";
+import {CreatePlanInput} from "./types/plan";
+import {ActivityInsertInput} from "./types/activity";
+import {EffectiveArgsData, EffectiveArgumentItem} from "./types/effective_args";
 
 // Besides the default metrics k6 records, we can define our own statistics and manually add data points to them
 const effective_args_duration = new Trend('effective_arg_duration', true);
 
 type VUSharedData = {
-  token: string
+  user: User
+  targeted_plan_id: number
+  model_id: number
 };
 
 // The options object configures our overall load test
@@ -105,92 +109,69 @@ export const options: Options = {
 };
 
 const plan_start_timestamp = '2021-001T00:00:00.000';
-const jar = open('./banananation.jar', 'b');
-const username = "load-tester";
-// this randomness is run once per VU
-const rd = Math.random() * 10000;
+const jar = open('./banananation.jar', 'b')
 
 // `setup()` runs once per k6 instance, and sets up a shared mission model for all VUs
 // VUSharedData is a custom type we return from the `setup()` function
 // This data is then accessible as an argument for other load testing functions
 export function setup(): VUSharedData {
-
+  const username = "load-tester";
   const user = req.login(username);
-  const token = user.token;
-
   check(user, {
-    'user has correct name': (user) => user.id === username
+    'user has correct name': (user) => user.username === username
   });
 
-  // upload banananation jar
-  const file = {
-    type: "application/java-archive",
-    file: http.file(jar)
-  };
-
-  const res = http.post(`${urls.GATEWAY_URL}/file`, file);
-
-  check(res, {
-    'is status 200': (r) => r.status === 200,
-  });
-
-  const jar_data = res.json();
-  const jar_id  = jar_data.id;
-
-  check(jar_id, {
-    "valid id": (id) => Number.isInteger(id)
-  });
-
-  // create mission model
-  const modelInput: MissionModelInsertInput = {
-    jar_id,
-    mission: "aerie-load-test" + rd,
-    name: "Banananation (load-test)"+rd,
-    version: "0.0.0"+ rd,
-  };
-
-  const model_resp = req.hasura(gql.CREATE_MISSION_MODEL, {model: modelInput}, token, username);
-  const model_data = model_resp.json("data");
-  check(model_data, {
-    "model id is valid": (data) => Number.isInteger(data.insert_mission_model_one.id)
-  });
-
+  const modelId = req.uploadMissionModel(jar, user);
   sleep(2);
 
+  const planInput: CreatePlanInput = {
+    model_id: modelId,
+    name: "load test targeted plan",
+    start_time: plan_start_timestamp,
+    duration: "1d"
+  }
+  const planId = req.createPlan(planInput, user);
+
   return {
-    token
+    user,
+    targeted_plan_id: planId,
+    model_id: modelId,
   };
 }
 
+export function teardown(data: VUSharedData) {
+  // 3. teardown code
+  // Runs once after all tests are finished
+
+  // Remove all plans using the uploaded model
+  req.removePlansForModel(data.model_id, data.user);
+  // Remove mission model
+  req.removeModel(data.model_id, data.user);
+}
+
 export function insert_plans(data: VUSharedData) {
-  const { token } = data;
+  const { user, model_id } = data;
   // generate new randomness per iteration
   const rd = Math.random() * 10000;
 
-  const random_mission_id = req.get_random_mission_model_id(token, username);
-
   const input: CreatePlanInput = {
-    model_id: random_mission_id,
-    name: `test_plan_${rd}_${random_mission_id}`,
+    model_id: model_id,
+    name: `test_plan_${rd}`,
     start_time: plan_start_timestamp,
     duration: "1d"
   };
 
-  const resp = req.hasura(gql.CREATE_PLAN, {plan: input}, token, username);
-  const plan_data = resp.json("data");
-  const { insert_plan_one } = plan_data;
-  const plan_id = insert_plan_one.id;
-
+  const plan_id = req.createPlan(input, user);
   check(plan_id, {
     "plan_id is a number": (plan_id) => Number.isInteger(plan_id)
   });
 }
 
 export function insert_random_activities(data: VUSharedData) {
-  const { token } = data;
+  const { user, model_id } = data;
   const random_hour_offset = Math.round(Math.random() * 24);
 
-  const random_id = req.get_random_plan_id(token, username);
+  const random_id = req.get_random_plan_id(model_id, user);
 
   const input: ActivityInsertInput = {
     arguments: {
@@ -201,82 +182,52 @@ export function insert_random_activities(data: VUSharedData) {
     start_offset: random_hour_offset + 'h',
   };
 
-  const resp = req.hasura(gql.CREATE_ACTIVITY_DIRECTIVE, {activityDirectiveInsertInput: input}, token, username);
-  const act_data = resp.json("data");
-  const { createActivityDirective } = act_data;
-  const act_id = createActivityDirective.id;
-
-  check(act_id, {
-    "act dir id is a number": (act_id) => Number.isInteger(act_id)
-  });
+  req.createActivityDirective(input, user);
 }
 
 // "Targeted" means insert lots of activities to plan_id 1
 export function insert_targeted_activities(data: VUSharedData) {
-  const { token } = data;
+  const { user, targeted_plan_id: planId } = data;
   const random_seconds_offset = Math.round(Math.random() * 24 * 60 * 60);
 
   const input: ActivityInsertInput = {
     arguments: {
       biteSize: 1,
     },
-    plan_id: 1,
+    plan_id: planId,
     type: 'BiteBanana',
     start_offset: random_seconds_offset + 's',
   };
 
-  const resp = req.hasura(gql.CREATE_ACTIVITY_DIRECTIVE, {activityDirectiveInsertInput: input}, token, username);
-  const act_data = resp.json("data");
-  const { createActivityDirective } = act_data;
-  const act_id = createActivityDirective.id;
-
-  check(act_id, {
-    "act dir id is a number": (act_id) => Number.isInteger(act_id)
-  });
+  req.createActivityDirective(input, user);
 }
 
 // Targeted simulations only request simulations on plan_id 1, which is packed full of activities
 export function run_targeted_simulations(data: VUSharedData) {
-  const { token } = data;
-
-  const resp = req.hasura(gql.SIMULATE, {plan_id: 1}, token, username);
-
-  const sim_data = resp.json("data");
-
-  check(sim_data, {
-    "got sim dataset id": (sim_data) => Number.isInteger(sim_data.simulate.simulationDatasetId)
-  });
+  const { user, targeted_plan_id: planId } = data;
+  req.simulate(planId, user);
 }
 
 export function run_random_simulations(data: VUSharedData) {
-  const { token } = data;
-  const random_id = req.get_random_plan_id(token, username);
-
-  const resp = req.hasura(gql.SIMULATE, {plan_id: random_id}, token, username);
-
-  const sim_data = resp.json("data");
-
-  check(sim_data, {
-    "got sim dataset id": (sim_data) => Number.isInteger(sim_data.simulate.simulationDatasetId)
-  });
+  const { user, model_id } = data;
+  const random_id = req.get_random_plan_id(model_id, user);
+  req.simulate(random_id, user);
 }
 
 export function get_effective_args(data: VUSharedData) {
-  const { token } = data;
+  const { user, model_id } = data;
 
   const input: EffectiveArgumentItem = {
     activityTypeName: "BiteBanana",
     activityArguments: {}
   };
 
-  const random_id = req.get_random_mission_model_id(token, username);
-
-  const resp = req.hasura(gql.GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK, { modelId: random_id, activities: input }, token, username);
+  const resp = req.hasura(gql.GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK, { modelId: model_id, activities: input }, user);
 
   // we are able to manually add data points to our custom metrics as follows
   effective_args_duration.add(resp.timings.duration);
 
-  const effective_args_data = resp.json("data");
+  const effective_args_data = resp.json("data") as EffectiveArgsData;
   const effective_args = effective_args_data.getActivityEffectiveArgumentsBulk[0];
 
   check(effective_args, {
