@@ -206,7 +206,7 @@ public final class SimulationDriver<Model> {
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
       while (engine.hasJobsScheduledThrough(simulationDuration)) {
-        engine.step(simulationDuration, queryTopic, simulationExtentConsumer);
+        engine.step(simulationDuration, simulationExtentConsumer);
       }
     } catch (Throwable ex) {
       throw new SimulationException(curTime().duration(), simulationStartTime, ex);
@@ -233,7 +233,7 @@ public final class SimulationDriver<Model> {
   private void startDaemons(Duration time) {
     if (!this.rerunning) {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
-      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+      engine.step(Duration.MAX_VALUE, $ -> {});
     }
   }
 
@@ -294,7 +294,7 @@ public final class SimulationDriver<Model> {
     // Drive the engine until we're out of time.
     // TERMINATION: Actually, we might never break if real time never progresses forward.
     while (!engine.isTaskComplete(taskId)) {
-      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+      engine.step(Duration.MAX_VALUE, $ -> {});
     }
     if (useResourceTracker) {
       engine.generateResourceProfiles(curTime().duration());  // REVIEW: Is this necessary?
@@ -348,7 +348,8 @@ public final class SimulationDriver<Model> {
   {
     // Emit the current activity (defined by directiveId)
     return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
-      scheduler1.emit(directiveId, activityTopic);
+      scheduler1.startDirective(directiveId, activityTopic);
+      //scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
     }), scheduler2 -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time

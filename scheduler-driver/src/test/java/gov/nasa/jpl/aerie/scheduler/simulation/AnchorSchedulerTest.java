@@ -34,6 +34,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -667,9 +668,9 @@ public class AnchorSchedulerTest {
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> $ -> {
-        $.emit(this, delayedActivityDirectiveInputTopic);
+        $.startActivity(this, delayedActivityDirectiveInputTopic);
         return TaskStatus.delayed(oneMinute, $$ -> {
-          $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
+          $$.endActivity(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
         });
       };
@@ -692,7 +693,7 @@ public class AnchorSchedulerTest {
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> scheduler -> {
-        scheduler.emit(this, decomposingActivityDirectiveInputTopic);
+        scheduler.startActivity(this, decomposingActivityDirectiveInputTopic);
         return TaskStatus.delayed(
             Duration.ZERO,
             $ -> {
@@ -710,7 +711,7 @@ public class AnchorSchedulerTest {
                       "Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                           ex.toString()));
                 }
-                $$.emit(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
+                $$.endActivity(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
                 return TaskStatus.completed(Unit.UNIT);
               });
             });
@@ -757,27 +758,35 @@ public class AnchorSchedulerTest {
     }
   };
 
+  private static LinkedHashMap<Topic<?>, MissionModel.SerializableTopic<?>> _topics = new LinkedHashMap<>();
+  {
+    _topics.put(delayedActivityDirectiveInputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Input.DelayActivityDirective",
+                    delayedActivityDirectiveInputTopic,
+                    testModelOutputType));
+    _topics.put(delayedActivityDirectiveOutputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Output.DelayActivityDirective",
+                    delayedActivityDirectiveOutputTopic,
+                    testModelOutputType));
+    _topics.put(decomposingActivityDirectiveInputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Input.DecomposingActivityDirective",
+                    decomposingActivityDirectiveInputTopic,
+                    testModelOutputType));
+    _topics.put(decomposingActivityDirectiveOutputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Output.DecomposingActivityDirective",
+                    decomposingActivityDirectiveOutputTopic,
+                    testModelOutputType));
+  }
+
   private static final MissionModel<Object> AnchorTestModel = new MissionModel<>(
       new Object(),
       new LiveCells(null),
       Map.of(),
-      List.of(
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Input.DelayActivityDirective",
-              delayedActivityDirectiveInputTopic,
-              testModelOutputType),
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Output.DelayActivityDirective",
-              delayedActivityDirectiveOutputTopic,
-              testModelOutputType),
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Input.DecomposingActivityDirective",
-              decomposingActivityDirectiveInputTopic,
-              testModelOutputType),
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Output.DecomposingActivityDirective",
-              decomposingActivityDirectiveOutputTopic,
-              testModelOutputType)),
+      _topics,
       Map.of(),
       DirectiveTypeRegistry.extract(
           new ModelType<>() {

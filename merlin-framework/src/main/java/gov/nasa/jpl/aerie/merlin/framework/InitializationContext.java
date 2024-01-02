@@ -52,6 +52,17 @@ public final class InitializationContext implements Context {
   }
 
   @Override
+  public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+    throw new IllegalStateException("Cannot start executing an activity state during initialization");
+  }
+
+  @Override
+  public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+    throw new IllegalStateException("Cannot end executing an activity state during initialization");
+  }
+
+
+  @Override
   public void spawn(final TaskFactory<?> task) {
     this.builder.daemon(null, task);
   }

@@ -9,6 +9,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.util.function.Function;
 
 public interface Context {
+  <T> void startActivity(T activity, Topic<T> inputTopic);
+  <T> void endActivity(T result, Topic<T> outputTopic);
   enum ContextType { Initializing, Reacting, Querying }
 
   // Usable in all contexts

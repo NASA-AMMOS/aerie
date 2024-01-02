@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +29,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public LiveCells liveCells;
   private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
+  public HashMap<EventGraph<Event>, EventGraph<Event>> noReadEvents = new HashMap<>();
   public TreeMap<Duration, List<TimePoint.Commit>> commitsByTime = new TreeMap<>();
   public Map<Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> eventsByTopic = new HashMap<>();
   public Map<TaskId, TreeMap<Duration, List<EventGraph<Event>>>> eventsByTask = new HashMap<>();
@@ -105,7 +105,9 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   // When adding a new commit to the timeline, we need to combine it with pre-existing commits.
   // If the commit is an empty graph, we only want to use it to fill the array element at stepIndexAtTime
   // when there is nothing in the old or new graph filling that spot.  Otherwise, we can ignore it.
-  public void add(final EventGraph<Event> graph, Duration time, final int stepIndexAtTime) {
+  public void add(final EventGraph<Event> graph, Duration time, final int stepIndexAtTime,
+                  final Topic<Topic<?>> queryTopic) {
+    //noReadEvents.put(graph, removeReadEvents(graph, queryTopic));
     if (debug) System.out.println("TemporalEventSource:add(" + graph + ", " + time + ", " + stepIndexAtTime + ")");
     List<TimePoint.Commit> commits = commitsByTime.get(time);
     if (debug) System.out.println("TemporalEventSource:add(): commits = " + commits);
@@ -150,6 +152,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     }
     if (debug) System.out.println("TemporalEventSource:add(): " + (copyingCommits ? "copyingCommits, " : "") +
                                   (combineGraphs? "combineGraphs, " : "") + "commits = " + commits);
+  }
+
+  public EventGraph<Event> withoutReadEvents(EventGraph<Event> graph) {
+    EventGraph<Event> g = noReadEvents.get(graph);
+    if (g == null) {
+      g = graph.filter(e -> e.topic() != missionModel.queryTopic);
+      noReadEvents.put(graph, g);
+    }
+    return g;
   }
 
   /**
@@ -707,6 +718,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         var cellSteppedAtTime = cellTime.index();
         for (; cellSteppedAtTime < maxStepIndex; ++cellSteppedAtTime) {
           var eventGraph = eventGraphList.get(cellSteppedAtTime);
+          if (beforeEvent == null) eventGraph = withoutReadEvents(eventGraph);
           if (debug) System.out.println("" + i + " cell.apply(" + eventGraph + ")");
           foundBeforeEvent = cell.apply(eventGraph, beforeEvent, false);
           if (foundBeforeEvent) break;
@@ -867,6 +879,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
             var maxSteps = Math.min(oldEventGraphList.size(), endTime.duration().isEqualTo(oldCellTime.duration()) ? endTime.index() : Integer.MAX_VALUE);
             for (; oldCellSteppedAtTime < maxSteps; ++oldCellSteppedAtTime) {
               var eventGraph = oldEventGraphList.get(oldCellSteppedAtTime);
+              if (beforeEvent == null) eventGraph = oldTemporalEventSource.withoutReadEvents(eventGraph);
               foundBeforeEventInOld = oldCell.apply(eventGraph, beforeEvent, false);
               if (debug) System.out.println("" + i + " stepUp(): oldCell.apply(oldGraph: " + eventGraph + ") oldCellState = " + oldCell);
               if (foundBeforeEventInOld) break;
@@ -885,6 +898,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
             var maxSteps = Math.min(oldEventGraphList.size(), endTime.duration().isEqualTo(cellTime.duration()) ? endTime.index() : Integer.MAX_VALUE);
             for (; cellSteppedAtTime < maxSteps; ++cellSteppedAtTime) {
               var eventGraph = oldEventGraphList.get(cellSteppedAtTime);
+              if (beforeEvent == null) eventGraph = oldTemporalEventSource.withoutReadEvents(eventGraph);
               foundBeforeEventInNew = cell.apply(eventGraph, beforeEvent, false);
               if (debug) System.out.println("" + i + " stepUp(): cell.apply(oldGraph: " + eventGraph + ") cellState = " + cell);
               if (foundBeforeEventInNew) break;
@@ -909,6 +923,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
           var maxSteps = Math.min(newEventGraphList.size(), endTime.duration().isEqualTo(cellTime.duration()) ? endTime.index() : Integer.MAX_VALUE);
           for (; cellSteppedAtTime < maxSteps; ++cellSteppedAtTime) {
             var eventGraph = newEventGraphList.get(cellSteppedAtTime);
+            if (beforeEvent == null) eventGraph = withoutReadEvents(eventGraph);
             foundBeforeEventInNew = cell.apply(eventGraph, beforeEvent, false);
             if (debug) System.out.println("" + i + " stepUp(): cell.apply(newGraph: " + eventGraph + ") cellState = " + cell);
             if (foundBeforeEventInNew) break;

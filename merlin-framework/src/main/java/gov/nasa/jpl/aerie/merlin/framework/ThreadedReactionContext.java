@@ -53,6 +53,16 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
+  public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+    this.scheduler.startActivity(activity, inputTopic);
+  }
+
+  @Override
+  public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+    this.scheduler.endActivity(result, outputTopic);
+  }
+
+  @Override
   public void spawn(final TaskFactory<?> task) {
     this.scheduler.spawn(task);
   }

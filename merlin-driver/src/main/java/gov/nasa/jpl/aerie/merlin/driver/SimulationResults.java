@@ -18,16 +18,16 @@ import java.util.Set;
 import java.util.SortedMap;
 
 public class SimulationResults implements SimulationResultsInterface {
-  protected final Instant startTime;
-  protected final Duration duration;
+  public final Instant startTime;
+  public final Duration duration;
 
-  protected final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles;
-  protected final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles;
-  protected final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
-  protected final Set<SimulatedActivityId> removedActivities;
-  protected final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities;
-  protected final List<Triple<Integer, String, ValueSchema>> topics;
-  protected final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
+  public final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles;
+  public final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles;
+  public final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
+  public final Set<SimulatedActivityId> removedActivities;
+  public final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities;
+  public final List<Triple<Integer, String, ValueSchema>> topics;
+  public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
 
   public SimulationResults(
       final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,

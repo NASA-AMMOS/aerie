@@ -23,7 +23,8 @@ public final class MissionModel<Model> {
   private final Model model;
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
-  private final List<SerializableTopic<?>> topics;
+  private final Map<Topic<?>, SerializableTopic<?>> topics;
+  public final Topic<Topic<?>> queryTopic = new Topic<>();
   private final DirectiveTypeRegistry<Model> directiveTypes;
   private final Map<String, TaskFactory<?>> daemons;
   private final Map<TaskFactory<?>, String> daemonIds;
@@ -32,14 +33,14 @@ public final class MissionModel<Model> {
       final Model model,
       final LiveCells initialCells,
       final Map<String, Resource<?>> resources,
-      final List<SerializableTopic<?>> topics,
+      final Map<Topic<?>, SerializableTopic<?>> topics,
       final Map<String, TaskFactory<?>> daemons,
       final DirectiveTypeRegistry<Model> directiveTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resources = Collections.unmodifiableMap(resources);
-    this.topics = Collections.unmodifiableList(topics);
+    this.topics = Collections.unmodifiableMap(topics);
     this.directiveTypes = Objects.requireNonNull(directiveTypes);
     this.daemons = Collections.unmodifiableMap(new HashMap<>(daemons));
     this.daemonIds = Collections.unmodifiableMap(daemons.entrySet().stream()
@@ -98,7 +99,7 @@ public final class MissionModel<Model> {
     return this.initialCells;
   }
 
-  public Iterable<SerializableTopic<?>> getTopics() {
+  public Map<Topic<?>, SerializableTopic<?>> getTopics() {
     return this.topics;
   }
 

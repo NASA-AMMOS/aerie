@@ -8,4 +8,7 @@ public interface Scheduler {
   <Event> void emit(Event event, Topic<Event> topic);
 
   void spawn(TaskFactory<?> task);
+  <T> void startActivity(T activity, Topic<T> inputTopic);
+  <T> void endActivity(T result, Topic<T> outputTopic);
+  <ActivityDirectiveId> void startDirective(ActivityDirectiveId directiveId, Topic<ActivityDirectiveId> activityTopic);
 }

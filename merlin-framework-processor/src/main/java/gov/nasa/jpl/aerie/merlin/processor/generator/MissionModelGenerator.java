@@ -817,16 +817,16 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 effectModel.returnType()
                                     .map(returnType -> CodeBlock
                                         .builder()
-                                        .addStatement("$T.emit($L, this.$L)", ModelActions.class, "activity", "inputTopic")
+                                        .addStatement("$T.startActivity($L, this.$L)", ModelActions.class, "activity", "inputTopic")
                                         .addStatement("final var result = $L.$L($L)", "activity", effectModel.methodName(), "model")
-                                        .addStatement("$T.emit(result, this.$L)", ModelActions.class, "outputTopic")
+                                        .addStatement("$T.endActivity(result, this.$L)", ModelActions.class, "outputTopic")
                                         .addStatement("return result")
                                         .build())
                                     .orElseGet(() -> CodeBlock
                                         .builder()
-                                        .addStatement("$T.emit($L, this.$L)", ModelActions.class, "activity", "inputTopic")
+                                        .addStatement("$T.startActivity($L, this.$L)", ModelActions.class, "activity", "inputTopic")
                                         .addStatement("$L.$L($L)", "activity", effectModel.methodName(), "model")
-                                        .addStatement("$T.emit($T.UNIT, this.$L)", ModelActions.class, Unit.class, "outputTopic")
+                                        .addStatement("$T.endActivity($T.UNIT, this.$L)", ModelActions.class, Unit.class, "outputTopic")
                                         .addStatement("return $T.UNIT", Unit.class)
                                         .build()))
                             .build())
@@ -835,8 +835,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .add(
                                 "return executor -> scheduler -> {$>\n$L$<};\n",
                                 CodeBlock.builder()
-                                    .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
-                                    .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")
+                                    .addStatement("scheduler.startActivity($L, this.$L)", "activity", "inputTopic")
+                                    .addStatement("scheduler.endActivity($T.UNIT, this.$L)", Unit.class, "outputTopic")
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
                                     .build())
                             .build()))

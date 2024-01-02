@@ -14,8 +14,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
@@ -30,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -80,7 +77,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   //List of activities simulated since the last reset
   private final Map<ActivityDirectiveId, ActivityDirective> activitiesInserted = new HashMap<>();
-  private Topic<Topic<?>> queryTopic = new Topic<>();
+  //private Topic<Topic<?>> queryTopic = new Topic<>();
 
   //counts the number of simulation restarts, used as performance metric in the scheduler
   //effectively counting the number of calls to initSimulation()
@@ -213,7 +210,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     while(engine.hasJobsScheduledThrough(endTime)) {
       if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
       // Run the jobs in this batch.
-      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+      engine.step(Duration.MAX_VALUE, $ -> {});
     }
     if (useResourceTracker) {
       // Replay the timeline to collect resource profiles
@@ -363,7 +360,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
 
       // Run the jobs in this batch.
-      engine.step(Duration.MAX_VALUE, queryTopic, $ -> {});
+      engine.step(Duration.MAX_VALUE, $ -> {});
 
       scheduleActivities(getSuccessorsToSchedule(engine), schedule, resolved, missionModel);
 
@@ -473,7 +470,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final TaskFactory<Output> task,
       final Topic<ActivityDirectiveId> activityTopic) {
     return executor -> scheduler -> {
-      scheduler.emit(directiveId, activityTopic);
+      scheduler.startDirective(directiveId, activityTopic);
       return task.create(executor).step(scheduler);
     };
   }

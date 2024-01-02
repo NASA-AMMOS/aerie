@@ -241,7 +241,7 @@ public class ResourceTracker {
               if (!this.offset.timeAfterPoint().isZero()) {
                 throw new AssertionError("Cannot have a non-zero offset from a Commit");
               }
-              if (cell.isInterestedIn(p.topics())) cell.apply(p.events(), null, false);
+              if (cell.isInterestedIn(p.topics())) cell.apply(timeline.withoutReadEvents(p.events()), null, false);
             } else {
               throw new IllegalStateException();
             }

@@ -79,7 +79,8 @@ public final class MissionModelBuilder implements Initializer {
 
     private final Map<String, Resource<?>> resources = new HashMap<>();
     private final Map<String, TaskFactory<?>> daemons = new HashMap<>();
-    private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
+    //private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
+    private final HashMap<Topic<?>, MissionModel.SerializableTopic<?>> topics = new HashMap<>();
 
     @Override
     public <State> State getInitialState(
@@ -128,7 +129,7 @@ public final class MissionModelBuilder implements Initializer {
         final Topic<Event> topic,
         final OutputType<Event> outputType)
     {
-      this.topics.add(new MissionModel.SerializableTopic<>(name, topic, outputType));
+      this.topics.put(topic, new MissionModel.SerializableTopic<>(name, topic, outputType));
     }
 
     /**

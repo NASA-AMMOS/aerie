@@ -5,6 +5,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -67,6 +68,11 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     public int compare(final Event e1, final Event e2) {
       return 0;
     }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(this);
+    }
   }
 
   /** Use {@link EventGraph#atom} instead of instantiating this class directly. */
@@ -85,6 +91,11 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     public int compare(final Event e1, final Event e2) {
       return 0;
     }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(this);
+    }
   }
 
   /** Use {@link EventGraph#sequentially(EventGraph[])}} instead of instantiating this class directly. */
@@ -97,6 +108,11 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public boolean equals(Object o) {
       return this == o;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(this);
     }
   }
 
@@ -111,6 +127,73 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     public boolean equals(Object o) {
       return this == o;
     }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(this);
+    }
+  }
+
+
+  /**
+   * This is a non-recursive alternative to {@link EventGraph#evaluate(EffectTrait, Function)}.
+   * <p/>
+   * Initial testing shows no speed improvement over the recursive version because the call to
+   * {@code substitution.apply()} was relatively expensive, and the overhead of recursion seems
+   * to be less than the overhead of {@link HashMap}s used here.
+   * <p/>
+   * Another approach could use a stack of {code EventGraph}s to mimic the call stack of the recursive method.
+   * Intermediate results would still need to stored, but this could have the advantage of avoiding the overhead of
+   * {@link HashMap} puts and gets.
+   * <p/>
+   * It may be worth using a non-recursive version just to avoid potential stack overflow for large graphs.
+   */
+  default <Effect> Effect evaluateNonRecursively(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
+    HashMap<EventGraph<Event>, EventGraph<Event>> parents = new HashMap<>();
+    HashMap<EventGraph<Event>, Effect> results = new HashMap<>();
+    EventGraph<Event> g = this;
+    Effect r = null;
+    while (true) {
+      if (g == null) break;
+      if (g instanceof EventGraph.Empty) {
+        r = trait.empty();
+      } else if (g instanceof EventGraph.Atom<Event> gg) {
+        r = substitution.apply(gg.atom());
+      } else if (g instanceof EventGraph.Sequentially<Event> gg) {
+        var r1 = results.get(gg.prefix());
+        if (r1 == null) {
+          parents.put(gg.prefix(), gg);
+          g = gg.prefix();
+          continue;
+        }
+        var r2 = results.get(gg.suffix());
+        if (r2 == null) {
+          parents.put(gg.suffix(), gg);
+          g = gg.suffix();
+          continue;
+        }
+        r = trait.sequentially(r1, r2);
+      } else if (g instanceof EventGraph.Concurrently<Event> gg) {
+        var r1 = results.get(gg.left());
+        if (r1 == null) {
+          parents.put(gg.left(), gg);
+          g = gg.left();
+          continue;
+        }
+        var r2 = results.get(gg.right());
+        if (r2 == null) {
+          parents.put(gg.right(), gg);
+          g = gg.right();
+          continue;
+        }
+        r = trait.concurrently(r1, r2);
+      } else {
+        throw new IllegalArgumentException();
+      }
+      results.put(g, r);
+      g = parents.get(g);
+    }
+    return results.get(this);
   }
 
   default <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {

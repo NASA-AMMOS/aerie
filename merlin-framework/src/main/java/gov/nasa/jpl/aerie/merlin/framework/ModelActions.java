@@ -105,4 +105,12 @@ public /*non-final*/ class ModelActions {
   public static void waitUntil(final Condition condition) {
     context.get().waitUntil(condition);
   }
+
+  public static <T> void startActivity(T activity, Topic<T> inputTopic) {
+    context.get().startActivity(activity, inputTopic);
+  }
+
+  public static <T> void endActivity(T result, Topic<T> outputTopic) {
+    context.get().endActivity(result, outputTopic);
+  }
 }

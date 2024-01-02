@@ -59,8 +59,6 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration.max;
-
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
@@ -661,6 +659,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (r == null && oldEngine != null) {
       r = oldEngine.getTopicsForEventGraph(graph);
     }
+    if (r == null) return Collections.emptySet();
     return r;
   }
 
@@ -902,7 +901,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public void step(final Duration maximumTime, final Topic<Topic<?>> queryTopic,
+  public void step(final Duration maximumTime,
                    final Consumer<Duration> simulationExtentConsumer) {
     if (debug) System.out.println("step(): begin -- time = " + curTime() + ", step " + stepIndexAtTime);
     if (stepIndexAtTime == Integer.MAX_VALUE) stepIndexAtTime = 0;
@@ -1028,11 +1027,11 @@ public final class SimulationEngine implements AutoCloseable {
       var tip = EventGraph.<Event>empty();
       for (final var job$ : batch.jobs()) {
         tip = EventGraph.concurrently(tip, TaskFrame.run(job$, this.cells, (job, frame) -> {
-          this.performJob(job, frame, curTime(), maximumTime, queryTopic);
+          this.performJob(job, frame, curTime(), maximumTime, missionModel.queryTopic);
         }));
       }
 
-      this.timeline.add(tip, curTime().duration(), stepIndexAtTime);
+      this.timeline.add(tip, curTime().duration(), stepIndexAtTime, missionModel.queryTopic);
       updateTaskInfo(tip);
       if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
     }
@@ -1384,7 +1383,7 @@ public final class SimulationEngine implements AutoCloseable {
       output.remove(id.id());
     }
 
-    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
+    public record Trait(Map<Topic<?>, SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
       @Override
       public Consumer<TaskInfo> empty() {
         return taskInfo -> {};
@@ -1410,7 +1409,7 @@ public final class SimulationEngine implements AutoCloseable {
               taskInfo.directiveIdToTaskId.put(directiveId, ev.provenance());
             });
 
-          for (final var topic : this.topics) {
+          for (final var topic : this.topics.values()) {
             // Identify activity inputs.
             extractInput(topic, ev, taskInfo);
 
@@ -1448,6 +1447,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   private TaskInfo.Trait taskInfoTrait = null;
   public void updateTaskInfo(EventGraph<Event> g) {
+    if (true) return;
     if (taskInfoTrait == null) taskInfoTrait = new TaskInfo.Trait(getMissionModel().getTopics(), defaultActivityTopic);
     g.evaluate(taskInfoTrait, taskInfoTrait::atom).accept(taskInfo);
   }
@@ -1602,19 +1602,31 @@ public final class SimulationEngine implements AutoCloseable {
     });
 
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
-    for (final var serializableTopic : serializableTopics) {
+    for (final var serializableTopic : serializableTopics.values()) {
       serializableTopicToId.put(serializableTopic, this.topics.size());
       this.topics.add(Triple.of(this.topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
     // Serialize the timeline of EventGraphs
+    long totalCommits = 0;
+    long totalGraphs = 0;
+    long totalNonEmptyGraphs = 0;
+    if (debug) System.out.println(timeline.commitsByTime.size() + " timepoints with commits");
     for (Duration time: timeline.commitsByTime.keySet()) {
       var commitList = timeline.commitsByTime.get(time);
+      if (debug) totalCommits += commitList.size();
       for (var commit : commitList) {
-        final var serializedEventGraph = commit.events().substitute(
+        var events = timeline.withoutReadEvents(commit.events());
+        if (debug) {
+          long c = events.count();
+          long ne = events.countNonEmpty();
+          totalGraphs += c;
+          totalNonEmptyGraphs += ne;
+        }
+        final var serializedEventGraph = events.substitute(
             event -> {
               EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
-              for (final var serializableTopic : serializableTopics) {
+              for (final var serializableTopic : serializableTopics.values()) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
                   output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
@@ -1630,6 +1642,10 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
     }
+    if (debug) System.out.println("TOTAL commits = " + totalCommits);
+    if (debug) System.out.println("TOTAL graphs = " + totalGraphs);
+    if (debug) System.out.println("TOTAL non-empty graphs = " + totalNonEmptyGraphs);
+    if (debug) System.out.println("TOTAL empty graphs = " + (totalGraphs - totalNonEmptyGraphs));
 
     this.simulationResults = new SimulationResults(realProfiles,
                                  discreteProfiles,
@@ -1828,6 +1844,26 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
+    @Override
+    public <ActDirectiveId> void startDirective(
+        final ActDirectiveId activityDirectiveId,
+        final Topic<ActDirectiveId> activityTopic)
+    {
+      if (activityDirectiveId instanceof ActivityDirectiveId aId) {
+        SimulationEngine.this.startDirective(aId, (Topic<ActivityDirectiveId>)activityTopic, this.activeTask);
+      }
+    }
+
+    @Override
+    public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+      SimulationEngine.this.startActivity(activity, inputTopic, this.activeTask);
+    }
+
+    @Override
+    public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+      SimulationEngine.this.endActivity(result, outputTopic, this.activeTask);
+    }
+
     /**
      * Return the taskId from the old simulation for the new (or old) TaskFactory.
      * @param taskFactory the TaskFactory used to create the task
@@ -1888,6 +1924,29 @@ public final class SimulationEngine implements AutoCloseable {
         this.frame.signal(JobId.forTask(task));
       }
     }
+  }
+
+  private void startDirective(ActivityDirectiveId directiveId, Topic<ActivityDirectiveId> activityTopic, TaskId activeTask) {
+    taskInfo.taskToPlannedDirective.put(activeTask.id(), directiveId);
+    taskInfo.directiveIdToTaskId.put(directiveId, activeTask);
+  }
+
+  private <T> void startActivity(T activity, Topic<T> inputTopic, final TaskId activeTask) {
+    final SerializableTopic<T> sTopic = (SerializableTopic<T>) getMissionModel().getTopics().get(inputTopic);
+    if (sTopic == null) return; // ignoring unregistered activity types!
+    final var activityType = sTopic.name().substring("ActivityType.Input.".length());
+
+    taskInfo.input.put(
+        activeTask.id(),
+        new SerializedActivity(activityType, sTopic.outputType().serialize(activity).asMap().orElseThrow()));
+  }
+
+  private <T> void endActivity(T result, Topic<T> outputTopic, TaskId activeTask) {
+    final SerializableTopic<T> sTopic = (SerializableTopic<T>) getMissionModel().getTopics().get(outputTopic);
+    if (sTopic == null) return; // ignoring unregistered activity types!
+    taskInfo.output.put(
+        activeTask.id(),
+        sTopic.outputType().serialize(result));
   }
 
   public static <E, T>
