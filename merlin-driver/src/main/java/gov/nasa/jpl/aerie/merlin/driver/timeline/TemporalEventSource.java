@@ -107,18 +107,10 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   // when there is nothing in the old or new graph filling that spot.  Otherwise, we can ignore it.
   public void add(final EventGraph<Event> graph, Duration time, final int stepIndexAtTime,
                   final Topic<Topic<?>> queryTopic) {
-    //noReadEvents.put(graph, removeReadEvents(graph, queryTopic));
     if (debug) System.out.println("TemporalEventSource:add(" + graph + ", " + time + ", " + stepIndexAtTime + ")");
     List<TimePoint.Commit> commits = commitsByTime.get(time);
     if (debug) System.out.println("TemporalEventSource:add(): commits = " + commits);
-//    if (graph.equals(EventGraph.empty())) {
-//      if (commits.size() < stepIndexAtTime) {
-//        System.err.println("ERROR! Empty space in commits! TemporalEventSource:add(" + graph + ", " + time + ", " + stepIndexAtTime + "): commits = " + commits.size() + " elements: " + commits);
-//      }
-//      if (commits.size() <= stepIndexAtTime) {
-//        commitsByTime.computeIfAbsent(time, $ -> new ArrayList<>()).add(commit);
-//      }
-//    }
+
     // copy old commits to new timeline if haven't already
     boolean copyingCommits = oldTemporalEventSource != null && (commits == null || commits.isEmpty());
     if (copyingCommits) {
@@ -128,21 +120,28 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         commitsByTime.put(time, commits);
       }
     }
+
+    // combine the newEventGraph concurrently with the existing one at the corresponding time step index
     var newEventGraph = graph;
     boolean combineGraphs = oldTemporalEventSource != null && commits != null && commits.size() > stepIndexAtTime;
     if (combineGraphs) {  // commits in new graph already replacing old
       newEventGraph = EventGraph.concurrently(graph, commits.get(stepIndexAtTime).events());
     }
+
+    // update the commit and its topics
     var topics = extractTopics(newEventGraph);
     var commit = new TimePoint.Commit(newEventGraph, topics);
+
+    // put the commit into the list of commits at for the time/offset
     if (combineGraphs) {
       commits.set(stepIndexAtTime, commit);
-      commitsByTime.put(time, commits); // need to add if copied from old timeline
+      commitsByTime.put(time, commits);
     } else {
       // If not combining with an existing graphs, just add to the end of the list.
       commitsByTime.computeIfAbsent(time, $ -> new ArrayList<>()).add(commit);
       commits = commitsByTime.get(time);
     }
+
     // Add indices for the new and copied commits
     // NOTE: since this is additive, we don't need to worry about replacing the old pre-combined graph's indices
     if (copyingCommits && commits != null) {
@@ -154,6 +153,11 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
                                   (combineGraphs? "combineGraphs, " : "") + "commits = " + commits);
   }
 
+  /**
+   * Strip out the read events from the EventGraph and store in a cache if haven't already
+   * @param graph the graph with read events
+   * @return the graph without read events
+   */
   public EventGraph<Event> withoutReadEvents(EventGraph<Event> graph) {
     EventGraph<Event> g = noReadEvents.get(graph);
     if (g == null) {

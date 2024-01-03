@@ -1031,9 +1031,13 @@ public final class SimulationEngine implements AutoCloseable {
         }));
       }
 
-      this.timeline.add(tip, curTime().duration(), stepIndexAtTime, missionModel.queryTopic);
-      //updateTaskInfo(tip);
-      if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
+      if (!(tip instanceof EventGraph.Empty) ||
+          (!batch.jobs().isEmpty() && batch.jobs().stream().findFirst().get() instanceof JobId.TaskJobId)) {
+        this.timeline.add(tip, curTime().duration(), stepIndexAtTime, missionModel.queryTopic);
+        //updateTaskInfo(tip);
+        if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
+        else throw new RuntimeException("Only Resource jobs (not Task jobs) should be run at step index Integer.MAX_VALUE");
+      }
     }
     if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
   }
