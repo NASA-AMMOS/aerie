@@ -76,6 +76,52 @@ comment on column plan.updated_by is e''
 comment on column plan.description is e''
   'A human-readable description for this plan and its contents.';
 
+-- Insert Triggers
+
+create function create_simulation_row_for_new_plan()
+returns trigger
+security definer
+language plpgsql as $$begin
+  insert into simulation (revision, simulation_template_id, plan_id, arguments, simulation_start_time, simulation_end_time)
+  values (0, null, new.id, '{}', new.start_time, new.start_time+new.duration);
+  return new;
+end
+$$;
+
+create trigger simulation_row_for_new_plan_trigger
+after insert on plan
+for each row
+execute function create_simulation_row_for_new_plan();
+
+-- Insert or Update Triggers
+
+create function plan_set_updated_at()
+returns trigger
+security definer
+language plpgsql as $$begin
+  new.updated_at = now();
+  return new;
+end$$;
+
+create trigger set_timestamp
+  before update or insert on plan
+  for each row
+execute function plan_set_updated_at();
+
+create function raise_duration_is_negative()
+returns trigger
+security definer
+language plpgsql as $$begin
+  raise exception 'invalid plan duration, expected nonnegative duration but found: %', new.duration;
+end$$;
+
+create trigger check_plan_duration_is_nonnegative_trigger
+before insert or update on plan
+for each row
+when (new.duration < '0')
+execute function raise_duration_is_negative();
+
+-- Update Triggers
 
 create function increment_revision_on_update_plan()
 returns trigger
@@ -95,18 +141,7 @@ for each row
 when (pg_trigger_depth() < 1)
 execute function increment_revision_on_update_plan();
 
-create function raise_duration_is_negative()
-returns trigger
-security definer
-language plpgsql as $$begin
-  raise exception 'invalid plan duration, expected nonnegative duration but found: %', new.duration;
-end$$;
-
-create trigger check_plan_duration_is_nonnegative_trigger
-before insert or update on plan
-for each row
-when (new.duration < '0')
-execute function raise_duration_is_negative();
+-- Delete Triggers
 
 create function cleanup_on_delete()
   returns trigger
@@ -136,31 +171,3 @@ create trigger cleanup_on_delete_trigger
   before delete on plan
   for each row
 execute function cleanup_on_delete();
-
-create function create_simulation_row_for_new_plan()
-returns trigger
-security definer
-language plpgsql as $$begin
-  insert into simulation (revision, simulation_template_id, plan_id, arguments, simulation_start_time, simulation_end_time)
-  values (0, null, new.id, '{}', new.start_time, new.start_time+new.duration);
-  return new;
-end
-$$;
-
-create trigger simulation_row_for_new_plan_trigger
-after insert on plan
-for each row
-execute function create_simulation_row_for_new_plan();
-
-create function plan_set_updated_at()
-returns trigger
-security definer
-language plpgsql as $$begin
-  new.updated_at = now();
-  return new;
-end$$;
-
-create trigger set_timestamp
-  before update or insert on plan
-  for each row
-execute function plan_set_updated_at();
