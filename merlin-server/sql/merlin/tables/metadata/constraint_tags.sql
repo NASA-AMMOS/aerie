@@ -1,5 +1,5 @@
 create table metadata.constraint_tags (
-  constraint_id integer not null references public."constraint"
+  constraint_id integer not null references public.constraint_metadata
     on update cascade
     on delete cascade,
   tag_id integer not null references metadata.tags
