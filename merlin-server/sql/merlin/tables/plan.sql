@@ -93,6 +93,26 @@ after insert on plan
 for each row
 execute function create_simulation_row_for_new_plan();
 
+create function populate_constraint_spec_new_plan()
+returns trigger
+language plpgsql as $$
+begin
+  insert into constraint_specification (plan_id, constraint_id, constraint_revision)
+  select new.id, cms.constraint_id, cms.constraint_revision
+  from constraint_model_specification cms
+  where cms.model_id = new.model_id;
+  return new;
+end;
+$$;
+
+comment on function populate_constraint_spec_new_plan() is e''
+'Populates the plan''s constraint specification with the contents of its model''s specification.';
+
+create trigger populate_constraint_spec_new_plan_trigger
+after insert on plan
+for each row
+execute function populate_constraint_spec_new_plan();
+
 -- Insert or Update Triggers
 
 create function plan_set_updated_at()
