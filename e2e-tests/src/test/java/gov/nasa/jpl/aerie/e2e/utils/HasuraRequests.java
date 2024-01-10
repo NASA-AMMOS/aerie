@@ -35,7 +35,7 @@ public class HasuraRequests implements AutoCloseable {
   public HasuraRequests(Playwright playwright) {
     request = playwright.request().newContext(
             new APIRequest.NewContextOptions()
-                    .setBaseURL(BaseURL.HASURA.url).setTimeout(0));
+                    .setBaseURL(BaseURL.HASURA.url));
   }
 
   @Override
@@ -735,20 +735,46 @@ public class HasuraRequests implements AutoCloseable {
 
   public int insertPlanConstraint(String name, int planId, String definition, String description) throws IOException {
     final var constraintInsertBuilder = Json.createObjectBuilder()
-                                            .add("name", name)
                                             .add("plan_id", planId)
-                                            .add("definition", definition)
-                                            .add("description", description);
+                                            .add("constraint_metadata",
+                                                 Json.createObjectBuilder()
+                                                     .add("data",
+                                                          Json.createObjectBuilder()
+                                                              .add("name", name)
+                                                              .add("description", description)
+                                                              .add("versions",
+                                                                   Json.createObjectBuilder()
+                                                                       .add("data",
+                                                                            Json.createObjectBuilder()
+                                                                                .add("definition", definition)))));
     final var variables = Json.createObjectBuilder().add("constraint", constraintInsertBuilder).build();
-    return makeRequest(GQL.INSERT_CONSTRAINT, variables).getJsonObject("constraint").getInt("id");
+    return makeRequest(GQL.INSERT_PLAN_SPEC_CONSTRAINT, variables).getJsonObject("constraint").getInt("constraint_id");
   }
 
-  public void updateConstraint(int constraintId, String definition) throws IOException{
+  public void updatePlanConstraintSpecVersion(int planId, int constraintId, int constraintRevision) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("constraint_id", constraintId)
+                              .add("constraint_revision", constraintRevision)
+                              .build();
+    makeRequest(GQL.UPDATE_CONSTRAINT_SPEC_VERSION, variables);
+  }
+
+  public void updatePlanConstraintSpecEnabled(int planId, int constraintId, boolean enabled) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("constraint_id", constraintId)
+                              .add("enabled", enabled)
+                              .build();
+    makeRequest(GQL.UPDATE_CONSTRAINT_SPEC_ENABLED, variables);
+  }
+
+  public int updateConstraintDefinition(int constraintId, String definition) throws IOException{
     final var variables = Json.createObjectBuilder()
                               .add("constraintId", constraintId)
                               .add("constraintDefinition", definition)
                               .build();
-    makeRequest(GQL.UPDATE_CONSTRAINT, variables);
+    return makeRequest(GQL.UPDATE_CONSTRAINT, variables).getJsonObject("constraint").getInt("revision");
   }
 
   public void deleteConstraint(int constraintId) throws IOException {
