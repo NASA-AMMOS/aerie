@@ -20,20 +20,17 @@ public class ConstraintAction {
   private final ConstraintsDSLCompilationService constraintsDSLCompilationService;
   private final ConstraintService constraintService;
   private final PlanService planService;
-  private final MissionModelService missionModelService;
   private final SimulationService simulationService;
 
   public ConstraintAction(
       final ConstraintsDSLCompilationService constraintsDSLCompilationService,
       final ConstraintService constraintService,
       final PlanService planService,
-      final MissionModelService missionModelService,
       final SimulationService simulationService
   ) {
     this.constraintsDSLCompilationService = constraintsDSLCompilationService;
     this.constraintService = constraintService;
     this.planService = planService;
-    this.missionModelService = missionModelService;
     this.simulationService = simulationService;
   }
 
