@@ -2,9 +2,20 @@ table:
   name: constraint_run
   schema: public
 object_relationships:
-  - name: constraint
+  - name: constraint_definition
     using:
-      foreign_key_constraint_on: constraint_id
+      foreign_key_constraint_on:
+       - constraint_id
+       - constraint_revision
+  - name: constraint_metadata
+    using:
+      manual_configuration:
+        column_mapping:
+          constraint_id: id
+        insertion_order: null
+        remote_table:
+          name: constraint_metadata
+          schema: public
   - name: simulation_dataset
     using:
       foreign_key_constraint_on: simulation_dataset_id
