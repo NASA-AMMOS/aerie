@@ -326,7 +326,7 @@ public final class ResponseSerializers {
                    .add("success", JsonValue.FALSE)
                    .add("constraintId", constraint.id())
                    .add("constraintName", constraint.name())
-                   .add("type",constraint.type().name())
+                   .add("constraintRevision", constraint.revision())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
                            .add("message", "Internal error processing a constraint")
@@ -348,7 +348,7 @@ public final class ResponseSerializers {
                    .add("success", JsonValue.FALSE)
                    .add("constraintId", constraint.id())
                    .add("constraintName", constraint.name())
-                   .add("type",constraint.type().name())
+                   .add("constraintRevision", constraint.revision())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
                            .add("message", failable.getMessage())
@@ -364,7 +364,7 @@ public final class ResponseSerializers {
                  .add("success", JsonValue.TRUE)
                  .add("constraintId", constraint.id())
                  .add("constraintName", constraint.name())
-                 .add("type",constraint.type().name())
+                 .add("constraintRevision", constraint.revision())
                  .add("errors", JsonValue.EMPTY_JSON_ARRAY)
                  .add("results", serializeConstraintResult(constraintResult))
                  .build();
@@ -514,7 +514,7 @@ public final class ResponseSerializers {
                .add("success", JsonValue.FALSE)
                .add("constraintId", constraint.id())
                .add("constraintName", constraint.name())
-               .add("type",constraint.type().name())
+               .add("constraintRevision", constraint.revision())
                .add("errors", userCodeErrorArrayBuilder.build())
                .add("results", Json.createObjectBuilder().build())
                .build();

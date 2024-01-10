@@ -60,16 +60,8 @@ public class ConstraintAction {
                                                         + " has not yet been simulated at its current revision"));
     }
 
-    final var constraintCode = new HashMap<Long, Constraint>();
+    final var constraintCode = new HashMap<>(this.planService.getConstraintsForPlan(planId));;
     final var constraintResultMap = new HashMap<Constraint, Failable<?>>();
-
-    try {
-      constraintCode.putAll(this.missionModelService.getConstraints(plan.missionModelId));
-      constraintCode.putAll(this.planService.getConstraintsForPlan(planId));
-    } catch (final MissionModelService.NoSuchMissionModelException ex) {
-      throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
-    }
-
 
     final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode
                                                                                       .values()
@@ -238,8 +230,8 @@ public class ConstraintAction {
         ConstraintResult constraintResult = expression.evaluate(preparedResults, environment);
 
         constraintResult.constraintName = entry.getValue().name();
+        constraintResult.constraintRevision = entry.getValue().revision();
         constraintResult.constraintId = entry.getKey();
-        constraintResult.constraintType = entry.getValue().type();
         constraintResult.resourceIds = List.copyOf(names);
 
         constraintResultMap.put(constraint, Failable.of(constraintResult));

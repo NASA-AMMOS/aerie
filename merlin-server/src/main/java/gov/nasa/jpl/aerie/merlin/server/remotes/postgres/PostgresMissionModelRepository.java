@@ -1,11 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
@@ -54,29 +52,6 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to retrieve mission model with id `%s`".formatted(missionModelId), ex);
-    }
-  }
-
-  @Override
-  public Map<Long, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
-    try (final var connection = this.dataSource.getConnection()) {
-      try (final var getModelConstraintsAction = new GetModelConstraintsAction(connection)) {
-        return getModelConstraintsAction
-            .get(toMissionModelId(missionModelId))
-            .orElseThrow(NoSuchMissionModelException::new)
-            .stream()
-            .collect(Collectors.toMap(
-                ConstraintRecord::id,
-                r -> new Constraint(
-                    r.id(),
-                    r.name(),
-                    r.description(),
-                    r.definition(),
-                    ConstraintType.model)));
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException(
-          "Failed to retrieve constraints for mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
