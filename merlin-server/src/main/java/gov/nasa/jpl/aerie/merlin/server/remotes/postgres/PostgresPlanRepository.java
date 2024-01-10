@@ -190,10 +190,10 @@ public final class PostgresPlanRepository implements PlanRepository {
                 ConstraintRecord::id,
                 r -> new Constraint(
                     r.id(),
+                    r.revision(),
                     r.name(),
                     r.description(),
-                    r.definition(),
-                    ConstraintType.plan)));
+                    r.definition())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

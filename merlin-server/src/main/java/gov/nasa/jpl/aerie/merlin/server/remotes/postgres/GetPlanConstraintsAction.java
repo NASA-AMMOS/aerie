@@ -11,14 +11,26 @@ import java.util.Optional;
 
 /*package local*/ final class GetPlanConstraintsAction implements AutoCloseable {
   // We left join through the plan table in order to distinguish
-  //   a plan without any constraints from a non-existent plan.
-  // A plan without constraints will produce a placeholder row with nulls.
+  //   a plan without any enabled constraints from a non-existent plan.
+  // A plan without any enabled constraints will produce a placeholder row with nulls.
   private static final @Language("SQL") String sql = """
-    select c.id, c.name, c.description, c.definition
-    from plan AS p
-    left join "constraint" AS c
-      on p.id = c.plan_id
-    where p.id = ?
+    select c.constraint_id, c.revision, c.name, c.description, c.definition
+    from plan p
+      left join (select cs.plan_id, cs.constraint_id, cd.revision, cm.name, cm.description, cd.definition
+                 from constraint_specification cs
+                   left join constraint_definition cd using (constraint_id)
+                   left join public.constraint_metadata cm on cs.constraint_id = cm.id
+                 where cs.enabled
+                   and ((cs.constraint_revision is not null
+                           and cs.constraint_revision = cd.revision)
+                          or (cs.constraint_revision is null
+                                and cd.revision = (select def.revision
+                                                   from constraint_definition def
+                                                   where def.constraint_id = cs.constraint_id
+                                                   order by def.revision desc limit 1)))
+                   ) c
+        on p.id = c.plan_id
+    where p.id = ?;
     """;
 
   private final PreparedStatement statement;
@@ -39,9 +51,10 @@ import java.util.Optional;
 
         final var constraint = new ConstraintRecord(
             results.getLong(1),
-            results.getString(2),
+            results.getLong(2),
             results.getString(3),
-            results.getString(4));
+            results.getString(4),
+            results.getString(5));
 
         constraints.add(constraint);
       } while (results.next());

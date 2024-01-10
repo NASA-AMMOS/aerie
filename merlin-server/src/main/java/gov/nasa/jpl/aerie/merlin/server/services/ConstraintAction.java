@@ -60,13 +60,10 @@ public class ConstraintAction {
                                                         + " has not yet been simulated at its current revision"));
     }
 
-    final var constraintCode = new HashMap<>(this.planService.getConstraintsForPlan(planId));;
+    final var constraintCode = new HashMap<>(this.planService.getConstraintsForPlan(planId));
     final var constraintResultMap = new HashMap<Constraint, Failable<?>>();
 
-    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode
-                                                                                      .values()
-                                                                                      .stream()
-                                                                                      .toList(), simDatasetId);
+    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode, simDatasetId);
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
@@ -141,7 +138,6 @@ public class ConstraintAction {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
 
-        // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult constraintCompilationResult;
         try {
           constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(

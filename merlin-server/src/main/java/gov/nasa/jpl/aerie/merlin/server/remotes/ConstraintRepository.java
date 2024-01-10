@@ -5,12 +5,11 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 
-import java.util.List;
 import java.util.Map;
 
 public interface ConstraintRepository {
   void insertConstraintRuns(final Map<Long, Constraint> constraintMap, final Map<Long, ConstraintResult> constraintResults,
                             final Long simulationDatasetId);
 
-  Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Long> constraintIds, SimulationDatasetId simulationDatasetId);
+  Map<Long, ConstraintRunRecord> getValidConstraintRuns(Map<Long, Constraint> constraints, SimulationDatasetId simulationDatasetId);
 }
