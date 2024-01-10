@@ -9,6 +9,17 @@ array_relationships:
         table:
           name: scheduling_specification_conditions
           schema: public
+remote_relationships:
+- name: model
+  definition:
+    to_source:
+      relationship_type: object
+      source: AerieMerlin
+      table:
+        schema: public
+        name: mission_model
+      field_mapping:
+        model_id: id
 select_permissions:
   - role: aerie_admin
     permission:
