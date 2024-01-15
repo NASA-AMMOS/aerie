@@ -50,6 +50,7 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   aerie_scheduler:
     build:
       context: ./scheduler-server
@@ -75,6 +76,7 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   aerie_sequencing:
     build:
       context: ./sequencing-server
@@ -99,6 +101,7 @@ services:
     volumes:
       - ./sequencing-server:/app:cached
       - aerie_file_store:/usr/src/app/sequencing_file_store
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   aerie_ui:
     container_name: aerie_ui
     depends_on: ["postgres"]
@@ -134,13 +137,16 @@ services:
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
-      UNTRUE_PLAN_START: "2000-01-01T11:58:55.816Z"
-      USE_RESOURCE_TRACKER: "true"
+        -Xmx34g
+      #UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
+      UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
+      USE_RESOURCE_TRACKER: "false"
     image: "aerie_merlin_worker_1"
     ports: ["5007:5005", "27187:8080"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   aerie_merlin_worker_2:
     build:
       context: ./merlin-worker
@@ -160,13 +166,16 @@ services:
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
-      UNTRUE_PLAN_START: "2000-01-01T11:58:55.816Z"
-      USE_RESOURCE_TRACKER: "true"
+        -Xmx34g
+      #UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
+      UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
+      USE_RESOURCE_TRACKER: "false"
     image: "aerie_merlin_worker_2"
     ports: ["5008:5005", "27188:8080"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   aerie_scheduler_worker_1:
     build:
       context: ./scheduler-worker
@@ -184,17 +193,18 @@ services:
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
-      USE_RESOURCE_TRACKER: "true"
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
+        -Xmx35g
     image: "aerie_scheduler_worker_1"
     ports: ["5009:5005", "27189:8080"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   aerie_scheduler_worker_2:
     build:
       context: ./scheduler-worker
@@ -212,17 +222,18 @@ services:
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
-      USE_RESOURCE_TRACKER: "true"
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
+        -Xmx35g
     image: "aerie_scheduler_worker_2"
     ports: ["5010:5005", "27190:8080"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
+      - ${SPICE_KERNEL_PATH:?err}:/usr/src/spice
   hasura:
     container_name: aerie_hasura
     depends_on: ["postgres"]
