@@ -41,7 +41,7 @@ To get started using Aerie for the first time please do our [fast track tutorial
 ├── deployment                  # Deployment artifacts and documentation
 ├── docker                      # Additional Dockerfiles for Aerie-specific images
 ├── docs                        # Documentation
-├── e2e-tests                   # End-to-end tests
+├── e2e-tests                   # End-to-end application tests
 ├── examples                    # Example mission models
 ├── gradle                      # Gradle Wrapper
 ├── load-tests                  # Load testing code and configuration
