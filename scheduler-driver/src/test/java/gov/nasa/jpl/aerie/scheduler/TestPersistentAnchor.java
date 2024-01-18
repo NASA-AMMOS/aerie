@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
@@ -24,6 +24,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.worker.SchedulingCanceledListener;
 import org.apache.commons.lang3.function.TriFunction;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -200,9 +201,18 @@ public class TestPersistentAnchor {
 
     final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
-    Problem problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
+
+    try(final var simulationFacade = new SimulationFacade(
         planningHorizon,
-        bananaMissionModel, SimulationUtility.getBananaSchedulerModel()), SimulationUtility.getBananaSchedulerModel());
+        bananaMissionModel,
+        SimulationUtility.getBananaSchedulerModel(),
+        new SchedulingCanceledListener())) {
+      final var problem = new Problem(
+          bananaMissionModel,
+          planningHorizon,
+          simulationFacade,
+          SimulationUtility.getBananaSchedulerModel()
+      );
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances

@@ -707,10 +707,6 @@ public class PrioritySolver implements Solver {
           }
         }
       }
-      //jd todo complete
-      else if(missing instanceof MissingAnchorConflict missingAnchor){
-  //jd todo: 1. add code of missingassociationconflict. 2. add anchorid. 3. update plan, gneerateactivityinstances and simulationfacade
-      }
     }//for(missing)
 
 
@@ -851,7 +847,8 @@ public class PrioritySolver implements Solver {
         final var act = createOneActivity(
             missingTemplate,
             goal.getName() + "_" + java.util.UUID.randomUUID(),
-            startWindows);
+            startWindows,
+            missing.getEvaluationEnvironment());
         if(act.isPresent()){
           if (missingTemplate.getAnchorId().isPresent()) {
             SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
@@ -979,7 +976,8 @@ public class PrioritySolver implements Solver {
       final MissingActivityTemplateConflict missingConflict,
       final String name,
       final Windows windows,
-      final EvaluationEnvironment evaluationEnvironment) {
+      final EvaluationEnvironment evaluationEnvironment) throws SchedulingInterruptedException
+  {
     //REVIEW: how to properly export any flexibility to instance?
     logger.info("Trying to create one activity, will loop through possible windows");
     for (var window : windows.iterateEqualTo(true)) {
