@@ -4,11 +4,13 @@ on:
   pull_request:
     branches:
       - develop
+      - dev-[0-9]+.[0-9]+.[0-9]+
   push:
     branches:
       - develop
     tags:
       - v*
+  workflow_dispatch:
 
 jobs:
   cloc:

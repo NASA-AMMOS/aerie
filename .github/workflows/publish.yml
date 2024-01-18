@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - develop
+      - dev-[0-9]+.[0-9]+.[0-9]+
     tags:
       - v*
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -137,19 +139,19 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:develop
           ignore-unfixed: true
-          exit-code: '1'
-          severity: 'CRITICAL'
-          format: 'template'
+          exit-code: "1"
+          severity: "CRITICAL"
+          format: "template"
           template: "@/contrib/html.tpl"
           scanners: "vuln"
-          output: '${{ matrix.image }}-results.html'
+          output: "${{ matrix.image }}-results.html"
 
       - name: Upload ${{ matrix.image }} scan results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: Vuln Scan Results
-          path: '${{ matrix.image }}-results.html'
+          path: "${{ matrix.image }}-results.html"
 
   publish:
     name: gradle publish
