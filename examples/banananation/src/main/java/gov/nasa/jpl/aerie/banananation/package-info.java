@@ -1,6 +1,7 @@
 @MissionModel(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
+@WithMappers(CustomValueMappers.class)
 @WithMetadata(name="banannotation", annotation=Banannotation.class)
 @WithMetadata(name="unit", annotation=gov.nasa.jpl.aerie.contrib.metadata.Unit.class)
 
@@ -26,6 +27,7 @@
 @WithActivityType(ControllableDurationActivity.class)
 @WithActivityType(RipenBananaActivity.class)
 @WithActivityType(ExceptionActivity.class)
+@WithActivityType(MatryoshkaActivity.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
@@ -42,6 +44,7 @@ import gov.nasa.jpl.aerie.banananation.activities.DurationParameterActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ExceptionActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.LineCountBananaActivity;
+import gov.nasa.jpl.aerie.banananation.activities.MatryoshkaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ParameterTestActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PeelBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PickBananaActivity;
