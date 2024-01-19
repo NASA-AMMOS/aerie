@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - develop
-      - dev-[0-9]+.[0-9]+.[0-9]+
+      - "dev-[0-9]+.[0-9]+.[0-9]+"
     tags:
       - v*
   workflow_dispatch:
