@@ -29,11 +29,6 @@ public @interface Export {
   }
 
   @Retention(RetentionPolicy.CLASS)
-  @Target(ElementType.FIELD)
-  @interface ActivityParameter {
-  }
-
-  @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
   @interface Validation {
     String value() default "";
