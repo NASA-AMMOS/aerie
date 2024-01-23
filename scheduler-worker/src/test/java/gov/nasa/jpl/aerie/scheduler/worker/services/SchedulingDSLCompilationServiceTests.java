@@ -565,6 +565,8 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+              false,
+              false,
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),

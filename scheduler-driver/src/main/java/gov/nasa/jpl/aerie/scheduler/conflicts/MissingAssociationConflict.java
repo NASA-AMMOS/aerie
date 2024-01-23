@@ -21,9 +21,11 @@ public class MissingAssociationConflict extends Conflict {
    * @param instancesToChooseFrom IN the list of instances to choose from to perform the association
    * @param anchorToStart
    */
-  public MissingAssociationConflict(final Goal goal, final Collection<SchedulingActivityDirective> instancesToChooseFrom,
-                                    final Optional<SchedulingActivityDirectiveId> anchorIdTo,
-                                    final Optional<Boolean> anchorToStart) {
+  public MissingAssociationConflict(
+      final Goal goal,
+      final Collection<SchedulingActivityDirective> instancesToChooseFrom,
+      final Optional<SchedulingActivityDirectiveId> anchorIdTo,
+      final Optional<Boolean> anchorToStart) {
 
 
     super(goal, new EvaluationEnvironment());

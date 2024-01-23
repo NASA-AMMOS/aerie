@@ -22,8 +22,10 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -138,6 +140,10 @@ class MockMerlinService implements MerlinService.OwnerRole {
     }
     return res;
   }
+
+  @Override
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
+  throws MerlinServiceException, IOException {}
 
   @Override
   public void ensurePlanExists(final PlanId planId) {
