@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 public interface ResultsCellRepository {
   ResultsProtocol.OwnerRole allocate(SpecificationId specificationId, final String requestedBy);
 
-  Optional<ResultsProtocol.OwnerRole> claim(SpecificationId specificationId);
+  Optional<ResultsProtocol.OwnerRole> claim(long analysisId);
 
   Optional<ResultsProtocol.ReaderRole> lookup(SpecificationId specificationId);
 

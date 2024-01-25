@@ -53,20 +53,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public Optional<ResultsProtocol.OwnerRole> claim(final SpecificationId specificationId)
+  public Optional<ResultsProtocol.OwnerRole> claim(final long analysisId)
   {
     try (
         final var connection = this.dataSource.getConnection();
         final var claimSimulationAction = new ClaimRequestAction(connection)
     ) {
-      claimSimulationAction.apply(specificationId.id());
-
-      final var spec = getSpecification(connection, specificationId);
-      final var request$ = getRequest(connection, specificationId, spec.revision());
-      if (request$.isEmpty()) return Optional.empty();
-      final var request = request$.get();
-
-      logger.info("Claimed scheduling request with specification id {}", specificationId);
+      final var request = claimSimulationAction.apply(analysisId);
+      logger.info("Claimed scheduling request with analysis id {}", analysisId);
       return Optional.of(new PostgresResultsCell(
           this.dataSource,
           new SpecificationId(request.specificationId()),
@@ -75,10 +69,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           request.analysisId()));
     } catch (UnclaimableRequestException ex) {
       return Optional.empty();
-    } catch (final NoSuchSpecificationException ex) {
-      throw new Error(String.format(
-          "Cannot process scheduling request for nonexistent specification %s%n",
-          specificationId), ex);
     } catch (final SQLException | DatabaseException ex) {
       throw new Error(ex.getMessage());
     }

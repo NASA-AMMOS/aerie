@@ -85,11 +85,12 @@ public final class SchedulerWorkerAppDriver {
         final var specificationRevision = notification.specificationRevision();
         final var planRevision = notification.planRevision();
         final var specificationId = new SpecificationId(notification.specificationId());
+        final var analysisId = notification.analysisId();
 
         // Register as early as possible to avoid potentially missing a canceled signal
         canceledListener.register(specificationId);
 
-        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
+        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(analysisId);
         if (owner.isEmpty()) {
           canceledListener.unregister();
           continue;
