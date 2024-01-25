@@ -6,12 +6,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.permissions.PermissionsService;
 import gov.nasa.jpl.aerie.permissions.gql.GraphQLPermissionsService;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
-import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
-import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemoryResultsCellRepository;
-import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemorySpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
@@ -115,12 +112,6 @@ public final class SchedulerAppDriver {
       return new Stores(
           new PostgresSpecificationRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource));
-    } else if (store instanceof InMemoryStore) {
-      final var inMemorySchedulerRepository = new InMemorySpecificationRepository();
-      return new Stores(
-          inMemorySchedulerRepository,
-          new InMemoryResultsCellRepository(inMemorySchedulerRepository));
-
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
     }
