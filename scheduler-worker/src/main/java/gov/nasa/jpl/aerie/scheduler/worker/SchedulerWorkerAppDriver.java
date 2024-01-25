@@ -18,8 +18,8 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellR
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
-import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
+import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNotificationPayload;
 import gov.nasa.jpl.aerie.scheduler.worker.services.SchedulingDSLCompilationService;
@@ -63,7 +63,7 @@ public final class SchedulerWorkerAppDriver {
       new PostgresSpecificationRepository(hikariDataSource),
       new PostgresResultsCellRepository(hikariDataSource));
 
-    final var specificationService = new LocalSpecificationService(stores.specifications());
+    final var specificationService = new SpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
         merlinService,
         config.merlinFileStore(),

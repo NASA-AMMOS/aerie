@@ -55,6 +55,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -2010,7 +2011,7 @@ public class SchedulingIntegrationTests {
     for (final var goal : goals) {
       goalsByPriority.add(new GoalRecord(goal.goalId(), new GoalSource(goal.definition()), goal.enabled(), goal.simulateAfter()));
     }
-    final var specificationService = new MockSpecificationService(Map.of(new SpecificationId(1L), new Specification(
+    final var specificationService = new SpecificationService(new MockSpecificationRepository(Map.of(new SpecificationId(1L), new Specification(
         planId,
         1L,
         goalsByPriority,

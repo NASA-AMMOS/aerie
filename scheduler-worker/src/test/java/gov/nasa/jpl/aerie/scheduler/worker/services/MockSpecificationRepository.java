@@ -3,32 +3,33 @@ package gov.nasa.jpl.aerie.scheduler.worker.services;
 import java.util.Map;
 import java.util.Optional;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
 
-class MockSpecificationService implements SpecificationService
+class MockSpecificationRepository implements SpecificationRepository
 {
   Map<SpecificationId, Specification> specifications;
 
-  MockSpecificationService(final Map<SpecificationId, Specification> specifications) {
+  MockSpecificationRepository(final Map<SpecificationId, Specification> specifications) {
     this.specifications = specifications;
   }
 
   @Override
   public Specification getSpecification(final SpecificationId specificationId)
-  throws NoSuchSpecificationException, SpecificationLoadException
+  throws NoSuchSpecificationException
   {
     return Optional.ofNullable(specifications.get(specificationId))
                    .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
   }
 
   @Override
-  public RevisionData getSpecificationRevisionData(final SpecificationId specificationId)
+  public SpecificationRevisionData getSpecificationRevisionData(final SpecificationId specificationId)
   throws NoSuchSpecificationException
   {
-    return $ -> RevisionData.MatchResult.success();
+    if(!specifications.containsKey(specificationId)) throw new NoSuchSpecificationException(specificationId);
+    final var spec = specifications.get(specificationId);
+    return new SpecificationRevisionData(spec.specificationRevision(), spec.planRevision());
   }
 }

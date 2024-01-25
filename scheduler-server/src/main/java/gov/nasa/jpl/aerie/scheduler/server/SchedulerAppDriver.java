@@ -13,11 +13,11 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
-import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
-import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
+import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
+import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 import org.eclipse.jetty.server.Connector;
@@ -54,8 +54,8 @@ public final class SchedulerAppDriver {
     final var stores = loadStores(config);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
-    final var specificationService = new LocalSpecificationService(stores.specifications());
-    final var schedulerService = new CachedSchedulerService(stores.results());
+    final var specificationService = new SpecificationService(stores.specifications());
+    final var schedulerService = new SchedulerService(stores.results());
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
     final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
