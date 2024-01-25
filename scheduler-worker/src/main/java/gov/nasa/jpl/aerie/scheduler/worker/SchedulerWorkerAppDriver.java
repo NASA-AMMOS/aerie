@@ -83,6 +83,7 @@ public final class SchedulerWorkerAppDriver {
         final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
         if (notification == null) continue;
         final var specificationRevision = notification.specificationRevision();
+        final var planRevision = notification.planRevision();
         final var specificationId = new SpecificationId(notification.specificationId());
 
         // Register as early as possible to avoid potentially missing a canceled signal
@@ -94,7 +95,7 @@ public final class SchedulerWorkerAppDriver {
           continue;
         }
 
-        final var revisionData = new SpecificationRevisionData(specificationRevision);
+        final var revisionData = new SpecificationRevisionData(specificationRevision, planRevision);
         final ResultsProtocol.WriterRole writer = owner.get();
         try {
           scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer, canceledListener);

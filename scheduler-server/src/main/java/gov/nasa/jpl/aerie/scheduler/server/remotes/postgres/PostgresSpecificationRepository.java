@@ -57,17 +57,16 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   }
 
   @Override
-  public RevisionData getSpecificationRevisionData(final SpecificationId specificationId)
+  public SpecificationRevisionData getSpecificationRevisionData(final SpecificationId specificationId)
   throws NoSuchSpecificationException
   {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getSpecificationAction = new GetSpecificationAction(connection)) {
-        final var specificationRevision = getSpecificationAction
+        final var spec = getSpecificationAction
             .get(specificationId.id())
-            .orElseThrow(() -> new NoSuchSpecificationException(specificationId))
-            .revision();
+            .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
 
-        return new SpecificationRevisionData(specificationRevision);
+        return new SpecificationRevisionData(spec.revision(), spec.planRevision());
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get scheduling specification revision data", ex);

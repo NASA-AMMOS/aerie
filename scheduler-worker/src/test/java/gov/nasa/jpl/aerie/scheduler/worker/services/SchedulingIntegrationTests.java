@@ -2038,7 +2038,7 @@ public class SchedulingIntegrationTests {
         schedulingDSLCompiler);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
-    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer, () -> false);
+    agent.schedule(new ScheduleRequest(new SpecificationId(1L), new SpecificationRevisionData(1L, 1L)), writer, () -> false);
     assertEquals(1, writer.results.size());
     final var result = writer.results.get(0);
     if (result instanceof MockResultsProtocolWriter.Result.Failure e) {

@@ -43,6 +43,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           this.dataSource,
           new SpecificationId(request.specificationId()),
           request.specificationRevision(),
+          request.planRevision(),
           request.analysisId());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
@@ -70,6 +71,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           this.dataSource,
           new SpecificationId(request.specificationId()),
           request.specificationRevision(),
+          request.planRevision(),
           request.analysisId()));
     } catch (UnclaimableRequestException ex) {
       return Optional.empty();
@@ -130,11 +132,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static Optional<RequestRecord> getRequest(
       final Connection connection,
       final SpecificationId specificationId,
-      final long specificationRevision
+      final long specificationRevision,
+      final long planRevision
   ) throws SQLException {
     try (final var getRequestAction = new GetRequestAction(connection)) {
-      return getRequestAction
-          .get(specificationId.id(), specificationRevision);
+      return getRequestAction.get(specificationId.id(), specificationRevision, planRevision);
     }
   }
 
@@ -262,9 +264,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static Optional<ResultsProtocol.State> getRequestState(
       final Connection connection,
       final SpecificationId specId,
-      final long specRevision
+      final long specRevision,
+      final long planRevision
   ) throws SQLException {
-    final var request$ = getRequest(connection, specId, specRevision);
+    final var request$ = getRequest(connection, specId, specRevision, planRevision);
     if (request$.isEmpty()) return Optional.empty();
     final var request = request$.get();
 
@@ -289,17 +292,20 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     private final DataSource dataSource;
     private final SpecificationId specId;
     private final long specRevision;
+    private final long planRevision;
     private final long analysisId;
 
     public PostgresResultsCell(
         final DataSource dataSource,
         final SpecificationId specId,
         final long specRevision,
+        final long planRevision,
         final long analysisId
     ) {
       this.dataSource = dataSource;
       this.specId = specId;
       this.specRevision = specRevision;
+      this.planRevision = planRevision;
       this.analysisId = analysisId;
     }
 
@@ -309,7 +315,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         return getRequestState(
             connection,
             specId,
-            specRevision)
+            specRevision,
+            planRevision)
             .orElseThrow(() -> new Error("Scheduling request no longer exists"));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to get scheduling request status", ex);
