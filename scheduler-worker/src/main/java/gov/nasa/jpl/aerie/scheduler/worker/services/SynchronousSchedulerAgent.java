@@ -30,7 +30,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -147,8 +146,7 @@ public record SynchronousSchedulerAgent(
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
         final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
-        specification.globalSchedulingConditions().forEach($ -> {
-          if (!$.enabled()) return;
+        specification.schedulingConditions().forEach($ -> {
           final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
               merlinService,
               planMetadata.planId(),
@@ -182,7 +180,6 @@ public record SynchronousSchedulerAgent(
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
-          if (!goalRecord.enabled()) continue;
           final var result = compileGoalDefinition(
               merlinService,
               planMetadata.planId(),
@@ -374,23 +371,6 @@ public record SynchronousSchedulerAgent(
       throw new ResultsProtocolFailure("schedule specification with id %s is stale: %s".formatted(
           request.specificationId(), failure));
     }
-  }
-
-  /**
-   * collects the scheduling goals that apply to the current scheduling run on the target plan
-   *
-   * @param planMetadata details of the plan container whose associated goals should be collected
-   * @param mission the mission model that the plan adheres to, possibly associating additional relevant goals
-   * @return the list of goals relevant to the target plan
-   * @throws ResultsProtocolFailure when the constraints could not be loaded, or the data stores could not be
-   *     reached
-   */
-  private List<GlobalConstraint> loadConstraints(final PlanMetadata planMetadata, final MissionModel<?> mission) {
-    //TODO: is the plan and mission model enough to find the relevant constraints? (eg what about sandbox toggling?)
-    //TODO: load global constraints from scheduler data store?
-    //TODO: load activity type constraints from somewhere (scheduler store? mission model?)
-    //TODO: somehow apply user control over which constraints to enforce during scheduling
-    return List.of();
   }
 
   /**

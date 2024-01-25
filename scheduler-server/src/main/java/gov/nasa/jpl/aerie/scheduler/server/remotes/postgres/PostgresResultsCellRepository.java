@@ -216,10 +216,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var createdActivities = new HashMap<GoalId, Collection<ActivityDirectiveId>>(numGoals);
     final var satisfyingActivities = new HashMap<GoalId, Collection<ActivityDirectiveId>>(numGoals);
 
-    results.goalResults().forEach((goalId, result) -> {
-      goalSatisfaction.put(goalId, result.satisfied());
-      createdActivities.put(goalId, result.createdActivities());
-      satisfyingActivities.put(goalId, result.satisfyingActivities());
+    results.goalResults().forEach((goal, result) -> {
+      goalSatisfaction.put(goal, result.satisfied());
+      createdActivities.put(goal, result.createdActivities());
+      satisfyingActivities.put(goal, result.satisfyingActivities());
     });
 
     try (
