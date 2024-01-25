@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults.GoalResult;
 import org.slf4j.Logger;
@@ -75,23 +76,21 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public Optional<ResultsProtocol.ReaderRole> lookup(final SpecificationId specificationId)
+  public Optional<ResultsProtocol.ReaderRole> lookup(final ScheduleRequest request)
   {
     try (final var connection = this.dataSource.getConnection()) {
-      final var spec = getSpecification(connection, specificationId);
-      final var request$ = getRequest(connection, specificationId, spec.revision());
+      final var request$ = getRequest(connection, request);
       if (request$.isEmpty()) return Optional.empty();
-      final var request = request$.get();
+      final var r = request$.get();
 
       return Optional.of(new PostgresResultsCell(
           this.dataSource,
-          new SpecificationId(request.specificationId()),
-          request.specificationRevision(),
-          request.analysisId()));
+          new SpecificationId(r.specificationId()),
+          r.specificationRevision(),
+          r.planRevision(),
+          r.analysisId()));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
-    } catch (final NoSuchSpecificationException ex) {
-      return Optional.empty();
     }
   }
 
@@ -117,6 +116,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           .get(specificationId.id())
           .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
     }
+  }
+
+  private static Optional<RequestRecord> getRequest(
+      final Connection connection,
+      final ScheduleRequest request
+  ) throws SQLException {
+    return getRequest(connection,
+                      request.specificationId(),
+                      request.specificationRev().specificationRevision(),
+                      request.specificationRev().planRevision());
   }
 
   private static Optional<RequestRecord> getRequest(
