@@ -62,7 +62,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
-import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
@@ -118,8 +117,8 @@ public record SynchronousSchedulerAgent(
 
       final var specification = specificationService.getSpecification(request.specificationId());
       final var planMetadata = merlinService.getPlanMetadata(specification.planId());
-      ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
+      ensureRequestIsCurrent(specification, request);
       //create scheduler problem seeded with initial plan
       final var schedulerMissionModel = loadMissionModel(planMetadata);
       final var planningHorizon = new PlanningHorizon(
@@ -359,17 +358,19 @@ public record SynchronousSchedulerAgent(
   {
     return merlinService.getPlanRevision(planId);
   }
+
   /**
-   * confirms that specification revision still matches that expected by the scheduling request
+   * confirms that the scheduling request is still relevant
+   * (spec hasn't been updated between request being made and now)
    *
    * @param request the original request for scheduling, containing an intended starting specification revision
    * @throws ResultsProtocolFailure when the requested specification revision does not match the actual revision
    */
-  private void ensureRequestIsCurrent(final ScheduleRequest request) throws NoSuchSpecificationException {
-    final var currentRevisionData = specificationService.getSpecificationRevisionData(request.specificationId());
-    if (currentRevisionData.matches(request.specificationRev()) instanceof final RevisionData.MatchResult.Failure failure) {
-      throw new ResultsProtocolFailure("schedule specification with id %s is stale: %s".formatted(
-          request.specificationId(), failure));
+  private void ensureRequestIsCurrent(final Specification specification, final ScheduleRequest request)
+  throws NoSuchSpecificationException {
+    if (specification.specificationRevision() != request.specificationRev().specificationRevision()) {
+      throw new ResultsProtocolFailure("schedule specification with id %s is no longer at revision %d".formatted(
+          request.specificationId(), request.specificationRev().specificationRevision()));
     }
   }
 
