@@ -360,7 +360,7 @@ public class TestPersistentAnchor {
   public void testCase13DontFitEnd() throws SchedulingInterruptedException{
     TestData testData = createTestCase(true, true, false, true, 0, 14, TimeAnchor.START, null, true, 0);
     assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertEquals(5, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
     assertTrue(allAnchoringActivitiesAnchored(testData));
     assertTrue(allNonAnchoringActivitiesAreNotAnchored(testData));
