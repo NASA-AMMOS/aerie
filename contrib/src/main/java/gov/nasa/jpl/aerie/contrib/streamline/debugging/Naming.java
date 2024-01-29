@@ -33,7 +33,7 @@ public final class Naming {
    * Register a name for thing, as a function of args' names.
    * If any of the args are anonymous, so is this thing.
    */
-  public static void name(Object thing, String nameFormat, Object... args) {
+  public static <T> T name(T thing, String nameFormat, Object... args) {
     // Only capture weak references to arguments, so we don't leak memory
     var args$ = Arrays.stream(args).map(WeakReference::new).toArray(WeakReference[]::new);
     NAMES.put(thing, () -> {
@@ -49,6 +49,7 @@ public final class Naming {
       }
       return Optional.of(nameFormat.formatted(argNames));
     });
+    return thing;
   }
 
   /**
