@@ -113,13 +113,13 @@ public final class LinearBoundaryConsistencySolver {
 
   private void solve() {
     final var domains = variables.stream().collect(toMap(identity(), Domain::new));
-    final Queue<DirectionalConstraint> constraintsLeft = new LinkedList<>(constraints);
+    final Queue<DirectionalConstraint> remainingConstraints = new LinkedList<>(constraints);
     DirectionalConstraint constraint;
     try {
       // While we either have constraints to apply or domains to solve...
-      while (!constraintsLeft.isEmpty() || domains.values().stream().anyMatch(Domain::isUnsolved)) {
+      while (!remainingConstraints.isEmpty() || domains.values().stream().anyMatch(Domain::isUnsolved)) {
         // Apply all constraints through simple arc consistency
-        while ((constraint = constraintsLeft.poll()) != null) {
+        while ((constraint = remainingConstraints.poll()) != null) {
           var V = constraint.constrainedVariable;
           var D = domains.get(V);
           var newBound = constraint.bound.apply(domains).getDynamics().getOrThrow();
@@ -134,7 +134,7 @@ public final class LinearBoundaryConsistencySolver {
                       getName(this).orElseThrow(), D.variable, D.lowerBound, D.upperBound));
             }
             // TODO: Make this more efficient by not adding constraints that are already in the queue.
-            constraintsLeft.addAll(neighboringConstraints.get(D.variable));
+            remainingConstraints.addAll(neighboringConstraints.get(D.variable));
           }
         }
         // If that didn't fully solve all variables, choose the first unsolved variable
@@ -146,7 +146,7 @@ public final class LinearBoundaryConsistencySolver {
             .findFirst()
             .ifPresent(D -> {
               D.lowerBound = D.upperBound = D.variable.selectionPolicy.apply(D);
-              constraintsLeft.addAll(neighboringConstraints.get(D.variable));
+              remainingConstraints.addAll(neighboringConstraints.get(D.variable));
             });
       }
       // All domains are solved and non-empty, emit solution
