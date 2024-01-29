@@ -25,9 +25,20 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.d
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static org.apache.commons.math3.analysis.polynomials.PolynomialsUtils.shift;
 
+/**
+ * An implementation of Polynomial Dynamics
+ * @param coefficients an array of polynomial coefficients, where an entry's index in the array corresponds to the degree of that coefficient
+ *
+ * @apiNote The units of `t` are seconds
+ */
 public record Polynomial(double[] coefficients) implements Dynamics<Double, Polynomial> {
 
   // TODO: Add Duration parameter for unit of formal parameter?
+  /**
+   *
+   * @param coefficients the polynomial coefficients, from least to most significant
+   * @return a Polynomial with the given coefficients
+   */
   public static Polynomial polynomial(double... coefficients) {
     int n = coefficients.length;
     if (n == 0) {

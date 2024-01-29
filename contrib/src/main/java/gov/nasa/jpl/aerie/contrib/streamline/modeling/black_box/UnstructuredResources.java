@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
-import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.monads.UnstructuredResourceApplicative;
@@ -32,7 +31,7 @@ public final class UnstructuredResources {
     // Put this in a cell so it'll be stepped up appropriately
     return resource(Unstructured.timeBased(f));
   }
-  
+
   public static <A, D extends Dynamics<A, D>> Resource<Unstructured<A>> asUnstructured(Resource<D> resource) {
     return map(resource, Unstructured::unstructured);
   }

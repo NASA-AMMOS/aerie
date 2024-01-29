@@ -70,6 +70,9 @@ public class Registrar {
     this.errorBehavior = errorBehavior;
     errors = resource(Discrete.discrete(Map.of()));
     var errorString = map(errors, errors$ -> errors$.entrySet().stream().map(entry -> formatError(entry.getKey(), entry.getValue())).collect(joining("\n\n")));
+
+    // Register the errors and number of errors resources for output
+    // TODO consider using serializable events, rather than resources, to log errors
     discrete("errors", errorString, new StringValueMapper());
     discrete("numberOfErrors", map(errors, Map::size), new IntegerValueMapper());
   }
@@ -99,7 +102,7 @@ public class Registrar {
   }
 
   public void clearProfile() {
-    profile = true;
+    profile = false;
   }
 
   public <Value> void discrete(final String name, final Resource<Discrete<Value>> resource, final ValueMapper<Value> mapper) {
@@ -145,7 +148,7 @@ public class Registrar {
     });
   }
 
-  // TODO: Consider pulling in a Guava MultiMap instead of doing this by hand below
+  // TODO: Consider using a MultiMap instead of doing this by hand below
   private Unit logError(String resourceName, Throwable e) {
     errors.emit(effect(s -> {
       var s$ = new HashMap<>(s);
@@ -163,6 +166,9 @@ public class Registrar {
     return Unit.UNIT;
   }
 
+  /**
+   * Include the resource name in the error to give context
+   */
   private static <D> gov.nasa.jpl.aerie.merlin.framework.Resource<D> wrapErrors(String resourceName, gov.nasa.jpl.aerie.merlin.framework.Resource<D> resource) {
     return () -> {
       try {

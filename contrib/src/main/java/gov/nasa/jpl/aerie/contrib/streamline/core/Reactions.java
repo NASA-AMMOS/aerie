@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.contrib.streamline.core;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

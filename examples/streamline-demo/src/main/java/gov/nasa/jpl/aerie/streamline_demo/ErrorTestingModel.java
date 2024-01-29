@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.discreteResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.*;
 
@@ -23,7 +23,7 @@ public class ErrorTestingModel {
       asPolynomial(map(counter, c -> (double) c)),
       asPolynomial(map(bool, $ -> $ ? 1.0 : -1.0)));
 
-  public MutableResource<Polynomial> upperBound = PolynomialResources.polynomialResource(5);
+  public MutableResource<Polynomial> upperBound = name(PolynomialResources.polynomialResource(5), "upperBound");
   public MutableResource<Polynomial> lowerBound = PolynomialResources.polynomialResource(-5);
   public Resource<Polynomial> clamped = clamp(constant(10), lowerBound, upperBound);
 

@@ -14,6 +14,8 @@ public interface Dynamics<V, D extends Dynamics<V, D>> {
 
     /**
      * Evolve for the given time.
+     *
+     * @apiNote This method should always return the same value when called on the same object with the same duration
      */
     D step(Duration t);
 }
