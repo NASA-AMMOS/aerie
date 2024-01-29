@@ -16,9 +16,7 @@ import java.util.stream.Stream;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock.clock;
@@ -44,6 +42,7 @@ public final class Resources {
     currentTime();
   }
 
+  // TODO if Aerie provides either a `getElapsedTime` method or dynamic allocation of Cells, we can avoid this mutable static variable
   private static Resource<Clock> CLOCK = resource(clock(ZERO));
   public static Duration currentTime() {
     try {
@@ -109,13 +108,13 @@ public final class Resources {
               // Use semantic comparison for exceptions, since derivation can generate the exception each invocation.
               currentException -> !equivalentExceptions(startException, currentException)));
 
-      return positive == haveChanged
-          ? Optional.of(atEarliest)
-          : positive
-            ? currentDynamics.match(
+        if (positive == haveChanged) return Optional.of(atEarliest);
+        if (!positive) return Optional.empty(); // Dynamics have changed, so they will never be unchanged
+
+        // Dynamics haven't changed, but they may expire before atLatest. Treat expiry as a change
+        return currentDynamics.match(
                 expiring -> expiring.expiry().value().filter(atLatest::noShorterThan),
-                exception -> Optional.empty())
-            : Optional.empty();
+                exception -> Optional.empty());
     };
     name(result, "Dynamics Change (%s)", resource);
     return result;
@@ -187,7 +186,6 @@ public final class Resources {
     addDependency(destination, source);
   }
 
-  // TODO: Should this be moved somewhere else?
   /**
    * Tests if two exceptions are equivalent from the point of view of resource values.
    * Two exceptions are equivalent if they have the same type and message.
@@ -216,7 +214,7 @@ public final class Resources {
    * </p>
    */
   public static <D extends Dynamics<?, D>> Resource<D> cache(Resource<D> resource) {
-    var cell = resource(resource.getDynamics());
+    final var cell = resource(resource.getDynamics());
     forward(resource, cell);
     name(cell, "Cache (%s)", resource);
     return cell;
@@ -266,6 +264,12 @@ public final class Resources {
   }
 
   public static <D extends Dynamics<?, D>> Resource<D> shift(Resource<D> resource, Duration interval, D initialDynamics) {
+    if (interval.shorterThan(ZERO)) {
+      throw new IllegalArgumentException("Cannot shift resource by negative interval: " + interval);
+    }
+    if (interval.isEqualTo(ZERO)) {
+      return resource;
+    }
     var cell = resource(initialDynamics);
     delayedSet(cell, resource.getDynamics(), interval);
     wheneverDynamicsChange(resource, newDynamics ->
