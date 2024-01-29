@@ -32,6 +32,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 dependencies {
   compileOnlyApi project(':merlin-sdk')
   implementation 'org.apache.commons:commons-lang3:3.13.0'
+  implementation 'org.apache.commons:commons-math3:3.6.1'
 
   testImplementation project(':merlin-sdk')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
