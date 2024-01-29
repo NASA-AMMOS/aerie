@@ -44,7 +44,7 @@ public final class Tracing {
 
   public static <D extends Dynamics<?, D>> MutableResource<D> trace(Supplier<String> name, MutableResource<D> resource) {
     return new MutableResource<>() {
-      private final Resource<D> tracedResoure = trace(name, (Resource<D>) resource);
+      private final Resource<D> tracedResource = trace(name, (Resource<D>) resource);
 
       @Override
       public void emit(final DynamicsEffect<D> effect) {
@@ -57,7 +57,7 @@ public final class Tracing {
 
       @Override
       public ErrorCatching<Expiring<D>> getDynamics() {
-        return tracedResoure.getDynamics();
+        return tracedResource.getDynamics();
       }
     };
   }
