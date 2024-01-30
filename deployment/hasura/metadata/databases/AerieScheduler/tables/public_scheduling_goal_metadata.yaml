@@ -1,0 +1,84 @@
+table:
+  name: scheduling_goal_metadata
+  schema: public
+array_relationships:
+  - name: tags
+    using:
+      foreign_key_constraint_on:
+        column: goal_id
+        table:
+          name: scheduling_goal_tags
+          schema: metadata
+  - name: versions
+    using:
+      foreign_key_constraint_on:
+        column: goal_id
+        table:
+          name: scheduling_goal_definition
+          schema: public
+  - name: models_using
+    using:
+      foreign_key_constraint_on:
+        column: goal_id
+        table:
+          name: scheduling_model_specification_goals
+          schema: public
+  - name: plans_using
+    using:
+      foreign_key_constraint_on:
+        column: goal_id
+        table:
+          name: scheduling_specification_goals
+          schema: public
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+# This should have filtering based on privacy, but cross-database permissions restrictions prevent that
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, description, public]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [name, description, public]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, description, public, owner]
+      filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [name, description, public, owner]
+      filter: { "owner": { "_eq": "X-Hasura-User-Id" } }
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: { "owner": { "_eq": "X-Hasura-User-Id" } }

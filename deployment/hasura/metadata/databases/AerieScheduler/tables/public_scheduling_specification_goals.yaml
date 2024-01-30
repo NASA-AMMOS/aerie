@@ -2,12 +2,17 @@ table:
   name: scheduling_specification_goals
   schema: public
 object_relationships:
-- name: goal
-  using:
-    foreign_key_constraint_on: goal_id
-- name: specification
-  using:
-    foreign_key_constraint_on: specification_id
+  - name: goal_metadata
+    using:
+      foreign_key_constraint_on: goal_id
+  - name: goal_definition
+    using:
+      foreign_key_constraint_on:
+        - goal_id
+        - goal_revision
+  - name: specification
+    using:
+      foreign_key_constraint_on: specification_id
 select_permissions:
   - role: aerie_admin
     permission:
@@ -28,20 +33,20 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      columns: [specification_id, goal_id, goal_revision, priority, enabled]
       check: {}
   - role: user
     permission:
-      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      columns: [specification_id, goal_id, goal_revision, priority, enabled]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, goal_id, priority, enabled, simulate_after]
+      columns: [goal_revision, priority, enabled]
       filter: {}
   - role: user
     permission:
-      columns: [priority, enabled, simulate_after]
+      columns: [goal_revision, priority, enabled]
       filter: {}
 delete_permissions:
   - role: aerie_admin

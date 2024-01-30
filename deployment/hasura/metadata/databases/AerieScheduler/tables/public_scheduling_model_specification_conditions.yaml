@@ -1,14 +1,15 @@
 table:
-  name: scheduling_condition
+  name: scheduling_model_specification_conditions
   schema: public
-array_relationships:
-  - name: scheduling_specification_conditions
+object_relationships:
+  - name: condition_metadata
+    using:
+      foreign_key_constraint_on: condition_id
+  - name: condition_definition
     using:
       foreign_key_constraint_on:
-        column: condition_id
-        table:
-          name: scheduling_specification_conditions
-          schema: public
+        - condition_id
+        - condition_revision
 remote_relationships:
 - name: model
   definition:
@@ -36,35 +37,25 @@ select_permissions:
       columns: '*'
       filter: {}
       allow_aggregations: true
-# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
+# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on model ownership)
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, definition, model_id, description]
+      columns: [model_id, condition_id, condition_revision]
       check: {}
-      set:
-        author: "x-hasura-user-id"
-        last_modified_by: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [name, definition, model_id, description]
+      columns: [model_id, condition_id, condition_revision]
       check: {}
-      set:
-        author: "x-hasura-user-id"
-        last_modified_by: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, definition, description, model_id]
+      columns: [condition_revision]
       filter: {}
-      set:
-        last_modified_by: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [name, definition, description]
+      columns: [condition_revision]
       filter: {}
-      set:
-        last_modified_by: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:

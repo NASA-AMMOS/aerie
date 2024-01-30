@@ -1,18 +1,26 @@
 table:
-  name: scheduling_specification_conditions
+  name: scheduling_model_specification_goals
   schema: public
 object_relationships:
-  - name: condition_metadata
+  - name: goal_metadata
     using:
-      foreign_key_constraint_on: condition_id
-  - name: condition_definition
+      foreign_key_constraint_on: goal_id
+  - name: goal_definition
     using:
       foreign_key_constraint_on:
-        - condition_id
-        - condition_revision
-  - name: specification
-    using:
-      foreign_key_constraint_on: specification_id
+        - goal_id
+        - goal_revision
+remote_relationships:
+- name: model
+  definition:
+    to_source:
+      relationship_type: object
+      source: AerieMerlin
+      table:
+        schema: public
+        name: mission_model
+      field_mapping:
+        model_id: id
 select_permissions:
   - role: aerie_admin
     permission:
@@ -29,24 +37,24 @@ select_permissions:
       columns: '*'
       filter: {}
       allow_aggregations: true
-# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
+# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on model ownership)
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, condition_id, condition_revision, enabled]
+      columns: [model_id, goal_id, goal_revision]
       check: {}
   - role: user
     permission:
-      columns: [specification_id, condition_id, condition_revision, enabled]
+      columns: [model_id, goal_id, goal_revision]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [condition_revision, enabled]
+      columns: [goal_revision]
       filter: {}
   - role: user
     permission:
-      columns: [condition_revision, enabled]
+      columns: [goal_revision]
       filter: {}
 delete_permissions:
   - role: aerie_admin
