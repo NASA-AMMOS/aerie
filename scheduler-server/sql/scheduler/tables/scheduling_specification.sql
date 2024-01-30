@@ -39,26 +39,8 @@ language plpgsql as $$begin
 return new;
 end$$;
 
-create function increment_revision_on_goal_update()
-  returns trigger
-  security definer
-language plpgsql as $$begin
-  with goals as (
-    select g.specification_id from scheduling_specification_goals as g
-    where g.goal_id = new.id
-  )
-  update scheduling_specification set revision = revision + 1
-  where exists(select 1 from goals where specification_id = id);
-  return new;
-end$$;
-
 create trigger increment_revision_on_update_trigger
   before update on scheduling_specification
   for each row
   when (pg_trigger_depth() < 1)
   execute function increment_revision_on_update();
-
-create trigger increment_revision_on_goal_update
-  before update on scheduling_goal
-  for each row
-  execute function increment_revision_on_goal_update();
