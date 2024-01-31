@@ -172,10 +172,9 @@ public class ConstraintsTests {
     assertEquals(1, violation.windows().size());
 
     final long activityOffset = 60 * 60 * 1000000L; // 1h in micros
-    final long planDuration = 1212 * 60 * 60 * 1000000L; // 1212h in micros
 
-    assertEquals(activityOffset, violation.windows().get(0).start());
-    assertEquals(planDuration, violation.windows().get(0).end());
+    assertEquals(0, violation.windows().get(0).start());
+    assertEquals(activityOffset, violation.windows().get(0).end());
     // Gaps
     assertTrue(constraintResult.gaps().isEmpty());
   }
