@@ -133,6 +133,54 @@ public class ConstraintsTests {
   }
 
   @Test
+  void constraintsSucceedAgainstVariantWithUnits() throws IOException {
+    hasura.deleteActivity(planId, activityId);
+    hasura.deleteConstraint(constraintId);
+    var fruitConstraintName = "fruit_equals_3";
+    var fruitConstraintId = hasura.insertPlanConstraint(
+        fruitConstraintName,
+        planId,
+        "export default (): Constraint => Real.Resource(\"/fruit\").equal(3)",
+        "");
+    hasura.insertActivity(
+        planId,
+        "PeelBanana",
+        "1h",
+        Json.createObjectBuilder().add("peelDirection", "fromStem").build());
+
+    hasura.awaitSimulation(planId);
+    final var constraintsResponses = hasura.checkConstraints(planId);
+    assertEquals(1, constraintsResponses.size());
+
+    // Check the Response
+    final var constraintResponse = constraintsResponses.get(0);
+    assertTrue(constraintResponse.success());
+    assertEquals(fruitConstraintId, constraintResponse.constraintId());
+    assertEquals(fruitConstraintName, constraintResponse.constraintName());
+    assertEquals("plan", constraintResponse.type());
+    // Check the Result
+    assertTrue(constraintResponse.result().isPresent());
+    final var constraintResult = constraintResponse.result().get();
+    // Resources
+    final var resources = constraintResult.resourceIds();
+    assertEquals(1, resources.size());
+    assertTrue(resources.contains("/fruit"));
+
+    // Violation
+    assertEquals(1, constraintResult.violations().size());
+    final var violation = constraintResult.violations().get(0);
+    assertEquals(1, violation.windows().size());
+
+    final long activityOffset = 60 * 60 * 1000000L; // 1h in micros
+    final long planDuration = 1212 * 60 * 60 * 1000000L; // 1212h in micros
+
+    assertEquals(activityOffset, violation.windows().get(0).start());
+    assertEquals(planDuration, violation.windows().get(0).end());
+    // Gaps
+    assertTrue(constraintResult.gaps().isEmpty());
+  }
+
+  @Test
   void constraintsSucceedNoViolations() throws IOException {
     // Delete activity to avoid violation
     hasura.deleteActivity(planId, activityId);
