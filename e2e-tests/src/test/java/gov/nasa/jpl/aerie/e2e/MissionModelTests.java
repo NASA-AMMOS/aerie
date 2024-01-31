@@ -311,9 +311,11 @@ public class MissionModelTests {
     activityTypes.add(new ActivityType(
         "PeelBanana",
         Map.of("peelDirection",
-               new Parameter(0, new ValueSchemaVariant(List.of(
-                   new Variant("fromStem", "fromStem"),
-                   new Variant("fromTip", "fromTip")))))));
+               new Parameter(0,
+                   new ValueSchemaMeta(Map.of("unit", Json.createObjectBuilder(Map.of("value", "direction")).build()),
+                   new ValueSchemaVariant(List.of(
+                       new Variant("fromStem", "fromStem"),
+                       new Variant("fromTip", "fromTip"))))))));
     activityTypes.add(new ActivityType("PickBanana", Map.of("quantity", new Parameter(0, VALUE_SCHEMA_INT))));
     activityTypes.add(new ActivityType("RipenBanana", Map.of()));
     activityTypes.add(new ActivityType("ThrowBanana", Map.of("speed", new Parameter(0, VALUE_SCHEMA_REAL))));
