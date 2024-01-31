@@ -50,7 +50,7 @@ public class RussianNestingActivityTest {
     final var simulationDuration = duration(5, SECONDS);
 
     var simulationResults = SimulationUtility.simulate(schedule, simulationDuration);
-    
+
     // verify results
     // 1. Plant count decreased by 3 (200 -> 197) from the pickBananaActivity call using pickBananaQuantityOverride
     var finalPlantCount = simulationResults.discreteProfiles.get("/plant").getValue().get(simulationResults.discreteProfiles.get("/plant").getValue().size()-1).dynamics().asInt().orElseThrow();
