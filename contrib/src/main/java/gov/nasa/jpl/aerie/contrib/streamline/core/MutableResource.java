@@ -12,6 +12,8 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.allocate;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.pure;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profileEffects;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -62,7 +64,10 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
       }
     };
     if (MutableResourceFlags.DETECT_BUSY_CELLS) {
-      result = Profiling.profileEffects(result);
+      result = profileEffects(result);
+    }
+    if (MutableResourceFlags.PROFILE_GET_DYNAMICS) {
+      result = profile(result);
     }
     return result;
   }
@@ -79,12 +84,12 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
    * Turn on busy cell detection.
    *
    * <p>
-   *     Calling this method once before constructing your model will profile effects on every cell.
+   *     Calling this method once before constructing your model will profile effects on every resource.
    *     Profiling effects may be compute and/or memory intensive, and should not be used in production.
    * </p>
    * <p>
-   *     If only a few cells are suspect, you can also call {@link Profiling#profileEffects}
-   *     directly on just those cells, rather than profiling every cell.
+   *     If only a few resources are suspect, you can also call {@link Profiling#profileEffects}
+   *     directly on just those resource, rather than profiling every resource.
    * </p>
    * <p>
    *     Call {@link Profiling#dump()} to see results.
@@ -92,6 +97,27 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
    */
   static void detectBusyCells() {
     MutableResourceFlags.DETECT_BUSY_CELLS = true;
+  }
+
+  /**
+   * Turn on profiling for all {@link MutableResource}s created by {@link MutableResource#resource}.
+   * Also implies {@link MutableResource#detectBusyCells()}.
+   *
+   * <p>
+   *     Calling this method once before constructing your model will profile virtually every {@link MutableResource}.
+   *     Profiling may be compute and/or memory intensive, and should not be used in production.
+   * </p>
+   * <p>
+   *     If only a few resources are suspect, you can also call {@link Profiling#profile}
+   *     directly on just those resource, rather than profiling every resource.
+   * </p>
+   * <p>
+   *     Call {@link Profiling#dump()} to see results.
+   * </p>
+   */
+  static void profileAllResources() {
+    MutableResourceFlags.PROFILE_GET_DYNAMICS = true;
+    detectBusyCells();
   }
 }
 
@@ -102,4 +128,5 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
  */
 final class MutableResourceFlags {
   public static boolean DETECT_BUSY_CELLS = false;
+  public static boolean PROFILE_GET_DYNAMICS = false;
 }
