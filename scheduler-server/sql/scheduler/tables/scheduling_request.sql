@@ -1,41 +1,64 @@
 create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 
 create table scheduling_request (
-  specification_id integer not null,
   analysis_id integer generated always as identity,
-  requested_by text,
-  requested_at timestamptz not null default now(),
-
-  status status_t not null default 'pending',
-  reason jsonb null,
-  canceled boolean not null default false,
+  specification_id integer not null,
   dataset_id integer default null,
 
   specification_revision integer not null,
+  plan_revision integer not null,
 
-  constraint scheduling_request_primary_key
-    primary key(specification_id, specification_revision),
-  constraint scheduling_request_analysis_unique
-    unique (analysis_id),
+  -- Scheduling State
+  status status_t not null default 'pending',
+  reason jsonb null,
+  canceled boolean not null default false,
+
+  -- Simulation Arguments Used in Scheduling
+  horizon_start timestamptz not null,
+  horizon_end timestamptz not null,
+  simulation_arguments jsonb not null,
+
+  -- Additional Metadata
+  requested_by text,
+  requested_at timestamptz not null default now(),
+
+  constraint scheduling_request_pkey
+    primary key(analysis_id),
+  constraint scheduling_request_unique
+    unique (specification_id, specification_revision, plan_revision),
   constraint scheduling_request_references_scheduling_specification
     foreign key(specification_id)
       references scheduling_specification
       on update cascade
-      on delete cascade
+      on delete cascade,
+  constraint start_before_end
+    check (horizon_start <= horizon_end)
 );
 
 comment on table scheduling_request is e''
   'The status of a scheduling run that is to be performed (or has been performed).';
-comment on column scheduling_request.specification_id is e''
-  'The ID of scheduling specification for this scheduling run.';
 comment on column scheduling_request.analysis_id is e''
   'The ID associated with the analysis of this scheduling run.';
+comment on column scheduling_request.specification_id is e''
+  'The ID of scheduling specification for this scheduling run.';
+comment on column scheduling_request.dataset_id is e''
+  'The dataset containing the final simulation results for the simulation. NULL if no simulations were run during scheduling.';
+comment on column scheduling_request.specification_revision is e''
+  'The revision of the scheduling_specification associated with this request.';
+comment on column scheduling_request.plan_revision is e''
+  'The revision of the plan corresponding to the given revision of the dataset.';
 comment on column scheduling_request.status is e''
   'The state of the the scheduling request.';
 comment on column scheduling_request.reason is e''
-  'The reason for failure when a scheduling request fails.';
-comment on column scheduling_request.specification_revision is e''
-  'The revision of the scheduling_specification associated with this request.';
+  'The reason for failure in the event a scheduling request fails.';
+comment on column scheduling_request.canceled is e''
+  'Whether the scheduling run has been marked as canceled.';
+comment on column scheduling_request.horizon_start is e''
+  'The start of the scheduling and simulation horizon for this scheduling run.';
+comment on column scheduling_request.horizon_end is e''
+  'The end of the scheduling and simulation horizon for this scheduling run.';
+comment on column scheduling_request.simulation_arguments is e''
+  'The arguments simulations run during the scheduling run will use.';
 comment on column scheduling_request.requested_by is e''
   'The user who made the scheduling request.';
 comment on column scheduling_request.requested_at is e''
@@ -51,10 +74,12 @@ language plpgsql as $$
 begin
   perform (
     with payload(specification_revision,
+                 plan_revision,
                  specification_id,
                  analysis_id) as
     (
       select NEW.specification_revision,
+             NEW.plan_revision,
              NEW.specification_id,
              NEW.analysis_id
     )

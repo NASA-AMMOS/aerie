@@ -719,6 +719,160 @@ for each row
 execute function scheduling_goal_metadata_set_updated_at();
 
 /*
+SCHEDULING REQUEST
+*/
+/* These FKs are dropped ahead of the pkey swap to remove the dependency on analysisId's index */
+alter table scheduling_goal_analysis_satisfying_activities
+  drop constraint satisfying_activities_references_scheduling_request;
+alter table scheduling_goal_analysis_created_activities
+  drop constraint created_activities_references_scheduling_request;
+alter table scheduling_goal_analysis
+  drop constraint scheduling_goal_analysis_references_scheduling_request;
+
+alter table scheduling_request
+  add column plan_revision integer not null default -1,
+  add column horizon_start timestamptz,
+  add column horizon_end timestamptz,
+  add column simulation_arguments jsonb not null default '{}',
+  drop constraint scheduling_request_primary_key,
+  add constraint scheduling_request_pkey primary key(analysis_id),
+  drop constraint scheduling_request_analysis_unique,
+  add constraint scheduling_request_unique
+    unique (specification_id, specification_revision, plan_revision),
+  add constraint start_before_end
+    check (horizon_start <= horizon_end);
+
+-- Insert values from the current config for the horizon
+-- This is fine as temporal subset scheduling isn't really a feature
+update scheduling_request
+  set horizon_start = s.horizon_start,
+      horizon_end = s.horizon_end
+from scheduling_specification s
+where s.id = scheduling_request.specification_id;
+
+-- Drop defaults
+alter table scheduling_request
+  alter column plan_revision drop default,
+  alter column horizon_start set not null,
+  alter column horizon_end set not null,
+  alter column simulation_arguments drop default ;
+
+comment on column scheduling_request.dataset_id is e''
+  'The dataset containing the final simulation results for the simulation. NULL if no simulations were run during scheduling.';
+comment on column scheduling_request.plan_revision is e''
+  'The revision of the plan corresponding to the given revision of the dataset.';
+comment on column scheduling_request.reason is e''
+  'The reason for failure in the event a scheduling request fails.';
+comment on column scheduling_request.canceled is e''
+  'Whether the scheduling run has been marked as canceled.';
+comment on column scheduling_request.horizon_start is e''
+  'The start of the scheduling and simulation horizon for this scheduling run.';
+comment on column scheduling_request.horizon_end is e''
+  'The end of the scheduling and simulation horizon for this scheduling run.';
+comment on column scheduling_request.simulation_arguments is e''
+  'The arguments simulations run during the scheduling run will use.';
+
+/* Restore dropped FKs */
+alter table scheduling_goal_analysis_satisfying_activities
+  add constraint satisfying_activities_references_scheduling_request
+    foreign key (analysis_id)
+      references scheduling_request (analysis_id)
+      on update cascade
+      on delete cascade;
+
+alter table scheduling_goal_analysis_created_activities
+  add constraint created_activities_references_scheduling_request
+    foreign key (analysis_id)
+      references scheduling_request (analysis_id)
+      on update cascade
+      on delete cascade;
+
+alter table scheduling_goal_analysis
+  add constraint scheduling_goal_analysis_references_scheduling_request
+    foreign key (analysis_id)
+      references scheduling_request (analysis_id)
+      on update cascade
+      on delete cascade;
+
+create or replace function notify_scheduler_workers ()
+returns trigger
+security definer
+language plpgsql as $$
+begin
+  perform (
+    with payload(specification_revision,
+                 plan_revision,
+                 specification_id,
+                 analysis_id) as
+    (
+      select NEW.specification_revision,
+             NEW.plan_revision,
+             NEW.specification_id,
+             NEW.analysis_id
+    )
+    select pg_notify('scheduling_request_notification', json_strip_nulls(row_to_json(payload))::text)
+    from payload
+  );
+  return null;
+end$$;
+
+/*
+ANALYSIS TABLES
+*/
+/* Dropped FKs are restored first */
+/* 0 is the initial default as all revisions will be at 0 by this point in the migration */
+alter table scheduling_goal_analysis
+  add column goal_revision integer not null default 0,
+  drop constraint scheduling_goal_analysis_primary_key,
+  add constraint scheduling_goal_analysis_primary_key
+    primary key (analysis_id, goal_id, goal_revision),
+  drop constraint scheduling_goal_analysis_references_scheduling_goal,
+  add constraint scheduling_goal_analysis_references_scheduling_goal
+    foreign key (goal_id, goal_revision)
+      references scheduling_goal_definition
+      on update cascade
+      on delete cascade;
+alter table scheduling_goal_analysis
+  alter column goal_revision drop default;
+
+comment on column scheduling_goal_analysis.goal_revision is e''
+  'The associated version of the goal definition used.';
+
+alter table scheduling_goal_analysis_created_activities
+  add column goal_revision integer not null default 0,
+  drop constraint created_activities_primary_key,
+  add constraint created_activities_primary_key
+    primary key (analysis_id, goal_id, goal_revision, activity_id),
+  drop constraint created_activities_references_scheduling_goal,
+  add constraint created_activities_references_scheduling_goal
+    foreign key (goal_id, goal_revision)
+      references scheduling_goal_definition
+      on update cascade
+      on delete cascade;
+alter table scheduling_goal_analysis_created_activities
+  alter column goal_revision drop default;
+
+comment on column scheduling_goal_analysis_created_activities.goal_revision is e''
+  'The associated version of the goal definition used.';
+
+alter table scheduling_goal_analysis_satisfying_activities
+  add column goal_revision integer not null default 0,
+  drop constraint satisfying_activities_primary_key,
+  add constraint satisfying_activities_primary_key
+    primary key (analysis_id, goal_id, goal_revision, activity_id),
+  drop constraint satisfying_activities_references_scheduling_goal,
+  add constraint satisfying_activities_references_scheduling_goal
+    foreign key (goal_id, goal_revision)
+      references scheduling_goal_definition
+      on update cascade
+      on delete cascade;
+alter table scheduling_goal_analysis_satisfying_activities
+  alter column goal_revision drop default;
+
+comment on column scheduling_goal_analysis_satisfying_activities.goal_revision is e''
+  'The associated version of the goal definition used.';
+
+/*
 DROP ORIGINAL
 */
 drop trigger update_logging_on_update_scheduling_goal_trigger on scheduling_goal;

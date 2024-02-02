@@ -60,6 +60,117 @@ create trigger update_logging_on_update_scheduling_goal_trigger
   execute function update_logging_on_update_scheduling_goal();
 
 /*
+ANALYSIS TABLES
+*/
+/* Dropped FKs are restored first */
+alter table scheduling_goal_analysis_satisfying_activities
+  drop constraint satisfying_activities_references_scheduling_goal,
+  add constraint satisfying_activities_references_scheduling_goal
+    foreign key (goal_id)
+      references scheduling_goal
+      on update cascade
+      on delete cascade,
+  drop constraint satisfying_activities_primary_key,
+  add constraint satisfying_activities_primary_key
+    primary key (analysis_id, goal_id, activity_id),
+  drop column goal_revision;
+
+alter table scheduling_goal_analysis_created_activities
+  drop constraint created_activities_references_scheduling_goal,
+  add constraint created_activities_references_scheduling_goal
+    foreign key (goal_id)
+      references scheduling_goal
+      on update cascade
+      on delete cascade,
+  drop constraint created_activities_primary_key,
+  add constraint created_activities_primary_key
+    primary key (analysis_id, goal_id, activity_id),
+  drop column goal_revision;
+
+alter table scheduling_goal_analysis
+  drop constraint scheduling_goal_analysis_references_scheduling_goal,
+  add constraint scheduling_goal_analysis_references_scheduling_goal
+    foreign key (goal_id)
+      references scheduling_goal
+      on update cascade
+      on delete cascade,
+  drop constraint scheduling_goal_analysis_primary_key,
+  add constraint scheduling_goal_analysis_primary_key
+    primary key (analysis_id, goal_id),
+  drop column goal_revision;
+
+/*
+SCHEDULING REQUEST
+*/
+create or replace function notify_scheduler_workers ()
+returns trigger
+security definer
+language plpgsql as $$
+begin
+  perform (
+    with payload(specification_revision,
+                 specification_id,
+                 analysis_id) as
+    (
+      select NEW.specification_revision,
+             NEW.specification_id,
+             NEW.analysis_id
+    )
+    select pg_notify('scheduling_request_notification', json_strip_nulls(row_to_json(payload))::text)
+    from payload
+  );
+  return null;
+end$$;
+
+/* These FKs are dropped ahead of the pkey swap to remove the dependency on the PK's index */
+alter table scheduling_goal_analysis_satisfying_activities
+  drop constraint satisfying_activities_references_scheduling_request;
+alter table scheduling_goal_analysis_created_activities
+  drop constraint created_activities_references_scheduling_request;
+alter table scheduling_goal_analysis
+  drop constraint scheduling_goal_analysis_references_scheduling_request;
+
+alter table scheduling_request
+  drop constraint start_before_end,
+  drop constraint scheduling_request_unique,
+  add constraint scheduling_request_analysis_unique
+    unique (analysis_id),
+  drop constraint scheduling_request_pkey,
+  add constraint scheduling_request_primary_key
+    primary key(specification_id, specification_revision),
+  drop column simulation_arguments,
+  drop column horizon_end,
+  drop column horizon_start,
+  drop column plan_revision;
+
+comment on column scheduling_request.canceled is null;
+comment on column scheduling_request.reason is e''
+  'The reason for failure when a scheduling request fails.';
+comment on column scheduling_request.dataset_id is null;
+
+/* Restore dropped FKs */
+alter table scheduling_goal_analysis_satisfying_activities
+  add constraint satisfying_activities_references_scheduling_request
+    foreign key (analysis_id)
+      references scheduling_request (analysis_id)
+      on update cascade
+      on delete cascade;
+
+alter table scheduling_goal_analysis_created_activities
+  add constraint created_activities_references_scheduling_request
+    foreign key (analysis_id)
+      references scheduling_request (analysis_id)
+      on update cascade
+      on delete cascade;
+
+alter table scheduling_goal_analysis
+  add constraint scheduling_goal_analysis_references_scheduling_request
+    foreign key (analysis_id)
+      references scheduling_request (analysis_id)
+      on update cascade
+      on delete cascade;
+
+/*
 DATA MIGRATION
 */
 -- Goals not on a model spec will not be kept, as the scheduler DB can't get the model id from the plan id
