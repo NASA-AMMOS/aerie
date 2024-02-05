@@ -1,5 +1,6 @@
 -- Services
 create schema merlin;
+create schema scheduler;
 
 -- Cross Service
 create schema migrations;
