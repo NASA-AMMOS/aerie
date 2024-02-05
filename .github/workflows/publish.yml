@@ -101,10 +101,8 @@ jobs:
           component: ${{ matrix.components.context }}
         run: |
           set -x
-          if [[ "$component" == "." ]]; then
-            # aerie-hasura and aerie-postgres don't need compiled java
-            ./gradlew distributeSql --no-daemon
-          else
+          # aerie-hasura and aerie-postgres don't need compiled java
+          if [[ "$component" != "." ]]; then
             ./gradlew ":$component:assemble" --no-daemon --parallel
           fi
 

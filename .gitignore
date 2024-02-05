@@ -39,10 +39,6 @@
 /nbproject/private/
 node_modules
 
-# Ignore any SQL files copied from build tasks
-deployment/postgres-init-db/sql/**/*.sql
-!deployment/postgres-init-db/sql/ui
-
 # Ignore Gradle project-specific cache directory
 .gradle
 
