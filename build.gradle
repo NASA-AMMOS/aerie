@@ -21,46 +21,6 @@ configure(subprojects) {
     }())
 }
 
-// Add `distributeSql` task to all subprojects with `sql/` child directory
-configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().exists() }) { sp ->
-
-  task distributeSql(type: Copy) {
-    into "$rootDir/deployment/postgres-init-db/sql"
-    from fileTree(dir: "${sp.projectDir}/sql", include: '**/*.sql')
-  }
-
-  // Remove distributed SQL as part of `clean` task
-  task undoDistributeSql(type: Delete) {
-    doLast { // Explicitly do last to avoid running during configuration step
-      file("${sp.projectDir}/sql").list().each {
-        delete "$rootDir/deployment/postgres-init-db/sql/$it"
-      }
-    }
-  }
-
-  // For all Java subprojects
-  sp.plugins.withId('java') {
-    // Distribute SQL as part of resource processing
-    processResources.dependsOn distributeSql
-    // Remove distributed SQL as part of `clean` tasks
-    clean.dependsOn undoDistributeSql
-  }
-
-  // For all Node subprojects
-  sp.plugins.withId('com.github.node-gradle.node') {
-    // For all subprojects without resource processing already defined
-    if (!tasks.findByName('processResources')) {
-      // Distribute SQL as part of resource processing
-      tasks.create('processResources')
-      tasks.findAll { it.name == 'processResources' }.each { it.dependsOn distributeSql }
-      // 'clean' is not visible here, make sure to call `undoDistributeSql` as part of each subproject's `clean` task
-    }
-  }
-
-  // Distribute SQL prior to creating deployment archive
-  archiveDeployment.dependsOn distributeSql
-}
-
 subprojects {
   apply plugin: 'com.github.ben-manes.versions'
 
