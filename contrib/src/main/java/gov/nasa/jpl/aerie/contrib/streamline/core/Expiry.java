@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 /**
  * The time at which a value expires.
  */
-public record Expiry(Optional<Duration> value) {
+public record Expiry(Optional<Duration> value) implements Comparable<Expiry> {
   public static Expiry NEVER = expiry(Optional.empty());
 
   public static Expiry at(Duration t) {
