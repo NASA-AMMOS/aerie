@@ -244,7 +244,7 @@ public record SchedulingActivityDirective(
   }
 
   public String toString() {
-    return "[" + this.type.getName() + ","+ this.id + "," + startOffset + "," + ((duration != null) ? getEndTime() : "no duration") + ", "+anchorId+", "+anchoredToStart+"]";
+    return "[" + this.type.getName() + ","+ this.id + "," + startOffset + "," + ((duration != null) ? getEndTime() : "no duration") + ", "+ topParent + ", " + anchorId+", "+anchoredToStart+"]";
   }
 
   /**
