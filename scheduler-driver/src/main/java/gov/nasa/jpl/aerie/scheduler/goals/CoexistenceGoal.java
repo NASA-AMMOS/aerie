@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
@@ -22,7 +21,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
-import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +28,6 @@ import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -61,12 +57,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
     public Builder startsAt(TimeExpressionRelative TimeExpressionRelative) {
       startExpr = TimeExpressionRelative;
-      return getThis();
-    }
-
-    protected DurationExpression durExpression;
-    public Builder durationIn(DurationExpression durExpr){
-      this.durExpression = durExpr;
       return getThis();
     }
 
