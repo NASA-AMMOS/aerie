@@ -1,14 +1,14 @@
 -- Default Roles:
-insert into metadata.user_roles(role) values ('aerie_admin'), ('user'), ('viewer');
+insert into permissions.user_roles(role) values ('aerie_admin'), ('user'), ('viewer');
 
 -- Permissions For Default Roles:
 -- 'aerie_admin' permissions aren't specified since 'aerie_admin' is always considered to have "NO_CHECK" permissions
-update metadata.user_role_permission
+update permissions.user_role_permission
 set action_permissions = '{}',
     function_permissions = '{}'
-where role = 'admin';
+where role = 'aerie_admin';
 
-update metadata.user_role_permission
+update permissions.user_role_permission
 set action_permissions = '{
       "check_constraints": "PLAN_OWNER_COLLABORATOR",
       "create_expansion_rule": "NO_CHECK",
@@ -46,7 +46,7 @@ set action_permissions = '{
     }'
 where role = 'user';
 
-update metadata.user_role_permission
+update permissions.user_role_permission
 set action_permissions = '{
       "sequence_seq_json_bulk": "NO_CHECK",
       "resource_samples": "NO_CHECK"
@@ -59,6 +59,6 @@ set action_permissions = '{
 where role = 'viewer';
 
 -- Default Users:
-insert into metadata.users(username, default_role)
+insert into permissions.users(username, default_role)
   values ('Mission Model', 'viewer'),
          ('Aerie Legacy', 'viewer');

@@ -1,24 +1,24 @@
-create table metadata.user_role_permission(
+create table permissions.user_role_permission(
   role text not null
     primary key
-    references metadata.user_roles
+    references permissions.user_roles
       on update cascade
       on delete cascade,
   action_permissions jsonb not null default '{}',
   function_permissions jsonb not null default '{}'
 );
 
-comment on table metadata.user_role_permission is e''
+comment on table permissions.user_role_permission is e''
   'Permissions for a role that cannot be expressed in Hasura. Permissions take the form {KEY:PERMISSION}.'
   'A list of valid KEYs and PERMISSIONs can be found at https://github.com/NASA-AMMOS/aerie/discussions/983#discussioncomment-6257146';
-comment on column metadata.user_role_permission.role is e''
+comment on column permissions.user_role_permission.role is e''
   'The role these permissions apply to.';
-comment on column metadata.user_role_permission.action_permissions is ''
+comment on column permissions.user_role_permission.action_permissions is ''
   'The permissions the role has on Hasura Actions.';
-comment on column metadata.user_role_permission.function_permissions is ''
+comment on column permissions.user_role_permission.function_permissions is ''
   'The permissions the role has on Hasura Functions.';
 
-create function metadata.validate_permissions_json()
+create function permissions.validate_permissions_json()
 returns trigger
 language plpgsql as $$
   declare
@@ -47,18 +47,18 @@ begin
   select
     jsonb_object_keys(new.function_permissions) as function_key,
     new.function_permissions ->> jsonb_object_keys(new.function_permissions) as function_permission,
-    jsonb_object_keys(new.function_permissions) = any(enum_range(null::metadata.function_permission_key)::text[]) as valid_function_key,
-    new.function_permissions ->> jsonb_object_keys(new.function_permissions) = any(enum_range(null::metadata.permission)::text[]) as valid_function_permission,
+    jsonb_object_keys(new.function_permissions) = any(enum_range(null::permissions.function_permission_key)::text[]) as valid_function_key,
+    new.function_permissions ->> jsonb_object_keys(new.function_permissions) = any(enum_range(null::permissions.permission)::text[]) as valid_function_permission,
     jsonb_object_keys(new.function_permissions) = any(plan_merge_fns) as is_plan_merge_key,
-  	new.function_permissions ->> jsonb_object_keys(new.function_permissions) = any(enum_range('PLAN_OWNER_SOURCE'::metadata.permission, 'PLAN_OWNER_COLLABORATOR_TARGET'::metadata.permission)::text[]) as is_plan_merge_permission;
+  	new.function_permissions ->> jsonb_object_keys(new.function_permissions) = any(enum_range('PLAN_OWNER_SOURCE'::permissions.permission, 'PLAN_OWNER_COLLABORATOR_TARGET'::permissions.permission)::text[]) as is_plan_merge_permission;
 
   create temp table _validate_actions_table as
   select
     jsonb_object_keys(new.action_permissions) as action_key,
     new.action_permissions ->> jsonb_object_keys(new.action_permissions) as action_permission,
-    jsonb_object_keys(new.action_permissions) = any(enum_range(null::metadata.action_permission_key)::text[]) as valid_action_key,
-    new.action_permissions ->> jsonb_object_keys(new.action_permissions) = any(enum_range(null::metadata.permission)::text[]) as valid_action_permission,
-  	new.action_permissions ->> jsonb_object_keys(new.action_permissions) = any(enum_range('PLAN_OWNER_SOURCE'::metadata.permission, 'PLAN_OWNER_COLLABORATOR_TARGET'::metadata.permission)::text[]) as is_plan_merge_permission;
+    jsonb_object_keys(new.action_permissions) = any(enum_range(null::permissions.action_permission_key)::text[]) as valid_action_key,
+    new.action_permissions ->> jsonb_object_keys(new.action_permissions) = any(enum_range(null::permissions.permission)::text[]) as valid_action_permission,
+  	new.action_permissions ->> jsonb_object_keys(new.action_permissions) = any(enum_range('PLAN_OWNER_SOURCE'::permissions.permission, 'PLAN_OWNER_COLLABORATOR_TARGET'::permissions.permission)::text[]) as is_plan_merge_permission;
 
 
   -- Get any invalid Action Keys
@@ -158,6 +158,6 @@ end
 $$;
 
 create trigger validate_permissions_trigger
-  before insert or update on metadata.user_role_permission
+  before insert or update on permissions.user_role_permission
   for each row
-  execute function metadata.validate_permissions_json();
+  execute function permissions.validate_permissions_json();

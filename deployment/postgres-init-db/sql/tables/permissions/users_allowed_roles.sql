@@ -1,8 +1,8 @@
-create table metadata.users_allowed_roles(
-  username text references metadata.users
+create table permissions.users_allowed_roles(
+  username text references permissions.users
     on update cascade
     on delete cascade,
-  allowed_role text not null references metadata.user_roles
+  allowed_role text not null references permissions.user_roles
     on update cascade
     on delete cascade,
 
@@ -12,5 +12,5 @@ create table metadata.users_allowed_roles(
     check (username != 'Mission Model' and username != 'Aerie Legacy' )
 );
 
-comment on table metadata.users_allowed_roles is e''
+comment on table permissions.users_allowed_roles is e''
 'An association between a user and all of the roles they are allowed to use for Hasura requests';
