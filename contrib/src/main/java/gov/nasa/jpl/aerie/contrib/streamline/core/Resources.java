@@ -99,9 +99,11 @@ public final class Resources {
     final Duration startTime = currentTime();
     Condition result = (positive, atEarliest, atLatest) -> {
       var currentDynamics = resource.getDynamics();
+      var elapsedTime = currentTime().minus(startTime);
       boolean haveChanged = startingDynamics.match(
           start -> currentDynamics.match(
-              current -> !current.data().equals(start.data().step(currentTime().minus(startTime))),
+              current -> !current.data().equals(start.data().step(elapsedTime)) ||
+                         !current.expiry().equals(start.expiry().minus(elapsedTime)),
               ignored -> true),
           startException -> currentDynamics.match(
               ignored -> true,
