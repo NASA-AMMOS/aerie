@@ -20,10 +20,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Triple;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -34,6 +36,37 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SimulationDuplicationTest {
+  CachedEngineStore store;
+  final private class InfiniteCapacityEngineStore implements CachedEngineStore{
+    private Map<SimulationEngineConfiguration, List<CheckpointSimulationDriver.CachedSimulationEngine>> store = new HashMap<>();
+    @Override
+    public void save(
+        final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine,
+        final SimulationEngineConfiguration configuration)
+    {
+      store.computeIfAbsent(configuration, conf -> new ArrayList<>());
+      store.get(configuration).add(cachedSimulationEngine);
+    }
+
+    @Override
+    public List<CheckpointSimulationDriver.CachedSimulationEngine> getCachedEngines(final SimulationEngineConfiguration configuration) {
+      return store.get(configuration);
+    }
+  }
+
+  public static SimulationEngineConfiguration mockConfiguration(){
+    return new SimulationEngineConfiguration(
+        Map.of(),
+        Instant.EPOCH,
+        new MissionModelId(0)
+    );
+  }
+
+  @BeforeEach
+  void beforeEach(){
+    this.store = new InfiniteCapacityEngineStore();
+  }
+
   @Test
   void emptyPlanTest() {
     final SimulationResults results = SimulationDriver.simulate(
@@ -42,7 +75,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         Instant.EPOCH,
-        Duration.HOUR);
+        Duration.HOUR,
+        () -> false);
     final List<Triple<Integer, String, ValueSchema>> standardTopics = List.of(
         Triple.of(
             0,
@@ -74,8 +108,10 @@ public class SimulationDuplicationTest {
 
   @Test
   void testDuplicate() {
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(
-        missionModel), List.of(Duration.of(5, MINUTES)));
+    final var results = simulateWithCheckpoints(
+        CheckpointSimulationDriver.CachedSimulationEngine.empty(missionModel),
+        List.of(Duration.of(5, MINUTES)),
+        store);
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
         Map.of(),
@@ -83,38 +119,19 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
+        () -> false,
         $ -> {});
-    assertEquals(expected, results.results());
-    final SimulationDriver.SimulationResultsWithCheckpoints newResults = simulateWithCheckpoints(results.checkpoints().get(0), List.of());
-    assertEquals(expected, newResults.results());
+    assertEquals(expected, results);
+    final var newResults = simulateWithCheckpoints(store.getCachedEngines(mockConfiguration()).get(0), List.of(), store);
+    assertEquals(expected, newResults);
   }
 
-  static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
-      final List<Duration> desiredCheckpoints
+  static SimulationResults simulateWithCheckpoints(
+      final CheckpointSimulationDriver.CachedSimulationEngine cachedEngine,
+      final List<Duration> desiredCheckpoints,
+      final CachedEngineStore engineStore
   ) {
-
-    final var engine = new SimulationEngine();
-//     Begin tracking all resources.
-    for (final var entry : missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-
-      engine.trackResource(name, resource, Duration.ZERO);
-    }
-
-    final var timeline = new TemporalEventSource();
-    final var cells = new LiveCells(timeline, missionModel.getInitialCells());
-
-    // Start daemon task(s) immediately, before anything else happens.
-    engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-    {
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
-      timeline.add(commit);
-    }
-
-
-    return SimulationDriver.simulateWithCheckpoints(
+    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         Map.of(),
         Instant.EPOCH,
@@ -122,50 +139,13 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         $ -> {},
-        new SimulationDriver.CachedSimulationEngine(
-            Duration.ZERO,
-            List.of(),
-            engine,
-            cells,
-            timeline.points(),
-            new Topic<>()
-        ),
-        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
-  }
-
-  static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
-      final SimulationDriver.CachedSimulationEngine cachedEngine,
-      final List<Duration> desiredCheckpoints
-  ) {
-
-    // Begin tracking all resources.
-//    for (final var entry : missionModel.getResources().entrySet()) {
-//      final var name = entry.getKey();
-//      final var resource = entry.getValue();
-//
-//      engine.trackResource(name, resource, elapsedTime);
-//    }
-
-//    if (true) {
-//      // Start daemon task(s) immediately, before anything else happens.
-//      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-//      {
-//        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-//        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-//        timeline.add(commit);
-//      }
-//    }
-
-    return SimulationDriver.simulateWithCheckpoints(
-        missionModel,
-        Map.of(),
-        Instant.EPOCH,
-        Duration.HOUR,
-        Instant.EPOCH,
-        Duration.HOUR,
-        $ -> {},
+        () -> false,
         cachedEngine,
-        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
+        CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
+        CheckpointSimulationDriver.noCondition(),
+        engineStore,
+        mockConfiguration()
+        ));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
@@ -338,10 +318,5 @@ public class SimulationDuplicationTest {
         return this;
       }
     };
-  }
-
-  @AfterEach
-  void afterEach() {
-    assertEquals(SimulationDriver.cachedEngines.size(), SimulationEngine.getNumActiveSimulationEngines());
   }
 }
