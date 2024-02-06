@@ -20,6 +20,19 @@ import java.util.Set;
 public interface Plan {
 
   /**
+   * Replace a directive by another in the plan and its attached Evaluation
+   * @param toBeReplaced the activity to be replaced
+   * @param replacement the replacement activity
+   */
+  void replace(SchedulingActivityDirective toBeReplaced, SchedulingActivityDirective replacement);
+
+  /**
+   * Duplicates a plan
+   * @return the duplicate plan
+   */
+  Plan duplicate();
+
+  /**
    * adds the given activity instances to the scheduled plan solution
    *
    * the provided instances must have start times specified
