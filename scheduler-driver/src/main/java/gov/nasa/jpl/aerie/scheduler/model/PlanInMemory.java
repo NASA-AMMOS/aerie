@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,34 +33,36 @@ public class PlanInMemory implements Plan {
   protected Evaluation evaluation;
 
   /**
-   * container of all activity instances in plan, indexed by name
-   */
-  private final HashMap<SchedulingActivityDirectiveId, SchedulingActivityDirective> actsById
-      = new HashMap<>();
-
-  /**
-   * container of all activity instances in plan, indexed by type
-   */
-  private final HashMap<ActivityType, List<SchedulingActivityDirective>> actsByType
-      = new HashMap<>();
-
-  /**
    * container of all activity instances in plan, indexed by start time
    */
-  private final TreeMap<Duration, List<SchedulingActivityDirective>> actsByTime
-      = new TreeMap<>();
-
-  /**
-   * container of all activity instances in plan
-   */
-  private final HashSet<SchedulingActivityDirective> actsSet
-      = new HashSet<>();
+  private final TreeMap<Duration, List<SchedulingActivityDirective>> actsByTime;
 
   /**
    * ctor creates a new empty solution plan
    *
    */
   public PlanInMemory() {
+    this.actsByTime = new TreeMap<>();
+  }
+
+  @Override
+  public void replace(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement) {
+    if(evaluation != null) evaluation.replace(toBeReplaced, replacement);
+    remove(toBeReplaced);
+    add(replacement);
+  }
+
+  public PlanInMemory(final PlanInMemory other){
+    if(other.evaluation != null) this.evaluation = other.evaluation.duplicate();
+    this.actsByTime = new TreeMap<>();
+    for(final var entry: other.actsByTime.entrySet()){
+      this.actsByTime.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+    }
+  }
+
+  @Override
+  public Plan duplicate() {
+    return new PlanInMemory(this);
   }
 
   /**
@@ -72,12 +75,19 @@ public class PlanInMemory implements Plan {
     }
   }
 
+  public int size(){
+    int size = 0;
+    for(final var entry: this.actsByTime.entrySet()){
+      size += entry.getValue().size();
+    }
+    return size;
+  }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void add(SchedulingActivityDirective act) {
+  public void add(final SchedulingActivityDirective act) {
     if (act == null) {
       throw new IllegalArgumentException(
           "adding null activity to plan");
@@ -89,20 +99,8 @@ public class PlanInMemory implements Plan {
     }
     final var id = act.getId();
     assert id != null;
-    if (actsById.containsKey(id)) {
-      throw new IllegalArgumentException(
-          "adding activity with duplicate name=" + id + " to plan");
-    }
-    final var type = act.getType();
-    assert type != null;
-
-    actsById.put(id, act);
-    //REVIEW: use a cleaner multimap? maybe guava
     actsByTime.computeIfAbsent(startT, k -> new LinkedList<>())
               .add(act);
-    actsByType.computeIfAbsent(type, k -> new LinkedList<>())
-              .add(act);
-    actsSet.add(act);
   }
 
   @Override
@@ -114,13 +112,8 @@ public class PlanInMemory implements Plan {
 
   @Override
   public void remove(SchedulingActivityDirective act) {
-    //TODO: handle ownership. Constraint propagation ?
-    actsById.remove(act.getId());
     var acts = actsByTime.get(act.startOffset());
     if (acts != null) acts.remove(act);
-    acts = actsByType.get(act.getType());
-    if (acts != null) acts.remove(act);
-    actsSet.remove(act);
   }
 
   /**
@@ -145,12 +138,24 @@ public class PlanInMemory implements Plan {
    */
   @Override
   public Map<ActivityType, List<SchedulingActivityDirective>> getActivitiesByType() {
-    return Collections.unmodifiableMap(actsByType);
+    final var map = new HashMap<ActivityType, List<SchedulingActivityDirective>>();
+    for(final var entry: this.actsByTime.entrySet()){
+      for(final var activity : entry.getValue()){
+        map.computeIfAbsent(activity.type(), t -> new ArrayList<>()).add(activity);
+      }
+    }
+    return Collections.unmodifiableMap(map);
   }
 
   @Override
   public Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
-    return Collections.unmodifiableMap(actsById);
+    final var map = new HashMap<SchedulingActivityDirectiveId, SchedulingActivityDirective>();
+    for(final var entry: this.actsByTime.entrySet()){
+      for(final var activity : entry.getValue()){
+        map.put(activity.id(), activity);
+      }
+    }
+    return Collections.unmodifiableMap(map);
   }
 
   /**
@@ -158,7 +163,11 @@ public class PlanInMemory implements Plan {
    */
   @Override
   public Set<SchedulingActivityDirective> getActivities() {
-    return Collections.unmodifiableSet(actsSet);
+    final var set = new HashSet<SchedulingActivityDirective>();
+    for(final var entry: this.actsByTime.entrySet()){
+      set.addAll(entry.getValue());
+    }
+    return Collections.unmodifiableSet(set);
   }
 
   /**
