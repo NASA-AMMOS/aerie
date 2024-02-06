@@ -195,7 +195,7 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
 
     // Do a binary search to find the exact transition time
     while (end.longerThan(start.plus(EPSILON))) {
-      Duration midpoint = start.plus(end).dividedBy(2);
+      Duration midpoint = start.plus(end.minus(start).dividedBy(2));
       if (expires.test(midpoint)) {
         end = midpoint;
       } else {
