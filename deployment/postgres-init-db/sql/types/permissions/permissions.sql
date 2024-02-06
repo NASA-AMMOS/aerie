@@ -1,6 +1,6 @@
 -- User Role Permissions Validation assumes that the Plan Merge Permissions
 -- are covered by the range [PLAN_OWNER_SOURCE - PLAN_OWNER_COLLABORATOR_TARGET]
-create type metadata.permission
+create type permissions.permission
   as enum (
     'NO_CHECK',
     'OWNER',
@@ -16,7 +16,7 @@ create type metadata.permission
     'PLAN_OWNER_COLLABORATOR_TARGET'
   );
 
-create type metadata.action_permission_key
+create type permissions.action_permission_key
   as enum (
     'check_constraints',
     'create_expansion_rule',
@@ -29,7 +29,7 @@ create type metadata.action_permission_key
     'simulate'
   );
 
-create type metadata.function_permission_key
+create type permissions.function_permission_key
   as enum (
     'apply_preset',
     'begin_merge',

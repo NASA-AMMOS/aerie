@@ -1,4 +1,4 @@
-create function metadata.get_role(hasura_session json)
+create function permissions.get_role(hasura_session json)
 returns text
 stable
 language plpgsql as $$
@@ -11,7 +11,7 @@ begin
     return _role;
   end if;
   _username := hasura_session ->> 'x-hasura-user-id';
-  select default_role from metadata.users u
+  select default_role from permissions.users u
   where u.username = _username into _role;
   if _role is null then
     raise exception 'Invalid username: %', _username;
