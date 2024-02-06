@@ -59,23 +59,26 @@ public final class IntervalFunctions {
           exp.data(),
           t,
           maximumError));
+      var effectiveMinSamplePeriod = Duration.min(e, minimumSamplePeriod);
+      var effectiveMaxSamplePeriod = Duration.min(e, maximumSamplePeriod);
+
       try {
         double intervalSize = solver.solve(
             100,
             errorFn,
-            Duration.min(e, minimumSamplePeriod).ratioOver(SECOND),
-            Duration.min(e, maximumSamplePeriod).ratioOver(SECOND));
+            effectiveMinSamplePeriod.ratioOver(SECOND),
+            effectiveMaxSamplePeriod.ratioOver(SECOND));
         return Duration.roundNearest(intervalSize, SECOND);
       } catch (NoBracketingException x) {
         if (errorFn.value(minimumSamplePeriod.ratioOver(SECOND)) > 0) {
           // maximum error > estimated error, best case
-          return maximumSamplePeriod;
+          return effectiveMaxSamplePeriod;
         } else {
           // maximum error < estimated error, worst case
-          return minimumSamplePeriod;
+          return effectiveMinSamplePeriod;
         }
       } catch (TooManyEvaluationsException | NumberIsTooLargeException x) {
-        return minimumSamplePeriod;
+        return effectiveMinSamplePeriod;
       }
     };
   }
