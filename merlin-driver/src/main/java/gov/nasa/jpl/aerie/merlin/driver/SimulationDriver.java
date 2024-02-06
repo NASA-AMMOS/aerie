@@ -401,6 +401,65 @@ public final class SimulationDriver {
     }
   }
 
+  public static TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>,Map<ActivityDirectiveId, TaskId>, Boolean>
+      stopOnceAllTasksAreFinished(){
+    return (engine, schedule, actIdToTaskId) -> actIdToTaskId
+        .values()
+        .stream()
+        .allMatch(engine::isTaskComplete);
+  }
+
+  public static TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>,Map<ActivityDirectiveId, TaskId>, Boolean>
+  stopAtEndOfSimulationDuration(){
+    return (engine, schedule, actIdToTaskId) -> false;
+  }
+  public static TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>,Map<ActivityDirectiveId, TaskId>, Boolean>
+  stopOnceSpecificTaskHasFinished(final ActivityDirectiveId activityDirectiveId){
+    return (engine, schedule, actIdToTaskId) -> (actIdToTaskId.containsKey(activityDirectiveId)
+                                                 && engine.isTaskComplete(actIdToTaskId.get(activityDirectiveId)));
+  }
+
+  public static SimulationResultsWithCheckpoints computeResults(final SimulationResultsInputsWithCheckpoints simulationResultsInputs){
+    return new SimulationResultsWithCheckpoints(computeResults(simulationResultsInputs.simulationResultsInputs()), simulationResultsInputs.checkpoints());
+  }
+
+  public static SimulationResults computeResults(
+      final SimulationResultsComputerInputs simulationResultsInputs,
+      final Set<String> resourceNames){
+    return SimulationEngine.computeResults(
+        simulationResultsInputs.engine(),
+        simulationResultsInputs.simulationStartTime(),
+        simulationResultsInputs.elapsedTime(),
+        simulationResultsInputs.activityTopic(),
+        simulationResultsInputs.timeline(),
+        simulationResultsInputs.serializableTopics(),
+        resourceNames
+    );
+  }
+
+  public static SimulationResults computeResults(
+      final SimulationResultsComputerInputs simulationResultsInputs){
+    return SimulationEngine.computeResults(
+        simulationResultsInputs.engine(),
+        simulationResultsInputs.simulationStartTime(),
+        simulationResultsInputs.elapsedTime(),
+        simulationResultsInputs.activityTopic(),
+        simulationResultsInputs.timeline(),
+        simulationResultsInputs.serializableTopics()
+    );
+  }
+
+  public static SimulationEngine.SimulationActivityExtract computeActivitySimulationResults(
+      final SimulationResultsComputerInputs simulationResultsInputs){
+    return SimulationEngine.computeActivitySimulationResults(
+        simulationResultsInputs.engine(),
+        simulationResultsInputs.simulationStartTime(),
+        simulationResultsInputs.elapsedTime(),
+        simulationResultsInputs.activityTopic(),
+        simulationResultsInputs.timeline(),
+        simulationResultsInputs.serializableTopics());
+  }
+
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
     try (final var engine = new SimulationEngine()) {
