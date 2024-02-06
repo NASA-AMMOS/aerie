@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 /**
@@ -48,5 +48,12 @@ public class TimeExpressionLatching extends TimeExpression {
       first = false;
     }
     return null;
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expr1.extractResources(names);
+    this.expr2.extractResources(names);
+    //not adding reset expression as it will disappear
   }
 }

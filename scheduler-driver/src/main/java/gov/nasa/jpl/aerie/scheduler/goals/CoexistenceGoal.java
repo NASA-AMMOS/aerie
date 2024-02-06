@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -19,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -27,7 +27,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
   private TimeExpression startExpr;
   private TimeExpression endExpr;
-  private DurationExpression durExpr;
   private String alias;
 
   /**
@@ -35,10 +34,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    */
   protected Expression<Spans> expr;
 
-  /**
-   * used to check this hasn't changed, as if it did, that's probably unanticipated behavior
-   */
-  protected Spans evaluatedExpr;
   /**
    * the builder can construct goals piecemeal via a series of method calls
    */
@@ -176,34 +171,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) { //TODO: check if interval gets split and if so, notify user?
-
-    //NOTE: temporalContext IS A WINDOWS OVER WHICH THE GOAL APPLIES, USUALLY SOMETHING BROAD LIKE A MISSION PHASE
-    //NOTE: expr IS A WINDOWS OVER WHICH A COEXISTENCEGOAL APPLIES, FOR EXAMPLE THE WINDOWS CORRESPONDING TO 5 SECONDS AFTER EVERY BASICACTIVITY IS SCHEDULED
-    //NOTE: IF temporalContext IS SMALLER THAN expr OR SOMEHOW BISECTS IT, ODDS ARE THIS ISN'T ANTICIPATED USER BEHAVIOR. GENERALLY, ANALYZEWHEN SHOULDN'T BE PROVIDING
-    //        A SMALLER WINDOW, AND HONESTLY DOESN'T MAKE SENSE TO USE ON TOP BUT IS SUPPORTED TO MAKE CODE MORE CONSISTENT. IF ONE NEEDS TO USE ANALYZEWHEN ON TOP
-    //        OF COEXISTENCEGOAL THEY SHOULD PROBABLY REFACTOR THEIR COEXISTENCE GOAL. ONE SUCH USE WOULD BE IF THE COEXISTENCEGOAL WAS SPECIFIED IN TERMS OF
-    //        AN ACTIVITYEXPRESSION AND THEN ANALYZEWHEN WAS A MISSION PHASE, ALTHOUGH IT IS POSSIBLE TO JUST SPECIFY AN EXPRESSION<WINDOWS> THAT COMBINES THOSE.
-
     //unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
 
-    //make sure it hasn't changed
-    if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
-      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
-    }
-    else if (this.initiallyEvaluatedTemporalContext == null) {
-      this.initiallyEvaluatedTemporalContext = windows;
-    }
-
     final var anchors = expr.evaluate(simulationResults, evaluationEnvironment).intersectWith(windows);
-
-    //make sure expr hasn't changed either as that could yield unexpected behavior
-    if (this.evaluatedExpr != null && !anchors.isCollectionSubsetOf(this.evaluatedExpr)) {
-      throw new UnexpectedTemporalContextChangeException("The expr Windows has changed from: " + this.expr.toString() + " to " + anchors.toString());
-    }
-    else if (this.initiallyEvaluatedTemporalContext == null) {
-      this.evaluatedExpr = anchors;
-    }
 
     // can only check if bisection has happened if you can extract the interval from expr like you do in computeRange but without the final windows parameter,
     //    then use that and compare it to local variable windows to check for bisection;
@@ -307,6 +278,14 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           existingEnvironment.discreteExternalProfiles()
       );
     }
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    super.extractResources(names);
+    this.expr.extractResources(names);
+    if(this.startExpr != null) this.startExpr.extractResources(names);
+    if(this.endExpr != null) this.endExpr.extractResources(names);
   }
 
   /**

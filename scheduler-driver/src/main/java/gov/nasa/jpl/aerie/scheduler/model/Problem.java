@@ -107,11 +107,11 @@ public class Problem {
    *
    * @param globalConstraint IN the global constraint
    */
-  public void add(GlobalConstraint globalConstraint) {
+  public void add(GlobalConstraintWithIntrospection globalConstraint) {
     this.globalConstraints.add(globalConstraint);
   }
 
-  public List<GlobalConstraint> getGlobalConstraints() {
+  public List<GlobalConstraintWithIntrospection> getGlobalConstraints() {
     return this.globalConstraints;
   }
 

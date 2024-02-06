@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * describes some criteria that is desired in the solution plans
@@ -248,6 +249,10 @@ public class Goal {
 
   }//Builder
 
+  public void extractResources(Set<String> names) {
+    temporalContext.extractResources(names);
+    if(resourceConstraints != null) resourceConstraints.extractResources(names);
+  }
 
   /**
    * fetches the human-legible identifier of the goal

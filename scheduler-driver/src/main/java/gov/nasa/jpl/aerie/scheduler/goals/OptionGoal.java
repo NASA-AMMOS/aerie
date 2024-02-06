@@ -9,6 +9,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class OptionGoal extends Goal {
 
@@ -33,6 +34,14 @@ public class OptionGoal extends Goal {
                                                      final SimulationResults simulationResults,
                                                      final EvaluationEnvironment evaluationEnvironment) {
     throw new NotImplementedException("Conflict detection is performed at solver level");
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    super.extractResources(names);
+    for(final var goal: goals){
+      goal.extractResources(names);
+    }
   }
 
   public static class Builder extends Goal.Builder<OptionGoal.Builder> {

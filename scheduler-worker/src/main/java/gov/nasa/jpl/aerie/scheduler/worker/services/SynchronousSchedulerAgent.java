@@ -30,7 +30,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -374,23 +373,6 @@ public record SynchronousSchedulerAgent(
       throw new ResultsProtocolFailure("schedule specification with id %s is stale: %s".formatted(
           request.specificationId(), failure));
     }
-  }
-
-  /**
-   * collects the scheduling goals that apply to the current scheduling run on the target plan
-   *
-   * @param planMetadata details of the plan container whose associated goals should be collected
-   * @param mission the mission model that the plan adheres to, possibly associating additional relevant goals
-   * @return the list of goals relevant to the target plan
-   * @throws ResultsProtocolFailure when the constraints could not be loaded, or the data stores could not be
-   *     reached
-   */
-  private List<GlobalConstraint> loadConstraints(final PlanMetadata planMetadata, final MissionModel<?> mission) {
-    //TODO: is the plan and mission model enough to find the relevant constraints? (eg what about sandbox toggling?)
-    //TODO: load global constraints from scheduler data store?
-    //TODO: load activity type constraints from somewhere (scheduler store? mission model?)
-    //TODO: somehow apply user control over which constraints to enforce during scheduling
-    return List.of();
   }
 
   /**

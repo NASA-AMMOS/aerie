@@ -6,6 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
+import java.util.Set;
+
 public class TimeExpressionBefore extends TimeExpression {
 
   protected final String name;
@@ -30,5 +32,10 @@ public class TimeExpressionBefore extends TimeExpression {
     return res.compareTo(from) > 0 ? // If we want a range of possibles
         Interval.between(from, res) :
         Interval.between(res, from);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    expr.extractResources(names);
   }
 }
