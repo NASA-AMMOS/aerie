@@ -24,6 +24,9 @@ import getLogger from './utils/logger.js';
 import { commandExpansionRouter } from './routes/command-expansion.js';
 import { seqjsonRouter } from './routes/seqjson.js';
 import { getHasuraSession, canUserPerformAction, ENDPOINTS_WHITELIST } from './utils/hasura.js';
+import type { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads';
+import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
+import { PromiseThrottler } from './utils/PromiseThrottler.js';
 
 const logger = getLogger('app');
 
@@ -37,7 +40,14 @@ app.use(bodyParser.json({ limit: '100mb' }));
 DbExpansion.init();
 export const db = DbExpansion.getDb();
 
-export const piscina = new Piscina({ filename: new URL('worker.js', import.meta.url).pathname });
+export const piscina = new Piscina({
+  filename: new URL('worker.js', import.meta.url).pathname,
+  minThreads: parseInt(getEnv().SEQUENCING_WORKER_NUM),
+  resourceLimits: { maxOldGenerationSizeMb: parseInt(getEnv().SEQUENCING_MAX_WORKER_HEAP_MB) },
+});
+export const promiseThrottler = new PromiseThrottler(parseInt(getEnv().SEQUENCING_WORKER_NUM) - 2);
+export const typeCheckingCache = new Map<string, Promise<Result<CacheItem, ReturnType<UserCodeError['toJSON']>[]>>>();
+
 const temporalPolyfillTypes = fs.readFileSync(new URL('TemporalPolyfillTypes.ts', import.meta.url).pathname, 'utf-8');
 
 export type Context = {
@@ -234,4 +244,7 @@ app.use((err: any, _: Request, res: Response, next: NextFunction) => {
 
 app.listen(PORT, () => {
   logger.info(`connected to port ${PORT}`);
+  logger.info(`Worker pool initialized:
+              Total workers started: ${piscina.threads.length},
+              Heap Size per Worker: ${getEnv().SEQUENCING_MAX_WORKER_HEAP_MB} MB`);
 });
