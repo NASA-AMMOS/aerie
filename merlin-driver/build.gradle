@@ -37,6 +37,7 @@ dependencies {
   api project(':merlin-sdk')
   api 'org.glassfish:javax.json:1.1.4'
   implementation 'it.unimi.dsi:fastutil:8.5.12'
+  implementation 'org.apache.commons:commons-collections4:4.4'
 
   testImplementation project(':merlin-framework')
   testImplementation project(':merlin-framework-junit')
