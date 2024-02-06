@@ -256,19 +256,38 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
    * Finds all roots of this function in the future
    */
   private Stream<Duration> findFutureRoots() {
+    // TODO: In some sense, isn't having an infinite coefficient the same as a vertical line,
+    //   hence the same as having a root at x = 0?
+    //   Unless the value itself is non-finite, that is...
     // If this polynomial can never have a root, fail immediately
     if (this.isNonFinite() || this.isConstant()) {
       return Stream.empty();
     }
 
-    // Defining epsilon keeps the Laguerre solver fast and stable for poorly-behaved polynomials.
-    final double epsilon = 2 * Arrays.stream(coefficients).map(Math::ulp).max().orElseThrow();
+    if (coefficients[0] == 0.0) {
+      return Stream.of(ZERO);
+    }
+
+    // If the polynomial is linear, solve it analytically for performance
+    if (this.degree() <= 1) {
+      double t = -getCoefficient(0) / getCoefficient(1);
+      if (t >= -ABSOLUTE_ACCURACY_FOR_DURATIONS / 2 && t <= MAX_SECONDS_FOR_DURATION) {
+        return Stream.of(Duration.roundNearest(t, SECOND));
+      } else {
+        return Stream.empty();
+      }
+    }
+
+    // Condition the problem by dividing through by the first coefficient:
+    double[] conditionedCoefficients = Arrays.stream(coefficients).map(c -> c / coefficients[0]).toArray();
+    // Defining epsilon keeps the Laguerre solver faster and more stable for poorly-behaved polynomials.
+    final double epsilon = 2 * Arrays.stream(conditionedCoefficients).map(Math::ulp).max().orElseThrow();
     final Complex[] solutions = new LaguerreSolver(0, ABSOLUTE_ACCURACY_FOR_DURATIONS, epsilon)
-            .solveAllComplex(coefficients, 0);
+            .solveAllComplex(conditionedCoefficients, 0);
     return Arrays.stream(solutions)
                  .filter(solution -> Math.abs(solution.getImaginary()) < epsilon)
                  .map(Complex::getReal)
-                 .filter(t -> t >= 0 && t <= MAX_SECONDS_FOR_DURATION)
+                 .filter(t -> t >= -ABSOLUTE_ACCURACY_FOR_DURATIONS / 2 && t <= MAX_SECONDS_FOR_DURATION)
                  .sorted()
                  .map(t -> Duration.roundNearest(t, SECOND));
   }
