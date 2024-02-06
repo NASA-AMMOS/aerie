@@ -51,12 +51,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    protected DurationExpression durExpression;
-    public Builder durationIn(DurationExpression durExpr){
-      this.durExpression = durExpr;
-      return getThis();
-    }
-
     protected TimeExpression startExpr;
 
     public Builder endsAt(TimeExpression timeExpression) {
@@ -148,8 +142,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       goal.endExpr = endExpr;
 
-      goal.durExpr = durExpression;
-
       goal.alias = alias;
 
       if(name==null){
@@ -203,12 +195,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         endTimeRange = this.endExpr.computeTime(simulationResults, plan, window.interval());
         activityFinder.endsIn(endTimeRange);
         activityCreationTemplate.endsIn(endTimeRange);
-      }
-      /* this will override whatever might be already present in the template */
-      if(durExpr!=null){
-        var durRange = this.durExpr.compute(window.interval(), simulationResults);
-        activityFinder.durationIn(durRange);
-        activityCreationTemplate.durationIn(durRange);
       }
 
       final var existingActs = plan.find(
