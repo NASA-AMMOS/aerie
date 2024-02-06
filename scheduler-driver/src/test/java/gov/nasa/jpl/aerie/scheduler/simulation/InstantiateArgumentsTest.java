@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
@@ -207,7 +208,7 @@ public class InstantiateArgumentsTest {
       }
 
       @Override
-      public Task<T> duplicate() {
+      public Task<T> duplicate(Executor executor) {
         return this;
       }
     };

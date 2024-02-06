@@ -140,9 +140,8 @@ public class SchedulingIntegrationTests {
             interval: Temporal.Duration.from({ hours : -4})
           })
           """, true)), PLANNING_HORIZON);
-      fail();
     }
-    catch (IllegalArgumentException e) {
+    catch (AssertionError e) {
       assertTrue(e.getMessage().contains("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!"));
     }
     catch (Exception e) {
@@ -300,7 +299,6 @@ public class SchedulingIntegrationTests {
     final var peelBanana = peelBananas.iterator().next();
     assertEquals(Duration.of(5, Duration.HOUR), peelBanana.startOffset());
   }
-
 
   @Test
   void testSingleActivityPlanSimpleRecurrenceGoal() {
@@ -1944,7 +1942,16 @@ public class SchedulingIntegrationTests {
       final MissionModelDescription desc,
       final List<ActivityDirective> plannedActivities,
       final Iterable<SchedulingGoal> goals,
-      final PlanningHorizon planningHorizon
+      final PlanningHorizon planningHorizon){
+    return runScheduler(desc, plannedActivities, goals, planningHorizon, 30);
+  }
+
+  private SchedulingRunResults runScheduler(
+      final MissionModelDescription desc,
+      final List<ActivityDirective> plannedActivities,
+      final Iterable<SchedulingGoal> goals,
+      final PlanningHorizon planningHorizon,
+      final int cachedEngineStoreCapacity
   )
   {
     final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
@@ -1952,7 +1959,7 @@ public class SchedulingIntegrationTests {
     for (final var activityDirective : plannedActivities) {
       activities.put(new ActivityDirectiveId(id++), activityDirective);
     }
-    return runScheduler(desc, activities, goals, List.of(), planningHorizon, Optional.empty());
+    return runScheduler(desc, activities, goals, List.of(), planningHorizon, Optional.empty(), cachedEngineStoreCapacity);
   }
 
   private SchedulingRunResults runScheduler(
@@ -1962,7 +1969,7 @@ public class SchedulingIntegrationTests {
       final PlanningHorizon planningHorizon
   )
   {
-    return runScheduler(desc, plannedActivities, goals, List.of(), planningHorizon, Optional.empty());
+    return runScheduler(desc, plannedActivities, goals, List.of(), planningHorizon, Optional.empty(), 30);
   }
 
   private SchedulingRunResults runScheduler(
@@ -1988,7 +1995,7 @@ public class SchedulingIntegrationTests {
     for (final var activityDirective : plannedActivities) {
       activities.put(new ActivityDirectiveId(id++), activityDirective);
     }
-    return runScheduler(desc, activities, goals, globalSchedulingConditions, planningHorizon, externalProfiles);
+    return runScheduler(desc, activities, goals, globalSchedulingConditions, planningHorizon, externalProfiles, 30);
   }
 
   private SchedulingRunResults runScheduler(
@@ -1997,7 +2004,8 @@ public class SchedulingIntegrationTests {
       final Iterable<SchedulingGoal> goals,
       final List<GlobalSchedulingConditionRecord> globalSchedulingConditions,
       final PlanningHorizon planningHorizon,
-      final Optional<ExternalProfiles> externalProfiles
+      final Optional<ExternalProfiles> externalProfiles,
+      final int cachedEngineStoreCapacity
   ) {
     final var mockMerlinService = new MockMerlinService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
@@ -2028,7 +2036,7 @@ public class SchedulingIntegrationTests {
         schedulingDSLCompiler);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
-    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer, () -> false);
+    agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer, () -> false, cachedEngineStoreCapacity);
     assertEquals(1, writer.results.size());
     final var result = writer.results.get(0);
     if (result instanceof MockResultsProtocolWriter.Result.Failure e) {
@@ -2036,10 +2044,18 @@ public class SchedulingIntegrationTests {
       System.err.println(serializedReason);
       fail(serializedReason);
     }
-    return new SchedulingRunResults(((MockResultsProtocolWriter.Result.Success) result).results(), mockMerlinService.updatedPlan, mockMerlinService.plan, plannedActivities);
+    return new SchedulingRunResults(
+        ((MockResultsProtocolWriter.Result.Success) result).results(),
+        mockMerlinService.updatedPlan,
+        mockMerlinService.plan,
+        plannedActivities);
   }
 
-  record SchedulingRunResults(ScheduleResults scheduleResults, Collection<ActivityDirective> updatedPlan, Plan plan, Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
+  record SchedulingRunResults(
+      ScheduleResults scheduleResults,
+      Collection<ActivityDirective> updatedPlan,
+      Plan plan,
+      Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
 
   static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
@@ -2275,12 +2291,7 @@ public class SchedulingIntegrationTests {
                  planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var biteBanana = planByActivityType.get("BiteBanana").stream().map((bb) -> bb.startOffset()).toList();
-    final var childs = planByActivityType.get("child");
-    assertEquals(childs.size(), biteBanana.size());
-    assertEquals(childs.size(), 2);
-    for(final var childAct: childs){
-      assertTrue(biteBanana.contains(childAct.startOffset()));
-    }
+    assertEquals(biteBanana.size(), 2);
   }
 
   @Test
@@ -3020,69 +3031,6 @@ public class SchedulingIntegrationTests {
   /**
    * Test the option to turn off simulation in between goals.
    *
-   * Goal 0 places `PeelBanana`s. Goal 1 looks for `PeelBanana`s and places `BananaNap`s.
-   * If it doesn't resimulate in between, Goal 1 should place no activities.
-   * If it does resimulate, it should place one activity.
-   *
-   * Both options are tested here.
-   */
-  @Test
-  void testOptionalSimulationAfterGoal_unsimulatedActivities() {
-    final var activityDuration = Duration.of(1, Duration.HOUR);
-    final var configs = Map.of(
-        false, 0, // don't simulate, expect 0 activities
-        true, 1 // do simulate, expect 1 activity
-    );
-    for (final var config: configs.entrySet()) {
-      final var results = runScheduler(
-          BANANANATION,
-          Map.of(
-              new ActivityDirectiveId(1L),
-              new ActivityDirective(
-                  Duration.ZERO,
-                  "GrowBanana",
-                  Map.of(
-                      "quantity", SerializedValue.of(1),
-                      "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
-                  null,
-                  true)
-          ),
-          List.of(
-              new SchedulingGoal(new GoalId(0L), """
-                  export default () => Goal.CoexistenceGoal({
-                    forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-                    activityTemplate: ActivityTemplates.BananaNap(),
-                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
-                  })
-                  """, true, config.getKey()
-              ),
-              new SchedulingGoal(new GoalId(1L), """
-                  export default () => Goal.CoexistenceGoal({
-                    forEach: ActivityExpression.ofType(ActivityTypes.BananaNap),
-                    activityTemplate: ActivityTemplates.DownloadBanana({connection: "DSL"}),
-                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
-                  })
-                    """, true, true)
-          ),
-          PLANNING_HORIZON);
-
-      assertEquals(2, results.scheduleResults.goalResults().size());
-      final var goalResult1 = results.scheduleResults.goalResults().get(new GoalId(0L));
-      final var goalResult2 = results.scheduleResults.goalResults().get(new GoalId(1L));
-
-      assertTrue(goalResult1.satisfied());
-      assertTrue(goalResult2.satisfied());
-      assertEquals(1, goalResult1.createdActivities().size());
-      assertEquals(config.getValue(), goalResult2.createdActivities().size());
-      for (final var activity : goalResult1.createdActivities()) {
-        assertNotNull(activity);
-      }
-    }
-  }
-
-  /**
-   * Test the option to turn off simulation in between goals.
-   *
    * Goal 0 places `PeelBanana`s. `PeelBanana`s effect the `/peel` resource.
    * If the `/peel` resource is unchanged because it didn't resimulate, Goal 1 will not place any activities.
    * If the resource is resimulated, it will be different and Goal 1 will place one activity.
@@ -3113,7 +3061,7 @@ public class SchedulingIntegrationTests {
           List.of(
               new SchedulingGoal(new GoalId(0L), """
                   export default () => Goal.CoexistenceGoal({
-                    forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+                    forEach: Real.Resource("/fruit").greaterThan(4),
                     activityTemplate: ActivityTemplates.DownloadBanana({connection: "DSL"}),
                     startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
                   })

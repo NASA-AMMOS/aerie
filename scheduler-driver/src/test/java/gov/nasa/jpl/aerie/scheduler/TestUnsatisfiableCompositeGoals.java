@@ -20,9 +20,15 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.stream.Stream;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,6 +48,10 @@ public class TestUnsatisfiableCompositeGoals {
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
     return SimulationUtility.buildProblemFromFoo(h);
+  }
+
+  private static Problem makeTestMissionABWithCache() {
+    return SimulationUtility.buildProblemFromFoo(h, 15);
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
@@ -70,9 +80,13 @@ public class TestUnsatisfiableCompositeGoals {
         .build();
   }
 
-  @Test
-  public void testAndWithoutBackTrack() throws SchedulingInterruptedException {
-    final var problem = makeTestMissionAB();
+  static Stream<Arguments> testAndWithoutBackTrack() {
+    return Stream.of(Arguments.of(makeTestMissionAB(), Duration.of(144, HOURS)),
+                     Arguments.of(makeTestMissionABWithCache(), Duration.of(68, HOURS).plus(48, MINUTES)));
+  }
+  @ParameterizedTest
+  @MethodSource
+  public void testAndWithoutBackTrack(Problem problem, Duration result) throws SchedulingInterruptedException {
     problem.setInitialPlan(makePlanA12(problem));
     final var actTypeControllable = problem.getActivityType("ControllableDurationActivity");
     final var actTypeBasic = problem.getActivityType("BasicActivity");
@@ -102,7 +116,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBar));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBasic));
     Assertions.assertEquals(plan.getActivities().size(), 5);
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(result, problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -135,7 +149,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t1hr, actTypeControllable));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeControllable));
     Assertions.assertEquals(plan.getActivities().size(), 2);
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(Duration.of(48, HOURS), problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -175,7 +189,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBar));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeBasic));
     Assertions.assertEquals(plan.getActivities().size(), 4);
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(Duration.of(96, HOURS), problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -210,7 +224,7 @@ public class TestUnsatisfiableCompositeGoals {
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t1hr, actTypeControllable));
     Assertions.assertTrue(TestUtility.activityStartingAtTime(plan, t2hr, actTypeControllable));
     Assertions.assertEquals(plan.getActivities().size(), 2);
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(Duration.ZERO, problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -249,6 +263,6 @@ public class TestUnsatisfiableCompositeGoals {
 
     var plan = solver.getNextSolution().orElseThrow();
     assertEquals(0, plan.getActivities().size());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(Duration.of(20, Duration.SECONDS), problem.getSimulationFacade().totalSimulationTime());
   }
 }

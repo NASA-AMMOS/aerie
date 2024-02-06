@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -67,6 +68,8 @@ import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
+import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.apache.commons.lang3.tuple.Pair;
@@ -86,8 +89,7 @@ public record SynchronousSchedulerAgent(
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode,
-    SchedulingDSLCompilationService schedulingDSLCompilationService
-)
+    SchedulingDSLCompilationService schedulingDSLCompilationService)
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
@@ -110,9 +112,10 @@ public record SynchronousSchedulerAgent(
   public void schedule(
       final ScheduleRequest request,
       final ResultsProtocol.WriterRole writer,
-      final Supplier<Boolean> canceledListener
+      final Supplier<Boolean> canceledListener,
+      final int sizeCachedEngineStore
   ) {
-    try {
+    try(final var cachedEngineStore = new InMemoryCachedEngineStore(sizeCachedEngineStore)) {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
@@ -126,128 +129,130 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
-      try(final var simulationFacade = new SimulationFacade(
-          planningHorizon,
+      final var simulationFacade = new SimulationFacade(
           schedulerMissionModel.missionModel(),
           schedulerMissionModel.schedulerModel(),
-          canceledListener)) {
-        final var problem = new Problem(
-            schedulerMissionModel.missionModel(),
-            planningHorizon,
-            simulationFacade,
-            schedulerMissionModel.schedulerModel()
-        );
-        final var externalProfiles = loadExternalProfiles(planMetadata.planId());
-        final var initialSimulationResults = loadSimulationResults(planMetadata);
-        //seed the problem with the initial plan contents
-        final var loadedPlanComponents = loadInitialPlan(planMetadata, problem, initialSimulationResults);
-        problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults);
-        problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
-        //apply constraints/goals to the problem
-        final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
-        final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
-        specification.globalSchedulingConditions().forEach($ -> {
-          if (!$.enabled()) return;
-          final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
-              merlinService,
-              planMetadata.planId(),
-              $.source().source(),
-              externalProfiles.resourceTypes());
-          if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
-            compiledGlobalSchedulingConditions.addAll(conditionBuilder(r.value(), problem));
-          } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
-            failedGlobalSchedulingConditions.add(r.errors());
-          } else {
-            throw new Error("Unhandled variant of %s: %s".formatted(
-                SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
-                result));
-          }
-        });
-
-        if (!failedGlobalSchedulingConditions.isEmpty()) {
-          writer.failWith(b -> b
-              .type("GLOBAL_SCHEDULING_CONDITIONS_FAILED")
-              .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1
-                                                                            ? "s"
-                                                                            : ""))
-              .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
-          return;
+          cachedEngineStore,
+          planningHorizon,
+          new SimulationEngineConfiguration(
+              planMetadata.modelConfiguration(),
+              planMetadata.horizon().getStartInstant(),
+              new MissionModelId(planMetadata.modelId())),
+          canceledListener);
+      final var problem = new Problem(
+          schedulerMissionModel.missionModel(),
+          planningHorizon,
+          simulationFacade,
+          schedulerMissionModel.schedulerModel()
+      );
+      final var externalProfiles = loadExternalProfiles(planMetadata.planId());
+      final var initialSimulationResults = loadSimulationResults(planMetadata);
+      //seed the problem with the initial plan contents
+      final var loadedPlanComponents = loadInitialPlan(planMetadata, problem, initialSimulationResults);
+      problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults, loadedPlanComponents.idMap());
+      problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
+      //apply constraints/goals to the problem
+      final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
+      final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
+      specification.globalSchedulingConditions().forEach($ -> {
+        if (!$.enabled()) return;
+        final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+            merlinService,
+            planMetadata.planId(),
+            $.source().source(),
+            externalProfiles.resourceTypes());
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
+          compiledGlobalSchedulingConditions.addAll(conditionBuilder(r.value(), problem));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
+          failedGlobalSchedulingConditions.add(r.errors());
+        } else {
+          throw new Error("Unhandled variant of %s: %s".formatted(
+              SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
+              result));
         }
+      });
 
-        compiledGlobalSchedulingConditions.forEach(problem::add);
-
-        final var orderedGoals = new ArrayList<Goal>();
-        final var goals = new HashMap<Goal, GoalId>();
-        final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
-        final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
-        for (final var goalRecord : specification.goalsByPriority()) {
-          if (!goalRecord.enabled()) continue;
-          final var result = compileGoalDefinition(
-              merlinService,
-              planMetadata.planId(),
-              goalRecord.definition(),
-              schedulingDSLCompilationService,
-              externalProfiles.resourceTypes());
-          if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
-            compiledGoals.add(Pair.of(goalRecord, r.value()));
-          } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
-            failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
-          } else {
-            throw new Error("Unhandled variant of %s: %s".formatted(
-                SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
-                result));
-          }
-        }
-        if (!failedGoals.isEmpty()) {
-          writer.failWith(b -> b
-              .type("SCHEDULING_GOALS_FAILED")
-              .message("Scheduling goal%s failed".formatted(failedGoals.size() > 1 ? "s" : ""))
-              .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
-          return;
-        }
-        for (final var compiledGoal : compiledGoals) {
-          final var goal = GoalBuilder
-              .goalOfGoalSpecifier(
-                  compiledGoal.getValue(),
-                  specification.horizonStartTimestamp(),
-                  specification.horizonEndTimestamp(),
-                  problem::getActivityType,
-                  compiledGoal.getKey().simulateAfter());
-          orderedGoals.add(goal);
-          goals.put(goal, compiledGoal.getKey().id());
-        }
-        problem.setGoals(orderedGoals);
-
-        final var scheduler = new PrioritySolver(problem, specification.analysisOnly());
-        //run the scheduler to find a solution to the posed problem, if any
-        final var solutionPlan = scheduler.getNextSolution().orElseThrow(
-            () -> new ResultsProtocolFailure("scheduler returned no solution"));
-
-        final var activityToGoalId = new HashMap<SchedulingActivityDirective, GoalId>();
-        for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
-          for (final var activity : entry.getValue().getInsertedActivities()) {
-            activityToGoalId.put(activity, goals.get(entry.getKey()));
-          }
-        }
-        //store the solution plan back into merlin (and reconfirm no intervening mods!)
-        //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
-        ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
-        final var instancesToIds = storeFinalPlan(
-            planMetadata,
-            loadedPlanComponents.idMap(),
-            loadedPlanComponents.merlinPlan(),
-            solutionPlan,
-            activityToGoalId,
-            schedulerMissionModel.schedulerModel()
-        );
-        final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
-        final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
-        //collect results and notify subscribers of success
-        final var results = collectResults(solutionPlan, instancesToIds, goals);
-        writer.succeedWith(results, datasetId);
-      } catch (SchedulingInterruptedException e) {
-          writer.reportCanceled(e);
+      if (!failedGlobalSchedulingConditions.isEmpty()) {
+        writer.failWith(b -> b
+            .type("GLOBAL_SCHEDULING_CONDITIONS_FAILED")
+            .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1
+                                                                          ? "s"
+                                                                          : ""))
+            .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
+        return;
       }
+
+      compiledGlobalSchedulingConditions.forEach(problem::add);
+
+      final var orderedGoals = new ArrayList<Goal>();
+      final var goals = new HashMap<Goal, GoalId>();
+      final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
+      final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
+      for (final var goalRecord : specification.goalsByPriority()) {
+        if (!goalRecord.enabled()) continue;
+        final var result = compileGoalDefinition(
+            merlinService,
+            planMetadata.planId(),
+            goalRecord.definition(),
+            schedulingDSLCompilationService,
+            externalProfiles.resourceTypes());
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+          compiledGoals.add(Pair.of(goalRecord, r.value()));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+          failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
+        } else {
+          throw new Error("Unhandled variant of %s: %s".formatted(
+              SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
+              result));
+        }
+      }
+      if (!failedGoals.isEmpty()) {
+        writer.failWith(b -> b
+            .type("SCHEDULING_GOALS_FAILED")
+            .message("Scheduling goal%s failed".formatted(failedGoals.size() > 1 ? "s" : ""))
+            .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
+        return;
+      }
+      for (final var compiledGoal : compiledGoals) {
+        final var goal = GoalBuilder
+            .goalOfGoalSpecifier(
+                compiledGoal.getValue(),
+                specification.horizonStartTimestamp(),
+                specification.horizonEndTimestamp(),
+                problem::getActivityType,
+                compiledGoal.getKey().simulateAfter());
+        orderedGoals.add(goal);
+        goals.put(goal, compiledGoal.getKey().id());
+      }
+      problem.setGoals(orderedGoals);
+
+      final var scheduler = new PrioritySolver(problem, specification.analysisOnly());
+      //run the scheduler to find a solution to the posed problem, if any
+      final var solutionPlan = scheduler.getNextSolution().orElseThrow(
+          () -> new ResultsProtocolFailure("scheduler returned no solution"));
+
+      final var activityToGoalId = new HashMap<SchedulingActivityDirective, GoalId>();
+      for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
+        for (final var activity : entry.getValue().getInsertedActivities()) {
+          activityToGoalId.put(activity, goals.get(entry.getKey()));
+        }
+      }
+      //store the solution plan back into merlin (and reconfirm no intervening mods!)
+      //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
+      ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
+      final var instancesToIds = storeFinalPlan(
+          planMetadata,
+          loadedPlanComponents.idMap(),
+          loadedPlanComponents.merlinPlan(),
+          solutionPlan,
+          activityToGoalId,
+          schedulerMissionModel.schedulerModel()
+      );
+      final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
+      final var datasetId = storeSimulationResults(solutionPlan, planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
+      //collect results and notify subscribers of success
+      final var results = collectResults(solutionPlan, instancesToIds, goals);
+      writer.succeedWith(results, datasetId);
     } catch (final SpecificationLoadException e) {
       writer.failWith(b -> b
           .type("SPECIFICATION_LOAD_EXCEPTION")
@@ -281,6 +286,13 @@ public record SynchronousSchedulerAgent(
           .type("IO_EXCEPTION")
           .message(e.toString())
           .trace(e));
+    } catch (SchedulingInterruptedException e) {
+      writer.reportCanceled(e);
+    } catch (Exception e) {
+      writer.failWith(b -> b
+          .type("OTHER_EXCEPTION")
+          .message(e.toString())
+          .trace(e));
     }
   }
 
@@ -298,33 +310,37 @@ public record SynchronousSchedulerAgent(
     return merlinService.getExternalProfiles(planId);
   }
 
-  private Optional<DatasetId> storeSimulationResults(PlanningHorizon planningHorizon, SimulationFacade simulationFacade, PlanMetadata planMetadata,
-                                                     final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
-      throws MerlinServiceException, IOException, SchedulingInterruptedException {
-    if(!simulationFacade.areInitialSimulationResultsStale()) return Optional.empty();
+  private Optional<DatasetId> storeSimulationResults(
+      final Plan plan,
+      PlanningHorizon planningHorizon,
+      SimulationFacade simulationFacade,
+      PlanMetadata planMetadata,
+      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
+  throws MerlinServiceException, IOException, SchedulingInterruptedException
+  {
     //finish simulation until end of horizon before posting results
     try {
-      simulationFacade.computeSimulationResultsUntil(planningHorizon.getEndAerie());
+      final var simulationData = simulationFacade.simulateWithResults(plan, planningHorizon.getEndAerie());
+      final var schedID_to_MerlinID =
+          schedDirectiveToMerlinId.entrySet().stream()
+                                  .collect(Collectors.toMap(
+                                      (a) -> new SchedulingActivityDirectiveId(a.getKey().id().id()), Map.Entry::getValue));
+      final var schedID_to_simID =
+          simulationData.mapping();
+      final var simID_to_MerlinID =
+          schedID_to_simID.entrySet().stream().collect(Collectors.toMap(
+              Map.Entry::getValue,
+              (a) -> schedID_to_MerlinID.get(a.getKey())));
+      if(simID_to_MerlinID.values().containsAll(schedDirectiveToMerlinId.values()) && schedDirectiveToMerlinId.values().containsAll(simID_to_MerlinID.values())){
+        return Optional.of(merlinService.storeSimulationResults(planMetadata,
+                                                                simulationData.driverResults(),
+                                                                simID_to_MerlinID));
+      } else{
+        //schedule in simulation is inconsistent with current state of the plan (user probably disabled simulation for some of the goals)
+        return Optional.empty();
+      }
     } catch (SimulationFacade.SimulationException e) {
       throw new RuntimeException("Error while running simulation before storing simulation results after scheduling", e);
-    }
-    final var schedID_to_MerlinID =
-        schedDirectiveToMerlinId.entrySet().stream()
-                                .collect(Collectors.toMap(
-                                    (a) -> new SchedulingActivityDirectiveId(a.getKey().id().id()), Map.Entry::getValue));
-    final var schedID_to_simID =
-        simulationFacade.getActivityIdCorrespondence();
-    final var simID_to_MerlinID =
-        schedID_to_simID.entrySet().stream().collect(Collectors.toMap(
-            Map.Entry::getValue,
-            (a) -> schedID_to_MerlinID.get(a.getKey())));
-    if(simID_to_MerlinID.values().containsAll(schedDirectiveToMerlinId.values()) && schedDirectiveToMerlinId.values().containsAll(simID_to_MerlinID.values())){
-      return Optional.of(merlinService.storeSimulationResults(planMetadata,
-                                                              simulationFacade.getLatestDriverSimulationResults().get(),
-                                                              simID_to_MerlinID));
-    } else{
-      //schedule in simulation is inconsistent with current state of the plan (user probably disabled simulation for some of the goals)
-      return Optional.empty();
     }
   }
 

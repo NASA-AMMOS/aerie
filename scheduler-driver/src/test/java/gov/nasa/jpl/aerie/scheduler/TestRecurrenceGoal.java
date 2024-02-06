@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
+import static gov.nasa.jpl.aerie.scheduler.TestApplyWhen.dur;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -45,7 +46,7 @@ public class TestRecurrenceGoal {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 1, 20), problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -75,7 +76,7 @@ public class TestRecurrenceGoal {
     catch (Exception e) {
       fail(e.getMessage());
     }
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(Duration.ZERO, problem.getSimulationFacade().totalSimulationTime());
   }
 
 }

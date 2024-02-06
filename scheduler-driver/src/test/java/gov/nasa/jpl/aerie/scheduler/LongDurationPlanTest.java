@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
+import static gov.nasa.jpl.aerie.scheduler.TestApplyWhen.dur;
 import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,7 +61,7 @@ public class LongDurationPlanTest {
 
     assertTrue(plan.isPresent());
     assertSetEquality(plan.get().getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(Duration.ZERO, problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -78,6 +80,6 @@ public class LongDurationPlanTest {
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(149399, 57, 0), problem.getSimulationFacade().totalSimulationTime());
   }
 }

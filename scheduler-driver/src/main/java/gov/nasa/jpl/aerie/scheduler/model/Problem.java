@@ -2,13 +2,14 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public class Problem {
   /**
    * global constraints in the mission model, indexed by name
    */
-  private final List<GlobalConstraint> globalConstraints
+  private final List<GlobalConstraintWithIntrospection> globalConstraints
       = new java.util.LinkedList<>();
 
   private final Map<String, LinearProfile> realExternalProfiles = new HashMap<>();
@@ -74,7 +75,11 @@ public class Problem {
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon, SimulationFacade simulationFacade, SchedulerModel schedulerModel) {
+  public Problem(
+      MissionModel<?> mission,
+      PlanningHorizon planningHorizon,
+      SimulationFacade simulationFacade,
+      SchedulerModel schedulerModel) {
     this.missionModel = mission;
     this.schedulerModel = schedulerModel;
     this.initialPlan = new PlanInMemory();
@@ -87,7 +92,7 @@ public class Problem {
     }
     this.simulationFacade = simulationFacade;
     if(this.simulationFacade != null) {
-      this.simulationFacade.setActivityTypes(this.getActivityTypes());
+      this.simulationFacade.addActivityTypes(this.getActivityTypes());
     }
     this.initialSimulationResults = Optional.empty();
   }
@@ -138,12 +143,17 @@ public class Problem {
    * @param initialSimulationResults optional initial simulation results associated to the initial plan
    * @param plan the initial seed plan that schedulers may start from
    */
-  public void setInitialPlan(final Plan plan, final Optional<SimulationResults> initialSimulationResults) {
+  public void setInitialPlan(
+      final Plan plan,
+      final Optional<SimulationResults> initialSimulationResults,
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> mapping) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
+        plan,
         simulationResults,
-        SimulationResultsConverter.convertToConstraintModelResults(
-            simulationResults)));
+        SimulationResultsConverter.convertToConstraintModelResults(simulationResults),
+        mapping
+        ));
   }
 
   /**
@@ -152,7 +162,7 @@ public class Problem {
    * @param plan the initial seed plan that schedulers may start from
    */
   public void setInitialPlan(final Plan plan) {
-    setInitialPlan(plan, Optional.empty());
+    setInitialPlan(plan, Optional.empty(), Map.of());
   }
 
   public Optional<SimulationData> getInitialSimulationResults(){ return initialSimulationResults; }
