@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput.ProfileSegmentI
 import gov.nasa.jpl.aerie.e2e.types.Plan;
 import gov.nasa.jpl.aerie.e2e.types.ProfileSegment;
 import gov.nasa.jpl.aerie.e2e.types.SchedulingRequest.SchedulingStatus;
+import gov.nasa.jpl.aerie.e2e.types.SimulationDataset;
 import gov.nasa.jpl.aerie.e2e.types.ValueSchema;
 import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
@@ -22,6 +23,7 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -286,7 +288,8 @@ public class SchedulingTests {
     // All directive have their simulated activity
     final var planActivities = plan.activityDirectives();
     final var simActivities = simResults.activities();
-
+    planActivities.sort(Comparator.comparingInt(Plan.ActivityDirective::id));
+    simActivities.sort(Comparator.comparingInt(SimulationDataset.SimulatedActivity::directiveId));
     assertEquals(2, planActivities.size());
     assertEquals(planActivities.size(), simActivities.size());
     for(int i = 0; i<planActivities.size(); ++i) {
