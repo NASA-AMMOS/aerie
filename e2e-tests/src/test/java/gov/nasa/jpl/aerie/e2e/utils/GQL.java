@@ -434,6 +434,7 @@ public enum GQL {
         status
         reason
         canceled
+        dataset_id
         simulation_start_time
         simulation_end_time
         simulated_activities {
@@ -453,6 +454,7 @@ public enum GQL {
         status
         reason
         canceled
+        dataset_id
         simulation_start_time
         simulation_end_time
         simulated_activities {

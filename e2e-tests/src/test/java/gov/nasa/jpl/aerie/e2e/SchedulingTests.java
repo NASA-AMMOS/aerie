@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput.ProfileSegmentI
 import gov.nasa.jpl.aerie.e2e.types.Plan;
 import gov.nasa.jpl.aerie.e2e.types.ProfileSegment;
 import gov.nasa.jpl.aerie.e2e.types.SchedulingRequest.SchedulingStatus;
+import gov.nasa.jpl.aerie.e2e.types.SimulationDataset;
 import gov.nasa.jpl.aerie.e2e.types.ValueSchema;
 import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
@@ -381,22 +382,17 @@ public class SchedulingTests {
       final var plan = hasura.getPlan(planId);
       final var simResults = hasura.getSimulationDatasetByDatasetId(datasetId);
 
-      // All directive have their simulated activity
-      final var planActivities = plan.activityDirectives();
-      final var simActivities = simResults.activities();
-      assertEquals(4, planActivities.size());
-      assertEquals(planActivities.size(), simActivities.size());
-      for(int i = 0; i<planActivities.size(); ++i) {
-        boolean match = false;
-        for(int j = 0; j<simActivities.size(); ++j) {
-          if (planActivities.get(i).id() == simActivities.get(j).directiveId() &&
-              planActivities.get(i).startOffset().equals(simActivities.get(j).startOffset())) {
-            match = true;
-            break;
-          }
-        }
-        assertTrue(match);;
-      }
+    // All directive have their simulated activity
+    final var planActivities = plan.activityDirectives();
+    final var simActivities = simResults.activities();
+    planActivities.sort(Comparator.comparingInt(Plan.ActivityDirective::id));
+    simActivities.sort(Comparator.comparingInt(SimulationDataset.SimulatedActivity::directiveId));
+    assertEquals(4, planActivities.size());
+    assertEquals(planActivities.size(), simActivities.size());
+    for(int i = 0; i<planActivities.size(); ++i) {
+      assertEquals(planActivities.get(i).id(), simActivities.get(i).directiveId());
+      assertEquals(planActivities.get(i).startOffset(), simActivities.get(i).startOffset());
+    }
 
       // All directive have their simulated activity
       final var profiles = hasura.getProfiles(datasetId);
@@ -466,7 +462,7 @@ public class SchedulingTests {
    * and it only has satisfied goals
    */
   @Test
-  void schedulingPostsSimResultsWithSimulation() throws IOException {
+  void schedulingDoesNotPostSimResultsWithSimulation() throws IOException {
     insertActivities();
     insertSatisfyingActivities();
     final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
@@ -475,9 +471,10 @@ public class SchedulingTests {
         schedulingSpecId,
         0);
     try{
-      hasura.awaitSimulation(planId);
+      final var response = hasura.awaitSimulation(planId);
+      final var simDataset = hasura.getSimulationDataset(response.simDatasetId());
       final var schedulingResults = hasura.awaitScheduling(schedulingSpecId);
-      assertNull(schedulingResults.datasetId());
+      assertEquals(schedulingResults.datasetId(), simDataset.datasetId());
     } finally {
       // Teardown: Delete Goal
       hasura.deleteSchedulingGoal(coexistenceGoalId);
