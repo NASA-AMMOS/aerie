@@ -57,6 +57,11 @@ public final class ReplayingTask<Return> implements Task<Return> {
     }
 
     @Override
+    public Scheduler tailCall(final TaskFactory<?> child) {
+      return this.yield(TaskStatus.tailCalling(child, ReplayingTask.this));
+    }
+
+    @Override
     public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
       return this.yield(TaskStatus.awaiting(condition, ReplayingTask.this));
     }

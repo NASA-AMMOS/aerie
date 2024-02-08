@@ -30,8 +30,12 @@ public interface Context {
   <Event> void emit(Event event, Topic<Event> topic);
 
   void spawn(TaskFactory<?> task);
+
   <Return> void call(TaskFactory<Return> task);
 
+  <Return> void tailCall(TaskFactory<Return> task);
+
   void delay(Duration duration);
+
   void waitUntil(Condition condition);
 }

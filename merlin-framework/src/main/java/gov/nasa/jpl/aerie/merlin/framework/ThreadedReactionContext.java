@@ -64,6 +64,12 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
+  public <T> void tailCall(final TaskFactory<T> task) {
+    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler = this.handle.tailCall(task);
+  }
+
+  @Override
   public void delay(final Duration duration) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.delay(duration);

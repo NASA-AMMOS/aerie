@@ -9,5 +9,7 @@ public interface TaskHandle {
 
   Scheduler call(TaskFactory<?> child);
 
+  Scheduler tailCall(TaskFactory<?> child);
+
   Scheduler await(gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition);
 }

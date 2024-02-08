@@ -219,14 +219,19 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
-      final var target = TaskId.generate();
-      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
-      SimulationEngine.this.taskParent.put(target, task);
-      SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
-      frame.signal(JobId.forTask(target));
-
-      this.tasks.put(task, progress.continueWith(s.continuation()));
-      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
+      if (s.tailCall()) {
+        this.tasks.put(task, new ExecutionState.InProgress<>(progress.startOffset, s.child().create(this.executor)));
+        this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
+      } else {
+        final var target = TaskId.generate();
+        this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
+        this.taskParent.put(target, task);
+        this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
+        frame.signal(JobId.forTask(target));
+        
+        this.tasks.put(task, progress.continueWith(s.continuation()));
+        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
+      }
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());

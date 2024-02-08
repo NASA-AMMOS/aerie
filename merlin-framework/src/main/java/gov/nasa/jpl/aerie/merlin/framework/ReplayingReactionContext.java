@@ -79,6 +79,14 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
+  public <T> void tailCall(final TaskFactory<T> task) {
+    this.memory.doOnce(() -> {
+      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+      this.scheduler = this.handle.tailCall(task);
+    });
+  }
+
+  @Override
   public void delay(final Duration duration) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
