@@ -144,33 +144,37 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
   }
 
   public static DiscreteProfile fromSimulatedProfile(final List<ProfileSegment<SerializedValue>> simulatedProfile) {
-    return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
+    return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of, true);
   }
 
   public static DiscreteProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<ProfileSegment<Optional<SerializedValue>>> externalProfile) {
-    return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
+    return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $, false);
   }
 
   private static <T> DiscreteProfile fromProfileHelper(
       final Duration offsetFromPlanStart,
       final List<ProfileSegment<T>> profile,
-      final Function<T, Optional<SerializedValue>> transform
+      final Function<T, Optional<SerializedValue>> transform,
+      final boolean close
   ) {
     final var result = new IntervalMap.Builder<SerializedValue>();
     var cursor = offsetFromPlanStart;
+    var c = 0;
     for (final var pair: profile) {
       final var nextCursor = cursor.plus(pair.extent());
 
       final var value = transform.apply(pair.dynamics());
       final Duration finalCursor = cursor;
+      final var isLast = c == profile.size() - 1;
       value.ifPresent(
           $ -> result.set(
-              Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
+              Interval.between(finalCursor, Inclusive, nextCursor, (close && isLast) ? Inclusive : Exclusive),
               $
           )
       );
 
       cursor = nextCursor;
+      c++;
     }
 
     return new DiscreteProfile(result.build());
