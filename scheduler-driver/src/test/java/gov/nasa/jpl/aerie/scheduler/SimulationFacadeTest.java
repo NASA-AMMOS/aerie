@@ -31,7 +31,6 @@ import java.util.function.Function;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -171,7 +170,7 @@ public class SimulationFacadeTest {
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive,5, Exclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive,5, Inclusive, SECONDS), false)
     );
     assertEquals(expected, actual);
   }
@@ -184,7 +183,7 @@ public class SimulationFacadeTest {
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
     );
     assertEquals(expected, actual);
   }
@@ -198,7 +197,7 @@ public class SimulationFacadeTest {
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
     );
     assertEquals(expected, actual);
   }
@@ -212,7 +211,7 @@ public class SimulationFacadeTest {
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
     );
     assertEquals(expected, actual);
   }
@@ -226,7 +225,7 @@ public class SimulationFacadeTest {
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
     );
     assertEquals(expected, actual);
   }

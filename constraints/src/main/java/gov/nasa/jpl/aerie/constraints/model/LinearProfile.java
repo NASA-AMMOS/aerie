@@ -175,28 +175,30 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
   }
 
   public static LinearProfile fromSimulatedProfile(final List<ProfileSegment<RealDynamics>> simulatedProfile) {
-    return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
+    return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of, true);
   }
 
   public static LinearProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<ProfileSegment<Optional<RealDynamics>>> externalProfile) {
-    return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
+    return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $, false);
   }
 
   private static <T> LinearProfile fromProfileHelper(
       final Duration offsetFromPlanStart,
       final List<ProfileSegment<T>> profile,
-      final Function<T, Optional<RealDynamics>> transform
+      final Function<T, Optional<RealDynamics>> transform,
+      final boolean close
   ) {
     final var result = new IntervalMap.Builder<LinearEquation>();
     var cursor = offsetFromPlanStart;
+    var c = 0;
     for (final var pair: profile) {
       final var nextCursor = cursor.plus(pair.extent());
-
+      final var isLast = c == profile.size() - 1;
       final var value = transform.apply(pair.dynamics());
       final Duration finalCursor = cursor;
       value.ifPresent(
           $ -> result.set(
-              Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
+              Interval.between(finalCursor, Inclusive, nextCursor, (close && isLast) ? Inclusive :Exclusive),
               new LinearEquation(
                   finalCursor,
                   $.initial,
@@ -206,6 +208,7 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
       );
 
       cursor = nextCursor;
+      c++;
     }
 
     return new LinearProfile(result.build());
