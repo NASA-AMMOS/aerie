@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,6 +68,10 @@ public sealed interface SerializedValue {
     }
   }
 
+  interface DirectNumericValue {
+    NumericValue asNumericValue();
+  }
+
   record NumericValue(BigDecimal value) implements SerializedValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
@@ -76,13 +81,68 @@ public sealed interface SerializedValue {
     // `BigDecimal#equals` is too strict -- values differing only in representation need to be considered the same.
     @Override
     public boolean equals(final Object obj) {
-      if (!(obj instanceof NumericValue other)) return false;
-      return (this.value.compareTo(other.value) == 0);
+      if (obj instanceof NumericValue other) {
+        return (this.value.compareTo(other.value) == 0);
+      } else if (obj instanceof DirectNumericValue other) {
+        return (this.value.compareTo(other.asNumericValue().value) == 0);
+      }
+      return false;
     }
 
     @Override
     public int hashCode() {
       return this.value.stripTrailingZeros().hashCode();
+    }
+  }
+
+  record IntValue(int value) implements SerializedValue, DirectNumericValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onNumeric(new BigDecimal(value));
+    }
+
+    @Override
+    public NumericValue asNumericValue() {
+      return new NumericValue(new BigDecimal(value));
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      return asNumericValue().equals(obj);
+    }
+  }
+
+  record LongValue(long value) implements SerializedValue, DirectNumericValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onNumeric(new BigDecimal(value));
+    }
+
+    @Override
+    public NumericValue asNumericValue() {
+      return new NumericValue(new BigDecimal(value));
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      return asNumericValue().equals(obj);
+    }
+  }
+
+  record DoubleValue(double value) implements SerializedValue, DirectNumericValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onNumeric(new BigDecimal(value, MathContext.DECIMAL64));
+    }
+
+    @Override
+    public NumericValue asNumericValue() {
+      return new NumericValue(new BigDecimal(value, MathContext.DECIMAL64));
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      return asNumericValue().equals(obj);
     }
   }
 
@@ -136,11 +196,11 @@ public sealed interface SerializedValue {
   /**
    * Creates a {@link SerializedValue} containing a real number.
    *
-   * @param value Any double} value.
+   * @param value Any double value.
    * @return A new {@link SerializedValue} containing a real number.
    */
   static SerializedValue of(final double value) {
-    return new NumericValue(BigDecimal.valueOf(value));
+    return new DoubleValue(value);
   }
 
   /**
@@ -150,7 +210,17 @@ public sealed interface SerializedValue {
    * @return A new {@link SerializedValue} containing an integral number.
    */
   static SerializedValue of(final long value) {
-    return new NumericValue(BigDecimal.valueOf(value));
+    return new LongValue(value);
+  }
+
+  /**
+   * Creates a {@link SerializedValue} containing an integral number.
+   *
+   * @param value Any integer value.
+   * @return A new {@link SerializedValue} containing an integral number.
+   */
+  static SerializedValue of(final int value) {
+    return new IntValue(value);
   }
 
   /**
