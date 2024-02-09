@@ -444,19 +444,20 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var name = id.id();
       final var resource = state.resource();
+      final boolean allowRLE = resource.allowRunLengthCompression();
 
       switch (resource.getType()) {
         case "real" -> realProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
+                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics, allowRLE)));
 
         case "discrete" -> discreteProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
+                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics, allowRLE)));
 
         default ->
             throw new IllegalArgumentException(
@@ -608,11 +609,24 @@ public final class SimulationEngine implements AutoCloseable {
     <Dynamics> Target apply(Resource<Dynamics> resource, Dynamics dynamics);
   }
 
+  private static <Target>
+  void appendProfileSegment(ArrayList<ProfileSegment<Target>> profile, Duration duration, Target value,
+                            boolean allowRunLengthCompression) {
+    final int s = profile.size();
+    final ProfileSegment lastSeg = s > 0 ? profile.get(s - 1) : null;
+    if (allowRunLengthCompression && lastSeg != null && value.equals(lastSeg.dynamics())) {
+        profile.set(s - 1, new ProfileSegment<>(lastSeg.extent().plus(duration), value));
+    } else {
+      profile.add(new ProfileSegment<>(duration, value));
+    }
+  }
+
   private static <Target, Dynamics>
   List<ProfileSegment<Target>> serializeProfile(
       final Duration elapsedTime,
       final ProfilingState<Dynamics> state,
-      final Translator<Target> translator
+      final Translator<Target> translator,
+      final boolean allowRunLengthCompression
   ) {
     final var profile = new ArrayList<ProfileSegment<Target>>(state.profile().segments().size());
 
@@ -621,17 +635,20 @@ public final class SimulationEngine implements AutoCloseable {
       var segment = iter.next();
       while (iter.hasNext()) {
         final var nextSegment = iter.next();
-
-        profile.add(new ProfileSegment<>(
-            nextSegment.startOffset().minus(segment.startOffset()),
-            translator.apply(state.resource(), segment.dynamics())));
+        appendProfileSegment(profile,
+                             nextSegment.startOffset().minus(segment.startOffset()),
+                             translator.apply(state.resource(), segment.dynamics()),
+                             allowRunLengthCompression);
         segment = nextSegment;
       }
 
-      profile.add(new ProfileSegment<>(
-          elapsedTime.minus(segment.startOffset()),
-          translator.apply(state.resource(), segment.dynamics())));
+      appendProfileSegment(profile,
+                           elapsedTime.minus(segment.startOffset()),
+                           translator.apply(state.resource(), segment.dynamics()),
+                           allowRunLengthCompression);
     }
+
+    profile.trimToSize();
 
     return profile;
   }
