@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -27,11 +26,12 @@ import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulePlanGrounder;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
-import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,7 +63,9 @@ public class PrioritySolver implements Solver {
 
   private boolean checkSimBeforeEvaluatingGoal;
 
-  private SimulationResults lastSimulationResults;
+  private boolean atLeastOneSimulateAfter;
+
+  private SimulationData cachedSimulationResultsBeforeGoalEvaluation;
 
   /**
    * boolean stating whether only conflict analysis should be performed or not
@@ -136,6 +139,7 @@ public class PrioritySolver implements Solver {
     checkNotNull(problem, "creating solver with null input problem descriptor");
     this.checkSimBeforeInsertingActivities = true;
     this.checkSimBeforeEvaluatingGoal = true;
+    this.atLeastOneSimulateAfter = false;
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
     this.analysisOnly = analysisOnly;
@@ -189,7 +193,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts, boolean actsFromInitialPlan) throws SchedulingInterruptedException{
+  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts) throws SchedulingInterruptedException{
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
     logger.info("Inserting new activities in the plan to check plan validity");
@@ -205,7 +209,7 @@ public class PrioritySolver implements Solver {
     final var planWithAddedActivities = plan.duplicate();
     planWithAddedActivities.add(acts);
     try {
-      if(checkSimBeforeInsertingActivities) simulationFacade.simulateNoResultsUntilEndPlan(planWithAddedActivities);
+      if(checkSimBeforeInsertingActivities) simulationFacade.simulateNoResultsAllActivities(planWithAddedActivities);
       plan = planWithAddedActivities;
     } catch (SimulationFacade.SimulationException e) {
       allGood = false;
@@ -224,7 +228,7 @@ public class PrioritySolver implements Solver {
     //turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
-    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime(), true);
+    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime());
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     plan.addEvaluation(new Evaluation());
@@ -283,6 +287,8 @@ public class PrioritySolver implements Solver {
     final var rawGoals = problem.getGoals();
     assert rawGoals != null;
 
+    this.atLeastOneSimulateAfter = rawGoals.stream().filter(g -> g.simulateAfter).findFirst().isPresent();
+
     //create queue container using comparator and pre-sized for all goals
     final var capacity = rawGoals.size();
     assert capacity >= 0;
@@ -340,7 +346,7 @@ public class PrioritySolver implements Solver {
             //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
             plan.getEvaluation().forGoal(goal).associate(act, false);
           }
-          final var insertionResult = checkAndInsertActs(actsToInsert, false);
+          final var insertionResult = checkAndInsertActs(actsToInsert);
           if(insertionResult.success()) {
             for(var act: insertionResult.activitiesInserted()){
               plan.getEvaluation().forGoal(goal).associate(act, false);
@@ -482,7 +488,7 @@ public class PrioritySolver implements Solver {
         //add the activities to the output plan
         if (!acts.isEmpty()) {
           logger.info("Found activity to satisfy missing activity instance conflict");
-          final var insertionResult = checkAndInsertActs(acts, false);
+          final var insertionResult = checkAndInsertActs(acts);
           if(insertionResult.success){
             plan.getEvaluation().forGoal(goal).associate(insertionResult.activitiesInserted(), true);
             itConflicts.remove();
@@ -507,7 +513,7 @@ public class PrioritySolver implements Solver {
           //add the activities to the output plan
           if (!acts.isEmpty()) {
             logger.info("Found activity to satisfy missing activity template conflict");
-            final var insertionResult = checkAndInsertActs(acts, false);
+            final var insertionResult = checkAndInsertActs(acts);
             if(insertionResult.success()){
 
               plan.getEvaluation().forGoal(goal).associate(insertionResult.activitiesInserted(), true);
@@ -554,9 +560,9 @@ public class PrioritySolver implements Solver {
                     missingAssociationConflict.getAnchorToStart().get(),
                     startOffset
                 );
-                replaceActivity(act,replacementAct);
+                plan.replace(act,replacementAct);
                 //decision-making here, we choose the first satisfying activity
-                evaluation.forGoal(goal).associate(replacementAct, false);
+                plan.getEvaluation().forGoal(goal).associate(replacementAct, false);
                 itConflicts.remove();
                 logger.info("Activity " + replacementAct + " has been associated to goal " + goal.getName() +" to satisfy conflict " + i);
                 break;
@@ -610,10 +616,14 @@ public class PrioritySolver implements Solver {
     logger.debug("Computing simulation results until "+ this.problem.getPlanningHorizon().getEndAerie() + " (planning horizon end) in order to compute conflicts");
     final var resources = new HashSet<String>();
     goal.extractResources(resources);
-    this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie(), resources);
+    final var simulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie(), resources);
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
-    final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds = simulationFacade.getBidiActivityIdCorrespondence();
-    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, mapSchedulingIdsToActivityIds, evaluationEnvironment, this.problem.getSchedulerModel());
+    final var rawConflicts = goal.getConflicts(
+        plan,
+        simulationResults.constraintsResults(),
+        simulationResults.mapSchedulingIdsToActivityIds(),
+        evaluationEnvironment,
+        this.problem.getSchedulerModel());
     assert rawConflicts != null;
     return rawConflicts;
   }
@@ -792,7 +802,7 @@ public class PrioritySolver implements Solver {
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
     for (final var constraint : constraints) {
       //REVIEW: loop through windows more efficient than enveloppe(windows) ?
-      final var validity = constraint.evaluate(latestSimulationResults, totalDomain, evaluationEnvironment);
+      final var validity = constraint.evaluate(latestSimulationResults.constraintsResults(), totalDomain, evaluationEnvironment);
       ret = ret.and(validity);
       //short-circuit if no possible windows left
       if (ret.stream().noneMatch(Segment::value)) {
@@ -802,14 +812,45 @@ public class PrioritySolver implements Solver {
     return ret;
   }
 
-
-  private SimulationResults getLatestSimResultsUpTo(final Duration time, final Set<String> resourceNames) throws SchedulingInterruptedException {
+  private SimulationData getLatestSimResultsUpTo(final Duration time, final Set<String> resourceNames) throws SchedulingInterruptedException {
+    //if no resource is needed, build the results from the current plan
+    if(resourceNames.isEmpty()) {
+      final var groundedPlan = SchedulePlanGrounder.groundSchedule(
+          this.plan.getActivities().stream().toList(),
+          this.problem.getPlanningHorizon().getEndAerie());
+      if (groundedPlan.isPresent()) {
+        return new SimulationData(
+            plan,
+            null,
+            new SimulationResults(
+              problem.getPlanningHorizon().getStartInstant(),
+              problem.getPlanningHorizon().getHor(),
+              groundedPlan.get(),
+              Map.of(),
+              Map.of()),
+            Optional.of(new DualHashBidiMap()));
+      } else {
+        logger.debug(
+            "Tried mocking simulation results with a grounded plan but could not because of the activity cannot be grounded.");
+      }
+    }
     try {
-      if(checkSimBeforeEvaluatingGoal || lastSimulationResults == null)
-        lastSimulationResults = simulationFacade
-            .simulateWithResults(plan, time.plus(Duration.of(1, Duration.MICROSECONDS)), resourceNames)
-            .constraintsResults();
-      return lastSimulationResults;
+      var resources = new HashSet<String>(resourceNames);
+      var resourcesAreMissing = false;
+      if(cachedSimulationResultsBeforeGoalEvaluation != null){
+        final var allResources = new HashSet<>(cachedSimulationResultsBeforeGoalEvaluation.constraintsResults().realProfiles.keySet());
+        allResources.addAll(cachedSimulationResultsBeforeGoalEvaluation.constraintsResults().discreteProfiles.keySet());
+        resourcesAreMissing = !allResources.containsAll(resourceNames);
+      }
+      //if at least one goal needs the simulateAfter, we can't compute partial resources to avoid future recomputations
+      if(atLeastOneSimulateAfter){
+        resources.clear();
+        resources.addAll(this.problem.getMissionModel().getResources().keySet());
+      }
+      if(checkSimBeforeEvaluatingGoal || cachedSimulationResultsBeforeGoalEvaluation == null || cachedSimulationResultsBeforeGoalEvaluation.constraintsResults().bounds.end.shorterThan(time) || resourcesAreMissing)
+        cachedSimulationResultsBeforeGoalEvaluation = simulationFacade
+            .simulateWithResults(plan, time, resources);
+      return cachedSimulationResultsBeforeGoalEvaluation;
     } catch (SimulationFacade.SimulationException e) {
     throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
     }
@@ -835,7 +876,7 @@ public class PrioritySolver implements Solver {
           plan,
           tmp,
           mac,
-          latestSimulationResults,
+          latestSimulationResults.constraintsResults(),
           evaluationEnvironment);
     }
   return tmp;
@@ -906,13 +947,12 @@ public class PrioritySolver implements Solver {
               SchedulingActivityDirective.instantiateArguments(
                   activityExpression.arguments(),
                   start,
-                  latestConstraintsSimulationResults,
+                  latestConstraintsSimulationResults.constraintsResults(),
                   evaluationEnvironment,
                   activityExpression.type()),
               null,
               null,
               true);
-          final var lastInsertion = history.getLastEvent();
           Duration computedDuration = null;
           try {
             final var duplicatePlan = plan.duplicate();
@@ -942,7 +982,7 @@ public class PrioritySolver implements Solver {
       final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(
           activityExpression.arguments(),
           earliestStart,
-          getLatestSimResultsUpTo(earliestStart, resourceNames),
+          getLatestSimResultsUpTo(earliestStart, resourceNames).constraintsResults(),
           evaluationEnvironment,
           activityExpression.type());
 
@@ -986,7 +1026,7 @@ public class PrioritySolver implements Solver {
           SchedulingActivityDirective.instantiateArguments(
               activityExpression.arguments(),
               earliestStart,
-              getLatestSimResultsUpTo(earliestStart, resourceNames),
+              getLatestSimResultsUpTo(earliestStart, resourceNames).constraintsResults(),
               evaluationEnvironment,
               activityExpression.type()),
           null,
@@ -1001,7 +1041,7 @@ public class PrioritySolver implements Solver {
           final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
               activityExpression.arguments(),
               start,
-              getLatestSimResultsUpTo(start, resourceNames),
+              getLatestSimResultsUpTo(start, resourceNames).constraintsResults(),
               evaluationEnvironment,
               activityExpression.type()
           );
