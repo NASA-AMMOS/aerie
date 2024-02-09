@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -26,8 +29,8 @@ import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulePlanGrounder;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
@@ -35,11 +38,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,7 +67,9 @@ public class PrioritySolver implements Solver {
 
   private boolean checkSimBeforeEvaluatingGoal;
 
-  private SimulationResults lastSimulationResults;
+  private boolean atLeastOneSimulateAfter;
+
+  private SimulationResults cachedSimulationResultsBeforeGoalEvaluation;
 
   /**
    * boolean stating whether only conflict analysis should be performed or not
@@ -135,6 +143,7 @@ public class PrioritySolver implements Solver {
     checkNotNull(problem, "creating solver with null input problem descriptor");
     this.checkSimBeforeInsertingActivities = true;
     this.checkSimBeforeEvaluatingGoal = true;
+    this.atLeastOneSimulateAfter = false;
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
     this.analysisOnly = analysisOnly;
@@ -282,6 +291,8 @@ public class PrioritySolver implements Solver {
     assert problem != null;
     final var rawGoals = problem.getGoals();
     assert rawGoals != null;
+
+    this.atLeastOneSimulateAfter = rawGoals.stream().filter(g -> g.simulateAfter).findFirst().isPresent();
 
     //create queue container using comparator and pre-sized for all goals
     final var capacity = rawGoals.size();
@@ -579,9 +590,9 @@ public class PrioritySolver implements Solver {
     logger.debug("Computing simulation results until "+ this.problem.getPlanningHorizon().getEndAerie() + " (planning horizon end) in order to compute conflicts");
     final var resources = new HashSet<String>();
     goal.extractResources(resources);
-    this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie(), resources);
+    final var simulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie(), resources);
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
-    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, evaluationEnvironment);
+    final var rawConflicts = goal.getConflicts(plan, simulationResults, evaluationEnvironment);
     assert rawConflicts != null;
     return rawConflicts;
   }
@@ -748,14 +759,42 @@ public class PrioritySolver implements Solver {
     return ret;
   }
 
-
   private SimulationResults getLatestSimResultsUpTo(final Duration time, final Set<String> resourceNames) throws SchedulingInterruptedException {
+    //if no resource is needed, build the results from the current plan
+    if(resourceNames.isEmpty()) {
+      final var groundedPlan = SchedulePlanGrounder.groundSchedule(
+          this.plan.getActivities().stream().toList(),
+          this.problem.getPlanningHorizon().getEndAerie());
+      if (groundedPlan.isPresent()) {
+        return new SimulationResults(
+            problem.getPlanningHorizon().getStartInstant(),
+            problem.getPlanningHorizon().getHor(),
+            groundedPlan.get(),
+            Map.of(),
+            Map.of());
+      } else {
+        logger.debug(
+            "Tried mocking simulation results with a grounded plan but could not because of the activity cannot be grounded.");
+      }
+    }
     try {
-      if(checkSimBeforeEvaluatingGoal || lastSimulationResults == null)
-        lastSimulationResults = simulationFacade
-            .simulateWithResults(plan, time.plus(Duration.of(1, Duration.MICROSECONDS)), resourceNames)
+      var resources = new HashSet<String>(resourceNames);
+      var resourcesAreMissing = false;
+      if(cachedSimulationResultsBeforeGoalEvaluation != null){
+        final var allResources = new HashSet<>(cachedSimulationResultsBeforeGoalEvaluation.realProfiles.keySet());
+        allResources.addAll(cachedSimulationResultsBeforeGoalEvaluation.discreteProfiles.keySet());
+        resourcesAreMissing = !allResources.containsAll(resourceNames);
+      }
+      //if at least one goal needs the simulateAfter, we can't compute partial resources to avoid future recomputations
+      if(atLeastOneSimulateAfter){
+        resources.clear();
+        resources.addAll(this.problem.getMissionModel().getResources().keySet());
+      }
+      if(checkSimBeforeEvaluatingGoal || cachedSimulationResultsBeforeGoalEvaluation == null || cachedSimulationResultsBeforeGoalEvaluation.bounds.end.shorterThan(time) || resourcesAreMissing)
+        cachedSimulationResultsBeforeGoalEvaluation = simulationFacade
+            .simulateWithResults(plan, time, resources)
             .constraintsResults();
-      return lastSimulationResults;
+      return cachedSimulationResultsBeforeGoalEvaluation;
     } catch (SimulationFacade.SimulationException e) {
     throw new RuntimeException("Exception while running simulation before evaluating conflicts", e);
     }
