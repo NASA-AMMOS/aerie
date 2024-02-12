@@ -373,6 +373,42 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
                                                        Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)))
           );
         }
+
+
+
+
+/*      The truth table that determines the type of conflict is shown below. The variables considered in the table are:
+        1. enableAnchors (user specified): True if the user allows the creation of anchors for new activities and the insertion of anchors in existing activities
+        2. allowActivityUpdate (user specified): True if the user allows the scheduler to modify activities already existing in the plan to satisfy the goal.
+        The modification consists on adding an anchor if necessary and making its starting time relative to the goal activity directive to which it will be anchored
+        3. missingActAssociationsWithAnchor: True if there are activities in the plan that can be directly associated (without requiring any modification) to satisfy the goal
+        4. missingActAssociationsWithoutAnchor: True if there are activities in the plan that can be associated to satisfy the goal, but require to be modified by adding to them the anchor.
+
+        enableAnchors	missingActAssociationsWithAnchor	missingActAssociationsWithoutAnchor 	type conflict
+        0	                  0	                                0	                              MissingActivityTemplateConflict
+        0	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty(), false)
+        0	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+        0	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+        1	                  0	                                0	                              MissingActivityTemplateConflict
+        1	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.of(anchorIdTo), false)
+        1	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+        1	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+ */
+          //create conflict if no matching target activity found
+          if (activitiesFound.isEmpty()) {
+            conflicts.add(new MissingActivityTemplateConflict(
+                this,
+                this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
+                activityCreationTemplate.build(),
+                createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+                1,
+                anchorIdTo == null ? Optional.empty() : Optional.of(anchorIdTo),
+                Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)),
+                Optional.empty()
+            ));
+          } else {
+            conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+          }
       }
     }
     return conflicts;

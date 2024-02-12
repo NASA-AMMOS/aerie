@@ -10,9 +10,14 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.spice.SpiceLoader;
+import org.apache.commons.lang3.Range;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +51,7 @@ public final class Mission {
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
     registrar.topic("/producer", this.producer.ref, new StringValueMapper());
 
+    loadTerrainTortuosity("/usr/src/app/endurance_files/config.json");
     // Load SPICE in the Mission constructor
     try {
       SpiceLoader.loadSpice();
@@ -55,6 +61,29 @@ public final class Mission {
     }
   }
 
+  public void loadTerrainTortuosity(String filename) {
+
+
+
+    // Load data from JSON file
+    try (FileReader reader = new FileReader(filename);
+         JsonReader jsonReader = Json.createReader(reader)) {
+      JsonObject jsonObject = jsonReader.readObject();
+
+      String mapFilename = jsonObject.getString("pathfilename");
+      System.out.println(mapFilename);
+
+      FileReader reader2 = new FileReader(mapFilename);
+      JsonReader jsonReader2 = Json.createReader(reader2);
+      JsonObject jsonObject2 = jsonReader2.readObject();
+      float speedAutonavDay = (float) jsonObject2.getJsonNumber("autonav_day").doubleValue();
+      System.out.println(speedAutonavDay);
+
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
   private static int countLines(final Path path) {
     try {
       return (int)Files.lines(path).count();

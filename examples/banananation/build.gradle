@@ -38,6 +38,7 @@ dependencies {
   implementation project(':merlin-framework')
   implementation project(':contrib')
   implementation 'org.apache.commons:commons-lang3:3.13.0'
+  implementation 'org.glassfish:javax.json:1.1.4'
 
   testImplementation project(':merlin-framework-junit')
   testImplementation 'org.assertj:assertj-core:3.24.2'
