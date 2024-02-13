@@ -1,8 +1,4 @@
-/*
-  Commit merge takes all of the contents of the staging area and all of the resolved conflicts
-  and applies the changes to the plan getting merged into.
- */
-create procedure commit_merge(_request_id integer)
+create or replace procedure commit_merge(_request_id integer)
   language plpgsql as $$
   declare
     validate_noConflicts integer;
@@ -171,3 +167,5 @@ begin
   where id = _request_id;
 end
 $$;
+
+call migrations.mark_migration_applied('37');
