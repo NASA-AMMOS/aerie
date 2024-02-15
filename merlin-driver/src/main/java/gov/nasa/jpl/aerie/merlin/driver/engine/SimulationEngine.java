@@ -208,7 +208,8 @@ public final class SimulationEngine implements AutoCloseable {
 
     // Based on the task's return status, update its execution state and schedule its resumption.
     if (status instanceof TaskStatus.Completed<Return>) {
-      final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
+      final var children = new LinkedList<>(Optional.ofNullable(this.taskChildren.remove(task))
+                                            .orElseGet(Collections::emptySet));
 
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
