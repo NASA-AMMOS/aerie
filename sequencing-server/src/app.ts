@@ -27,6 +27,7 @@ import { getHasuraSession, canUserPerformAction, ENDPOINTS_WHITELIST } from './u
 import type { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads';
 import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { PromiseThrottler } from './utils/PromiseThrottler.js';
+import { backgroundTranspiler } from './backgroundTranspiler.js';
 
 const logger = getLogger('app');
 
@@ -39,7 +40,9 @@ app.use(bodyParser.json({ limit: '100mb' }));
 
 DbExpansion.init();
 export const db = DbExpansion.getDb();
-
+export let graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL, {
+  headers: { 'x-hasura-admin-secret': getEnv().HASURA_GRAPHQL_ADMIN_SECRET },
+});
 export const piscina = new Piscina({
   filename: new URL('worker.js', import.meta.url).pathname,
   minThreads: parseInt(getEnv().SEQUENCING_WORKER_NUM),
@@ -62,10 +65,6 @@ export type Context = {
 };
 
 app.use(async (req: Request, res: Response, next: NextFunction) => {
-  const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL, {
-    headers: { 'x-hasura-admin-secret': getEnv().HASURA_GRAPHQL_ADMIN_SECRET },
-  });
-
   // Check and make sure the user making the request has the required permissions.
   if (
     !ENDPOINTS_WHITELIST.has(req.url) &&
@@ -247,4 +246,30 @@ app.listen(PORT, () => {
   logger.info(`Worker pool initialized:
               Total workers started: ${piscina.threads.length},
               Heap Size per Worker: ${getEnv().SEQUENCING_MAX_WORKER_HEAP_MB} MB`);
+
+  if (getEnv().TRANSPILER_ENABLED === 'true') {
+    //log that the tranpiler is on
+    logger.info(`Background Transpiler is 'on'`);
+
+    let transpilerPromise: Promise<void> | undefined; // Holds the transpilation promise
+    async function invokeTranspiler() {
+      try {
+        await backgroundTranspiler();
+      } catch (error) {
+        console.error('Error during transpilation:', error);
+      } finally {
+        transpilerPromise = undefined; // Reset promise after completion
+      }
+    }
+
+    // Immediately call the background transpiler
+    transpilerPromise = invokeTranspiler();
+
+    // Schedule next execution after 2 minutes, handling ongoing transpilation
+    setInterval(async () => {
+      if (!transpilerPromise) {
+        transpilerPromise = invokeTranspiler(); // Start a new transpilation
+      }
+    }, 60 * 2 * 1000);
+  }
 });
