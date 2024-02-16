@@ -1,8 +1,4 @@
-/*
-  Commit merge takes all of the contents of the staging area and all of the resolved conflicts
-  and applies the changes to the plan getting merged into.
- */
-create procedure commit_merge(_request_id integer)
+create or replace procedure commit_merge(_request_id integer)
   language plpgsql as $$
   declare
     validate_noConflicts integer;
@@ -138,12 +134,10 @@ begin
   -- Presets
   insert into preset_to_directive(preset_id, activity_id, plan_id)
   select pts.preset_id, pts.activity_id, plan_id_R
-  from merge_staging_area msa
-  inner join preset_to_snapshot_directive pts using (activity_id)
-  where pts.snapshot_id = snapshot_id_S
-    and msa.merge_request_id = _request_id
-    and (msa.change_type = 'add'
-     or msa.change_type = 'modify')
+  from merge_staging_area msa, preset_to_snapshot_directive pts
+  where msa.activity_id = pts.activity_id
+    and msa.change_type = 'add'
+     or msa.change_type = 'modify'
   on conflict (activity_id, plan_id)
     do update
     set preset_id = excluded.preset_id;
@@ -171,3 +165,5 @@ begin
   where id = _request_id;
 end
 $$;
+
+call migrations.mark_migration_rolled_back('37');

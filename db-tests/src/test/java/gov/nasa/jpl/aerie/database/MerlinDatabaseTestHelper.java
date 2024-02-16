@@ -210,6 +210,17 @@ final class MerlinDatabaseTestHelper {
     }
   }
 
+  void unassignPreset(int presetId, int activityId, int planId) throws SQLException {
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+         //language=sql
+         """
+         delete from preset_to_directive
+         where (preset_id, activity_id, plan_id) = (%d, %d, %d);
+         """.formatted(presetId, activityId, planId));
+    }
+  }
+
 
   int insertConstraintPlan(int plan_id, String name, String definition, User user) throws SQLException {
     try(final var statement = connection.createStatement()) {
