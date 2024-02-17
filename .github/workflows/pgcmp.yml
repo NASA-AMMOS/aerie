@@ -28,16 +28,16 @@ jobs:
     environment: e2e-test
     steps:
       - name: Checkout v1.0.1
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: "v1.0.1"
       - name: Clone PGCMP
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Setup Postgres Client (psql)
@@ -47,9 +47,9 @@ jobs:
       - name: Setup Hasura CLI
         run: sudo curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v2
       - name: Distribute SQL and Assemble Java
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
         with:
           arguments: distributeSQL
       - name: Start Postgres
@@ -79,13 +79,13 @@ jobs:
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpv1_0_1/AerieUIV1_0_1 PGCLABEL=AerieUIV1_0_1 PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: v1_0_1-db-dump
           path: pgdumpv1_0_1
           retention-days: 1
       - name: Checkout Latest
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Restart Hasura
         run: |
           docker compose down
@@ -116,7 +116,7 @@ jobs:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
       - name: Clone PGCMP
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
@@ -132,7 +132,7 @@ jobs:
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpmigrated/AerieUIMigrated PGCLABEL=AerieUIMigrated PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: migrated-db-dump
           path: pgdumpmigrated
@@ -153,19 +153,19 @@ jobs:
     environment: e2e-test
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Postgres Client (psql)
         run: |
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v2
       - name: Distribute SQL
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
         with:
           arguments: distributeSQL
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Setup Hasura CLI
@@ -186,7 +186,7 @@ jobs:
         run: sleep 60s
         shell: bash
       - name: Clone PGCMP
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
@@ -202,7 +202,7 @@ jobs:
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpraw/AerieUIRaw PGCLABEL=AerieUIRaw PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: raw-sql-db-dump
           path: pgdumpraw
@@ -232,7 +232,7 @@ jobs:
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpmigrateddown/AerieUIMigratedDown PGCLABEL=AerieUIMigratedDown PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: migrated-down-db-dump
           path: pgdumpmigrateddown
@@ -252,9 +252,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Clone PGCMP
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
@@ -268,11 +268,11 @@ jobs:
         run: sleep 5s
         shell: bash
       - name: Download Shared Dumps
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: migrated-db-dump
           path: pgcmp/pgdumpmigrated
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: raw-sql-db-dump
           path: pgcmp/pgdumpraw
@@ -285,7 +285,7 @@ jobs:
         shell: bash
       - name: Upload Invalid
         if: ${{ failure() && steps.dbcmp.conclusion == 'failure' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pgcmpresultsup
           path: "**/results/"
@@ -305,9 +305,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Clone PGCMP
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
@@ -321,11 +321,11 @@ jobs:
         run: sleep 5s
         shell: bash
       - name: Download Shared Dumps
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: v1_0_1-db-dump
           path: pgcmp/pgdumpv1_0_1
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: migrated-down-db-dump
           path: pgcmp/pgdumpmigrateddown
@@ -340,7 +340,7 @@ jobs:
         shell: bash
       - name: Upload Invalid
         if: ${{ failure() && steps.dbcmp.conclusion == 'failure' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pgcmpresultsdown
           path: "**/results/"
