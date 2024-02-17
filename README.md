@@ -69,6 +69,10 @@ Want to file a bug, contribute some code, or improve documentation? Excellent! R
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE).
 
+## Attribution
+
+Parts of the Merlin codebase inherit from [Blackbird](https://trs.jpl.nasa.gov/handle/2014/52245) planning system, on which Merlin is based.  The repository history may not properly capture the original authors of some of Merlin's code.
+
 [contributing]: ./docs/CONTRIBUTING.md
 [deployment]: ./deployment
 [dev]: ./docs/DEVELOPER.md
