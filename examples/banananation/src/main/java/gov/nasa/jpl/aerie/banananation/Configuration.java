@@ -12,7 +12,7 @@ public record Configuration(@Unit("count") int initialPlantCount, String initial
 
   public static final int DEFAULT_PLANT_COUNT = 200;
   public static final String DEFAULT_PRODUCER = "Chiquita";
-  public static final Path DEFAULT_DATA_PATH = Path.of("/usr/src/app/endurance_files/config.json");
+  public static final Path DEFAULT_DATA_PATH = Path.of("/etc/os-release");
   public static final InitialConditions DEFAULT_INITIAL_CONDITIONS = new InitialConditions(
       4.0,
       4.0,

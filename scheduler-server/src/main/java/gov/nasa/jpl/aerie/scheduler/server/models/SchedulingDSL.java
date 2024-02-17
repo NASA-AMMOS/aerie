@@ -118,7 +118,6 @@ public class SchedulingDSL {
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
             .field("createPersistentAnchor",boolP)
-            .field("allowActivityUpdate",boolP)
             .optionalField("activityFinder", activityExpressionP)
             .field("alias", stringP)
             .field("forEach", constraintExpressionP)
@@ -132,12 +131,11 @@ public class SchedulingDSL {
    * This convert is in a helper function in order to define the generic variables T1 and T2
    */
   private static <T1 extends TimingConstraint, T2 extends TimingConstraint>
-  Convert<Pair<Pair<Pair<Pair<Pair<Pair<Pair<Pair<ActivityTemplate, Boolean>, Boolean>, Optional<ConstraintExpression.ActivityExpression>>, String>, ConstraintExpression>, Optional<T1>>, Optional<T2>>, Boolean>, GoalSpecifier.CoexistenceGoalDefinition>
+  Convert<Pair<Pair<Pair<Pair<Pair<Pair<Pair<ActivityTemplate, Boolean>, Optional<ConstraintExpression.ActivityExpression>>, String>, ConstraintExpression>, Optional<T1>>, Optional<T2>>, Boolean>, GoalSpecifier.CoexistenceGoalDefinition>
   coexistenceGoalTransform() {
     return Convert.between(untuple(GoalSpecifier.CoexistenceGoalDefinition::new), (GoalSpecifier.CoexistenceGoalDefinition $) -> tuple(
         $.activityTemplate(),
         $.createPersistentAnchor(),
-        $.allowActivityUpdate(),
         $.activityFinder(),
         $.alias,
         $.forEach,
@@ -270,7 +268,6 @@ public class SchedulingDSL {
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
         boolean createPersistentAnchor,
-        boolean allowActivityUpdate,
         Optional<ConstraintExpression.ActivityExpression> activityFinder,
         String alias,
         ConstraintExpression forEach,

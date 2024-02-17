@@ -221,6 +221,7 @@ public class PlanInMemory implements Plan {
       return null;
     if(act.anchorId() != null){
       SchedulingActivityDirective parent = this.getActivitiesById().get(act.anchorId());
+      //todo if parent.duration is null, then
       return calculateAbsoluteStartOffsetAnchoredActivity(parent).plus(act.anchoredToStart() ? act.startOffset() : act.startOffset().plus(parent.duration()));
     }
     return act.startOffset();

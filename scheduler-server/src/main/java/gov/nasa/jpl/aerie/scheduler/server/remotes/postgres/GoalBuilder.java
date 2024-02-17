@@ -62,7 +62,6 @@ public class GoalBuilder {
       var builder = new CoexistenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
           .createPersistentAnchor(g.createPersistentAnchor())
-          .allowActivityUpdate(g.allowActivityUpdate())
           .forEach(spansOfConstraintExpression(
               g.forEach()))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))

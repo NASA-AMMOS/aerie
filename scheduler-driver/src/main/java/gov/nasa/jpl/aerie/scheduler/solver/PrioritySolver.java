@@ -688,20 +688,38 @@ public class PrioritySolver implements Solver {
             if (missingAssociationConflict.getAnchorIdTo().isPresent()){
               SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingAssociationConflict.getAnchorIdTo().get());
               Duration startOffset = act.startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor));
-              var replacementAct = SchedulingActivityDirective.copyOf(
-                  act,
-                  missingAssociationConflict.getAnchorIdTo().get(),
-                  missingAssociationConflict.getAnchorToStart().get(),
-                  startOffset
-              );
-              replaceActivity(act,replacementAct);
-              act = replacementAct;
+              // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
+              if(((MissingAssociationConflict) missing).getAnchorToStart().isEmpty() || ((MissingAssociationConflict) missing).getAnchorToStart().get() || startOffset.longerThan(Duration.ZERO)){
+                var replacementAct = SchedulingActivityDirective.copyOf(
+                    act,
+                    missingAssociationConflict.getAnchorIdTo().get(),
+                    missingAssociationConflict.getAnchorToStart().get(),
+                    startOffset
+                );
+                replaceActivity(act,replacementAct);
+                act = replacementAct;
+                //decision-making here, we choose the first satisfying activity
+                evaluation.forGoal(goal).associate(act, false);
+                itConflicts.remove();
+                logger.info("Activity " + act + " has been associated to goal " + goal.getName() +" to satisfy conflict " + i);
+                break;
+              }
+               else{
+                logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
+               }
             }
-            //decision-making here, we choose the first satisfying activity
-            evaluation.forGoal(goal).associate(act, false);
-            itConflicts.remove();
-            logger.info("Activity " + act + " has been associated to goal " + goal.getName() +" to satisfy conflict " + i);
-            break;
+            else {
+              //decision-making here, we choose the first satisfying activity
+              evaluation.forGoal(goal).associate(act, false);
+              itConflicts.remove();
+              logger.info("Activity "
+                          + act
+                          + " has been associated to goal "
+                          + goal.getName()
+                          + " to satisfy conflict "
+                          + i);
+              break;
+            }
           } else{
             logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
           }
@@ -852,15 +870,20 @@ public class PrioritySolver implements Solver {
         if(act.isPresent()){
           if (missingTemplate.getAnchorId().isPresent()) {
             SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
-
             int includePredDuration = 0;
             if (missingTemplate.getAnchorToStart().isPresent()) {
               includePredDuration = missingTemplate.getAnchorToStart().get() ? 0 : 1;
             }
             Duration dur = predecessor.duration().times(includePredDuration);
             Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
-            final var actWithAnchor = Optional.of(SchedulingActivityDirective.copyOf(act.get(), missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
-            newActs.add(actWithAnchor.get());
+            // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
+            if(((MissingActivityTemplateConflict) missing).getAnchorToStart().isEmpty() || ((MissingActivityTemplateConflict) missing).getAnchorToStart().get() || startOffset.noShorterThan(Duration.ZERO)){
+              final var actWithAnchor = Optional.of(SchedulingActivityDirective.copyOf(act.get(), missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
+              newActs.add(actWithAnchor.get());
+            }
+            else{
+              logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
+            }
           }
           else{
             newActs.add(act.get());

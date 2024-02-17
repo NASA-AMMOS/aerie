@@ -7,9 +7,11 @@ import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -21,6 +23,9 @@ import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,8 +37,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   private TimeExpressionRelative endExpr;
   private DurationExpression durExpr;
   private String alias;
-  private boolean allowReuseExistingActivity;
-  private boolean allowActivityUpdate;
+  private boolean allowCreationAnchors;
   /**
    * the pattern used to locate anchor activity instances in the plan
    */
@@ -123,12 +127,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    boolean allowActivityUpdate;
-    public Builder allowActivityUpdate(boolean allowActivityUpdate){
-      this.allowActivityUpdate = allowActivityUpdate;
-      return getThis();
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -173,9 +171,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       goal.alias = alias;
 
-      goal.allowReuseExistingActivity = allowReuseExistingActivity;
-
-      goal.allowActivityUpdate = allowActivityUpdate;
+      goal.allowCreationAnchors = allowReuseExistingActivity;
 
       if(name==null){
         goal.name = "CoexistenceGoal_forEach_"+forEach.prettyPrint("")+"_thereExists_"+this.thereExists.type().getName();
@@ -186,12 +182,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
   }//Builder
 
-  public boolean isAllowReuseExistingActivity() {
-    return allowReuseExistingActivity;
-  }
-
-  public boolean isAllowActivityUpdate() {
-    return allowActivityUpdate;
+  public boolean isAllowCreationAnchors() {
+    return allowCreationAnchors;
   }
   /**
    * {@inheritDoc}
@@ -210,6 +202,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     //        A SMALLER WINDOW, AND HONESTLY DOESN'T MAKE SENSE TO USE ON TOP BUT IS SUPPORTED TO MAKE CODE MORE CONSISTENT. IF ONE NEEDS TO USE ANALYZEWHEN ON TOP
     //        OF COEXISTENCEGOAL THEY SHOULD PROBABLY REFACTOR THEIR COEXISTENCE GOAL. ONE SUCH USE WOULD BE IF THE COEXISTENCEGOAL WAS SPECIFIED IN TERMS OF
     //        AN ACTIVITYEXPRESSION AND THEN ANALYZEWHEN WAS A MISSION PHASE, ALTHOUGH IT IS POSSIBLE TO JUST SPECIFY AN EXPRESSION<WINDOWS> THAT COMBINES THOSE.
+
+    if(allowCreationAnchors && this.startExpr == null && this.endExpr != null){
+      return List.of(new UnsatisfiableGoalConflict(this, "A Coexistence Goal cannot be set to create anchors with respect to the end timepoint of the template activity"));
+    }
 
     //unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
@@ -248,16 +244,21 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       assert activityFinder != null;
       activityFinder.basedOn(this.matchActTemplate);
       activityCreationTemplate.basedOn(this.desiredActTemplate);
+
+      Interval directiveTimeInterval = Interval.between(window.interval().end, Interval.Inclusivity.Exclusive, planHorizon.getEndAerie(), Interval.Inclusivity.Inclusive);
       if (this.startExpr != null) {
         Interval startTimeRange = null;
         startTimeRange = this.startExpr.computeTime(simulationResults, plan, window.interval());
-        //startTimeRange = this.startExpr.computeTimeRelativeAbsolute(simulationResults, plan, window.interval(), !(this.createPersistentAnchor || this.allowActivityUpdate));
+        if(this.startExpr.getAnchor().equals(TimeAnchor.END))
+          startTimeRange = Interval.intersect(directiveTimeInterval,startTimeRange);
         activityFinder.startsIn(startTimeRange);
         activityCreationTemplate.startsIn(startTimeRange);
       }
       if (this.endExpr != null) {
         Interval endTimeRange = null;
         endTimeRange = this.endExpr.computeTime(simulationResults, plan, window.interval());
+        if(this.endExpr.getAnchor().equals(TimeAnchor.END))
+          endTimeRange = Interval.intersect(directiveTimeInterval,endTimeRange);
         activityFinder.endsIn(endTimeRange);
         activityCreationTemplate.endsIn(endTimeRange);
       }
@@ -276,12 +277,18 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
+
+      // Assuming 'activitiesFound' is a Set or Collection
       for (var act : activitiesFound) {
         //has already been associated to this goal
         if (associatedActivitiesToThisGoal.contains(act)) {
           alreadyOneActivityAssociated = true;
           break;
         }
+        Duration templateAbsoluteStart = plan.calculateAbsoluteStartOffsetAnchoredActivity(act);
+        Duration templateAbsoluteEnd = templateAbsoluteStart.plus(act.duration());
+        Interval templateTimeInterval = Interval.between(templateAbsoluteStart, Interval.Inclusivity.Inclusive, templateAbsoluteEnd, Interval.Inclusivity.Inclusive);
+
       }
       if (!alreadyOneActivityAssociated) {
         SchedulingActivityDirectiveId anchorIdTo = null;
@@ -338,7 +345,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         2. There are no activities that match the activity template
         3. The user doesn't allow to update existing matching activities without anchor and there exists matching activities without anchor
         */
-        if(!allowReuseExistingActivity || (missingActAssociationsWithAnchor.isEmpty() && missingActAssociationsWithoutAnchor.isEmpty()) || (!allowActivityUpdate && missingActAssociationsWithAnchor.isEmpty())) {
+/*        if(!allowCreationAnchors
+           || (missingActAssociationsWithAnchor.isEmpty() && missingActAssociationsWithoutAnchor.isEmpty()) || (!allowActivityUpdate && missingActAssociationsWithAnchor.isEmpty())) {
           conflicts.add(new MissingActivityTemplateConflict(
               this,
               this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
@@ -351,12 +359,12 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           ));
         }
 
-        /* Condition for MissingAssociationConflict with the anchorId in its parameters.
+        *//* Condition for MissingAssociationConflict with the anchorId in its parameters.
         Case: 1 1 0 1
         1. The user allows to update matching activities without anchors from the plan and there are only matching activities without anchors
         Notice that it has been implicitly checked in the previous if that allowReuseExistingActivity is 1 and that missingActAssociationsWithoutAnchor is not empty. If it were empty,
          as we are checking in this condition that missingActAssociationsWithAnchor is also empty, we would have entered in the previous if
-        */
+        *//*
         else if(allowActivityUpdate && missingActAssociationsWithAnchor.isEmpty()){
           conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,
                                                        anchorIdTo == null ? Optional.empty() : Optional.of(anchorIdTo),
@@ -364,15 +372,15 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           );
         }
 
-        /* Condition fort MissingAssociationConflict without any anchorId in its parameters. Final condition for remaining cases, in which it is allowed to reuse matching activities already in the plan and there are activities with anchors already in the plan.
+        *//* Condition fort MissingAssociationConflict without any anchorId in its parameters. Final condition for remaining cases, in which it is allowed to reuse matching activities already in the plan and there are activities with anchors already in the plan.
         Case: 1 x 1 x
-         */
+         *//*
         else{
           conflicts.add(new MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,
                                                        Optional.empty(),
                                                        Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)))
           );
-        }
+        }*/
 
 
 
@@ -389,26 +397,34 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         0	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty(), false)
         0	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
         0	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
-        1	                  0	                                0	                              MissingActivityTemplateConflict
+        1	                  0	                                0	                              MissingActivityTemplateConflict(anchorId)
         1	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.of(anchorIdTo), false)
         1	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
         1	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
  */
           //create conflict if no matching target activity found
-          if (activitiesFound.isEmpty()) {
-            conflicts.add(new MissingActivityTemplateConflict(
+        final Optional<SchedulingActivityDirectiveId> anchorValue = (!allowCreationAnchors || !missingActAssociationsWithAnchor.isEmpty() || anchorIdTo == null) ? Optional.empty() : Optional.of(anchorIdTo);
+        Optional<Boolean> anchoredToStart = this.startExpr != null ? Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)) : Optional.of(this.endExpr.getAnchor().equals(TimeAnchor.START));
+        if (activitiesFound.isEmpty()) {
+          conflicts.add(new MissingActivityTemplateConflict(
+              this,
+              this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
+              activityCreationTemplate.build(),
+              createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+              1,
+              anchorValue,
+              anchoredToStart,
+              Optional.empty()
+          ));
+        } else {
+            var actsToAssociate = missingActAssociationsWithAnchor.isEmpty() ? missingActAssociationsWithoutAnchor : missingActAssociationsWithAnchor;
+            conflicts.add(new MissingAssociationConflict(
                 this,
-                this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
-                activityCreationTemplate.build(),
-                createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
-                1,
-                anchorIdTo == null ? Optional.empty() : Optional.of(anchorIdTo),
-                Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)),
-                Optional.empty()
+                actsToAssociate,
+                anchorValue,
+                anchoredToStart
             ));
-          } else {
-            conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
-          }
+        }
       }
     }
     return conflicts;
