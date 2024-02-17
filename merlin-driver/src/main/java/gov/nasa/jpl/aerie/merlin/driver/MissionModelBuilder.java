@@ -15,11 +15,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 
 public final class MissionModelBuilder implements Initializer {
@@ -138,36 +135,29 @@ public final class MissionModelBuilder implements Initializer {
      * If the mission model does not specify a name ({@code taskName == null}), then
      * re-executing the daemon will re-apply any effects, potentially resulting in
      * an inaccurate simulation.  This function will add a suffix if necessary to the passed-in name
-     * in order to make it unique. If null is passed, a UUID is used.  The same IDs
+     * in order to make it unique. If null is passed, "daemon" is used.  The same IDs
      * will be generated for tasks with passed-in names in consecutive runs so that they
-     * can be correlated.  These string IDs are used instead of {@code TaskId}s because the
-     * tasks have not yet been created.  TODO: That doesn't seem like a good reason to not use TaskIds.
+     * can be correlated.
      * @param taskName A name to associate with the task so that it can be rerun
      * @param task A factory for constructing instances of the daemon task.
      */
     @Override
-    public void daemon(final String taskName, final TaskFactory<?> task) {
+    public void daemon(String taskName, final TaskFactory<?> task) {
       int numDigits = 5;
-      String id;
-      if (taskName == null) {
-        id = UUID.randomUUID().toString();
-      } else {
-        id = taskName;
-        int ct = 0;
+      int ct = 0;
+      taskName = taskName == null ? "daemon" : taskName;
+      String id = taskName;
+      // If we care how fast this is, we should save the ct for the taskName so that we don't have to visit
+      // every daemon with the same name, or we should do a binary search.
+      while (true) {
+        if (!this.daemons.containsKey(id)) {
+          break;
+        }
         String suffix = String.format("%0" + numDigits + "d", ct);
-        while (true) {
-          if (!this.daemons.containsKey(taskName)) {
-            break;
-          }
-          if (id.endsWith(suffix)) {
-            id = id.substring(0, id.length() - suffix.length());
-          }
-          ct++;
-          if (ct >= Math.pow(10,numDigits)) {
-            throw new RuntimeException("Too many daemon tasks!  Limit is " + ct + ".");
-          }
-          suffix = String.format("%0" + numDigits + "d", ct);
-          id = id + suffix;
+        id = taskName + suffix;
+        ct++;
+        if (ct >= Math.pow(10,numDigits)) {
+          throw new RuntimeException("Too many daemon tasks!  Limit is " + ct + ".");
         }
       }
       this.daemons.put(id, task);
