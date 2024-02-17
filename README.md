@@ -71,7 +71,7 @@ The scripts and documentation in this project are released under the [MIT Licens
 
 ## Attribution
 
-Parts of the Merlin codebase inherit from [Blackbird](https://trs.jpl.nasa.gov/handle/2014/52245) planning system, on which Merlin is based.  The repository history may not properly capture the original authors of some of Merlin's code.
+Parts of the Merlin simulation codebase in Aerie inherit from [Blackbird](https://trs.jpl.nasa.gov/handle/2014/52245) planning system, on which Merlin is based.  The repository history may not properly capture the original authors of some of Merlin's code.
 
 [contributing]: ./docs/CONTRIBUTING.md
 [deployment]: ./deployment
