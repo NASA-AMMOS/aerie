@@ -91,5 +91,5 @@ jobs:
       - name: Upload Security Scan Results
         uses: actions/upload-artifact@v4
         with:
-          name: Security Scan Results
+          name: Security Scan Results - ${{ matrix.language }}
           path: ${{ env.RESULTS_DIR }}
