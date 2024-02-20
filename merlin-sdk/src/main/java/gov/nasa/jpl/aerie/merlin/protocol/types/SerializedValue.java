@@ -147,7 +147,7 @@ public sealed interface SerializedValue {
     }
 
     private BigDecimal toBigDecimal() {
-      //without MathContext.DECIMAL64 then a double assigned to from a string (or code literal) "3.14"
+      //without MathContext.DECIMAL64 then a double assigned from a string (or code literal) "3.14"
       //converts to a BigDecimal=3.140000000000000124344978758017532527446746826171875
       //but since a double can only represent up to 15 decimal digits when going from string -> double -> string
       //the nonzero values in the smaller decimal places are just an artifact of the representation
