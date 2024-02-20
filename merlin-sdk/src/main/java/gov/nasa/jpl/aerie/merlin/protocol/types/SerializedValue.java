@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.List;
 import java.util.Map;
@@ -132,17 +133,32 @@ public sealed interface SerializedValue {
   record DoubleValue(double value) implements SerializedValue, DirectNumericValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
-      return visitor.onNumeric(new BigDecimal(value, MathContext.DECIMAL64));
+      return visitor.onNumeric(toBigDecimal());
     }
 
     @Override
     public NumericValue asNumericValue() {
-      return new NumericValue(new BigDecimal(value, MathContext.DECIMAL64));
+      return new NumericValue(toBigDecimal());
     }
 
     @Override
     public boolean equals(final Object obj) {
       return asNumericValue().equals(obj);
+    }
+
+    private BigDecimal toBigDecimal() {
+      //without MathContext.DECIMAL64 then a double assigned to from a string (or code literal) "3.14"
+      //converts to a BigDecimal=3.140000000000000124344978758017532527446746826171875
+      //but since a double can only represent up to 15 decimal digits when going from string -> double -> string
+      //the nonzero values in the smaller decimal places are just an artifact of the representation
+      //and there are unit tests that assume that string -> double -> string will be an identity op for e.g. 3.14
+      //with MathContext.DECIMAL64 "3.14" converts to a BigDecimal=3.140000000000000
+      var bd = new BigDecimal(value, MathContext.DECIMAL64);
+      if (bd.scale() == 0) { //if the underlying value was actually an integer
+        //we want to always serialize as a real number, i.e. "1.0" not "1" in JSON
+        bd = new BigDecimal(bd.unscaledValue().multiply(BigInteger.valueOf(10)), 1); //yes scale=1 not -1
+      }
+      return bd;
     }
   }
 
