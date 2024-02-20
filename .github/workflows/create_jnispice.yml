@@ -77,7 +77,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: "temurin"
-          java-version: "19"
+          java-version: "21"
       - name: Download and Unpack JNISpice TAR
         run: |
           curl https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/PC_Linux_GCC_Java1.8_64bit/packages/JNISpice.tar.Z -o JNISpice.tar.Z
