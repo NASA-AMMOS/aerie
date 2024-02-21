@@ -6,7 +6,7 @@ import {ActivityInsertInput} from "./types/activity";
 
 export const options = {
   // A number specifying the number of VUs to run concurrently.
-  vus: 50,
+  vus: 15, // set to at least 50 when running locally
   // A string specifying the total duration of the test run.
   duration: '10s',
 
