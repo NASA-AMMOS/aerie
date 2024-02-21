@@ -315,7 +315,7 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
   // Get all the sequence IDs that are assigned to simulated activities.
   const seqToSimulatedActivity = await db.query(
     `
-      select seq_id
+      select seq_id, simulated_activity_id
       from sequence_to_simulated_activity
       where sequence_to_simulated_activity.simulated_activity_id in (${pgFormat(
         '%L',
@@ -340,6 +340,17 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
       [simulationDatasetId],
     );
 
+    // Map seqIds to simulated activity ids so we only save expanded seqs for selected activites.
+    const seqIdToSimActivityId: Record<string, Set<number>> = {};
+
+    for (const row of seqToSimulatedActivity.rows) {
+      if (seqIdToSimActivityId[row.seq_id] === undefined) {
+        seqIdToSimActivityId[row.seq_id] = new Set();
+      }
+
+      seqIdToSimActivityId[row.seq_id]!.add(row.simulated_activity_id);
+    }
+
     // If the user has created a sequence, we can try to save the expanded sequences when an expansion runs.
     for (const seqRow of seqRows.rows) {
       const seqId = seqRow.seq_id;
@@ -360,9 +371,11 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
         return next();
       }
 
-      const sortedActivityInstances = (
+      let sortedActivityInstances = (
         simulatedActivities as Exclude<(typeof simulatedActivities)[number], Error>[]
       ).sort((a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset));
+
+      sortedActivityInstances = sortedActivityInstances.filter(ai => seqIdToSimActivityId[seqId]?.has(ai.id));
 
       const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
         const row = expandedActivityInstances.find(row => row.id === ai.id);
@@ -380,18 +393,19 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
         return {
           ...ai,
-          commands: row.commands?.map(c => {
-            switch (c.type) {
-              case 'command':
-                return CommandStem.fromSeqJson(c);
-              case 'load':
-                return LoadStep.fromSeqJson(c);
-              case 'activate':
-                return ActivateStep.fromSeqJson(c);
-              default:
-                throw new Error(`Unknown command type: ${c.type}`);
-            }
-          }) ?? null,
+          commands:
+            row.commands?.map(c => {
+              switch (c.type) {
+                case 'command':
+                  return CommandStem.fromSeqJson(c);
+                case 'load':
+                  return LoadStep.fromSeqJson(c);
+                case 'activate':
+                  return ActivateStep.fromSeqJson(c);
+                default:
+                  throw new Error(`Unknown command type: ${c.type}`);
+              }
+            }) ?? null,
           errors: errors as { message: string; stack: string; location: { line: number; column: number } }[],
         };
       });
