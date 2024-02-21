@@ -246,9 +246,10 @@ function convertType(value: any, schema: Schema): any {
     case SchemaTypes.String:
       return value;
     case SchemaTypes.Series:
-      return value.map((value: any) => convertType(value, schema.items));
+      return value == null ? null : value.map((value: any) => convertType(value, schema.items));
     case SchemaTypes.Struct:
       const struct: { [attributeName: string]: any } = {};
+      if (value == null) {return null;}
       for (const [attributeKey, attributeSchema] of Object.entries(schema.items)) {
         struct[attributeKey] = convertType(value[attributeKey], attributeSchema);
       }
