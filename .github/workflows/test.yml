@@ -25,41 +25,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v2
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
       - name: Assemble
         run: ./gradlew assemble --parallel
       - name: Run Unit Tests
         run: ./gradlew test --parallel
-      - name: Upload Test Results as XML
+      - name: Upload Test Results as XML and HTML
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: Test Results
-          path: "**/build/test-results/test"
-      - name: Upload Test Results as HTML
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results
-          path: "**/build/reports/tests/test"
+          name: Unit Test Results
+          path: |
+            **/build/test-results/test
+            **/build/reports/tests/test
 
   e2e-test:
     runs-on: ubuntu-latest
     environment: e2e-test
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
@@ -68,9 +64,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v2
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
       - name: Assemble
         run: ./gradlew assemble --parallel
       - name: Start Services
@@ -85,22 +81,13 @@ jobs:
         run: ./gradlew e2eTest
       - name: Upload E2E Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: Test Results
-          path: "**/e2e-tests/build/reports/tests/e2eTest"
-      - name: Upload DB Test Results as HTML
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results
-          path: "**/db-tests/build/reports/tests/e2eTest"
-      - name: Upload Sequencing Server Test Results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Results
-          path: "**/sequencing-server/test-report.*"
+          name: E2E Test Results
+          path: |
+            **/e2e-tests/build/reports/tests/e2eTest
+            **/db-tests/build/reports/tests/e2eTest
+            **/sequencing-server/test-report.*
       - name: Print Logs for Services
         if: always()
         run: docker compose -f ./e2e-tests/docker-compose-test.yml logs -t
