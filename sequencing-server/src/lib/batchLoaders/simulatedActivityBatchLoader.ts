@@ -231,6 +231,9 @@ export function mapGraphQLActivityInstance(
 function convertType(value: any, schema: Schema): any {
   switch (schema.type) {
     case SchemaTypes.Int:
+      if (value === null) {
+        return value;
+      }
       if (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER) {
         return value.toString();
       }
@@ -238,7 +241,10 @@ function convertType(value: any, schema: Schema): any {
     case SchemaTypes.Real:
       return value;
     case SchemaTypes.Duration:
-      return Temporal.Duration.from(parse(value).toISOString());
+      if (value !== null) {
+        return Temporal.Duration.from(parse(value).toISOString());
+      }
+      return value;
     case SchemaTypes.Boolean:
       return value;
     case SchemaTypes.Path:
@@ -246,15 +252,21 @@ function convertType(value: any, schema: Schema): any {
     case SchemaTypes.String:
       return value;
     case SchemaTypes.Series:
+      if (value === null) {
+        return value;
+      }
       return value.map((value: any) => convertType(value, schema.items));
     case SchemaTypes.Struct:
+      if (value === null) {
+        return value;
+      }
       const struct: { [attributeName: string]: any } = {};
       for (const [attributeKey, attributeSchema] of Object.entries(schema.items)) {
         struct[attributeKey] = convertType(value[attributeKey], attributeSchema);
       }
       return struct;
     case SchemaTypes.Variant:
-      if (schema.variants.length === 1 && schema.variants[0]?.key === 'VOID') {
+      if (value === null || (schema.variants.length === 1 && schema.variants[0]?.key === 'VOID')) {
         return null;
       }
       return value;
