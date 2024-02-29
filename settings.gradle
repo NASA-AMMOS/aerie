@@ -11,6 +11,7 @@ include 'contrib'
 // Service support
 include 'parsing-utilities'
 include 'permissions'
+include 'timeline'
 
 // Services for deployment within the Aerie infrastructure
 include 'merlin-server'
