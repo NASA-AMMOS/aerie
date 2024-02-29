@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
@@ -16,6 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
+import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
@@ -35,7 +35,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   private TimeExpressionRelative endExpr;
   private DurationExpression durExpr;
   private String alias;
-  private boolean allowCreationAnchors;
+  private PersistentTimeAnchor createPersistentAnchor;
   /**
    * the pattern used to locate anchor activity instances in the plan
    */
@@ -119,9 +119,9 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    boolean allowReuseExistingActivity;
-    public Builder createPersistentAnchor(boolean createPersistentAnchor){
-      this.allowReuseExistingActivity = createPersistentAnchor;
+    PersistentTimeAnchor createPersistentAnchor;
+    public Builder createPersistentAnchor(PersistentTimeAnchor createPersistentAnchor){
+      this.createPersistentAnchor = createPersistentAnchor;
       return getThis();
     }
 
@@ -168,7 +168,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       goal.alias = alias;
 
-      goal.allowCreationAnchors = allowReuseExistingActivity;
+      goal.createPersistentAnchor = createPersistentAnchor;
 
       if(name==null){
         goal.name = "CoexistenceGoal_forEach_"+forEach.prettyPrint("")+"_thereExists_"+this.thereExists.type().getName();
@@ -197,7 +197,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     //        OF COEXISTENCEGOAL THEY SHOULD PROBABLY REFACTOR THEIR COEXISTENCE GOAL. ONE SUCH USE WOULD BE IF THE COEXISTENCEGOAL WAS SPECIFIED IN TERMS OF
     //        AN ACTIVITYEXPRESSION AND THEN ANALYZEWHEN WAS A MISSION PHASE, ALTHOUGH IT IS POSSIBLE TO JUST SPECIFY AN EXPRESSION<WINDOWS> THAT COMBINES THOSE.
 
-    if(allowCreationAnchors && this.startExpr == null && this.endExpr != null){
+    if(createPersistentAnchor.equals(PersistentTimeAnchor.DISABLED) && this.startExpr == null && this.endExpr != null){
       return List.of(new UnsatisfiableGoalConflict(this, "A Coexistence Goal cannot be set to create anchors with respect to the end timepoint of the template activity"));
     }
 
@@ -239,18 +239,22 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       activityFinder.basedOn(this.matchActTemplate);
       activityCreationTemplate.basedOn(this.desiredActTemplate);
 
-      Interval directiveTimeInterval = Interval.between(window.interval().end, Interval.Inclusivity.Exclusive, planHorizon.getEndAerie(), Interval.Inclusivity.Inclusive);
+      Interval directiveTimeInterval = Interval.between(window.interval().end, Interval.Inclusivity.Inclusive, planHorizon.getEndAerie(), Interval.Inclusivity.Inclusive);
       if (this.startExpr != null) {
         Interval startTimeRange = this.startExpr.computeTime(simulationResults, plan, window.interval());
-        if(this.startExpr.getAnchor().equals(TimeAnchor.END))
+        // This condition further constraints the window in which we are looking for satisfying directives so that we don't create/look activities in the past of the directive's end
+        if(this.createPersistentAnchor.equals(PersistentTimeAnchor.END)){
           startTimeRange = Interval.intersect(directiveTimeInterval,startTimeRange);
+        }
         activityFinder.startsIn(startTimeRange);
         activityCreationTemplate.startsIn(startTimeRange);
       }
       if (this.endExpr != null) {
         Interval endTimeRange = this.endExpr.computeTime(simulationResults, plan, window.interval());
-        if(this.endExpr.getAnchor().equals(TimeAnchor.END))
-          endTimeRange = Interval.intersect(directiveTimeInterval,endTimeRange);
+        // This condition further constraints the window in which we are looking for satisfying directives so that we don't create/look activities in the past of the directive's end
+        if(this.createPersistentAnchor.equals(PersistentTimeAnchor.END)) {
+          endTimeRange = Interval.intersect(directiveTimeInterval, endTimeRange);
+        }
         activityFinder.endsIn(endTimeRange);
         activityCreationTemplate.endsIn(endTimeRange);
       }
@@ -301,25 +305,28 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         }
 
 /*      The truth table that determines the type of conflict is shown below. The variables considered in the table are:
-        1. enableAnchors (user specified): True if the user allows the creation of anchors for new activities and the insertion of anchors in existing activities
-        2. allowActivityUpdate (user specified): True if the user allows the scheduler to modify activities already existing in the plan to satisfy the goal.
-        The modification consists on adding an anchor if necessary and making its starting time relative to the goal activity directive to which it will be anchored
-        3. missingActAssociationsWithAnchor: True if there are activities in the plan that can be directly associated (without requiring any modification) to satisfy the goal
-        4. missingActAssociationsWithoutAnchor: True if there are activities in the plan that can be associated to satisfy the goal, but require to be modified by adding to them the anchor.
+        1. If createPersistentAnchor is disabled, then no anchors are created. There are two scenarios:
+          1.1 Matching activity found: MissingAssociationConflict created.
+          1.2 No matching activity found: MissingActivityTemplateConflict created
+        2. If createPersistentAnchor is enabled (START or END) then an anchor will be created. There are three scenarios
+          2.1 Matching activity with anchor found. MissingAssociationConflict created.
+          2.2 Matching activity found, but only without anchor. MissingAssociationConflict created, passing the ID of the matching activity in order to create the anchor
+          2.3 No matching activity found: MissingActivityTemplateConflict created
 
-        enableAnchors	missingActAssociationsWithAnchor	missingActAssociationsWithoutAnchor 	type conflict
-        0	                  0	                                0	                              MissingActivityTemplateConflict
-        0	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithoutAnchor,  Optional.empty(), false)
-        0	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
-        0	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
-        1	                  0	                                0	                              MissingActivityTemplateConflict(anchorId)
-        1	                  0	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.of(anchorIdTo), false)
-        1	                  1	                                0	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
-        1	                  1	                                1	                              MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+        createPersistentAnchor	missingActAssociationsWithAnchor	missingActAssociationsWithoutAnchor 	type conflict
+        0	                      0	                                0	                                    MissingActivityTemplateConflict
+        0	                      0	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithoutAnchor, Optional.empty(), false)
+        0	                      1	                                0	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false) //TODO jd check this case
+        0	                      1	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+        1	                      0	                                0	                                    MissingActivityTemplateConflict(anchorId)
+        1	                      0	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.of(anchorIdTo), false)
+        1	                      1	                                0	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
+        1	                      1	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
  */
-          //create conflict if no matching target activity found
-        final Optional<SchedulingActivityDirectiveId> anchorValue = (!allowCreationAnchors || !missingActAssociationsWithAnchor.isEmpty() || anchorIdTo == null) ? Optional.empty() : Optional.of(anchorIdTo);
+        // If anchors are disabled or there are some activity directives that satisfy the goal and already have the anchor or the anchorID is null, then we pass an empty anchor. Otherwise, we pass the anchorID of the directive that can satisfy the goal
+        final Optional<SchedulingActivityDirectiveId> anchorValue = (this.createPersistentAnchor.equals(PersistentTimeAnchor.DISABLED) || !missingActAssociationsWithAnchor.isEmpty() || anchorIdTo == null) ? Optional.empty() : Optional.of(anchorIdTo);
         Optional<Boolean> anchoredToStart = this.startExpr != null ? Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)) : Optional.of(this.endExpr.getAnchor().equals(TimeAnchor.START));
+        //  Create MissingActivityTemplateConflict if no matching target activity found
         if (activitiesFound.isEmpty()) {
           conflicts.add(new MissingActivityTemplateConflict(
               this,

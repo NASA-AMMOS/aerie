@@ -73,8 +73,7 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate<any>,
-  createPersistentAnchor: boolean,
-  allowActivityUpdate: boolean,
+  createPersistentAnchor: PersistentTimeAnchor,
   activityFinder: ActivityExpression<any> | undefined,
   alias: string,
   forEach: WindowsExpressions.WindowsExpression | ActivityExpression<any>,
@@ -98,6 +97,12 @@ export enum TimeExpressionOperator {
 }
 
 export enum TimeAnchor {
+  Start = "Start",
+  End = "End"
+}
+
+export enum PersistentTimeAnchor {
+  Disabled = "Disabled",
   Start = "Start",
   End = "End"
 }

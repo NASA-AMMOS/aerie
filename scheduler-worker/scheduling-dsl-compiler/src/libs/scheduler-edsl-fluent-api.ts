@@ -6,7 +6,8 @@
  */
 
 import * as AST from "./scheduler-ast.js";
-import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
+import {PersistentTimeAnchor} from "./scheduler-ast.js";
+import * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import {ActivityInstance} from "./constraints-edsl-fluent-api.js";
 import * as ConstraintsAST from "./constraints-ast.js";
 import {makeArgumentsDiscreteProfiles} from "./scheduler-mission-model-generated-code";
@@ -387,8 +388,7 @@ export class Goal {
     activityFinder?: ActivityExpression<B>
   } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    createPersistentAnchor?: boolean,
-    allowActivityUpdate?: boolean,
+    createPersistentAnchor?: PersistentTimeAnchor,
     forEach:  ActivityExpression<T>,
     activityFinder?: ActivityExpression<B>
   }) & CoexistenceGoalTimingConstraints): Goal {
@@ -426,18 +426,12 @@ export class Goal {
       activityTemplate = opts.activityTemplate;
     }
 
-    let PersistentAnchortmp: boolean;
-    let allowActivityUpdatetmp: boolean;
+    let PersistentAnchortmp: PersistentTimeAnchor;
 
-    if ((opts as {createPersistentAnchor: boolean}).createPersistentAnchor !== undefined)
-      PersistentAnchortmp = (opts as {createPersistentAnchor: boolean}).createPersistentAnchor;
+    if ((opts as {createPersistentAnchor: PersistentTimeAnchor}).createPersistentAnchor !== undefined)
+      PersistentAnchortmp = (opts as {createPersistentAnchor: PersistentTimeAnchor}).createPersistentAnchor;
     else
-      PersistentAnchortmp = false;
-
-    if ((opts as {allowActivityUpdate: boolean}).allowActivityUpdate !== undefined)
-      allowActivityUpdatetmp = (opts as {allowActivityUpdate: boolean}).allowActivityUpdate;
-    else
-      allowActivityUpdatetmp = false;
+      PersistentAnchortmp = PersistentTimeAnchor.Disabled;
 
 
     return Goal.new({
@@ -445,7 +439,6 @@ export class Goal {
       alias: alias,
       activityTemplate: activityTemplate,
       createPersistentAnchor: PersistentAnchortmp,
-      allowActivityUpdate: allowActivityUpdatetmp,
       activityFinder: opts.activityFinder?.__astNode,
       forEach: localForEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),

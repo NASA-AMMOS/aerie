@@ -68,8 +68,7 @@ public class SchedulingTests {
         return Goal.CoexistenceGoal({
           forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
           activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
-          createPersistentAnchor: true,
-          allowActivityUpdate: true,
+          createPersistentAnchor: PersistentTimeAnchor.Disabled,
           startsAt:TimingConstraint.singleton(WindowProperty.END)
         })
       }""";

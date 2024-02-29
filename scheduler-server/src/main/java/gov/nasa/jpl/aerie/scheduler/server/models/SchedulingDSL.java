@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import org.apache.commons.lang3.tuple.Pair;
@@ -117,7 +118,7 @@ public class SchedulingDSL {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
-            .field("createPersistentAnchor",boolP)
+            .field("createPersistentAnchor",enumP(PersistentTimeAnchor.class, Enum::name))
             .optionalField("activityFinder", activityExpressionP)
             .field("alias", stringP)
             .field("forEach", constraintExpressionP)
@@ -131,7 +132,7 @@ public class SchedulingDSL {
    * This convert is in a helper function in order to define the generic variables T1 and T2
    */
   private static <T1 extends TimingConstraint, T2 extends TimingConstraint>
-  Convert<Pair<Pair<Pair<Pair<Pair<Pair<Pair<ActivityTemplate, Boolean>, Optional<ConstraintExpression.ActivityExpression>>, String>, ConstraintExpression>, Optional<T1>>, Optional<T2>>, Boolean>, GoalSpecifier.CoexistenceGoalDefinition>
+  Convert<Pair<Pair<Pair<Pair<Pair<Pair<Pair<ActivityTemplate, PersistentTimeAnchor>, Optional<ConstraintExpression.ActivityExpression>>, String>, ConstraintExpression>, Optional<T1>>, Optional<T2>>, Boolean>, GoalSpecifier.CoexistenceGoalDefinition>
   coexistenceGoalTransform() {
     return Convert.between(untuple(GoalSpecifier.CoexistenceGoalDefinition::new), (GoalSpecifier.CoexistenceGoalDefinition $) -> tuple(
         $.activityTemplate(),
@@ -267,7 +268,7 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
-        boolean createPersistentAnchor,
+        PersistentTimeAnchor createPersistentAnchor,
         Optional<ConstraintExpression.ActivityExpression> activityFinder,
         String alias,
         ConstraintExpression forEach,

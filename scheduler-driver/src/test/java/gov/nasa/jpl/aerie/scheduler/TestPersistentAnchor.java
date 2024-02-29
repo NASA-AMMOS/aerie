@@ -30,10 +30,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/*
-Considering the four boolean variables: createPersistentAnchor,	allowActivityUpdate,	missingActAssociationsWithAnchor,	missingActAssociationsWithoutAnchor
-that define all possible anchoring cases (see CoexistenceGoal.getConflicts), the test cases below cover all possible combinations
- */
 public class TestPersistentAnchor {
 
   public record TestData(
@@ -160,12 +156,16 @@ public class TestPersistentAnchor {
     return true;
   }
 
-  /* Test cases in which the goal is created with TimeExpression startAt
+
+  /*
+  Test cases for temporal relation StartsAt Start, with anchor at start and end
    */
-  @Test
-  public void testCase0AnchorStartAt() throws SchedulingInterruptedException{
 
-    TestData testData = createTestCaseStartsAt(false, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
+  // Anchor Disabled
+  @Test
+  public void testCaseStartAtStartDisable00() throws SchedulingInterruptedException{
+
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -174,8 +174,8 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase1AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(false, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtDisable01() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -184,8 +184,8 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase2AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(false, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtDisable10() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -194,8 +194,8 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase3AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(false, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtDisable11() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(9, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -203,9 +203,10 @@ public class TestPersistentAnchor {
     assertTrue(checkUnanchoredActivities(testData));
   }
 
+  // Anchor at START
   @Test
-  public void testCase4AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtStart00() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -214,8 +215,8 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase5AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtStart01() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -224,8 +225,8 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase6AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtStart10() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -234,8 +235,8 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase7AnchorStartAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtStartAnchorAtStart11() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(9, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -243,9 +244,10 @@ public class TestPersistentAnchor {
     assertTrue(checkUnanchoredActivities(testData));
   }
 
+  //Anchor at END
   @Test
-  public void testCase5AnchorStartAtEnd() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, true, 2, 0, 20, TimeAnchor.END, null, 0);
+  public void testCaseStartAtStartAnchorAtEnd00() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -254,8 +256,28 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase7AnchorStartAtEnd() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, true, true, 2, 0, 20, TimeAnchor.END, null, 0);
+  public void testCaseStartAtStartAnchorAtEnd01() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, false));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtStartAnchorAtEnd10() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtStartAnchorAtEnd11() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(9, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -263,19 +285,56 @@ public class TestPersistentAnchor {
     assertTrue(checkUnanchoredActivities(testData));
   }
 
+
+  /*
+  Test cases for temporal relation StartsAt End, with anchor at start and end
+   */
+
+  // Anchor Disabled
   @Test
-  public void testCase4AnchorStartAtStartDontFit() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, false, 2, 3, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtEndAnchorAtDisable00() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, false, false, 2, 0, 20, TimeAnchor.END, null, 0);
     assertTrue(testData.plan.isPresent());
-    assertEquals(5, testData.plan.get().getActivitiesById().size());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, false));
+    assertTrue(checkAnchoredActivities(testData, false, false));
     assertTrue(checkUnanchoredActivities(testData));
   }
 
   @Test
-  public void testCase5AnchorStartAtStartDontFit() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, true, 2, 3, 20, TimeAnchor.START, null, 0);
+  public void testCaseStartAtDisable01() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, false, true, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, false, false));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtDisable10() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, true, false, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, false, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtDisable11() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.DISABLED, true, true, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(9, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, false, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  // Anchor to START
+  @Test
+  public void testCaseStartAtStartAnchorAt00() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, false, false, 2, 0, 20, TimeAnchor.END, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -284,29 +343,88 @@ public class TestPersistentAnchor {
   }
 
   @Test
-  public void testCase4AnchorStartAtEndDontFit() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, false, 2, 0, 9, TimeAnchor.END, null, 0);
+  public void testCaseStartAtStartAnchorAt01() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, false, true, 2, 0, 20, TimeAnchor.END, null, 0);
     assertTrue(testData.plan.isPresent());
-    assertEquals(5, testData.plan.get().getActivitiesById().size());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
     assertTrue(checkAnchoredActivities(testData, true, false));
     assertTrue(checkUnanchoredActivities(testData));
   }
 
   @Test
-  public void testCase5AnchorStartAtEndDontFit() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseStartsAt(true, false, true, 2, 0, 10, TimeAnchor.END, null, 0);
+  public void testCaseStartAtStartAnchorAt10() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, true, false, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtStartAnchorAt11() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.START, true, true, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(9, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  //Anchor at END
+  @Test
+  public void testCaseStartAtEndAnchorAt00() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, false, false, 2, 0, 20, TimeAnchor.END, null, 0);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
     assertTrue(checkAnchoredActivities(testData, true, false));
-    assertTrue(checkUnanchoredActivities(testData));;
+    assertTrue(checkUnanchoredActivities(testData));
   }
+
+  @Test
+  public void testCaseStartAtEndAnchorAt01() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, false, true, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, false));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtEndAnchorAt10() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, true, false, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+  @Test
+  public void testCaseStartAtEndAnchorAt11() throws SchedulingInterruptedException{
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, true, true, 2, 0, 20, TimeAnchor.END, null, 0);
+    assertTrue(testData.plan.isPresent());
+    assertEquals(9, testData.plan.get().getActivitiesById().size());
+    assertTrue(allAnchorsIncluded(testData));
+    assertTrue(checkAnchoredActivities(testData, true, true));
+    assertTrue(checkUnanchoredActivities(testData));
+  }
+
+
+
+
+
+
+
+/*
 
   @Test
   public void testCase4AnchorStartAtTimeOffsetAfterEndFit() throws SchedulingInterruptedException{
     long durOffset = 1;
-    TestData testData = createTestCaseStartsAt(true, false, false, 2, 0, 20, null, TimeExpressionRelative.offsetByAfterEnd(Duration.of(durOffset, Duration.HOUR)), durOffset);
+    TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, false, false, 2, 0, 20, null, TimeExpressionRelative.offsetByAfterEnd(Duration.of(durOffset, Duration.HOUR)), durOffset);
     assertTrue(testData.plan.isPresent());
     assertEquals(6, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
@@ -345,120 +463,12 @@ public class TestPersistentAnchor {
     assertTrue(allAnchorsIncluded(testData));
     assertTrue(checkAnchoredActivities(testData, true, false));
     assertTrue(checkUnanchoredActivities(testData));
-  }
-
-
+  }*/
 
   /* Test cases in which the goal is created with TimeExpression endsAt
    */
-  @Test
-  public void testCase0AnchorEndAt() throws SchedulingInterruptedException{
 
-    TestData testData = createTestCaseEndsAt(false, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, false, false));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase1AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(false, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, false, false));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase2AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(false, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, false, true));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase3AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(false, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(9, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, false, true));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase4AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(true, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(3, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, false));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase5AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(true, false, true, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, false));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase6AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(true, true, false, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, true));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase7AnchorEndAt() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(true, true, true, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(9, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, true));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase4AnchorEndAtEndDontFit() throws SchedulingInterruptedException{
-    TestData testData = createTestCaseEndsAt(true, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(3, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, false));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-  @Test
-  public void testCase4AnchorEndAtTimeOffsetAfterEndFit() throws SchedulingInterruptedException{
-    long durOffset = 7;
-    TestData testData = createTestCaseEndsAt(true, false, false, 2, 0, 20, null, TimeExpressionRelative.offsetByAfterEnd(Duration.of(durOffset, Duration.HOUR)), durOffset);
-    assertTrue(testData.plan.isPresent());
-    assertEquals(3, testData.plan.get().getActivitiesById().size());
-    assertTrue(allAnchorsIncluded(testData));
-    assertTrue(checkAnchoredActivities(testData, true, false));
-    assertTrue(checkUnanchoredActivities(testData));
-  }
-
-
-  /*
-  Test Case constructor
-   */
-
-  public TestData createTestCaseStartsAt(boolean allowCreationAnchors,  boolean missingActAssociationsWithAnchor, boolean missingActAssociationsWithoutAnchor, int activityDurationHours, int goalStartPeriodHours, int goalEndPeriodHours, TimeAnchor timeAnchor, TimeExpressionRelative timeExpression, long relativeOffsetHours)
+  public TestData createTestCaseStartsAt(PersistentTimeAnchor createPersistentAnchor,  boolean missingActAssociationsWithAnchor, boolean missingActAssociationsWithoutAnchor, int activityDurationHours, int goalStartPeriodHours, int goalEndPeriodHours, TimeAnchor timeAnchor, TimeExpressionRelative timeExpression, long relativeOffsetHours)
   throws SchedulingInterruptedException
   {
     ArrayList<SchedulingActivityDirective> actsToBeAnchored = new ArrayList<>();
@@ -559,7 +569,7 @@ public class TestPersistentAnchor {
           "quantity", SerializedValue.of(1)),null, true);
       partialPlan.add(act9);
 
-      if (allowCreationAnchors && !missingActAssociationsWithAnchor) {
+      if (!createPersistentAnchor.equals(PersistentTimeAnchor.DISABLED) && !missingActAssociationsWithAnchor) {
         templateActsWithoutAnchorAnchored.add(act7);
         templateActsWithoutAnchorAnchored.add(act8);
         templateActsWithoutAnchorAnchored.add(act9);
@@ -591,7 +601,7 @@ public class TestPersistentAnchor {
                               .build())
           .startsAt(timeAnchor)
           .aliasForAnchors("Grow and Pick Bananas")
-          .createPersistentAnchor(allowCreationAnchors)
+          .createPersistentAnchor(createPersistentAnchor)
           .withinPlanHorizon(planningHorizon)
           .build();
     }
@@ -605,175 +615,7 @@ public class TestPersistentAnchor {
                               .build())
           .startsAt(timeExpression)
           .aliasForAnchors("Grow and Pick Bananas")
-          .createPersistentAnchor(allowCreationAnchors)
-          .withinPlanHorizon(planningHorizon)
-          .build();
-    }
-    problem.setGoals(List.of(goal));
-
-    final var solver = new PrioritySolver(problem);
-    var plan = solver.getNextSolution();
-
-    templateNewActsAnchored = new ArrayList<>(plan.get().getActivities());
-    templateNewActsAnchored.removeAll(partialPlan.getActivities());
-
-
-    for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
-    }
-    return new TestData(plan, actsToBeAnchored, templateActsAlreadyAnchor, templateActsWithoutAnchorAnchored, templateActsWithoutAnchorNotAnchored, templateNewActsAnchored);
-  }
-
-  public TestData createTestCaseEndsAt(boolean allowCreationAnchors, boolean missingActAssociationsWithAnchor, boolean missingActAssociationsWithoutAnchor, int activityDurationHours, int goalStartPeriodHours, int goalEndPeriodHours, TimeAnchor timeAnchor, TimeExpressionRelative timeExpression, long relativeOffsetHours)
-  throws SchedulingInterruptedException
-  {
-    ArrayList<SchedulingActivityDirective> actsToBeAnchored = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateActsAlreadyAnchor = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateActsWithoutAnchorAnchored = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateActsWithoutAnchorNotAnchored = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateNewActsAnchored;
-
-    final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
-
-    final var simulationFacade = new SimulationFacade(
-        planningHorizon,
-        bananaMissionModel,
-        SimulationUtility.getBananaSchedulerModel(),
-        () -> false);
-    final var problem = new Problem(
-        bananaMissionModel,
-        planningHorizon,
-        simulationFacade,
-        SimulationUtility.getBananaSchedulerModel()
-    );
-
-    //have some activity already present
-    //  create a PlanInMemory, add ActivityInstances
-    PlanInMemory partialPlan = new PlanInMemory();
-    final var actTypeA = problem.getActivityType("GrowBanana");
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-        "quantity", SerializedValue.of(1),
-        "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
-    partialPlan.add(act1);
-    actsToBeAnchored.add(act1);
-
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-        "quantity", SerializedValue.of(1),
-        "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
-    partialPlan.add(act2);
-    actsToBeAnchored.add(act2);
-
-    SchedulingActivityDirective act3 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(15, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-        "quantity", SerializedValue.of(1),
-        "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
-    partialPlan.add(act3);
-    actsToBeAnchored.add(act3);
-
-    final var actTypeB = problem.getActivityType("PickBanana");
-
-    boolean anchoredToStart;
-    if(timeAnchor != null)
-      anchoredToStart = timeAnchor.equals(TimeAnchor.START);
-    else
-      anchoredToStart = timeExpression.getAnchor().equals(TimeAnchor.START);
-
-    // Nominal anchor is right at the start or end
-    Duration relativeOffset = Duration.of(relativeOffsetHours, Duration.HOURS);
-    Duration offsetWithDuration = Duration.of(0, Duration.HOURS);
-    // If TimeAnchor or TimeExpressionRelative is related to the start of Goal directive, then need to add goal directive duration
-    if(anchoredToStart){
-      offsetWithDuration = offsetWithDuration.plus(activityDurationHours, Duration.HOURS);
-    }
-    // If in addition the goal uses an offset, it needs to be added
-    if(timeAnchor == null){
-      offsetWithDuration = offsetWithDuration.plus(relativeOffsetHours, Duration.HOURS);
-    }
-
-    if(missingActAssociationsWithAnchor){
-      // Activities with anchors
-      SchedulingActivityDirective act4 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)).minus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act1.id(), anchoredToStart);
-      partialPlan.add(act4);
-      templateActsAlreadyAnchor.add(act4);
-
-      SchedulingActivityDirective act5 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)).minus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act2.id(), anchoredToStart);
-      partialPlan.add(act5);
-      templateActsAlreadyAnchor.add(act5);
-
-      SchedulingActivityDirective act6 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(15, Duration.HOURS)).minus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act3.id(), anchoredToStart);
-      partialPlan.add(act6);
-      templateActsAlreadyAnchor.add(act6);
-    }
-
-    if(missingActAssociationsWithoutAnchor){
-      // Activities without anchors
-      SchedulingActivityDirective act7 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)).minus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, true);
-      partialPlan.add(act7);
-
-      SchedulingActivityDirective act8 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)).minus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, true);
-      partialPlan.add(act8);
-
-      SchedulingActivityDirective act9 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(15, Duration.HOURS)).minus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, true);
-      partialPlan.add(act9);
-
-      if (allowCreationAnchors && !missingActAssociationsWithAnchor) {
-        templateActsWithoutAnchorAnchored.add(act7);
-        templateActsWithoutAnchorAnchored.add(act8);
-        templateActsWithoutAnchorAnchored.add(act9);
-      }
-      else{
-        templateActsWithoutAnchorNotAnchored.add(act7);
-        templateActsWithoutAnchorNotAnchored.add(act8);
-        templateActsWithoutAnchorNotAnchored.add(act9);
-      }
-    }
-
-    //  pass this plan as initialPlan to Problem object
-    problem.setInitialPlan(partialPlan);
-    //want to create another activity for each of the already present activities
-    //  foreach with activityexpression
-    ActivityExpression framework = new ActivityExpression.Builder()
-        .ofType(actTypeA)
-        .build();
-
-    Interval period = Interval.betweenClosedOpen(Duration.of(goalStartPeriodHours, Duration.HOURS), Duration.of(goalEndPeriodHours, Duration.HOURS));
-    CoexistenceGoal goal;
-    if(timeAnchor != null){
-      goal = new CoexistenceGoal.Builder()
-          .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
-          .forEach(spansOfConstraintExpression(framework))
-          .thereExistsOne(new ActivityExpression.Builder()
-                              .ofType(actTypeB)
-                              .withArgument("quantity", SerializedValue.of(1))
-                              .build())
-          .endsAt(timeAnchor)
-          .aliasForAnchors("Grow and Pick Bananas")
-          .createPersistentAnchor(allowCreationAnchors)
-          .withinPlanHorizon(planningHorizon)
-          .build();
-    }
-    else{
-      //todo:replace pickbanana by a controllable activity
-      goal = new CoexistenceGoal.Builder()
-          .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
-          .forEach(spansOfConstraintExpression(framework))
-          .thereExistsOne(new ActivityExpression.Builder()
-                              .ofType(actTypeB)
-                              .withArgument("quantity", SerializedValue.of(1))
-                              .withArgument("duration", SimulationUtility.getBananaSchedulerModel().serializeDuration(Duration.of(activityDurationHours, Duration.HOURS)))
-                              .build())
-          .endsAt(timeExpression)
-          .aliasForAnchors("Grow and Pick Bananas")
-          .createPersistentAnchor(allowCreationAnchors)
+          .createPersistentAnchor(createPersistentAnchor)
           .withinPlanHorizon(planningHorizon)
           .build();
     }
