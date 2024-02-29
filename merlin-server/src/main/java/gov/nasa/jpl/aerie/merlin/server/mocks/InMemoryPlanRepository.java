@@ -119,7 +119,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<Long, Constraint> getAllConstraintsInPlan(final PlanId planId) {
+  public Map<Long, Constraint> getPlanConstraints(final PlanId planId) {
     return Map.of();
   }
 

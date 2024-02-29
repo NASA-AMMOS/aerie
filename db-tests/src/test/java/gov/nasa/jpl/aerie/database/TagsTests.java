@@ -63,6 +63,7 @@ public class TagsTests {
     helper.clearTable("metadata.tags");
     helper.clearTable("metadata.activity_directive_tags");
     helper.clearTable("metadata.constraint_tags");
+    helper.clearTable("metadata.constraint_definition_tags");
     helper.clearTable("metadata.snapshot_activity_tags");
   }
 
@@ -327,14 +328,24 @@ public class TagsTests {
     }
   }
 
+  void assignTagToConstraintRevision(int constraint_id, int constraint_revision, int tag_id) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          """
+          INSERT INTO metadata.constraint_definition_tags (constraint_id, constraint_revision, tag_id)
+          VALUES (%d, %d, %d)
+          """.formatted(constraint_id, constraint_revision, tag_id));
+    }
+  }
+
   void removeTagFromConstraint(int constraint_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
           """
-              DELETE FROM metadata.constraint_tags
-              WHERE constraint_id = %d
-                AND tag_id = %d;
-              """.formatted(constraint_id, tag_id));
+          DELETE FROM metadata.constraint_tags
+          WHERE constraint_id = %d
+            AND tag_id = %d;
+          """.formatted(constraint_id, tag_id));
     }
   }
 
@@ -343,12 +354,35 @@ public class TagsTests {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
           """
-              SELECT id, name, color, owner
-              FROM metadata.tags t, metadata.constraint_tags ct
-              WHERE ct.tag_id = t.id
-                AND ct.constraint_id = %d
-              ORDER BY id;
-              """.formatted(constraint_id));
+          SELECT id, name, color, owner
+          FROM metadata.tags t, metadata.constraint_tags ct
+          WHERE ct.tag_id = t.id
+            AND ct.constraint_id = %d
+          ORDER BY id;
+          """.formatted(constraint_id));
+      while (res.next()) {
+        tags.add(new Tag(
+            res.getInt("id"),
+            res.getString("name"),
+            res.getString("color"),
+            res.getString("owner")));
+      }
+      return tags;
+    }
+  }
+
+  ArrayList<Tag> getTagsOnConstraintRevision(int constraint_id, int constraint_revision) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var tags = new ArrayList<Tag>();
+      final var res = statement.executeQuery(
+          """
+          SELECT id, name, color, owner
+          FROM metadata.tags t, metadata.constraint_definition_tags ct
+          WHERE ct.tag_id = t.id
+            AND ct.constraint_id = %d
+            AND ct.constraint_revision = %d
+          ORDER BY id;
+          """.formatted(constraint_id, constraint_revision));
       while (res.next()) {
         tags.add(new Tag(
             res.getInt("id"),
@@ -385,7 +419,7 @@ public class TagsTests {
           WHERE model_id = %d
           AND name = '%s'
           RETURNING subsystem
-         """.formatted(missionModelId, "GrowBanana"));
+         """.formatted(modelId, name));
        assertTrue(res.next());
        assertNull(res.getObject("subsystem"));
        assertFalse(res.next());
@@ -402,17 +436,19 @@ public class TagsTests {
     final var secondTagId = insertTag("Banana");
     final var planId = merlinHelper.insertPlan(missionModelId);
     final var activityId = merlinHelper.insertActivity(planId);
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
+    final var constraintId = merlinHelper.insertConstraint("Test Constraint", constraintDefinition, tagsUser);
 
     assignTagToPlan(planId, tagId);
     assignTagToActivity(activityId, planId, tagId);
     assignTagToConstraint(constraintId, tagId);
+    assignTagToConstraintRevision(constraintId, 0, tagId);
 
     assignTagToPlan(planId, secondTagId);
 
     final var planTags = getTagsOnPlan(planId);
     final var activityTags = getTagsOnActivity(activityId, planId);
     final var constraintTags = getTagsOnConstraint(constraintId);
+    final var constraintRevisionTags = getTagsOnConstraintRevision(constraintId, 0);
 
     final ArrayList<Tag> expected = new ArrayList<>();
     expected.add(new Tag(tagId, "Farm", null, "TagsTest"));
@@ -424,6 +460,7 @@ public class TagsTests {
     assertEquals(expectedPlan, planTags);
     assertEquals(expected, activityTags);
     assertEquals(expected, constraintTags);
+    assertEquals(expected, constraintRevisionTags);
   }
 
   @Test
@@ -431,11 +468,12 @@ public class TagsTests {
     final var secondTagId = insertTag("Banana");
     final var planId = merlinHelper.insertPlan(missionModelId);
     final var activityId = merlinHelper.insertActivity(planId);
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
+    final var constraintId = merlinHelper.insertConstraint("Test Constraint", constraintDefinition, tagsUser);
 
     assignTagToPlan(planId, tagId);
     assignTagToActivity(activityId, planId, tagId);
     assignTagToConstraint(constraintId, tagId);
+    assignTagToConstraintRevision(constraintId, 0, tagId);
 
     assignTagToPlan(planId, secondTagId);
 
@@ -444,6 +482,7 @@ public class TagsTests {
     final var planTags = getTagsOnPlan(planId);
     final var activityTags = getTagsOnActivity(activityId, planId);
     final var constraintTags = getTagsOnActivity(activityId, planId);
+    final var constraintRevisionTags = getTagsOnConstraintRevision(constraintId, 0);
 
     final var expected = new ArrayList<Tag>(1);
     expected.add(new Tag(tagId, "Farm", null, tagsUser.name()));
@@ -454,6 +493,7 @@ public class TagsTests {
     assertEquals(expectedPlan, planTags);
     assertEquals(expected, activityTags);
     assertEquals(expected, constraintTags);
+    assertEquals(expected, constraintRevisionTags);
   }
 
   @Test
@@ -477,11 +517,19 @@ public class TagsTests {
       }
     }
     // Constraint
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
+    final var constraintId = merlinHelper.insertConstraint("Test Constraint", constraintDefinition, tagsUser);
     try {
       assignTagToConstraint(constraintId, -1);
     } catch (SQLException e) {
       if(!e.getMessage().contains("insert or update on table \"constraint_tags\" violates foreign key constraint \"constraint_tags_tag_id_fkey\"")) {
+        throw e;
+      }
+    }
+    // Constraint Revision
+    try {
+      assignTagToConstraintRevision(constraintId, 0, -1);
+    } catch (SQLException e) {
+      if(!e.getMessage().contains("insert or update on table \"constraint_definition_tags\" violates foreign key constraint \"constraint_definition_tags_tag_id_fkey\"")) {
         throw e;
       }
     }
@@ -501,21 +549,24 @@ public class TagsTests {
     final var secondTagId = insertTag("Banana");
     final var planId = merlinHelper.insertPlan(missionModelId);
     final var activityId = merlinHelper.insertActivity(planId);
-    final var constraintId = merlinHelper.insertConstraintPlan(planId, "Test Constraint", constraintDefinition, tagsUser);
+    final var constraintId = merlinHelper.insertConstraint("Test Constraint", constraintDefinition, tagsUser);
 
     assignTagToPlan(planId, tagId);
     assignTagToActivity(activityId, planId, tagId);
     assignTagToConstraint(constraintId, tagId);
+    assignTagToConstraintRevision(constraintId, 0, tagId);
 
     assignTagToPlan(planId, secondTagId);
     assignTagToActivity(activityId, planId, secondTagId);
     assignTagToConstraint(constraintId, secondTagId);
+    assignTagToConstraintRevision(constraintId, 0, secondTagId);
 
     deleteTag(tagId);
 
     final var planTags = getTagsOnPlan(planId);
     final var activityTags = getTagsOnActivity(activityId, planId);
     final var constraintTags = getTagsOnConstraint(constraintId);
+    final var constraintRevisionTags = getTagsOnConstraintRevision(constraintId, 0);
 
     final ArrayList<Tag> expected = new ArrayList<>();
     expected.add(new Tag(secondTagId, "Banana", null, tagsUser.name()));
@@ -523,6 +574,7 @@ public class TagsTests {
     assertEquals(expected, planTags);
     assertEquals(expected, activityTags);
     assertEquals(expected, constraintTags);
+    assertEquals(expected, constraintRevisionTags);
   }
 
   @Test

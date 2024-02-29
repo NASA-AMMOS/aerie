@@ -281,8 +281,8 @@ type ResourceSamplesResponse {
 type ConstraintResponse {
   success: String!
   constraintId: Int!,
+  constraintRevision: Int!,
   constraintName: String!,
-  type: String!,
   errors: [UserCodeError!]!
   results: [ConstraintResult!]!
 }

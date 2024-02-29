@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PostgresConstraintRepository implements ConstraintRepository {
@@ -34,9 +33,9 @@ public class PostgresConstraintRepository implements ConstraintRepository {
   }
 
   @Override
-  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Long> constraintIds, SimulationDatasetId simulationDatasetId) {
+  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(Map<Long, Constraint> constraints, SimulationDatasetId simulationDatasetId) {
     try (final var connection = this.dataSource.getConnection();
-         final var validConstraintRunAction = new GetValidConstraintRunsAction(connection, constraintIds, simulationDatasetId)) {
+         final var validConstraintRunAction = new GetValidConstraintRunsAction(connection, constraints, simulationDatasetId)) {
       final var constraintRuns = validConstraintRunAction.get();
       final var validConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
 

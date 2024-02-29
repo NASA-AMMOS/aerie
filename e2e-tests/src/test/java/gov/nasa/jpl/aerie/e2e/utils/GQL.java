@@ -52,8 +52,8 @@ public enum GQL {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
         success
         constraintId
+        constraintRevision
         constraintName
-        type
         results {
           resourceIds
           gaps {
@@ -141,7 +141,10 @@ public enum GQL {
     }"""),
   DELETE_CONSTRAINT("""
     mutation DeleteConstraint($id: Int!) {
-      delete_constraint_by_pk(id: $id) {
+      delete_constraint_specification(where: {constraint_id: {_eq: $id}}){
+        affected_rows
+      }
+      delete_constraint_metadata_by_pk(id: $id) {
         id
       }
     }"""),
@@ -170,6 +173,12 @@ public enum GQL {
       deleteSimulation: delete_simulation(where: { plan_id: { _eq: $id } }) {
         returning {
           id
+        }
+      }
+      deleteConstraintSpec: delete_constraint_specification(where: {plan_id: {_eq: $id}}){
+        returning {
+          constraint_id
+          constraint_revision
         }
       }
     }"""),
@@ -213,11 +222,13 @@ public enum GQL {
   GET_CONSTRAINT_RUNS("""
     query getConstraintRuns($simulationDatasetId: Int!) {
       constraint_run(where: {simulation_dataset_id: {_eq: $simulationDatasetId}}) {
-        constraint_definition
         constraint_id
+        constraint_revision
         simulation_dataset_id
-        definition_outdated
         results
+        constraint_definition {
+          definition
+        }
       }
     }"""),
   GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK("""
@@ -279,13 +290,16 @@ public enum GQL {
           startOffset: start_offset
           type
         }
-        constraints {
-          definition
-          description
-          id
-          model_id
-          name
-          plan_id
+        constraint_specification {
+          constraint_id
+          constraint_revision
+          constraint_metadata{
+            name
+            description
+          }
+          constraint_definition {
+            definition
+          }
         }
         duration
         id
@@ -293,14 +307,6 @@ public enum GQL {
           activityTypes: activity_types {
             name
             parameters
-          }
-          constraints {
-            definition
-            description
-            id
-            model_id
-            name
-            plan_id
           }
           id
           parameters {
@@ -436,10 +442,10 @@ public enum GQL {
         }
       }
     }"""),
-  INSERT_CONSTRAINT("""
-    mutation insertConstraint($constraint: constraint_insert_input!) {
-      constraint: insert_constraint_one(object: $constraint) {
-        id
+  INSERT_PLAN_SPEC_CONSTRAINT("""
+    mutation insertConstraintAssignToPlanSpec($constraint: constraint_specification_insert_input!) {
+      constraint: insert_constraint_specification_one(object: $constraint){
+        constraint_id
       }
     }"""),
   INSERT_PROFILE("""
@@ -497,12 +503,35 @@ public enum GQL {
     }"""),
   UPDATE_CONSTRAINT("""
     mutation updateConstraint($constraintId: Int!, $constraintDefinition: String!) {
-      update_constraint(where: {id: {_eq: $constraintId}}, _set: {definition: $constraintDefinition}) {
-        returning {
-          definition
-        }
+      constraint: insert_constraint_definition_one(object: {constraint_id: $constraintId, definition: $constraintDefinition}) {
+        definition
+        revision
       }
     }"""),
+  UPDATE_CONSTRAINT_SPEC_VERSION("""
+      mutation updateConstraintSpecVersion($plan_id: Int!, $constraint_id: Int!, $constraint_revision: Int!) {
+        update_constraint_specification_by_pk(
+          pk_columns: {constraint_id: $constraint_id, plan_id: $plan_id},
+          _set: {constraint_revision: $constraint_revision}
+        ) {
+          plan_id
+          constraint_id
+          constraint_revision
+          enabled
+        }
+      }"""),
+  UPDATE_CONSTRAINT_SPEC_ENABLED("""
+      mutation updateConstraintSpecVersion($plan_id: Int!, $constraint_id: Int!, $enabled: Boolean!) {
+        update_constraint_specification_by_pk(
+          pk_columns: {constraint_id: $constraint_id, plan_id: $plan_id},
+          _set: {enabled: $enabled}
+        ) {
+          plan_id
+          constraint_id
+          constraint_revision
+          enabled
+        }
+      }"""),
   UPDATE_ROLE_ACTION_PERMISSIONS("""
     mutation updateRolePermissions($role: user_roles_enum!, $action_permissions: jsonb!) {
       permissions: update_user_role_permission_by_pk(

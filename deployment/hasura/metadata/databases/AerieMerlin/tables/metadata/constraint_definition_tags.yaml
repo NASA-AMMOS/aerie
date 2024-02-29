@@ -1,12 +1,14 @@
 table:
-  name: constraint_tags
+  name: constraint_definition_tags
   schema: metadata
 configuration:
-  custom_name: "constraint_tags"
+  custom_name: "constraint_definition_tags"
 object_relationships:
-  - name: constraint_metadata
+  - name: constraint_definition
     using:
-      foreign_key_constraint_on: constraint_id
+      foreign_key_constraint_on:
+        - constraint_id
+        - constraint_revision
   - name: tag
     using:
       foreign_key_constraint_on: tag_id
@@ -29,16 +31,20 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [constraint_id, tag_id]
+      columns: [constraint_id, constraint_revision, tag_id]
       check: {}
   - role: user
     permission:
-      columns: [constraint_id, tag_id]
-      check: {"constraint_metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}
+      columns: [constraint_id, constraint_revision, tag_id]
+      check: {"constraint_definition":{"_or":[
+        {"author":{"_eq":"X-Hasura-User-Id"}},
+        {"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}}
 delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
   - role: user
     permission:
-      filter: {"constraint_metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}
+      filter: {"constraint_definition":{"_or":[
+        {"author":{"_eq":"X-Hasura-User-Id"}},
+        {"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}}
