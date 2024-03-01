@@ -8,6 +8,9 @@ public final class Configuration {
   public boolean traceResources = false;
 
   @Parameter
+  public boolean profileResources = false;
+
+  @Parameter
   public double approximationTolerance = 1e-2;
 
   @Parameter

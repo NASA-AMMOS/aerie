@@ -4,6 +4,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -25,9 +26,19 @@ public final class Naming {
   private Naming() {}
 
   // Use a WeakHashMap so that naming a thing doesn't prevent it from being garbage-collected.
-  private static final WeakHashMap<Object, Supplier<Optional<String>>> NAMES = new WeakHashMap<>();
-  // Way to inject a temporary "anonymous" name, so derived names still work even when not all args are named.
-  private static final MutableObject<Optional<String>> anonymousName = new MutableObject<>(Optional.empty());
+  private static final WeakHashMap<Object, Function<NamingContext, Optional<String>>> NAMES = new WeakHashMap<>();
+
+  private record NamingContext(Set<Object> visited, Optional<String> anonymousName) {
+    NamingContext visit(Object thing) {
+      var newVisited = new HashSet<>(visited);
+      newVisited.add(thing);
+      return new NamingContext(newVisited, anonymousName);
+    }
+
+    public NamingContext(String anonymousName) {
+      this(Set.of(), Optional.ofNullable(anonymousName));
+    }
+  }
 
   /**
    * Register a name for thing, as a function of args' names.
@@ -36,15 +47,12 @@ public final class Naming {
   public static <T> T name(T thing, String nameFormat, Object... args) {
     // Only capture weak references to arguments, so we don't leak memory
     var args$ = Arrays.stream(args).map(WeakReference::new).toArray(WeakReference[]::new);
-    NAMES.put(thing, () -> {
+    NAMES.put(thing, context -> {
       Object[] argNames = new Object[args$.length];
       for (int i = 0; i < args$.length; ++i) {
-        // Try to resolve the argument name by first looking up and using its registered name,
-        // or by falling back to the anonymous name.
         var argName$ = Optional.ofNullable(args$[i].get())
-                .flatMap(Naming::getName)
-                .or(anonymousName::getValue);
-        if (argName$.isEmpty()) return Optional.empty();
+                .flatMap(argRef -> getName(argRef, context));
+        if (argName$.isEmpty()) return context.anonymousName();
         argNames[i] = argName$.get();
       }
       return Optional.of(nameFormat.formatted(argNames));
@@ -58,7 +66,7 @@ public final class Naming {
    * returns empty.
    */
   public static Optional<String> getName(Object thing) {
-    return Optional.ofNullable(NAMES.get(thing)).flatMap(Supplier::get).or(anonymousName::getValue);
+    return getName(thing, new NamingContext(null));
   }
 
   /**
@@ -66,11 +74,14 @@ public final class Naming {
    * Use anonymousName for anything without a name instead of returning empty.
    */
   public static String getName(Object thing, String anonymousName) {
-    Naming.anonymousName.setValue(Optional.of(anonymousName));
-    var result = getName(thing);
-    Naming.anonymousName.setValue(Optional.empty());
-    // This will never throw, because anonymous name will guarantee that some name is found.
-    return result.orElseThrow();
+    // This expression never throws, because context always has a name available.
+    return getName(thing, new NamingContext(anonymousName)).orElseThrow();
+  }
+
+  private static Optional<String> getName(Object thing, NamingContext context) {
+    return context.visited.contains(thing)
+            ? context.anonymousName
+            : NAMES.getOrDefault(thing, NamingContext::anonymousName).apply(context.visit(thing));
   }
 
   public static String argsFormat(Collection<?> collection) {

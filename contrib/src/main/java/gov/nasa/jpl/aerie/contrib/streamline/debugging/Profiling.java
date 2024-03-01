@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
+import static java.lang.Math.*;
 import static java.util.Comparator.comparingLong;
 
 /**
@@ -62,13 +63,15 @@ public final class Profiling {
 
   public static <D> Resource<D> profile(String name, Resource<D> resource) {
     Resource<D> result = new Resource<>() {
+      private final Supplier<String> name$ = computeName(name, this);
+
       @Override
       public ErrorCatching<Expiring<D>> getDynamics() {
-        return resourceSamples.computeIfAbsent(computeName(name, this), k -> new CallStats())
+        return resourceSamples.computeIfAbsent(name$.get(), k -> new CallStats())
                 .accrue(resource::getDynamics);
       }
     };
-    assignName(result, name, resource);
+    assignName("Resource", result, name, resource);
     return result;
   }
 
@@ -78,6 +81,8 @@ public final class Profiling {
 
   public static <D extends Dynamics<?, D>> MutableResource<D> profile(String name, MutableResource<D> resource) {
     MutableResource<D> result = new MutableResource<>() {
+      private final Supplier<String> name$ = computeName(name, this);
+
       @Override
       public void emit(DynamicsEffect<D> effect) {
         resource.emit(effect);
@@ -85,11 +90,11 @@ public final class Profiling {
 
       @Override
       public ErrorCatching<Expiring<D>> getDynamics() {
-        return resourceSamples.computeIfAbsent(computeName(name, this), k -> new CallStats())
+        return resourceSamples.computeIfAbsent(name$.get(), k -> new CallStats())
                 .accrue(resource::getDynamics);
       }
     };
-    assignName(result, name, resource);
+    assignName("MutableResource", result, name, resource);
     return result;
   }
 
@@ -99,12 +104,14 @@ public final class Profiling {
 
   public static Condition profile(String name, Condition condition) {
     Condition result = new Condition() {
+      private final Supplier<String> name$ = computeName(name, this);
+
       @Override
       public Optional<Duration> nextSatisfied(boolean positive, Duration atEarliest, Duration atLatest) {
-        return accrue(conditionEvaluations, computeName(name, this), () -> condition.nextSatisfied(positive, atEarliest, atLatest));
+        return accrue(conditionEvaluations, name$.get(), () -> condition.nextSatisfied(positive, atEarliest, atLatest));
       }
     };
-    assignName(result, name, condition);
+    assignName("Condition", result, name, condition);
     return result;
   }
 
@@ -130,32 +137,22 @@ public final class Profiling {
 
   public static <R> Supplier<R> profileTask(String name, Supplier<R> task) {
     Supplier<R> result = new Supplier<>() {
+      private final Supplier<String> name$ = computeName(name, this);
+
       @Override
       public R get() {
-        return accrue(taskExecutions, computeName(name, this), task);
+        return accrue(taskExecutions, name$.get(), task);
       }
     };
-    assignName(result, name, task);
+    assignName("Task", result, name, task);
     return result;
   }
 
-  private static long ANONYMOUS_CELL_RESOURCE_ID = 0;
   public static <D extends Dynamics<?, D>> MutableResource<D> profileEffects(MutableResource<D> resource) {
-    return new MutableResource<>() {
-      private String name = null;
+    MutableResource<D> result = new MutableResource<>() {
       @Override
       public void emit(DynamicsEffect<D> effect) {
-        // Get the name the first time an effect is emitted,
-        // which will be after any registrations happen.
-        if (name == null) {
-          name = getName(this, "...");
-          if (name.equals("...")) {
-            var generatedName = "CellResource" + (ANONYMOUS_CELL_RESOURCE_ID++);
-            name(this, generatedName);
-            name = generatedName;
-          }
-        }
-        resource.emit(x -> accrue(effectsEmitted, name, () -> effect.apply(x)));
+        resource.emit(x -> accrue(effectsEmitted, getName(this, "..."), () -> effect.apply(x)));
       }
 
       @Override
@@ -163,15 +160,20 @@ public final class Profiling {
         return resource.getDynamics();
       }
     };
+    assignName("MutableResource", result, null, resource);
+    return result;
   }
 
-  private static String computeName(String explicitName, Object profiledThing) {
-    return explicitName != null ? explicitName : getName(profiledThing, "...");
+  private static Supplier<String> computeName(String explicitName, Object profiledThing) {
+    return explicitName != null
+            ? () -> explicitName
+            : () -> getName(profiledThing, "...");
   }
 
-  private static void assignName(Object profiledThing, String explicitName, Object originalThing) {
+  private static long ANONYMOUS_ID = 0;
+  private static void assignName(String typeName, Object profiledThing, String explicitName, Object originalThing) {
     if (explicitName == null) {
-      name(profiledThing, "%s", originalThing);
+      name(profiledThing, typeName + (ANONYMOUS_ID++) + " = %s", originalThing);
     } else {
       name(profiledThing, explicitName);
     }
@@ -206,12 +208,13 @@ public final class Profiling {
     }
   }
 
+  private static final int MAX_NAME_LENGTH = 60;
   private static void dumpSampleMap(Map<String, CallStats> map, long overallElapsedNanos, Comparator<CallStats> sortBy) {
-    final var nameLength = Math.max(5, map.keySet().stream().mapToInt(String::length).max().orElse(1));
+    final var nameLength = min(MAX_NAME_LENGTH, max(5, map.keySet().stream().mapToInt(String::length).max().orElse(1)));
     final var totalCalls = map.values().stream().mapToLong(c1 -> c1.callsMade).sum();
     final var totalNanos = map.values().stream().mapToLong(c1 -> c1.ownNanos).sum();
-    final var callsLength = Math.max(5, String.valueOf(totalCalls).length());
-    final var millisLength = Math.max(7, String.valueOf(totalNanos / 1_000_000).length());
+    final var callsLength = max(5, String.valueOf(totalCalls).length());
+    final var millisLength = max(7, String.valueOf(totalNanos / 1_000_000).length());
     final var titleFormat =
         "  %-" + nameLength + "s  |"
         + "  %" + callsLength + "s %7s  |"
@@ -255,7 +258,7 @@ public final class Profiling {
          var stats = entry.getValue();
          System.out.printf(
              lineFormat,
-             entry.getKey(),
+             fit(entry.getKey(), nameLength),
              stats.callsMade,
              100.0 * stats.callsMade / totalCalls,
              stats.totalNanos / 1_000_000,
@@ -265,6 +268,13 @@ public final class Profiling {
              100.0 * stats.ownNanos / totalNanos,
              100.0 * stats.ownNanos / overallElapsedNanos);
        });
+  }
+
+  private static final String TRUNCATED_INDICATOR = " ...";
+  private static String fit(String s, int maxNameLength) {
+    return s.length() <= maxNameLength
+            ? s
+            : s.substring(0, maxNameLength - TRUNCATED_INDICATOR.length()) + TRUNCATED_INDICATOR;
   }
 
   private static final class CallStats {

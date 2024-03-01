@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ThinResource;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
 import gov.nasa.jpl.aerie.contrib.streamline.utils.*;
 import org.apache.commons.lang3.function.TriFunction;
 
@@ -11,6 +12,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.utils.FunctionalUtils.curry;
 
 /**
@@ -21,14 +23,37 @@ import static gov.nasa.jpl.aerie.contrib.streamline.utils.FunctionalUtils.curry;
 public final class ResourceMonad {
   private ResourceMonad() {}
 
+  private static boolean profileAllResources = false;
+  /**
+   * Turn on profiling for all getDynamics calls on {@link Resource}s derived through {@link ResourceMonad}.
+   *
+   * <p>
+   *     Calling this method once before constructing your model will profile getDynamics on every derived resource.
+   *     Profiling may be compute and/or memory intensive, and should not be used in production.
+   * </p>
+   * <p>
+   *     If only a few cells are suspect, you can also call {@link Profiling#profile}
+   *     directly on just those resource, rather than profiling every resource.
+   * </p>
+   * <p>
+   *     Call {@link Profiling#dump()} to see results.
+   * </p>
+   */
+  public static void profileAllResources() {
+    profileAllResources = true;
+  }
+
   public static <A> Resource<A> pure(A a) {
-    return ThinResourceMonad.pure(DynamicsMonad.pure(a))::getDynamics;
+    Resource<A> result = ThinResourceMonad.pure(DynamicsMonad.pure(a))::getDynamics;
+    if (profileAllResources) result = profile(result);
+    return result;
   }
 
   public static <A, B> Resource<B> apply(Resource<A> a, Resource<Function<A, B>> f) {
     Resource<B> result = ThinResourceMonad.apply(a, ThinResourceMonad.map(f, DynamicsMonad::apply))::getDynamics;
     addDependency(result, a);
     addDependency(result, f);
+    if (profileAllResources) result = profile(result);
     return result;
   }
 
@@ -43,6 +68,7 @@ public final class ResourceMonad {
     // The ::getDynamics at the end up-converts back to Resource, from ThinResource
     Resource<A> result = ThinResourceMonad.map(ThinResourceMonad.join(ThinResourceMonad.map(a$, ResourceMonad::distribute)), DynamicsMonad::join)::getDynamics;
     addDependency(result, a);
+    if (profileAllResources) result = profile(result);
     return result;
   }
 
