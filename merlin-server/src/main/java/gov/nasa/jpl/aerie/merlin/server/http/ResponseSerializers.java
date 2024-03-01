@@ -191,6 +191,14 @@ public final class ResponseSerializers {
       return Json.createObjectBuilder(serializeInstantiationException(f.ex()).asJsonObject())
           .add("type", "INSTANTIATION_ERRORS")
           .build();
+    } else if (response instanceof BulkArgumentValidationResponse.NoSuchMissionModelError m) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("type", "NO_SUCH_MISSION_MODEL")
+                 .add("errors", Json.createObjectBuilder()
+                     .add("noSuchMissionModelError", serializeNoSuchMissionModelException(m.ex()))
+                     .build())
+                 .build();
     }
 
     // This should never happen, but we don't have exhaustive pattern matching

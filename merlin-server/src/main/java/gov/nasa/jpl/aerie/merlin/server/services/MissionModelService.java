@@ -105,6 +105,7 @@ public interface MissionModelService {
   sealed interface BulkArgumentValidationResponse {
     record Success() implements BulkArgumentValidationResponse { }
     record Validation(List<ValidationNotice> notices) implements BulkArgumentValidationResponse { }
+    record NoSuchMissionModelError(NoSuchMissionModelException ex) implements BulkArgumentValidationResponse { }
     record NoSuchActivityError(NoSuchActivityTypeException ex) implements BulkArgumentValidationResponse { }
     record InstantiationError(InstantiationException ex) implements BulkArgumentValidationResponse { }
   }

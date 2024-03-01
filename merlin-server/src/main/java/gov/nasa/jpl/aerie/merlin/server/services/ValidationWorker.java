@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
-import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkArgumentValidationResponse;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -49,9 +48,6 @@ public record ValidationWorker(LocalMissionModelService missionModelService, int
           final var duration = (endTime - beginTime) / 1_000_000.0;
           logger.debug("processed model batch of size {} in {} ms", unvalidatedDirectives.size(), duration);
         }
-
-      } catch (NoSuchMissionModelException ex) {
-        logger.error("Validation request failed due to no such mission model: {}", ex.toString());
       } catch (InterruptedException ex) {
         // we were interrupted, so exit gracefully
         return;
