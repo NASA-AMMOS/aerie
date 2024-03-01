@@ -299,6 +299,80 @@ public class ComparisonsTest {
     check_extrema(false, true);
   }
 
+  // Unrepresentable convergence:
+  // These tests reflect polynomials that in theory converge, but do so in timespans
+  // that are too large to represent. Thus, they should be treated as non-converging.
+
+  @Test
+  void comparing_linear_terms_with_convergence_unrepresentable_by_double() {
+    setup(() -> {
+      set(p, polynomial(Double.MAX_VALUE));
+      set(q, polynomial(0, 0.1));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, false, false);
+    check_comparison(p_gt_q, true, false);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
+  @Test
+  void comparing_linear_terms_with_convergence_unrepresentable_by_duration() {
+    setup(() -> {
+      set(p, polynomial(Duration.MAX_VALUE.ratioOver(SECOND)));
+      set(q, polynomial(0, 0.1));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, false, false);
+    check_comparison(p_gt_q, true, false);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
+  @Test
+  void comparing_nonlinear_terms_with_convergence_unrepresentable_by_double() {
+    setup(() -> {
+      set(p, polynomial(Double.MAX_VALUE));
+      set(q, polynomial(0, 0, 0.1));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, false, false);
+    check_comparison(p_gt_q, true, false);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
+  @Test
+  void comparing_nonlinear_terms_with_convergence_unrepresentable_by_duration() {
+    setup(() -> {
+      set(p, polynomial(Duration.MAX_VALUE.ratioOver(SECOND) * Duration.MAX_VALUE.ratioOver(SECOND)));
+      set(q, polynomial(0, 0, 0.1));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, false, false);
+    check_comparison(p_gt_q, true, false);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
+  @Test
+  void comparing_pathological_nonlinear_terms_with_convergence_unrepresentable_by_duration() {
+    setup(() -> {
+      set(p, polynomial(Duration.MAX_VALUE.ratioOver(SECOND) * Duration.MAX_VALUE.ratioOver(SECOND)));
+      set(q, polynomial(0, Duration.MIN_VALUE.ratioOver(SECOND), 1.0 + Math.ulp(1.0)));
+    });
+
+    check_comparison(p_lt_q, false, false);
+    check_comparison(p_lte_q, false, false);
+    check_comparison(p_gt_q, true, false);
+    check_comparison(p_gte_q, true, false);
+    check_extrema(true, false);
+  }
+
   private void check_comparison(Resource<Discrete<Boolean>> result, boolean expectedValue, boolean expectCrossover) {
     reset();
     var resultDynamics = result.getDynamics().getOrThrow();

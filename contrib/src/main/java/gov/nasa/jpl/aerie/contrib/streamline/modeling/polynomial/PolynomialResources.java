@@ -364,6 +364,7 @@ public final class PolynomialResources {
       Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
     LinearBoundaryConsistencySolver rateSolver = new LinearBoundaryConsistencySolver("clampedIntegrate rate solver");
     var integral = resource(polynomial(startingValue));
+    var neverExpiringIntegral = eraseExpiry(integral);
 
     // Solve for the rate as a function of value
     var overflowRate = rateSolver.variable("overflowRate", Domain::lowerBound);
@@ -377,11 +378,11 @@ public final class PolynomialResources {
 
     // Set up rate clamping conditions
     var integrandUB = choose(
-        greaterThanOrEquals(integral, upperBound),
+        greaterThanOrEquals(neverExpiringIntegral, upperBound),
         differentiate(upperBound),
         constant(Double.POSITIVE_INFINITY));
     var integrandLB = choose(
-        lessThanOrEquals(integral, lowerBound),
+        lessThanOrEquals(neverExpiringIntegral, lowerBound),
         differentiate(lowerBound),
         constant(Double.NEGATIVE_INFINITY));
 
@@ -390,10 +391,10 @@ public final class PolynomialResources {
 
     // Use a simple feedback loop on volumes to do the integration and clamping.
     // Clamping here takes care of discrete under-/overflows and overshooting bounds due to discrete time steps.
-    var clampedCell = clamp(integral, lowerBound, upperBound);
+    var clampedCell = clamp(neverExpiringIntegral, lowerBound, upperBound);
     var correctedCell = map(clampedCell, rate.resource(), (v, r) -> r.integral(v.extract()));
     // Use the corrected integral values to set volumes, but erase expiry information in the process to avoid loops
-    forward(eraseExpiry(correctedCell), integral);
+    forward(correctedCell, integral);
 
     name(integral, "Clamped Integral (%s)", integrand);
     name(overflowRate.resource(), "Overflow of %s", integral);

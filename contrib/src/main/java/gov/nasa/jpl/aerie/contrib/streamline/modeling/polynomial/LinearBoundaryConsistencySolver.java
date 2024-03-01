@@ -27,7 +27,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad.bind;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.eraseExpiry;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.getName;
@@ -314,7 +313,7 @@ public final class LinearBoundaryConsistencySolver {
         // Expiry for driven terms is captured by re-solving rather than expiring the solution.
         // If solver has a feedback loop from last iteration (which is common)
         // feeding that expiry in here can loop the solver forever.
-        var result = eraseExpiry(drivenTerm);
+        var result = drivenTerm;
         for (var drivingVariable : drivingVariables) {
           var scale = controlledTerm.get(drivingVariable);
           var domain = domains.get(drivingVariable);
