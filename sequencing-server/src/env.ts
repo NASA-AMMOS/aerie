@@ -12,6 +12,7 @@ export type Env = {
   STORAGE: string;
   SEQUENCING_WORKER_NUM: string;
   SEQUENCING_MAX_WORKER_HEAP_MB: string;
+  TRANSPILER_ENABLED: string;
 };
 
 export const defaultEnv: Env = {
@@ -28,6 +29,7 @@ export const defaultEnv: Env = {
   STORAGE: 'sequencing_file_store',
   SEQUENCING_WORKER_NUM: '8',
   SEQUENCING_MAX_WORKER_HEAP_MB: '1000',
+  TRANSPILER_ENABLED: 'true',
 };
 
 export function getEnv(): Env {
@@ -47,6 +49,7 @@ export function getEnv(): Env {
   const SEQUENCING_WORKER_NUM = env['SEQUENCING_WORKER_NUM'] ?? defaultEnv.SEQUENCING_WORKER_NUM;
   const SEQUENCING_MAX_WORKER_HEAP_MB =
     env['SEQUENCING_MAX_WORKER_HEAP_MB'] ?? defaultEnv.SEQUENCING_MAX_WORKER_HEAP_MB;
+  const TRANSPILER_ENABLED = env['TRANSPILER_ENABLED'] ?? defaultEnv.TRANSPILER_ENABLED;
   return {
     HASURA_GRAPHQL_ADMIN_SECRET,
     LOG_FILE,
@@ -61,5 +64,6 @@ export function getEnv(): Env {
     STORAGE,
     SEQUENCING_WORKER_NUM,
     SEQUENCING_MAX_WORKER_HEAP_MB,
+    TRANSPILER_ENABLED,
   };
 }
