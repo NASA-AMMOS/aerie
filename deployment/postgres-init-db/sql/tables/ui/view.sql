@@ -1,4 +1,4 @@
-create table view (
+create table ui.view (
   created_at timestamptz not null default now(),
   definition jsonb not null,
   id integer generated always as identity,
@@ -9,30 +9,22 @@ create table view (
   constraint view_primary_key primary key (id)
 );
 
-comment on table view is e''
+comment on table ui.view is e''
   'View configuration for Aerie UI.';
-comment on column view.created_at is e''
+comment on column ui.view.created_at is e''
   'Time the view was created.';
-comment on column view.definition is e''
+comment on column ui.view.definition is e''
   'JSON blob of the view definition that implements the view JSON schema.';
-comment on column view.id is e''
+comment on column ui.view.id is e''
   'Integer primary key of the view.';
-comment on column view.name is e''
+comment on column ui.view.name is e''
   'Human-readable name of the view.';
-comment on column view.owner is e''
+comment on column ui.view.owner is e''
   'The user who owns the view.';
-comment on column view.updated_at is e''
+comment on column ui.view.updated_at is e''
   'Time the view was last updated.';
 
-create or replace function view_set_updated_at()
-returns trigger
-security definer
-language plpgsql as $$begin
-  new.updated_at = now();
-  return new;
-end$$;
-
 create trigger set_timestamp
-before update on view
+before update on ui.view
 for each row
-execute function view_set_updated_at();
+execute function util_functions.set_updated_at();
