@@ -133,8 +133,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
   public List<BulkArgumentValidationResponse> validateActivityArgumentsBulk(
       final MissionModelId modelId,
-      final List<ActivityDirectiveForValidation> activities
-  ) throws NoSuchMissionModelException, MissionModelLoadException {
+      final List<ActivityDirectiveForValidation> activities) {
     // load mission model once for all activities
     ModelType<?, ?> modelType;
     try {
@@ -145,6 +144,10 @@ public final class LocalMissionModelService implements MissionModelService {
       return activities.stream()
           .map(directive -> new BulkArgumentValidationResponse.NoSuchMissionModelError(e))
           .collect(Collectors.toList());
+    } catch (MissionModelLoadException e) {
+      log.error("Caught MissionModelLoadException, skipping this batch but leaving validations pending...");
+      log.error(e.toString());
+      return List.of();
     }
     final var registry = DirectiveTypeRegistry.extract(modelType);
 

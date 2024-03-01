@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
 import java.util.List;
