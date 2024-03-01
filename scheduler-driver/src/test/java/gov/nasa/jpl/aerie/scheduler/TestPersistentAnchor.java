@@ -245,11 +245,13 @@ public class TestPersistentAnchor {
   }
 
   //Anchor at END
+
+  // In this test the template activities cannot be added as the anchor is in the future
   @Test
   public void testCaseStartAtStartAnchorAtEnd00() throws SchedulingInterruptedException{
     TestData testData = createTestCaseStartsAt(PersistentTimeAnchor.END, false, false, 2, 0, 20, TimeAnchor.START, null, 0);
     assertTrue(testData.plan.isPresent());
-    assertEquals(6, testData.plan.get().getActivitiesById().size());
+    assertEquals(3, testData.plan.get().getActivitiesById().size());
     assertTrue(allAnchorsIncluded(testData));
     assertTrue(checkAnchoredActivities(testData, true, false));
     assertTrue(checkUnanchoredActivities(testData));

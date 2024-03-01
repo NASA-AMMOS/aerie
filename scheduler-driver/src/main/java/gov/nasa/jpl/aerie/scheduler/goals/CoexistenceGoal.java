@@ -314,7 +314,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           2.3 No matching activity found: MissingActivityTemplateConflict created
 
         createPersistentAnchor	missingActAssociationsWithAnchor	missingActAssociationsWithoutAnchor 	type conflict
-        0	                      0	                                0	                                    MissingActivityTemplateConflict
+        0	                      0	                                0	                                    MissingActivityTemplateConflict // Check no anchor created
         0	                      0	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithoutAnchor, Optional.empty(), false)
         0	                      1	                                0	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false) //TODO jd check this case
         0	                      1	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
@@ -325,7 +325,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
  */
         // If anchors are disabled or there are some activity directives that satisfy the goal and already have the anchor or the anchorID is null, then we pass an empty anchor. Otherwise, we pass the anchorID of the directive that can satisfy the goal
         final Optional<SchedulingActivityDirectiveId> anchorValue = (this.createPersistentAnchor.equals(PersistentTimeAnchor.DISABLED) || !missingActAssociationsWithAnchor.isEmpty() || anchorIdTo == null) ? Optional.empty() : Optional.of(anchorIdTo);
-        Optional<Boolean> anchoredToStart = this.startExpr != null ? Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)) : Optional.of(this.endExpr.getAnchor().equals(TimeAnchor.START));
+        // TODO jd might not be needed Optional<Boolean> anchoredToStart = this.startExpr != null ? Optional.of(this.startExpr.getAnchor().equals(TimeAnchor.START)) : Optional.of(this.endExpr.getAnchor().equals(TimeAnchor.START));
         //  Create MissingActivityTemplateConflict if no matching target activity found
         if (activitiesFound.isEmpty()) {
           conflicts.add(new MissingActivityTemplateConflict(
@@ -335,7 +335,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
               createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
               1,
               anchorValue,
-              anchoredToStart,
+                  Optional.of(this.createPersistentAnchor.equals(PersistentTimeAnchor.START)),
               Optional.empty()
           ));
         } else {
@@ -344,7 +344,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
                 this,
                 actsToAssociate,
                 anchorValue,
-                anchoredToStart
+                    Optional.of(this.createPersistentAnchor.equals(PersistentTimeAnchor.START))
             ));
         }
       }

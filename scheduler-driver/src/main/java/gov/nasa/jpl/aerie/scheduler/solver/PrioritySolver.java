@@ -682,12 +682,13 @@ public class PrioritySolver implements Solver {
             narrowed = narrowByResourceConstraints(actWindow, List.of(stateConstraints));
           }
           if(narrowed.includes(actWindow)){
-            // If anchor is missing for an existing activity act and it is allowed to update activities, then the appropriate anchorId has been included in MissingAssociationConflict.
+            // If existing activity is a match but is missing the anchor, then the appropriate anchorId has been included in MissingAssociationConflict.
             // In that case, a new activity must be created as a copy of act but including the anchorId. This activity is then added to all appropriate data structures and the association is created
             if (missingAssociationConflict.getAnchorIdTo().isPresent()){
               SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingAssociationConflict.getAnchorIdTo().get());
               Duration startOffset = act.startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor));
               // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
+              //TODO jd review this condition
               if(((MissingAssociationConflict) missing).getAnchorToStart().isEmpty() || ((MissingAssociationConflict) missing).getAnchorToStart().get() || startOffset.longerThan(Duration.ZERO)){
                 var replacementAct = SchedulingActivityDirective.copyOf(
                     act,
