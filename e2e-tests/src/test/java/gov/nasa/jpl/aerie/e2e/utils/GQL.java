@@ -501,6 +501,15 @@ public enum GQL {
         simulationDatasetId
       }
     }"""),
+  UPDATE_ACTIVITY_DIRECTIVE_ARGUMENTS("""
+    mutation updateActivityDirectiveArguments($id: Int!, $plan_id: Int!, $arguments: jsonb!) {
+      updateActivityDirectiveArguments: update_activity_directive_by_pk(
+        pk_columns: {id: $id, plan_id: $plan_id},
+        _set: {arguments: $arguments}
+      ) {
+        id
+      }
+  }"""),
   UPDATE_CONSTRAINT("""
     mutation updateConstraint($constraintId: Int!, $constraintDefinition: String!) {
       constraint: insert_constraint_definition_one(object: {constraint_id: $constraintId, definition: $constraintDefinition}) {

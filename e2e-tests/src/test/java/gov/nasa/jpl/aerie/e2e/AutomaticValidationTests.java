@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import java.io.IOException;
 import java.util.List;
 
@@ -128,6 +130,30 @@ public class AutomaticValidationTests {
             "temperature",
             "Expected real number, got StringValue[value=this is a string]"))
     ), activityValidation);
+  }
+
+  @Test
+  void noSuchMissionModelError() throws IOException, InterruptedException {
+    final var activityId = hasura.insertActivity(
+        planId,
+        "BiteBanana",
+        "1h",
+        JsonValue.EMPTY_JSON_OBJECT
+    );
+    Thread.sleep(1000); // TODO consider a while loop here
+
+    hasura.deleteMissionModel(modelId);
+
+    final var arguments = Json.createObjectBuilder().add("biteSize", 2).build();
+    hasura.updateActivityDirectiveArguments(planId, activityId, arguments);
+    Thread.sleep(1000); // TODO consider a while loop here
+
+    final var activityValidations = hasura.getActivityValidations(planId);
+    final ActivityValidation activityValidation = activityValidations.get((long) activityId);
+    assertEquals(
+        new ActivityValidation.NoSuchMissionModelFailure("no such mission model", "0"),
+        activityValidation
+    );
   }
 
   @Test

@@ -192,6 +192,16 @@ public class HasuraRequests implements AutoCloseable {
     return makeRequest(GQL.CREATE_ACTIVITY_DIRECTIVE, variables).getJsonObject("createActivityDirective").getInt("id");
   }
 
+  public void updateActivityDirectiveArguments(int planId, int activityId, JsonObject arguments) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("id", activityId)
+                              .add("arguments", arguments)
+                              .build();
+
+    makeRequest(GQL.UPDATE_ACTIVITY_DIRECTIVE_ARGUMENTS, variables);
+  }
+
   public void deleteActivity(int planId, int activityId) throws IOException {
     final var variables = Json.createObjectBuilder()
                               .add("plan_id", planId)
