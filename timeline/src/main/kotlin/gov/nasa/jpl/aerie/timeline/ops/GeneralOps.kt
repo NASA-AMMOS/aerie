@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.timeline.collections.Intervals
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.util.coalesceList
+import gov.nasa.jpl.aerie.timeline.util.map2ParallelLists
 import gov.nasa.jpl.aerie.timeline.util.sorted
 import gov.nasa.jpl.aerie.timeline.util.truncateList
 
@@ -86,6 +87,13 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
    * @suppress
    */
   fun shouldCoalesce(): (V.(V) -> Boolean)?
+
+  /**
+   * Whether the result of [collect] is guaranteed to be a sorted list.
+   *
+   * @suppress
+   */
+  fun isAlwaysSorted(): Boolean
 
   /**
    * [(DOC)][unset] Unsets everything in a given interval. Timeline objects whose intervals fully contain the rejected interval may be
@@ -188,6 +196,14 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
    * @param f a mapper function that converts each timeline object to an interval to be used as the new interval for that object
    */
   fun unsafeMapIntervals(boundsTransformer: BoundsTransformer, truncate: Boolean, f: (V) -> Interval) = unsafeMap(boundsTransformer, truncate) { v -> v.withNewInterval(f(v)) }
+
+  /**
+   * Performs a generalized binary operation between this and another timeline.
+   */
+  fun <W: IntervalLike<W>, OTHER: GeneralOps<W, OTHER>, R: IntervalLike<R>, RESULT: GeneralOps<R, RESULT>> unsafeMap2(ctor: (Timeline<R, RESULT>) -> RESULT, other: GeneralOps<W, OTHER>, op: (V, W, Interval) -> R?) =
+      unsafeOperate(ctor) { opts ->
+        map2ParallelLists(collect(opts), other.collect(opts), isAlwaysSorted(), other.isAlwaysSorted(), op)
+      }
 
   /**
    * [(DOC)][filter] Removes or retains objects based on a predicate.

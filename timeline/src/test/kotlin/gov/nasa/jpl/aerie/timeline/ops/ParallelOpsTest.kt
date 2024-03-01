@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.timeline.ops
 
-import gov.nasa.jpl.aerie.timeline.BinaryOperation
+import gov.nasa.jpl.aerie.timeline.NullBinaryOperation
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.seconds
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.at
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.between
@@ -39,7 +39,7 @@ class ParallelOpsTest {
         Segment(seconds(0) .. seconds(3), 2),
         Segment(seconds(4) .. seconds(6), 5),
         Segment(seconds(2) .. seconds(5), 3)
-    ).reduceIntoProfile(::Numbers, BinaryOperation.reduce(
+    ).reduceIntoProfile(::Numbers, NullBinaryOperation.reduce(
         { seg, _ -> seg.value },
         { seg, acc, _ -> seg.value + acc }
     )).collect()

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.timeline.*
 import gov.nasa.jpl.aerie.timeline.collections.Intervals
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Numbers
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Booleans
+import gov.nasa.jpl.aerie.timeline.ops.coalesce.CoalesceNoOp
 import gov.nasa.jpl.aerie.timeline.payloads.Connection
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
@@ -13,9 +14,12 @@ import gov.nasa.jpl.aerie.timeline.util.truncateList
 /**
  * Operations mixin for timelines of potentially overlapping objects.
  *
- * Opposite of [SerialOps].
+ * Opposite of [SerialSegmentOps].
  */
-interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOps<T, THIS> {
+interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOps<T, THIS>, CoalesceNoOp<T, THIS> {
+
+  override fun isAlwaysSorted() = false
+
   /** [(DOC)][merge] Combines two timelines together by overlaying them. Does not perform any transformation. */
   infix fun <OTHER: GeneralOps<T, OTHER>> merge(other: GeneralOps<T, OTHER>) = unsafeOperate { opts ->
     collect(opts) + other.collect(opts)
@@ -42,7 +46,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param ctor the constructor of the result timeline
    * @param f a function which converts a payload object into the value of the resulting segment
    */
-  fun <R: Any, RESULT: SerialOps<R, RESULT>> flattenIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (T) -> R) =
+  fun <R: Any, RESULT: SerialSegmentOps<R, RESULT>> flattenIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (T) -> R) =
       unsafeOperate(ctor) { bounds ->
         val result = collect(bounds).mapTo(mutableListOf()) { Segment(it.interval, f(it)) }
         result.sortWith { l, r -> l.interval.compareStarts(r.interval) }
@@ -54,7 +58,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    *
    * After the payload objects are converted into segments, any overlapping segments are resolved by combining them
    * with a binary operation similar to a reduce operation (as in functional programming). It is recommended to
-   * create the binary operation using the [BinaryOperation.reduce] function.
+   * create the binary operation using the [NullBinaryOperation.reduce] function.
    *
    * ## Example
    *
@@ -80,7 +84,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param ctor the constructor of the result profile
    * @param op a binary operation for converting and combining the input objects
    */
-  fun <R: Any, RESULT: SerialOps<R, RESULT>> reduceIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, op: BinaryOperation<T, R, R>) =
+  fun <R: Any, RESULT: SerialSegmentOps<R, RESULT>> reduceIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, op: NullBinaryOperation<T, R, R>) =
       unsafeOperate(ctor) { opts ->
         val bounds = opts.bounds
         var acc: List<Segment<R>> = listOf()
@@ -132,7 +136,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
   fun active() = flattenIntoProfile(::Booleans) { _ -> true }.assignGaps(Booleans(false))
 
   /** [(DOC)][countActive] Returns a [Numbers] profile that corresponds to the number of active objects at any given time. */
-  fun countActive() = reduceIntoProfile(::Numbers, BinaryOperation.reduce(
+  fun countActive() = reduceIntoProfile(::Numbers, NullBinaryOperation.reduce(
       { _, _ -> 1 },
       { _, acc, _ -> acc.toInt() + 1}
   )).assignGaps(Numbers(0))
@@ -189,7 +193,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param other the other timeline to connect to
    * @param connectToBounds whether to connect to the end of the bounds if the other timeline ends prematurely
    */
-  fun <U: IntervalLike<U>, OTHER: ParallelOps<U, OTHER>>connectTo(other: ParallelOps<U, OTHER>, connectToBounds: Boolean) =
+  fun <U: IntervalLike<U>, OTHER: ParallelOps<U, OTHER>> connectTo(other: ParallelOps<U, OTHER>, connectToBounds: Boolean) =
       unsafeOperate(::Intervals) { opts ->
         val sortedFrom = collect(opts).sortedWith { l, r -> l.interval.compareEnds(r.interval) }
         val sortedTo = other.collect(opts).sortedWith { l, r -> l.interval.compareStarts(r.interval) }
@@ -235,4 +239,5 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    */
   fun rollingDuration(range: Duration, unit: Duration) =
       accumulatedDuration(unit).shiftedDifference(range)
+
 }

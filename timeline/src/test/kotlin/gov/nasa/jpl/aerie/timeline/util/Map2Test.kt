@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.timeline.util
 
-import gov.nasa.jpl.aerie.timeline.BinaryOperation
+import gov.nasa.jpl.aerie.timeline.NullBinaryOperation
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.seconds
 import gov.nasa.jpl.aerie.timeline.Interval
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.between
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Nested
 
-class Map2SerialTest {
+class Map2Test {
 
   @Test
   fun basicCombineOrIdentity() {
@@ -20,7 +20,7 @@ class Map2SerialTest {
 
     val result = map2SegmentLists(
         left, right,
-        BinaryOperation.combineOrIdentity { l, r, _ -> l + r}
+        NullBinaryOperation.combineOrIdentity { l, r, _ -> l + r}
     )
 
     val expected = listOf(
@@ -39,7 +39,7 @@ class Map2SerialTest {
 
     val result = map2SegmentLists(
         left, right,
-        BinaryOperation.combineOrNull { l, r, _ -> l + r}
+        NullBinaryOperation.combineOrNull { l, r, _ -> l + r}
     )
 
     val expected = listOf(
@@ -53,7 +53,7 @@ class Map2SerialTest {
   inner class SegmentAlignment {
 
     // Helper functions for below
-    val op = BinaryOperation.combineOrIdentity<Int> { l, r, _ -> l + r }
+    val op = NullBinaryOperation.combineOrIdentity<Int> { l, r, _ -> l + r }
     fun makeLeft(s: Long, e: Long, si: Interval.Inclusivity = Inclusive, ei: Interval.Inclusivity = Inclusive) =
         listOf(Segment(between(seconds(s), seconds(e), si, ei), -1))
 

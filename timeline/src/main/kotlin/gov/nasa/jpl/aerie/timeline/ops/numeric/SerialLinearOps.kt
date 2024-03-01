@@ -34,18 +34,20 @@ interface SerialLinearOps<THIS: SerialLinearOps<THIS>>: SerialNumericOps<LinearE
   }
 
   /** [(DOC)][plus] Adds this and another numeric profile. */
-  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> plus(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear(), BinaryOperation.combineOrNull { l, r, _ ->
+  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> plus(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear()) { l, r, _ ->
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     LinearEquation(l.initialTime, l.initialValue + shiftedRight.initialValue, l.rate + r.rate)
-  })
+  }
+
   /** [(DOC)][plus] Adds a constant number to this. */
   operator fun plus(n: Number) = plus(Numbers(n))
 
   /** [(DOC)][minus] Subtracts another numeric profile from this. */
-  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> minus(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear(), BinaryOperation.combineOrNull { l, r, _ ->
+  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> minus(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear()) { l, r, _ ->
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     LinearEquation(l.initialTime, l.initialValue - shiftedRight.initialValue, l.rate - r.rate)
-  })
+  }
+
   /** [(DOC)][minus] Subtracts a constant number from this. */
   operator fun minus(n: Number) = minus(Numbers(n))
 
@@ -54,12 +56,13 @@ interface SerialLinearOps<THIS: SerialLinearOps<THIS>>: SerialNumericOps<LinearE
    *
    * @throws SerialLinearOpException if both profiles have non-zero rate at the same time.
    */
-  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> times(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear(), BinaryOperation.combineOrNull { l, r, i ->
+  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> times(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear()) { l, r, i ->
     if (!l.isConstant() && !r.isConstant()) throw SerialLinearOpException("Cannot multiply two linear equations that are non-constant at the same time (at time ${i.start})")
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     val newRate = l.rate * shiftedRight.initialValue + r.rate * l.initialValue
     LinearEquation(l.initialTime, l.initialValue * shiftedRight.initialValue, newRate)
-  })
+  }
+
   /** [(DOC)][times] Multiplies this by a constant number. */
   operator fun times(n: Number) = times(Numbers(n))
 
@@ -68,11 +71,12 @@ interface SerialLinearOps<THIS: SerialLinearOps<THIS>>: SerialNumericOps<LinearE
    *
    * @throws SerialLinearOpException if the divisor has a non-zero rate at any time that the dividend is defined.
    */
-  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> div(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear(), BinaryOperation.combineOrNull { l, r, i ->
+  operator fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> div(other: SerialNumericOps<W, OTHER>) = map2Values(other.toSerialLinear()) { l, r, i ->
     if (!r.isConstant()) throw SerialLinearOpException("Cannot divide by a non-piecewise-constant linear equation (at time ${i.start})")
     LinearEquation(l.initialTime, l.initialValue / r.initialValue, l.rate / r.initialValue)
-  })
-  /** [(DOC)][div] Calculates this divided by a contant number. */
+  }
+
+  /** [(DOC)][div] Calculates this divided by a constant number. */
   operator fun div(n: Number) = div(Numbers(n))
 
   /**
@@ -82,13 +86,14 @@ interface SerialLinearOps<THIS: SerialLinearOps<THIS>>: SerialNumericOps<LinearE
    *                                 or if the base has a non-zero rate at any time that the exponent is defined and not
    *                                 either 0 or 1.
    */
-  infix fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> pow(exp: SerialNumericOps<W, OTHER>) = map2Values(exp.toSerialLinear(), BinaryOperation.combineOrNull { l, r, i ->
+  infix fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> pow(exp: SerialNumericOps<W, OTHER>) = map2Values(exp.toSerialLinear()) { l, r, i ->
     if (!r.isConstant()) throw SerialLinearOpException("Cannot apply a non-piecewise-constant exponent (at time ${i.start}")
     if (r.initialValue == 0.0) LinearEquation(1.0)
     else if (r.initialValue == 1.0) l
     else if (!l.isConstant()) throw SerialLinearOpException("Cannot apply an exponent to a non-piecewise-constant profile")
     else LinearEquation(l.initialValue.pow(r.initialValue))
-  })
+  }
+
   /** [(DOC)][pow] Calculates this raised to the power of a constant number. */
   infix fun pow(n: Number) = pow(Numbers(n))
 
@@ -123,7 +128,7 @@ interface SerialLinearOps<THIS: SerialLinearOps<THIS>>: SerialNumericOps<LinearE
   infix fun greaterThanOrEqualTo(n: Number) = greaterThanOrEqualTo(Numbers(n))
 
   private fun <W: Any, OTHER: SerialNumericOps<W, OTHER>> inequalityHelper(other: SerialNumericOps<W, OTHER>, f: LinearEquation.(LinearEquation) -> Booleans) =
-      flatMap2Values(::Booleans, other.toSerialLinear(), BinaryOperation.combineOrNull { l, r, _ -> l.f(r) })
+      flatMap2Values(::Booleans, other.toSerialLinear()) { l, r, _ -> l.f(r) }
 
 
   override fun changes() =
@@ -156,7 +161,7 @@ interface SerialLinearOps<THIS: SerialLinearOps<THIS>>: SerialNumericOps<LinearE
    * [(DOC)][transitions] Returns a [Booleans] that is true whenever this discontinuously transitions between
    * a specific pair of values, and false or gap everywhere else.
    */
-  fun transitions(from: Double, to: Double) = detectEdges(BinaryOperation.cases(
+  fun transitions(from: Double, to: Double) = detectEdges(NullBinaryOperation.cases(
       { l, i -> if (l.valueAt(i.start) == from) null else false },
       { r, i -> if (r.valueAt(i.start) == to) null else false },
       { l, r, i -> l.valueAt(i.start) == from && r.valueAt(i.start) == to }

@@ -1,7 +1,8 @@
 package gov.nasa.jpl.aerie.timeline.util
 
-import gov.nasa.jpl.aerie.timeline.BinaryOperation
+import gov.nasa.jpl.aerie.timeline.NullBinaryOperation
 import gov.nasa.jpl.aerie.timeline.Interval
+import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.payloads.transpose
 
@@ -24,20 +25,20 @@ import gov.nasa.jpl.aerie.timeline.payloads.transpose
  * This routine performs a single pass down each list, with a computational complexity
  * proportional to the total number of segments in both lists.
  */
-fun <Left, Right, Out> map2SegmentLists(
-    left: List<Segment<Left & Any>>,
-    right: List<Segment<Right & Any>>,
-    op: BinaryOperation<Left, Right, Out?>
-): List<Segment<Out & Any>> {
-  val result = mutableListOf<Segment<Out & Any>>()
+fun <LEFT, RIGHT, OUT> map2SegmentLists(
+    left: List<Segment<LEFT & Any>>,
+    right: List<Segment<RIGHT & Any>>,
+    op: NullBinaryOperation<LEFT, RIGHT, OUT?>
+): List<Segment<OUT & Any>> {
+  val result = mutableListOf<Segment<OUT & Any>>()
 
   var leftIndex = 0
   var rightIndex = 0
 
-  var leftSegment: Segment<Left & Any>?
-  var rightSegment: Segment<Right & Any>?
-  var remainingLeftSegment: Segment<Left & Any>? = null
-  var remainingRightSegment: Segment<Right & Any>? = null
+  var leftSegment: Segment<LEFT & Any>?
+  var rightSegment: Segment<RIGHT & Any>?
+  var remainingLeftSegment: Segment<LEFT & Any>? = null
+  var remainingRightSegment: Segment<RIGHT & Any>? = null
 
   while (
       leftIndex < left.size ||
@@ -157,5 +158,55 @@ fun <Left, Right, Out> map2SegmentLists(
     }
   }
 
+  return result
+}
+
+/**
+ * Low-level routine for performing a binary operation on a pair of parallel lists.
+ *
+ * The result is defined as follows: for every object `l` in [left] and every object `r`
+ * in [right], if their intervals overlap on an intersection `i`, the operation will be
+ * invoked with `(l, r, i)`. If the output of the operation is not `null`, it will be
+ * included in the resulting timeline.
+ *
+ * Always sorts both lists before performing the operation.
+ *
+ * @param left the left operand list
+ * @param right the right operand list
+ * @param op a binary operation between the payload types of the operand lists, which also
+ *           accepts an intersection interval
+ */
+fun <LEFT: IntervalLike<LEFT>, RIGHT: IntervalLike<RIGHT>, OUT: IntervalLike<OUT>> map2ParallelLists(
+    left: List<LEFT>,
+    right: List<RIGHT>,
+    isLeftSorted: Boolean,
+    isRightSorted: Boolean,
+    op: (LEFT, RIGHT, Interval) -> OUT?,
+): List<OUT> {
+  val leftSorted = if (isLeftSorted) left else left.sorted()
+  val rightSorted = if (isRightSorted) right else right.sorted()
+
+  var rightIndex = 0
+  var rightLookaheadIndex: Int
+
+  val result = mutableListOf<OUT>()
+  for (leftObj in leftSorted) {
+    while (rightSorted[rightIndex].interval.compareEndToStart(leftObj.interval) == -1 && rightIndex < right.size) {
+      rightIndex++
+    }
+
+    if (rightIndex == right.size) break
+
+    rightLookaheadIndex = rightIndex
+    while (leftObj.interval.compareEndToStart(rightSorted[rightLookaheadIndex].interval) != -1) {
+      val rightObj = right[rightLookaheadIndex]
+      val intersection = leftObj.interval intersection rightObj.interval
+
+      if (!intersection.isEmpty()) op(leftObj, rightObj, intersection)?.let { result.add(it) }
+
+      rightLookaheadIndex++
+      if (rightLookaheadIndex == right.size) break
+    }
+  }
   return result
 }

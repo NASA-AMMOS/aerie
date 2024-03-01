@@ -11,9 +11,9 @@ package gov.nasa.jpl.aerie.timeline
  * Helper functions for constructing binary operations with common patterns are available
  * in this interface's companion object [here][Companion]. Unfortunately, Kotlin's documentation
  * generator Dokka doesn't like to show companion object methods inside interfaces, but all these
- * methods can be called just like a static method (i.e. `BinaryOperation.combineOrNull(...)`).
+ * methods can be called just like a static method (i.e. `NullBinaryOperation.combineOrNull(...)`).
  */
-fun interface BinaryOperation<in Left, in Right, out Out> {
+fun interface NullBinaryOperation<in Left, in Right, out Out> {
 
   /**
    * Calculate the operation.
@@ -36,15 +36,15 @@ fun interface BinaryOperation<in Left, in Right, out Out> {
         left: (Left & Any, Interval) -> Out,
         right: (Right & Any, Interval) -> Out,
         combine: (Left & Any, Right & Any, Interval) -> Out
-    ) = BinaryOperation<Left, Right, Out> { l, r, i ->
+    ) = NullBinaryOperation<Left, Right, Out> { l, r, i ->
       if (l != null && r != null) combine(l, r, i)
       else if (l != null) left(l, i)
       else if (r != null) right(r, i)
       else throw BinaryOperationBothNullException()
     }
 
-    /** A named overload of the default constructor. */
-    @JvmStatic fun <Left, Right, Out> singleFunction(f: (Left?, Right?, Interval) -> Out) = BinaryOperation(f)
+    /** A named version of the default constructor. */
+    @JvmStatic fun <Left, Right, Out> singleFunction(f: (Left?, Right?, Interval) -> Out) = NullBinaryOperation(f)
 
     /**
      * Constructs an operation that combines the operands in some way if they are both present,
@@ -52,7 +52,7 @@ fun interface BinaryOperation<in Left, in Right, out Out> {
      *
      * @param f operation to be invoked when both operands are present.
      */
-    @JvmStatic fun <Left, Right, Out> combineOrNull(f: (Left & Any, Right & Any, Interval) -> Out) = BinaryOperation<Left, Right, Out?> { l, r, i ->
+    @JvmStatic fun <Left, Right, Out> combineOrNull(f: (Left & Any, Right & Any, Interval) -> Out) = NullBinaryOperation<Left, Right, Out?> { l, r, i ->
       if (l == null || r == null) null
       else f(l, r, i)
     }
@@ -63,7 +63,7 @@ fun interface BinaryOperation<in Left, in Right, out Out> {
      *
      * This means that both operands and the output must all be the same type.
      */
-    @JvmStatic fun <V> combineOrIdentity(f: (V & Any, V & Any, Interval) -> V) = BinaryOperation<V, V, V> { l, r, i ->
+    @JvmStatic fun <V> combineOrIdentity(f: (V & Any, V & Any, Interval) -> V) = NullBinaryOperation<V, V, V> { l, r, i ->
       if (l != null && r != null) f(l, r, i)
       else l ?: r ?: throw BinaryOperationBothNullException()
     }
@@ -85,7 +85,7 @@ fun interface BinaryOperation<in Left, in Right, out Out> {
     @JvmStatic fun <In, Out> reduce(
         convert: (new: In & Any, Interval) -> Out,
         combine: (new: In & Any, acc: Out & Any, Interval) -> Out
-    ) = BinaryOperation<In, Out, Out> { new, acc, i ->
+    ) = NullBinaryOperation<In, Out, Out> { new, acc, i ->
       if (acc != null && new != null) combine(new, acc, i)
       else if (new != null) convert(new, i)
       else acc ?: throw BinaryOperationBothNullException()
@@ -96,7 +96,7 @@ fun interface BinaryOperation<in Left, in Right, out Out> {
      *
      * Throws [ZipOperationBothDefinedException] if both operands are present.
      */
-    @JvmStatic fun <In> zip() = BinaryOperation<In, In, In> { l, r, _ ->
+    @JvmStatic fun <In> zip() = NullBinaryOperation<In, In, In> { l, r, _ ->
       if (l != null && r != null) throw ZipOperationBothDefinedException()
       else l ?: (r ?: throw BinaryOperationBothNullException())
     }
@@ -109,7 +109,7 @@ fun interface BinaryOperation<in Left, in Right, out Out> {
     @JvmStatic fun <Left, Right, Out> convertZip(
         left: (Left & Any, Interval) -> Out,
         right: (Right & Any, Interval) -> Out,
-    ) = BinaryOperation<Left, Right, Out> { l, r, i ->
+    ) = NullBinaryOperation<Left, Right, Out> { l, r, i ->
       if (l != null && r != null) throw ZipOperationBothDefinedException()
       else if (l != null) left(l, i)
       else if (r != null) right(r, i)

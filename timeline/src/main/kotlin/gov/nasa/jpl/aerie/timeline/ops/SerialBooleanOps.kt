@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.timeline.ops
 
-import gov.nasa.jpl.aerie.timeline.BinaryOperation
+import gov.nasa.jpl.aerie.timeline.NullBinaryOperation
 import gov.nasa.jpl.aerie.timeline.Duration
 import gov.nasa.jpl.aerie.timeline.Interval
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real
@@ -11,31 +11,31 @@ import gov.nasa.jpl.aerie.timeline.payloads.LinearEquation
  */
 interface SerialBooleanOps<THIS: SerialBooleanOps<THIS>>: SerialConstantOps<Boolean, THIS>, BooleanOps<THIS> {
   /** [(DOC)][and] Computes the AND operation between two boolean profiles. */
-  infix fun <OTHER: SerialBooleanOps<OTHER>> and(other: SerialBooleanOps<OTHER>) = map2Values(other, BinaryOperation.cases(
+  infix fun <OTHER: SerialBooleanOps<OTHER>> and(other: SerialBooleanOps<OTHER>) = map2OptionalValues(other, NullBinaryOperation.cases(
       { l, _ -> if (l) null else false },
       { r, _ -> if (r) null else false },
       { l, r, _ -> l && r }
   ))
 
   /** [(DOC)][or] Computes the OR operation between two boolean profiles. */
-  infix fun <OTHER: SerialBooleanOps<OTHER>> or(other: SerialBooleanOps<OTHER>) = map2Values(other, BinaryOperation.cases(
+  infix fun <OTHER: SerialBooleanOps<OTHER>> or(other: SerialBooleanOps<OTHER>) = map2OptionalValues(other, NullBinaryOperation.cases(
       { l, _ -> if (l) true else null },
       { r, _ -> if (r) true else null },
       { l, r, _ -> l || r }
   ))
 
   /** [(DOC)][xor] Computes the XOR operation between two boolean profiles. */
-  infix fun <OTHER: SerialBooleanOps<OTHER>> xor(other: SerialBooleanOps<OTHER>) = map2Values(other, BinaryOperation.combineOrNull { l, r, _ -> l.xor(r) })
+  infix fun <OTHER: SerialBooleanOps<OTHER>> xor(other: SerialBooleanOps<OTHER>) = map2Values(other) { l, r, _ -> l xor r }
 
   /** [(DOC)][nor] the NOR operation between two boolean profiles. */
-  infix fun <OTHER: SerialBooleanOps<OTHER>> nor(other: SerialBooleanOps<OTHER>) = map2Values(other, BinaryOperation.cases(
+  infix fun <OTHER: SerialBooleanOps<OTHER>> nor(other: SerialBooleanOps<OTHER>) = map2OptionalValues(other, NullBinaryOperation.cases(
       { l, _ -> if (l) false else null },
       { r, _ -> if (r) false else null },
       { l, r, _ -> !(l || r) }
   ))
 
   /** [(DOC)][nand] Computes the NAND operation between two boolean profiles. */
-  infix fun <OTHER: SerialBooleanOps<OTHER>> nand(other: SerialBooleanOps<OTHER>) = map2Values(other, BinaryOperation.cases(
+  infix fun <OTHER: SerialBooleanOps<OTHER>> nand(other: SerialBooleanOps<OTHER>) = map2OptionalValues(other, NullBinaryOperation.cases(
       { l, _ -> if (l) null else true },
       { r, _ -> if (r) null else true },
       { l, r, _ -> !(l && r) }

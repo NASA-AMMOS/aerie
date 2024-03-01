@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.timeline.ops
 
-import gov.nasa.jpl.aerie.timeline.BinaryOperation
+import gov.nasa.jpl.aerie.timeline.NullBinaryOperation
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.milliseconds
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.seconds
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.at
@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.timeline.collections.profiles.Constants
 import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.Test
 
-class SerialOpsTest {
+class SerialSegmentOpsTest {
 
   // set, assignGaps, and map2Values are not tested here because they are trivial delegations to map2Serial.
   // see Map2SerialTest.kt
@@ -25,7 +25,7 @@ class SerialOpsTest {
         Segment(seconds(1) .. seconds(2), "oooo"),
         Segment(between(seconds(2), seconds(3), Exclusive), "aaaa"),
         Segment(seconds(5) .. seconds(6), "ao")
-    ).detectEdges(BinaryOperation.cases(
+    ).detectEdges(NullBinaryOperation.cases(
         { l, _ -> l.endsWith('o') },
         { r, _ -> r.startsWith('o') },
         { l, r, _ -> l.endsWith(r.first()) }

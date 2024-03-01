@@ -3,14 +3,14 @@ package gov.nasa.jpl.aerie.timeline.ops.numeric
 import gov.nasa.jpl.aerie.timeline.Duration
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real
-import gov.nasa.jpl.aerie.timeline.ops.SerialOps
+import gov.nasa.jpl.aerie.timeline.ops.SerialSegmentOps
 import gov.nasa.jpl.aerie.timeline.payloads.LinearEquation
 
 
 /**
  * Operations for profiles that represent numbers.
  */
-interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialOps<V, THIS>, NumericOps<V, THIS> {
+interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegmentOps<V, THIS>, NumericOps<V, THIS> {
   /** [(DOC)][toSerialLinear] Converts the profile to a linear profile, a.k.a. [Real] (no-op if it already was linear). */
   fun toSerialLinear(): Real
 
