@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
@@ -17,6 +16,11 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.Dis
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
+/**
+ * Utilities for {@link Clock} resources.
+ *
+ * @see AbsoluteClockResources
+ */
 public final class ClockResources {
   private ClockResources() {}
 

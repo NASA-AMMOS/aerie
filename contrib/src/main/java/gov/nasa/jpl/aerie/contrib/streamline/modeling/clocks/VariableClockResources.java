@@ -20,6 +20,18 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
 public final class VariableClockResources {
   private VariableClockResources() {}
 
+  public static Resource<VariableClock> plus(Resource<VariableClock> clock1, Resource<VariableClock> clock2) {
+    return map(clock1, clock2, VariableClock::plus);
+  }
+
+  public static Resource<VariableClock> negate(Resource<VariableClock> clock) {
+    return map(clock, VariableClock::negate);
+  }
+
+  public static Resource<VariableClock> subtract(Resource<VariableClock> clock1, Resource<VariableClock> clock2) {
+    return map(clock1, clock2, VariableClock::subtract);
+  }
+
   public static Resource<Discrete<Boolean>> lessThan(Resource<VariableClock> clock, Resource<Discrete<Duration>> threshold) {
     // Since Duration is an integral type, implement strictness through EPSILON stepping
     return lessThanOrEquals(clock, DiscreteResourceMonad.map(threshold, t -> t.minus(EPSILON)));

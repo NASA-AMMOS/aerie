@@ -11,6 +11,18 @@ public record VariableClock(Duration extract, int multiplier) implements Dynamic
     return new VariableClock(extract.plus(t.times(multiplier)), multiplier);
   }
 
+  public VariableClock plus(VariableClock other) {
+    return new VariableClock(this.extract.plus(other.extract), this.multiplier + other.multiplier);
+  }
+
+  public VariableClock negate() {
+    return new VariableClock(Duration.negate(this.extract), -this.multiplier);
+  }
+
+  public VariableClock subtract(VariableClock other) {
+    return this.plus(other.negate());
+  }
+
   public static VariableClock runningStopwatch() {
     return runningStopwatch(ZERO);
   }
