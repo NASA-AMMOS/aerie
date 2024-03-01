@@ -2,6 +2,14 @@ table:
   name: scheduling_goal_metadata
   schema: public
 array_relationships:
+  - name: analyses
+    using:
+      manual_configuration:
+        column_mapping:
+          id: goal_id
+        remote_table:
+          name: scheduling_goal_analysis
+          schema: public
   - name: tags
     using:
       foreign_key_constraint_on:
