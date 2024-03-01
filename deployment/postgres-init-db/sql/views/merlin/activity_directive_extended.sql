@@ -1,4 +1,4 @@
-create function get_approximate_start_time(_activity_id int, _plan_id int)
+create function merlin.get_approximate_start_time(_activity_id int, _plan_id int)
   returns timestamptz
   security definer
   language plpgsql as $$
@@ -12,11 +12,11 @@ begin
     -- Sum up all the activities from here until the plan
     with recursive get_net_offset(activity_id, plan_id, anchor_id, net_offset) as (
       select id, plan_id, anchor_id, start_offset
-      from activity_directive ad
+      from merlin.activity_directive ad
       where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
       union
       select ad.id, ad.plan_id, ad.anchor_id, ad.start_offset+gno.net_offset
-      from activity_directive ad, get_net_offset gno
+      from merlin.activity_directive ad, get_net_offset gno
       where (ad.id, ad.plan_id) = (gno.anchor_id, gno.plan_id)
     )
     select gno.net_offset, activity_id from get_net_offset gno
@@ -25,12 +25,12 @@ begin
 
   -- Get the plan start time and duration
   select start_time, duration
-  from plan
+  from merlin.plan
   where id = _plan_id
   into _plan_start_time, _plan_duration;
 
   select anchored_to_start
-  from activity_directive
+  from merlin.activity_directive
   where (id, plan_id) = (_root_activity_id, _plan_id)
   into _root_anchored_to_start;
 
@@ -43,7 +43,7 @@ begin
 end
 $$;
 
-create view activity_directive_extended as
+create view merlin.activity_directive_extended as
 (
   select
     -- Activity Directive Properties
@@ -51,7 +51,7 @@ create view activity_directive_extended as
     ad.plan_id as plan_id,
     -- Additional Properties
     ad.name as name,
-    get_tags(ad.id, ad.plan_id) as tags,
+    tags.get_tags(ad.id, ad.plan_id) as tags,
     ad.source_scheduling_goal_id as source_scheduling_goal_id,
     ad.created_at as created_at,
     ad.created_by as created_by,
@@ -65,10 +65,10 @@ create view activity_directive_extended as
     ad.anchor_id as anchor_id,
     ad.anchored_to_start as anchored_to_start,
     -- Derived Properties
-    get_approximate_start_time(ad.id, ad.plan_id) as approximate_start_time,
+    merlin.get_approximate_start_time(ad.id, ad.plan_id) as approximate_start_time,
     ptd.preset_id as preset_id,
     ap.arguments as preset_arguments
-   from activity_directive ad
-   left join preset_to_directive ptd on ad.id = ptd.activity_id and ad.plan_id = ptd.plan_id
-   left join activity_presets ap on ptd.preset_id = ap.id
+   from merlin.activity_directive ad
+   left join merlin.preset_to_directive ptd on ad.id = ptd.activity_id and ad.plan_id = ptd.plan_id
+   left join merlin.activity_presets ap on ptd.preset_id = ap.id
 );

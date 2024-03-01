@@ -1,4 +1,4 @@
-create table uploaded_file (
+create table merlin.uploaded_file (
   id integer generated always as identity,
   path bytea not null,
 
@@ -13,22 +13,22 @@ create table uploaded_file (
     unique (name)
 );
 
-comment on table uploaded_file is e''
+comment on table merlin.uploaded_file is e''
   'A file stored physically in an external filesystem.';
 
-comment on column uploaded_file.id is e''
+comment on column merlin.uploaded_file.id is e''
   'An opaque internal reference to this file.';
-comment on column uploaded_file.path is e''
+comment on column merlin.uploaded_file.path is e''
   'An opaque external reference to this file in an external filesystem.'
 '\n'
   'This is of type bytea since OS paths do not have a set encoding.';
-comment on column uploaded_file.name is e''
+comment on column merlin.uploaded_file.name is e''
   'A human-readable identifier for this file.';
-comment on column uploaded_file.created_date is e''
+comment on column merlin.uploaded_file.created_date is e''
   'The instant at which this file was added to the datastore.';
-comment on column uploaded_file.modified_date is e''
+comment on column merlin.uploaded_file.modified_date is e''
   'The instant at which this file was last updated.';
-comment on column uploaded_file.deleted_date is e''
+comment on column merlin.uploaded_file.deleted_date is e''
   'The instant at which this file was removed from use.'
 '\n'
   'Deletion does not remove the file from the external filesystem, '

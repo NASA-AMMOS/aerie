@@ -1,22 +1,22 @@
-create table activity_directive_metadata_schema (
+create table merlin.activity_directive_metadata_schema (
   key text not null primary key,
   schema jsonb not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-comment on table activity_directive_metadata_schema is 'e'
+comment on table merlin.activity_directive_metadata_schema is 'e'
   'Schema for the activity directive metadata.';
-comment on column activity_directive_metadata_schema.key is 'e'
+comment on column merlin.activity_directive_metadata_schema.key is 'e'
   'Key of the metadata.';
-comment on column activity_directive_metadata_schema.schema is 'e'
+comment on column merlin.activity_directive_metadata_schema.schema is 'e'
   'Schema of the metadata field.';
-comment on column activity_directive_metadata_schema.created_at is 'e'
+comment on column merlin.activity_directive_metadata_schema.created_at is 'e'
   'Timestamp when the metadata field was created.';
-comment on column activity_directive_metadata_schema.updated_at is 'e'
+comment on column merlin.activity_directive_metadata_schema.updated_at is 'e'
   'Timestamp when the metadata field was last updated.';
 
-create or replace function validate_activity_directive_metadata_schema()
+create function merlin.validate_activity_directive_metadata_schema()
   returns trigger
   security definer
   language plpgsql as $$
@@ -50,23 +50,14 @@ create or replace function validate_activity_directive_metadata_schema()
 $$;
 
 create trigger validate_activity_directive_metadata_schema_trigger
-before insert or update on activity_directive_metadata_schema
+before insert or update on merlin.activity_directive_metadata_schema
 for each row
-execute function validate_activity_directive_metadata_schema();
+execute function merlin.validate_activity_directive_metadata_schema();
 
-comment on trigger validate_activity_directive_metadata_schema_trigger on activity_directive_metadata_schema is 'e'
+comment on trigger validate_activity_directive_metadata_schema_trigger on merlin.activity_directive_metadata_schema is 'e'
   'Trigger to validate the metadata schema entries for the activity directive metadata.';
 
-create or replace function activity_directive_metadata_schema_updated_at()
-returns trigger
-security definer
-language plpgsql as $$begin
-  new.updated_at = now();
-  return new;
-end$$;
-
 create trigger activity_directive_metadata_schema_updated_at_trigger
-before update
-on activity_directive_metadata_schema
+before update on merlin.activity_directive_metadata_schema
 for each row
-execute procedure activity_directive_metadata_schema_updated_at();
+execute procedure util_functions.set_updated_at();

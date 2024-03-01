@@ -1,15 +1,30 @@
-create table anchor_validation_status(
+create table merlin.anchor_validation_status(
   activity_id integer not null,
   plan_id integer not null,
   reason_invalid text default null,
   primary key (activity_id, plan_id),
   foreign key (activity_id, plan_id)
-    references activity_directive
+    references merlin.activity_directive
     on update cascade
     on delete cascade
 );
 
-create function get_dependent_activities(_activity_id int, _plan_id int)
+create index anchor_validation_plan_id_index on merlin.anchor_validation_status (plan_id);
+
+comment on index merlin.anchor_validation_plan_id_index is e''
+  'A similar index to that on activity_directive, as we often want to filter by plan_id';
+
+comment on table merlin.anchor_validation_status is e''
+  'The validation status of the anchor of a single activity_directive within a plan.';
+comment on column merlin.anchor_validation_status.activity_id is e''
+  'The synthetic identifier for the activity_directive.\n'
+  'Unique within a given plan.';
+comment on column merlin.anchor_validation_status.plan_id is e''
+  'The plan within which the activity_directive is located';
+comment on column merlin.anchor_validation_status.reason_invalid is e''
+  'If null, the anchor is valid. If not null, this contains a reason why the anchor is invalid.';
+
+create function merlin.get_dependent_activities(_activity_id int, _plan_id int)
   returns table(activity_id int, total_offset interval)
   stable
   language plpgsql as $$
@@ -17,11 +32,11 @@ begin
   return query
   with recursive d_activities(activity_id, anchor_id, anchored_to_start, start_offset, total_offset) as (
       select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, ad.start_offset
-      from activity_directive ad
+      from merlin.activity_directive ad
       where (ad.anchor_id, ad.plan_id) = (_activity_id, _plan_id) -- select all activities anchored to this one
     union
       select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, da.total_offset + ad.start_offset
-      from activity_directive ad, d_activities da
+      from merlin.activity_directive ad, d_activities da
       where (ad.anchor_id, ad.plan_id) = (da.activity_id, _plan_id) -- select all activities anchored to those in the selection
         and ad.anchored_to_start  -- stop at next end-time anchor
   ) select da.activity_id, da.total_offset
@@ -29,30 +44,15 @@ begin
 end;
 $$;
 
-comment on function get_dependent_activities(_activity_id int, _plan_id int) is e''
+comment on function merlin.get_dependent_activities(_activity_id int, _plan_id int) is e''
 'Get the collection of activities that depend on the given activity, with offset relative to the specified activity';
-
-create index anchor_validation_plan_id_index on anchor_validation_status (plan_id);
-
-comment on index anchor_validation_plan_id_index is e''
-  'A similar index to that on activity_directive, as we often want to filter by plan_id';
-
-comment on table anchor_validation_status is e''
-  'The validation status of the anchor of a single activity_directive within a plan.';
-comment on column anchor_validation_status.activity_id is e''
-  'The synthetic identifier for the activity_directive.\n'
-  'Unique within a given plan.';
-comment on column anchor_validation_status.plan_id is e''
-  'The plan within which the activity_directive is located';
-comment on column anchor_validation_status.reason_invalid is e''
-  'If null, the anchor is valid. If not null, this contains a reason why the anchor is invalid.';
 
 /*
     An activity directive may have a negative offset from its anchor's start time.
     If its anchor is anchored to the end time of another activity (or so on up the chain), the activity with a
     negative offset must come out to have a positive offset relative to that end time anchor.
 */
-create procedure validate_nonnegative_net_end_offset(_activity_id integer, _plan_id integer)
+create procedure merlin.validate_nonnegative_net_end_offset(_activity_id integer, _plan_id integer)
   security definer
   language plpgsql as $$
 declare
@@ -63,7 +63,7 @@ declare
   _anchored_to_start boolean;
 begin
   select anchor_id, start_offset, anchored_to_start
-  from activity_directive
+  from merlin.activity_directive
   where (id, plan_id) = (_activity_id, _plan_id)
   into _anchor_id, _start_offset, _anchored_to_start;
 
@@ -77,7 +77,7 @@ begin
       select _activity_id, _anchor_id, _anchored_to_start, _start_offset, _start_offset
       union
       select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, eta.total_offset + ad.start_offset
-      from activity_directive ad, end_time_anchor eta
+      from merlin.activity_directive ad, end_time_anchor eta
       where (ad.id, ad.plan_id) = (eta.anchor_id, _plan_id)
         and eta.anchor_id is not null                               -- stop at plan
         and eta.anchored_to_start                                   -- or stop at end time anchor
@@ -89,7 +89,7 @@ begin
     if end_anchor_id is not null and offset_from_end_anchor < '0' then
       raise notice 'Activity Directive % has a net negative offset relative to an end-time anchor on Activity Directive %.', _activity_id, end_anchor_id;
 
-      insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+      insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
       values (_activity_id, _plan_id, 'Activity Directive ' || _activity_id || ' has a net negative offset relative to an end-time' ||
                                       ' anchor on Activity Directive ' || end_anchor_id ||'.')
       on conflict (activity_id, plan_id) do update
@@ -99,12 +99,12 @@ begin
   end if;
 end
 $$;
-comment on procedure validate_nonnegative_net_end_offset(_activity_id integer, _plan_id integer) is e''
+comment on procedure merlin.validate_nonnegative_net_end_offset(_activity_id integer, _plan_id integer) is e''
   'Returns true if the specified activity has a net negative offset from a non-plan activity end-time anchor. Otherwise, returns false.\n'
   'If true, writes to anchor_validation_status.';
 
 -- An activity may not have a start time before the plan
-create procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_id integer)
+create procedure merlin.validate_nonegative_net_plan_start(_activity_id integer, _plan_id integer)
   security definer
   language plpgsql as $$
   declare
@@ -114,7 +114,7 @@ create procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_
     _anchored_to_start boolean;
   begin
     select anchor_id, start_offset, anchored_to_start
-    from activity_directive
+    from merlin.activity_directive
     where (id, plan_id) = (_activity_id, _plan_id)
     into _anchor_id, _start_offset, _anchored_to_start;
 
@@ -123,7 +123,7 @@ create procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_
           select _activity_id, _anchor_id, _anchored_to_start, _start_offset, _start_offset
         union
           select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, anchors.total_offset + ad.start_offset
-          from activity_directive ad, anchors
+          from merlin.activity_directive ad, anchors
           where anchors.anchor_id is not null                               -- stop at plan
             and  (ad.id, ad.plan_id) = (anchors.anchor_id, _plan_id)
             and anchors.anchored_to_start                                  -- or, stop at end-time offset
@@ -138,7 +138,7 @@ create procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_
       if(net_offset < '0') then
         raise notice 'Activity Directive % has a net negative offset relative to Plan Start.', _activity_id;
 
-        insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+        insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
         values (_activity_id, _plan_id, 'Activity Directive ' || _activity_id || ' has a net negative offset relative to Plan Start.')
         on conflict (activity_id, plan_id) do update
           set reason_invalid = 'Activity Directive ' || excluded.activity_id || ' has a net negative offset relative to Plan Start.';
@@ -146,7 +146,7 @@ create procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_
     end if;
     end
   $$;
-comment on procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_id integer) is e''
+comment on procedure merlin.validate_nonegative_net_plan_start(_activity_id integer, _plan_id integer) is e''
   'Returns true if the specified activity has a net negative offset from plan start. Otherwise, returns false.\n'
   'If true, writes to anchor_validation_status.';
 
@@ -161,7 +161,7 @@ comment on procedure validate_nonegative_net_plan_start(_activity_id integer, _p
   For all other invalid states, it writes to 'anchor_validation_status's 'reason_invalid' field and then returns.
   If the activity's anchor is valid, then the 'reason_invalid' field on the activity's entry in 'anchor_validation_status' is set to ''.
 */
-create function validate_anchors()
+create function merlin.validate_anchors()
   returns trigger
   security definer
   language plpgsql as $$
@@ -172,7 +172,7 @@ declare
   offset_from_plan_start interval;
 begin
   -- Clear the reason invalid field (if an exception is thrown, this will be rolled back)
-  insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+  insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
   values (new.id, new.plan_id, '')
   on conflict (activity_id, plan_id) do update
     set reason_invalid = '';
@@ -190,7 +190,7 @@ begin
         select ad.id, ad.anchor_id,
                ad.id = any(path),
                path || ad.id
-        from activity_directive ad, history h
+        from merlin.activity_directive ad, history h
         where (ad.id, ad.plan_id) = (h.anchor_id, new.plan_id)
           and not is_cycle
       ) select * from history
@@ -205,8 +205,8 @@ begin
     If its anchor is anchored to the end time of another activity (or so on up the chain), the activity with a
     negative offset must come out to have a positive offset relative to that end time anchor.
   */
-  call validate_nonnegative_net_end_offset(new.id, new.plan_id);
-  call validate_nonegative_net_plan_start(new.id, new.plan_id);
+  call merlin.validate_nonnegative_net_end_offset(new.id, new.plan_id);
+  call merlin.validate_nonegative_net_plan_start(new.id, new.plan_id);
 
   /*
     Everything below validates that the activities anchored to this one did not become invalid as a result of these changes.
@@ -219,7 +219,7 @@ begin
     select new.id, new.anchor_id, new.anchored_to_start, new.start_offset, new.start_offset
     union
     select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, eta.total_offset + ad.start_offset
-    from activity_directive ad, end_time_anchor eta
+    from merlin.activity_directive ad, end_time_anchor eta
     where (ad.id, ad.plan_id) = (eta.anchor_id, new.plan_id)
       and eta.anchor_id is not null                               -- stop at plan
       and eta.anchored_to_start                                   -- or stop at end time anchor
@@ -231,7 +231,7 @@ begin
   -- Not null iff the activity being looked at has some end anchor to another activity in its chain
   if offset_from_end_anchor is not null then
     select array_agg(activity_id)
-    from get_dependent_activities(new.id, new.plan_id)
+    from merlin.get_dependent_activities(new.id, new.plan_id)
     where total_offset + offset_from_end_anchor < '0'
     into invalid_descendant_act_ids;
 
@@ -240,7 +240,7 @@ begin
         'There may be additional activities that are invalid relative to this activity.',
         end_anchor_id, array_to_string(invalid_descendant_act_ids, ',');
 
-      insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+      insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
       select id, new.plan_id, 'Activity Directive ' || id || ' has a net negative offset relative to an end-time' ||
                               ' anchor on Activity Directive ' || end_anchor_id ||'.'
       from unnest(invalid_descendant_act_ids) as id
@@ -255,7 +255,7 @@ begin
     select new.id, new.anchor_id, new.anchored_to_start, new.start_offset, new.start_offset
     union
     select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, anchors.total_offset + ad.start_offset
-    from activity_directive ad, anchors
+    from merlin.activity_directive ad, anchors
     where anchors.anchor_id is not null                               -- stop at plan
       and (ad.id, ad.plan_id) = (anchors.anchor_id, new.plan_id)
       and anchors.anchored_to_start                                  -- or, stop at end-time offset
@@ -272,7 +272,7 @@ begin
     -- Validate descendents
     invalid_descendant_act_ids := null;
     select array_agg(activity_id)
-    from get_dependent_activities(new.id, new.plan_id)
+    from merlin.get_dependent_activities(new.id, new.plan_id)
     where total_offset + offset_from_plan_start < '0'
     into invalid_descendant_act_ids;  -- grab all and split
 
@@ -281,7 +281,7 @@ begin
         'There may be additional activities that are invalid relative to this activity.',
         array_to_string(invalid_descendant_act_ids, ',');
 
-      insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+      insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
       select id, new.plan_id, 'Activity Directive ' || id || ' has a net negative offset relative to Plan Start.'
       from unnest(invalid_descendant_act_ids) as id
       on conflict (activity_id, plan_id) do update
@@ -292,17 +292,17 @@ begin
   -- These are both null iff the activity is anchored to plan end
   if(offset_from_plan_start is null and offset_from_end_anchor is null) then
     -- All dependent activities should have no errors, as Plan End can have an offset of any value.
-    insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+    insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
     select da.activity_id, new.plan_id, ''
-    from get_dependent_activities(new.id, new.plan_id) as da
+    from merlin.get_dependent_activities(new.id, new.plan_id) as da
     on conflict (activity_id, plan_id) do update
       set reason_invalid = '';
   end if;
 
   -- Remove the error from the dependent activities that wouldn't have been flagged by the earlier checks.
-  insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+  insert into merlin.anchor_validation_status (activity_id, plan_id, reason_invalid)
   select da.activity_id, new.plan_id, ''
-  from get_dependent_activities(new.id, new.plan_id) as da
+  from merlin.get_dependent_activities(new.id, new.plan_id) as da
   where total_offset + offset_from_plan_start >= '0'
     or total_offset + offset_from_end_anchor >= '0' -- only one of these checks will run depending on which one has `null` behind the offset
   on conflict (activity_id, plan_id) do update
@@ -313,20 +313,20 @@ end $$;
 
 create constraint trigger validate_anchors_update_trigger
   after update
-  on activity_directive
+  on merlin.activity_directive
   deferrable initially deferred
   for each row
   when (old.anchor_id is distinct from new.anchor_id -- != but allows for one side to be null
     or old.anchored_to_start != new.anchored_to_start
     or old.start_offset != new.start_offset)
-execute procedure validate_anchors();
+execute procedure merlin.validate_anchors();
 
 
 --  The insert trigger is separate in order to allow the update trigger to have a 'when' clause
 create constraint trigger validate_anchors_insert_trigger
   after insert
-  on activity_directive
+  on merlin.activity_directive
   deferrable initially deferred
   for each row
-execute procedure validate_anchors();
+execute procedure merlin.validate_anchors();
 
