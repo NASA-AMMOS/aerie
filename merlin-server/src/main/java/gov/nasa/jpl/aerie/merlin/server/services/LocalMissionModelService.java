@@ -139,6 +139,8 @@ public final class LocalMissionModelService implements MissionModelService {
     ModelType<?, ?> modelType;
     try {
       modelType = this.loadMissionModelType(modelId.toString());
+      // try and catch NoSuchMissionModel here, so we can serialize it out to each activity validation
+      // rather than catching it at a higher level in the workerLoop itself
     } catch (NoSuchMissionModelException e) {
       return activities.stream()
           .map(directive -> new BulkArgumentValidationResponse.NoSuchMissionModelError(e))
