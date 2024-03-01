@@ -1,4 +1,4 @@
-create table expansion_set (
+create table sequencing.expansion_set (
   id integer generated always as identity,
   name text not null,
   description text not null default '',
@@ -19,32 +19,32 @@ create table expansion_set (
     primary key (id),
 
   foreign key (command_dict_id)
-    references command_dictionary (id)
+    references sequencing.command_dictionary (id)
     on delete cascade
 );
 
-comment on table expansion_set is e''
+comment on table sequencing.expansion_set is e''
   'A binding of a command dictionary to a mission model.';
-comment on column expansion_set.id is e''
+comment on column sequencing.expansion_set.id is e''
   'The synthetic identifier for the set.';
-comment on column expansion_set.command_dict_id is e''
+comment on column sequencing.expansion_set.command_dict_id is e''
   'The ID of a command dictionary.';
-comment on column expansion_set.mission_model_id is e''
+comment on column sequencing.expansion_set.mission_model_id is e''
   'The ID of a mission model.';
-comment on column expansion_set.name is e''
+comment on column sequencing.expansion_set.name is e''
   'The human-readable name of the expansion set.';
-comment on column expansion_set.owner is e''
+comment on column sequencing.expansion_set.owner is e''
   'The user responsible for the expansion set.';
-comment on column expansion_set.updated_by is e''
+comment on column sequencing.expansion_set.updated_by is e''
   'The user who last updated this expansion set.';
-comment on column expansion_set.description is e''
+comment on column sequencing.expansion_set.description is e''
   'A description of this expansion set.';
-comment on column expansion_set.created_at is e''
+comment on column sequencing.expansion_set.created_at is e''
   'The time this expansion set was created';
-comment on column expansion_set.updated_at is e''
+comment on column sequencing.expansion_set.updated_at is e''
   'The time this expansion set or one of its expansion rules was last updated.';
 
-create function expansion_set_default_name()
+create function sequencing.expansion_set_default_name()
 returns trigger
 security invoker
 language plpgsql as $$begin
@@ -54,7 +54,7 @@ end
 $$;
 
 create trigger set_default_name
-before insert on expansion_set
+before insert on sequencing.expansion_set
 for each row
 when ( new.name is null )
-execute function expansion_set_default_name();
+execute function sequencing.expansion_set_default_name();

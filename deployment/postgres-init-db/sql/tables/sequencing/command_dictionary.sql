@@ -1,4 +1,4 @@
-create table command_dictionary (
+create table sequencing.command_dictionary (
   id integer generated always as identity,
 
   command_types_typescript_path text not null,
@@ -14,17 +14,17 @@ create table command_dictionary (
     unique (mission,version)
 );
 
-comment on table command_dictionary is e''
+comment on table sequencing.command_dictionary is e''
   'A Command Dictionary for a mission.';
-comment on column command_dictionary.id is e''
+comment on column sequencing.command_dictionary.id is e''
   'The synthetic identifier for this command dictionary.';
-comment on column command_dictionary.command_types_typescript_path is e''
+comment on column sequencing.command_dictionary.command_types_typescript_path is e''
   'The location of command dictionary types (.ts) on the filesystem';
-comment on column command_dictionary.mission is e''
+comment on column sequencing.command_dictionary.mission is e''
   'A human-meaningful identifier for the mission described by the command dictionary';
-comment on column command_dictionary.version is e''
+comment on column sequencing.command_dictionary.version is e''
   'A human-meaningful version qualifier.';
-comment on column command_dictionary.parsed_json is e''
+comment on column sequencing.command_dictionary.parsed_json is e''
   'The XML that has been parsed and converted to JSON';
-comment on constraint command_dictionary_natural_key on command_dictionary is e''
+comment on constraint command_dictionary_natural_key on sequencing.command_dictionary is e''
   'There an only be one command dictionary of a given version for a given mission.';
