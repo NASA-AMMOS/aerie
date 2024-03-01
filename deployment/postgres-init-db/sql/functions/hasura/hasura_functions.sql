@@ -1,5 +1,5 @@
 -- Simulation Resources
-create table hasura_functions.resource_at_start_offset_return_value(
+create table hasura.resource_at_start_offset_return_value(
   dataset_id integer not null,
   id integer not null,
   name text not null,
@@ -9,8 +9,8 @@ create table hasura_functions.resource_at_start_offset_return_value(
   is_gap bool not null
 );
 
-create function hasura_functions.get_resources_at_start_offset(_dataset_id int, _start_offset interval)
-returns setof hasura_functions.resource_at_start_offset_return_value
+create function hasura.get_resources_at_start_offset(_dataset_id int, _start_offset interval)
+returns setof hasura.resource_at_start_offset_return_value
 strict
 stable
 security invoker
@@ -19,7 +19,7 @@ begin
   return query
     select distinct on (p.name)
       p.dataset_id, p.id, p.name, p.type, ps.start_offset, ps.dynamics, ps.is_gap
-    from profile p, profile_segment ps
+    from merlin.profile p, merlin.profile_segment ps
 	  where ps.profile_id = p.id
 	    and p.dataset_id = _dataset_id
 	    and ps.dataset_id = _dataset_id
@@ -28,38 +28,38 @@ begin
 end
 $$;
 
-create function hasura_functions.restore_activity_changelog(
+create function hasura.restore_activity_changelog(
   _plan_id integer,
   _activity_directive_id integer,
   _revision integer,
   hasura_session json
 )
-  returns setof activity_directive
+  returns setof merlin.activity_directive
   volatile
   language plpgsql as $$
 declare
-  _function_permission metadata.permission;
+  _function_permission permissions.permission;
 begin
   _function_permission :=
-      metadata.get_function_permissions('restore_activity_changelog', hasura_session);
+      permissions.get_function_permissions('restore_activity_changelog', hasura_session);
   if not _function_permission = 'NO_CHECK' then
-    call metadata.check_general_permissions(
+    call permissions.check_general_permissions(
       'restore_activity_changelog',
       _function_permission, _plan_id,
       (hasura_session ->> 'x-hasura-user-id')
     );
   end if;
 
-  if not exists(select id from public.plan where id = _plan_id) then
+  if not exists(select id from merlin.plan where id = _plan_id) then
     raise exception 'Plan % does not exist', _plan_id;
   end if;
 
-  if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_directive_id, _plan_id)) then
+  if not exists(select id from merlin.activity_directive where (id, plan_id) = (_activity_directive_id, _plan_id)) then
     raise exception 'Activity Directive % does not exist in Plan %', _activity_directive_id, _plan_id;
   end if;
 
   if not exists(select revision
-                from public.activity_directive_changelog
+                from merlin.activity_directive_changelog
                 where (plan_id, activity_directive_id, revision) =
                       (_plan_id, _activity_directive_id, _revision))
   then
@@ -67,7 +67,7 @@ begin
   end if;
 
   return query
-  update activity_directive as ad
+  update merlin.activity_directive as ad
   set name                       = c.name,
       source_scheduling_goal_id  = c.source_scheduling_goal_id,
       start_offset               = c.start_offset,
@@ -79,7 +79,7 @@ begin
       anchored_to_start          = c.anchored_to_start,
       last_modified_at           = c.changed_at,
       last_modified_by           = c.changed_by
-  from activity_directive_changelog as c
+  from merlin.activity_directive_changelog as c
   where ad.id                    = _activity_directive_id
     and c.activity_directive_id  = _activity_directive_id
     and ad.plan_id               = _plan_id
