@@ -136,7 +136,14 @@ public final class LocalMissionModelService implements MissionModelService {
       final List<ActivityDirectiveForValidation> activities
   ) throws NoSuchMissionModelException, MissionModelLoadException {
     // load mission model once for all activities
-    final var modelType = this.loadMissionModelType(modelId.toString());
+    ModelType<?, ?> modelType;
+    try {
+      modelType = this.loadMissionModelType(modelId.toString());
+    } catch (NoSuchMissionModelException e) {
+      return activities.stream()
+          .map(directive -> new BulkArgumentValidationResponse.NoSuchMissionModelError(e))
+          .collect(Collectors.toList());
+    }
     final var registry = DirectiveTypeRegistry.extract(modelType);
 
     // map all directives to validation response
