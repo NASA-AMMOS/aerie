@@ -12,6 +12,12 @@ interface ConstantOps<V: Any, THIS: ConstantOps<V, THIS>>: SegmentOps<V, THIS> {
   fun isolateEqualTo(value: V) = isolate { it.value == value }
 
   /**
+   * [(DOC)][highlightEqualTo] Highlights intervals where the value is equal to a specific value.
+   * @see [GeneralOps.highlight]
+   */
+  fun highlightEqualTo(value: V) = highlight { it.value == value }
+
+  /**
    * [(DOC)][splitEqualTo] Splits segments where the value is equal to a specific value.
    *
    * @see [split]

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.timeline.ops
 
 import gov.nasa.jpl.aerie.timeline.*
 import gov.nasa.jpl.aerie.timeline.collections.Intervals
+import gov.nasa.jpl.aerie.timeline.collections.Windows
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.util.coalesceList
@@ -119,11 +120,23 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
   }
 
   /**
-   * [(DOC)][isolate] Similar to [filter], but returns an [Intervals] timeline
+   * [(DOC)][isolate] Similar to [filter], but returns an [Intervals] timeline.
    *
-   * @param f a predicate which decides if a given payload object's interval should be included in the result
+   * @param f a predicate which decides if a given payload object's interval should be included in the result.
    */
   fun isolate(f: (V) -> Boolean) = filter(false, f).unsafeCast(::Intervals)
+
+  /**
+   * [(DOC)][highlight] Similar to [filter], but produces a coalesced [Windows] object
+   * that highlights everything that satisfies the predicate.
+   *
+   * @param f a predicate that decides if a given payload object's interval should be included in the result.
+   */
+  fun highlight(f: (V) -> Boolean) =
+      unsafeMap(::Intervals, BoundsTransformer.IDENTITY, false) {
+        if (f(it)) it.interval
+        else Interval.EMPTY
+      }.convert(::Windows)
 
   /** [(DOC)][unsafeMap] **UNSAFE!** A simpler version of [unsafeMap] for operations that don't change the timeline type. */
   fun unsafeMap(boundsTransformer: BoundsTransformer, truncate: Boolean, f: (V) -> V) = unsafeMap(ctor, boundsTransformer, truncate, f)
@@ -237,6 +250,20 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
   fun filterShorterThan(dur: Duration) = filter(true) { it.interval.duration() >= dur }
   /** [(DOC)][filterLongerThan] Removes objects whose duration is longer than a given duration. */
   fun filterLongerThan(dur: Duration) = filter(true) { it.interval.duration() <= dur }
+
+  /**
+   * [(DOC)][filterByWindows] Filters out payload objects whose intervals are not contained in the
+   * given Windows timeline.
+   *
+   * @param truncateMarginal whether objects with only partial overlap with an interval in the windows timeline
+   *                         should be truncated to the intersection or included unchanged.
+   */
+  fun <OTHER: SerialIntervalOps<OTHER>> filterByWindows(windows: SerialIntervalOps<OTHER>, truncateMarginal: Boolean = true) =
+      if (truncateMarginal) {
+        unsafeMap2(ctor, windows) { l, _, i -> l.withNewInterval(i) }
+      } else {
+        unsafeMap2(::Intervals, windows) { l, _, _ -> l }.unsafeOperate { collect(it).distinct() }.unsafeCast(ctor)
+      }
 
   /** [(DOC)][shift] Uniformly shifts the entire timeline in time (positive shifts toward the future). */
   fun shift(dur: Duration) = unsafeMapIntervals(BoundsTransformer.shift(dur), false) { it.interval.shiftBy(dur) }
