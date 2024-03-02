@@ -26,7 +26,6 @@ import java.lang.ArithmeticException
  */
 data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers<N>>):
     Timeline<Segment<N>, Numbers<N>> by timeline,
-    CoalesceSegmentsOp<N, Numbers<N>>,
     SerialPrimitiveNumberOps<N, Numbers<N>> {
   constructor(v: N): this(Segment(Interval.MIN_MAX, v))
   constructor(vararg segments: Segment<N>): this(segments.asList())

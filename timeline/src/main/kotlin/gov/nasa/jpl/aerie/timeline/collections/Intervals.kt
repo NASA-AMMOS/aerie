@@ -12,8 +12,7 @@ import gov.nasa.jpl.aerie.timeline.util.preprocessList
 data class Intervals<T: IntervalLike<T>>(private val timeline: Timeline<T, Intervals<T>>):
     Timeline<T, Intervals<T>> by timeline,
     ParallelOps<T, Intervals<T>>,
-    NonZeroDurationOps<T, Intervals<T>>,
-    CoalesceNoOp<T, Intervals<T>>
+    NonZeroDurationOps<T, Intervals<T>>
 {
   constructor(vararg intervals: T): this(intervals.asList())
   constructor(intervals: List<T>): this(BaseTimeline(::Intervals, preprocessList(intervals)))

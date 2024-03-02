@@ -12,8 +12,7 @@ import gov.nasa.jpl.aerie.timeline.util.preprocessList
 /** A profile of booleans. */
 data class Booleans(private val timeline: Timeline<Segment<Boolean>, Booleans>):
     Timeline<Segment<Boolean>, Booleans> by timeline,
-    SerialBooleanOps<Booleans>,
-    CoalesceSegmentsOp<Boolean, Booleans>
+    SerialBooleanOps<Booleans>
 {
   constructor(v: Boolean): this(Segment(Interval.MIN_MAX, v))
   constructor(vararg segments: Segment<Boolean>): this(segments.asList())

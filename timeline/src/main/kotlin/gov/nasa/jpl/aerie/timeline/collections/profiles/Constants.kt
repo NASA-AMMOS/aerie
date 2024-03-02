@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.timeline.util.preprocessList
 /** A profile of piece-wise constant values. */
 data class Constants<V: Any>(private val timeline: Timeline<Segment<V>, Constants<V>>):
     Timeline<Segment<V>, Constants<V>> by timeline,
-    CoalesceSegmentsOp<V, Constants<V>>,
     SerialConstantOps<V, Constants<V>>
 {
   constructor(v: V): this(Segment(Interval.MIN_MAX, v))

@@ -14,9 +14,7 @@ import gov.nasa.jpl.aerie.timeline.util.preprocessList
  */
 data class Instances<A: Any>(private val timeline: Timeline<Instance<A>, Instances<A>>):
     Timeline<Instance<A>, Instances<A>> by timeline,
-    ParallelOps<Instance<A>, Instances<A>>,
-    InstanceOps<A, Instances<A>>,
-    CoalesceNoOp<Instance<A>, Instances<A>>
+    InstanceOps<A, Instances<A>>
 {
   constructor(vararg instances: Instance<A>): this(instances.asList())
   constructor(instances: List<Instance<A>>): this(BaseTimeline(::Instances, preprocessList(instances)))

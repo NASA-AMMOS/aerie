@@ -14,8 +14,7 @@ import kotlin.jvm.optionals.getOrNull
 /** A profile of [LinearEquations][LinearEquation]; a piece-wise linear real-number profile. */
 data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
     Timeline<Segment<LinearEquation>, Real> by timeline,
-    SerialLinearOps<Real>,
-    CoalesceSegmentsOp<LinearEquation, Real>
+    SerialLinearOps<Real>
 {
   constructor(v: Int): this(v.toDouble())
   constructor(v: Long): this(v.toDouble())

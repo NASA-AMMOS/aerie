@@ -15,9 +15,7 @@ import gov.nasa.jpl.aerie.timeline.util.preprocessList
  */
 data class Directives<A: Any>(private val timeline: Timeline<Directive<A>, Directives<A>>):
     Timeline<Directive<A>, Directives<A>> by timeline,
-    ParallelOps<Directive<A>, Directives<A>>,
-    DirectiveOps<A, Directives<A>>,
-    CoalesceNoOp<Directive<A>, Directives<A>>
+    DirectiveOps<A, Directives<A>>
 {
   constructor(vararg directives: Directive<A>): this(directives.asList())
   constructor(directives: List<Directive<A>>): this(BaseTimeline(::Directives, preprocessList(directives)))
