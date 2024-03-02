@@ -53,7 +53,7 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    *
    * The operation is "local", meaning that while the operation is allowed to know when it is
    * being evaluated, it is not allowed to change where the result segment should be placed.
-   * For that, you can use [unsafeMap], or more generally, [unsafeOperate].
+   * For that, try to shift the results in a separate operation.
    *
    * @param W the other operand's payload type
    * @param OTHER the other operand's timeline type
@@ -76,7 +76,8 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
   fun <W: Any, OTHER: SerialSegmentOps<W, OTHER>, NESTED: SerialSegmentOps<V, NESTED>> flatMap2OptionalValues(other: SerialSegmentOps<W, OTHER>, op: NullBinaryOperation<V, W, NESTED?>) = flatMap2OptionalValues(ctor, other, op)
 
   /**
-   * [(DOC)][flatMap2OptionalValues] Performs a local binary operation that produces profiles, and flattens it.
+   * [(DOC)][flatMap2OptionalValues] Performs a local binary operation that produces profiles, and flattens it, with
+   * special treatment of gaps.
    *
    * Similar to [map2OptionalValues], except it expects the [NullBinaryOperation] to return a profile. Each nested profile
    * is then collected on the interval it corresponds to, and the results are concatenated into a single profile.
@@ -95,6 +96,8 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    * @param op a binary operation between the two payload types that produces a maybe-null profile
    *
    * @return a coalesced flattened profile; an instance of the return type of [ctor]
+   *
+   * @see map2OptionalValues
    */
   fun <W: Any, OTHER: SerialSegmentOps<W, OTHER>, R: Any, NESTED: SerialSegmentOps<R, NESTED>, RESULT: GeneralOps<Segment<R>, RESULT>> flatMap2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, OTHER>, op: NullBinaryOperation<V, W, NESTED?>) =
       unsafeOperate(ctor) { opts ->

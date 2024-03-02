@@ -36,9 +36,9 @@ interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegme
         var acc = 0.0
         for (segment in segments) {
           if (previousTime < segment.interval.start)
-            throw SerialLinearOps.SerialLinearOpException("Cannot integrate a linear profile that has gaps (time $previousTime")
+            throw Real.RealOpException("Cannot integrate a linear profile that has gaps (time $previousTime")
           if (!segment.value.isConstant())
-            throw SerialLinearOps.SerialLinearOpException("Cannot integrate a non-piecewise-constant linear profile (time $previousTime")
+            throw Real.RealOpException("Cannot integrate a non-piecewise-constant linear profile (time $previousTime")
           val rate = segment.value.initialValue * baseRate
           val nextAcc = acc + rate * segment.interval.duration().ratioOver(Duration.SECOND)
           result.add(Segment(segment.interval, LinearEquation(previousTime, acc, rate)))

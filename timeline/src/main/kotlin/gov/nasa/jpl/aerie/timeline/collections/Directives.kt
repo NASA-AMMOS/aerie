@@ -2,10 +2,8 @@ package gov.nasa.jpl.aerie.timeline.collections
 
 import gov.nasa.jpl.aerie.timeline.BaseTimeline
 import gov.nasa.jpl.aerie.timeline.payloads.activities.Directive
-import gov.nasa.jpl.aerie.timeline.ops.DirectiveOps
-import gov.nasa.jpl.aerie.timeline.ops.ParallelOps
 import gov.nasa.jpl.aerie.timeline.Timeline
-import gov.nasa.jpl.aerie.timeline.ops.coalesce.CoalesceNoOp
+import gov.nasa.jpl.aerie.timeline.ops.ActivityOps
 import gov.nasa.jpl.aerie.timeline.util.preprocessList
 
 /**
@@ -15,7 +13,7 @@ import gov.nasa.jpl.aerie.timeline.util.preprocessList
  */
 data class Directives<A: Any>(private val timeline: Timeline<Directive<A>, Directives<A>>):
     Timeline<Directive<A>, Directives<A>> by timeline,
-    DirectiveOps<A, Directives<A>>
+    ActivityOps<Directive<A>, Directives<A>>
 {
   constructor(vararg directives: Directive<A>): this(directives.asList())
   constructor(directives: List<Directive<A>>): this(BaseTimeline(::Directives, preprocessList(directives)))
