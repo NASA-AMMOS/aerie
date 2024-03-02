@@ -9,6 +9,9 @@ data class Instance<A: Any>(
     val inner: A,
     override val type: String,
 
+    /** The instance id. */
+    val id: Long,
+
     /**
      * The maybe-null id of the directive associated with this instance.
      *
@@ -20,5 +23,5 @@ data class Instance<A: Any>(
   override val startTime: Duration
     get() = interval.start
 
-  override fun withNewInterval(i: Interval) = Instance(inner, type, directiveId, i)
+  override fun withNewInterval(i: Interval) = Instance(inner, type, id, directiveId, i)
 }

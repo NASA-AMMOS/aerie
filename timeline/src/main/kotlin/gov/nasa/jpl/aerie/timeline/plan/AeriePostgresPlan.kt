@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.timeline.BaseTimeline
 import gov.nasa.jpl.aerie.timeline.Duration
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.minus
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.plus
+import gov.nasa.jpl.aerie.timeline.Interval.Companion.at
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.between
 import gov.nasa.jpl.aerie.timeline.Interval.Inclusivity.*
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
@@ -166,7 +167,7 @@ data class AeriePostgresPlan(
   }
 
   private val activityInstancesStatement = c.prepareStatement(
-      "select start_offset, duration, attributes, activity_type_name from simulated_activity where simulation_dataset_id = ?;"
+      "select start_offset, duration, attributes, activity_type_name, id from simulated_activity where simulation_dataset_id = ?;"
   )
   override fun allActivityInstances(): Instances<AnyInstance> {
     activityInstancesStatement.clearParameters()
@@ -176,17 +177,18 @@ data class AeriePostgresPlan(
     val result = mutableListOf<Instance<AnyInstance>>()
     while (response.next()) {
       val start = Duration.parseISO8601(response.getString(1))
+      val id = response.getLong(5)
       val attributesString = response.getString(3)
       val attributes = parseJson(attributesString)
       val directiveId = attributes.asMap().getOrNull()?.get("directiveId")?.asInt()?.getOrNull()
-          ?: throw DatabaseError("Could not get directiveId from attributes: $attributesString")
       val arguments = attributes.asMap().getOrNull()!!["arguments"]?.asMap()?.getOrNull()
           ?: throw DatabaseError("Could not get arguments from attributes: $attributesString")
-      val computedAttributes = attributes.asMap().getOrNull()!!["computedAttributes"]?.asMap()?.getOrNull()
+      val computedAttributes = attributes.asMap().getOrNull()!!["computedAttributes"]
           ?: throw DatabaseError("Could not get computed attributes from attributes: $attributesString")
       result.add(Instance(
           AnyInstance(arguments, computedAttributes),
           response.getString(4),
+          id,
           directiveId,
           between(start, start.plus(Duration.parseISO8601(response.getString(2))))
       ))
@@ -195,7 +197,7 @@ data class AeriePostgresPlan(
   }
 
   private val activityDirectivesStatement = c.prepareStatement(
-      "select name, start_offset, type, arguments from activity_directive where plan_id = ?" +
+      "select name, start_offset, type, arguments, id from activity_directive where plan_id = ?" +
         " and start_offset > cast(? as interval) and start_offset < cast(? as interval);"
   )
   override fun allActivityDirectives() = BaseTimeline(::Directives) { opts ->
@@ -212,6 +214,7 @@ data class AeriePostgresPlan(
               parseJson(response.getString(4)).asMap().getOrNull()!!
           ),
           response.getString(1),
+          response.getLong(5),
           response.getString(3),
           Duration.parseISO8601(response.getString(2))
       ))

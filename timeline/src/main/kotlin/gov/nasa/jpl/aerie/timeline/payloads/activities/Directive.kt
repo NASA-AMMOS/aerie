@@ -11,6 +11,9 @@ data class Directive<A: Any>(
     /** The name of this specific directive. */
     val name: String,
 
+    /** The directive id. */
+    val id: Long,
+
     override val type: String,
     override val startTime: Duration
 ): Activity<Directive<A>> {
@@ -18,7 +21,7 @@ data class Directive<A: Any>(
     get() = Interval.at(startTime)
 
   override fun withNewInterval(i: Interval): Directive<A> {
-    if (i.isPoint()) return Directive(inner, name, type, i.start)
+    if (i.isPoint()) return Directive(inner, name, id, type, i.start)
     else throw Exception("Cannot change directive time to a non-instantaneous interval.")
   }
 }
