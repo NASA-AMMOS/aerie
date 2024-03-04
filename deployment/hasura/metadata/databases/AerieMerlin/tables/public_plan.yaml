@@ -67,10 +67,10 @@ array_relationships:
         name: plan
         schema: public
 remote_relationships:
-- name: scheduling_specifications
+- name: scheduling_specification
   definition:
     to_source:
-      relationship_type: array
+      relationship_type: object
       source: AerieScheduler
       table:
         schema: public
