@@ -1,6 +1,6 @@
 table:
   name: activity_directive_tags
-  schema: metadata
+  schema: tags
 configuration:
   custom_name: "activity_directive_tags"
 object_relationships:

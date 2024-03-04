@@ -1,6 +1,8 @@
 table:
   name: span
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "span"
 object_relationships:
 - name: span
   using:
@@ -11,7 +13,7 @@ object_relationships:
       insertion_order: null
       remote_table:
         name: span
-        schema: public
+        schema: merlin
 array_relationships:
 - name: spans
   using:
@@ -22,7 +24,7 @@ array_relationships:
       insertion_order: null
       remote_table:
         name: span
-        schema: public
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

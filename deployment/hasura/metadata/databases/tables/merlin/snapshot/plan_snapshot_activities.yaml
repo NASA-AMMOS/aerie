@@ -1,6 +1,8 @@
 table:
   name: plan_snapshot_activities
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "plan_snapshot_activities"
 object_relationships:
   - name: snapshot
     using:
@@ -12,7 +14,7 @@ array_relationships:
         insertion_order: null
         remote_table:
           name: snapshot_activity_tags
-          schema: metadata
+          schema: tags
         column_mapping:
           id: directive_id
           snapshot_id: snapshot_id

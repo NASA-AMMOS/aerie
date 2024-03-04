@@ -1,6 +1,8 @@
 table:
   name: simulation_template
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "simulation_template"
 object_relationships:
 - name: mission_model
   using:

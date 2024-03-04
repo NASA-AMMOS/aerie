@@ -1,6 +1,8 @@
 table:
   name: scheduling_request
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_request"
 object_relationships:
 - name: scheduling_specification
   using:
@@ -12,32 +14,29 @@ array_relationships:
       column: analysis_id
       table:
         name: scheduling_goal_analysis
-        schema: public
+        schema: scheduler
 - name: satisfying_activities
   using:
     foreign_key_constraint_on:
       column: analysis_id
       table:
         name: scheduling_goal_analysis_satisfying_activities
-        schema: public
+        schema: scheduler
 - name: created_activities
   using:
     foreign_key_constraint_on:
       column: analysis_id
       table:
         name: scheduling_goal_analysis_created_activities
-        schema: public
-remote_relationships:
+        schema: scheduler
 - name: simulation_dataset
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieMerlin
-      table:
-        schema: public
-        name: simulation_dataset
-      field_mapping:
+  using:
+    manual_configuration:
+      column_mapping:
         dataset_id: dataset_id
+      remote_table:
+        name: simulation_dataset
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

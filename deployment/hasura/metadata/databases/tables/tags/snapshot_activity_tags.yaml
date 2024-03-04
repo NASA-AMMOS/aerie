@@ -1,6 +1,6 @@
 table:
   name: snapshot_activity_tags
-  schema: metadata
+  schema: tags
 configuration:
   custom_name: "snapshot_activity_tags"
 object_relationships:

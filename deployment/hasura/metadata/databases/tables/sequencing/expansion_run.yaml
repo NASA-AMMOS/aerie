@@ -1,10 +1,20 @@
 table:
   name: expansion_run
-  schema: public
+  schema: sequencing
+configuration:
+  custom_name: "expansion_run"
 object_relationships:
   - name: expansion_set
     using:
       foreign_key_constraint_on: expansion_set_id
+  - name: simulation_dataset
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_dataset_id: id
+        remote_table:
+          name: simulation_dataset
+          schema: merlin
 array_relationships:
   - name: activity_instance_commands
     using:
@@ -12,25 +22,14 @@ array_relationships:
         column: expansion_run_id
         table:
           name: activity_instance_commands
-          schema: public
+          schema: sequencing
   - name: expanded_sequences
     using:
       foreign_key_constraint_on:
         column: expansion_run_id
         table:
           name: expanded_sequences
-          schema: public
-remote_relationships:
-  - name: simulation_dataset
-    definition:
-      to_source:
-        relationship_type: object
-        source: AerieMerlin
-        table:
-          schema: public
-          name: simulation_dataset
-        field_mapping:
-          simulation_dataset_id: id
+          schema: sequencing
 select_permissions:
   - role: aerie_admin
     permission:

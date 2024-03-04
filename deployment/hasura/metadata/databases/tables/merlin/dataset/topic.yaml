@@ -1,12 +1,14 @@
 table:
   name: topic
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "topic"
 array_relationships:
 - name: events
   using:
     manual_configuration:
       remote_table:
-        schema: public
+        schema: merlin
         name: event
       column_mapping:
         dataset_id: dataset_id

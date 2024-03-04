@@ -1,6 +1,8 @@
 table:
   name: scheduling_model_specification_goals
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_model_specification_goals"
 object_relationships:
   - name: goal_metadata
     using:
@@ -10,17 +12,14 @@ object_relationships:
       foreign_key_constraint_on:
         - goal_id
         - goal_revision
-remote_relationships:
-- name: model
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieMerlin
-      table:
-        schema: public
-        name: mission_model
-      field_mapping:
-        model_id: id
+  - name: model
+    using:
+      manual_configuration:
+        column_mapping:
+          model_id: id
+        remote_table:
+          name: mission_model
+          schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

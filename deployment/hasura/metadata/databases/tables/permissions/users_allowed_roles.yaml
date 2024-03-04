@@ -1,6 +1,6 @@
 table:
   name: users_allowed_roles
-  schema: metadata
+  schema: permissions
 configuration:
   custom_name: "users_allowed_roles"
 select_permissions:

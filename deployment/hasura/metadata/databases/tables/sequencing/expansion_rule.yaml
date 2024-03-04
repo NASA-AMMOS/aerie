@@ -1,13 +1,15 @@
 table:
   name: expansion_rule
-  schema: public
+  schema: sequencing
+configuration:
+  custom_name: "expansion_rule"
 array_relationships:
 - name: expansion_sets
   using:
     manual_configuration:
       remote_table:
         name: rule_expansion_set_view
-        schema: public
+        schema: sequencing
       insertion_order: null
       column_mapping:
         id: rule_id
@@ -16,7 +18,7 @@ array_relationships:
     manual_configuration:
       remote_table:
         name: expansion_rule_tags
-        schema: metadata
+        schema: tags
       insertion_order: null
       column_mapping:
         id: rule_id

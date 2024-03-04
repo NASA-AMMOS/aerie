@@ -1,6 +1,8 @@
 table:
   name: extension_roles
-  schema: public
+  schema: ui
+configuration:
+  custom_name: "extension_roles"
 object_relationships:
   - name: extension
     using:

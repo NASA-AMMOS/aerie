@@ -1,6 +1,8 @@
 table:
   name: activity_presets
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "activity_presets"
 select_permissions:
   - role: aerie_admin
     permission:

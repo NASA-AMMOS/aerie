@@ -1,6 +1,8 @@
 table:
   name: merge_staging_area
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "merge_staging_area"
 object_relationships:
   - name: merge_request
     using:

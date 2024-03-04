@@ -1,12 +1,14 @@
 table:
   name: profile
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "profile"
 array_relationships:
 - name: profile_segments
   using:
     manual_configuration:
       remote_table:
-        schema: public
+        schema: merlin
         name: profile_segment
       column_mapping:
         id: profile_id

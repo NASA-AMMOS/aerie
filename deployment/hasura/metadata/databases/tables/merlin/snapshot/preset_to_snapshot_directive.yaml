@@ -1,20 +1,17 @@
 table:
-  name: activity_instance_commands
-  schema: sequencing
+  name: preset_to_snapshot_directive
+  schema: merlin
 configuration:
-  custom_name: "activity_instance_commands"
+  custom_name: "preset_to_snapshot_directive"
 object_relationships:
-- name: expansion_run
-  using:
-    foreign_key_constraint_on: expansion_run_id
-- name: activity_instance
-  using:
-    manual_configuration:
-      column_mapping:
-        activity_instance_id: id
-      remote_table:
-        name: span
-        schema: merlin
+  - name: directive_applied_to
+    using:
+      foreign_key_constraint_on:
+        - activity_id
+        - snapshot_id
+  - name: preset_applied
+    using:
+      foreign_key_constraint_on: preset_id
 select_permissions:
   - role: aerie_admin
     permission:

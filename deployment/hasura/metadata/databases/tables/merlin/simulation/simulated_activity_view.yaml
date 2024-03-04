@@ -1,13 +1,15 @@
 table:
   name: simulated_activity
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "simulated_activity"
 object_relationships:
 - name: simulation_dataset
   using:
     manual_configuration:
       remote_table:
         name: simulation_dataset
-        schema: public
+        schema: merlin
       column_mapping:
         simulation_dataset_id: id
 - name: parent_simulated_activity
@@ -15,14 +17,14 @@ object_relationships:
     manual_configuration:
       remote_table:
         name: simulated_activity
-        schema: public
+        schema: merlin
       column_mapping:
         parent_id: id
 - name: activity_directive
   using:
     manual_configuration:
       remote_table:
-        schema: public
+        schema: merlin
         name: activity_directive
       insertion_order: null
       column_mapping:

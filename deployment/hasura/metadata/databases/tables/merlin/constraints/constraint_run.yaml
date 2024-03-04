@@ -1,6 +1,8 @@
 table:
   name: constraint_run
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "constraint_run"
 object_relationships:
   - name: constraint_definition
     using:
@@ -15,7 +17,7 @@ object_relationships:
         insertion_order: null
         remote_table:
           name: constraint_metadata
-          schema: public
+          schema: merlin
   - name: simulation_dataset
     using:
       foreign_key_constraint_on: simulation_dataset_id

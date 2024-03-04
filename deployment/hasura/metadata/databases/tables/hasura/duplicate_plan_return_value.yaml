@@ -1,6 +1,6 @@
 table:
   name: duplicate_plan_return_value
-  schema: hasura_functions
+  schema: hasura
 select_permissions:
   - role: aerie_admin
     permission:

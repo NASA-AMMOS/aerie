@@ -1,12 +1,14 @@
 table:
   name: user_sequence
-  schema: public
+  schema: sequencing
+configuration:
+  custom_name: "user_sequence"
 object_relationships:
 - name: command_dictionary
   using:
     manual_configuration:
       remote_table:
-        schema: public
+        schema: sequencing
         name: command_dictionary
       insertion_order: null
       column_mapping:

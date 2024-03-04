@@ -1,27 +1,25 @@
 table:
   name: sequence_to_simulated_activity
-  schema: public
-remote_relationships:
+  schema: sequencing
+configuration:
+  custom_name: "sequence_to_simulated_activity"
+object_relationships:
 - name: simulation_dataset
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieMerlin
-      table:
-        schema: public
-        name: simulation_dataset
-      field_mapping:
+  using:
+    manual_configuration:
+      column_mapping:
         simulation_dataset_id: id
+      remote_table:
+        name: simulation_dataset
+        schema: merlin
 - name: simulated_activity
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieMerlin
-      table:
-        schema: public
-        name: simulated_activity
-      field_mapping:
+  using:
+    manual_configuration:
+      column_mapping:
         simulated_activity_id: id
+      remote_table:
+        name: simulated_activity
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

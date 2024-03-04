@@ -1,17 +1,14 @@
 table:
   name: preset_to_directive
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "preset_to_directive"
 object_relationships:
   - name: directive_applied_to
     using:
-      manual_configuration:
-        column_mapping:
-          activity_id: id
-          plan_id: plan_id
-        insertion_order: null
-        remote_table:
-          name: activity_directive
-          schema: public
+      foreign_key_constraint_on:
+        - activity_id
+        - plan_id
   - name: preset_applied
     using:
       foreign_key_constraint_on: preset_id

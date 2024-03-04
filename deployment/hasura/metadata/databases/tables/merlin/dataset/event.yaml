@@ -1,6 +1,8 @@
 table:
   name: event
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "event"
 select_permissions:
   - role: aerie_admin
     permission:

@@ -1,6 +1,8 @@
 table:
   name: constraint_specification
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "constraint_specification"
 object_relationships:
   - name: plan
     using:

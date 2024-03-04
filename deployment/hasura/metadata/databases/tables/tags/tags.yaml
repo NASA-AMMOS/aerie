@@ -1,6 +1,6 @@
 table:
   name: tags
-  schema: metadata
+  schema: tags
 configuration:
   custom_name: "tags"
 select_permissions:

@@ -1,6 +1,8 @@
 table:
   name: plan_dataset
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "plan_dataset"
 object_relationships:
 - name: dataset
   using:

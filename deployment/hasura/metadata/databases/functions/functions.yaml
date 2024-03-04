@@ -1,6 +1,6 @@
 - function:
     name: apply_preset_to_activity
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: apply_preset_to_activity
@@ -10,7 +10,7 @@
     - role: user
 - function:
     name: begin_merge
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: begin_merge
@@ -20,7 +20,7 @@
     - role: user
 - function:
     name: cancel_merge
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: cancel_merge
@@ -30,7 +30,7 @@
     - role: user
 - function:
     name: create_merge_request
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: create_merge_request
@@ -40,7 +40,7 @@
     - role: user
 - function:
     name: create_snapshot
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: create_snapshot
@@ -50,7 +50,7 @@
     - role: user
 - function:
     name: commit_merge
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: commit_merge
@@ -60,7 +60,7 @@
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_plan_start
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_plan_start
@@ -70,7 +70,7 @@
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_plan_start_bulk
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_plan_start_bulk
@@ -80,7 +80,7 @@
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_to_anchor
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_to_anchor
@@ -90,7 +90,7 @@
     - role: user
 - function:
     name: delete_activity_by_pk_reanchor_to_anchor_bulk
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_reanchor_to_anchor_bulk
@@ -100,7 +100,7 @@
     - role: user
 - function:
     name: delete_activity_by_pk_delete_subtree
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree
@@ -110,7 +110,7 @@
     - role: user
 - function:
     name: delete_activity_by_pk_delete_subtree_bulk
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree_bulk
@@ -120,7 +120,7 @@
     - role: user
 - function:
     name: deny_merge
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: deny_merge
@@ -130,7 +130,7 @@
     - role: user
 - function:
     name: duplicate_plan
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: duplicate_plan
@@ -140,7 +140,7 @@
     - role: user
 - function:
     name: get_conflicting_activities
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: get_conflicting_activities
@@ -152,7 +152,7 @@
     - role: viewer
 - function:
     name: get_non_conflicting_activities
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: get_non_conflicting_activities
@@ -164,7 +164,7 @@
     - role: viewer
 - function:
     name: get_plan_history
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: get_plan_history
@@ -174,7 +174,7 @@
     - role: user
 - function:
     name: get_resources_at_start_offset
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_name: getResourcesAtStartOffset
   permissions:
@@ -183,7 +183,7 @@
     - role: viewer
 - function:
     name: restore_activity_changelog
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_name: restoreActivityFromChangelog
     session_argument: hasura_session
@@ -192,7 +192,7 @@
     - role: user
 - function:
     name: restore_from_snapshot
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: restore_from_snapshot
@@ -202,7 +202,7 @@
     - role: user
 - function:
     name: set_resolution
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: set_resolution
@@ -212,7 +212,7 @@
     - role: user
 - function:
     name: set_resolution_bulk
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: set_resolution_bulk
@@ -222,7 +222,7 @@
     - role: user
 - function:
     name: withdraw_merge_request
-    schema: hasura_functions
+    schema: hasura
   configuration:
     custom_root_fields:
       function: withdraw_merge_request

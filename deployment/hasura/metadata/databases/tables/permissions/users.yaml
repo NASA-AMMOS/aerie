@@ -1,6 +1,6 @@
 table:
   name: users
-  schema: metadata
+  schema: permissions
 configuration:
   custom_name: "users"
 select_permissions:

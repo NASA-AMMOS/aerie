@@ -1,13 +1,15 @@
 table:
   name: activity_directive_changelog
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "activity_directive_changelog"
 object_relationships:
 - name: activity_directive
   using:
     manual_configuration:
       remote_table:
         name: activity_directive
-        schema: public
+        schema: merlin
       column_mapping:
         plan_id: plan_id
         activity_directive_id: id

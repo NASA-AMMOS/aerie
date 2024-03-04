@@ -1,6 +1,8 @@
 table:
   name: scheduling_specification_goals
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_specification_goals"
 object_relationships:
   - name: goal_metadata
     using:

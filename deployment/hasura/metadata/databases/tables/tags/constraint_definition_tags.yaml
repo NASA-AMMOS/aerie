@@ -1,6 +1,6 @@
 table:
   name: constraint_definition_tags
-  schema: metadata
+  schema: tags
 configuration:
   custom_name: "constraint_definition_tags"
 object_relationships:

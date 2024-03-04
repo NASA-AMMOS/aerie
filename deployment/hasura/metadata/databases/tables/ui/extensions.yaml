@@ -1,6 +1,8 @@
 table:
   name: extensions
-  schema: public
+  schema: ui
+configuration:
+  custom_name: "extensions"
 array_relationships:
   - name: extension_roles
     using:
@@ -8,7 +10,7 @@ array_relationships:
         column: extension_id
         table:
           name: extension_roles
-          schema: public
+          schema: ui
 select_permissions:
   - role: aerie_admin
     permission:
