@@ -1,6 +1,8 @@
 table:
   name: constraint_definition
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "constraint_definition"
 object_relationships:
   - name: metadata
     using:
@@ -14,7 +16,7 @@ array_relationships:
           - constraint_revision
         table:
           name: constraint_model_specification
-          schema: public
+          schema: merlin
   - name: plans_using
     using:
       foreign_key_constraint_on:
@@ -23,7 +25,7 @@ array_relationships:
           - constraint_revision
         table:
           name: constraint_specification
-          schema: public
+          schema: merlin
   - name: tags
     using:
       foreign_key_constraint_on:
@@ -32,7 +34,7 @@ array_relationships:
           - constraint_revision
         table:
           name: constraint_definition_tags
-          schema: metadata
+          schema: tags
 select_permissions:
   - role: aerie_admin
     permission:

@@ -1,6 +1,6 @@
 table:
   name: plan_snapshot_tags
-  schema: metadata
+  schema: tags
 configuration:
   custom_name: "plan_snapshot_tags"
 object_relationships:

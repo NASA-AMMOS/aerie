@@ -1,16 +1,12 @@
 table:
   name: scheduling_goal_analysis
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_goal_analysis"
 object_relationships:
 - name: request
   using:
-    manual_configuration:
-      remote_table:
-        schema: public
-        name: scheduling_request
-      insertion_order: null
-      column_mapping:
-        analysis_id: analysis_id
+    foreign_key_constraint_on: analysis_id
 - name: goal_metadata
   using:
     manual_configuration:
@@ -18,7 +14,7 @@ object_relationships:
         goal_id: id
       remote_table:
         name: scheduling_goal_metadata
-        schema: public
+        schema: scheduler
 - name: goal_definition
   using:
     foreign_key_constraint_on:
@@ -28,13 +24,12 @@ array_relationships:
 - name: satisfying_activities
   using:
     manual_configuration:
-      remote_table:
-        schema: public
-        name: scheduling_goal_analysis_satisfying_activities
-      insertion_order: null
       column_mapping:
         goal_id: goal_id
         analysis_id: analysis_id
+      remote_table:
+        name: scheduling_goal_analysis_satisfying_activities
+        schema: scheduler
 select_permissions:
   - role: aerie_admin
     permission:

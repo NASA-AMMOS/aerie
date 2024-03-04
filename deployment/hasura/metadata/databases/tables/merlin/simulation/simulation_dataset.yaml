@@ -1,6 +1,8 @@
 table:
   name: simulation_dataset
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "simulation_dataset"
 object_relationships:
 - name: dataset
   using:
@@ -10,32 +12,28 @@ object_relationships:
     foreign_key_constraint_on: simulation_id
 - name: extent
   using:
-    manual_configuration:
-      remote_table:
-        schema: public
+    foreign_key_constraint_on:
+      column: simulation_dataset_id
+      table:
         name: simulation_extent
-      insertion_order: null
-      column_mapping:
-        id: simulation_dataset_id
+        schema: merlin
 array_relationships:
 - name: simulated_activities
   using:
     manual_configuration:
       remote_table:
-        schema: public
+        schema: merlin
         name: simulated_activity
       insertion_order: null
       column_mapping:
         id: simulation_dataset_id
 - name: constraint_runs
   using:
-    manual_configuration:
-      remote_table:
-        schema: public
+    foreign_key_constraint_on:
+      column: simulation_dataset_id
+      table:
         name: constraint_run
-      insertion_order: null
-      column_mapping:
-        id: simulation_dataset_id
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

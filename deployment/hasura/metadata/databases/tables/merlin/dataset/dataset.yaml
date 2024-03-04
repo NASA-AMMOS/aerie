@@ -1,6 +1,8 @@
 table:
   name: dataset
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "dataset"
 array_relationships:
 - name: profiles
   using:
@@ -8,7 +10,7 @@ array_relationships:
       column: dataset_id
       table:
         name: profile
-        schema: public
+        schema: merlin
 - name: spans
   using:
     manual_configuration:
@@ -17,14 +19,14 @@ array_relationships:
       insertion_order: null
       remote_table:
         name: span
-        schema: public
+        schema: merlin
 - name: topics
   using:
     foreign_key_constraint_on:
       column: dataset_id
       table:
         name: topic
-        schema: public
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

@@ -1,10 +1,20 @@
 table:
   name: expansion_set
-  schema: public
+  schema: sequencing
+configuration:
+  custom_name: "expansion_set"
 object_relationships:
 - name: command_dictionary
   using:
     foreign_key_constraint_on: command_dict_id
+- name: mission_model
+  using:
+    manual_configuration:
+      column_mapping:
+        mission_model_id: id
+      remote_table:
+        name: mission_model
+        schema: merlin
 array_relationships:
 - name: expansion_runs
   using:
@@ -12,27 +22,16 @@ array_relationships:
       column: expansion_set_id
       table:
         name: expansion_run
-        schema: public
+        schema: sequencing
 - name: expansion_rules
   using:
     manual_configuration:
       remote_table:
         name: expansion_set_rule_view
-        schema: public
+        schema: sequencing
       insertion_order: null
       column_mapping:
         id: set_id
-remote_relationships:
-- name: mission_model
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieMerlin
-      table:
-        schema: public
-        name: mission_model
-      field_mapping:
-        mission_model_id: id
 select_permissions:
   - role: aerie_admin
     permission:

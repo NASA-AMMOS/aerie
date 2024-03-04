@@ -1,6 +1,8 @@
 table:
   name: merge_request
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "merge_request"
 object_relationships:
 - name: plan_receiving_changes
   using:
@@ -10,7 +12,7 @@ object_relationships:
       insertion_order: null
       remote_table:
         name: plan
-        schema: public
+        schema: merlin
 - name: plan_snapshot_supplying_changes
   using:
     manual_configuration:
@@ -19,31 +21,29 @@ object_relationships:
       insertion_order: null
       remote_table:
         name: plan_snapshot
-        schema: public
+        schema: merlin
 array_relationships:
 - name: comment
   using:
-    manual_configuration:
-      column_mapping:
-        id: merge_request_id
-      insertion_order: null
-      remote_table:
+    foreign_key_constraint_on:
+      column: merge_request_id
+      table:
         name: merge_request_comment
-        schema: public
+        schema: merlin
 - name: conflicting_activities
   using:
     foreign_key_constraint_on:
       column: merge_request_id
       table:
         name: conflicting_activities
-        schema: public
+        schema: merlin
 - name: staged_activities
   using:
     foreign_key_constraint_on:
       column: merge_request_id
       table:
         name: merge_staging_area
-        schema: public
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

@@ -1,6 +1,8 @@
 table:
   name: activity_directive_validations
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "activity_directive_validations"
 select_permissions:
   - role: aerie_admin
     permission:

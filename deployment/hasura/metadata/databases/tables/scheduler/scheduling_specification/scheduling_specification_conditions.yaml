@@ -1,6 +1,8 @@
 table:
   name: scheduling_specification_conditions
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_specification_conditions"
 object_relationships:
   - name: condition_metadata
     using:

@@ -1,6 +1,8 @@
 table:
   name: constraint_model_specification
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "constraint_model_specification"
 object_relationships:
   - name: model
     using:
@@ -13,7 +15,7 @@ object_relationships:
         insertion_order: null
         remote_table:
           name: constraint_metadata
-          schema: public
+          schema: merlin
   - name: constraint_definition
     using:
       manual_configuration:
@@ -23,7 +25,7 @@ object_relationships:
         insertion_order: null
         remote_table:
           name: constraint_definition
-          schema: public
+          schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

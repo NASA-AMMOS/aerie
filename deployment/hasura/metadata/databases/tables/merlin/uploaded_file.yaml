@@ -1,6 +1,8 @@
 table:
   name: uploaded_file
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "uploaded_file"
 select_permissions:
   - role: aerie_admin
     permission:

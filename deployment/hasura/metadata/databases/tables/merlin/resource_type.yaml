@@ -1,6 +1,8 @@
 table:
   name: resource_type
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "resource_type"
 select_permissions:
   - role: aerie_admin
     permission:

@@ -1,6 +1,8 @@
 table:
   name: mission_model
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "mission_model"
 object_relationships:
 - name: parameters
   using:
@@ -8,7 +10,7 @@ object_relationships:
       column: model_id
       table:
         name: mission_model_parameters
-        schema: public
+        schema: merlin
 - name: uploaded_file
   using:
     foreign_key_constraint_on: jar_id
@@ -19,49 +21,42 @@ array_relationships:
       column: model_id
       table:
         name: activity_type
-        schema: public
+        schema: merlin
 - name: constraint_specification
   using:
     foreign_key_constraint_on:
       column: model_id
       table:
         name: constraint_model_specification
-        schema: public
+        schema: merlin
 - name: plans
   using:
     foreign_key_constraint_on:
       column: model_id
       table:
         name: plan
-        schema: public
+        schema: merlin
 - name: resource_types
   using:
     foreign_key_constraint_on:
       column: model_id
       table:
         name: resource_type
-        schema: public
-remote_relationships:
+        schema: merlin
 - name: scheduling_specification_conditions
-  definition:
-    to_source:
-      relationship_type: array
-      source: AerieScheduler
+  using:
+    foreign_key_constraint_on:
+      column: model_id
       table:
-        schema: public
         name: scheduling_model_specification_conditions
-      field_mapping:
-        id: model_id
+        schema: scheduler
 - name: scheduling_specification_goals
-  definition:
-    to_source:
-      relationship_type: array
-      source: AerieScheduler
+  using:
+    foreign_key_constraint_on:
+      column: model_id
       table:
-        schema: public
         name: scheduling_model_specification_goals
-      field_mapping:
-        id: model_id
+        schema: scheduler
 select_permissions:
   - role: aerie_admin
     permission:

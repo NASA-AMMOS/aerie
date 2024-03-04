@@ -1,6 +1,8 @@
 table:
   name: simulation
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "simulation"
 object_relationships:
 - name: simulation_dataset
   using:
@@ -8,7 +10,7 @@ object_relationships:
       column: simulation_id
       table:
         name: simulation_dataset
-        schema: public
+        schema: merlin
 - name: simulation_template
   using:
     foreign_key_constraint_on: simulation_template_id
@@ -22,7 +24,7 @@ array_relationships:
       column: simulation_id
       table:
         name: simulation_dataset
-        schema: public
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

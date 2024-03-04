@@ -1,6 +1,8 @@
 table:
   name: activity_directive
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "activity_directive"
 object_relationships:
 - name: plan
   using:
@@ -13,7 +15,7 @@ object_relationships:
         - plan_id
       table:
         name: activity_directive_validations
-        schema: public
+        schema: merlin
 - name: anchor_validations
   using:
     foreign_key_constraint_on:
@@ -22,7 +24,7 @@ object_relationships:
         - plan_id
       table:
         name: anchor_validation_status
-        schema: public
+        schema: merlin
 - name: applied_preset
   using:
     foreign_key_constraint_on:
@@ -31,48 +33,43 @@ object_relationships:
         - plan_id
       table:
         name: preset_to_directive
-        schema: public
+        schema: merlin
+- name: source_scheduling_goal
+  using:
+    manual_configuration:
+      column_mapping:
+        source_scheduling_goal_id: id
+      remote_table:
+        name: scheduling_goal_metadata
+        schema: scheduler
 array_relationships:
 - name: simulated_activities
   using:
     manual_configuration:
       remote_table:
-        schema: public
+        schema: merlin
         name: simulated_activity
       insertion_order: null
       column_mapping:
         id: directive_id
 - name: tags
   using:
-    manual_configuration:
-      insertion_order: null
-      remote_table:
+    foreign_key_constraint_on:
+      columns:
+        - directive_id
+        - plan_id
+      table:
         name: activity_directive_tags
-        schema: metadata
-      column_mapping:
-        id: directive_id
-        plan_id: plan_id
+        schema: tags
 - name: activity_directive_changelog
   using:
-    manual_configuration:
-      insertion_order: null
-      remote_table:
-        name: activity_directive_changelog
-        schema: public
-      column_mapping:
-        id: activity_directive_id
-        plan_id: plan_id
-remote_relationships:
-- name: source_scheduling_goal
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieScheduler
+    foreign_key_constraint_on:
+      columns:
+        - activity_directive_id
+        - plan_id
       table:
-        schema: public
-        name: scheduling_goal_metadata
-      field_mapping:
-        source_scheduling_goal_id: id
+        name: activity_directive_changelog
+        schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:

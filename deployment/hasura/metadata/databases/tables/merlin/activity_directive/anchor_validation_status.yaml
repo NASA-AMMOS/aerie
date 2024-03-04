@@ -1,6 +1,8 @@
 table:
   name: anchor_validation_status
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "anchor_validation_status"
 select_permissions:
   - role: aerie_admin
     permission:

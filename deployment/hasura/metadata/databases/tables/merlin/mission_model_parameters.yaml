@@ -1,6 +1,8 @@
 table:
   name: mission_model_parameters
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "mission_model_parameters"
 select_permissions:
   - role: aerie_admin
     permission:

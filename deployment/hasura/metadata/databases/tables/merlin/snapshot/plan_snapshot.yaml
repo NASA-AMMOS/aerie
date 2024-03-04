@@ -1,16 +1,12 @@
 table:
   name: plan_snapshot
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "plan_snapshot"
 object_relationships:
 - name: plan
   using:
-    manual_configuration:
-      column_mapping:
-        plan_id: id
-      insertion_order: null
-      remote_table:
-        name: plan
-        schema: public
+    foreign_key_constraint_on: plan_id
 array_relationships:
   - name: activities
     using:
@@ -18,14 +14,14 @@ array_relationships:
         column: snapshot_id
         table:
           name: plan_snapshot_activities
-          schema: public
+          schema: merlin
   - name: tags
     using:
       foreign_key_constraint_on:
         column: snapshot_id
         table:
           name: plan_snapshot_tags
-          schema: metadata
+          schema: tags
 select_permissions:
   - role: aerie_admin
     permission:

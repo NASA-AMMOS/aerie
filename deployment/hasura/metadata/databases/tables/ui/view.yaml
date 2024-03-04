@@ -1,6 +1,8 @@
 table:
   name: view
-  schema: public
+  schema: ui
+configuration:
+  custom_name: "view"
 select_permissions:
   - role: aerie_admin
     permission:

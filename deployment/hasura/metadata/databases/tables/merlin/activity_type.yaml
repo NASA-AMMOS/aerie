@@ -1,6 +1,8 @@
 table:
   name: activity_type
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "activity_type"
 object_relationships:
   - name: subsystem_tag
     using:
@@ -10,23 +12,20 @@ array_relationships:
     using:
       manual_configuration:
         remote_table:
-          schema: public
+          schema: merlin
           name: activity_presets
         insertion_order: null
         column_mapping:
           model_id: model_id
           name: associated_activity_type
-remote_relationships:
-- name: expansion_rules
-  definition:
-    to_source:
-      relationship_type: array
-      source: AerieSequencing
-      table:
-        schema: public
-        name: expansion_rule
-      field_mapping:
-        name: activity_type
+  - name: expansion_rules
+    using:
+      manual_configuration:
+        column_mapping:
+          name: activity_type
+        remote_table:
+          name: expansion_rule
+          schema: sequencing
 select_permissions:
   - role: aerie_admin
     permission:

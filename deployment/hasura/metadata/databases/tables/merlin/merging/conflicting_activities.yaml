@@ -1,6 +1,8 @@
 table:
   name: conflicting_activities
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "conflicting_activities"
 object_relationships:
   - name: merge_request
     using:

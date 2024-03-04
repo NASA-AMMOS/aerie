@@ -1,6 +1,8 @@
 table:
   name: scheduling_condition_metadata
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_condition_metadata"
 array_relationships:
   - name: tags
     using:
@@ -8,28 +10,28 @@ array_relationships:
         column: condition_id
         table:
           name: scheduling_condition_tags
-          schema: metadata
+          schema: tags
   - name: versions
     using:
       foreign_key_constraint_on:
         column: condition_id
         table:
           name: scheduling_condition_definition
-          schema: public
+          schema: scheduler
   - name: models_using
     using:
       foreign_key_constraint_on:
         column: condition_id
         table:
           name: scheduling_model_specification_conditions
-          schema: public
+          schema: scheduler
   - name: plans_using
     using:
       foreign_key_constraint_on:
         column: condition_id
         table:
           name: scheduling_specification_conditions
-          schema: public
+          schema: scheduler
 select_permissions:
   - role: aerie_admin
     permission:

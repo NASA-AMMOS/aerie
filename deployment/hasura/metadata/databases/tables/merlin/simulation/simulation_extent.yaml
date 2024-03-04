@@ -1,6 +1,8 @@
 table:
   name: simulation_extent
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "simulation_extent"
 select_permissions:
   - role: aerie_admin
     permission:

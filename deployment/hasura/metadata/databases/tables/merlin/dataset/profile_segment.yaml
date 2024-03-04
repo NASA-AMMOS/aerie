@@ -1,6 +1,8 @@
 table:
   name: profile_segment
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "profile_segment"
 select_permissions:
   - role: aerie_admin
     permission:

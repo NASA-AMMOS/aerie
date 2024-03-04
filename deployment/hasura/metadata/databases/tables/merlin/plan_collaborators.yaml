@@ -1,6 +1,8 @@
 table:
   name: plan_collaborators
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "plan_collaborators"
 object_relationships:
   - name: plan
     using:

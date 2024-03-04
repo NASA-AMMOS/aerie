@@ -1,6 +1,8 @@
 table:
   name: scheduling_goal_analysis_created_activities
-  schema: public
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_goal_analysis_created_activities"
 object_relationships:
 - name: analysis
   using:

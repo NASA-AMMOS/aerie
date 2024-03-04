@@ -1,6 +1,8 @@
 table:
   name: merge_request_comment
-  schema: public
+  schema: merlin
+configuration:
+  custom_name: "merge_request_comment"
 object_relationships:
   - name: merge_request
     using:

@@ -1,27 +1,27 @@
 table:
   name: sequence
-  schema: public
+  schema: sequencing
+configuration:
+  custom_name: "sequence"
+object_relationships:
+- name: simulation_dataset
+  using:
+    manual_configuration:
+      column_mapping:
+        simulation_dataset_id: id
+      remote_table:
+        name: simulation_dataset
+        schema: merlin
 array_relationships:
 - name: activity_instance_joins
   using:
-    manual_configuration:
-      remote_table:
-        name: sequence_to_simulated_activity
-        schema: public
-      column_mapping:
-        seq_id: seq_id
-        simulation_dataset_id: simulation_dataset_id
-remote_relationships:
-- name: simulation_dataset
-  definition:
-    to_source:
-      relationship_type: object
-      source: AerieMerlin
+    foreign_key_constraint_on:
+      columns:
+        - seq_id
+        - simulation_dataset_id
       table:
-        schema: public
-        name: simulation_dataset
-      field_mapping:
-        simulation_dataset_id: id
+        name: sequence_to_simulated_activity
+        schema: sequencing
 select_permissions:
   - role: aerie_admin
     permission:
