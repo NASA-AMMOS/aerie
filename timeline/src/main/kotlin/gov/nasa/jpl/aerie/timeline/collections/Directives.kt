@@ -16,5 +16,5 @@ data class Directives<A: Any>(private val timeline: Timeline<Directive<A>, Direc
     ActivityOps<Directive<A>, Directives<A>>
 {
   constructor(vararg directives: Directive<A>): this(directives.asList())
-  constructor(directives: List<Directive<A>>): this(BaseTimeline(::Directives, preprocessList(directives)))
+  constructor(directives: List<Directive<A>>): this(BaseTimeline(::Directives, preprocessList(directives, null)))
 }

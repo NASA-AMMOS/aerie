@@ -15,5 +15,5 @@ data class Intervals<T: IntervalLike<T>>(private val timeline: Timeline<T, Inter
     NonZeroDurationOps<T, Intervals<T>>
 {
   constructor(vararg intervals: T): this(intervals.asList())
-  constructor(intervals: List<T>): this(BaseTimeline(::Intervals, preprocessList(intervals)))
+  constructor(intervals: List<T>): this(BaseTimeline(::Intervals, preprocessList(intervals, null)))
 }

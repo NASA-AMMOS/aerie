@@ -17,7 +17,7 @@ import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
  *
  * @return a collect closure that produces a sorted, possibly coalesced, and bounded list
  */
-fun <V: IntervalLike<V>> preprocessList(list: List<V>, shouldCoalesce: (V.(V) -> Boolean)? = null): (CollectOptions) -> List<V> {
+fun <V: IntervalLike<V>> preprocessList(list: List<V>, shouldCoalesce: (V.(V) -> Boolean)?): (CollectOptions) -> List<V> {
   val sorted = list.sorted()
   val coalesced = maybeCoalesce(sorted, shouldCoalesce)
   return listCollector(coalesced)

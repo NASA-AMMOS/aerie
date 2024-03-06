@@ -17,7 +17,7 @@ data class Windows(private val timeline: Timeline<Interval, Windows>):
     NonZeroDurationOps<Interval, Windows>
 {
   constructor(vararg intervals: Interval): this(intervals.asList())
-  constructor(intervals: List<Interval>): this(BaseTimeline(::Windows, preprocessList(intervals)))
+  constructor(intervals: List<Interval>): this(BaseTimeline(::Windows, preprocessList(intervals) { true }))
 
   /** Calculates the union of this and another [Windows]. */
   infix fun union(other: Windows) = unsafeOperate { opts ->
