@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.timeline.ops.numeric
 
 import gov.nasa.jpl.aerie.timeline.Duration
+import gov.nasa.jpl.aerie.timeline.collections.profiles.Numbers
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real
 import gov.nasa.jpl.aerie.timeline.ops.SerialSegmentOps
@@ -13,6 +14,7 @@ import gov.nasa.jpl.aerie.timeline.payloads.LinearEquation
 interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegmentOps<V, THIS>, NumericOps<V, THIS> {
   /** [(DOC)][toSerialLinear] Converts the profile to a linear profile, a.k.a. [Real] (no-op if it already was linear). */
   fun toSerialLinear(): Real
+  fun toSerialPrimitiveNumbers(message: String? = null): Numbers<*>
 
   /**
    * [(DOC)][integrate] Calculates the integral of this profile, starting from zero.
@@ -28,7 +30,7 @@ interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegme
    * @param unit length of the time basis vector
    */
   fun integrate(unit: Duration = Duration.SECOND) =
-      toSerialLinear().unsafeOperate { opts ->
+      toSerialPrimitiveNumbers("Cannot integrate a non-piecewise-constant linear profile.").unsafeOperate(::Real) { opts ->
         val segments = collect(opts)
         val result = mutableListOf<Segment<LinearEquation>>()
         val baseRate = Duration.SECOND.ratioOver(unit)
@@ -37,9 +39,7 @@ interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegme
         for (segment in segments) {
           if (previousTime < segment.interval.start)
             throw Real.RealOpException("Cannot integrate a linear profile that has gaps (time $previousTime")
-          if (!segment.value.isConstant())
-            throw Real.RealOpException("Cannot integrate a non-piecewise-constant linear profile (time $previousTime")
-          val rate = segment.value.initialValue * baseRate
+          val rate = segment.value.toDouble() * baseRate
           val nextAcc = acc + rate * segment.interval.duration().ratioOver(Duration.SECOND)
           result.add(Segment(segment.interval, LinearEquation(previousTime, acc, rate)))
           previousTime = segment.interval.end
@@ -49,12 +49,10 @@ interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegme
       }
 
   /**
-   * [(DOC)][shiftedDifference] Calculates the difference between this, and this profile's value at [range] time in the future.
+   * [(DOC)][shiftedDifference] Calculates the difference between this profile's value at [range] time in the future,
+   * and this profile at the present.
    *
    * If this is a function `f(t)`, the result is `f(t+range) - f(t)`.
    */
-  fun shiftedDifference(range: Duration): Real {
-    val linearized = toSerialLinear()
-    return linearized.shift(range.negate()).minus(linearized)
-  }
+  fun shiftedDifference(range: Duration): THIS
 }

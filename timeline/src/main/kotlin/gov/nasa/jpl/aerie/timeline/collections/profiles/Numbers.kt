@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.timeline.collections.profiles
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
 import gov.nasa.jpl.aerie.timeline.BaseTimeline
+import gov.nasa.jpl.aerie.timeline.Duration
 import gov.nasa.jpl.aerie.timeline.Interval
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.Timeline
@@ -17,7 +18,7 @@ import kotlin.math.pow
  * A profile of piece-wise constant numbers.
  *
  * Unlike [Real], this is not able to vary linearly. Instead,
- * it can contain either homogeneous (and strictly-typed) collection of
+ * it can contain either a homogeneous (and strictly-typed) collection of
  * any numeric type (i.e. `Numbers<Integer>` (Java) or `Numbers<Int>` (Kotlin)),
  * or a heterogeneous collection of all numeric types (i.e. `Numbers<Number>`).
  *
@@ -38,6 +39,7 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
   constructor(segments: List<Segment<N>>): this(BaseTimeline(::Numbers, preprocessList(segments, Segment<N>::valueEquals)))
 
   override fun toSerialLinear() = mapValues(::Real) { LinearEquation(it.value.toDouble()) }
+  override fun toSerialPrimitiveNumbers(message: String?) = this
 
   /*
   Due to the fact there is no superinterface for numbers that includes any arithmetic
@@ -195,6 +197,11 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
   infix fun greaterThanOrEqual(n: Number) = greaterThanOrEqualTo(Numbers(n))
   /** Returns a [Booleans] that is true when this is greater than or equal to a linear profile. */
   infix fun greaterThanOrEqualTo(other: Real) = other lessThanOrEqualTo this
+
+  // This unchecked cast is OK because the difference between two primitives of different type
+  // will never be a third type.
+  @Suppress("UNCHECKED_CAST")
+  override fun shiftedDifference(range: Duration) = shift(range.negate()).minus(this) as Numbers<N>
 
   /***/ companion object {
     /**

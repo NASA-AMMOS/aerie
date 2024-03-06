@@ -25,7 +25,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   constructor(vararg segments: Segment<LinearEquation>): this(segments.asList())
   constructor(segments: List<Segment<LinearEquation>>): this(BaseTimeline(::Real, preprocessList(segments, Segment<LinearEquation>::valueEquals)))
 
-  override fun toSerialLinear() = unsafeCast(::Real)
+  override fun toSerialLinear() = this
   override fun LinearEquation.toLinear() = this
 
   /**
@@ -33,7 +33,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *
    * @param message error message to throw if this is not piece-wise constant.
    */
-  fun toSerialPrimitiveNumbers(message: String? = null) = mapValues(::Numbers) {
+  override fun toSerialPrimitiveNumbers(message: String?) = mapValues(::Numbers) {
     if (it.value.isConstant()) it.value.initialValue
     else if (message == null) throw RealOpException("Cannot convert a non-piecewise-constant linear equation to a constant number. (at time ${it.interval.start})")
     else throw RealOpException("$message (at time ${it.interval.start})")
@@ -172,6 +172,8 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
       { r, i -> if (r.valueAt(i.start) == to) null else false },
       { l, r, i -> l.valueAt(i.start) == from && r.valueAt(i.start) == to }
   ))
+
+  override fun shiftedDifference(range: Duration) = shift(range.negate()).minus(this)
 
   /**
    * An exception for linear profile operations; usually thrown in contexts that
