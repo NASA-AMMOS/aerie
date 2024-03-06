@@ -18,23 +18,23 @@ import gov.nasa.jpl.aerie.timeline.util.truncateList
  */
 interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<Segment<V>, THIS>, SegmentOps<V, THIS>, CoalesceSegmentsOp<V, THIS> {
   /** Overlays two profiles on each other, asserting that they both cannot be defined at the same time. */
-  infix fun <OTHER: SerialSegmentOps<V, OTHER>> zip(other: SerialSegmentOps<V, OTHER>) = map2OptionalValues(other, NullBinaryOperation.zip())
+  infix fun zip(other: SerialSegmentOps<V, *>) = map2OptionalValues(other, NullBinaryOperation.zip())
 
   /** [(DOC)][assignGaps] Fills in gaps in this profile with another profile. */
   // While this is logically the converse of [set], they can't delegate to each other because it would mess up the return type.
-  infix fun <OTHER: SerialSegmentOps<V, OTHER>> assignGaps(other: SerialSegmentOps<V, OTHER>) =
+  infix fun assignGaps(other: SerialSegmentOps<V, *>) =
       map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { l, _, _, -> l })
   /** [(DOC)][assignGaps] Fills in gaps in this profile with a constant value. */
   infix fun assignGaps(v: V) = assignGaps(Constants(v))
 
   /** [(DOC)][set] Overwrites this profile with another. Gaps in the argument profile will be filled in with this profile. */
-  infix fun <OTHER: SerialSegmentOps<V, OTHER>> set(other: SerialSegmentOps<V, OTHER>) = map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { _, r, _ -> r })
+  infix fun set(other: SerialSegmentOps<V, *>) = map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { _, r, _ -> r })
 
   /**
    * [(DOC)][map2OptionalValues] Performs a local binary operation between two profiles where the result
    * is the same type as this profile.
    */
-  fun <W: Any, OTHER: SerialSegmentOps<W, OTHER>> map2OptionalValues(other: SerialSegmentOps<W, OTHER>, op: NullBinaryOperation<V, W, V?>) = map2OptionalValues(ctor, other, op)
+  fun <W: Any> map2OptionalValues(other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, V?>) = map2OptionalValues(ctor, other, op)
 
   /**
    * [(DOC)][map2OptionalValues] Performs a local binary operation between two profiles, with special treatment
@@ -56,7 +56,6 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    * For that, try to shift the results in a separate operation.
    *
    * @param W the other operand's payload type
-   * @param OTHER the other operand's timeline type
    * @param R the result's payload type
    * @param RESULT the result's timeline type
    *
@@ -66,14 +65,14 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    *
    * @return a coalesced profile; an instance of the return type of [ctor]
    */
-  fun <W: Any, OTHER: SerialSegmentOps<W, OTHER>, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> map2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, OTHER>, op: NullBinaryOperation<V, W, R?>) =
+  fun <W: Any, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> map2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, R?>) =
       unsafeOperate(ctor) { bounds -> map2SegmentLists(collect(bounds), other.collect(bounds), op) }
 
   /**
    * [(DOC)][flatMap2OptionalValues] Performs a local binary operation that produces profiles, and flattens
    * it into a profile of the same type as this.
    */
-  fun <W: Any, OTHER: SerialSegmentOps<W, OTHER>, NESTED: SerialSegmentOps<V, NESTED>> flatMap2OptionalValues(other: SerialSegmentOps<W, OTHER>, op: NullBinaryOperation<V, W, NESTED?>) = flatMap2OptionalValues(ctor, other, op)
+  fun <W: Any> flatMap2OptionalValues(other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, SerialSegmentOps<V, *>?>) = flatMap2OptionalValues(ctor, other, op)
 
   /**
    * [(DOC)][flatMap2OptionalValues] Performs a local binary operation that produces profiles, and flattens it, with
@@ -86,9 +85,7 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    * varies within the segment, such as [gov.nasa.jpl.aerie.timeline.collections.profiles.Real].
    *
    * @param W the other operand's payload type
-   * @param OTHER the other operand's timeline type
    * @param R the result's payload type
-   * @param NESTED the nested profile type returned by the operation before flattening
    * @param RESULT the result's timeline type
    *
    * @param ctor the result timeline's constructor
@@ -99,7 +96,7 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    *
    * @see map2OptionalValues
    */
-  fun <W: Any, OTHER: SerialSegmentOps<W, OTHER>, R: Any, NESTED: SerialSegmentOps<R, NESTED>, RESULT: GeneralOps<Segment<R>, RESULT>> flatMap2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, OTHER>, op: NullBinaryOperation<V, W, NESTED?>) =
+  fun <W: Any, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> flatMap2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, SerialSegmentOps<R, *>?>) =
       unsafeOperate(ctor) { opts ->
         map2SegmentLists(collect(opts), other.collect(opts), op)
             .flatMap { it.value.collect(CollectOptions(it.interval, true)) }

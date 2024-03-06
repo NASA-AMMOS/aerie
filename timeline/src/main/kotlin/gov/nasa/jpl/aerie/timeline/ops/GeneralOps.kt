@@ -180,7 +180,6 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
    * @see [unsafeOperate] for an explanation of why this method is unsafe.
    *
    * @param R the result payload type
-   * @param NESTED the nested timeline type; typically the same as [RESULT]
    * @param RESULT the result timeline type
    *
    * @param ctor the constructor of the result timeline
@@ -188,7 +187,7 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
    * @param truncate whether to truncate the result before returning
    * @param f a mapper function that converts each timeline object to a segment of a nested timeline
    */
-  fun <R: IntervalLike<R>, NESTED: GeneralOps<R, NESTED>, RESULT: GeneralOps<R, RESULT>> unsafeFlatMap(ctor: (Timeline<R, RESULT>) -> RESULT, boundsTransformer: BoundsTransformer, truncate: Boolean, f: (V) -> Segment<NESTED>) =
+  fun <R: IntervalLike<R>, RESULT: GeneralOps<R, RESULT>> unsafeFlatMap(ctor: (Timeline<R, RESULT>) -> RESULT, boundsTransformer: BoundsTransformer, truncate: Boolean, f: (V) -> Segment<GeneralOps<R, *>>) =
       unsafeOperate(ctor) { opts ->
         val mapped = collect(opts.transformBounds(boundsTransformer)).flatMap {
           val nested = f(it)
@@ -213,7 +212,7 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
   /**
    * Performs a generalized binary operation between this and another timeline.
    */
-  fun <W: IntervalLike<W>, OTHER: GeneralOps<W, OTHER>, R: IntervalLike<R>, RESULT: GeneralOps<R, RESULT>> unsafeMap2(ctor: (Timeline<R, RESULT>) -> RESULT, other: GeneralOps<W, OTHER>, op: (V, W, Interval) -> R?) =
+  fun <W: IntervalLike<W>, R: IntervalLike<R>, RESULT: GeneralOps<R, RESULT>> unsafeMap2(ctor: (Timeline<R, RESULT>) -> RESULT, other: GeneralOps<W, *>, op: (V, W, Interval) -> R?) =
       unsafeOperate(ctor) { opts ->
         map2ParallelLists(collect(opts), other.collect(opts), isAlwaysSorted(), other.isAlwaysSorted(), op)
       }

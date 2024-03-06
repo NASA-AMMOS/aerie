@@ -21,7 +21,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
   override fun isAlwaysSorted() = false
 
   /** [(DOC)][merge] Combines two timelines together by overlaying them. Does not perform any transformation. */
-  infix fun <OTHER: GeneralOps<T, OTHER>> merge(other: GeneralOps<T, OTHER>) = unsafeOperate { opts ->
+  infix fun merge(other: GeneralOps<T, *>) = unsafeOperate { opts ->
     collect(opts) + other.collect(opts)
   }
 
@@ -34,7 +34,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * Not currently usable because no parallel profile types are implemented.
    * @suppress
    */
-  fun <V: Any, RESULT: ParallelOps<Segment<V>, RESULT>> mapIntoProfile(ctor: (Timeline<Segment<V>, RESULT>) -> RESULT, f: (T) -> V) =
+  fun <R: Any, RESULT: ParallelOps<Segment<R>, RESULT>> mapIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (T) -> R) =
       unsafeMap(ctor, BoundsTransformer.IDENTITY, false) { Segment(it.interval, f(it)) }
 
   /**
@@ -193,7 +193,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param other the other timeline to connect to
    * @param connectToBounds whether to connect to the end of the bounds if the other timeline ends prematurely
    */
-  fun <U: IntervalLike<U>, OTHER: ParallelOps<U, OTHER>> connectTo(other: ParallelOps<U, OTHER>, connectToBounds: Boolean) =
+  fun <U: IntervalLike<U>> connectTo(other: ParallelOps<U, *>, connectToBounds: Boolean) =
       unsafeOperate(::Intervals) { opts ->
         val sortedFrom = collect(opts).sortedWith { l, r -> l.interval.compareEnds(r.interval) }
         val sortedTo = other.collect(opts).sortedWith { l, r -> l.interval.compareStarts(r.interval) }

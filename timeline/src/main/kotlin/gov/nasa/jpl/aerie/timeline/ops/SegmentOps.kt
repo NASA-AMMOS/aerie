@@ -30,7 +30,7 @@ interface SegmentOps<V : Any, THIS: SegmentOps<V, THIS>>: NonZeroDurationOps<Seg
       unsafeMap(ctor, IDENTITY, false) { it.mapValue(f) }
 
   /** [(DOC)][flatMapValues] A simpler version of [flatMapValues] for operations that don't change the timeline type. */
-  fun <NESTED: SegmentOps<V, NESTED>> flatMapValues(f: (Segment<V>) -> NESTED) =
+  fun flatMapValues(f: (Segment<V>) -> SegmentOps<V, *>) =
       unsafeFlatMap(ctor, IDENTITY, false) { it.mapValue(f) }
 
   /**
@@ -40,17 +40,16 @@ interface SegmentOps<V : Any, THIS: SegmentOps<V, THIS>>: NonZeroDurationOps<Seg
    * is flattened into.
    *
    * @param R the result payload type
-   * @param NESTED the nested timeline type; typically the same as [RESULT]
    * @param RESULT the result timeline type
    *
    * @param ctor the constructor of the result timeline
    * @param f a mapper function that converts each timeline object to a nested timeline
    */
-  fun <R: Any, NESTED: SegmentOps<R, NESTED>, RESULT: SegmentOps<R, RESULT>> flatMapValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (Segment<V>) -> NESTED) =
+  fun <R: Any, RESULT: SegmentOps<R, RESULT>> flatMapValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (Segment<V>) -> SegmentOps<R, *>) =
      unsafeFlatMap(ctor, IDENTITY, false) { it.mapValue(f) }
 
   /** [(DOC)][map2Values] A simplified version of [map2Values] for operations that don't change the timeline type. */
-  fun <OTHER: SegmentOps<V, OTHER>> map2Values(other: SegmentOps<V, OTHER>, op: (V, V, Interval) -> V?) = map2Values(ctor, other, op)
+  fun map2Values(other: SegmentOps<V, *>, op: (V, V, Interval) -> V?) = map2Values(ctor, other, op)
 
   /**
    * [(DOC)][map2Values] Performs a local binary operation between two segment-valued timelines.
@@ -67,7 +66,6 @@ interface SegmentOps<V : Any, THIS: SegmentOps<V, THIS>>: NonZeroDurationOps<Seg
    * For that, consider using [unsafeMap2] or (ideally) shifting the results in a separate operation.
    *
    * @param W the other operand's payload type
-   * @param OTHER the other operand's timeline type
    * @param R the result's payload type
    * @param RESULT the result's timeline type
    *
@@ -77,11 +75,11 @@ interface SegmentOps<V : Any, THIS: SegmentOps<V, THIS>>: NonZeroDurationOps<Seg
    *
    * @return a new timeline of segments
    */
-  fun <W: Any, OTHER: SegmentOps<W, OTHER>, R: Any, RESULT: SegmentOps<R, RESULT>> map2Values(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SegmentOps<W, OTHER>, op: (V, W, Interval) -> R?) =
+  fun <W: Any, R: Any, RESULT: SegmentOps<R, RESULT>> map2Values(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SegmentOps<W, *>, op: (V, W, Interval) -> R?) =
       unsafeMap2(ctor, other) { l, r, i -> op(l.value, r.value, i)?.let { Segment(i, it) } }
 
   /** [(DOC)][flatMap2Values] A simpler version of [flatMap2Values] for operations that don't change the timeline type. */
-  fun <OTHER: SegmentOps<V, OTHER>, NESTED: SegmentOps<V, NESTED>> flatMap2Values(other: SegmentOps<V, OTHER>, op: (V, V, Interval) -> NESTED?) =
+  fun flatMap2Values(other: SegmentOps<V, *>, op: (V, V, Interval) -> SegmentOps<V, *>?) =
       flatMap2Values(ctor, other, op)
 
   /**
@@ -94,9 +92,7 @@ interface SegmentOps<V : Any, THIS: SegmentOps<V, THIS>>: NonZeroDurationOps<Seg
    * varies within the segment, such as [gov.nasa.jpl.aerie.timeline.collections.profiles.Real].
    *
    * @param W the other operand's payload type
-   * @param OTHER the other operand's timeline type
    * @param R the result's payload type
-   * @param NESTED the nested profile type returned by the operation before flattening
    * @param RESULT the result's timeline type
    *
    * @param ctor the result timeline's constructor
@@ -107,7 +103,7 @@ interface SegmentOps<V : Any, THIS: SegmentOps<V, THIS>>: NonZeroDurationOps<Seg
    *
    * @see map2Values
    */
-  fun <W: Any, OTHER: SegmentOps<W, OTHER>, R: Any, NESTED: SegmentOps<R, NESTED>, RESULT: SegmentOps<R, RESULT>> flatMap2Values(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SegmentOps<W, OTHER>, op: (V, W, Interval) -> NESTED?) =
+  fun <W: Any, R: Any, RESULT: SegmentOps<R, RESULT>> flatMap2Values(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SegmentOps<W, *>, op: (V, W, Interval) -> SegmentOps<R, *>?) =
       unsafeOperate(ctor) { opts ->
         map2ParallelLists(collect(opts), other.collect(opts), isAlwaysSorted(), other.isAlwaysSorted()) { l, r, i ->
           op(l.value, r.value, i)?.let { Segment(i, it) }

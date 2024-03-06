@@ -11,14 +11,14 @@ import gov.nasa.jpl.aerie.timeline.collections.profiles.Constants
 interface SerialConstantOps<V: Any, THIS: SerialConstantOps<V, THIS>>: SerialSegmentOps<V, THIS>, ConstantOps<V, THIS> {
 
   /** [(DOC)][equalTo] Returns a [Booleans] that is `true` when this and another profile are equal. */
-  infix fun <OTHER: SerialConstantOps<V, OTHER>> equalTo(other: OTHER) =
+  infix fun equalTo(other: SerialConstantOps<V, *>) =
       map2Values(::Booleans, other) { l, r, _ -> l == r }
 
   /** [(DOC)][equalTo] Returns a [Booleans] that is `true` when this equals a constant value. */
   infix fun equalTo(v: V) = equalTo(Constants(v))
 
   /** [(DOC)][notEqualTo] Returns a [Booleans] that is `true` when this and another profile are not equal. */
-  infix fun <OTHER: SerialConstantOps<V, OTHER>> notEqualTo(other: OTHER) =
+  infix fun notEqualTo(other: SerialConstantOps<V, *>) =
       map2Values(::Booleans, other) { l, r, _ -> l != r }
 
   /** [(DOC)][notEqualTo] Returns a [Booleans] that is `true` when this is not equal to a constant value. */
