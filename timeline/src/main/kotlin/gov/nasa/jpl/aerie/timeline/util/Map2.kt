@@ -191,7 +191,7 @@ fun <LEFT: IntervalLike<LEFT>, RIGHT: IntervalLike<RIGHT>, OUT: IntervalLike<OUT
 
   val result = mutableListOf<OUT>()
   for (leftObj in leftSorted) {
-    while (rightSorted[rightIndex].interval.compareEndToStart(leftObj.interval) == -1 && rightIndex < right.size) {
+    while (rightIndex < right.size && rightSorted[rightIndex].interval.compareEndToStart(leftObj.interval) == -1) {
       rightIndex++
     }
 

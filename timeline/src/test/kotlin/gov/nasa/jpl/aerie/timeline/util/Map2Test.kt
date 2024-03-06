@@ -13,182 +13,204 @@ import org.junit.jupiter.api.Nested
 
 class Map2Test {
 
-  @Test
-  fun basicCombineOrIdentity() {
-    val left = listOf(Segment(seconds(0) .. seconds(2), 2))
-    val right = listOf(Segment(seconds(1) .. seconds(3), 3))
+  @Nested
+  inner class Map2SegmentLists {
 
-    val result = map2SegmentLists(
-        left, right,
-        NullBinaryOperation.combineOrIdentity { l, r, _ -> l + r}
-    )
+    @Test
+    fun basicCombineOrIdentity() {
+      val left = listOf(Segment(seconds(0)..seconds(2), 2))
+      val right = listOf(Segment(seconds(1)..seconds(3), 3))
 
-    val expected = listOf(
-        Segment(seconds(0) ..< seconds(1), 2),
-        Segment(seconds(1) .. seconds(2), 5),
-        Segment(between(seconds(2), seconds(3), Exclusive, Inclusive), 3),
-    )
+      val result = map2SegmentLists(
+          left, right,
+          NullBinaryOperation.combineOrIdentity { l, r, _ -> l + r }
+      )
 
-    assertIterableEquals(expected, result)
-  }
+      val expected = listOf(
+          Segment(seconds(0)..<seconds(1), 2),
+          Segment(seconds(1)..seconds(2), 5),
+          Segment(between(seconds(2), seconds(3), Exclusive, Inclusive), 3),
+      )
 
-  @Test
-  fun basicCombineOrUndefined() {
-    val left = listOf(Segment(seconds(0) .. seconds(2), 2))
-    val right = listOf(Segment(seconds(1) .. seconds(3), 3))
+      assertIterableEquals(expected, result)
+    }
 
-    val result = map2SegmentLists(
-        left, right,
-        NullBinaryOperation.combineOrNull { l, r, _ -> l + r}
-    )
+    @Test
+    fun basicCombineOrUndefined() {
+      val left = listOf(Segment(seconds(0)..seconds(2), 2))
+      val right = listOf(Segment(seconds(1)..seconds(3), 3))
 
-    val expected = listOf(
-        Segment(seconds(1) .. seconds(2), 5)
-    )
+      val result = map2SegmentLists(
+          left, right,
+          NullBinaryOperation.combineOrNull { l, r, _ -> l + r }
+      )
 
-    assertIterableEquals(expected, result)
+      val expected = listOf(
+          Segment(seconds(1)..seconds(2), 5)
+      )
+
+      assertIterableEquals(expected, result)
+    }
   }
 
   @Nested
   inner class SegmentAlignment {
 
-    // Helper functions for below
-    val op = NullBinaryOperation.combineOrIdentity<Int> { l, r, _ -> l + r }
-    fun makeLeft(s: Long, e: Long, si: Interval.Inclusivity = Inclusive, ei: Interval.Inclusivity = Inclusive) =
+    private fun makeLeft(s: Long, e: Long, si: Interval.Inclusivity = Inclusive, ei: Interval.Inclusivity = Inclusive) =
         listOf(Segment(between(seconds(s), seconds(e), si, ei), -1))
 
-    fun makeRight(s: Long, e: Long, si: Interval.Inclusivity = Inclusive, ei: Interval.Inclusivity = Inclusive) =
+    private fun makeRight(s: Long, e: Long, si: Interval.Inclusivity = Inclusive, ei: Interval.Inclusivity = Inclusive) =
         listOf(Segment(between(seconds(s), seconds(e), si, ei), 1))
+
+    private fun testBothMap2Routines(
+        left: List<Segment<Int>>,
+        right: List<Segment<Int>>,
+        resultWithIdentity: List<Segment<Int>>,
+    ) {
+      val resultWithGaps = resultWithIdentity.filter { it.value == 0 }
+      assertIterableEquals(
+          resultWithIdentity,
+          map2SegmentLists(left, right, NullBinaryOperation.combineOrIdentity { l, r, _ -> l + r })
+      )
+      assertIterableEquals(
+          resultWithGaps,
+          map2SegmentLists(left, right, NullBinaryOperation.combineOrNull { l, r, _ -> l + r })
+      )
+      assertIterableEquals(
+          resultWithGaps,
+          map2ParallelLists(left, right, false, false) { l, r, i -> Segment(i, l.value + r.value) }
+      )
+    }
 
     @Test
     fun identical() {
-      assertIterableEquals(
-          listOf(Segment(seconds(1) .. seconds(2), 0)),
-          map2SegmentLists(makeLeft(1, 2), makeRight(1, 2), op)
+      testBothMap2Routines(
+          makeLeft(1, 2), makeRight(1, 2),
+          listOf(Segment(seconds(1)..seconds(2), 0))
       )
     }
 
     @Test
     fun identicalExclusive() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 2, Exclusive, Exclusive), makeRight(1, 2, Exclusive, Exclusive),
           listOf(Segment(between(seconds(1), seconds(2), Exclusive, Exclusive), 0)),
-          map2SegmentLists(makeLeft(1, 2, Exclusive, Exclusive), makeRight(1, 2, Exclusive, Exclusive), op)
       )
     }
 
     @Test
     fun entireLeftSegmentFirst() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 2), makeRight(3, 4),
           listOf(
-              Segment(seconds(1) .. seconds(2), -1),
-              Segment(seconds(3) .. seconds(4), 1)
+              Segment(seconds(1)..seconds(2), -1),
+              Segment(seconds(3)..seconds(4), 1)
           ),
-          map2SegmentLists(makeLeft(1, 2), makeRight(3, 4), op)
       )
     }
 
     @Test
     fun entireRightSegmentFirst() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(3, 4), makeRight(1, 2),
           listOf(
-              Segment(seconds(1) .. seconds(2), 1),
-              Segment(seconds(3) .. seconds(4), -1)
+              Segment(seconds(1)..seconds(2), 1),
+              Segment(seconds(3)..seconds(4), -1)
           ),
-          map2SegmentLists(makeLeft(3, 4), makeRight(1, 2), op)
       )
     }
 
     @Test
     fun leftFirstMomentOfOverlap() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 2), makeRight(2, 3),
           listOf(
               Segment(between(seconds(1), seconds(2), endInclusivity = Exclusive), -1),
               Segment(Interval.at(seconds(2)), 0),
               Segment(between(seconds(2), seconds(3), Exclusive, Inclusive), 1)
           ),
-          map2SegmentLists(makeLeft(1, 2), makeRight(2, 3), op)
       )
     }
 
     @Test
     fun rightFirstMomentOfOverlap() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(2, 3), makeRight(1, 2),
           listOf(
               Segment(between(seconds(1), seconds(2), endInclusivity = Exclusive), 1),
               Segment(Interval.at(seconds(2)), 0),
               Segment(between(seconds(2), seconds(3), Exclusive, Inclusive), -1)
           ),
-          map2SegmentLists(makeLeft(2, 3), makeRight(1, 2), op)
       )
     }
 
     @Test
     fun leftFirstMomentOfNonOverlap() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 2), makeRight(1, 2, Exclusive, Inclusive),
           listOf(
               Segment(Interval.at(seconds(1)), -1),
               Segment(between(seconds(1), seconds(2), Exclusive, Inclusive), 0)
           ),
-          map2SegmentLists(makeLeft(1, 2), makeRight(1, 2, Exclusive, Inclusive), op)
       )
     }
 
     @Test
     fun rightFirstMomentOfNonOverlap() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 2, Exclusive, Inclusive), makeRight(1, 2),
           listOf(
               Segment(Interval.at(seconds(1)), 1),
               Segment(between(seconds(1), seconds(2), Exclusive, Inclusive), 0)
           ),
-          map2SegmentLists(makeLeft(1, 2, Exclusive, Inclusive), makeRight(1, 2), op)
       )
     }
 
     @Test
     fun leftFirstHalfNonOverlap() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 3), makeRight(2, 4),
           listOf(
-              Segment(seconds(1) ..< seconds(2), -1),
-              Segment(seconds(2) .. seconds(3), 0),
+              Segment(seconds(1)..<seconds(2), -1),
+              Segment(seconds(2)..seconds(3), 0),
               Segment(between(seconds(3), seconds(4), Exclusive, Inclusive), 1),
           ),
-          map2SegmentLists(makeLeft(1, 3), makeRight(2, 4), op)
       )
     }
 
     @Test
     fun rightFirstHalfNonOverlap() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(2, 4), makeRight(1, 3),
           listOf(
-              Segment(seconds(1) ..< seconds(2), 1),
-              Segment(seconds(2) .. seconds(3), 0),
+              Segment(seconds(1)..<seconds(2), 1),
+              Segment(seconds(2)..seconds(3), 0),
               Segment(between(seconds(3), seconds(4), Exclusive, Inclusive), -1),
           ),
-          map2SegmentLists(makeLeft(2, 4), makeRight(1, 3), op)
       )
     }
 
     @Test
     fun leftContainsRight() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(1, 4), makeRight(2, 3),
           listOf(
-              Segment(seconds(1) ..< seconds(2), -1),
-              Segment(seconds(2) .. seconds(3), 0),
+              Segment(seconds(1)..<seconds(2), -1),
+              Segment(seconds(2)..seconds(3), 0),
               Segment(between(seconds(3), seconds(4), Exclusive, Inclusive), -1),
           ),
-          map2SegmentLists(makeLeft(1, 4), makeRight(2, 3), op)
       )
     }
 
     @Test
     fun rightContainsLeft() {
-      assertIterableEquals(
+      testBothMap2Routines(
+          makeLeft(2, 3), makeRight(1, 4),
           listOf(
-              Segment(seconds(1) ..< seconds(2), 1),
-              Segment(seconds(2) .. seconds(3), 0),
+              Segment(seconds(1)..<seconds(2), 1),
+              Segment(seconds(2)..seconds(3), 0),
               Segment(between(seconds(3), seconds(4), Exclusive, Inclusive), 1),
           ),
-          map2SegmentLists(makeLeft(2, 3), makeRight(1, 4), op)
       )
     }
   }

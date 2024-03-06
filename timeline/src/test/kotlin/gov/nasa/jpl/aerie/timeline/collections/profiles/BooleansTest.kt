@@ -1,14 +1,13 @@
-package gov.nasa.jpl.aerie.timeline.ops
+package gov.nasa.jpl.aerie.timeline.collections.profiles
 
 import gov.nasa.jpl.aerie.timeline.CollectOptions
 import gov.nasa.jpl.aerie.timeline.Duration.Companion.seconds
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.between
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
-import gov.nasa.jpl.aerie.timeline.collections.profiles.Booleans
 import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.Test
 
-class SerialBooleanTest {
+class BooleansTest {
   @Test
   fun shiftEdgesBasic() {
     val result = Booleans(
