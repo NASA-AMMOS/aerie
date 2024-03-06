@@ -315,7 +315,7 @@ public enum GQL {
         }
         name
         revision
-        scheduling_specifications {
+        scheduling_specification {
           id
         }
         simulations {
