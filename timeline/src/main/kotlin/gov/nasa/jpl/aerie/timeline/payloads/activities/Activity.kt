@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.timeline.Duration
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
 
 /** Unifying interface for activity instances and directives. */
-interface Activity<A: Any>: IntervalLike<A> {
+interface Activity<A: IntervalLike<A>>: IntervalLike<A> {
   /** String type name of the activity. */
   val type: String
 

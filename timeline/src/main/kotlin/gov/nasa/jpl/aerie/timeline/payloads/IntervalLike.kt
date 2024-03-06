@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.timeline.Interval
  *
  * For example, profile segments, activity instances, and plain intervals are all interval-like.
  */
-interface IntervalLike<I> {
+interface IntervalLike<I: IntervalLike<I>> {
   /** The interval this occupies on the timeline. */
   val interval: Interval
 
