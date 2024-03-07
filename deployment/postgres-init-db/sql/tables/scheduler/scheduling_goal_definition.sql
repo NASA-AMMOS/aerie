@@ -12,7 +12,12 @@ create table scheduler.scheduling_goal_definition(
     foreign key (goal_id)
     references scheduler.scheduling_goal_metadata
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint goal_definition_author_exists
+    foreign key (author)
+    references permissions.users
+    on update cascade
+    on delete set null
 );
 
 comment on table scheduler.scheduling_goal_definition is e''

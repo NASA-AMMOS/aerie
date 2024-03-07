@@ -31,6 +31,16 @@ create table scheduler.scheduling_request (
       references scheduler.scheduling_specification
       on update cascade
       on delete cascade,
+  constraint scheduling_request_requester_exists
+    foreign key (requested_by)
+      references permissions.users
+        on update cascade
+        on delete set null,
+  constraint scheduling_request_references_dataset
+    foreign key (dataset_id)
+      references merlin.dataset
+      on update cascade
+      on delete set null,
   constraint start_before_end
     check (horizon_start <= horizon_end)
 );

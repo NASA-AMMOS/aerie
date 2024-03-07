@@ -12,7 +12,17 @@ create table scheduler.scheduling_condition_metadata (
   updated_at timestamptz not null default now(),
 
   constraint scheduling_condition_metadata_pkey
-    primary key (id)
+    primary key (id),
+  constraint condition_owner_exists
+    foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
+  constraint condition_updated_by_exists
+    foreign key (updated_by)
+    references permissions.users
+    on update cascade
+    on delete set null
 );
 
 -- A partial index is used to enforce name uniqueness only on conditions visible to other users

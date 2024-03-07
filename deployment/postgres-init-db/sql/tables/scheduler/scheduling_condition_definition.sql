@@ -11,7 +11,12 @@ create table scheduler.scheduling_condition_definition(
     foreign key (condition_id)
     references scheduler.scheduling_condition_metadata
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint condition_definition_author_exists
+    foreign key (author)
+    references permissions.users
+    on update cascade
+    on delete set null
 );
 
 comment on table scheduler.scheduling_condition_definition is e''

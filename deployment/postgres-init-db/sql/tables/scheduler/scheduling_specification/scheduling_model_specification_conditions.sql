@@ -11,7 +11,11 @@ create table scheduler.scheduling_model_specification_conditions(
   foreign key (condition_id, condition_revision)
     references scheduler.scheduling_condition_definition
     on update cascade
-    on delete restrict
+    on delete restrict,
+  foreign key (model_id)
+    references merlin.mission_model
+    on update cascade
+    on delete cascade
 );
 
 comment on table scheduler.scheduling_model_specification_conditions is e''
