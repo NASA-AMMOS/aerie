@@ -27,6 +27,18 @@ create table sequencing.expansion_rule (
 
   foreign key (authoring_command_dict_id)
     references sequencing.command_dictionary (id)
+    on delete set null,
+  foreign key (authoring_mission_model_id)
+    references merlin.mission_model
+    on update cascade
+    on delete set null,
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
+  foreign key (updated_by)
+    references permissions.users
+    on update cascade
     on delete set null
 );
 comment on table sequencing.expansion_rule is e''
@@ -34,7 +46,7 @@ comment on table sequencing.expansion_rule is e''
 comment on column sequencing.expansion_rule.id is e''
   'The synthetic identifier for this expansion rule.';
 comment on column sequencing.expansion_rule.activity_type is e''
-  'The user selected activity type.';
+  'The activity type this expansion rule applies to. This type is not model-specific.';
 comment on column sequencing.expansion_rule.expansion_logic is e''
   'The expansion logic used to generate commands.';
 comment on column sequencing.expansion_rule.authoring_command_dict_id is e''

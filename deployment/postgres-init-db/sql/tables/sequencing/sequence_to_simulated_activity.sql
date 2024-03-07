@@ -4,12 +4,16 @@ create table sequencing.sequence_to_simulated_activity (
     seq_id text not null,
 
     constraint sequence_to_simulated_activity_primary_key
-        primary key (simulated_activity_id, simulation_dataset_id),
+      primary key (simulated_activity_id, simulation_dataset_id),
 
     constraint sequence_to_simulated_activity_activity_instance_id_fkey
-        foreign key (seq_id, simulation_dataset_id)
-        references sequencing.sequence (seq_id, simulation_dataset_id)
-        on delete cascade
+      foreign key (seq_id, simulation_dataset_id)
+      references sequencing.sequence (seq_id, simulation_dataset_id)
+      on delete cascade,
+    constraint sequence_to_sim_run
+      foreign key (simulation_dataset_id)
+      references merlin.simulation_dataset
+      on delete cascade
 );
 
 comment on table sequencing.sequence_to_simulated_activity is e''

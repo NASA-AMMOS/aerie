@@ -20,7 +20,18 @@ create table sequencing.expansion_set (
 
   foreign key (command_dict_id)
     references sequencing.command_dictionary (id)
-    on delete cascade
+    on delete cascade,
+  foreign key (mission_model_id)
+    references merlin.mission_model
+    on delete cascade,
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
+  foreign key (updated_by)
+    references permissions.users
+    on update cascade
+    on delete set null
 );
 
 comment on table sequencing.expansion_set is e''
