@@ -14,7 +14,7 @@ fun interface BoundsTransformer {
   /** Helper functions for constructing bounds transformers. */
   companion object {
     /** Does nothing. Used for operations that don't need to change the bounds. */
-    @JvmStatic
+    @JvmField
     val IDENTITY: BoundsTransformer = BoundsTransformer { i -> i }
 
     /**

@@ -13,11 +13,11 @@ import kotlin.math.absoluteValue
 /** A linear equation in point-slope form. */
 data class LinearEquation(
     /** The time of the start point. */
-    val initialTime: Duration,
+    @JvmField val initialTime: Duration,
     /** The value of the start point. */
-    val initialValue: Double,
+    @JvmField val initialValue: Double,
     /** The rate of change, in units per second. */
-    val rate: Double
+    @JvmField val rate: Double
 ) {
   /** Creates a constant linear equation at a given value. */
   constructor(constant: Double): this(Duration.ZERO, constant, 0.0)

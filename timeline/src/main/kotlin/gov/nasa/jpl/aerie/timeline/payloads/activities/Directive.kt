@@ -6,13 +6,13 @@ import gov.nasa.jpl.aerie.timeline.Interval
 /** A wrapper of any type of activity directive containing common data. */
 data class Directive<A: Any>(
     /** The inner payload, typically either [AnyDirective] or a mission model activity type. */
-    val inner: A,
+    @JvmField val inner: A,
 
     /** The name of this specific directive. */
-    val name: String,
+    @JvmField val name: String,
 
     /** The directive id. */
-    val id: Long,
+    @JvmField val id: Long,
 
     override val type: String,
     override val startTime: Duration

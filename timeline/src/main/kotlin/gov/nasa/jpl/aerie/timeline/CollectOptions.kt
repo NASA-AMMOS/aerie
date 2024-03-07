@@ -5,14 +5,14 @@ package gov.nasa.jpl.aerie.timeline
  */
 data class CollectOptions(
     /** The bounds on which to evaluate the timeline. */
-    val bounds: Interval,
+    @JvmField val bounds: Interval,
 
     /**
      * Whether to truncate objects that extend outside the bounds.
      *
      * Objects with no intersection with the bounds should never be included in the results.
      */
-    val truncateMarginal: Boolean = true
+    @JvmField val truncateMarginal: Boolean = true
 ) {
   /** Creates a new options object with a [BoundsTransformer] applied. */
   fun transformBounds(boundsTransformer: BoundsTransformer) = CollectOptions(boundsTransformer(bounds), truncateMarginal)

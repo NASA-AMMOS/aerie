@@ -124,12 +124,12 @@ data class Duration(private val micros: Long) : Comparable<Duration> {
      * except that it is no larger than [Duration.MICROSECOND].
      *
      */
-    @JvmStatic val EPSILON = Duration(1)
+    @JvmField val EPSILON = Duration(1)
 
     /**
      * The empty span of time.
      */
-    @JvmStatic val ZERO = Duration(0)
+    @JvmField val ZERO = Duration(0)
 
     /**
      * The largest observable negative span of time. Attempting to go "more negative" will cause an exception.
@@ -138,7 +138,7 @@ data class Duration(private val micros: Long) : Comparable<Duration> {
      * Currently, this is precisely -9,223,372,036,854,775,808 microseconds, or approximately -293,274 years.
      *
      */
-    @JvmStatic val MIN_VALUE = Duration(Long.MIN_VALUE)
+    @JvmField val MIN_VALUE = Duration(Long.MIN_VALUE)
 
     /**
      * The largest observable positive span of time. Attempting to go "more positive" will cause an exception.
@@ -147,25 +147,25 @@ data class Duration(private val micros: Long) : Comparable<Duration> {
      * Currently, this is precisely +9,223,372,036,854,775,807 microseconds, or approximately 293,274 years.
      *
      */
-    @JvmStatic val MAX_VALUE = Duration(Long.MAX_VALUE)
+    @JvmField val MAX_VALUE = Duration(Long.MAX_VALUE)
 
     /** One microsecond (μs).  */
-    @JvmStatic val MICROSECOND = Duration(1)
+    @JvmField val MICROSECOND = Duration(1)
 
     /** One millisecond (ms), equal to 1000μs.  */
-    @JvmStatic val MILLISECOND = MICROSECOND * 1000
+    @JvmField val MILLISECOND = MICROSECOND * 1000
 
     /** One second (s), equal to 1000ms.  */
-    @JvmStatic val SECOND = MILLISECOND * 1000
+    @JvmField val SECOND = MILLISECOND * 1000
 
     /** One minute (m), equal to 60s.  */
-    @JvmStatic val MINUTE = SECOND * 60
+    @JvmField val MINUTE = SECOND * 60
 
     /** One hour (h), equal to 60m.  */
-    @JvmStatic val HOUR = MINUTE * 60
+    @JvmField val HOUR = MINUTE * 60
 
     /** One hour (d), equal to 24h.  */
-    @JvmStatic val DAY = HOUR * 24
+    @JvmField val DAY = HOUR * 24
 
     /** Constructs a duration with a given number of microseconds.  */
     @JvmStatic fun microseconds(quantity: Long) = Duration(quantity)

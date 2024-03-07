@@ -7,12 +7,12 @@ import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
  * and start and end inclusivity.
  */
 data class Interval(
-    /***/ val start: Duration,
-    /***/ val end: Duration,
+    /***/ @JvmField val start: Duration,
+    /***/ @JvmField val end: Duration,
     /** Whether this interval contains its start time. */
-    val startInclusivity: Inclusivity = Inclusivity.Inclusive,
+    @JvmField val startInclusivity: Inclusivity = Inclusivity.Inclusive,
     /** Whether this interval contains its end time. */
-    val endInclusivity: Inclusivity = startInclusivity
+    @JvmField val endInclusivity: Inclusivity = startInclusivity
 ): IntervalLike<Interval> {
 
   /** Constructs an interval that contains both its endpoints. */
@@ -318,9 +318,9 @@ data class Interval(
     @JvmStatic fun at(point: Duration) = point .. point
 
     /** Shorthand for an empty interval. */
-    @JvmStatic val EMPTY: Interval = Duration.ZERO .. (Duration.ZERO - Duration.EPSILON)
+    @JvmField val EMPTY: Interval = Duration.ZERO .. (Duration.ZERO - Duration.EPSILON)
 
     /** The widest representable interval (from long min to long max microseconds). */
-    @JvmStatic val MIN_MAX = Duration.MIN_VALUE .. Duration.MAX_VALUE
+    @JvmField val MIN_MAX = Duration.MIN_VALUE .. Duration.MAX_VALUE
   }
 }

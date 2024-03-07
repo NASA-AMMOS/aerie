@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.timeline.util.coalesceList
 /**
  * A generic container that associates a value with an interval on a timeline.
  */
-data class Segment<V>(/***/ override val interval: Interval, /***/ val value: V): IntervalLike<Segment<V>> {
+data class Segment<V>(/***/ override val interval: Interval, /***/ @JvmField val value: V): IntervalLike<Segment<V>> {
   /**
    * Create a new segment on the same interval, with a new value derived from this segment.
    *
