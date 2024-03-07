@@ -27,6 +27,22 @@ create table sequencing.expansion_rule (
 
   foreign key (authoring_command_dict_id)
     references sequencing.command_dictionary (id)
+    on delete set null,
+  foreign key (authoring_mission_model_id)
+    references merlin.mission_model
+    on update cascade
+    on delete set null,
+  foreign key (authoring_mission_model_id, activity_type)
+    references merlin.activity_type (model_id, name)
+    on update cascade
+    on delete set null,
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
+  foreign key (updated_by)
+    references permissions.users
+    on update cascade
     on delete set null
 );
 comment on table sequencing.expansion_rule is e''

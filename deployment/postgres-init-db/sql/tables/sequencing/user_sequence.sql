@@ -7,7 +7,14 @@ create table sequencing.user_sequence (
   owner text,
   updated_at timestamptz not null default now(),
 
-  constraint user_sequence_primary_key primary key (id)
+  constraint user_sequence_primary_key primary key (id),
+  foreign key (authoring_command_dict_id)
+    references sequencing.command_dictionary
+    on delete cascade,
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete cascade
 );
 
 comment on column sequencing.user_sequence.authoring_command_dict_id is e''

@@ -6,7 +6,10 @@ create table sequencing.sequence (
   created_at timestamptz not null default now(),
 
   constraint sequence_primary_key
-    primary key (seq_id, simulation_dataset_id)
+    primary key (seq_id, simulation_dataset_id),
+  foreign key (simulation_dataset_id)
+    references merlin.simulation_dataset
+    on delete cascade
 );
 comment on table sequencing.sequence is e''
   'A sequence product';

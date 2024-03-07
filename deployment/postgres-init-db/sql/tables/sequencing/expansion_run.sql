@@ -11,6 +11,9 @@ create table sequencing.expansion_run (
 
   foreign key (expansion_set_id)
     references sequencing.expansion_set (id)
+    on delete cascade,
+  foreign key (simulation_dataset_id)
+    references merlin.simulation_dataset
     on delete cascade
 );
 comment on table sequencing.expansion_run is e''
