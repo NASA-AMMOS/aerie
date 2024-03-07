@@ -2,7 +2,9 @@ create table ui.extensions (
   id integer generated always as identity,
   description text,
   label text not null,
-  owner text,
+  owner text references permissions.users (username)
+    on update cascade
+    on delete set null,
   url text not null,
   updated_at timestamptz not null default now(),
 

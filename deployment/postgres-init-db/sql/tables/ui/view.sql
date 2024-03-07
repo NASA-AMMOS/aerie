@@ -3,7 +3,9 @@ create table ui.view (
   definition jsonb not null,
   id integer generated always as identity,
   name text not null,
-  owner text,
+  owner text references permissions.users (username)
+    on update cascade
+    on delete set null,
   updated_at timestamptz not null default now(),
 
   constraint view_primary_key primary key (id)

@@ -2,7 +2,9 @@ create table ui.extension_roles (
   extension_id  integer not null references ui.extensions(id)
     on update cascade
     on delete cascade,
-  role text not null,
+  role text not null references permissions.user_roles (role)
+    on update cascade
+    on delete cascade,
   primary key (extension_id, role)
 );
 
