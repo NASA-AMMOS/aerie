@@ -26,7 +26,10 @@ interface Timeline<V: IntervalLike<V>, THIS: Timeline<V, THIS>> {
    *
    * @param bounds bounds of evaluation (defaults to [Interval.MIN_MAX] if not provided).
    */
-  fun collect(bounds: Interval = Interval.MIN_MAX) = collect(CollectOptions(bounds))
+  fun collect(bounds: Interval) = collect(CollectOptions(bounds))
+
+  /** [(DOC)][collect] Collects the timeline for all available time. */
+  fun collect() = collect(Interval.MIN_MAX)
 
   /**
    * [(DOC)][unsafeCast] **UNSAFE!** Casts this timeline type to another type without changing its contents.

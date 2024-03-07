@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.timeline
 /**
  * Options for collecting a timeline.
  */
-data class CollectOptions(
+data class CollectOptions @JvmOverloads constructor(
     /** The bounds on which to evaluate the timeline. */
     @JvmField val bounds: Interval,
 

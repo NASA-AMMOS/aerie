@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
  * An Interval on the timeline, represented by start and end points
  * and start and end inclusivity.
  */
-data class Interval(
+data class Interval @JvmOverloads constructor(
     /***/ @JvmField val start: Duration,
     /***/ @JvmField val end: Duration,
     /** Whether this interval contains its start time. */
@@ -14,9 +14,6 @@ data class Interval(
     /** Whether this interval contains its end time. */
     @JvmField val endInclusivity: Inclusivity = startInclusivity
 ): IntervalLike<Interval> {
-
-  /** Constructs an interval that contains both its endpoints. */
-  constructor(start: Duration, end: Duration) : this(start, end, Inclusivity.Inclusive, Inclusivity.Inclusive)
 
   /**
    * Labels to indicate whether an interval includes its endpoints.
@@ -75,7 +72,7 @@ data class Interval(
    * @param shiftStart Duration to shift the start by. Negative means backward in time.
    * @param shiftEnd Duration to shift the end by. Defaults to [shiftStart]
    */
-  fun shiftBy(shiftStart: Duration, shiftEnd: Duration = shiftStart) = between(
+  @JvmOverloads fun shiftBy(shiftStart: Duration, shiftEnd: Duration = shiftStart) = between(
       start.saturatingPlus(shiftStart),
       end.saturatingPlus(shiftEnd),
       startInclusivity,
@@ -299,7 +296,7 @@ data class Interval(
      * @param end The ending time of the interval.
      * @return A non-empty interval if start < end, or an empty interval otherwise.
      */
-    @JvmStatic fun between(
+    @JvmOverloads @JvmStatic fun between(
         start: Duration,
         end: Duration,
         startInclusivity: Inclusivity = Inclusivity.Inclusive,
