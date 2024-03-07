@@ -5,6 +5,10 @@ create table scheduler.scheduling_model_specification_goals(
   priority integer not null,
 
   primary key (model_id, goal_id),
+  foreign key (model_id)
+    references merlin.mission_model
+    on update cascade
+    on delete cascade,
   foreign key (goal_id)
     references scheduler.scheduling_goal_metadata
     on update cascade
