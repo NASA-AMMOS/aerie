@@ -97,7 +97,7 @@ type Query {
 }
 
 type Query {
-  simulate(planId: Int!): MerlinSimulationResponse
+  simulate(planId: Int!, force: Boolean): MerlinSimulationResponse
 }
 
 type Query {

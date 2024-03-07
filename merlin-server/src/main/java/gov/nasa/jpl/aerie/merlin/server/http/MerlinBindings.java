@@ -35,6 +35,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivity
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityBulkActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsViolationsActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraSimulateActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraUploadExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
@@ -175,7 +176,7 @@ public final class MerlinBindings implements Plugin {
 
   private void getSimulationResults(final Context ctx) {
     try {
-      final var body = parseJson(ctx.body(), hasuraPlanActionP);
+      final var body = parseJson(ctx.body(), hasuraSimulateActionP);
       final var planId = body.input().planId();
 
       this.checkPermissions(Action.simulate, body.session(), planId);
