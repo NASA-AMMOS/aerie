@@ -198,7 +198,7 @@ data class AeriePostgresPlan(
 
   private val activityDirectivesStatement = c.prepareStatement(
       "select name, start_offset, type, arguments, id from activity_directive where plan_id = ?" +
-        " and start_offset > cast(? as interval) and start_offset < cast(? as interval);"
+        " and start_offset > ?::interval and start_offset < ?::interval;"
   )
   override fun allActivityDirectives() = BaseTimeline(::Directives) { opts ->
     activityDirectivesStatement.clearParameters()

@@ -131,23 +131,31 @@ data class Duration(private val micros: Long) : Comparable<Duration> {
      */
     @JvmField val ZERO = Duration(0)
 
-    /**
-     * The largest observable negative span of time. Attempting to go "more negative" will cause an exception.
-     *
-     * The value of this quantity should not be assumed.
-     * Currently, this is precisely -9,223,372,036,854,775,808 microseconds, or approximately -293,274 years.
-     *
-     */
-    @JvmField val MIN_VALUE = Duration(Long.MIN_VALUE)
+    private const val MICROSECONDS_MIN = Long.MIN_VALUE / 2
+    private const val MICROSECONDS_MAX = Long.MAX_VALUE / 2
 
     /**
-     * The largest observable positive span of time. Attempting to go "more positive" will cause an exception.
+     * The largest valid negative span of time. Attempting to go "more negative" may cause an exception.
      *
-     * The value of this quantity should not be assumed.
-     * Currently, this is precisely +9,223,372,036,854,775,807 microseconds, or approximately 293,274 years.
-     *
+     * The value of this quantity should not be assumed. Currently, it equals half of long-min microseconds.
+     * This is for two reasons:
+     * 1. It may avoid some overflow errors by giving a 2x margin.
+     * 2. Java durations are serialized to ISO8601 duration format using only hours, minutes, and fractional seconds.
+     *    This is to avoid timekeeping issues related to leap seconds and leap years. Postgres intervals can represent
+     *    durations up to hundreds of millions of years, but only by using days and months. Thus, attempting to
+     *    interact with Postgres using a duration of long-min or long-max microseconds, represented as hours, causes an overflow.
+     *    However, long-min / 2 and long-max / 2 microseconds are small enough to not cause overflow.
      */
-    @JvmField val MAX_VALUE = Duration(Long.MAX_VALUE)
+    @JvmField val MIN_VALUE = Duration(MICROSECONDS_MIN)
+
+    /**
+     * The largest valid positive span of time. Attempting to go "more positive" may cause an exception.
+     *
+     * The value of this quantity should not be assumed. Currently, it equals half of long-max microseconds.
+     *
+     * @see MIN_VALUE for an explanation of the choice of extremes.
+     */
+    @JvmField val MAX_VALUE = Duration(MICROSECONDS_MAX)
 
     /** One microsecond (μs).  */
     @JvmField val MICROSECOND = Duration(1)
@@ -219,7 +227,15 @@ data class Duration(private val micros: Long) : Comparable<Duration> {
     private fun saturatingAddInternal(left: Long, right: Long): Long {
       val result = left + right
       return if (result xor left and (result xor right) < 0) {
-        Long.MIN_VALUE - (result ushr java.lang.Long.SIZE - 1)
+        val saturatedToLongBounds = Long.MIN_VALUE - (result ushr java.lang.Long.SIZE - 1)
+
+        // This block is added to clamp the value to less than the long data type bounds.
+        // IntelliJ says that the second if-branch is always true, but that's some black
+        // magic wizardry, so I'm not touching it. The compiler can make that optimization
+        // if its really that smart.
+        if (saturatedToLongBounds < MICROSECONDS_MIN) Long.MIN_VALUE / 2
+        else if (saturatedToLongBounds > MICROSECONDS_MAX) Long.MAX_VALUE / 2
+        else saturatedToLongBounds
       } else result
     }
 
