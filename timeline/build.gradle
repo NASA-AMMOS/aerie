@@ -14,7 +14,6 @@ repositories {
 
 dependencies {
   implementation project(':merlin-driver')
-  implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
