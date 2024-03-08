@@ -25,11 +25,11 @@ class SerialNumericOpsTest {
 
     assertIterableEquals(
         real.collect(),
-        real.toSerialLinear().collect()
+        real.toReal().collect()
     )
     assertIterableEquals(
         real.collect(),
-        numbers.toSerialLinear().collect()
+        numbers.toReal().collect()
     )
   }
 
@@ -46,17 +46,17 @@ class SerialNumericOpsTest {
 
     assertIterableEquals(
         numbers.collect(),
-        numbers.toSerialPrimitiveNumbers().collect()
+        numbers.toNumbers().collect()
     )
     assertIterableEquals(
         numbers.toDoubles().collect(),
-        real.toSerialPrimitiveNumbers().collect()
+        real.toNumbers().collect()
     )
 
     assertThrows<Real.RealOpException> {
       Real(
           Segment(seconds(0)..seconds(1), LinearEquation(seconds(0), 1.0, 1.0))
-      ).toSerialPrimitiveNumbers().collect()
+      ).toNumbers().collect()
     }
   }
 

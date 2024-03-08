@@ -12,9 +12,10 @@ import gov.nasa.jpl.aerie.timeline.payloads.LinearEquation
  * Operations for profiles that represent numbers.
  */
 interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegmentOps<V, THIS>, NumericOps<V, THIS> {
-  /** [(DOC)][toSerialLinear] Converts the profile to a linear profile, a.k.a. [Real] (no-op if it already was linear). */
-  fun toSerialLinear(): Real
-  fun toSerialPrimitiveNumbers(message: String? = null): Numbers<*>
+  /** [(DOC)][toReal] Converts the profile to a linear profile, a.k.a. [Real] (no-op if it already was linear). */
+  fun toReal(): Real
+  /** [(DOC)][toNumbers] Converts the profile to a constant numbers profile, a.k.a. [Numbers] (no-op if it already was [Numbers]). */
+  fun toNumbers(message: String? = null): Numbers<*>
 
   /**
    * [(DOC)][integrate] Calculates the integral of this profile, starting from zero.
@@ -30,7 +31,7 @@ interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegme
    * @param unit length of the time basis vector
    */
   fun integrate(unit: Duration = Duration.SECOND) =
-      toSerialPrimitiveNumbers("Cannot integrate a non-piecewise-constant linear profile.").unsafeOperate(::Real) { opts ->
+      toNumbers("Cannot integrate a non-piecewise-constant linear profile.").unsafeOperate(::Real) { opts ->
         val segments = collect(opts)
         val result = mutableListOf<Segment<LinearEquation>>()
         val baseRate = Duration.SECOND.ratioOver(unit)

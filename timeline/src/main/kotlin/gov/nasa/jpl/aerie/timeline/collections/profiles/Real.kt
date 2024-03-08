@@ -25,7 +25,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   constructor(vararg segments: Segment<LinearEquation>): this(segments.asList())
   constructor(segments: List<Segment<LinearEquation>>): this(BaseTimeline(::Real, preprocessList(segments, Segment<LinearEquation>::valueEquals)))
 
-  override fun toSerialLinear() = this
+  override fun toReal() = this
   override fun LinearEquation.toLinear() = this
 
   /**
@@ -33,14 +33,14 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *
    * @param message error message to throw if this is not piece-wise constant.
    */
-  override fun toSerialPrimitiveNumbers(message: String?) = mapValues(::Numbers) {
+  override fun toNumbers(message: String?) = mapValues(::Numbers) {
     if (it.value.isConstant()) it.value.initialValue
     else if (message == null) throw RealOpException("Cannot convert a non-piecewise-constant linear equation to a constant number. (at time ${it.interval.start})")
     else throw RealOpException("$message (at time ${it.interval.start})")
   }
 
   /** Adds this and another numeric profile. */
-  operator fun plus(other: SerialNumericOps<*, *>) = map2Values(other.toSerialLinear()) { l, r, _ ->
+  operator fun plus(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, _ ->
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     LinearEquation(l.initialTime, l.initialValue + shiftedRight.initialValue, l.rate + r.rate)
   }
@@ -49,7 +49,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   operator fun plus(n: Number) = plus(Numbers(n))
 
   /** Subtracts another numeric profile from this. */
-  operator fun minus(other: SerialNumericOps<*, *>) = map2Values(other.toSerialLinear()) { l, r, _ ->
+  operator fun minus(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, _ ->
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     LinearEquation(l.initialTime, l.initialValue - shiftedRight.initialValue, l.rate - r.rate)
   }
@@ -62,7 +62,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *
    * @throws RealOpException if both profiles have non-zero rate at the same time.
    */
-  operator fun times(other: SerialNumericOps<*, *>) = map2Values(other.toSerialLinear()) { l, r, i ->
+  operator fun times(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, i ->
     if (!l.isConstant() && !r.isConstant()) throw RealOpException("Cannot multiply two linear equations that are non-constant at the same time (at time ${i.start})")
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     val newRate = l.rate * shiftedRight.initialValue + r.rate * l.initialValue
@@ -77,7 +77,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *
    * @throws RealOpException if the divisor has a non-zero rate at any time that the dividend is defined.
    */
-  operator fun div(other: SerialNumericOps<*, *>) = map2Values(other.toSerialLinear()) { l, r, i ->
+  operator fun div(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, i ->
     if (!r.isConstant()) throw RealOpException("Cannot divide by a non-piecewise-constant linear equation (at time ${i.start})")
     LinearEquation(l.initialTime, l.initialValue / r.initialValue, l.rate / r.initialValue)
   }
@@ -92,7 +92,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *                                 or if the base has a non-zero rate at any time that the exponent is defined and not
    *                                 either 0 or 1.
    */
-  infix fun pow(exp: SerialNumericOps<*, *>) = map2Values(exp.toSerialLinear()) { l, r, i ->
+  infix fun pow(exp: SerialNumericOps<*, *>) = map2Values(exp.toReal()) { l, r, i ->
     if (!r.isConstant()) throw RealOpException("Cannot apply a non-piecewise-constant exponent (at time ${i.start}")
     if (r.initialValue == 0.0) LinearEquation(1.0)
     else if (r.initialValue == 1.0) l
@@ -134,7 +134,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   infix fun greaterThanOrEqualTo(n: Number) = greaterThanOrEqualTo(Numbers(n))
 
   private fun inequalityHelper(other: SerialNumericOps<*, *>, f: LinearEquation.(LinearEquation) -> Booleans) =
-      flatMap2Values(::Booleans, other.toSerialLinear()) { l, r, _ -> l.f(r) }
+      flatMap2Values(::Booleans, other.toReal()) { l, r, _ -> l.f(r) }
 
 
   override fun changes() =

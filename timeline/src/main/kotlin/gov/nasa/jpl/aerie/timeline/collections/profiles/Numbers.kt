@@ -38,8 +38,8 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
   constructor(vararg segments: Segment<N>): this(segments.asList())
   constructor(segments: List<Segment<N>>): this(BaseTimeline(::Numbers, preprocessList(segments, Segment<N>::valueEquals)))
 
-  override fun toSerialLinear() = mapValues(::Real) { LinearEquation(it.value.toDouble()) }
-  override fun toSerialPrimitiveNumbers(message: String?) = this
+  override fun toReal() = mapValues(::Real) { LinearEquation(it.value.toDouble()) }
+  override fun toNumbers(message: String?) = this
 
   /*
   Due to the fact there is no superinterface for numbers that includes any arithmetic
@@ -113,7 +113,7 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
   /** Divides this by a constant number. */
   operator fun div(n: Number) = div(Numbers(n))
   /** Divides this by a linear profile. */
-  operator fun div(other: Real) = this / other.toSerialPrimitiveNumbers("Cannot divide by a non-piecewise-constant divisor.")
+  operator fun div(other: Real) = this / other.toNumbers("Cannot divide by a non-piecewise-constant divisor.")
 
   /**
    * Calculates this raised to the power of another primitive numeric profile.
@@ -128,7 +128,7 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
   /** Raises this to the power of a constant number. */
   infix fun pow(n: Number) = pow(Numbers(n))
   /** Raises this to the power of a linear profile. */
-  infix fun pow(other: Real) = this pow other.toSerialPrimitiveNumbers("Cannot apply a non-piecewise-constant exponent.")
+  infix fun pow(other: Real) = this pow other.toNumbers("Cannot apply a non-piecewise-constant exponent.")
 
   /** Returns a [Booleans] that is true when this is less than another primitive numeric profile. */
   infix fun lessThan(other: Numbers<*>) =
