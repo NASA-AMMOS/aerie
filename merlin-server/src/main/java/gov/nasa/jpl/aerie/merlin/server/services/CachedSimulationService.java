@@ -14,7 +14,12 @@ public record CachedSimulationService (
 ) implements SimulationService {
 
   @Override
-  public ResultsProtocol.State getSimulationResults(final PlanId planId, final RevisionData revisionData, final String requestedBy) {
+  public ResultsProtocol.State getSimulationResults(
+      final PlanId planId,
+      final boolean forceResim,
+      final RevisionData revisionData,
+      final String requestedBy)
+  {
     final var cell$ = this.store.lookup(planId);
     if (cell$.isPresent()) {
       return cell$.get().get();

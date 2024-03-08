@@ -178,10 +178,11 @@ public final class MerlinBindings implements Plugin {
     try {
       final var body = parseJson(ctx.body(), hasuraSimulateActionP);
       final var planId = body.input().planId();
+      final var force = body.input().force().orElse(false);
 
       this.checkPermissions(Action.simulate, body.session(), planId);
 
-      final var response = this.simulationAction.run(planId, body.session());
+      final var response = this.simulationAction.run(planId, force, body.session());
       ctx.result(ResponseSerializers.serializeSimulationResultsResponse(response).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
