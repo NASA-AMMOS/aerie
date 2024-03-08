@@ -1,17 +1,15 @@
 package gov.nasa.jpl.aerie.e2e;
 
 import com.microsoft.playwright.Playwright;
-import gov.nasa.jpl.aerie.e2e.utils.BaseURL;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
 import gov.nasa.jpl.aerie.timeline.Duration;
 import gov.nasa.jpl.aerie.timeline.Interval;
-import gov.nasa.jpl.aerie.timeline.collections.Instances;
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real;
 import gov.nasa.jpl.aerie.timeline.payloads.LinearEquation;
 import gov.nasa.jpl.aerie.timeline.payloads.Segment;
-import gov.nasa.jpl.aerie.timeline.payloads.activities.AnyInstance;
-import gov.nasa.jpl.aerie.timeline.payloads.activities.Instance;
 import gov.nasa.jpl.aerie.timeline.plan.AeriePostgresPlan;
 import gov.nasa.jpl.aerie.timeline.plan.Plan;
 import org.junit.jupiter.api.AfterAll;
@@ -20,9 +18,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 import javax.json.Json;
 import java.io.IOException;
@@ -117,7 +112,7 @@ public class TimelineRemoteTests {
 
   @Test
   void queryActivityInstances() {
-    final var instances = plan.allActivityInstances().collect();
+    final var instances = plan.instances().collect();
     assertEquals(1, instances.size());
     final var instance = instances.get(0);
     assertEquals("BiteBanana", instance.getType());
@@ -128,7 +123,7 @@ public class TimelineRemoteTests {
 
   @Test
   void queryActivityDirectives() {
-    final var directives = plan.allActivityDirectives().collect();
+    final var directives = plan.directives().collect();
     assertEquals(1, directives.size());
     final var directive = directives.get(0);
     assertEquals("BiteBanana", directive.getType());

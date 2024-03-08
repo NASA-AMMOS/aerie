@@ -32,8 +32,27 @@ interface Plan {
    */
   fun <V: Any, TL: CoalesceSegmentsOp<V, TL>> resource(name: String, ctor: (List<Segment<SerializedValue>>) -> TL): TL
 
-  /** Query all activity instances. */
-  fun allActivityInstances(): Instances<AnyInstance>
-  /** Query all activity directives. */
-  fun allActivityDirectives(): Directives<AnyDirective>
+  /**
+   * Query activity instances.
+   *
+   * @param type Activity type name to filter by; queries all activities if null.
+   * @param deserializer a function from [SerializedValue] to an inner payload type
+   */
+  fun <A: Any> instances(type: String?, deserializer: (SerializedValue) -> A): Instances<A>
+  /** Queries activity instances, filtered by type, deserializing them as [AnyInstance]. **/
+  fun instances(type: String) = instances(type, AnyInstance::deserialize)
+  /** Queries all activity instances, deserializing them as [AnyInstance]. **/
+  fun instances() = instances(null, AnyInstance::deserialize)
+
+  /**
+   * Query activity directives.
+   *
+   * @param type Activity type name to filter by; queries all activities if null.
+   * @param deserializer a function from [SerializedValue] to an inner payload type
+   */
+  fun <A: Any> directives(type: String?, deserializer: (SerializedValue) -> A): Directives<A>
+  /** Queries activity directives, filtered by type, deserializing them as [AnyDirective]. **/
+  fun directives(type: String) = directives(type, AnyDirective::deserialize)
+  /** Queries all activity directives, deserializing them as [AnyDirective]. **/
+  fun directives() = directives(null, AnyDirective::deserialize)
 }

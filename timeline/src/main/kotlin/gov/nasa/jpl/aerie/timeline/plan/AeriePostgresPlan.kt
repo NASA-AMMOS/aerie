@@ -166,27 +166,30 @@ data class AeriePostgresPlan(
       return result.getSuccessOrThrow { DatabaseError(it.toString()) }
   }
 
-  private val activityInstancesStatement = c.prepareStatement(
-      "select start_offset, duration, attributes, activity_type_name, id from simulated_activity where simulation_dataset_id = ?;"
+  private val allInstancesStatement = c.prepareStatement(
+      "select start_offset, duration, attributes, activity_type_name, id from simulated_activity" +
+          " where simulation_dataset_id = ?;"
   )
-  override fun allActivityInstances(): Instances<AnyInstance> {
-    activityInstancesStatement.clearParameters()
-    activityInstancesStatement.setInt(1, simDatasetId)
+  private val filteredInstancesStatement = c.prepareStatement(
+      "select start_offset, duration, attributes, activity_type_name, id from simulated_activity" +
+          " where simulation_dataset_id = ? and activity_type_name = ?;"
+  )
+  override fun <A: Any> instances(type: String?, deserializer: (SerializedValue) -> A): Instances<A> {
+    val statement = if (type == null) allInstancesStatement else filteredInstancesStatement
+    statement.clearParameters()
+    statement.setInt(1, simDatasetId)
+    if (type != null) statement.setString(2, type);
     intervalStyleStatement.execute()
-    val response = activityInstancesStatement.executeQuery()
-    val result = mutableListOf<Instance<AnyInstance>>()
+    val response = statement.executeQuery()
+    val result = mutableListOf<Instance<A>>()
     while (response.next()) {
       val start = Duration.parseISO8601(response.getString(1))
       val id = response.getLong(5)
       val attributesString = response.getString(3)
       val attributes = parseJson(attributesString)
       val directiveId = attributes.asMap().getOrNull()?.get("directiveId")?.asInt()?.getOrNull()
-      val arguments = attributes.asMap().getOrNull()!!["arguments"]?.asMap()?.getOrNull()
-          ?: throw DatabaseError("Could not get arguments from attributes: $attributesString")
-      val computedAttributes = attributes.asMap().getOrNull()!!["computedAttributes"]
-          ?: throw DatabaseError("Could not get computed attributes from attributes: $attributesString")
       result.add(Instance(
-          AnyInstance(arguments, computedAttributes),
+          deserializer(attributes),
           response.getString(4),
           id,
           directiveId,
@@ -196,23 +199,27 @@ data class AeriePostgresPlan(
     return Instances(result)
   }
 
-  private val activityDirectivesStatement = c.prepareStatement(
+  private val allDirectivesStatement = c.prepareStatement(
       "select name, start_offset, type, arguments, id from activity_directive where plan_id = ?" +
         " and start_offset > ?::interval and start_offset < ?::interval;"
   )
-  override fun allActivityDirectives() = BaseTimeline(::Directives) { opts ->
-    activityDirectivesStatement.clearParameters()
-    activityDirectivesStatement.setInt(1, planInfo.id)
-    activityDirectivesStatement.setString(2, opts.bounds.start.toISO8601())
-    activityDirectivesStatement.setString(3, opts.bounds.end.toISO8601())
+  private val filteredDirectivesStatement = c.prepareStatement(
+      "select name, start_offset, type, arguments, id from activity_directive where plan_id = ?" +
+          " and start_offset > ?::interval and start_offset < ?::interval and type = ?;"
+  )
+  override fun <A: Any> directives(type: String?, deserializer: (SerializedValue) -> A) = BaseTimeline(::Directives) { opts ->
+    val statement = if (type == null) allDirectivesStatement else filteredDirectivesStatement
+    statement.clearParameters()
+    statement.setInt(1, planInfo.id)
+    statement.setString(2, opts.bounds.start.toISO8601())
+    statement.setString(3, opts.bounds.end.toISO8601())
+    if (type != null) statement.setString(4, type)
     intervalStyleStatement.execute()
-    val response = activityDirectivesStatement.executeQuery()
-    val result = mutableListOf<Directive<AnyDirective>>()
+    val response = statement.executeQuery()
+    val result = mutableListOf<Directive<A>>()
     while (response.next()) {
       result.add(Directive(
-          AnyDirective(
-              parseJson(response.getString(4)).asMap().getOrNull()!!
-          ),
+          deserializer(parseJson(response.getString(4))),
           response.getString(1),
           response.getLong(5),
           response.getString(3),
