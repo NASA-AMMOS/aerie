@@ -11,12 +11,7 @@ object_relationships:
         - condition_revision
   - name: tag
     using:
-      manual_configuration:
-        column_mapping:
-          tag_id: id
-        remote_table:
-          name: tags
-          schema: tags
+      foreign_key_constraint_on: tag_id
 select_permissions:
   - role: aerie_admin
     permission:

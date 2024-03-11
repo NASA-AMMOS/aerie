@@ -6,12 +6,7 @@ configuration:
 object_relationships:
 - name: plan
   using:
-    manual_configuration:
-      column_mapping:
-        plan_id: id
-      remote_table:
-        name: plan
-        schema: merlin
+    foreign_key_constraint_on: plan_id
 array_relationships:
 - name: goals
   using:

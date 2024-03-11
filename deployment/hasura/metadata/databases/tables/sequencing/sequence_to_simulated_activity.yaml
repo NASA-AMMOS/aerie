@@ -6,12 +6,7 @@ configuration:
 object_relationships:
 - name: simulation_dataset
   using:
-    manual_configuration:
-      column_mapping:
-        simulation_dataset_id: id
-      remote_table:
-        name: simulation_dataset
-        schema: merlin
+    foreign_key_constraint_on: simulation_dataset_id
 - name: simulated_activity
   using:
     manual_configuration:

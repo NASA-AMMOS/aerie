@@ -9,12 +9,7 @@ object_relationships:
     foreign_key_constraint_on: command_dict_id
 - name: mission_model
   using:
-    manual_configuration:
-      column_mapping:
-        mission_model_id: id
-      remote_table:
-        name: mission_model
-        schema: merlin
+    foreign_key_constraint_on: mission_model_id
 array_relationships:
 - name: expansion_runs
   using:

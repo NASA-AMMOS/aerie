@@ -10,14 +10,13 @@ object_relationships:
 array_relationships:
   - name: tags
     using:
-      manual_configuration:
-        insertion_order: null
-        remote_table:
+      foreign_key_constraint_on:
+        columns:
+          - directive_id
+          - snapshot_id
+        table:
           name: snapshot_activity_tags
           schema: tags
-        column_mapping:
-          id: directive_id
-          snapshot_id: snapshot_id
 select_permissions:
   - role: aerie_admin
     permission:
