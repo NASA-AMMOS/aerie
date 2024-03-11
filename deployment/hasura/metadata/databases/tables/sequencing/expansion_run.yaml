@@ -9,12 +9,7 @@ object_relationships:
       foreign_key_constraint_on: expansion_set_id
   - name: simulation_dataset
     using:
-      manual_configuration:
-        column_mapping:
-          simulation_dataset_id: id
-        remote_table:
-          name: simulation_dataset
-          schema: merlin
+      foreign_key_constraint_on: simulation_dataset_id
 array_relationships:
   - name: activity_instance_commands
     using:

@@ -9,23 +9,12 @@ object_relationships:
       foreign_key_constraint_on: model_id
   - name: constraint_metadata
     using:
-      manual_configuration:
-        column_mapping:
-          constraint_id: id
-        insertion_order: null
-        remote_table:
-          name: constraint_metadata
-          schema: merlin
+      foreign_key_constraint_on: constraint_id
   - name: constraint_definition
     using:
-      manual_configuration:
-        column_mapping:
-          constraint_id: constraint_id
-          constraint_revision: revision
-        insertion_order: null
-        remote_table:
-          name: constraint_definition
-          schema: merlin
+      foreign_key_constraint_on:
+        - constraint_id
+        - constraint_revision
 select_permissions:
   - role: aerie_admin
     permission:

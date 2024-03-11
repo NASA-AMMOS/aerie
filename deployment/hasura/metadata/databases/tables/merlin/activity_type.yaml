@@ -10,20 +10,20 @@ object_relationships:
 array_relationships:
   - name: presets
     using:
-      manual_configuration:
-        remote_table:
-          schema: merlin
+      foreign_key_constraint_on:
+        columns:
+          - model_id
+          - associated_activity_type
+        table:
           name: activity_presets
-        insertion_order: null
-        column_mapping:
-          model_id: model_id
-          name: associated_activity_type
+          schema: merlin
   - name: expansion_rules
     using:
-      manual_configuration:
-        column_mapping:
-          name: activity_type
-        remote_table:
+      foreign_key_constraint_on:
+        column:
+          - activity_type
+          - authoring_mission_model_id
+        table:
           name: expansion_rule
           schema: sequencing
 select_permissions:

@@ -14,12 +14,7 @@ object_relationships:
         - condition_revision
   - name: model
     using:
-      manual_configuration:
-        column_mapping:
-          model_id: id
-        remote_table:
-          name: mission_model
-          schema: merlin
+      foreign_key_constraint_on: model_id
 select_permissions:
   - role: aerie_admin
     permission:

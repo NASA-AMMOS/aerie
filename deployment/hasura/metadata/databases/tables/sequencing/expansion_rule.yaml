@@ -15,13 +15,11 @@ array_relationships:
         id: rule_id
 - name: tags
   using:
-    manual_configuration:
-      remote_table:
+    foreign_key_constraint_on:
+      column: rule_id
+      table:
         name: expansion_rule_tags
         schema: tags
-      insertion_order: null
-      column_mapping:
-        id: rule_id
 select_permissions:
   - role: aerie_admin
     permission:

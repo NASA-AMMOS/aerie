@@ -9,19 +9,12 @@ object_relationships:
     foreign_key_constraint_on: model_id
 - name: parent_plan
   using:
-    manual_configuration:
-      column_mapping:
-        parent_id: id
-      insertion_order: null
-      remote_table:
-        name: plan
-        schema: merlin
+    foreign_key_constraint_on: parent_id
 - name: scheduling_specification
   using:
-    manual_configuration:
-      column_mapping:
-        id: plan_id
-      remote_table:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
         name: scheduling_specification
         schema: scheduler
 array_relationships:
@@ -69,11 +62,9 @@ array_relationships:
         schema: tags
 - name: child_plans
   using:
-    manual_configuration:
-      column_mapping:
-        id: parent_id
-      insertion_order: null
-      remote_table:
+    foreign_key_constraint_on:
+      column: parent_id
+      table:
         name: plan
         schema: merlin
 select_permissions:
