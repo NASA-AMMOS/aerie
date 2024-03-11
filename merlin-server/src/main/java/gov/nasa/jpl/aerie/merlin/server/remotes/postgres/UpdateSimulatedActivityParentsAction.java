@@ -9,7 +9,7 @@ import java.util.Map;
 
 /*package-local*/ final class UpdateSimulatedActivityParentsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      update span
+      update merlin.span
       set parent_id = ?
       where dataset_id = ?
         and id = ?
@@ -40,7 +40,7 @@ import java.util.Map;
     try {
       final var results = this.statement.executeBatch();
       for (final var result : results) {
-        if (result != 1) throw new FailedUpdateException("span");
+        if (result != 1) throw new FailedUpdateException("merlin.span");
       }
     } finally {
       this.statement.clearBatch();

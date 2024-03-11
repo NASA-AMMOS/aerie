@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 /*package-local*/ final class UpdateProfileDurationAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      update profile
+      update merlin.profile
       set duration = ?::interval
       where dataset_id=? and id=?;
     """;

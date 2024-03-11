@@ -19,12 +19,12 @@ import java.util.Optional;
            t.revision as template_revision,
            p.revision as plan_revision,
            m.revision as model_revision
-         from simulation as s
-         left join simulation_template as t
+         from merlin.simulation as s
+         left join merlin.simulation_template as t
            on s.simulation_template_id = t.id
-         left join plan as p
+         left join merlin.plan as p
            on p.id = s.plan_id
-         left join mission_model as m
+         left join merlin.mission_model as m
            on m.id = p.model_id)
     select
           d.dataset_id as dataset_id,
@@ -34,7 +34,7 @@ import java.util.Optional;
           to_char(d.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
           to_char(d.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time,
           d.id as id
-      from simulation_dataset as d
+      from merlin.simulation_dataset as d
       left join revisions as r
         on d.simulation_id = r.sim_id
       where

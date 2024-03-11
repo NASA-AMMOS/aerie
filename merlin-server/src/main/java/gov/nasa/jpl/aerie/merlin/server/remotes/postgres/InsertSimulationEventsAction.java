@@ -19,7 +19,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
 /*package-local*/ final class InsertSimulationEventsAction implements AutoCloseable {
   @Language("SQL") private static final String sql = """
-      insert into event (dataset_id, real_time, transaction_index, causal_time, topic_index, value)
+      insert into merlin.event (dataset_id, real_time, transaction_index, causal_time, topic_index, value)
       values (?, ?::timestamptz - ?::timestamptz, ?, ?, ?, ?::jsonb)
     """;
 

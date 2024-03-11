@@ -10,7 +10,7 @@ import java.util.List;
 
 /*package-local*/ final class CreateModelParametersAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into mission_model_parameters (model_id, parameters)
+    insert into merlin.mission_model_parameters (model_id, parameters)
     values (?, ?::json)
     on conflict (model_id) do update set parameters = ?::json
     returning model_id
@@ -28,7 +28,7 @@ import java.util.List;
     PreparedStatements.setParameters(this.statement, 3, parameters);
 
     try (final var results = statement.executeQuery()) {
-      if (!results.next()) throw new FailedInsertException("mission_model_parameters");
+      if (!results.next()) throw new FailedInsertException("merlin.mission_model_parameters");
 
       return results.getLong(1);
     }

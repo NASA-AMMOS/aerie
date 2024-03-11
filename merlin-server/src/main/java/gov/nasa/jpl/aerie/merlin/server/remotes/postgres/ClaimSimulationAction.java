@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 /*package local*/ public class ClaimSimulationAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    update simulation_dataset
+    update merlin.simulation_dataset
       set
         status = 'incomplete'
       where (dataset_id = ? and status = 'pending' and not canceled);

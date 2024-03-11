@@ -14,12 +14,12 @@ import java.util.Optional;
           p.revision as plan_revision,
           s.revision as sim_revision,
           t.revision as template_revision
-        from plan as p
-        left join mission_model as m
+        from merlin.plan as p
+        left join merlin.mission_model as m
           on p.model_id = m.id
-        left join simulation as s
+        left join merlin.simulation as s
           on p.id = s.plan_id
-        left join simulation_template as t
+        left join merlin.simulation_template as t
           on s.simulation_template_id = t.id
         where p.id = ?
       """;
