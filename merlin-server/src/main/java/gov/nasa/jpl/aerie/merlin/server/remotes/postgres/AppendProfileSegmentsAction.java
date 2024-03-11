@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public final class AppendProfileSegmentsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
+      insert into merlin.profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
       values (?, ?, ?::interval, ?::json, ?)
     """;
   private final PreparedStatement statement;
@@ -52,7 +52,7 @@ public final class AppendProfileSegmentsAction implements AutoCloseable {
 
     final var results = this.statement.executeBatch();
     for (final var result : results) {
-      if (result == Statement.EXECUTE_FAILED) throw new FailedInsertException("profile_segment");
+      if (result == Statement.EXECUTE_FAILED) throw new FailedInsertException("merlin.profile_segment");
     }
 
     return accumulatedOffset;

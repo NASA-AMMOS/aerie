@@ -20,7 +20,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
 /*package-local*/ final class PostSpansAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-      insert into span (dataset_id, start_offset, duration, type, attributes)
+      insert into merlin.span (dataset_id, start_offset, duration, type, attributes)
       values (?, ?::timestamptz - ?::timestamptz, ?::timestamptz - ?::timestamptz, ?, ?::jsonb)
     """;
 

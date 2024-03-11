@@ -20,10 +20,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 public class GetUnvalidatedDirectivesAction implements AutoCloseable {
   private static final String sql = """
       select ad.id, ad.plan_id, ad.type, ad.arguments, p.model_id, adv.last_modified_arguments_at
-        from activity_directive ad
-        join activity_directive_validations adv
+        from merlin.activity_directive ad
+        join merlin.activity_directive_validations adv
           on ad.id = adv.directive_id and ad.plan_id = adv.plan_id
-        join plan p
+        join merlin.plan p
           on ad.plan_id = p.id
         where adv.status = 'pending';
         """;

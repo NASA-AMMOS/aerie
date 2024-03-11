@@ -21,7 +21,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           s.arguments,
           to_char(s.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
           to_char(s.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time
-      from simulation as s
+      from merlin.simulation as s
       where s.plan_id = ?
     """;
 

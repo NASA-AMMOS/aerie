@@ -9,9 +9,9 @@ import java.sql.SQLException;
 
 /*package-local*/ final class UpdateSimulationExtentAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-        insert into simulation_extent (simulation_dataset_id, extent)
+        insert into merlin.simulation_extent (simulation_dataset_id, extent)
         select id, ?::interval
-          from simulation_dataset
+          from merlin.simulation_dataset
           where dataset_id = ?
         on conflict (simulation_dataset_id)
         do update

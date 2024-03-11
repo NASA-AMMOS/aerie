@@ -10,7 +10,7 @@ import java.sql.SQLException;
 /*package-local*/ final class CheckPlanDatasetExistsAction implements AutoCloseable {
     private final @Language("SQL") String sql = """
       select 1
-      from plan_dataset as p
+      from merlin.plan_dataset as p
       where
         p.dataset_id = ?
     """;
