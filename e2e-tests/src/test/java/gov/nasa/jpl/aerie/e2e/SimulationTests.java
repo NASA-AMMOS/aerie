@@ -319,4 +319,50 @@ public class SimulationTests {
       assertEquals(startedActivities, results.activities().size());
     }
   }
+
+  @Nested
+  class ForceResimulation {
+    private int simulationDatasetId;
+    @BeforeEach
+    void beforeEach() throws IOException {
+      simulationDatasetId = hasura.awaitSimulation(planId).simDatasetId();
+    }
+    @Test
+    void noResimWhenNull() throws IOException {
+      assertEquals(simulationDatasetId, hasura.awaitSimulation(planId, null).simDatasetId());
+    }
+
+    @Test
+    void noResimWhenFalse() throws IOException {
+      assertEquals(simulationDatasetId, hasura.awaitSimulation(planId, false).simDatasetId());
+    }
+
+    @Test
+    void noResimWhenAbsent() throws IOException {
+      assertEquals(simulationDatasetId, hasura.awaitSimulation(planId).simDatasetId());
+    }
+
+    @Test
+    void resimOnlyUpdatesConfigRevision() throws IOException {
+      final int planRevision = hasura.getPlanRevision(planId);
+      final var simConfig = hasura.getSimConfig(planId);
+
+      // Assert forcibly resimming returned a new simulation dataset
+      final var newSimDatasetId = hasura.awaitSimulation(planId, true).simDatasetId();
+      assertNotEquals(simulationDatasetId, newSimDatasetId);
+
+      // Assert that the plan revision is unchanged
+      assertEquals(planRevision, hasura.getPlanRevision(planId));
+
+      // Assert that the simulation configuration has only had its revision updated
+      final var newSimConfig = hasura.getSimConfig(planId);
+      assertNotEquals(simConfig.revision(), newSimConfig.revision());
+      assertEquals(simConfig.id(), newSimConfig.id());
+      assertEquals(simConfig.planId(), newSimConfig.planId());
+      assertEquals(simConfig.simulationTemplateId(), newSimConfig.simulationTemplateId());
+      assertEquals(simConfig.arguments(), newSimConfig.arguments());
+      assertEquals(simConfig.simulationStartTime(), newSimConfig.simulationStartTime());
+      assertEquals(simConfig.simulationEndTime(), newSimConfig.simulationEndTime());
+    }
+  }
 }
