@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
@@ -376,7 +376,11 @@ public record ActivityExpression(
     );  }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<Dependency> names) {
+    if( durationRange != null || endRange != null ) {
+      names.add(new Dependency.ActivityTypeDurationDependency(this.type.getName()));
+    }
+  }
 
   /**
    * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not

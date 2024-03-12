@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
@@ -46,8 +47,8 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) {
-    names.add(this.name);
+  public void extractResources(final Set<Dependency> names) {
+    names.add(new Dependency.ResourceDependency(this.name));
   }
 
   @Override

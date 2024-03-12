@@ -176,13 +176,18 @@ public class ConstraintAction {
           continue;
         }
 
-        final var names = new HashSet<String>();
-        expression.extractResources(names);
+        final var dependencies = new HashSet<Dependency>();
+        expression.extractResources(dependencies);
 
         final var newNames = new HashSet<String>();
-        for (final var name : names) {
-          if (!realProfiles.containsKey(name) && !discreteProfiles.containsKey(name)) {
-            newNames.add(name);
+        final var onlyResourceDependencies = new HashSet<String>();
+        for (final var dependency : dependencies) {
+          if (dependency instanceof Dependency.ResourceDependency resourceDependency) {
+            onlyResourceDependencies.add(resourceDependency.resourceName());
+            if (!realProfiles.containsKey(resourceDependency.resourceName()) && !discreteProfiles.containsKey(
+                resourceDependency.resourceName())) {
+              newNames.add(resourceDependency.resourceName());
+            }
           }
         }
 
@@ -225,7 +230,7 @@ public class ConstraintAction {
         constraintResult.constraintName = entry.getValue().name();
         constraintResult.constraintRevision = entry.getValue().revision();
         constraintResult.constraintId = entry.getKey();
-        constraintResult.resourceIds = List.copyOf(names);
+        constraintResult.resourceIds = List.copyOf(onlyResourceDependencies);
 
         constraintResultMap.put(constraint, Failable.of(constraintResult));
 

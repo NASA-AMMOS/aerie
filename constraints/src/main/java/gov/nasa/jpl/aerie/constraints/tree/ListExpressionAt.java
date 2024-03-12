@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
@@ -37,7 +38,7 @@ public record ListExpressionAt(
   }
 
   @Override
-  public void extractResources(final Set<String> names) {
+  public void extractResources(final Set<Dependency> names) {
     for (final var field: elements) {
       field.extractResources(names);
     }

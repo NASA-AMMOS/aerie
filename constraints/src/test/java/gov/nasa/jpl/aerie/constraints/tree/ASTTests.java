@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
@@ -1651,7 +1652,7 @@ public class ASTTests {
     }
 
     @Override
-    public void extractResources(final Set<String> names) { }
+    public void extractResources(final Set<Dependency> names) { }
 
     @Override
     public String prettyPrint(final String prefix) {
@@ -1678,7 +1679,7 @@ public class ASTTests {
     }
 
     @Override
-    public void extractResources(final Set<String> names) {
+    public void extractResources(final Set<Dependency> names) {
 
     }
   }

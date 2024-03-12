@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
@@ -102,7 +103,7 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
   }
 
   @Override
-  public void extractResources(final Set<String> names) {
+  public void extractResources(final Set<Dependency> names) {
     this.spans.extractResources(names);
     this.width.extractResources(names);
     this.threshold.extractResources(names);

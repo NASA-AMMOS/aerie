@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
@@ -26,7 +27,7 @@ public record RealValue(double value, double rate, Optional<Expression<Interval>
   }
 
   @Override
-  public void extractResources(final Set<String> names) {}
+  public void extractResources(final Set<Dependency> names) {}
 
   @Override
   public String prettyPrint(final String prefix) {

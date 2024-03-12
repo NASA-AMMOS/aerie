@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
@@ -25,5 +26,5 @@ public class WindowsWrapperExpression implements Expression<Windows> {
     );
   }
   /** Add the resources referenced by this expression to the given set. **/
-  public void extractResources(Set<String> names) { }
+  public void extractResources(Set<Dependency> names) { }
 }

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
@@ -24,7 +25,7 @@ public final class Plus implements Expression<LinearProfile> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) {
+  public void extractResources(final Set<Dependency> names) {
     this.left.extractResources(names);
     this.right.extractResources(names);
   }

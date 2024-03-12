@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.model.Dependency;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
@@ -21,7 +22,7 @@ public final class Not implements Expression<Windows> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) {
+  public void extractResources(final Set<Dependency> names) {
     this.expression.extractResources(names);
   }
 
