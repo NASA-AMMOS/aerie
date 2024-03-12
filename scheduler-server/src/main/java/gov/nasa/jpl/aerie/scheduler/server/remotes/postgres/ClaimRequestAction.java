@@ -7,7 +7,7 @@ import org.intellij.lang.annotations.Language;
 
 /*package local*/ public class ClaimRequestAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    update scheduling_request
+    update scheduler.scheduling_request
     set status = 'incomplete'
     where (analysis_id = ? and status = 'pending' and not canceled)
     returning

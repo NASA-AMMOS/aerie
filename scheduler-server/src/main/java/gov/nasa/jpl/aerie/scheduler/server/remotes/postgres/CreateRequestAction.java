@@ -20,7 +20,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedState
           .appendOffset("+HH:mm:ss", "+00")
           .toFormatter();
   private final @Language("SQL") String sql = """
-      insert into scheduling_request (
+      insert into scheduler.scheduling_request (
         specification_id,
         specification_revision,
         plan_revision,
@@ -54,7 +54,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedState
     this.statement.setString(7, requestedBy);
 
     final var result = this.statement.executeQuery();
-    if (!result.next()) throw new FailedInsertException("scheduling_request");
+    if (!result.next()) throw new FailedInsertException("scheduler.scheduling_request");
 
     final RequestRecord.Status status;
     try {

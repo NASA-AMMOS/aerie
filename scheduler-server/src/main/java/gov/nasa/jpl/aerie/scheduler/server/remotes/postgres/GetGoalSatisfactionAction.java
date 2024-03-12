@@ -14,7 +14,7 @@ import org.intellij.lang.annotations.Language;
       goal.goal_id,
       goal.goal_revision,
       goal.satisfied
-    from scheduling_goal_analysis as goal
+    from scheduler.scheduling_goal_analysis as goal
     where goal.analysis_id = ?
     """;
 

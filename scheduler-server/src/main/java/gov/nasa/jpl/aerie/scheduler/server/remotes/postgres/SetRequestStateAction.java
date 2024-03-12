@@ -12,7 +12,7 @@ import java.util.Optional;
 
 /*package-local*/ final class SetRequestStateAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    update scheduling_request
+    update scheduler.scheduling_request
       set
         status = ?::status_t,
         reason = ?::json,
@@ -46,7 +46,7 @@ import java.util.Optional;
     this.statement.setLong(5, specificationRevision);
 
     final var count = this.statement.executeUpdate();
-    if (count < 1) throw new FailedUpdateException("scheduling_request");
+    if (count < 1) throw new FailedUpdateException("scheduler.scheduling_request");
     if (count > 1) throw new Error("More than one row affected by scheduling_request update by primary key. Is the database corrupted?");
   }
 

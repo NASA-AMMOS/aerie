@@ -11,7 +11,7 @@ import java.util.Map;
 
 /*package-local*/ final class InsertGoalSatisfactionAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into scheduling_goal_analysis (analysis_id, goal_id, goal_revision, satisfied)
+    insert into scheduler.scheduling_goal_analysis (analysis_id, goal_id, goal_revision, satisfied)
     values (?, ?, ?, ?)
     """;
 
