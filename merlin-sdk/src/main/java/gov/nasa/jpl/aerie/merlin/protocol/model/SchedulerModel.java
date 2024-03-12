@@ -10,4 +10,5 @@ public interface SchedulerModel {
   Map<String, DurationType> getDurationTypes();
   SerializedValue serializeDuration(final Duration duration);
   Duration deserializeDuration(final SerializedValue serializedValue);
+  Map<String, Duration> getMaximumDurations();
 }

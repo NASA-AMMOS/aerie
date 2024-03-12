@@ -3,11 +3,17 @@ package gov.nasa.jpl.aerie.scheduler.solver.stn;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Adapter for TaskNetwork for use with Interval and Duration
  */
 public class TaskNetworkAdapter {
+  private static final Logger logger = LoggerFactory.getLogger(TaskNetworkAdapter.class);
 
   private final TaskNetwork tw;
 
@@ -89,26 +95,37 @@ public class TaskNetworkAdapter {
     return toWin(pair.getLeft(), pair.getRight());
   }
 
-  public static TNActData solve(Interval start, Interval end, Interval dur, Interval enveloppe){
-    TaskNetwork tw = new TaskNetwork();
-    String actName = "ACT";
-    TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
-    if(start!=null){
-      tnw.addStartInterval(actName, start.start, start.end);
+  public static Optional<TNActData> reduceActivityTemporalConstraints(
+      final Interval startInterval,
+      final Interval endInterval,
+      final Interval durationInterval,
+      final Collection<Interval> envelopes){
+    final TaskNetwork tw = new TaskNetwork();
+    final String actName = "ACT";
+    final TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
+    tnw.addAct(actName);
+    if(startInterval != null){
+      tnw.addStartInterval(actName, startInterval.start, startInterval.end);
     }
-    if(end!=null){
-      tnw.addStartInterval(actName, end.start, end.end);
+    if(endInterval != null){
+      tnw.addEndInterval(actName, endInterval.start, endInterval.end);
     }
-    if(dur!=null){
-      tnw.addDurationInterval(actName, dur.start, dur.end);
+    if(durationInterval != null){
+      tnw.addDurationInterval(actName, durationInterval.start, durationInterval.end);
     }
-    if(enveloppe!=null){
-      tnw.addEnveloppe(actName, "ENV", enveloppe.start, enveloppe.end);
+    var i = 0;
+    for(final var enveloppe: envelopes){
+      tnw.addEnveloppe(actName, "ENV"+(i++), enveloppe.start, enveloppe.end);
     }
     if(tnw.solveConstraints()){
-      return tnw.getAllData(actName);
+      return Optional.of(tnw.getAllData(actName));
     } else{
-      return null;
+      logger.debug("Inconsistent static temporal constraints, cannot place activity in interval");
+      logger.debug("Start range " + startInterval);
+      logger.debug("End range " + endInterval);
+      logger.debug("Duration range " + durationInterval);
+      logger.debug("Envelopes: " + envelopes);
+      return Optional.empty();
     }
   }
 

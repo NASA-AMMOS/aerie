@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -123,7 +124,11 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @Override
-  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
+  public Collection<Conflict> getConflicts(
+      final Plan plan,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final SchedulerModel schedulerModel) {
 
     //unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);

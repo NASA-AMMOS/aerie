@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -287,8 +288,9 @@ public class Goal {
   public java.util.Collection<Conflict> getConflicts(
       Plan plan,
       final SimulationResults simulationResults,
-      final EvaluationEnvironment evaluationEnvironment
-  ) {
+      final EvaluationEnvironment evaluationEnvironment,
+      final SchedulerModel schedulerModel
+      ) {
     return java.util.Collections.emptyList();
   }
 
