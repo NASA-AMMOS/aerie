@@ -14,14 +14,14 @@ import java.util.List;
 /*package-local*/ final class GetSpecificationConditionsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
     select s.condition_id, cd.revision, cm.name, cd.definition
-      from scheduling_specification_conditions s
-      left join scheduling_condition_definition cd using (condition_id)
-      left join scheduling_condition_metadata cm on s.condition_id = cm.id
+      from scheduler.scheduling_specification_conditions s
+      left join scheduler.scheduling_condition_definition cd using (condition_id)
+      left join scheduler.scheduling_condition_metadata cm on s.condition_id = cm.id
       where s.specification_id = ?
       and s.enabled
       and ((s.condition_revision is not null and s.condition_revision = cd.revision)
       or (s.condition_revision is null and cd.revision = (select def.revision
-                                                      from scheduling_condition_definition def
+                                                      from scheduler.scheduling_condition_definition def
                                                       where def.condition_id = s.condition_id
                                                       order by def.revision desc limit 1)));
     """;

@@ -14,14 +14,14 @@ import java.util.List;
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       select s.goal_id, gd.revision, gm.name, gd.definition, s.simulate_after
-      from scheduling_specification_goals s
-      left join scheduling_goal_definition gd using (goal_id)
-      left join scheduling_goal_metadata gm on s.goal_id = gm.id
+      from scheduler.scheduling_specification_goals s
+      left join scheduler.scheduling_goal_definition gd using (goal_id)
+      left join scheduler.scheduling_goal_metadata gm on s.goal_id = gm.id
       where s.specification_id = ?
       and s.enabled
       and ((s.goal_revision is not null and s.goal_revision = gd.revision)
       or (s.goal_revision is null and gd.revision = (select def.revision
-                                                      from scheduling_goal_definition def
+                                                      from scheduler.scheduling_goal_definition def
                                                       where def.goal_id = s.goal_id
                                                       order by def.revision desc limit 1)))
       order by s.priority;

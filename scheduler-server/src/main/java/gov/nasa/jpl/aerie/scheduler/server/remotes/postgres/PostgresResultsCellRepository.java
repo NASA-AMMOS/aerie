@@ -101,7 +101,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       throw new Error("Unable to deallocate results cell of unknown type");
     }
     try (final var connection = this.dataSource.getConnection()) {
-      deleteRequest(connection, cell.specId, cell.specRevision);
+      deleteRequest(connection, cell.analysisId);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete scheduling request", ex);
     }
@@ -151,11 +151,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static void deleteRequest(
       final Connection connection,
-      final SpecificationId specId,
-      final long specRevision
+      final long analysisId
   ) throws SQLException {
     try (final var deleteRequestAction = new DeleteRequestAction(connection)) {
-      deleteRequestAction.apply(specId.id(), specRevision);
+      deleteRequestAction.apply(analysisId);
     }
   }
 
