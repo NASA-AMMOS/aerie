@@ -14,7 +14,7 @@ import java.util.Optional;
   private static final @Language("SQL") String sql = """
     update scheduler.scheduling_request
       set
-        status = ?::status_t,
+        status = ?::util_functions.request_status,
         reason = ?::json,
         dataset_id = ?
       where
