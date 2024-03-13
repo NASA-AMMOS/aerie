@@ -10,7 +10,7 @@ import java.sql.SQLException;
   private final @Language("SQL") String sql = """
         update merlin.simulation_dataset
           set
-            status = ?::status_t,
+            status = ?::util_functions.request_status,
             reason = ?::json
           where dataset_id = ?
         """;

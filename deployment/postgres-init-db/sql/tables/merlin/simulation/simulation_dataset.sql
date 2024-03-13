@@ -1,5 +1,3 @@
-create type merlin.status_t as enum('pending', 'incomplete', 'failed', 'success');
-
 create table merlin.simulation_dataset (
   id integer generated always as identity,
   simulation_id integer not null,
@@ -23,7 +21,7 @@ create table merlin.simulation_dataset (
   simulation_end_time timestamptz not null,
 
   -- Simulation state
-  status merlin.status_t not null default 'pending',
+  status util_functions.request_status not null default 'pending',
   reason jsonb null,
   canceled boolean not null default false,
 

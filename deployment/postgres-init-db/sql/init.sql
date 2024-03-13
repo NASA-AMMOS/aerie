@@ -15,6 +15,7 @@ begin;
 
   -- Util Functions
   \ir functions/util_functions/shared_update_functions.sql
+  \ir types/util_functions/request_status.sql
 
   -- Permissions
   \ir init_permissions.sql

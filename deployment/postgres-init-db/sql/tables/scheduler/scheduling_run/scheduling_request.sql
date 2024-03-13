@@ -1,5 +1,3 @@
-create type scheduler.status_t as enum('pending', 'incomplete', 'failed', 'success');
-
 create table scheduler.scheduling_request (
   analysis_id integer generated always as identity,
   specification_id integer not null,
@@ -9,7 +7,7 @@ create table scheduler.scheduling_request (
   plan_revision integer not null,
 
   -- Scheduling State
-  status scheduler.status_t not null default 'pending',
+  status util_functions.request_status not null default 'pending',
   reason jsonb null,
   canceled boolean not null default false,
 
