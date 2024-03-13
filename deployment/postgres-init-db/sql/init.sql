@@ -44,4 +44,7 @@ begin;
 
   -- Preload Data
   \ir default_user_roles.sql;
+
+  -- Initialize DB User permissions
+  \ir init_db_users.sql
 end;

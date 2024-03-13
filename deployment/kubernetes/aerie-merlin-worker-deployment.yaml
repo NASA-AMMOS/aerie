@@ -27,26 +27,24 @@ spec:
             - name: JAVA_OPTS
               value: |
                 -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=WARN -Dorg.slf4j.simpleLogger.logFile=System.err
-            - name: MERLIN_WORKER_DB
-              value: aerie_merlin
-            - name: MERLIN_WORKER_DB_PORT
+            - name: AERIE_DB_PORT
               value: "5432"
-            - name: MERLIN_WORKER_DB_SERVER
+            - name: AERIE_DB_HOST
               value: postgres
             - name: MERLIN_WORKER_LOCAL_STORE
               value: /usr/src/app/merlin_file_store
             - name: UNTRUE_PLAN_START
               value: "2000-01-01T11:58:55.816Z"
-            - name: MERLIN_WORKER_DB_USER
+            - name: MERLIN_DB_USER
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_USERNAME
-            - name: MERLIN_WORKER_DB_PASSWORD
+                  key: MERLIN_USERNAME
+            - name: MERLIN_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_PASSWORD
+                  key: MERLIN_PASSWORD
       restartPolicy: Always
       volumes:
         - name: aerie-file-store

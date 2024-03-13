@@ -58,8 +58,8 @@ public class TimelineRemoteTests {
     hikariConfig.addDataSourceProperty("portNumber", 5432);
     hikariConfig.addDataSourceProperty("databaseName", "aerie");
     hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
-    hikariConfig.setUsername(System.getenv("AERIE_USERNAME"));
-    hikariConfig.setPassword(System.getenv("AERIE_PASSWORD"));
+    hikariConfig.setUsername(System.getenv("MERLIN_USERNAME"));
+    hikariConfig.setPassword(System.getenv("MERLIN_PASSWORD"));
 
     hikariConfig.setConnectionInitSql("set time zone 'UTC'");
     dataSource = new HikariDataSource(hikariConfig);
