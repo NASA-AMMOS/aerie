@@ -7,6 +7,38 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
   CREATE USER "$AERIE_USERNAME" WITH PASSWORD '$AERIE_PASSWORD';
   \echo 'Done!'
 
+  \echo 'Initializing gateway user...'
+  DO \$\$ BEGIN
+    CREATE USER "$GATEWAY_DB_USER" WITH PASSWORD '$GATEWAY_DB_PASSWORD';
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END \$\$;
+  \echo 'Done!'
+
+  \echo 'Initializing merlin user...'
+  DO \$\$ BEGIN
+    CREATE USER "$MERLIN_DB_USER" WITH PASSWORD '$MERLIN_DB_PASSWORD';
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END \$\$;
+  \echo 'Done!'
+
+  \echo 'Initializing scheduler user...'
+  DO \$\$ BEGIN
+    CREATE USER "$SCHEDULER_DB_USER" WITH PASSWORD '$SCHEDULER_DB_PASSWORD';
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END \$\$;
+  \echo 'Done!'
+
+  \echo 'Initializing sequencing user...'
+  DO \$\$ BEGIN
+    CREATE USER "$SEQUENCING_DB_USER" WITH PASSWORD '$SEQUENCING_DB_PASSWORD';
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END \$\$;
+  \echo 'Done!'
+
   \echo 'Initializing aerie database...'
   CREATE DATABASE aerie OWNER "$AERIE_USERNAME";
   \connect aerie
@@ -23,6 +55,11 @@ EOSQL
 export PGPASSWORD="$AERIE_PASSWORD"
 
 psql -v ON_ERROR_STOP=1 --username "$AERIE_USERNAME" --dbname "aerie" <<-EOSQL
+  \set aerie_user $AERIE_USERNAME
+  \set gateway_user $GATEWAY_DB_USER
+  \set merlin_user $MERLIN_DB_USER
+  \set scheduler_user $SCHEDULER_DB_USER
+  \set sequencing_user $SEQUENCING_DB_USER
   \echo 'Initializing aerie database objects...'
   \ir /docker-entrypoint-initdb.d/sql/init.sql
   \echo 'Done!'

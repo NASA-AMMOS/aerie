@@ -40,22 +40,20 @@ spec:
               value: UpdateInputPlanWithNewActivities
             - name: SCHEDULER_RULES_JAR
               value: /usr/src/app/merlin_file_store/scheduler_rules.jar
-            - name: SCHEDULER_WORKER_DB
-              value: aerie_scheduler
-            - name: SCHEDULER_WORKER_DB_PORT
+            - name: AERIE_DB_PORT
               value: "5432"
-            - name: SCHEDULER_WORKER_DB_SERVER
+            - name: AERIE_DB_HOST
               value: postgres
-            - name: SCHEDULER_WORKER_DB_USER
+            - name: SCHEDULER_DB_USER
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_USERNAME
-            - name: SCHEDULER_WORKER_DB_PASSWORD
+                  key: SCHEDULER_USERNAME
+            - name: SCHEDULER_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_PASSWORD
+                  key: SCHEDULER_PASSWORD
       restartPolicy: Always
       volumes:
         - name: aerie-file-store

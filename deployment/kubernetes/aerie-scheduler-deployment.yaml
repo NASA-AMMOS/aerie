@@ -32,11 +32,9 @@ spec:
                 -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.logFile=System.err
             - name: MERLIN_GRAPHQL_URL
               value: http://hasura:8080/v1/graphql
-            - name: SCHEDULER_DB
-              value: aerie_scheduler
-            - name: SCHEDULER_DB_PORT
+            - name: AERIE_DB_PORT
               value: "5432"
-            - name: SCHEDULER_DB_SERVER
+            - name: AERIE_DB_HOST
               value: postgres
             - name: SCHEDULER_PORT
               value: "27185"
@@ -44,12 +42,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_USERNAME
+                  key: SCHEDULER_USERNAME
             - name: SCHEDULER_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_PASSWORD
+                  key: SCHEDULER_PASSWORD
       restartPolicy: Always
       volumes:
         - name: aerie-file-store
