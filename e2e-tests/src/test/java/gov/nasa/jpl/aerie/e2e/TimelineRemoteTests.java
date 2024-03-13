@@ -44,21 +44,39 @@ public class TimelineRemoteTests {
   private Connection connection;
   private HikariDataSource dataSource;
   @BeforeAll
-  void beforeAll() {
+  void beforeAll() throws SQLException {
     // Setup Requests
     playwright = Playwright.create();
     hasura = new HasuraRequests(playwright);
+
+    // Connect to the database
+    final var hikariConfig = new HikariConfig();
+
+    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+
+    hikariConfig.addDataSourceProperty("serverName", "localhost");
+    hikariConfig.addDataSourceProperty("portNumber", 5432);
+    hikariConfig.addDataSourceProperty("databaseName", "aerie");
+    hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
+    hikariConfig.setUsername(System.getenv("AERIE_USERNAME"));
+    hikariConfig.setPassword(System.getenv("AERIE_PASSWORD"));
+
+    hikariConfig.setConnectionInitSql("set time zone 'UTC'");
+    dataSource = new HikariDataSource(hikariConfig);
+    connection = dataSource.getConnection();
   }
 
   @AfterAll
-  void afterAll() {
+  void afterAll() throws SQLException {
     // Cleanup Requests
     hasura.close();
     playwright.close();
+    connection.close();
+    dataSource.close();
   }
 
   @BeforeEach
-  void beforeEach() throws IOException, InterruptedException, SQLException {
+  void beforeEach() throws IOException, InterruptedException {
     // Insert the Mission Model
     try (final var gateway = new GatewayRequests(playwright)) {
       modelId = hasura.createMissionModel(
@@ -81,33 +99,13 @@ public class TimelineRemoteTests {
         Json.createObjectBuilder().add("biteSize", 1).build());
     simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
 
-
-    // Connect to the database
-
-    final var hikariConfig = new HikariConfig();
-
-    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-
-    hikariConfig.addDataSourceProperty("serverName", "localhost");
-    hikariConfig.addDataSourceProperty("portNumber", 5432);
-    hikariConfig.addDataSourceProperty("databaseName", "aerie_merlin");
-    hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
-    hikariConfig.setUsername(System.getenv("AERIE_USERNAME"));
-    hikariConfig.setPassword(System.getenv("AERIE_PASSWORD"));
-
-    hikariConfig.setConnectionInitSql("set time zone 'UTC'");
-    dataSource = new HikariDataSource(hikariConfig);
-    connection = dataSource.getConnection();
-
     plan = new AeriePostgresPlan(connection, simDatasetId);
   }
 
   @AfterEach
-  void afterEach() throws IOException, SQLException {
+  void afterEach() throws IOException {
     hasura.deletePlan(planId);
     hasura.deleteMissionModel(modelId);
-    connection.close();
-    dataSource.close();
   }
 
   @Test
