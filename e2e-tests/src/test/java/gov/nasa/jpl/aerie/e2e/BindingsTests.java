@@ -1041,15 +1041,7 @@ public class BindingsTests {
           duration,
           plan_start_timestamp,
           admin.session());
-
-      // Insert the Scheduling Spec
-      schedulingSpecId = hasura.insertSchedulingSpecification(
-          planId,
-          hasura.getPlanRevision(planId),
-          plan_start_timestamp,
-          plan_end_timestamp,
-          JsonValue.EMPTY_JSON_OBJECT,
-          true);
+      schedulingSpecId = hasura.getSchedulingSpecId(planId);
     }
 
     @AfterEach

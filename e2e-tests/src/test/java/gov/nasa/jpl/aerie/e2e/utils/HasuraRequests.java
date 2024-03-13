@@ -591,23 +591,11 @@ public class HasuraRequests implements AutoCloseable {
     makeRequest(GQL.DELETE_SCHEDULING_GOAL, variables);
   }
 
-  public int insertSchedulingSpecification(
-      int planId,
-      int planRevision,
-      String horizonStart,
-      String horizonEnd,
-      JsonObject simArguments,
-      boolean analysisOnly
-  ) throws IOException {
-    final var schedulingSpecInputBuilder = Json.createObjectBuilder()
-                                               .add("plan_id", planId)
-                                               .add("plan_revision", planRevision)
-                                               .add("horizon_start", horizonStart)
-                                               .add("horizon_end", horizonEnd)
-                                               .add("simulation_arguments", simArguments)
-                                               .add("analysis_only", analysisOnly);
-    final var variables = Json.createObjectBuilder().add("scheduling_spec", schedulingSpecInputBuilder).build();
-    return makeRequest(GQL.INSERT_SCHEDULING_SPECIFICATION, variables).getJsonObject("scheduling_spec").getInt("id");
+  public int getSchedulingSpecId(int planId) throws IOException {
+    final var variables = Json.createObjectBuilder().add("planId", planId).build();
+    final var spec = makeRequest(GQL.GET_SCHEDULING_SPECIFICATION_ID, variables).getJsonArray("scheduling_spec");
+    assertEquals(1, spec.size());
+    return spec.getJsonObject(0).getInt("id");
   }
 
   public void updatePlanRevisionSchedulingSpec(int planId) throws IOException {
