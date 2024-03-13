@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -17,34 +16,23 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandExpansionDatabaseTests {
-  private static final File initSqlScriptFile = new File("../sequencing-server/sql/sequencing/init.sql");
   private DatabaseTestHelper helper;
-
   private Connection connection;
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "command_expansion_test",
-        "Command Expansion Database Tests",
-        initSqlScriptFile
-    );
-    helper.startDatabase();
+    helper = new DatabaseTestHelper("command_expansion_test", "Command Expansion Database Tests");
     connection = helper.connection();
   }
 
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    helper.stopDatabase();
-    connection = null;
-    helper = null;
+    helper.close();
   }
 
   @AfterEach
   void afterEach() throws SQLException {
-    helper.clearTable("expansion_rule");
-    helper.clearTable("sequence");
-    helper.clearTable("sequence_to_simulated_activity");
+    helper.clearSchema("sequencing");
   }
 
   @Nested
@@ -52,11 +40,13 @@ class CommandExpansionDatabaseTests {
     @Test
     void shouldModifyUpdatedAtTimeOnUpdate() throws SQLException {
       try (final var statement = connection.createStatement()) {
-        final var insertRes = statement.executeQuery("""
-          insert into expansion_rule (activity_type, expansion_logic)
-          values ('test-activity-type', 'test-activity-logic')
-          returning id, created_at, updated_at
-        """);
+        final var insertRes = statement.executeQuery(
+            //language=sql
+            """
+            insert into sequencing.expansion_rule (activity_type, expansion_logic)
+            values ('test-activity-type', 'test-activity-logic')
+            returning id, created_at, updated_at
+            """);
         insertRes.next();
         final var id = insertRes.getInt("id");
         final var created_at = insertRes.getTimestamp("created_at");
@@ -64,11 +54,14 @@ class CommandExpansionDatabaseTests {
 
         assertEquals(created_at, updated_at);
 
-        final var updateRes = statement.executeQuery("""
-          update expansion_rule set expansion_logic = 'updated-logic'
-          where id = %d
-          returning created_at, updated_at
-        """.formatted(id));
+        final var updateRes = statement.executeQuery(
+            //language=sql
+            """
+            update sequencing.expansion_rule
+            set expansion_logic = 'updated-logic'
+            where id = %d
+            returning created_at, updated_at
+            """.formatted(id));
         updateRes.next();
         final var created_at2 = updateRes.getTimestamp("created_at");
         final var updated_at2 = updateRes.getTimestamp("updated_at");
