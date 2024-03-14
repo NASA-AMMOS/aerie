@@ -31,7 +31,7 @@ configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().e
 
   // Remove distributed SQL as part of `clean` task
   task undoDistributeSql(type: Delete) {
-    doLast { // Explicity do last to avoid running during configuration step
+    doLast { // Explicitly do last to avoid running during configuration step
       file("${sp.projectDir}/sql").list().each {
         delete "$rootDir/deployment/postgres-init-db/sql/$it"
       }
