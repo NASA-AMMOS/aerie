@@ -35,6 +35,7 @@ services:
       MERLIN_DB_USER: "${AERIE_USERNAME}"
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       MERLIN_PORT: 27183
+      ENABLE_CONTINUOUS_VALIDATION_THREAD: true
       JAVA_OPTS: >
         -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN
         -Dorg.slf4j.simpleLogger.logFile=System.err
@@ -143,7 +144,6 @@ services:
     environment:
       ORIGIN: http://localhost
       PUBLIC_AERIE_FILE_STORE_PREFIX: "/usr/src/app/merlin_file_store/"
-      PUBLIC_LOGIN_PAGE: "enabled"
       PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
       PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000
       PUBLIC_HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
