@@ -1,19 +1,17 @@
 package gov.nasa.jpl.aerie.constraints
 
-import gov.nasa.jpl.aerie.constraints.ActivityId.DirectiveId
-import gov.nasa.jpl.aerie.constraints.ActivityId.InstanceId
-import gov.nasa.jpl.aerie.constraints.Violations.Companion.getActivityId
+import gov.nasa.jpl.aerie.timeline.payloads.activities.ActivityId.DirectiveId
+import gov.nasa.jpl.aerie.timeline.payloads.activities.ActivityId.InstanceId
 import gov.nasa.jpl.aerie.timeline.BaseTimeline
 import gov.nasa.jpl.aerie.timeline.BoundsTransformer
 import gov.nasa.jpl.aerie.timeline.Timeline
-import gov.nasa.jpl.aerie.timeline.collections.Instances
 import gov.nasa.jpl.aerie.timeline.collections.Intervals
 import gov.nasa.jpl.aerie.timeline.collections.Windows
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real
 import gov.nasa.jpl.aerie.timeline.ops.*
 import gov.nasa.jpl.aerie.timeline.ops.coalesce.CoalesceNoOp
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
-import gov.nasa.jpl.aerie.timeline.payloads.activities.Activity
+import gov.nasa.jpl.aerie.timeline.payloads.activities.ActivityId
 import gov.nasa.jpl.aerie.timeline.payloads.activities.Directive
 import gov.nasa.jpl.aerie.timeline.payloads.activities.Instance
 import gov.nasa.jpl.aerie.timeline.util.preprocessList

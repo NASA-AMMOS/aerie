@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints
 
 import gov.nasa.jpl.aerie.timeline.Interval
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
+import gov.nasa.jpl.aerie.timeline.payloads.activities.ActivityId
 
 /** A single violation of a constraint. */
 data class Violation(
