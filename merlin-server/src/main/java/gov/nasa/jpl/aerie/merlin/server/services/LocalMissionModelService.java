@@ -282,9 +282,6 @@ public final class LocalMissionModelService implements MissionModelService {
         .getEffectiveArguments(arguments);
   }
 
-  static Map<String, MissionModel<?>> missionModelCache = new HashMap<>();
-  static Map<String, List<SimulationDriver.CachedSimulationEngine>> cachedEngines = new HashMap<>();
-
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
