@@ -35,9 +35,9 @@ kotlin {
   jvmToolchain(21)
 }
 
-dokkaHtml.configure {
+dokkaHtmlPartial.configure {
   dokkaSourceSets {
-    named("main") {
+     configureEach {
       // used as project name in the header
       moduleName.set("Timeline")
 
@@ -49,10 +49,10 @@ dokkaHtml.configure {
 
       // adds source links that lead to this repository, allowing readers
       // to easily find source code for inspected declarations
-      sourceLink.configure {
+      sourceLink {
         localDirectory.set(file("timeline/src/main/kotlin"))
-        remoteUrl.set(URL(
-            "https://github.com/NASA-AMMOS/aerie/blob/feat/java-timeline-library/timeline/src/main/kotlin"
+        remoteUrl.set(new URL(
+            "https://github.com/NASA-AMMOS/aerie/blob/feat/java-timeline-library/timeline/src/main/kotlin/"
         ))
         remoteLineSuffix.set("#L")
       }
