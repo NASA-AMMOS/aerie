@@ -101,7 +101,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   private SimulationEngine(SimulationEngine other) {
     numActiveSimulationEngines++;
-    executor = getLoomOrFallback();
+    executor = Executors.newVirtualThreadPerTaskExecutor();
     scheduledJobs = other.scheduledJobs.duplicate();
     waitingTasks = other.waitingTasks.duplicate();
     waitingConditions = other.waitingConditions.duplicate();
