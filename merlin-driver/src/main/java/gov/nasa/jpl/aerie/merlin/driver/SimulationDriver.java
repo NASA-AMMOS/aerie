@@ -1,38 +1,25 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-import org.apache.commons.lang3.function.TriFunction;
-import org.apache.commons.lang3.mutable.MutableLong;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 
 public final class SimulationDriver {
@@ -255,17 +242,17 @@ public final class SimulationDriver {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> oneShotTask(scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> oneShotTask(scheduler1 -> {
+    return executor -> new OneStepTask<>(scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> new OneStepTask<>(scheduler1 -> {
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
-    })), oneShotTask(scheduler2 -> {
+    })), new OneStepTask<>(scheduler2 -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
       for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> oneShotTask(scheduler3 ->
+        scheduler2.spawn(executor2 -> new OneStepTask<>(scheduler3 ->
             // Delay until the dependent starts
-            TaskStatus.delayed(dependent.getRight(), oneShotTask(scheduler4 -> {
+            TaskStatus.delayed(dependent.getRight(), new OneStepTask<>(scheduler4 -> {
               final var dependentDirectiveId = dependent.getLeft();
               final var serializedDependentDirective = schedule.get(dependentDirectiveId).serializedActivity();
 
@@ -295,19 +282,5 @@ public final class SimulationDriver {
       }
       return TaskStatus.completed(Unit.UNIT);
     })));
-  }
-
-  public static <T> Task<T> oneShotTask(Function<Scheduler, TaskStatus<T>> f) {
-    return new Task<>() {
-      @Override
-      public TaskStatus<T> step(final Scheduler scheduler) {
-        return f.apply(scheduler);
-      }
-
-      @Override
-      public Task<T> duplicate(Executor executor) {
-        return this;
-      }
-    };
   }
 }

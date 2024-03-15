@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
@@ -393,7 +393,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final ActivityDirectiveId directiveId,
       final TaskFactory<Output> task,
       final Topic<ActivityDirectiveId> activityTopic) {
-    return executor -> SimulationDriver.oneShotTask(
+    return executor -> new OneStepTask<>(
         scheduler -> {
           scheduler.emit(directiveId, activityTopic);
           return task.create(executor).step(scheduler);
