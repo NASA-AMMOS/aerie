@@ -3,12 +3,10 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,29 +17,21 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.driver.SimulationDriver.scheduleActivities;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MAX_VALUE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 
 public class CheckpointSimulationDriver {
   private static final Logger LOGGER = LoggerFactory.getLogger(CheckpointSimulationDriver.class);
-
-  public record SimulationResultsComputerInputs(
-      SimulationEngine engine,
-      Instant simulationStartTime,
-      Duration elapsedTime,
-      Topic<ActivityDirectiveId> activityTopic,
-      TemporalEventSource timeline,
-      Iterable<MissionModel.SerializableTopic<?>> serializableTopics,
-      Map<ActivityDirectiveId, SpanId> activityDirectiveIdTaskIdMap){}
 
   public record CachedSimulationEngine(
       Duration endsAt,
@@ -52,7 +42,7 @@ public class CheckpointSimulationDriver {
       Topic<ActivityDirectiveId> activityTopic,
       MissionModel<?> missionModel
   ) {
-    public CachedSimulationEngine {
+    public void freeze() {
       cells.freeze();
       timePoints.freeze();
       simulationEngine.close();
@@ -80,8 +70,7 @@ public class CheckpointSimulationDriver {
           timeline.add(commit);
         }
       }
-
-      return new CachedSimulationEngine(
+      final var emptyCachedEngine = new CachedSimulationEngine(
           Duration.MIN_VALUE,
           Map.of(),
           engine,
@@ -90,6 +79,7 @@ public class CheckpointSimulationDriver {
           new Topic<>(),
           missionModel
       );
+      return emptyCachedEngine;
     }
   }
 
@@ -129,7 +119,7 @@ public class CheckpointSimulationDriver {
       }
     }
 
-    bestCandidate.ifPresent(cachedSimulationEngine -> System.out.println("Re-using simulation engine at "
+    bestCandidate.ifPresent(cachedSimulationEngine -> LOGGER.info("Re-using simulation engine at "
                                                                          + cachedSimulationEngine.endsAt()));
     return bestCandidate.map(cachedSimulationEngine -> Pair.of(cachedSimulationEngine, correspondenceMap));
   }
@@ -168,10 +158,10 @@ public class CheckpointSimulationDriver {
     return combinedTimeline;
   }
 
-  public static BiFunction<Duration, Duration, Boolean> desiredCheckpoints(final List<Duration> desiredCheckpoints) {
-    return (elapsedTime, nextTime) -> {
+  public static Function<SimulationState, Boolean> desiredCheckpoints(final List<Duration> desiredCheckpoints) {
+    return simulationState -> {
       for (final var desiredCheckpoint : desiredCheckpoints) {
-        if (elapsedTime.noLongerThan(desiredCheckpoint) && nextTime.longerThan(desiredCheckpoint)) {
+        if (simulationState.currentTime().noLongerThan(desiredCheckpoint) && simulationState.nextTime().longerThan(desiredCheckpoint)) {
           return true;
         }
       }
@@ -179,19 +169,31 @@ public class CheckpointSimulationDriver {
     };
   }
 
-  public static BiFunction<Duration, Duration, Boolean> wallClockCheckpoints(final long thresholdSeconds) {
+  public static Function<SimulationState, Boolean> wallClockCheckpoints(final long thresholdSeconds) {
     MutableLong lastCheckpointRealTime = new MutableLong(System.nanoTime());
     MutableObject<Duration> lastCheckpointSimTime = new MutableObject<>(Duration.ZERO);
-    return (elapsedTime, nextTime) -> {
-      if (nextTime.longerThan(elapsedTime) && System.nanoTime() - lastCheckpointRealTime.getValue() > (thresholdSeconds * 1000 * 1000 * 1000)) {
+    return simulationState -> {
+      if (simulationState.nextTime().longerThan(simulationState.currentTime()) && System.nanoTime() - lastCheckpointRealTime.getValue() > (thresholdSeconds * 1000 * 1000 * 1000)) {
         lastCheckpointRealTime.setValue(System.nanoTime());
-        lastCheckpointSimTime.setValue(elapsedTime);
+        lastCheckpointSimTime.setValue(simulationState.currentTime());
         return true;
       } else {
         return false;
       }
     };
   }
+
+  public static Function<SimulationState, Boolean> checkpointAtEnd(Function<SimulationState, Boolean> stoppingCondition) {
+    return simulationState -> stoppingCondition.apply(simulationState) || simulationState.nextTime.isEqualTo(MAX_VALUE);
+  }
+
+  public record SimulationState(
+      Duration currentTime,
+      Duration nextTime,
+      SimulationEngine simulationEngine,
+      Map<ActivityDirectiveId,  ActivityDirective> schedule,
+      Map<ActivityDirectiveId, SpanId> activityDirectiveIdSpanIdMap
+  ){}
 
   public static <Model> SimulationResultsComputerInputs simulateWithCheckpoints(
       final MissionModel<Model> missionModel,
@@ -203,17 +205,18 @@ public class CheckpointSimulationDriver {
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> simulationCanceled,
       final CachedSimulationEngine cachedEngine,
-      final BiFunction<Duration, Duration, Boolean> shouldTakeCheckpoint,
-      final TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>, Map<ActivityDirectiveId, SpanId>, Boolean> stopConditionOnPlan,
+      final Function<SimulationState, Boolean> shouldTakeCheckpoint,
+      final Function<SimulationState, Boolean> stopConditionOnPlan,
       final CachedEngineStore cachedEngineStore,
-      final SimulationEngineConfiguration configuration) {
-    final var activityToSpan = new HashMap<ActivityDirectiveId, SpanId>();
+      final SimulationEngineConfiguration configuration,
+      final boolean avoidDuplication) {
+    final var activityToSpan = new LinkedHashMap<ActivityDirectiveId, SpanId>();
     final var activityTopic = cachedEngine.activityTopic();
     final var timelines = new ArrayList<TemporalEventSource>();
     timelines.add(new TemporalEventSource(cachedEngine.timePoints));
-    var engine = cachedEngine.simulationEngine.duplicate();
+    var engine = avoidDuplication ? cachedEngine.simulationEngine : cachedEngine.simulationEngine.duplicate();
     engine.unscheduleAfter(cachedEngine.endsAt);
-    try (var ignored = cachedEngine.simulationEngine) {
+
       var timeline = new TemporalEventSource();
       var cells = new LiveCells(timeline, cachedEngine.cells());
       /* The current real time. */
@@ -261,26 +264,28 @@ public class CheckpointSimulationDriver {
         // TERMINATION: Actually, we might never break if real time never progresses forward.
         while (elapsedTime.noLongerThan(simulationDuration) && !simulationCanceled.get()) {
           final var nextTime = engine.peekNextTime().orElse(Duration.MAX_VALUE);
-          if (shouldTakeCheckpoint.apply(elapsedTime, nextTime)) {
-            cells.freeze();
+          if (shouldTakeCheckpoint.apply(new SimulationState(elapsedTime, nextTime, engine, schedule, activityToSpan))) {
+            if(!avoidDuplication) cells.freeze();
             LOGGER.info("Saving a simulation engine in memory");
-            cachedEngineStore.save(
-                new CachedSimulationEngine(
+            final var newCachedEngine = new CachedSimulationEngine(
                 elapsedTime,
                 schedule,
                 engine,
                 cells,
                 makeCombinedTimeline(timelines, timeline).points(),
                 activityTopic,
-                missionModel),
+                missionModel);
+            if(!avoidDuplication) newCachedEngine.freeze();
+            cachedEngineStore.save(
+                newCachedEngine,
                 configuration);
             timelines.add(timeline);
-            engine = engine.duplicate();
+            engine = avoidDuplication ? engine : engine.duplicate();
             timeline = new TemporalEventSource();
             cells = new LiveCells(timeline, cells);
           }
           //break before changing the state of the engine
-          if (simulationCanceled.get() || stopConditionOnPlan.apply(engine, schedule, activityToSpan)) {
+          if (simulationCanceled.get() || stopConditionOnPlan.apply(new SimulationState(elapsedTime, nextTime, engine, schedule, activityToSpan))) {
             break;
           }
 
@@ -306,7 +311,7 @@ public class CheckpointSimulationDriver {
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
-
+      if(!avoidDuplication) engine.close();
       return new SimulationResultsComputerInputs(
               engine,
               simulationStartTime,
@@ -315,62 +320,21 @@ public class CheckpointSimulationDriver {
               makeCombinedTimeline(timelines, timeline),
               missionModel.getTopics(),
               activityToSpan);
-    }
   }
 
-  public static TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>,Map<ActivityDirectiveId, SpanId>, Boolean>
-  stopOnceAllActivitiessAreFinished(){
-    return (engine, schedule, actIdToTaskId) -> actIdToTaskId
+  public static Function<SimulationState, Boolean> stopOnceAllActivitiessAreFinished(){
+    return simulationState -> simulationState.activityDirectiveIdSpanIdMap()
         .values()
         .stream()
-        .allMatch(engine::spanIsComplete);
+        .allMatch(simulationState.simulationEngine()::spanIsComplete);
   }
 
-  public static TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>,Map<ActivityDirectiveId, SpanId>, Boolean>
-  noCondition(){
-    return (engine, schedule, actIdToSpanId) -> false;
+  public static Function<SimulationState, Boolean>  noCondition(){
+    return simulationState -> false;
   }
 
-  public static TriFunction<SimulationEngine, Map<ActivityDirectiveId,  ActivityDirective>,Map<ActivityDirectiveId, SpanId>, Boolean>
-  stopOnceActivityHasFinished(final ActivityDirectiveId activityDirectiveId){
-    return (engine, schedule, actIdToSpanId) -> (actIdToSpanId.containsKey(activityDirectiveId)
-                                                 && engine.spanIsComplete(actIdToSpanId.get(activityDirectiveId)));
-  }
-
-  public static SimulationResults computeResults(
-      final SimulationResultsComputerInputs simulationResultsInputs,
-      final Set<String> resourceNames){
-    return SimulationEngine.computeResults(
-        simulationResultsInputs.engine(),
-        simulationResultsInputs.simulationStartTime(),
-        simulationResultsInputs.elapsedTime(),
-        simulationResultsInputs.activityTopic(),
-        simulationResultsInputs.timeline(),
-        simulationResultsInputs.serializableTopics(),
-        resourceNames
-    );
-  }
-
-  public static SimulationResults computeResults(
-      final SimulationResultsComputerInputs simulationResultsInputs){
-    return SimulationEngine.computeResults(
-        simulationResultsInputs.engine(),
-        simulationResultsInputs.simulationStartTime(),
-        simulationResultsInputs.elapsedTime(),
-        simulationResultsInputs.activityTopic(),
-        simulationResultsInputs.timeline(),
-        simulationResultsInputs.serializableTopics()
-    );
-  }
-
-  public static SimulationEngine.SimulationActivityExtract computeActivitySimulationResults(
-      final SimulationResultsComputerInputs simulationResultsInputs){
-    return SimulationEngine.computeActivitySimulationResults(
-        simulationResultsInputs.engine(),
-        simulationResultsInputs.simulationStartTime(),
-        simulationResultsInputs.elapsedTime(),
-        simulationResultsInputs.activityTopic(),
-        simulationResultsInputs.timeline(),
-        simulationResultsInputs.serializableTopics());
+  public static Function<SimulationState, Boolean> stopOnceActivityHasFinished(final ActivityDirectiveId activityDirectiveId){
+    return simulationState -> (simulationState.activityDirectiveIdSpanIdMap().containsKey(activityDirectiveId)
+                                                 && simulationState.simulationEngine.spanIsComplete(simulationState.activityDirectiveIdSpanIdMap().get(activityDirectiveId)));
   }
 }

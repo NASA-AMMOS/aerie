@@ -32,6 +32,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -41,6 +42,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -101,7 +103,7 @@ class SchedulingDSLCompilationServiceTests {
     }
 
     @Override
-    public Optional<SimulationResults> getSimulationResults(final PlanMetadata planMetadata)
+    public Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(final PlanMetadata planMetadata)
     throws MerlinServiceException, IOException, InvalidJsonException
     {
       return Optional.empty();

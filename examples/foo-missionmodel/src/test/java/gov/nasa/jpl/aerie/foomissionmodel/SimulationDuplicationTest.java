@@ -9,20 +9,20 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
+import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
@@ -43,8 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Executor;
-import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
@@ -395,7 +393,7 @@ public class SimulationDuplicationTest {
       final CachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
-    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
+    return SimulationResultsComputerInputs.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
         Instant.EPOCH,
@@ -408,7 +406,8 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,
-        simulationEngineConfiguration));
+        simulationEngineConfiguration,
+        false));
   }
 
   static SimulationResults simulateWithCheckpoints(
@@ -418,7 +417,7 @@ public class SimulationDuplicationTest {
       final CachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
-    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
+    return SimulationResultsComputerInputs.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
         Instant.EPOCH,
@@ -431,7 +430,8 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,
-        simulationEngineConfiguration));
+        simulationEngineConfiguration,
+        false));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
@@ -489,29 +489,15 @@ public class SimulationDuplicationTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> oneShotTask($ -> {
+      return executor -> new OneStepTask<>($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(Duration.MINUTE, oneShotTask($$ -> {
+        return TaskStatus.delayed(Duration.MINUTE, new OneStepTask<>($$ -> {
           $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
         }));
       });
     }
   };
-
-  public static <T> Task<T> oneShotTask(Function<Scheduler, TaskStatus<T>> f) {
-    return new Task<>() {
-      @Override
-      public TaskStatus<T> step(final Scheduler scheduler) {
-        return f.apply(scheduler);
-      }
-
-      @Override
-      public Task<T> duplicate(Executor executor) {
-        return this;
-      }
-    };
-  }
 
   private static final Topic<Object> decomposingActivityDirectiveInputTopic = new Topic<>();
   private static final Topic<Object> decomposingActivityDirectiveOutputTopic = new Topic<>();
@@ -528,18 +514,18 @@ public class SimulationDuplicationTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> oneShotTask(scheduler -> {
+      return executor -> new OneStepTask<>(scheduler -> {
         scheduler.emit(this, decomposingActivityDirectiveInputTopic);
         return TaskStatus.delayed(
             Duration.ZERO,
-            oneShotTask($ -> {
+            new OneStepTask<>($ -> {
               try {
                 $.spawn(InSpan.Parent, delayedActivityDirective.getTaskFactory(null, null));
               } catch (final InstantiationException ex) {
                 throw new Error("Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                     ex.toString()));
               }
-              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), oneShotTask($$ -> {
+              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), new OneStepTask<>($$ -> {
                 try {
                   $$.spawn(InSpan.Fresh, delayedActivityDirective.getTaskFactory(null, null));
                 } catch (final InstantiationException ex) {

@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +23,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FixedDurationTest {
@@ -39,7 +37,7 @@ public class FixedDurationTest {
     problem = new Problem(
         bananaMissionModel,
         planningHorizon,
-        new SimulationFacade(
+        new CheckpointSimulationFacade(
             bananaMissionModel,
             SimulationUtility.getBananaSchedulerModel(),
             new InMemoryCachedEngineStore(10),

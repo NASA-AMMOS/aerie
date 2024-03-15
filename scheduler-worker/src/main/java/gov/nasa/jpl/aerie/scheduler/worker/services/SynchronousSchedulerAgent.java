@@ -68,12 +68,16 @@ import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
@@ -94,6 +98,8 @@ public record SynchronousSchedulerAgent(
 )
     implements SchedulerAgent
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SynchronousSchedulerAgent.class);
+
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinService);
     Objects.requireNonNull(modelJarsDir);
@@ -131,7 +137,7 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
-      final var simulationFacade = new SimulationFacade(
+      final var simulationFacade = new CheckpointSimulationFacade(
           schedulerMissionModel.missionModel(),
           schedulerMissionModel.schedulerModel(),
           cachedEngineStore,
@@ -148,10 +154,11 @@ public record SynchronousSchedulerAgent(
             schedulerMissionModel.schedulerModel()
         );
         final var externalProfiles = loadExternalProfiles(planMetadata.planId());
-        final var initialSimulationResults = loadSimulationResults(planMetadata);
+        final var initialSimulationResultsAndDatasetId = loadSimulationResults(planMetadata);
         //seed the problem with the initial plan contents
-        final var loadedPlanComponents = loadInitialPlan(planMetadata, problem, initialSimulationResults);
-        problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults, loadedPlanComponents.mapSchedulingIdsToActivityIds);
+        final var loadedPlanComponents = loadInitialPlan(planMetadata, problem,
+                                                         initialSimulationResultsAndDatasetId.map(Pair::getKey));
+        problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResultsAndDatasetId.map(Pair::getKey), loadedPlanComponents.mapSchedulingIdsToActivityIds);
         problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
@@ -252,10 +259,19 @@ public record SynchronousSchedulerAgent(
       merlinService.updatePlanActivityDirectiveAnchors(specification.planId(), updatedActs, instancesToIds);
 
       final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
-        final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
-        //collect results and notify subscribers of success
-        final var results = collectResults(solutionPlan, instancesToIds, goals);
-        writer.succeedWith(results, datasetId);
+      Optional<DatasetId> datasetId = initialSimulationResultsAndDatasetId.map(Pair::getRight);
+      if(planMetadataAfterChanges.planRev() != specification.planRevision()) {
+        datasetId = storeSimulationResults(
+            solutionPlan,
+            planningHorizon,
+            simulationFacade,
+            planMetadataAfterChanges,
+            instancesToIds);
+      }
+      //collect results and notify subscribers of success
+      final var results = collectResults(solutionPlan, instancesToIds, goals);
+      LOGGER.info("Simulation cache saved " + cachedEngineStore.getTotalSavedSimulationTime() + " in simulation time");
+      writer.succeedWith(results, datasetId);
     } catch (final SpecificationLoadException e) {
       writer.failWith(b -> b
           .type("SPECIFICATION_LOAD_EXCEPTION")
@@ -317,7 +333,7 @@ public record SynchronousSchedulerAgent(
   }
 
 
-  private Optional<SimulationResults> loadSimulationResults(final PlanMetadata planMetadata){
+  private Optional<Pair<SimulationResults, DatasetId>> loadSimulationResults(final PlanMetadata planMetadata){
     try {
       return merlinService.getSimulationResults(planMetadata);
     } catch (MerlinServiceException | IOException | InvalidJsonException e) {
@@ -347,7 +363,7 @@ public record SynchronousSchedulerAgent(
                                   .collect(Collectors.toMap(
                                       (a) -> new SchedulingActivityDirectiveId(a.getKey().id().id()), Map.Entry::getValue));
       final var schedID_to_simID =
-          simulationData.mapping();
+          simulationData.mapSchedulingIdsToActivityIds().get();
       final var simID_to_MerlinID =
           schedID_to_simID.entrySet().stream().collect(Collectors.toMap(
               Map.Entry::getValue,

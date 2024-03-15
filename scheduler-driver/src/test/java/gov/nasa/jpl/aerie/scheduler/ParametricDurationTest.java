@@ -15,7 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRe
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.scheduler.TestApplyWhen.dur;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParametricDurationTest {
@@ -37,7 +35,7 @@ public class ParametricDurationTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochDays(3));
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(
+    problem = new Problem(bananaMissionModel, planningHorizon, new CheckpointSimulationFacade(
         bananaMissionModel,
         SimulationUtility.getBananaSchedulerModel(),
         new InMemoryCachedEngineStore(15),

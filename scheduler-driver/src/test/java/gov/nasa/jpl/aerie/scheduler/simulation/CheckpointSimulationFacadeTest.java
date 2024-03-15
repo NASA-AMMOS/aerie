@@ -18,19 +18,18 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class CheckpointSimulationFacadeTest {
   private SimulationFacade newSimulationFacade;
   private final static PlanningHorizon H = new PlanningHorizon(TimeUtility.fromDOY("2025-001T00:00:00.000"), TimeUtility.fromDOY("2025-005T00:00:00.000"));
-
+  private Map<String, ActivityType> activityTypes;
   private final static Duration t0 = H.getStartAerie();
-  private final static Duration d1min = Duration.of(1, Duration.MINUTE);
-  private final static Duration d1hr = Duration.of(1, Duration.HOUR);
+  private final static Duration d1hr = Duration.of(1, HOUR);
   private final static Duration t1hr = t0.plus(d1hr);
   private final static Duration t2hr = t0.plus(d1hr.times(2));
-  private final static Duration t3hr = t0.plus(d1hr.times(3));
   private static PlanInMemory makePlanA012(Map<String, ActivityType> activityTypeMap) {
     final var plan = new PlanInMemory();
     final var actTypeA = activityTypeMap.get("BasicActivity");
@@ -42,16 +41,12 @@ public class CheckpointSimulationFacadeTest {
   @BeforeEach
   public void before(){
     ThreadedTask.CACHE_READS = true;
-  }
-  @Test
-  public void planUpdateTest() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final Map<String, ActivityType> activityTypes = new HashMap<>();
+    activityTypes = new HashMap<>();
     for(var taskType : fooMissionModel.getDirectiveTypes().directiveTypes().entrySet()){
       activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), SimulationUtility.getFooSchedulerModel().getDurationTypes().get(taskType.getKey())));
     }
-    final var plan = makePlanA012(activityTypes);
-    newSimulationFacade = new SimulationFacade(
+    newSimulationFacade = new CheckpointSimulationFacade(
         fooMissionModel,
         SimulationUtility.getFooSchedulerModel(),
         new InMemoryCachedEngineStore(10),
@@ -59,61 +54,57 @@ public class CheckpointSimulationFacadeTest {
         new SimulationEngineConfiguration(Map.of(), Instant.EPOCH, new MissionModelId(1)),
         () -> false);
     newSimulationFacade.addActivityTypes(activityTypes.values());
+  }
+
+  /**
+   * This is to check that one of the simulation interfaces, the one simulating a plan until a given time, is actually stopping
+   * at the given time. It does that by checking that calling the simulation did not update the activity's duration.
+   */
+  @Test
+  public void simulateUntilTime() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
+    final var plan = makePlanA012(activityTypes);
     newSimulationFacade.simulateNoResults(plan, t2hr);
-    //we are stopping at 2hr, at the start of the last activity so it will not have a duraiton in the plan
+    //we are stopping at 2hr, at the start of the last activity so it will not have a duration in the plan
     assertNull(plan.getActivities().stream().filter(a -> a.startOffset().isEqualTo(t2hr)).findFirst().get().duration());
   }
 
+  /**
+   * Simulating the same plan on a smaller horizon leads to re-using the simulation data
+   */
   @Test
-  public void planUpdateTest2() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final Map<String, ActivityType> activityTypes = new HashMap<>();
-    for(var taskType : fooMissionModel.getDirectiveTypes().directiveTypes().entrySet()){
-      activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), SimulationUtility.getFooSchedulerModel().getDurationTypes().get(taskType.getKey())));
-    }
+  public void noNeedForResimulation() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
     final var plan = makePlanA012(activityTypes);
-    newSimulationFacade = new SimulationFacade(
-        fooMissionModel,
-        SimulationUtility.getFooSchedulerModel(),
-        new InMemoryCachedEngineStore(10),
-        H,
-        new SimulationEngineConfiguration(Map.of(),Instant.EPOCH, new MissionModelId(1)),
-        () -> false);
-    newSimulationFacade.addActivityTypes(activityTypes.values());
-    newSimulationFacade.simulateNoResults(plan, t3hr);
-    //we are stopping at 2hr, at the start of the last activity so it will not have a duraiton in the plan
-    assertNotNull(plan
-                      .getActivities()
-                      .stream()
-                      .filter(a -> a.startOffset().isEqualTo(t2hr))
-                      .findFirst()
-                      .get()
-                      .duration());
-  }
-
-  @Test
-  public void secondIteration() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final Map<String, ActivityType> activityTypes = new HashMap<>();
-    for(var taskType : fooMissionModel.getDirectiveTypes().directiveTypes().entrySet()){
-      activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), SimulationUtility.getFooSchedulerModel().getDurationTypes().get(taskType.getKey())));
-    }
-    final var plan = makePlanA012(activityTypes);
-    final var cachedEngines = new InMemoryCachedEngineStore(10);
-    newSimulationFacade = new SimulationFacade(
-        fooMissionModel,
-        SimulationUtility.getFooSchedulerModel(),
-        cachedEngines,
-        H,
-        new SimulationEngineConfiguration(Map.of(),Instant.EPOCH, new MissionModelId(1)),
-        () -> false
-    );
-    newSimulationFacade.addActivityTypes(activityTypes.values());
     final var ret = newSimulationFacade.simulateWithResults(plan, t2hr);
-    final var ret2 = newSimulationFacade.simulateWithResults(plan, t2hr);
-    //TODO: equality on two checkpoint is difficult, although the plan are the same and the startoffset is the same, they are not equal (cells...)
-    //so when saving, we don't know if we already have the same checkpoint
-    //we are stopping at 2hr, at the start of the last activity so it will not have a duraiton in the plan
+    final var ret2 = newSimulationFacade.simulateWithResults(plan, t1hr);
     SimulationResultsComparisonUtils.assertEqualsSimulationResults(ret.driverResults(), ret2.driverResults());
   }
+
+  /**
+   * Simulating the same plan on a smaller horizon via a different request (no-results vs with-results) leads to the same
+   * simulation data
+   */
+  @Test
+  public void simulationResultsTest() throws SchedulingInterruptedException, SimulationFacade.SimulationException {
+    final var plan = makePlanA012(activityTypes);
+    final var simResults = newSimulationFacade.simulateNoResultsAllActivities(plan).computeResults();
+    final var simResults2 = newSimulationFacade.simulateWithResults(plan, t1hr);
+    SimulationResultsComparisonUtils.assertEqualsSimulationResults(simResults, simResults2.driverResults());
+  }
+
+  /**
+   * Tests that the simulation stops at the end of the planning horizon even if the plan we are trying to simulate
+   * is supposed to last longer.
+   */
+  @Test
+  public void testStopsAtEndOfPlanningHorizon()
+  throws SchedulingInterruptedException, SimulationFacade.SimulationException
+  {
+    final var plan = new PlanInMemory();
+    final var actTypeA = activityTypes.get("ControllableDurationActivity");
+    plan.add(SchedulingActivityDirective.of(actTypeA, t0, HOUR.times(200), null, true));
+    final var results = newSimulationFacade.simulateNoResultsAllActivities(plan).computeResults();
+    assertEquals(H.getEndAerie(), newSimulationFacade.totalSimulationTime());
+    assert(results.unfinishedActivities.size() == 1);
+  }
+
 }

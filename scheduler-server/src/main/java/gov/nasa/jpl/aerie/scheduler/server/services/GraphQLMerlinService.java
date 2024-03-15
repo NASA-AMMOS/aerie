@@ -906,7 +906,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   @Override
-  public Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata)
+  public Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(PlanMetadata planMetadata)
   throws MerlinServiceException, IOException
   {
     final var simulationDatasetId = getSuitableSimulationResults(planMetadata);
@@ -929,7 +929,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         final var simulationEndTime = planMetadata.horizon().getEndInstant();
         final var micros = java.time.Duration.between(simulationStartTime, simulationEndTime).toNanos() / 1000;
         final var duration = Duration.of(micros, MICROSECOND);
-        return Optional.of(new SimulationResults(
+        return Optional.of(Pair.of(new SimulationResults(
             unwrappedProfiles.realProfiles(),
             unwrappedProfiles.discreteProfiles(),
             simulatedActivities,
@@ -938,7 +938,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
             duration,
             List.of(),
             new TreeMap<>()
-        ));
+        ), simulationDatasetId.get().datasetId));
       } catch (InterruptedException | ExecutionException e) {
         return Optional.empty();
       }

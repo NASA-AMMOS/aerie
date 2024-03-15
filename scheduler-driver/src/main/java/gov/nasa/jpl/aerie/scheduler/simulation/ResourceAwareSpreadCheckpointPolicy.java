@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Policy for saving simulation checkpoints in a cache.
@@ -39,7 +39,7 @@ public class ResourceAwareSpreadCheckpointPolicy implements Function<CheckpointS
   }
 
   @Override
-  public Boolean apply(final Duration duration, final Duration duration2) {
-    return function.apply(duration, duration2);
+  public Boolean apply(final CheckpointSimulationDriver.SimulationState simulationState) {
+    return function.apply(simulationState);
   }
 }
