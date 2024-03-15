@@ -164,7 +164,7 @@ public class SimulationDuplicationTest {
   }
 
   @Test
-  void testFooDuplicateEmptyPlan() {
+  void testCompareCheckpointOnEmptyPlan() {
     final MissionModel<Mission> missionModel = makeMissionModel(
         new MissionModelBuilder(),
         Instant.EPOCH,
@@ -195,8 +195,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         new Configuration());
     final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
-        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
-        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+        activityFrom(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activityFrom(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
     final var results = simulateWithCheckpoints(
         missionModel,
@@ -237,8 +237,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         new Configuration());
     final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
-        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
-        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+        activityFrom(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activityFrom(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
     final var results = simulateWithCheckpoints(
         missionModel,
@@ -290,8 +290,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         new Configuration());
     final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
-        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
-        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+        activityFrom(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activityFrom(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
     final var results = simulateWithCheckpoints(
         missionModel,
@@ -342,18 +342,18 @@ public class SimulationDuplicationTest {
         new MissionModelBuilder(),
         Instant.EPOCH,
         new Configuration());
-    final Pair<ActivityDirectiveId, ActivityDirective> activity1 = activity(
+    final Pair<ActivityDirectiveId, ActivityDirective> activity1 = activityFrom(
         1,
         MINUTE,
         "foo",
         Map.of("z", SerializedValue.of(123)));
     final Map<ActivityDirectiveId, ActivityDirective> schedule1 = Map.ofEntries(
         activity1,
-        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+        activityFrom(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
     final Map<ActivityDirectiveId, ActivityDirective> schedule2 = Map.ofEntries(
         activity1,
-        activity(390, SECONDS, "foo", Map.of("z", SerializedValue.of(999)))
+        activityFrom(390, SECONDS, "foo", Map.of("z", SerializedValue.of(999)))
     );
     final var results = simulateWithCheckpoints(
         missionModel,
@@ -410,18 +410,11 @@ public class SimulationDuplicationTest {
 
   private static long nextActivityDirectiveId = 0L;
 
-  private static Pair<ActivityDirectiveId, ActivityDirective> activity(final long quantity, final Duration unit, final String type) {
-    return activity(quantity, unit, type, Map.of());
-  }
-  private static Pair<ActivityDirectiveId, ActivityDirective> activity(final Duration startOffset, final String type) {
-    return activity(startOffset, type, Map.of());
+  private static Pair<ActivityDirectiveId, ActivityDirective> activityFrom(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> args) {
+    return activityFrom(Duration.of(quantity, unit), type, args);
   }
 
-  private static Pair<ActivityDirectiveId, ActivityDirective> activity(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> args) {
-    return activity(Duration.of(quantity, unit), type, args);
-  }
-
-  private static Pair<ActivityDirectiveId, ActivityDirective> activity(final Duration startOffset, final String type, final Map<String, SerializedValue> args) {
+  private static Pair<ActivityDirectiveId, ActivityDirective> activityFrom(final Duration startOffset, final String type, final Map<String, SerializedValue> args) {
     return Pair.of(new ActivityDirectiveId(nextActivityDirectiveId++), new ActivityDirective(startOffset, type, args, null, true));
   }
 
