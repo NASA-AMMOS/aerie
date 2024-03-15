@@ -148,16 +148,16 @@ public final class SimulationDriver {
           final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
           timeline.add(commit);
         }
-        return SimulationEngine.computeResults(
-            engine,
-            simulationStartTime,
-            elapsedTime,
-            activityTopic,
-            timeline,
-            missionModel.getTopics());
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
+      return SimulationEngine.computeResults(
+          engine,
+          simulationStartTime,
+          elapsedTime,
+          activityTopic,
+          timeline,
+          missionModel.getTopics());
     }
   }
   public static <Model, Return>
