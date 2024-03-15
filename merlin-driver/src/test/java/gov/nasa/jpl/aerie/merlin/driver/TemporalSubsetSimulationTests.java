@@ -13,8 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-import static gov.nasa.jpl.aerie.merlin.driver.AnchorSimulationTest.AnchorsSimulationDriverTests.AnchorTestModel;
-import static gov.nasa.jpl.aerie.merlin.driver.AnchorSimulationTest.AnchorsSimulationDriverTests.modelTopicList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -117,11 +115,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart,
         fiveDays,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart,
         fiveDays,
@@ -169,11 +167,11 @@ public class TemporalSubsetSimulationTests {
         Map.of(), //The last activity starts an hour before the simulation ends
         planStart.plus(5, ChronoUnit.DAYS),
         fiveDays,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(5, ChronoUnit.DAYS),
         fiveDays,
@@ -239,11 +237,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(3, ChronoUnit.DAYS),
         fiveDays,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(3, ChronoUnit.DAYS),
         fiveDays,
@@ -303,11 +301,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(-2, ChronoUnit.DAYS),
         fiveDays,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(-2, ChronoUnit.DAYS),
         fiveDays,
@@ -356,11 +354,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(8, ChronoUnit.DAYS),
         fiveDays,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(8, ChronoUnit.DAYS),
         fiveDays,
@@ -597,11 +595,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
@@ -758,11 +756,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
@@ -953,11 +951,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(3, ChronoUnit.HOURS),
         fourAndAHalfHours,
@@ -998,11 +996,11 @@ public class TemporalSubsetSimulationTests {
         unfinishedActivities,
         planStart.plus(12, ChronoUnit.HOURS),
         Duration.ZERO,
-        modelTopicList,
+        TestMissionModel.getModelTopicList(),
         new TreeMap<>() //events
     );
     final var actualSimResults = SimulationDriver.simulate(
-        AnchorTestModel,
+        TestMissionModel.missionModel(),
         activitiesInPlan,
         planStart.plus(12, ChronoUnit.HOURS),
         Duration.ZERO,
