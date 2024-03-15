@@ -51,6 +51,9 @@ import java.util.function.Consumer;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  /* Controls automatic pushing of spans when certain topics receive events */
+  private final boolean createSpanOnEmit;
+  private final Set<Topic<?>> topicsToTriggerPushSpan;
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
   /** The set of all jobs waiting on a condition. */
@@ -76,6 +79,11 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+
+  public SimulationEngine(final boolean createSpanOnEmit, final Set<Topic<?>> topicsToTriggerPushSpan) {
+    this.createSpanOnEmit = createSpanOnEmit;
+    this.topicsToTriggerPushSpan = topicsToTriggerPushSpan;
+  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> SpanId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
@@ -667,6 +675,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     @Override
     public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
+      if (SimulationEngine.this.createSpanOnEmit && SimulationEngine.this.topicsToTriggerPushSpan.contains(topic)) this.pushSpan();
       // Append this event to the timeline.
       this.frame.emit(Event.create(topic, event, this.span));
 

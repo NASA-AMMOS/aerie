@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -14,8 +15,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -53,7 +56,7 @@ public final class SimulationDriver {
       final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   ) {
-    try (final var engine = new SimulationEngine()) {
+    try (final var engine = makeSimulationEngine(missionModel)) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
       var cells = new LiveCells(timeline, missionModel.getInitialCells());
@@ -141,7 +144,7 @@ public final class SimulationDriver {
 
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-    try (final var engine = new SimulationEngine()) {
+    try (final var engine = makeSimulationEngine(missionModel)) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
       var cells = new LiveCells(timeline, missionModel.getInitialCells());
@@ -183,6 +186,21 @@ public final class SimulationDriver {
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
         timeline.add(commit);
       }
+    }
+  }
+
+  public static <Model> SimulationEngine makeSimulationEngine(MissionModel<Model> missionModel) {
+    if (missionModel.getMerlinPluginVersion().equals(MerlinPluginVersion.V0)) {
+      final var topicsToTriggerPushSpan = new HashSet<Topic<?>>();
+      for (final var topic : missionModel.getTopics()) {
+        if (!topic.name().startsWith("ActivityType.Input.")) continue;
+        topicsToTriggerPushSpan.add(topic.topic());
+      }
+      return new SimulationEngine(
+          true,
+          topicsToTriggerPushSpan);
+    } else {
+      return new SimulationEngine(false, Set.of());
     }
   }
 

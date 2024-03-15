@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.banananation;
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -17,7 +18,7 @@ public final class SimulationUtility {
     final var registry = DirectiveTypeRegistry.extract(factory);
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
     final var model = factory.instantiate(planStart, config, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, MerlinPluginVersion.V1);
   }
 
   public static SimulationResults

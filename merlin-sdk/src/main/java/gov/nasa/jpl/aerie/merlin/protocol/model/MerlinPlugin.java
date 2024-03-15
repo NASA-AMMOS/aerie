@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
+
 /**
  * A reflection-friendly service for interacting with a simulation model.
  *
@@ -21,4 +23,14 @@ public interface MerlinPlugin {
    *   The model type associated with this plugin.
    */
   ModelType<?, ?> getModelType();
+
+  /**
+   * Gets the version of the merlin plugin against which this plugin was compiled
+   *
+   * @return
+   *   The version of the merlin plugin against which this plugin was compiled
+   */
+  default MerlinPluginVersion getMerlinPluginVersion() {
+    return MerlinPluginVersion.V0;
+  }
 }

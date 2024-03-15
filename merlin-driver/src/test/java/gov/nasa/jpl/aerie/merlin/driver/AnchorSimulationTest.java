@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
@@ -1221,7 +1222,8 @@ public final class AnchorSimulationTest {
                 return new Object();
               }
             }
-        )
+        ),
+        MerlinPluginVersion.V1
     );
     //endregion
   }

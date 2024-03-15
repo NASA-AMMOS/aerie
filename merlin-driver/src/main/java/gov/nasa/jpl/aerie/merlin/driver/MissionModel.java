@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
@@ -21,6 +22,7 @@ public final class MissionModel<Model> {
   private final List<SerializableTopic<?>> topics;
   private final DirectiveTypeRegistry<Model> directiveTypes;
   private final List<TaskFactory<?>> daemons;
+  private final MerlinPluginVersion merlinPluginVersion;
 
   public MissionModel(
       final Model model,
@@ -28,7 +30,8 @@ public final class MissionModel<Model> {
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
       final List<TaskFactory<?>> daemons,
-      final DirectiveTypeRegistry<Model> directiveTypes)
+      final DirectiveTypeRegistry<Model> directiveTypes,
+      final MerlinPluginVersion merlinPluginVersion)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
@@ -36,6 +39,7 @@ public final class MissionModel<Model> {
     this.topics = Collections.unmodifiableList(topics);
     this.directiveTypes = Objects.requireNonNull(directiveTypes);
     this.daemons = Collections.unmodifiableList(daemons);
+    this.merlinPluginVersion = merlinPluginVersion;
   }
 
   public Model getModel() {
@@ -81,4 +85,8 @@ public final class MissionModel<Model> {
       Topic<EventType> topic,
       OutputType<EventType> outputType
   ) {}
+
+  public MerlinPluginVersion getMerlinPluginVersion() {
+    return this.merlinPluginVersion;
+  }
 }

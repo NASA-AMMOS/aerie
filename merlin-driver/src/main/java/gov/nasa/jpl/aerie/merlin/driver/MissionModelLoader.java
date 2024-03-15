@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -35,7 +36,7 @@ public final class MissionModelLoader {
         final var service = loadMissionModelProvider(path, name, version);
         final var modelType = service.getModelType();
         final var builder = new MissionModelBuilder();
-        return loadMissionModel(planStart, missionModelConfig, modelType, builder);
+        return loadMissionModel(planStart, missionModelConfig, modelType, builder, service.getMerlinPluginVersion());
     }
 
     private static <Config, Model>
@@ -43,7 +44,8 @@ public final class MissionModelLoader {
         final Instant planStart,
         final SerializedValue missionModelConfig,
         final ModelType<Config, Model> modelType,
-        final MissionModelBuilder builder)
+        final MissionModelBuilder builder,
+        final MerlinPluginVersion merlinPluginVersion)
     {
         try {
             final var serializedConfigMap = missionModelConfig.asMap().orElseThrow(() ->
@@ -52,7 +54,7 @@ public final class MissionModelLoader {
             final var config = modelType.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(modelType);
             final var model = modelType.instantiate(planStart, config, builder);
-            return builder.build(model, registry);
+            return builder.build(model, registry, merlinPluginVersion);
         } catch (final InstantiationException ex) {
             throw new MissionModelInstantiationException(ex);
         }

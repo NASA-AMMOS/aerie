@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 
 import java.time.Instant;

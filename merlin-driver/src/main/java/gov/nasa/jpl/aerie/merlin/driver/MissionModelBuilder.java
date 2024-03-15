@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -62,15 +63,16 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   public <Model>
-  MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
-    return this.state.build(model, registry);
+  MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry, final MerlinPluginVersion merlinPluginVersion) {
+    return this.state.build(model, registry, merlinPluginVersion);
   }
 
   private interface MissionModelBuilderState extends Initializer {
     <Model> MissionModel<Model>
     build(
         Model model,
-        DirectiveTypeRegistry<Model> registry);
+        DirectiveTypeRegistry<Model> registry,
+        MerlinPluginVersion merlinPluginVersion);
   }
 
   private final class UnbuiltState implements MissionModelBuilderState {
@@ -137,14 +139,15 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
+    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry, final MerlinPluginVersion merlinPluginVersion) {
       final var missionModel = new MissionModel<>(
           model,
           this.initialCells,
           this.resources,
           this.topics,
           this.daemons,
-          registry);
+          registry,
+          MerlinPluginVersion.V0);
 
       MissionModelBuilder.this.state = new BuiltState();
 
@@ -192,7 +195,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry) {
+    MissionModel<Model> build(final Model model, final DirectiveTypeRegistry<Model> registry, final MerlinPluginVersion merlinPluginVersion) {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }

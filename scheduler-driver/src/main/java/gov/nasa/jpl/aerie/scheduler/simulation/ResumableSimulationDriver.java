@@ -33,6 +33,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import static gov.nasa.jpl.aerie.merlin.driver.SimulationDriver.makeSimulationEngine;
+
 public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private final Supplier<Boolean> canceledListener;
 
@@ -42,7 +44,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   /* The current real time. All the tasks before and at this time have been performed.
  Simulation has not started so it is set to MIN_VALUE. */
   private Duration curTime = Duration.MIN_VALUE;
-  private SimulationEngine engine = new SimulationEngine();
+  private SimulationEngine engine;
   private LiveCells cells;
   private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
@@ -74,6 +76,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       Duration planDuration,
       Supplier<Boolean> canceledListener
   ){
+    this.engine = makeSimulationEngine(missionModel);
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     toCheckForDependencyScheduling = new HashMap<>();
@@ -105,7 +108,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     lastSimResultsEnd = Duration.ZERO;
     long before = System.nanoTime();
     if (this.engine != null) this.engine.close();
-    this.engine = new SimulationEngine();
+    this.engine = makeSimulationEngine(missionModel);
     batch = null;
     /* The top-level simulation timeline. */
     this.timeline = new TemporalEventSource();

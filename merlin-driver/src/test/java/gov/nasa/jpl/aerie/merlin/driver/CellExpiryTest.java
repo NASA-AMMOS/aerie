@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
@@ -147,6 +148,6 @@ public final class CellExpiryTest {
 
     initializer.resource(resourceName, resource);
 
-    return initializer.build(ref, new DirectiveTypeRegistry<>(Map.of()));
+    return initializer.build(ref, new DirectiveTypeRegistry<>(Map.of()), MerlinPluginVersion.V1);
   }
 }

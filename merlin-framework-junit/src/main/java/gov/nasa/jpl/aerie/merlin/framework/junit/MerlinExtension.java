@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -131,7 +132,7 @@ public final class MerlinExtension
         throw ex.wrapped;
       }
 
-      this.missionModel = this.builder.build(Unit.UNIT, new DirectiveTypeRegistry<>(Map.of()));
+      this.missionModel = this.builder.build(Unit.UNIT, new DirectiveTypeRegistry<>(Map.of()), MerlinPluginVersion.V0);
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;

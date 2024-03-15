@@ -13,13 +13,15 @@ import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import java.nio.file.Path;
 import java.time.Instant;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion.V1;
+
 public final class SimulationUtility {
 
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, V1);
   }
 
   public static MissionModel<Mission>
@@ -29,7 +31,7 @@ public final class SimulationUtility {
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
-    return builder.build(model, registry);
+    return builder.build(model, registry, V1);
   }
 
   public static Problem buildProblemFromFoo(final PlanningHorizon planningHorizon){

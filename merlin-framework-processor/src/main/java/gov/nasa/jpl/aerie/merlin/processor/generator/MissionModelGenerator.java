@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.MerlinPluginVersion;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
@@ -81,6 +82,16 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addStatement(
                         "return new $T()",
                         missionModel.getModelTypeName())
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getMerlinPluginVersion")
+                    .addAnnotation(Override.class)
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(MerlinPluginVersion.class)
+                    .addStatement(
+                        "return $T.V1",
+                        MerlinPluginVersion.class)
                     .build())
             .build();
 
