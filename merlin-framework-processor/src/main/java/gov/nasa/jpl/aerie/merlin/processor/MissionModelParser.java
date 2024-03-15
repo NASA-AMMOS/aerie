@@ -70,6 +70,8 @@ import java.util.stream.Collectors;
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
+    verifyChildrenNames(activityTypes);
+
     return new MissionModelRecord(
         missionModelElement,
         topLevelModel.type,
@@ -77,6 +79,21 @@ import java.util.stream.Collectors;
         topLevelModel.configurationType,
         typeRules,
         activityTypes);
+  }
+
+  private void verifyChildrenNames(final List<ActivityTypeRecord> activityTypeRecords)
+  throws InvalidMissionModelException
+  {
+    final var allActivityNames = activityTypeRecords.stream().map(ActivityTypeRecord::name).collect(Collectors.toSet());
+    for(final var activityTypeRecord:activityTypeRecords){
+      if(activityTypeRecord.effectModel().isPresent() && activityTypeRecord.effectModel().get().children().isPresent()){
+        for(final var childName: activityTypeRecord.effectModel().get().children().get()){
+          if(!allActivityNames.contains(childName)){
+            throw new InvalidMissionModelException(childName + " has been declared as a child of "+ activityTypeRecord.name() + " with the @AllChildren annotation but it is not a valid activity type name.");
+          }
+        }
+      }
+    }
   }
 
   private record MissionModelTypeRecord(
@@ -550,6 +567,7 @@ import java.util.stream.Collectors;
   {
     Optional<String> fixedDuration = Optional.empty();
     Optional<String> parameterizedDuration = Optional.empty();
+    Optional<String[]> children = Optional.empty();
     for (final var element: activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.FixedDuration.class) != null) {
         if (fixedDuration.isPresent()) throw new InvalidMissionModelException(
@@ -581,6 +599,13 @@ import java.util.stream.Collectors;
         );
 
         parameterizedDuration = Optional.of(executableElement.getSimpleName().toString());
+      } else if (element.getAnnotation(ActivityType.AllChildren.class) != null) {
+        if (children.isPresent()) throw new InvalidMissionModelException(
+            "AllChildren annotation cannot be applied multiple times in one activity type."
+        );
+        if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException(
+            "AllChildren method annotation must be an executable element.");
+        children = Optional.of(element.getAnnotation(ActivityType.AllChildren.class).children());
       }
     }
 
@@ -609,7 +634,7 @@ import java.util.stream.Collectors;
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration, children));
     }
 
     return Optional.empty();

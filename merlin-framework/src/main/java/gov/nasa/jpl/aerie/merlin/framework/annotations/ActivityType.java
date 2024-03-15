@@ -134,4 +134,10 @@ public @interface ActivityType {
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
   @interface ParametricDuration {}
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.METHOD)
+  @interface AllChildren {
+    String[] children();
+  }
 }
