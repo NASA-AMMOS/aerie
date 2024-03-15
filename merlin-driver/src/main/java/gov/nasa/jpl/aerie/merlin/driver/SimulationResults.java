@@ -59,18 +59,16 @@ public final class SimulationResults {
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (!(o instanceof SimulationResults that)) return false;
 
-    SimulationResults that = (SimulationResults) o;
-
-    if (!startTime.equals(that.startTime)) return false;
-    if (!duration.isEqualTo(that.duration)) return false;
-    if (!realProfiles.equals(that.realProfiles)) return false;
-    if (!discreteProfiles.equals(that.discreteProfiles)) return false;
-    if (!simulatedActivities.equals(that.simulatedActivities)) return false;
-    if (!unfinishedActivities.equals(that.unfinishedActivities)) return false;
-    if (!topics.equals(that.topics)) return false;
-    return events.equals(that.events);
+    return startTime.equals(that.startTime)
+           && duration.isEqualTo(that.duration)
+           && realProfiles.equals(that.realProfiles)
+           && discreteProfiles.equals(that.discreteProfiles)
+           && simulatedActivities.equals(that.simulatedActivities)
+           && unfinishedActivities.equals(that.unfinishedActivities)
+           && topics.equals(that.topics)
+           && events.equals(that.events);
   }
 
   @Override
