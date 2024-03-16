@@ -12,34 +12,45 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
   { graphqlClient: GraphQLClient; activitySchemaDataLoader: InferredDataloader<typeof activitySchemaBatchLoader> }
 > = opts => async keys => {
   const result = await opts.graphqlClient.batchRequests<
-    {
-      data: {
-        simulated_activity: GraphQLSimulatedActivityInstance[];
-      };
-    }[]
+      {
+        data: {
+          simulation_dataset: {
+            id: number,
+            simulation: {
+              plan: {
+                id: number,
+                model_id: number
+              }
+            },
+            simulation_start_time: string,
+            dataset: { spans: GQLSpan[]},
+          }
+        };
+      }[]
   >(
     keys.map(key => ({
       document: gql`
         query ($simulationDatasetId: Int!) {
-          simulated_activity(where: { simulation_dataset_id: { _eq: $simulationDatasetId } }) {
+          simulation_dataset: simulation_dataset_by_pk(id: $simulationDatasetId) {
             id
-            simulation_dataset {
-              id
-              simulation {
-                plan {
-                  model_id
-                }
+            simulation {
+              plan {
+                model_id
+                id
               }
             }
-            attributes
-            start_offset
-            start_time
-            end_time
-            duration
-            activity_type_name
+            simulation_start_time
+            dataset {
+              spans {
+                id
+                attributes
+                start_offset
+                duration
+                activity_type_name: type
+              }
+            }
           }
-        }
-      `,
+        }`,
       variables: {
         simulationDatasetId: key.simulationDatasetId,
       },
@@ -48,18 +59,37 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
 
   return Promise.all(
     keys.map(async ({ simulationDatasetId }) => {
-      const simulatedActivities = result.find(
-        res => res.data.simulated_activity[0]?.simulation_dataset.id === simulationDatasetId,
-      )?.data.simulated_activity;
-      if (simulatedActivities === undefined) {
+      const simulation_dataset = result.find(
+        res => res.data.simulation_dataset.id === simulationDatasetId,
+      )?.data.simulation_dataset;
+      if (simulation_dataset === undefined) {
         return new ErrorWithStatusCode(`No simulation_dataset with id: ${simulationDatasetId}`, 404);
       }
+
+      const spans = simulation_dataset.dataset.spans;
+
+      const simulatedActivities: GraphQLSimulatedActivityInstance[] = spans.map(span => {
+            return {
+              id: span.id,
+              simulation_dataset_id: simulation_dataset.id,
+              plan_id: simulation_dataset.simulation.plan.id,
+              model_id: simulation_dataset.simulation.plan.model_id,
+              attributes: span.attributes,
+              duration: span.duration,
+              start_offset: span.start_offset,
+              // TODO: Sum this intervals + durations properly
+              start_time: simulation_dataset.simulation_start_time + span.start_offset,
+              end_time: simulation_dataset.simulation_start_time + span.start_offset + span.duration,
+              activity_type_name: span.activity_type_name
+            }
+          }
+      )
       return Promise.all(
         simulatedActivities.map(async simulatedActivity =>
           mapGraphQLActivityInstance(
             simulatedActivity,
             await opts.activitySchemaDataLoader.load({
-              missionModelId: simulatedActivity.simulation_dataset.simulation.plan.model_id,
+              missionModelId: simulation_dataset.simulation.plan.model_id,
               activityTypeName: simulatedActivity.activity_type_name,
             }),
           ),
@@ -77,35 +107,43 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
   const result = await opts.graphqlClient.batchRequests<
     {
       data: {
-        simulated_activity: GraphQLSimulatedActivityInstance[];
+        simulation_dataset: {
+          id: number,
+          simulation_start_time: string,
+          simulation: {
+            plan: {
+              id: number,
+              model_id: number,
+            }
+          },
+          dataset: {span: GQLSpan}
+        };
       };
     }[]
   >(
     keys.map(key => ({
       document: gql`
         query ($simulationDatasetId: Int!, $simulatedActivityId: Int!) {
-          simulated_activity(
-            where: { simulation_dataset_id: { _eq: $simulationDatasetId }, id: { _eq: $simulatedActivityId } }
-          ) {
+          simulation_dataset: simulation_dataset_by_pk(id: $simulationDatasetId) {
             id
-            simulation_dataset {
-              id
-              simulation {
-                plan {
-                  model_id
-                }
-                plan_id
+            simulation_start_time
+            simulation {
+              plan {
+                id
+                model_id
               }
             }
-            attributes
-            start_offset
-            start_time
-            end_time
-            duration
-            activity_type_name
+            dataset {
+              spans: spans(where: {id: {_eq: $simulatedActivityId}}) {
+                id
+                attributes
+                start_offset
+                duration
+                activity_type_name: type
+              }
+            }
           }
-        }
-      `,
+        }`,
       variables: {
         simulationDatasetId: key.simulationDatasetId,
         simulatedActivityId: key.simulatedActivityId,
@@ -115,21 +153,42 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
 
   return Promise.all(
     keys.map(async ({ simulationDatasetId, simulatedActivityId }) => {
-      const simulatedActivity = result.find(
+      const simulation_dataset = result.find(
         res =>
-          res.data.simulated_activity[0]?.simulation_dataset.id === simulationDatasetId &&
-          res.data.simulated_activity[0]?.id === simulatedActivityId,
-      )?.data.simulated_activity[0];
-      if (simulatedActivity === undefined) {
+          res.data.simulation_dataset.id === simulationDatasetId
+      )?.data.simulation_dataset;
+      if (simulation_dataset === undefined) {
         return new ErrorWithStatusCode(
-          `No simulation_dataset with id: ${simulationDatasetId} and simulated activity id: ${simulatedActivityId}`,
-          404,
+            `No simulation_dataset with id: ${simulationDatasetId}`,
+            404,
         );
+      }
+
+      const span = simulation_dataset.dataset.span
+      if(span === undefined) {
+        return new ErrorWithStatusCode(
+            `No simulation_dataset with id: ${simulationDatasetId} and simulated activity id: ${simulatedActivityId}`,
+            404,
+        );
+      }
+
+      const simulatedActivity: GraphQLSimulatedActivityInstance = {
+        id: span.id,
+        simulation_dataset_id: simulation_dataset.id,
+        plan_id: simulation_dataset.simulation.plan.id,
+        model_id: simulation_dataset.simulation.plan.model_id,
+        attributes: span.attributes,
+        duration: span.duration,
+        start_offset: span.start_offset,
+        // TODO: Sum this intervals + durations properly
+        start_time: simulation_dataset.simulation_start_time + span.start_offset,
+        end_time: simulation_dataset.simulation_start_time + span.start_offset + span.duration,
+        activity_type_name: span.activity_type_name
       }
       return mapGraphQLActivityInstance(
         simulatedActivity,
         await opts.activitySchemaDataLoader.load({
-          missionModelId: simulatedActivity.simulation_dataset.simulation.plan.model_id,
+          missionModelId: simulation_dataset.simulation.plan.model_id,
           activityTypeName: simulatedActivity.activity_type_name,
         }),
       );
@@ -173,20 +232,25 @@ export interface SimulatedActivity<
   activityTypeName: string;
 }
 
+export interface GQLSpan<
+  ActivityArguments extends Record<string, unknown> = Record<string, unknown>,
+  ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
+> {
+  id: number
+  attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
+  start_offset: string;
+  duration: string;
+  activity_type_name: string;
+}
+
 export interface GraphQLSimulatedActivityInstance<
   ActivityArguments extends Record<string, unknown> = Record<string, unknown>,
   ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
 > {
   id: number;
-  simulation_dataset: {
-    id: number;
-    simulation: {
-      plan: {
-        model_id: number;
-      };
-      plan_id: number;
-    };
-  };
+  simulation_dataset_id: number;
+  plan_id: number;
+  model_id: number;
   attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   duration: string;
   start_offset: string;
@@ -202,7 +266,7 @@ export function mapGraphQLActivityInstance(
   return {
     simulationDataset: {
       simulation: {
-        planId: activityInstance.simulation_dataset.simulation.plan_id,
+        planId: activityInstance.model_id
       },
     },
     id: activityInstance.id,
@@ -210,7 +274,7 @@ export function mapGraphQLActivityInstance(
     startOffset: Temporal.Duration.from(parse(activityInstance.start_offset).toISOString()),
     startTime: Temporal.Instant.from(activityInstance.start_time),
     endTime: activityInstance.end_time ? Temporal.Instant.from(activityInstance.end_time) : null,
-    simulationDatasetId: activityInstance.simulation_dataset.id,
+    simulationDatasetId: activityInstance.simulation_dataset_id,
     activityTypeName: activityInstance.activity_type_name,
     attributes: {
       arguments: Object.entries(activityInstance.attributes.arguments).reduce((acc, [key, value]) => {
