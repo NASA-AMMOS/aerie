@@ -15,8 +15,8 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   }
 
   // Fetch latest mission model
-  const { mission_model_aggregate } = await getLatestMissionModel(graphqlClient);
-  if (!mission_model_aggregate) {
+  const { mission_model_aggregate: {aggregate: {max: {id: missionModelId} } } } = await getLatestMissionModel(graphqlClient);
+  if (!missionModelId) {
     console.log(
       '[ Background Transpiler ] Unable to fetch the latest mission model. Aborting background transpiling...',
     );
@@ -24,16 +24,14 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   }
 
   // Fetch latest command dictionary
-  const { command_dictionary_aggregate } = await getLatestCommandDictionary(graphqlClient);
-  if (!command_dictionary_aggregate) {
+  const { command_dictionary_aggregate: {aggregate: {max: {id: commandDictionaryId} } } } = await getLatestCommandDictionary(graphqlClient);
+  if (!commandDictionaryId) {
     console.log(
       '[ Background Transpiler ] Unable to fetch the latest command dictionary. Aborting background transpiling...',
     );
     return;
   }
 
-  const commandDictionaryId = command_dictionary_aggregate.aggregate.max.id;
-  const missionModelId = mission_model_aggregate.aggregate.max.id;
   const { expansion_rule } = await getExpansionRule(graphqlClient, missionModelId, commandDictionaryId);
 
   if (expansion_rule === null || expansion_rule.length === 0) {
