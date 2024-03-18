@@ -166,6 +166,13 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
         );
       }
 
+      if(spans.length > 1) {
+        return new ErrorWithStatusCode(
+            `Too many spans with simulated activity id ${simulatedActivityId} found for simulation_dataset with id ${simulationDatasetId}`,
+            404,
+        );
+      }
+
       const span = spans[0];
       const simulatedActivity: GraphQLSimulatedActivityInstance = {
         id: span.id,
