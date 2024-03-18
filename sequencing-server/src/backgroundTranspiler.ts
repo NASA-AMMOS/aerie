@@ -49,7 +49,7 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   });
 
   const commandTypes = await commandTypescriptDataLoader.load({
-    dictionaryId: missionModelId,
+    dictionaryId: commandDictionaryId,
   });
 
   if (commandTypes === null) {

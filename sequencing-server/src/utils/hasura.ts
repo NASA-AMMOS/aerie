@@ -453,7 +453,7 @@ export async function getExpansionRule(
   }>(
     gql`
         query GetExpansonLogic {
-          expansion_rule(where: {authoring_command_dict_id: {_eq: ${missionModelId}}, authoring_mission_model_id: {_eq: ${commandDictionaryId} }}) {
+          expansion_rule(where: {authoring_command_dict_id: {_eq: ${commandDictionaryId}}, authoring_mission_model_id: {_eq: ${missionModelId} }}) {
             id
             activity_type
             expansion_logic
