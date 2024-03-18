@@ -15,12 +15,13 @@ import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setDuration;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
 
 /*package-local*/ final class InsertSimulationEventsAction implements AutoCloseable {
   @Language("SQL") private static final String sql = """
       insert into event (dataset_id, real_time, transaction_index, causal_time, topic_index, value)
-      values (?, ?::timestamptz - ?::timestamptz, ?, ?, ?, ?::jsonb)
+      values (?, ?::interval, ?, ?, ?, ?::jsonb)
     """;
 
   private final PreparedStatement statement;
@@ -31,8 +32,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
   public void apply(
       final long datasetId,
-      final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints,
-      final Timestamp simulationStart
+      final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints
   ) throws SQLException {
     for (final var eventPoint : eventPoints.entrySet()) {
       final var time = eventPoint.getKey();
@@ -40,7 +40,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       for (int transactionIndex = 0; transactionIndex < transactions.size(); transactionIndex++) {
         final var eventGraph = transactions.get(transactionIndex);
         final var flattenedEventGraph = EventGraphFlattener.flatten(eventGraph);
-        batchInsertEventGraph(datasetId, time, transactionIndex, simulationStart, flattenedEventGraph, this.statement);
+        batchInsertEventGraph(datasetId, time, transactionIndex, flattenedEventGraph, this.statement);
       }
     }
     this.statement.executeBatch();
@@ -50,21 +50,19 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       final long datasetId,
       final Duration duration,
       final int transactionIndex,
-      final Timestamp simulationStart,
       final List<Pair<String, Pair<Integer, SerializedValue>>> flattenedEventGraph,
       final PreparedStatement statement
   ) throws SQLException {
-    for (final Pair<String, Pair<Integer, SerializedValue>> entry : flattenedEventGraph) {
+    for (final var entry : flattenedEventGraph) {
       final var causalTime = entry.getLeft();
-      final Pair<Integer, SerializedValue> event = entry.getRight();
+      final var event = entry.getRight();
 
       statement.setLong(1, datasetId);
-      setTimestamp(statement, 2, simulationStart.plusMicros(duration.in(MICROSECONDS)));
-      setTimestamp(statement, 3, simulationStart);
-      statement.setInt(4, transactionIndex);
-      statement.setString(5, causalTime);
-      statement.setInt(6, event.getLeft());
-      statement.setString(7, serializedValueP.unparse(event.getRight()).toString());
+      setDuration(statement, 2, duration);
+      statement.setInt(3, transactionIndex);
+      statement.setString(4, causalTime);
+      statement.setInt(5, event.getLeft());
+      statement.setString(6, serializedValueP.unparse(event.getRight()).toString());
 
       statement.addBatch();
     }
