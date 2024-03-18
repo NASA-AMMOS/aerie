@@ -384,6 +384,18 @@ public enum GQL {
         status
       }
     }"""),
+  GET_SIMULATION_CONFIGURATION("""
+    query GetSimConfig($planId: Int!) {
+      sim_config: simulation(where: {plan_id: {_eq:$planId}}) {
+        id
+        revision
+        plan_id
+        simulation_template_id
+        arguments
+        simulation_start_time
+        simulation_end_time
+      }
+    }"""),
   GET_SIMULATION_DATASET("""
     query GetSimulationDataset($id: Int!) {
       simulationDataset: simulation_dataset_by_pk(id: $id) {
@@ -496,6 +508,14 @@ public enum GQL {
   SIMULATE("""
     query Simulate($plan_id: Int!) {
       simulate(planId: $plan_id){
+        status
+        reason
+        simulationDatasetId
+      }
+    }"""),
+  SIMULATE_FORCE("""
+    query SimulateForce($plan_id: Int!, $force: Boolean) {
+      simulate(planId: $plan_id, force: $force){
         status
         reason
         simulationDatasetId

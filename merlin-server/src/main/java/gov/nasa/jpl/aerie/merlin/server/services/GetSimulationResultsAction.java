@@ -35,11 +35,11 @@ public final class GetSimulationResultsAction {
     this.simulationService = Objects.requireNonNull(simulationService);
   }
 
-  public Response run(final PlanId planId, final HasuraAction.Session session)
+  public Response run(final PlanId planId, final boolean forceResim, final HasuraAction.Session session)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException {
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
-    final var response = this.simulationService.getSimulationResults(planId, revisionData, session.hasuraUserId());
+    final var response = this.simulationService.getSimulationResults(planId, forceResim, revisionData, session.hasuraUserId());
 
     if (response instanceof ResultsProtocol.State.Pending r) {
       return new Response.Pending(r.simulationDatasetId());

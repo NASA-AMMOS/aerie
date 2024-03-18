@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
 
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -53,6 +54,17 @@ public abstract class HasuraParsers {
       = hasuraActionF(productP
                           .field("planId", planIdP)
                           .map(HasuraAction.PlanInput::new, HasuraAction.PlanInput::planId));
+
+  public static final JsonParser<HasuraAction<HasuraAction.SimulateInput>> hasuraSimulateActionP
+      = hasuraActionF(
+          productP
+              .field("planId", planIdP)
+              .optionalField("force", nullableP(boolP))
+              .map(
+                  untuple((planId, force) -> new HasuraAction.SimulateInput(planId, force.flatMap($ -> $))),
+                  $ -> tuple($.planId(), Optional.of($.force()))
+              )
+  );
 
   public static final JsonParser<HasuraAction<HasuraAction.ConstraintViolationsInput>> hasuraConstraintsViolationsActionP
       = hasuraActionF(

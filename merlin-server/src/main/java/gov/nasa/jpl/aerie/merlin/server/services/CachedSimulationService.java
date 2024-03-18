@@ -14,17 +14,26 @@ public record CachedSimulationService (
 ) implements SimulationService {
 
   @Override
-  public ResultsProtocol.State getSimulationResults(final PlanId planId, final RevisionData revisionData, final String requestedBy) {
+  public ResultsProtocol.State getSimulationResults(
+      final PlanId planId,
+      final boolean forceResim,
+      final RevisionData revisionData,
+      final String requestedBy)
+  {
+    // If force resimulation is enabled, allocate a new cell regardless of whether there was already a valid cell
+    if (forceResim) {
+      return this.store.forceAllocate(planId, requestedBy).get();
+    }
+
     final var cell$ = this.store.lookup(planId);
     if (cell$.isPresent()) {
       return cell$.get().get();
-    } else {
-      // Allocate a fresh cell.
-      final var cell = this.store.allocate(planId, requestedBy);
-
-      // Return the current value of the reader; if it's incomplete, the caller can check it again later.
-      return cell.get();
     }
+
+    // Allocate a fresh cell.
+    final var cell = this.store.allocate(planId, requestedBy);
+    // Return the current value of the reader; if it's incomplete, the caller can check it again later.
+    return cell.get();
   }
 
   @Override

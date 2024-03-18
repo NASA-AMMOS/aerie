@@ -260,6 +260,16 @@ public class HasuraRequests implements AutoCloseable {
     return SimulationResponse.fromJSON(makeRequest(GQL.SIMULATE, variables).getJsonObject("simulate"));
   }
 
+  private SimulationResponse simulateForce(int planId, Boolean force) throws IOException {
+    final var variables = Json.createObjectBuilder().add("plan_id", planId);
+    if (force == null) {
+      variables.add("force", JsonValue.NULL);
+    } else {
+      variables.add("force", force);
+    }
+    return SimulationResponse.fromJSON(makeRequest(GQL.SIMULATE_FORCE, variables.build()).getJsonObject("simulate"));
+  }
+
   private SimulationDataset cancelSimulation(int simDatasetId, int timeout) throws IOException {
     final var variables = Json.createObjectBuilder().add("id", simDatasetId).build();
     makeRequest(GQL.CANCEL_SIMULATION, variables);
@@ -307,6 +317,47 @@ public class HasuraRequests implements AutoCloseable {
     throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
   }
 
+    /**
+   * Simulate the specified plan, potentially forcibly, with a timeout of 30 seconds
+   * @param planId the plan to simulate
+   * @param force whether to forcibly resimulate in the event of an existing dataset.
+   */
+  public SimulationResponse awaitSimulation(int planId, Boolean force) throws IOException {
+    return awaitSimulation(planId, force, 30);
+  }
+
+  /**
+   * Simulate the specified plan, potentially forcibly, with a set timeout
+   * @param planId the plan to simulate
+   * @param force whether to forcibly resimulate in the event of an existing dataset.
+   * @param timeout the length of the timeout, in seconds
+   */
+  public SimulationResponse awaitSimulation(int planId, Boolean force, int timeout) throws IOException {
+    for (int i = 0; i < timeout; ++i) {
+      final SimulationResponse response;
+      // Only use force on the initial request to avoid an infinite loop of making new sim requests
+      if (i == 0) {
+        response = simulateForce(planId, force);
+      } else {
+        response = simulate(planId);
+      }
+      switch (response.status()) {
+        case "pending", "incomplete" -> {
+          try {
+            Thread.sleep(1000); // 1s
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        case "complete" -> {
+          return response;
+        }
+        default -> fail("Simulation returned bad status " + response.status() + " with reason " + response.reason());
+      }
+    }
+    throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
+  }
+
   /**
    * Start and immediately cancel a simulation with a timeout of 30 seconds
    * @param planId the plan to simulate
@@ -349,6 +400,13 @@ public class HasuraRequests implements AutoCloseable {
   public int getSimulationId(int planId) throws IOException {
     final var variables = Json.createObjectBuilder().add("plan_id", planId).build();
     return makeRequest(GQL.GET_SIMULATION_ID, variables).getJsonArray("simulation").getJsonObject(0).getInt("id");
+  }
+
+  public SimulationConfiguration getSimConfig(int planId) throws IOException {
+    final var variables = Json.createObjectBuilder().add("planId", planId).build();
+    final var simConfig = makeRequest(GQL.GET_SIMULATION_CONFIGURATION, variables).getJsonArray("sim_config");
+    assertEquals(1, simConfig.size());
+    return SimulationConfiguration.fromJSON(simConfig.getJsonObject(0));
   }
 
   public int insertAndAssociateSimTemplate(int modelId, String description, JsonObject arguments, int simConfigId)
