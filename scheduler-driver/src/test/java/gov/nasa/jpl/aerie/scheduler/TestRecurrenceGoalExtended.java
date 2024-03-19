@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
+import static gov.nasa.jpl.aerie.scheduler.TestApplyWhen.dur;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -47,7 +49,7 @@ public class TestRecurrenceGoalExtended {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 1, 20), problem.getSimulationFacade().totalSimulationTime());
   }
 
   /**
@@ -76,7 +78,7 @@ public class TestRecurrenceGoalExtended {
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType) && (plan.getActivities().size() == 1));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 0, 20), problem.getSimulationFacade().totalSimulationTime());
   }
 
   /**
@@ -105,7 +107,7 @@ public class TestRecurrenceGoalExtended {
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 0, 20), problem.getSimulationFacade().totalSimulationTime());
   }
 
   /**
@@ -140,7 +142,7 @@ public class TestRecurrenceGoalExtended {
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(8, Duration.SECONDS), activityType));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 0, 20), problem.getSimulationFacade().totalSimulationTime());
   }
 
 
@@ -170,7 +172,7 @@ public class TestRecurrenceGoalExtended {
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.emptyPlan(plan));
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(ZERO, problem.getSimulationFacade().totalSimulationTime());
   }
 
 
@@ -200,7 +202,7 @@ public class TestRecurrenceGoalExtended {
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.emptyPlan(plan));
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 0, 0), problem.getSimulationFacade().totalSimulationTime());
   }
 
 
@@ -248,6 +250,6 @@ public class TestRecurrenceGoalExtended {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(5, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(10, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(15, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(dur(0, 1, 20), problem.getSimulationFacade().totalSimulationTime());
   }
 }

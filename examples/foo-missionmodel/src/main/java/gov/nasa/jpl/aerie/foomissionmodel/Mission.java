@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
+import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 
@@ -40,6 +41,8 @@ public final class Mission {
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
   public final TimeTrackerDaemon timeTrackerDaemon = new TimeTrackerDaemon();
+
+  public final Counter<Integer> counter = Counter.ofInteger();
 
   public Mission(final Registrar registrar, final Instant planStart, final Configuration config) {
     this.cachedRegistrar = registrar;
@@ -74,13 +77,20 @@ public final class Mission {
     registrar.real("/simple_data/b/rate", this.simpleData.b.rate);
     registrar.real("/simple_data/total_volume", this.simpleData.totalVolume);
 
+    registrar.discrete("/counter", this.counter, new IntegerValueMapper());
+
     spawn(timeTrackerDaemon::run);
 
-    spawn(() -> { // Register a never-ending daemon task
-      while (true) {
-        ModelActions.delay(Duration.SECOND);
+    spawn(replaying(new Runnable() {
+      @Override
+      public void run() { // Register a never-ending daemon task
+        for (int i = 0; i < 1000; i++) {
+          ModelActions.delay(Duration.SECOND);
+        }
+        counter.add(1);
+        spawn(this);
       }
-    });
+    }));
   }
 
   public void test() {

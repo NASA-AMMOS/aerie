@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
@@ -42,45 +43,89 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  private static int numActiveSimulationEngines = 0;
+  private boolean closed = false;
+
+  public static int getNumActiveSimulationEngines() {
+    return numActiveSimulationEngines;
+  }
+
   /** The set of all jobs waiting for time to pass. */
-  private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
+  private final JobSchedule<JobId, SchedulingInstant> scheduledJobs;
   /** The set of all jobs waiting on a given signal. */
-  private final Subscriptions<SignalId, TaskId> waitingTasks = new Subscriptions<>();
+  private final Subscriptions<SignalId, TaskId> waitingTasks;
   /** The set of conditions depending on a given set of topics. */
-  private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ConditionId> waitingConditions;
   /** The set of queries depending on a given set of topics. */
-  private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ResourceId> waitingResources;
 
   /** The execution state for every task. */
-  private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
+  private final Map<TaskId, ExecutionState<?>> tasks;
   /** The getter for each tracked condition. */
-  private final Map<ConditionId, Condition> conditions = new HashMap<>();
+  private final Map<ConditionId, Condition> conditions;
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  private final Map<ResourceId, ProfilingState<?>> resources;
 
   /** The task that spawned a given task (if any). */
-  private final Map<TaskId, TaskId> taskParent = new HashMap<>();
+  private final Map<TaskId, TaskId> taskParent;
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
-  private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
+  private final Map<TaskId, Set<TaskId>> taskChildren;
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
-  private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+  private final ExecutorService executor;
+
+  public SimulationEngine() {
+    numActiveSimulationEngines++;
+    scheduledJobs = new JobSchedule<>();
+    waitingTasks = new Subscriptions<>();
+    waitingConditions = new Subscriptions<>();
+    waitingResources = new Subscriptions<>();
+    tasks = new HashMap<>();
+    conditions = new HashMap<>();
+    resources = new HashMap<>();
+    taskParent = new HashMap<>();
+    taskChildren = new HashMap<>();
+    executor = Executors.newVirtualThreadPerTaskExecutor();
+  }
+
+  private SimulationEngine(SimulationEngine other) {
+    numActiveSimulationEngines++;
+    executor = Executors.newVirtualThreadPerTaskExecutor();
+    scheduledJobs = other.scheduledJobs.duplicate();
+    waitingTasks = other.waitingTasks.duplicate();
+    waitingConditions = other.waitingConditions.duplicate();
+    waitingResources = other.waitingResources.duplicate();
+    tasks = new HashMap<>();
+    for (final var entry : other.tasks.entrySet()) {
+      tasks.put(entry.getKey(), entry.getValue().duplicate(executor));
+    }
+    conditions = new HashMap<>(other.conditions);
+    resources = new HashMap<>();
+    for (final var entry : other.resources.entrySet()) {
+      resources.put(entry.getKey(), entry.getValue().duplicate());
+    }
+    taskParent = new HashMap<>(other.taskParent);
+    taskChildren = new HashMap<>(other.taskChildren);
+  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
+    if (this.closed) throw new IllegalStateException("Cannot schedule task on closed simulation engine");
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
+    this.tasks.put(task, new ExecutionState.NotStarted<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
@@ -88,7 +133,12 @@ public final class SimulationEngine implements AutoCloseable {
   /** Register a resource whose profile should be accumulated over time. */
   public <Dynamics>
   void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
+    if (this.closed) throw new IllegalStateException("Cannot track resource on closed simulation engine");
     final var id = new ResourceId(name);
+
+    if (this.resources.containsKey(id)) {
+      throw new IllegalArgumentException("Re-tracking previously tracked resource " + name);
+    }
 
     this.resources.put(id, ProfilingState.create(resource));
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
@@ -96,6 +146,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
   public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
+    if (this.closed) throw new IllegalStateException("Cannot invalidate topic on closed simulation engine");
     final var resources = this.waitingResources.invalidateTopic(topic);
     for (final var resource : resources) {
       this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(invalidationTime));
@@ -112,6 +163,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Removes and returns the next set of jobs to be performed concurrently. */
   public JobSchedule.Batch<JobId> extractNextJobs(final Duration maximumTime) {
+    if (this.closed) throw new IllegalStateException("Cannot extract next jobs on closed simulation engine");
     final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
 
     // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
@@ -136,6 +188,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final Duration maximumTime
   ) {
+    if (this.closed) throw new IllegalStateException("Cannot perform jobs on closed simulation engine");
     var tip = EventGraph.<Event>empty();
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
@@ -168,6 +221,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Perform the next step of a modeled task. */
   public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) {
+    if (this.closed) throw new IllegalStateException("Cannot step task on closed simulation engine");
     // The handler for each individual task stage is responsible
     //   for putting an updated lifecycle back into the task set.
     var lifecycle = this.tasks.remove(task);
@@ -182,7 +236,9 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
+    if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
+      stepEffectModel(task, e.startedAt(currentTime), frame, currentTime);
+    } else if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
       stepEffectModel(task, e, frame, currentTime);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
@@ -268,6 +324,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Cause any tasks waiting on the given signal to be resumed concurrently with other jobs in the current frame. */
   public void stepSignalledTasks(final SignalId signal, final TaskFrame<JobId> frame) {
+    if (this.closed) throw new IllegalStateException("Cannot step signalled tasks on closed simulation engine");
     final var tasks = this.waitingTasks.invalidateTopic(signal);
     for (final var task : tasks) frame.signal(JobId.forTask(task));
   }
@@ -279,6 +336,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final Duration horizonTime
   ) {
+    if (this.closed) throw new IllegalStateException("Cannot update condition on closed simulation engine");
     final var querier = new EngineQuerier(frame);
     final var prediction = this.conditions
         .get(condition)
@@ -303,6 +361,7 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
+    if (this.closed) throw new IllegalStateException("Cannot update resource on closed simulation engine");
     final var querier = new EngineQuerier(frame);
     this.resources.get(resource).append(currentTime, querier);
 
@@ -317,6 +376,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** Resets all tasks (freeing any held resources). The engine should not be used after being closed. */
   @Override
   public void close() {
+    numActiveSimulationEngines--;
     for (final var task : this.tasks.values()) {
       if (task instanceof ExecutionState.InProgress r) {
         r.state.release();
@@ -324,11 +384,28 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     this.executor.shutdownNow();
+    this.closed = true;
   }
 
   /** Determine if a given task has fully completed. */
   public boolean isTaskComplete(final TaskId task) {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
+  }
+
+  public void unscheduleAfter(final Duration duration) {
+    if (this.closed) throw new IllegalStateException("Cannot unschedule jobs on closed simulation engine");
+    for (final var task : new ArrayList<>(this.tasks.entrySet())) {
+      final var taskId = task.getKey();
+      final var executionState = task.getValue();
+      if (executionState instanceof ExecutionState.NotStarted<?> e && e.startTime.longerThan(duration)) {
+        this.tasks.remove(taskId);
+        this.scheduledJobs.unschedule(JobId.forTask(taskId));
+      }
+    }
+  }
+
+  public Optional<Duration> peekNextTime() {
+    return this.scheduledJobs.peekNextTime();
   }
 
   private record TaskInfo(
@@ -403,21 +480,17 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  /** Compute a set of results from the current state of simulation. */
-  // TODO: Move result extraction out of the SimulationEngine.
-  //   The Engine should only need to stream events of interest to a downstream consumer.
-  //   The Engine cannot be cognizant of all downstream needs.
-  // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
-  // TODO: Produce results for all tasks, not just those that have completed.
-  //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
-      final SimulationEngine engine,
-      final Instant startTime,
-      final Duration elapsedTime,
-      final Topic<ActivityDirectiveId> activityTopic,
+  public record SimulationActivityExtract(
+      Instant startTime,
+      Duration duration,
+      Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
+      Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities){}
+
+  private static TaskInfo computeTaskInfo(
       final TemporalEventSource timeline,
+      final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics
-  ) {
+      ){
     // Collect per-task information from the event graph.
     final var taskInfo = new TaskInfo();
 
@@ -427,38 +500,34 @@ public final class SimulationEngine implements AutoCloseable {
       final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
       p.events().evaluate(trait, trait::atom).accept(taskInfo);
     }
+    return taskInfo;
+  }
 
-    // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+  public static SimulationActivityExtract computeActivitySimulationResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics
+  ){
+    return computeActivitySimulationResults(
+        engine,
+        startTime,
+        elapsedTime,
+        computeTaskInfo(timeline, activityTopic, serializableTopics)
+    );
+  }
 
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
-      final var name = id.id();
-      final var resource = state.resource();
-
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
-      }
-    }
-
-
+  /**
+   * Computes only activity-related results when resources are not needed
+   */
+  public static SimulationActivityExtract computeActivitySimulationResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final TaskInfo taskInfo
+  ){
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
     final var taskToSimulatedActivityId = new HashMap<String, SimulatedActivityId>(taskInfo.taskToPlannedDirective.size());
     final var usedSimulatedActivityIds = new HashSet<>();
@@ -541,6 +610,80 @@ public final class SimulationEngine implements AutoCloseable {
         throw new Error("Unexpected subtype of %s: %s".formatted(ExecutionState.class, state.getClass()));
       }
     });
+    return new SimulationActivityExtract(startTime, elapsedTime, simulatedActivities, unfinishedActivities);
+  }
+
+  public static SimulationResults computeResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics
+  ) {
+    return computeResults(
+        engine,
+        startTime,
+        elapsedTime,
+        activityTopic,
+        timeline,
+        serializableTopics,
+        engine.resources.keySet()
+                        .stream()
+                        .map(ResourceId::id)
+                        .collect(Collectors.toSet()));
+  }
+
+  /** Compute a set of results from the current state of simulation. */
+  // TODO: Move result extraction out of the SimulationEngine.
+  //   The Engine should only need to stream events of interest to a downstream consumer.
+  //   The Engine cannot be cognizant of all downstream needs.
+  // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
+  // TODO: Produce results for all tasks, not just those that have completed.
+  //   Planners need to be aware of failed or unfinished tasks.
+  public static SimulationResults computeResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Set<String> resourceNames
+  ) {
+    // Collect per-task information from the event graph.
+    final var taskInfo = computeTaskInfo(timeline, activityTopic, serializableTopics);
+
+    // Extract profiles for every resource.
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+
+    for (final var entry : engine.resources.entrySet()) {
+      final var id = entry.getKey();
+      final var state = entry.getValue();
+
+      final var name = id.id();
+      final var resource = state.resource();
+      if(!resourceNames.contains(name)) continue;
+      switch (resource.getType()) {
+        case "real" -> realProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
+
+        case "discrete" -> discreteProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
+
+        default ->
+            throw new IllegalArgumentException(
+                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
+      }
+    }
+
+    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, taskInfo);
 
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
@@ -577,8 +720,8 @@ public final class SimulationEngine implements AutoCloseable {
 
     return new SimulationResults(realProfiles,
                                  discreteProfiles,
-                                 simulatedActivities,
-                                 unfinishedActivities,
+                                 activityResults.simulatedActivities,
+                                 activityResults.unfinishedActivities,
                                  startTime,
                                  elapsedTime,
                                  topics,
@@ -752,6 +895,22 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
+    ExecutionState<Return> duplicate(Executor executor);
+
+    /** The task has been scheduled, but not started. */
+    record NotStarted<Return>(Duration startTime, Task<Return> state)
+        implements ExecutionState<Return>
+    {
+      public InProgress<Return> startedAt(final Duration startOffset) {
+        return new InProgress<>(startOffset, state);
+      }
+
+      @Override
+      public ExecutionState<Return> duplicate(Executor executor) {
+        return new NotStarted<>(startTime, state.duplicate(executor));
+      }
+    }
+
     /** The task is in its primary operational phase. */
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
@@ -765,6 +924,11 @@ public final class SimulationEngine implements AutoCloseable {
       public InProgress<Return> continueWith(final Task<Return> newState) {
         return new InProgress<>(this.startOffset, newState);
       }
+
+      @Override
+      public ExecutionState<Return> duplicate(Executor executor) {
+        return new InProgress<>(startOffset, state.duplicate(executor));
+      }
     }
 
     /** The task has completed its primary operation, but has unfinished children. */
@@ -777,6 +941,11 @@ public final class SimulationEngine implements AutoCloseable {
       public Terminated<Return> joinedAt(final Duration joinOffset) {
         return new Terminated<>(this.startOffset, this.endOffset, joinOffset);
       }
+
+      @Override
+      public ExecutionState<Return> duplicate(Executor executor) {
+        return new AwaitingChildren<>(startOffset, endOffset, new LinkedList<>(remainingChildren));
+      }
     }
 
     /** The task and all its delegated children have completed. */
@@ -784,6 +953,15 @@ public final class SimulationEngine implements AutoCloseable {
         Duration startOffset,
         Duration endOffset,
         Duration joinOffset
-    ) implements ExecutionState<Return> {}
+    ) implements ExecutionState<Return> {
+      @Override
+      public ExecutionState<Return> duplicate(Executor executor) {
+        return this;
+      }
+    }
+  }
+
+  public SimulationEngine duplicate() {
+    return new SimulationEngine(this);
   }
 }

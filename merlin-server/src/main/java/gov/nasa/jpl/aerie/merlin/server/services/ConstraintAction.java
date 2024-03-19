@@ -212,7 +212,7 @@ public class ConstraintAction {
           }
         }
 
-        final Interval bounds = Interval.betweenClosedOpen(Duration.ZERO, simDuration);
+        final Interval bounds = Interval.between(Duration.ZERO, simDuration);
         final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
             simStartTime,
             bounds,

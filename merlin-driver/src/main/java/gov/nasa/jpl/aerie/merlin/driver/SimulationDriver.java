@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 
 public final class SimulationDriver {
   public static <Model>
@@ -82,12 +85,15 @@ public final class SimulationDriver {
           timeline.add(commit);
         }
 
+
         // Get all activities as close as possible to absolute time
         // Schedule all activities.
         // Using HashMap explicitly because it allows `null` as a key.
         // `null` key means that an activity is not waiting on another activity to finish to know its start time
-        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-        if(!resolved.isEmpty()) {
+        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+            planDuration,
+            schedule).compute();
+        if (!resolved.isEmpty()) {
           resolved.put(
               null,
               StartOffsetReducer.adjustStartOffset(
@@ -107,7 +113,7 @@ public final class SimulationDriver {
             activityTopic
         );
 
-        // Drive the engine until we're out of time or until simulation is canceled.
+        // Drive the engine until we're out of time.
         // TERMINATION: Actually, we might never break if real time never progresses forward.
         while (!simulationCanceled.get()) {
           final var batch = engine.extractNextJobs(simulationDuration);
@@ -121,8 +127,7 @@ public final class SimulationDriver {
 
           simulationExtentConsumer.accept(elapsedTime);
 
-          if (simulationCanceled.get() ||
-              (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration))) {
+          if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
             break;
           }
 
@@ -133,12 +138,15 @@ public final class SimulationDriver {
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
-
-      final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
+      return SimulationEngine.computeResults(
+          engine,
+          simulationStartTime,
+          elapsedTime,
+          activityTopic,
+          timeline,
+          missionModel.getTopics());
     }
   }
-
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
     try (final var engine = new SimulationEngine()) {
@@ -186,8 +194,7 @@ public final class SimulationDriver {
     }
   }
 
-
-  private static <Model> void scheduleActivities(
+  public static <Model> Map<ActivityDirectiveId, TaskId> scheduleActivities(
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved,
       final MissionModel<Model> missionModel,
@@ -195,7 +202,8 @@ public final class SimulationDriver {
       final Topic<ActivityDirectiveId> activityTopic
   )
   {
-    if(resolved.get(null) == null) { return; } // Nothing to simulate
+    final var activityDirectiveIdToTaskId = new HashMap<ActivityDirectiveId, TaskId>();
+    if(resolved.get(null) == null) { return activityDirectiveIdToTaskId; } // Nothing to simulate
 
     for (final Pair<ActivityDirectiveId, Duration> directivePair : resolved.get(null)) {
       final var directiveId = directivePair.getLeft();
@@ -211,7 +219,7 @@ public final class SimulationDriver {
                             .formatted(serializedDirective.getTypeName(), ex.toString()));
       }
 
-      engine.scheduleTask(startOffset, makeTaskFactory(
+      final var taskId = engine.scheduleTask(startOffset, makeTaskFactory(
           directiveId,
           task,
           schedule,
@@ -219,7 +227,9 @@ public final class SimulationDriver {
           missionModel,
           activityTopic
       ));
+      activityDirectiveIdToTaskId.put(directivePair.getKey(), taskId);
     }
+    return activityDirectiveIdToTaskId;
   }
 
   private static <Model, Output> TaskFactory<Unit> makeTaskFactory(
@@ -232,17 +242,17 @@ public final class SimulationDriver {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
+    return executor -> new OneStepTask<>(scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> new OneStepTask<>(scheduler1 -> {
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
-    }), scheduler2 -> {
+    })), new OneStepTask<>(scheduler2 -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
       for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> scheduler3 ->
+        scheduler2.spawn(executor2 -> new OneStepTask<>(scheduler3 ->
             // Delay until the dependent starts
-            TaskStatus.delayed(dependent.getRight(), scheduler4 -> {
+            TaskStatus.delayed(dependent.getRight(), new OneStepTask<>(scheduler4 -> {
               final var dependentDirectiveId = dependent.getLeft();
               final var serializedDependentDirective = schedule.get(dependentDirectiveId).serializedActivity();
 
@@ -267,9 +277,10 @@ public final class SimulationDriver {
                   activityTopic
               ));
               return TaskStatus.completed(Unit.UNIT);
-            }));
+            })))
+        );
       }
       return TaskStatus.completed(Unit.UNIT);
-    });
+    })));
   }
 }

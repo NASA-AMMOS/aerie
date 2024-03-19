@@ -376,7 +376,13 @@ public record ActivityExpression(
     );  }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+    if(this.durationRange != null) {
+      this.durationRange.getLeft().extractResources(names);
+      this.durationRange.getRight().extractResources(names);
+    }
+    this.arguments.forEach((name, pe)-> pe.extractResources(names));
+  }
 
   /**
    * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not

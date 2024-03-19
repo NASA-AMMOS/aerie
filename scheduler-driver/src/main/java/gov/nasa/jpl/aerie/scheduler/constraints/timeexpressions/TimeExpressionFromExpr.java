@@ -6,6 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
+import java.util.Set;
+
 public class TimeExpressionFromExpr extends TimeExpression {
 
   protected final TimeExpression expression;
@@ -34,5 +36,10 @@ public class TimeExpressionFromExpr extends TimeExpression {
 
     }
     return retRange;
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expression.extractResources(names);
   }
 }

@@ -85,6 +85,17 @@ public record SchedulingActivityDirective(
                                 Map.of(), null, anchorId, anchoredToStart);
 
   }
+  public static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration startOffset, Duration duration, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+    return new SchedulingActivityDirective(
+        id,
+        type,
+        startOffset,
+        duration,
+        Map.of(),
+        null,
+        anchorId,
+        anchoredToStart);
+  }
 
   public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
@@ -244,7 +255,7 @@ public record SchedulingActivityDirective(
   }
 
   public String toString() {
-    return "[" + this.type.getName() + ","+ this.id + "," + startOffset + "," + ((duration != null) ? getEndTime() : "no duration") + ", "+anchorId+", "+anchoredToStart+"]";
+    return "[" + this.type.getName() + ","+ this.id + "," + startOffset + "," + ((duration != null) ? getEndTime() : "no duration") + ", "+ topParent + ", " + anchorId+", "+anchoredToStart+"]";
   }
 
   /**

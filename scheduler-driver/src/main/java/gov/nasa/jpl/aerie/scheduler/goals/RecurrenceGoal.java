@@ -124,14 +124,6 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       }
     }
 
-    //make sure it hasn't changed
-    if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
-      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows);
-    }
-    else if (this.initiallyEvaluatedTemporalContext == null) {
-      this.initiallyEvaluatedTemporalContext = windows;
-    }
-
     //iterate through it and then within each iteration do exactly what you did before
     for (Interval subInterval : windows.iterateEqualTo(true)) {
       //collect all matching target acts ordered by start time

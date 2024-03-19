@@ -124,17 +124,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    */
   @Override
   public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
-
     //unwrap temporalContext
     final var windows = getTemporalContext().evaluate(simulationResults, evaluationEnvironment);
-
-    //make sure it hasn't changed
-    if (this.initiallyEvaluatedTemporalContext != null && !windows.equals(this.initiallyEvaluatedTemporalContext)) {
-      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
-    }
-    else if (this.initiallyEvaluatedTemporalContext == null) {
-      this.initiallyEvaluatedTemporalContext = windows;
-    }
 
     //iterate through it and then within each iteration do exactly what you did before
     final var conflicts = new LinkedList<Conflict>();

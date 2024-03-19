@@ -1,15 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
-import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 
-import java.util.Optional;
+import java.util.Set;
 
 /**
  * describes the desired existence of an activity matching a given template/preset
@@ -74,9 +69,6 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
       } else {
         goal.matchActTemplate = matchingActTemplate;
       }
-
-      goal.initiallyEvaluatedTemporalContext = null;
-
       return goal;
     }
 
@@ -116,12 +108,10 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    */
   protected ActivityExpression matchActTemplate;
 
-
-  /**
-   * checked by getConflicts every time it is invoked to see if the Window(s)
-   * corresponding to when this goal has changed, which is unexpected behavior
-   * that needs to be caught
-   */
-  protected Windows initiallyEvaluatedTemporalContext;
-
+  @Override
+  public void extractResources(final Set<String> names) {
+    super.extractResources(names);
+    matchActTemplate.extractResources(names);
+    desiredActTemplate.extractResources(names);
+  }
 }

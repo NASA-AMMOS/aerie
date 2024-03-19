@@ -23,6 +23,7 @@ public interface SchedulerAgent {
   void schedule(
       ScheduleRequest request,
       ResultsProtocol.WriterRole writer,
-      Supplier<Boolean> canceledListener
+      Supplier<Boolean> canceledListener,
+      int sizeCachedEngineStore
   ) throws InterruptedException;
 }

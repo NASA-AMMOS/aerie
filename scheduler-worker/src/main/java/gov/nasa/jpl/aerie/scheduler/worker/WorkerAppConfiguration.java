@@ -11,5 +11,6 @@ public record WorkerAppConfiguration(
     Path merlinFileStore,
     Path missionRuleJarPath,
     PlanOutputMode outputMode,
-    String hasuraGraphQlAdminSecret
+    String hasuraGraphQlAdminSecret,
+    int maxCachedSimulationEngines
 ) { }

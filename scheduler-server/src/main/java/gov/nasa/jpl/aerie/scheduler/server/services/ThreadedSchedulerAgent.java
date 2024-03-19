@@ -25,7 +25,8 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
   public void schedule(
       final ScheduleRequest request,
       final ResultsProtocol.WriterRole writer,
-      final Supplier<Boolean> canceledListener
+      final Supplier<Boolean> canceledListener,
+      final int sizeCachedEngineStore
   ) throws InterruptedException
   {
     this.requestQueue.put(new SchedulingRequest.Schedule(request, writer, canceledListener));
@@ -65,7 +66,7 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
 
           if (request instanceof SchedulingRequest.Schedule req) {
             try {
-              this.schedulerAgent.schedule(req.request(), req.writer(), req.canceledListener);
+              this.schedulerAgent.schedule(req.request(), req.writer(), req.canceledListener, 0);
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
               req.writer().failWith(b -> b

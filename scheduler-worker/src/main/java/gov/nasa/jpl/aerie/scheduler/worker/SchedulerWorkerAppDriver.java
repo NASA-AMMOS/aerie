@@ -97,7 +97,11 @@ public final class SchedulerWorkerAppDriver {
         final var revisionData = new SpecificationRevisionData(specificationRevision);
         final ResultsProtocol.WriterRole writer = owner.get();
         try {
-          scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer, canceledListener);
+          scheduleAgent.schedule(
+              new ScheduleRequest(specificationId, revisionData),
+              writer,
+              canceledListener,
+              config.maxCachedSimulationEngines());
         } catch (final Throwable ex) {
           ex.printStackTrace(System.err);
           writer.failWith(b -> b
@@ -131,7 +135,8 @@ public final class SchedulerWorkerAppDriver {
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
-        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
+        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
+        Integer.parseInt(getEnv("MAX_NB_CACHED_SIMULATION_ENGINE", "30"))
     );
   }
 }

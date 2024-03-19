@@ -2,320 +2,141 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.lang3.function.TriFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
-/**
- * A facade for simulating plans and processing simulation results.
- */
-public class SimulationFacade implements AutoCloseable{
-
-  private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
-  private final Supplier<Boolean> canceledListener;
-
+public class SimulationFacade {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SimulationFacade.class);
   private final MissionModel<?> missionModel;
-  private final SchedulerModel schedulerModel;
-
-  // planning horizon
+  private final InMemoryCachedEngineStore cachedEngines;
   private final PlanningHorizon planningHorizon;
-  private Map<String, ActivityType> activityTypes;
-  private ResumableSimulationDriver<?> driver;
+  private final Map<String, ActivityType> activityTypes;
   private int itSimActivityId;
-
-  private final Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
-      planActDirectiveIdToSimulationActivityDirectiveId = new HashMap<>();
-  private final Map<SchedulingActivityDirective, ActivityDirective> insertedActivities;
-  //counts the total number of simulation restarts, used as performance metric in the scheduler
-  private int pastSimulationRestarts;
-
-  public SimulationData lastSimulationData;
-
-  /**
-   * state boolean stating whether the initial plan has been modified to allow initial simulation results to be used
-   */
-  private boolean initialPlanHasBeenModified = false;
-
-  /* External initial simulation results that will be served only if initialPlanHasBeenModified is equal to false*/
-  private Optional<SimulationData> initialSimulationResults;
-
-  /**
-   * The set of activities to be added to the first simulation.
-   * Used to potentially delay the first simulation until the loaded results are stale.
-   * The only way to add activities to the facade is to simulate them. But sometimes, we have initial sim results and we
-   * do not need to simulate before the first activity insertion. This initial plan allows the facade to "load" the activities in simulation
-   * and wait until the first needed simulation to simulate them.
-   */
-  private List<SchedulingActivityDirective> initialPlan;
+  private final SimulationEngineConfiguration configuration;
+  private SimulationData initialSimulationResults;
+  private final Supplier<Boolean> canceledListener;
+  private final SchedulerModel schedulerModel;
+  private Duration totalSimulationTime = Duration.ZERO;
 
   /**
    * Loads initial simulation results into the simulation. They will be served until initialSimulationResultsAreStale()
    * is called.
    * @param simulationData the initial simulation results
    */
-  public void loadInitialSimResults(SimulationData simulationData){
-    initialPlanHasBeenModified = false;
-    this.initialSimulationResults = Optional.of(simulationData);
+  public void setInitialSimResults(final SimulationData simulationData){
+    this.initialSimulationResults = simulationData;
+  }
+
+
+  public SimulationFacade(
+      final MissionModel<?> missionModel,
+      final SchedulerModel schedulerModel,
+      final InMemoryCachedEngineStore cachedEngines,
+      final PlanningHorizon planningHorizon,
+      final SimulationEngineConfiguration simulationEngineConfiguration,
+      final Supplier<Boolean> canceledListener){
+    this.itSimActivityId = 0;
+    this.missionModel = missionModel;
+    this.schedulerModel = schedulerModel;
+    this.cachedEngines = cachedEngines;
+    this.planningHorizon = planningHorizon;
+    this.activityTypes = new HashMap<>();
+    this.configuration = simulationEngineConfiguration;
+    this.canceledListener = canceledListener;
   }
 
   /**
-   * Signals to the facade that the initial simulation results are stale and should not be used anymore
+   * Returns the total simulated time
+   * @return
    */
-  public void initialSimulationResultsAreStale(){
-    this.initialPlanHasBeenModified = true;
+  public Duration totalSimulationTime(){
+    return totalSimulationTime;
   }
-
-  /**
-   * @return true if initial simulation results are stale, false otherwise
-   */
-  public boolean areInitialSimulationResultsStale(){
-    return this.initialPlanHasBeenModified;
-  }
-
-  public Optional<gov.nasa.jpl.aerie.constraints.model.SimulationResults> getLatestConstraintSimulationResults(){
-    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().constraintsResults());
-    if(lastSimulationData == null) return Optional.empty();
-    return Optional.of(lastSimulationData.constraintsResults());
-  }
-
-  public Optional<SimulationResults> getLatestDriverSimulationResults(){
-    if(!initialPlanHasBeenModified && initialSimulationResults.isPresent()) return Optional.of(this.initialSimulationResults.get().driverResults());
-    if(lastSimulationData == null) return Optional.empty();
-    return Optional.of(lastSimulationData.driverResults());
-  }
-
-  public Supplier<Boolean> getCanceledListener() {return canceledListener;}
 
   public SimulationFacade(
       final PlanningHorizon planningHorizon,
       final MissionModel<?> missionModel,
-      final SchedulerModel schedulerModel,
-      Supplier<Boolean> canceledListener
-  ) {
-    this.missionModel = missionModel;
-    this.planningHorizon = planningHorizon;
-    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), canceledListener);
+      final SchedulerModel schedulerModel
+      ){
     this.itSimActivityId = 0;
-    this.insertedActivities = new HashMap<>();
+    this.missionModel = missionModel;
+    this.cachedEngines = new InMemoryCachedEngineStore(0);
+    this.planningHorizon = planningHorizon;
     this.activityTypes = new HashMap<>();
-    this.pastSimulationRestarts = 0;
-    this.initialPlan = new ArrayList<>();
-    this.initialSimulationResults = Optional.empty();
+    this.configuration = new SimulationEngineConfiguration(Map.of(), Instant.now(), new MissionModelId(1));
+    this.canceledListener = () -> false;
     this.schedulerModel = schedulerModel;
-    this.canceledListener = canceledListener;
   }
 
-  @Override
-  public void close(){
-    driver.close();
+  public Supplier<Boolean> getCanceledListener(){
+    return this.canceledListener;
   }
 
-  /**
-   * Adds a set of activities that will not be simulated yet. They will be simulated at the latest possible time, when it cannot be avoided.
-   * This is to allow the use of initial simulation results in PrioritySolver.
-   * @param initialPlan the initial set of activities in the plan
-   */
-  public void addInitialPlan(Collection<SchedulingActivityDirective> initialPlan){
-    this.initialPlan.clear();
-    this.initialPlan.addAll(initialPlan);
-  }
-
-  public void setActivityTypes(final Collection<ActivityType> activityTypes){
-    this.activityTypes = new HashMap<>();
+  public void addActivityTypes(final Collection<ActivityType> activityTypes){
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
   }
 
-  public Map<SchedulingActivityDirectiveId, ActivityDirectiveId> getActivityIdCorrespondence(){
-    return planActDirectiveIdToSimulationActivityDirectiveId;
-  }
-
-  /**
-   * Fetches activity instance durations from last simulation
-   *
-   * @param schedulingActivityDirective the activity instance we want the duration for
-   * @return the duration if found in the last simulation, null otherwise
-   */
-  public Optional<Duration> getActivityDuration(final SchedulingActivityDirective schedulingActivityDirective) {
-    if(!planActDirectiveIdToSimulationActivityDirectiveId.containsKey(schedulingActivityDirective.getId())){
-      return Optional.empty();
-    }
-    final var duration = driver.getActivityDuration(planActDirectiveIdToSimulationActivityDirectiveId.get(
-        schedulingActivityDirective.getId()));
-    return duration;
-  }
-
-  private ActivityDirectiveId getIdOfRootParent(SimulationResults results, SimulatedActivityId instanceId){
-    final var act = results.simulatedActivities.get(instanceId);
-    if(act.parentId() == null){
-      // SAFETY: any activity that has no parent must have a directive id.
-      return act.directiveId().get();
-    } else {
-      return getIdOfRootParent(results, act.parentId());
-    }
-  }
-
-  public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime)
-  throws SimulationException, SchedulingInterruptedException
-  {
-    logger.info("Need to compute simulation results until "+ endTime + " for getting child activities");
-    var latestSimulationData = this.getLatestDriverSimulationResults();
-    //if no initial sim results and no sim has been performed, perform a sim and get the sim results
-    if(latestSimulationData.isEmpty()){
-      //useful only if there are activities to simulate for this case of getting child activities
-      if(insertedActivities.size() == 0) return Map.of();
-      computeSimulationResultsUntil(endTime);
-      latestSimulationData = this.getLatestDriverSimulationResults();
-    }
-    final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
-    latestSimulationData.get().simulatedActivities.forEach( (activityInstanceId, activity) -> {
-      if (activity.parentId() == null) return;
-      final var rootParent = getIdOfRootParent(this.lastSimulationData.driverResults(), activityInstanceId);
-      final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(
-          entry -> entry.getValue().equals(rootParent)
-      ).findFirst().get().getKey();
-      final var activityInstance = SchedulingActivityDirective.of(
-          activityTypes.get(activity.type()),
-          this.planningHorizon.toDur(activity.start()),
-          activity.duration(),
-          activity.arguments(),
-          schedulingActId,
-          null,
-          true);
-      childActivities.put(activityInstance, schedulingActId);
-    });
-    return childActivities;
-  }
-
-  public void removeAndInsertActivitiesFromSimulation(
-      final Collection<SchedulingActivityDirective> activitiesToRemove,
-      final Collection<SchedulingActivityDirective> activitiesToAdd
-  ) throws SimulationException, SchedulingInterruptedException {
-    if (canceledListener.get()) throw new SchedulingInterruptedException("removing/adding activities");
-    logger.debug("Removing("+activitiesToRemove.size()+")/Adding("+activitiesToAdd.size()+") activities from simulation");
-    activitiesToRemove.stream().forEach(remove -> logger.debug("Removing act starting at " + remove.startOffset()));
-    activitiesToAdd.stream().forEach(adding -> logger.debug("Adding act starting at " + adding.startOffset()));
-    var atLeastOneActualRemoval = false;
-    for(final var act: activitiesToRemove){
-      if(insertedActivities.containsKey(act)){
-        atLeastOneActualRemoval = true;
-        insertedActivities.remove(act);
+  private <K,V> void replaceValue(final Map<K,V> map, final V value, final V replacement){
+    for (final Map.Entry<K, V> entry : map.entrySet()) {
+      if (entry.getValue().equals(value)) {
+        entry.setValue(replacement);
+        break;
       }
     }
-    var allActivitiesToSimulate = new ArrayList<>(activitiesToAdd);
-    if(!initialPlan.isEmpty()) allActivitiesToSimulate.addAll(this.initialPlan);
-    this.initialPlan.clear();
-    allActivitiesToSimulate = new ArrayList<>(allActivitiesToSimulate.stream().filter(a -> !insertedActivities.containsKey(a)).toList());
-    Duration earliestActStartTime = Duration.MAX_VALUE;
-    for(final var act: activitiesToAdd){
-      earliestActStartTime = Duration.min(earliestActStartTime, act.startOffset());
-    }
-    if(allActivitiesToSimulate.isEmpty() && !atLeastOneActualRemoval) return;
-    //reset resumable simulation
-    if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(this.driver.getCurrentSimulationEndTime())){
-      allActivitiesToSimulate.addAll(insertedActivities.keySet());
-      insertedActivities.clear();
-      planActDirectiveIdToSimulationActivityDirectiveId.clear();
-      logger.info("(Re)creating simulation driver because at least one removal("+atLeastOneActualRemoval+") or insertion in the past ("+earliestActStartTime+")");
-      if (driver != null) {
-        this.pastSimulationRestarts += driver.getCountSimulationRestarts();
-        driver.close();
+  }
+
+  private void replaceIds(
+      final PlanSimCorrespondence planSimCorrespondence,
+      final Map<ActivityDirectiveId, ActivityDirectiveId> updates){
+    for(final var replacements : updates.entrySet()){
+      replaceValue(planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId,replacements.getKey(), replacements.getValue());
+      if(planSimCorrespondence.directiveIdActivityDirectiveMap.containsKey(replacements.getKey())){
+        final var value = planSimCorrespondence.directiveIdActivityDirectiveMap.remove(replacements.getKey());
+        planSimCorrespondence.directiveIdActivityDirectiveMap.put(replacements.getValue(), value);
       }
-      logger.info("Number of simulation restarts so far: " + this.pastSimulationRestarts);
-      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), canceledListener);
     }
-    simulateActivities(allActivitiesToSimulate);
-  }
-
-  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities)
-  throws SimulationException, SchedulingInterruptedException
-  {
-    removeAndInsertActivitiesFromSimulation(activities, List.of());
   }
 
   /**
-   * Returns the total number of simulation restarts
-   * @return the number of simulation restarts
+   * Simulates until the end of the last activity of a plan. Updates the input plan with child activities and activity durations.
+   * @param plan the plan to simulate
+   * @return the inputs needed to compute simulation results
+   * @throws SimulationException if an exception happens during simulation
    */
-  public int countSimulationRestarts(){
-    return this.driver.getCountSimulationRestarts() + this.pastSimulationRestarts;
-  }
-
-  public void insertActivitiesIntoSimulation(final Collection<SchedulingActivityDirective> activities)
+  public CheckpointSimulationDriver.SimulationResultsComputerInputs simulateNoResultsUntilEndPlan(final Plan plan)
   throws SimulationException, SchedulingInterruptedException
   {
-    removeAndInsertActivitiesFromSimulation(List.of(), activities);
-  }
-
-  /**
-   * Replaces an activity instance with another, strictly when they have the same id
-   * @param toBeReplaced the activity to be replaced
-   * @param replacement the replacement activity
-   */
-  public void replaceActivityFromSimulation(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement){
-    if(toBeReplaced.type() != replacement.type()||
-       toBeReplaced.startOffset() != replacement.startOffset()||
-       !(toBeReplaced.arguments().equals(replacement.arguments()))) {
-      throw new IllegalArgumentException("When replacing an activity, you can only update the duration");
-    }
-    if(!insertedActivities.containsKey(toBeReplaced)){
-      throw new IllegalArgumentException("Trying to replace an activity that has not been previously simulated");
-    }
-    final var associated = insertedActivities.get(toBeReplaced);
-    insertedActivities.remove(toBeReplaced);
-    insertedActivities.put(replacement, associated);
-    final var simulationId = this.planActDirectiveIdToSimulationActivityDirectiveId.get(toBeReplaced.id());
-    this.planActDirectiveIdToSimulationActivityDirectiveId.remove(toBeReplaced.id());
-    this.planActDirectiveIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
-  }
-
-  private void simulateActivities(final Collection<SchedulingActivityDirective> activities)
-  throws SimulationException, SchedulingInterruptedException {
-    final var activitiesSortedByStartTime =
-        activities.stream().filter(activity -> !(insertedActivities.containsKey(activity)))
-                  .sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
-    if(activitiesSortedByStartTime.isEmpty()) return;
-    final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
-
-    for(final var activity : activitiesSortedByStartTime){
-      final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
-      planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
-    }
-
-    for(final var activity : activitiesSortedByStartTime) {
-      final var activityDirective = schedulingActToActivityDir(activity);
-      directivesToSimulate.put(
-          planActDirectiveIdToSimulationActivityDirectiveId.get(activity.getId()),
-          activityDirective);
-      insertedActivities.put(activity, activityDirective);
-    }
-    try {
-      driver.simulateActivities(directivesToSimulate);
-    } catch (SchedulingInterruptedException e) {
-      throw e; //pass interruption up
-    } catch (Exception e){
-      throw new SimulationException("An exception happened during simulation", e);
-    }
-    this.lastSimulationData = null;
+    return simulateNoResults(plan, planningHorizon.getEndAerie(), null).simulationResultsComputerInputs();
   }
 
   public static class SimulationException extends Exception {
@@ -324,32 +145,284 @@ public class SimulationFacade implements AutoCloseable{
     }
   }
 
-  public void computeSimulationResultsUntil(final Duration endTime)
-  throws SimulationException, SchedulingInterruptedException {
-    if(!initialPlan.isEmpty()){
-      final var toSimulate = new ArrayList<>(this.initialPlan);
-      this.initialPlan.clear();
-      this.insertActivitiesIntoSimulation(toSimulate);
+  /**
+   * Simulates a plan until the end of one of its activities
+   * Do not use to update the plan as decomposing activities may not finish
+   * @param plan
+   * @param activity
+   * @return
+   * @throws SimulationException
+   */
+
+  public CheckpointSimulationDriver.SimulationResultsComputerInputs simulateNoResultsUntilEndAct(
+      final Plan plan,
+      final SchedulingActivityDirective activity) throws SimulationException, SchedulingInterruptedException
+  {
+    return simulateNoResults(plan, null, activity).simulationResultsComputerInputs();
+  }
+
+  public record AugmentedSimulationResultsComputerInputs(
+      CheckpointSimulationDriver.SimulationResultsComputerInputs simulationResultsComputerInputs,
+      PlanSimCorrespondence planSimCorrespondence){}
+
+  public AugmentedSimulationResultsComputerInputs simulateNoResults(
+      final Plan plan,
+      final Duration until) throws SimulationException, SchedulingInterruptedException
+  {
+    return simulateNoResults(plan, until, null);
+  }
+
+
+    /**
+     * Simulates and updates plan
+     * @param plan
+     * @param until can be null
+     * @param activity can be null
+     */
+  private AugmentedSimulationResultsComputerInputs simulateNoResults(
+      final Plan plan,
+      final Duration until,
+      final SchedulingActivityDirective activity) throws SimulationException, SchedulingInterruptedException
+  {
+    final var planSimCorrespondence = scheduleFromPlan(plan, planningHorizon.getEndAerie(), planningHorizon.getStartInstant(), planningHorizon.getStartInstant());
+
+    final var best = CheckpointSimulationDriver.bestCachedEngine(
+        planSimCorrespondence.directiveIdActivityDirectiveMap(),
+        cachedEngines.getCachedEngines(configuration));
+    CheckpointSimulationDriver.CachedSimulationEngine engine = null;
+    Duration from = Duration.ZERO;
+    if(best.isPresent()){
+      engine = best.get().getKey();
+      replaceIds(planSimCorrespondence, best.get().getRight());
+      from = engine.endsAt();
     }
+
+    //Configuration
+    //Three modes : (1) until a specific end time (2) until end of one specific activity (3) until end of last activity in plan
+    Duration simulationDuration;
+    TriFunction<SimulationEngine, Map<ActivityDirectiveId, ActivityDirective>, Map<ActivityDirectiveId, TaskId>, Boolean>
+        stoppingCondition;
+    //(1)
+    if(until != null && activity == null){
+      simulationDuration = until;
+      stoppingCondition = CheckpointSimulationDriver.noCondition();
+    }
+    //(2)
+    else if(activity != null && until == null){
+      simulationDuration = planningHorizon.getEndAerie();
+      stoppingCondition = CheckpointSimulationDriver.stopOnceActivityHasFinished(planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId.get(activity));
+    //(3)
+    } else if(activity == null && until == null){
+      simulationDuration = planningHorizon.getEndAerie();
+      stoppingCondition = CheckpointSimulationDriver.stopOnceAllActivitiessAreFinished();
+    } else {
+      throw new SimulationException("Bad configuration", null);
+    }
+
+    if(engine == null) engine = CheckpointSimulationDriver.CachedSimulationEngine.empty(missionModel);
+
+    if(best.isPresent()) cachedEngines.registerUsed(engine);
     try {
-      final var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTime);
-      //compare references
-      if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
-        //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results));
+      final var simulation = CheckpointSimulationDriver.simulateWithCheckpoints(
+          missionModel,
+          planSimCorrespondence.directiveIdActivityDirectiveMap(),
+          planningHorizon.getStartInstant(),
+          simulationDuration,
+          planningHorizon.getStartInstant(),
+          planningHorizon.getEndAerie(),
+          $ -> {},
+          canceledListener,
+          engine,
+          new ResourceAwareSpreadCheckpointPolicy(
+              cachedEngines.capacity(),
+              Duration.ZERO,
+              planningHorizon.getEndAerie(),
+              Duration.max(engine.endsAt(), Duration.ZERO),
+              simulationDuration,
+              1,
+              true),
+          stoppingCondition,
+          cachedEngines,
+          configuration);
+      if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
+      this.totalSimulationTime = this.totalSimulationTime.plus(simulation.elapsedTime().minus(from));
+      final var activityResults =
+          CheckpointSimulationDriver.computeActivitySimulationResults(simulation);
+
+      updatePlanWithChildActivities(
+          activityResults,
+          activityTypes,
+          plan,
+          planSimCorrespondence);
+      pullActivityDurationsIfNecessary(
+          plan,
+          planSimCorrespondence,
+          activityResults
+      );
+      //plan has been updated
+      return new AugmentedSimulationResultsComputerInputs(simulation, planSimCorrespondence);
+    } catch(Exception e){
+      if(e instanceof SchedulingInterruptedException sie){
+        throw sie;
       }
-    } catch (SchedulingInterruptedException e){
-      throw e; //pass interruption up
-    } catch (Exception e){
       throw new SimulationException("An exception happened during simulation", e);
     }
   }
 
-  public Duration getCurrentSimulationEndTime(){
-    return driver.getCurrentSimulationEndTime();
+  public SimulationData simulateWithResults(
+      final Plan plan,
+      final Duration until) throws SimulationException, SchedulingInterruptedException
+  {
+    return simulateWithResults(plan, until, missionModel.getResources().keySet());
   }
 
-  private ActivityDirective schedulingActToActivityDir(SchedulingActivityDirective activity) {
+  public SimulationData simulateWithResults(
+      final Plan plan,
+      final Duration until,
+      final Set<String> resourceNames) throws SimulationException, SchedulingInterruptedException
+  {
+    if(this.initialSimulationResults != null) {
+      final var inputPlan = scheduleFromPlan(plan, planningHorizon.getEndAerie(), planningHorizon.getStartInstant(), planningHorizon.getStartInstant());
+      final var initialPlanA = scheduleFromPlan(this.initialSimulationResults.plan(), planningHorizon.getEndAerie(), planningHorizon.getStartInstant(), planningHorizon.getStartInstant());
+      if (initialPlanA.equals(inputPlan)) {
+        return new SimulationData(
+            plan,
+            initialSimulationResults.driverResults(),
+            SimulationResultsConverter.convertToConstraintModelResults(initialSimulationResults.driverResults()),
+            this.initialSimulationResults.mapping());
+      }
+    }
+    final var resultsInput = simulateNoResults(plan, until);
+    final var driverResults = CheckpointSimulationDriver.computeResults(resultsInput.simulationResultsComputerInputs, resourceNames);
+    return new SimulationData(plan, driverResults, SimulationResultsConverter.convertToConstraintModelResults(driverResults), resultsInput.planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId);
+  }
+
+  private record PlanSimCorrespondence(
+      BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
+      Map<ActivityDirectiveId, ActivityDirective> directiveIdActivityDirectiveMap){
+    @Override
+    public boolean equals(Object other){
+      if(other instanceof PlanSimCorrespondence planSimCorrespondenceAs){
+        return directiveIdActivityDirectiveMap.size() == planSimCorrespondenceAs.directiveIdActivityDirectiveMap.size() &&
+               new HashSet<>(directiveIdActivityDirectiveMap.values()).containsAll(new HashSet<>(((PlanSimCorrespondence) other).directiveIdActivityDirectiveMap.values()));
+      }
+      return false;
+    }
+  }
+
+  private PlanSimCorrespondence scheduleFromPlan(
+      final Plan plan,
+      final Duration planDuration,
+      final Instant planStartTime,
+      final Instant simulationStartTime){
+    final var activities = plan.getActivities();
+    final var planActDirectiveIdToSimulationActivityDirectiveId = new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
+    if(activities.isEmpty()) return new PlanSimCorrespondence(new DualHashBidiMap<>(), Map.of());
+    //filter out child activities
+    final var activitiesWithoutParent = activities.stream().filter(a -> a.topParent() == null).toList();
+    final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
+
+    for(final var activity : activitiesWithoutParent){
+      final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
+      planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
+    }
+
+    for(final var activity : activitiesWithoutParent) {
+      final var activityDirective = schedulingActToActivityDir(activity, planActDirectiveIdToSimulationActivityDirectiveId);
+      directivesToSimulate.put(
+          planActDirectiveIdToSimulationActivityDirectiveId.get(activity.getId()),
+          activityDirective);
+    }
+    return new PlanSimCorrespondence(planActDirectiveIdToSimulationActivityDirectiveId, directivesToSimulate);
+  }
+
+  /**
+   * For activities that have a null duration (in an initial plan for example) and that have been simulated, we pull the duration and
+   * replace the original instance with a new instance that includes the duration, both in the plan and the simulation facade
+   */
+  private void pullActivityDurationsIfNecessary(
+      final Plan plan,
+      final PlanSimCorrespondence correspondence,
+      final SimulationEngine.SimulationActivityExtract activityExtract
+      ) {
+    final var toReplace = new HashMap<SchedulingActivityDirective, SchedulingActivityDirective>();
+    for (final var activity : plan.getActivities()) {
+      if (activity.duration() == null) {
+        final var activityDirective = findSimulatedActivityById(
+            activityExtract.simulatedActivities().values(),
+            correspondence.planActDirectiveIdToSimulationActivityDirectiveId.get(activity.getId()));
+        if (activityDirective.isPresent()) {
+          final var replacementAct = SchedulingActivityDirective.copyOf(
+              activity,
+              activityDirective.get().duration()
+          );
+          toReplace.put(activity, replacementAct);
+        }
+        //if not, maybe the activity is not finished
+      }
+    }
+    toReplace.forEach(plan::replace);
+  }
+
+  private final Optional<SimulatedActivity> findSimulatedActivityById(Collection<SimulatedActivity> simulatedActivities, final ActivityDirectiveId activityDirectiveId){
+    return simulatedActivities.stream().filter(a -> a.directiveId().isPresent() && a.directiveId().get().equals(activityDirectiveId)).findFirst();
+  }
+
+  private void updatePlanWithChildActivities(
+      final SimulationEngine.SimulationActivityExtract activityExtract,
+      final Map<String, ActivityType> activityTypes,
+      final Plan plan,
+      final PlanSimCorrespondence planSimCorrespondence)
+  {
+    //remove all activities with parents
+    final var toRemove = plan.getActivities().stream().filter(a -> a.topParent() != null).toList();
+    toRemove.forEach(plan::remove);
+    //pull child activities
+    activityExtract.simulatedActivities().forEach( (activityInstanceId, activity) -> {
+      if (activity.parentId() == null) return;
+      final var rootParent = getIdOfRootParent(activityExtract, activityInstanceId);
+      if(rootParent.isPresent()) {
+        final var activityInstance = SchedulingActivityDirective.of(
+            activityTypes.get(activity.type()),
+            planningHorizon.toDur(activity.start()),
+            activity.duration(),
+            activity.arguments(),
+            planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId.getKey(rootParent.get()),
+            null,
+            true);
+        plan.add(activityInstance);
+      }
+    });
+    //no need to replace in Evaluation because child activities are not referenced in it
+  }
+
+  private static Optional<ActivityDirectiveId> getIdOfRootParent(
+      final SimulationEngine.SimulationActivityExtract results,
+      final SimulatedActivityId instanceId){
+    if(!results.simulatedActivities().containsKey(instanceId)){
+      if(!results.unfinishedActivities().containsKey(instanceId)){
+        LOGGER.debug("The simulation of the parent of activity with id "+ instanceId.id() + " has been finished");
+      }
+      return Optional.empty();
+    }
+    final var act = results.simulatedActivities().get(instanceId);
+    if(act.parentId() == null){
+      // SAFETY: any activity that has no parent must have a directive id.
+      return Optional.of(act.directiveId().get());
+    } else {
+      return getIdOfRootParent(results, act.parentId());
+    }
+  }
+
+  private static Optional<Duration> getActivityDuration(
+      final ActivityDirectiveId activityDirectiveId,
+      final CheckpointSimulationDriver.SimulationResultsComputerInputs simulationResultsInputs){
+      return simulationResultsInputs.engine().getTaskDuration(simulationResultsInputs.activityDirectiveIdTaskIdMap().get(activityDirectiveId));
+  }
+
+  private ActivityDirective schedulingActToActivityDir(
+      final SchedulingActivityDirective activity,
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId) {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
     }
@@ -369,9 +442,6 @@ public class SimulationFacade implements AutoCloseable{
       }
     }
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
-    if(activity.anchorId()!= null && !planActDirectiveIdToSimulationActivityDirectiveId.containsKey(activity.anchorId())){
-      throw new RuntimeException("Activity with id "+ activity.anchorId() + " referenced as an anchor by activity " + activity.toString() + " is not present in the plan");
-    }
     return new ActivityDirective(
         activity.startOffset(),
         serializedActivity,

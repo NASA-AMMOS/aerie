@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
@@ -665,13 +666,13 @@ public class AnchorSchedulerTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
+      return executor -> new OneStepTask<>($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
+        return TaskStatus.delayed(oneMinute, new OneStepTask<>($$ -> {
           $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
-        });
-      };
+        }));
+      });
     }
   };
 
@@ -690,18 +691,18 @@ public class AnchorSchedulerTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> scheduler -> {
+      return executor -> new OneStepTask<>(scheduler -> {
         scheduler.emit(this, decomposingActivityDirectiveInputTopic);
         return TaskStatus.delayed(
             Duration.ZERO,
-            $ -> {
+            new OneStepTask<>($ -> {
               try {
                 $.spawn(delayedActivityDirective.getTaskFactory(null, null));
               } catch (final InstantiationException ex) {
                 throw new Error("Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                     ex.toString()));
               }
-              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), $$ -> {
+              return TaskStatus.delayed(Duration.of(120, Duration.SECOND), new OneStepTask<>($$ -> {
                 try {
                   $$.spawn(delayedActivityDirective.getTaskFactory(null, null));
                 } catch (final InstantiationException ex) {
@@ -711,9 +712,9 @@ public class AnchorSchedulerTest {
                 }
                 $$.emit(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
                 return TaskStatus.completed(Unit.UNIT);
-              });
-            });
-      };
+              }));
+            }));
+      });
     }
   };
 
