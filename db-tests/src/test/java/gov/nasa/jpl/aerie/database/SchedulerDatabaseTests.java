@@ -49,15 +49,20 @@ class SchedulerDatabaseTests {
   int insertGoal() throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
-        insert into scheduling_goal(
-          revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date
-        ) values (0, 'goal', 'does thing', 0, 'hey there', 'its me', 'also me', now(), now()) returning id;
+        with metadata(id, owner) as (
+          insert into scheduling_goal_metadata(name, description, owner, updated_by)
+          values ('test goal', 'no-op', 'scheduler db tests', 'scheduler db tests')
+          returning id, owner
+        )
+        insert into scheduling_goal_definition(goal_id, definition, author)
+        select m.id, 'nothing', m.owner
+        from metadata m
+        returning goal_id as id;
       """);
       res.next();
       return res.getInt("id");
     }
   }
-
 
   @Nested
   class TestSpecificationAndTemplateGoalTriggers {
@@ -73,7 +78,8 @@ class SchedulerDatabaseTests {
     @AfterEach
     void afterEach() throws SQLException {
       helper.clearTable("scheduling_specification");
-      helper.clearTable("scheduling_goal");
+      helper.clearTable("scheduling_goal_metadata");
+      helper.clearTable("scheduling_goal_definition");
       helper.clearTable("scheduling_specification_goals");
     }
 
@@ -143,12 +149,13 @@ class SchedulerDatabaseTests {
     }
 
     @Test
-    void shouldIncrementSpecRevisionAfterModifyingGoal() throws SQLException {
+    void shouldIncrementSpecRevisionAfterModifyingGoalSpec() throws SQLException {
       insertGoalPriorities(0, new int[] {0, 1, 2, 3, 4}, new int[]{0, 1, 2, 3, 4});
       final var revisionBefore  = getSpecificationRevision(specificationIds[0]);
       connection.createStatement().executeUpdate("""
-        update scheduling_goal
-        set name = 'other name' where id = %d;
+        update scheduling_specification_goals
+        set goal_revision = 0
+        where goal_id = %d;
       """.formatted(goalIds[3]));
       final var revisionAfter  = getSpecificationRevision(specificationIds[0]);
       assertEquals(revisionBefore + 1, revisionAfter);

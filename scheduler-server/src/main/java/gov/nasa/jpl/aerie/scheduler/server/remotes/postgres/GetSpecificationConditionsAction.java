@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionSource;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -10,16 +13,17 @@ import java.util.List;
 
 /*package-local*/ final class GetSpecificationConditionsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-    select
-      s.condition_id,
-      s.enabled,
-      c.name,
-      c.definition,
-      c.revision
-    from scheduling_specification_conditions as s
-      join scheduling_condition as c
-      on s.specification_id = ?
-      and s.condition_id = c.id
+    select s.condition_id, cd.revision, cm.name, cd.definition
+      from scheduling_specification_conditions s
+      left join scheduling_condition_definition cd using (condition_id)
+      left join scheduling_condition_metadata cm on s.condition_id = cm.id
+      where s.specification_id = ?
+      and s.enabled
+      and ((s.condition_revision is not null and s.condition_revision = cd.revision)
+      or (s.condition_revision is null and cd.revision = (select def.revision
+                                                      from scheduling_condition_definition def
+                                                      where def.condition_id = s.condition_id
+                                                      order by def.revision desc limit 1)));
     """;
 
   private final PreparedStatement statement;
@@ -28,21 +32,20 @@ import java.util.List;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<PostgresSchedulingConditionRecord> get(final long specificationId) throws SQLException {
+  public List<SchedulingConditionRecord> get(final long specificationId) throws SQLException {
     this.statement.setLong(1, specificationId);
     final var resultSet = this.statement.executeQuery();
 
-    final var goals = new ArrayList<PostgresSchedulingConditionRecord>();
+    final var conditions = new ArrayList<SchedulingConditionRecord>();
     while (resultSet.next()) {
       final var id = resultSet.getLong("condition_id");
       final var revision = resultSet.getLong("revision");
       final var name = resultSet.getString("name");
       final var definition = resultSet.getString("definition");
-      final var enabled = resultSet.getBoolean("enabled");
-      goals.add(new PostgresSchedulingConditionRecord(id, revision, name, definition, enabled));
+      conditions.add(new SchedulingConditionRecord(new SchedulingConditionId(id), revision, name, new SchedulingConditionSource(definition)));
     }
 
-    return goals;
+    return conditions;
   }
 
   @Override

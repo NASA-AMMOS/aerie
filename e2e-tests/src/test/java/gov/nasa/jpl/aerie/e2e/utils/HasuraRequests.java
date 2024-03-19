@@ -455,18 +455,12 @@ public class HasuraRequests implements AutoCloseable {
 
   private SchedulingRequest cancelSchedulingRun(int analysisId, int timeout) throws IOException {
     final var variables = Json.createObjectBuilder().add("analysis_id", analysisId).build();
-    //assert that we only canceled one task
-    final var cancelRequest = makeRequest(GQL.CANCEL_SCHEDULING, variables)
-                                .getJsonObject("update_scheduling_request")
-                                .getJsonArray("returning");
-    assertEquals(1, cancelRequest.size());
-    final int specId = cancelRequest.getJsonObject(0).getInt("specification_id");
-    final int specRev = cancelRequest.getJsonObject(0).getInt("specification_revision");
+    makeRequest(GQL.CANCEL_SCHEDULING, variables);
     for(int i = 0; i <timeout; ++i) {
       try {
         Thread.sleep(1000); //1s
       } catch (InterruptedException ex) {throw new RuntimeException(ex);}
-      final var response = getSchedulingRequest(specId, specRev);
+      final var response = getSchedulingRequest(analysisId);
       // If reason is present, that means that the scheduler has posted
       // and we are not just seeing the side effects of `GQL.CANCEL_SCHEDULING`
       if(response.canceled() && response.reason().isPresent()) return response;
@@ -474,10 +468,9 @@ public class HasuraRequests implements AutoCloseable {
     throw new TimeoutError("Canceling scheduling timed out after " + timeout + " seconds");
   }
 
-  private SchedulingRequest getSchedulingRequest(int specificationId, int specificationRevision) throws IOException {
+  private SchedulingRequest getSchedulingRequest(int analysisId) throws IOException {
     final var variables = Json.createObjectBuilder()
-                              .add("specificationId", specificationId)
-                              .add("specificationRev", specificationRevision)
+                              .add("analysisId", analysisId)
                               .build();
     final var data = makeRequest(GQL.GET_SCHEDULING_REQUEST, variables).getJsonObject("scheduling_request_by_pk");
     return SchedulingRequest.fromJSON(data);
@@ -550,20 +543,6 @@ public class HasuraRequests implements AutoCloseable {
     throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
   }
 
-  public int insertSchedulingGoal(String name, int modelId, String definition) throws IOException {
-    return insertSchedulingGoal(name, modelId, definition, "");
-  }
-
-  public int insertSchedulingGoal(String name, int modelId, String definition, String description) throws IOException {
-    final var schedulingGoalInputBuilder = Json.createObjectBuilder()
-                                          .add("name", name)
-                                          .add("model_id", modelId)
-                                          .add("definition", definition)
-                                          .add("description", description);
-    final var variables = Json.createObjectBuilder().add("goal", schedulingGoalInputBuilder).build();
-    return makeRequest(GQL.CREATE_SCHEDULING_GOAL, variables).getJsonObject("goal").getInt("id");
-  }
-
   public void deleteSchedulingGoal(int goalId) throws IOException {
     final var variables = Json.createObjectBuilder().add("goalId", goalId).build();
     makeRequest(GQL.DELETE_SCHEDULING_GOAL, variables);
@@ -596,13 +575,67 @@ public class HasuraRequests implements AutoCloseable {
     makeRequest(GQL.UPDATE_SCHEDULING_SPECIFICATION_PLAN_REVISION, variables);
   }
 
-  public void createSchedulingSpecGoal(int goalId, int specificationId, int priority) throws IOException {
-    final var schedulingSpecGoalInsertBuilder = Json.createObjectBuilder()
-                                                    .add("goal_id", goalId)
-                                                    .add("specification_id", specificationId)
-                                                    .add("priority", priority);
-    final var variables = Json.createObjectBuilder().add("spec_goal", schedulingSpecGoalInsertBuilder).build();
-    makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables);
+  public int createSchedulingSpecGoal(
+      String name,
+      String definition,
+      int specificationId,
+      int priority
+  ) throws IOException {
+    return createSchedulingSpecGoal(name, definition, "", specificationId, priority);
+  }
+
+  public int createSchedulingSpecGoal(
+      String name,
+      String definition,
+      String description,
+      int specificationId,
+      int priority
+  ) throws IOException {
+    final var specGoalBuilder = Json.createObjectBuilder()
+                                    .add("goal_metadata",
+                                         Json.createObjectBuilder()
+                                             .add("data",
+                                                  Json.createObjectBuilder()
+                                                      .add("name", name)
+                                                      .add("description", description)
+                                                      .add("versions",
+                                                           Json.createObjectBuilder()
+                                                               .add("data",
+                                                                    Json.createArrayBuilder()
+                                                                        .add(Json.createObjectBuilder()
+                                                                                 .add("definition", definition))))))
+                                    .add("specification_id", specificationId)
+                                    .add("priority", priority);
+    final var variables = Json.createObjectBuilder().add("spec_goal", specGoalBuilder).build();
+    return makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
+            .getJsonObject("insert_scheduling_specification_goals_one")
+            .getInt("goal_id");
+  }
+
+  public int updateGoalDefinition(int goalId, String definition) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("goal_id", goalId)
+                              .add("definition", definition)
+                              .build();
+    return makeRequest(GQL.UPDATE_GOAL_DEFINITION, variables).getJsonObject("definition").getInt("revision");
+  }
+
+  public void updateSchedulingSpecEnabled(int schedulingSpecId, int goalId, boolean enabled) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("spec_id", schedulingSpecId)
+                              .add("goal_id", goalId)
+                              .add("enabled", enabled)
+                              .build();
+    makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_ENABLED, variables);
+  }
+
+  public void updateSchedulingSpecVersion(int schedulingSpecId, int goalId, int version) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("spec_id", schedulingSpecId)
+                              .add("goal_id", goalId)
+                              .add("goal_revision", version)
+                              .build();
+    makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_VERSION, variables);
   }
 
   public SchedulingDSLTypesResponse getSchedulingDslTypeScript(int missionModelId) throws IOException {

@@ -27,15 +27,13 @@ public enum GQL {
     }"""),
   CANCEL_SCHEDULING("""
     mutation cancelScheduling($analysis_id: Int!) {
-      update_scheduling_request(where: {analysis_id: {_eq: $analysis_id}}, _set: {canceled: true}) {
-        returning {
-          analysis_id
-          specification_id
-          specification_revision
-          canceled
-          reason
-          status
-        }
+      update_scheduling_request_by_pk(pk_columns: {analysis_id: $analysis_id}, _set: {canceled: true}) {
+        analysis_id
+        specification_id
+        specification_revision
+        canceled
+        reason
+        status
       }
     }"""),
   CANCEL_SIMULATION("""
@@ -94,21 +92,6 @@ public enum GQL {
     mutation CreatePlan($plan: plan_insert_input!) {
       insert_plan_one(object: $plan) {
         id
-        revision
-      }
-    }"""),
-  CREATE_SCHEDULING_GOAL("""
-    mutation CreateSchedulingGoal($goal: scheduling_goal_insert_input!) {
-      goal: insert_scheduling_goal_one(object: $goal) {
-        author
-        created_date
-        definition
-        description
-        id
-        last_modified_by
-        model_id
-        modified_date
-        name
         revision
       }
     }"""),
@@ -184,9 +167,11 @@ public enum GQL {
     }"""),
   DELETE_SCHEDULING_GOAL("""
     mutation DeleteSchedulingGoal($goalId: Int!) {
-      delete_scheduling_goal_by_pk(id: $goalId) {
+      delete_scheduling_specification_goals(where: {goal_id: {_eq: $goalId}}){
+        affected_rows
+      }
+      delete_scheduling_goal_metadata_by_pk(id: $goalId) {
         name
-        definition
       }
     }"""),
   DELETE_SIMULATION_PRESET("""
@@ -374,8 +359,8 @@ public enum GQL {
       }
     }"""),
   GET_SCHEDULING_REQUEST("""
-    query GetSchedulingRequest($specificationId: Int!, $specificationRev: Int!) {
-      scheduling_request_by_pk(specification_id: $specificationId, specification_revision: $specificationRev) {
+    query GetSchedulingRequest($analysisId: Int!) {
+      scheduling_request_by_pk(analysis_id: $analysisId) {
         specification_id
         specification_revision
         analysis_id
@@ -561,6 +546,12 @@ public enum GQL {
           enabled
         }
       }"""),
+  UPDATE_GOAL_DEFINITION("""
+    mutation updateGoalDefinition($goal_id: Int!, $definition: String!) {
+      definition: insert_scheduling_goal_definition_one(object: {goal_id: $goal_id, definition: $definition}) {
+        revision
+      }
+    }"""),
   UPDATE_ROLE_ACTION_PERMISSIONS("""
     mutation updateRolePermissions($role: user_roles_enum!, $action_permissions: jsonb!) {
       permissions: update_user_role_permission_by_pk(
@@ -570,6 +561,26 @@ public enum GQL {
         action_permissions
       }
     }"""),
+  UPDATE_SCHEDULING_SPEC_GOALS_ENABLED("""
+		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $enabled: Boolean!) {
+			update_scheduling_specification_goals_by_pk(
+			  pk_columns: {specification_id: $spec_id, goal_id: $goal_id},
+			  _set: {enabled: $enabled})
+			{
+				goal_revision
+				enabled
+			}
+		}"""),
+  UPDATE_SCHEDULING_SPEC_GOALS_VERSION("""
+		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $goal_revision: Int!) {
+			update_scheduling_specification_goals_by_pk(
+				pk_columns: {specification_id: $spec_id, goal_id: $goal_id},
+				_set: {goal_revision: $goal_revision})
+			{
+				goal_revision
+				enabled
+			}
+		}"""),
   UPDATE_SCHEDULING_SPECIFICATION_PLAN_REVISION("""
     mutation updateSchedulingSpec($planId: Int!, $planRev: Int!) {
       update_scheduling_specification(

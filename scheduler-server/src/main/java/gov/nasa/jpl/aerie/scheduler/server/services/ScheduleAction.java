@@ -55,12 +55,11 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
   public Response run(final SpecificationId specificationId, final HasuraAction.Session session)
   throws NoSuchSpecificationException, IOException
   {
-    //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
-    //TODO may also need to verify the model revision / other volatile metadata matches one from request
-    final var specificationRev = this.specificationService.getSpecificationRevisionData(specificationId);
+    //record the plan and specification revision as of the scheduling request time (in case work commences much later in worker thread)
+    final var request = new ScheduleRequest(specificationId, this.specificationService.getSpecificationRevisionData(specificationId));
 
-    //submit request to run scheduler (possibly asynchronously or even cached depending on service)
-    final var response = this.schedulerService.getScheduleResults(new ScheduleRequest(specificationId, specificationRev), session.hasuraUserId());
+    //submit request to run scheduler workers
+    final var response = this.schedulerService.getScheduleResults(request, session.hasuraUserId());
 
     return repackResponse(response);
   }

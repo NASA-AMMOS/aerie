@@ -70,7 +70,7 @@ remote_relationships:
       source: AerieScheduler
       table:
         schema: public
-        name: scheduling_goal
+        name: scheduling_goal_metadata
       field_mapping:
         source_scheduling_goal_id: id
 select_permissions:
