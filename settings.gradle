@@ -16,6 +16,9 @@ include 'permissions'
 include 'procedural:timeline'
 include 'procedural:constraints'
 
+// Procedural examples
+include 'procedural:examples:foo-procedures'
+
 // Services for deployment within the Aerie infrastructure
 include 'merlin-server'
 include 'merlin-worker'
