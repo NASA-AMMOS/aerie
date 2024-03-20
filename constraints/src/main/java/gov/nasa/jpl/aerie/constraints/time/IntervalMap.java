@@ -534,22 +534,27 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       // Cases: --[---]---<--->--
       Segment<V> s = null;
       var originalS = Segment.of(interval, value);
-      var iter = this.segments.headSet(originalS, false).descendingIterator();
+      var iter = this.segments.headSet(originalS, true).descendingIterator();
       Segment<V> lowerS = null;
       while (iter.hasNext()) {
         lowerS = iter.next();
         //lowerS = this.segments.lower(lowerS);
         //if (lowerS == null) break;
         if (IntervalAlgebra.endsStrictlyBefore(lowerS.interval(), originalS.interval())) {
+          //if (s == null) s = lowerS;
           break;
         } else {
           s = lowerS;
         }
       }
+      if (s == null) { // there are no elements that start before
+        s = this.segments.higher(originalS);
+      }
 
       // Cases: --[---<---]--->-- and --[---<--->---]--
-      if (s == null && !this.segments.isEmpty()) s = this.segments.first();
-      if (s != null) {
+      //boolean sWasNull = s == null;
+      //if (s == null && !this.segments.isEmpty()) s = this.segments.first();
+      if (s != null && IntervalAlgebra.startsBefore(s.interval(), interval)) {
         // If the intervals agree on their value, we can unify the old interval with the new one.
         // Otherwise, we'll snip the old one.
         if (Objects.equals(s.value(), value)) {
