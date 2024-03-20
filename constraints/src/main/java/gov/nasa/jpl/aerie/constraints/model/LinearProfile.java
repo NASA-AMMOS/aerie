@@ -106,17 +106,16 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
     @Override
     public Windows changePoints() {
       final var result = IntervalMap.<Boolean>builder().set(this.profilePieces.map(LinearEquation::changing));
-      for (int i = 0; i < this.profilePieces.size(); i++) {
-        final var segment = this.profilePieces.get(i);
+      for (final var segment : profilePieces) {
         final var startTime = segment.interval().start;
-        if (i == 0) {
+        if (segment == profilePieces.first()) {
           if (!segment.interval().contains(Duration.MIN_VALUE)) {
             result.unset(Interval.at(startTime));
           }
         } else {
-          final var previousSegment = this.profilePieces.get(i-1);
+          final var previousSegment = this.profilePieces.segments().lower(segment);
 
-          if (Interval.meets(previousSegment.interval(), segment.interval())) {
+          if (previousSegment != null && Interval.meets(previousSegment.interval(), segment.interval())) {
             if (previousSegment.value().valueAt(startTime) != segment.value().valueAt(startTime)) {
               result.set(Interval.at(startTime), true);
             }
@@ -133,7 +132,7 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
   @Override
   public boolean isConstant() {
     return profilePieces.isEmpty() ||
-           (profilePieces.size() == 1 && !profilePieces.get(0).value().changing());
+           (profilePieces.size() == 1 && !profilePieces.first().value().changing());
   }
 
   /** Assigns a default value to all gaps in the profile. */

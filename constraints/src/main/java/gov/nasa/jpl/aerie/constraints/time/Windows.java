@@ -185,8 +185,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
 
   /** Gets the time and inclusivity of the trailing edge of the last true segment */
   public Optional<Pair<Duration, Interval.Inclusivity>> maxTrueTimePoint(){
-    for (int i = this.segments.size() - 1; i >= 0; i--) {
-      final var segment = this.segments.get(i);
+    for (var segment : segments.segments().reversed()) {
       if (segment.value()) {
         final var window = segment.interval();
         return Optional.of(Pair.of(window.end, window.endInclusivity));
@@ -230,8 +229,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
       }
     } else {
       int index = -1;
-      for (int i = this.segments.size() - 1; i >= 0; i--) {
-        final var segment = this.segments.get(i);
+      for (var segment : segments.segments().reversed()) {
         if (segment.value()) {
           if (index == indexToRemove) {
             return new Windows(this.segments.set(segment.interval(), false));
@@ -264,8 +262,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
       }
     } else {
       int index = -1;
-      for (int i = this.segments.size() - 1; i >= 0; i--) {
-        final var segment = this.segments.get(i);
+      for (var segment : segments.segments().reversed()) {
         if (segment.value()) {
           if (index != indexToKeep) {
             builder.set(Segment.of(segment.interval(), false));
@@ -419,14 +416,14 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    */
   public Windows starts() {
     var result = IntervalMap.<Boolean>builder().set(this.segments).build();
-    for (int i = 0; i < result.size(); i++) {
-      final var segment = result.get(i);
+    for (final var segment : result.segments()) {
       if (segment.value()) {
         final boolean meetsFalse;
-        if (i == 0) {
+        if (segment == result.first()) {
           meetsFalse = false;
         } else {
-          meetsFalse = Interval.meets(this.segments.get(i - 1).interval(), segment.interval());
+          var s = this.segments.segments().lower(segment);
+          meetsFalse = s != null && Interval.meets(s.interval(), segment.interval());
         }
         if (meetsFalse) {
           result = result.set(Interval.at(segment.interval().start), true);
@@ -461,14 +458,14 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   @Override
   public Windows ends() {
     var result = IntervalMap.<Boolean>builder().set(this.segments).build();
-    for (int i = 0; i < this.segments.size(); i++) {
-      final var segment = this.segments.get(i);
+    for (final var segment : this.segments.segments()) {
       if (segment.value()) {
         final boolean meetsFalse;
-        if (i == this.segments.size()-1) {
+        if (segment == this.segments.segments().last()) {
           meetsFalse = false;
         } else {
-          meetsFalse = Interval.meets(segment.interval(), this.segments.get(i + 1).interval());
+          var s = this.segments.segments().higher(segment);
+          meetsFalse = s != null && Interval.meets(segment.interval(), s.interval());
         }
         if (meetsFalse) {
           result = result.set(Interval.between(
@@ -497,14 +494,19 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     boolean boundsStartContained = false;
     boolean boundsEndContained = false;
     if(this.segments.size() == 1){
-      if (segments.get(0).interval().contains(bounds.start) ||
-          Interval.hasSameStart(segments.get(0).interval(), bounds)) boundsStartContained = true;
-      if (segments.get(0).interval().contains(bounds.end) ||
-          Interval.hasSameEnd(segments.get(0).interval(), bounds)) boundsEndContained = true;
+      if (segments.first().interval().contains(bounds.start) ||
+          Interval.hasSameStart(segments.first().interval(), bounds)) boundsStartContained = true;
+      if (segments.first().interval().contains(bounds.end) ||
+          Interval.hasSameEnd(segments.first().interval(), bounds)) boundsEndContained = true;
     }
-    for (int i = 0; i < this.segments.size() - 1; i++) {
-      final var leftInterval = this.segments.get(i).interval();
-      final var rightInterval = this.segments.get(i+1).interval();
+    Interval leftInterval = null;
+    Interval rightInterval = null;
+    for (final var segment : this.segments.segments()) {
+      rightInterval = segment.interval();
+      if (leftInterval == null) {
+        leftInterval = rightInterval;
+        continue;
+      }
       if((leftInterval.contains(bounds.start) || rightInterval.contains(bounds.start)) ||
          Interval.hasSameStart(leftInterval, bounds) || Interval.hasSameStart(rightInterval, bounds)) boundsStartContained = true;
       if((leftInterval.contains(bounds.end) || rightInterval.contains(bounds.end)) ||
@@ -518,6 +520,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         message.append(").");
         throw new InvalidGapsException(message.toString());
       }
+      leftInterval = rightInterval;
     }
     if (!boundsStartContained) throw new InvalidGapsException("cannot convert Windows with gaps into Spans (gap detected at plan bounds start)");
     if (!boundsEndContained) throw new InvalidGapsException("cannot convert Windows with gaps into Spans (gap detected at plan bounds end)");
@@ -573,15 +576,14 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
 
   @Override
   public Windows changePoints() {
+    Segment previousSegment = null;
     final var result = IntervalMap.<Boolean>builder().set(this.segments.map($ -> false));
-    for (int i = 0; i < this.segments.size(); i++) {
-      final var segment = this.segments.get(i);
-      if (i == 0) {
+    for (final var segment : this.segments.segments()) {
+      if (segment == this.segments.first()) {
         if (!segment.interval().contains(Duration.MIN_VALUE)) {
           result.unset(Interval.at(segment.interval().start));
         }
       } else {
-        final var previousSegment = this.segments.get(i-1);
         if (Interval.meets(previousSegment.interval(), segment.interval())) {
           if (!previousSegment.value().equals(segment.value())) {
             result.set(Interval.at(segment.interval().start), true);
@@ -590,6 +592,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
           result.unset(Interval.at(segment.interval().start));
         }
       }
+      previousSegment = segment;
     }
 
     return new Windows(result.build());
@@ -633,10 +636,10 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     return new Windows(segments.select(intervals));
   }
 
-  /** Delegated to {@link IntervalMap#get(int)} */
-  public Segment<Boolean> get(final int index) {
-    return segments.get(index);
-  }
+//  /** Delegated to {@link IntervalMap#get(int)} */
+//  public Segment<Boolean> get(final int index) {
+//    return segments.get(index);
+//  }
 
   /** Delegated to {@link IntervalMap#size()} */
   public int size() {
