@@ -180,7 +180,7 @@ public final class AerieAppDriver {
         Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
         URI.create(getEnv("HASURA_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
-        Boolean.parseBoolean(getEnv("ENABLE_CONTINUOUS_VALIDATION_THREAD", "false")),
+        Boolean.parseBoolean(getEnv("ENABLE_CONTINUOUS_VALIDATION_THREAD", "true")),
         Integer.parseInt(getEnv("VALIDATION_THREAD_POLLING_PERIOD", "500"))
     );
   }
