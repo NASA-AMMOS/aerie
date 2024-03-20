@@ -10,6 +10,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,6 +22,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class SimulationDriver {
+
+  private static final Logger logger = LoggerFactory.getLogger(SimulationDriver.class);
+
   public static <Model>
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
@@ -53,6 +58,13 @@ public final class SimulationDriver {
       final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer
   ) {
+
+    final long start = System.nanoTime();
+
+    logger.info("Starting simulation of {} activity directives, planning horizon {} to {}, simulation horizon {} to {}",
+                schedule.size(), planStartTime, planStartTime.plusMillis(planDuration.in(Duration.MILLISECONDS)),
+                simulationStartTime, simulationStartTime.plusMillis(simulationDuration.in(Duration.MILLISECONDS)));
+
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
@@ -134,8 +146,40 @@ public final class SimulationDriver {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
 
+      logger.debug("Computing simulation results");
+
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
+      final var results =
+        SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
+
+      final long now = System.nanoTime();
+
+      final var resourceStats = engine.resourceUpdateStats.entrySet();
+      if (!resourceStats.isEmpty()) {
+        final double thresholdSeconds = 0.1;
+        final var hotResourceStats = resourceStats.stream()
+          .filter(e -> e.getValue().totalSeconds >= thresholdSeconds)
+          .sorted((a, b) -> Double.compare(b.getValue().totalSeconds, a.getValue().totalSeconds))
+          .toList();
+        final double totSec = resourceStats.stream().mapToDouble(e -> e.getValue().totalSeconds).sum();
+        final double hotSec = hotResourceStats.stream().mapToDouble(e -> e.getValue().totalSeconds).sum();
+        logger.debug("Total {}s updating {} resources, {}s for hot {} (at least {}s each), {}s for remaining {}",
+                     totSec, resourceStats.size(), hotSec, hotResourceStats.size(), thresholdSeconds,
+                     totSec - hotSec, resourceStats.size() - hotResourceStats.size());
+        for (final var stats : hotResourceStats) {
+          logger.debug("Hot resource {}: {} updates, {}s total time, {}s average per update",
+                       stats.getKey().id(), stats.getValue().totalUpdates, stats.getValue().totalSeconds,
+                       stats.getValue().totalSeconds / stats.getValue().totalUpdates);
+        }
+      }
+
+      logger.info("Finished simulation of {} activity directives, " +
+                  "planning horizon {} to {}, simulation horizon {} to {}, total wall-clock time {}s",
+                  schedule.size(), planStartTime, planStartTime.plusMillis(planDuration.in(Duration.MILLISECONDS)),
+                  simulationStartTime, simulationStartTime.plusMillis(simulationDuration.in(Duration.MILLISECONDS)),
+                  (now - start) * 1e-9);
+
+      return results;
     }
   }
 
