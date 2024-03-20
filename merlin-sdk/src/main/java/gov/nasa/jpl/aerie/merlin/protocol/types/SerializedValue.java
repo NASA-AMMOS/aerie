@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,7 +26,7 @@ import java.util.Optional;
  * code would need to know about all possible subclasses for deserialization). The Visitor
  * pattern on a class closed to extension allows us to guarantee that no ambiguity occurs.
  */
-public sealed interface SerializedValue {
+public sealed interface SerializedValue extends Comparable<SerializedValue> {
   SerializedValue NULL = SerializedValue.ofNull();
 
   /**
@@ -38,6 +39,31 @@ public sealed interface SerializedValue {
    *   kind of data contained in this object.
    */
   <T> T match(Visitor<T> visitor);
+
+  default Object getValue() {
+    var dc = this.getClass().getDeclaredFields();
+    if (dc.length == 0) {
+      return null;
+    }
+    if (dc.length == 1) {
+        try {
+            return dc[0].get(this);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    var list = new ArrayList<>();
+    var list2 = new ArrayList<>();
+    for (var f : this.getClass().getDeclaredFields()) {
+        try {
+            list.add(f.get(this));
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    list.equals(list2);
+    return list;
+  }
 
   /**
    * An operation to be performed on the data contained in a {@link SerializedValue}.
@@ -60,10 +86,27 @@ public sealed interface SerializedValue {
     T onList(List<SerializedValue> value);
   }
 
+  @Override
+  default int compareTo(final SerializedValue o) {
+    return gov.nasa.jpl.aerie.merlin.protocol.types.ObjectComparator.getInstance().compare(this.getValue(), o.getValue());
+  }
+
+
   record NullValue() implements SerializedValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onNull();
+    }
+
+    @Override
+    public Object getValue() {
+      return null;
+    }
+
+    @Override
+    public int compareTo(final SerializedValue o) {
+      if (o instanceof NullValue) return 0;
+      return -1;
     }
   }
 
@@ -71,6 +114,11 @@ public sealed interface SerializedValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onNumeric(value);
+    }
+
+    @Override
+    public BigDecimal getValue() {
+      return value;
     }
 
     // `BigDecimal#equals` is too strict -- values differing only in representation need to be considered the same.
@@ -91,12 +139,20 @@ public sealed interface SerializedValue {
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onBoolean(value);
     }
+    @Override
+    public Boolean getValue() {
+      return value;
+    }
   }
 
   record StringValue(String value) implements SerializedValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onString(value);
+    }
+    @Override
+    public String getValue() {
+      return value;
     }
   }
 
@@ -105,12 +161,20 @@ public sealed interface SerializedValue {
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onMap(map);
     }
+    @Override
+    public Map<String, SerializedValue> getValue() {
+      return map;
+    }
   }
 
   record ListValue(List<SerializedValue> list) implements SerializedValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
       return visitor.onList(list);
+    }
+    @Override
+    public List<SerializedValue> getValue() {
+      return list;
     }
   }
 
@@ -380,4 +444,5 @@ public sealed interface SerializedValue {
       }
     });
   }
+
 }
