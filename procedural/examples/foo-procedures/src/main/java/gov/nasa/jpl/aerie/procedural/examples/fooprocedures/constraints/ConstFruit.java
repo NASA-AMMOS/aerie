@@ -17,7 +17,6 @@ class ConstFruit implements Constraint {
   public Violations run(Plan plan, @NotNull CollectOptions options) {
 
     final var fruit = plan.resource("/fruit", Real::deserialize);
-    final var peel = plan.resource("/peel", Numbers::deserialize);
 
     return Violations.violateOn(
         fruit.equalTo(4),
