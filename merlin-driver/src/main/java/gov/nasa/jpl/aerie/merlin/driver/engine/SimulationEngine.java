@@ -71,8 +71,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The set of all spans of work contributed to by modeled tasks. */
   private final Map<SpanId, Span> spans = new HashMap<>();
-  /** A count of the remaining live tasks (and other spans) under each span. */
-  private final Map<SpanId, MutableInt> spanTasks = new HashMap<>();
+  /** A count of the direct contributors to each span, including child spans and tasks. */
+  private final Map<SpanId, MutableInt> spanContributors = new HashMap<>();
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -85,7 +85,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.spans.put(span, new Span(Optional.empty(), startTime, Optional.empty()));
 
     final var task = TaskId.generate();
-    this.spanTasks.put(span, new MutableInt(1));
+    this.spanContributors.put(span, new MutableInt(1));
     this.tasks.put(task, new ExecutionState<>(span, 0, Optional.empty(), state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
@@ -201,8 +201,8 @@ public final class SimulationEngine implements AutoCloseable {
       // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
       var span = progress.span();
       while (true) {
-        if (this.spanTasks.get(span).decrementAndGet() > 0) break;
-        this.spanTasks.remove(span);
+        if (this.spanContributors.get(span).decrementAndGet() > 0) break;
+        this.spanContributors.remove(span);
 
         this.spans.compute(span, (_id, $) -> $.close(currentTime));
 
@@ -226,7 +226,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
       final var target = TaskId.generate();
-      SimulationEngine.this.spanTasks.get(scheduler.span).increment();
+      SimulationEngine.this.spanContributors.get(scheduler.span).increment();
       SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor)));
       SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
@@ -688,7 +688,7 @@ public final class SimulationEngine implements AutoCloseable {
     @Override
     public void spawn(final TaskFactory<?> state) {
       final var task = TaskId.generate();
-      SimulationEngine.this.spanTasks.get(this.span).increment();
+      SimulationEngine.this.spanContributors.get(this.span).increment();
       SimulationEngine.this.tasks.put(task, new ExecutionState<>(this.span, 0, this.caller, state.create(SimulationEngine.this.executor)));
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
       this.frame.signal(JobId.forTask(task));
@@ -701,7 +701,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.span = SpanId.generate();
 
       SimulationEngine.this.spans.put(this.span, new Span(Optional.of(parentSpan), this.currentTime, Optional.empty()));
-      SimulationEngine.this.spanTasks.put(this.span, new MutableInt(1));
+      SimulationEngine.this.spanContributors.put(this.span, new MutableInt(1));
     }
 
     @Override
@@ -709,8 +709,8 @@ public final class SimulationEngine implements AutoCloseable {
       // TODO: Do we want to throw an error instead?
       if (this.shadowedSpans == 0) return;
 
-      if (SimulationEngine.this.spanTasks.get(this.span).decrementAndGet() == 0) {
-        SimulationEngine.this.spanTasks.remove(this.span);
+      if (SimulationEngine.this.spanContributors.get(this.span).decrementAndGet() == 0) {
+        SimulationEngine.this.spanContributors.remove(this.span);
         SimulationEngine.this.spans.compute(this.span, (_id, $) -> $.close(currentTime));
       }
       // NOTE: We don't need to propagate completion any further, because the next shadowed span
