@@ -302,11 +302,6 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     Duration endTime;
     Interval.Inclusivity endInclusivity;
 
-//    var leftIndex = 0;
-//    var rightIndex = 0;
-//    var nextLeftIndex = 0;
-//    var nextRightIndex = 0;
-
     final Iterator<Segment<V1>> leftIter = left.segments.iterator();
     final Iterator<Segment<V2>> rightIter = right.segments.iterator();
 
@@ -372,30 +367,23 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
         endTime = leftInterval.end;
         if (leftInterval.includesEnd() && rightInterval.includesEnd()) {
           endInclusivity = Inclusive;
-//          leftIndex = nextLeftIndex;
-//          rightIndex = nextRightIndex;
         } else if (leftInterval.includesEnd()) {
           endInclusivity = Exclusive;
-//          rightIndex = nextRightIndex;
           leftGetNext = false;
         } else if (rightInterval.includesEnd()) {
           endInclusivity = Exclusive;
-//          leftIndex = nextLeftIndex;
           rightGetNext = false;
         } else {
           endInclusivity = Exclusive;
-//          rightIndex = nextRightIndex;
           leftGetNext = false;
         }
       } else if (leftInterval.end.shorterThan(rightInterval.end)) {
         endTime = leftInterval.end;
         endInclusivity = leftInterval.endInclusivity;
-//        leftIndex = nextLeftIndex;
         rightGetNext = false;
       } else {
         endTime = rightInterval.end;
         endInclusivity = rightInterval.endInclusivity;
-//        rightIndex = nextRightIndex;
         leftGetNext = false;
       }
       var finalInterval = Interval.between(startTime, startInclusivity, endTime, endInclusivity);
@@ -443,12 +431,6 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     }
     return result.build();
   }
-
-//  /** Gets the segment at a given index */
-//  public Segment<V> get(final int index) {
-//    final var i = (index >= 0) ? index : this.segments.size() + index;
-//    return this.segments.get(i);
-//  }
 
   /** The number of defined intervals in this. */
   public int size() {
@@ -510,10 +492,6 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       this.segments = new TreeSet<>();
     }
 
-//    public Builder(int initialCapacity) {
-//      this.segments = new TreeSet<>();
-//    }
-
     public Builder<V> set(final IntervalMap<V> map) {
       for (final var segment: map) {
         set(segment);
@@ -538,22 +516,17 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       Segment<V> lowerS = null;
       while (iter.hasNext()) {
         lowerS = iter.next();
-        //lowerS = this.segments.lower(lowerS);
-        //if (lowerS == null) break;
         if (IntervalAlgebra.endsStrictlyBefore(lowerS.interval(), originalS.interval())) {
-          //if (s == null) s = lowerS;
           break;
         } else {
           s = lowerS;
         }
       }
-      if (s == null) { // there are no elements that start before
+      if (s == null) { // there are no elements that start before `interval`
         s = this.segments.higher(originalS);
       }
 
       // Cases: --[---<---]--->-- and --[---<--->---]--
-      //boolean sWasNull = s == null;
-      //if (s == null && !this.segments.isEmpty()) s = this.segments.first();
       if (s != null && IntervalAlgebra.startsBefore(s.interval(), interval)) {
         // If the intervals agree on their value, we can unify the old interval with the new one.
         // Otherwise, we'll snip the old one.
@@ -594,8 +567,8 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
         }
       }
 
-      // now, everything left of `index` is strictly left of `interval`,
-      // and everything right of `index` is strictly right of `interval`,
+      // now, everything left of s is strictly left of `interval`,
+      // and everything right of s is strictly right of `interval`,
       // so adding this interval to the list is trivial.
       this.segments.add(Segment.of(interval, value));
 
@@ -666,13 +639,5 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       // SAFETY: `segments` meets the same invariants as required by `IntervalMap`.
       return new IntervalMap<>(segments);
     }
-
-//    private Interval getInterval(final int index) {
-//      return this.segments.get(index).interval();
-//    }
-
-//    private V getValue(final int index) {
-//      return this.segments.get(index).value();
-//    }
   }
 }
