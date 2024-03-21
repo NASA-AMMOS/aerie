@@ -40,30 +40,7 @@ public sealed interface SerializedValue extends Comparable<SerializedValue> {
    */
   <T> T match(Visitor<T> visitor);
 
-  default Object getValue() {
-    var dc = this.getClass().getDeclaredFields();
-    if (dc.length == 0) {
-      return null;
-    }
-    if (dc.length == 1) {
-        try {
-            return dc[0].get(this);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    var list = new ArrayList<>();
-    var list2 = new ArrayList<>();
-    for (var f : this.getClass().getDeclaredFields()) {
-        try {
-            list.add(f.get(this));
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    list.equals(list2);
-    return list;
-  }
+  Object getValue();
 
   /**
    * An operation to be performed on the data contained in a {@link SerializedValue}.
@@ -444,5 +421,4 @@ public sealed interface SerializedValue extends Comparable<SerializedValue> {
       }
     });
   }
-
 }

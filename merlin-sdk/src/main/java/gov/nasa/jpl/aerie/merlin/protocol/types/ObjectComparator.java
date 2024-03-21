@@ -40,7 +40,7 @@ public class ObjectComparator implements Comparator<Object> {
       var i1 = ((Iterable<?>) o1).iterator();
       var i2 = ((Iterable<?>) o2).iterator();
       while (i1.hasNext() && i2.hasNext()) {
-        int c = getInstance().compare(i1.next(), i2.next());
+        int c = compare(i1.next(), i2.next());
         if (c != 0) return c;
       }
       if (i1.hasNext()) return 1;
