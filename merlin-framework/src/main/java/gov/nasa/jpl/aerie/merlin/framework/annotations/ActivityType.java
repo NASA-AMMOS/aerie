@@ -134,4 +134,57 @@ public @interface ActivityType {
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
   @interface ParametricDuration {}
+
+  /**
+   * Use when the duration of an activity can be upper-bounded,
+   * Apply to either a static {@link Duration} field or a static no-arg method
+   * that returns {@link Duration}.
+   *
+   * This annotation can be used when the activity has an uncontrollable or parametric duration (see @ParametricDuration).
+   *
+   * Apply either like the following on a static field:
+   * <pre>{@code
+   * @ActivityType("Activity")
+   * public record Activity() {
+   *   @MaximumDuration
+   *   public static final Duration MAXIMUM_DURATION = Duration.HOUR;
+   *
+   *   @EffectModel
+   *   public void run(Mission mission) {
+   *     if(mission.resourceA.equals(true){
+   *       delay(MAXIMUM_DURATION)
+   *     } else{
+   *       delay(Duration.MINUTE);
+   *     }
+   *   }
+   * }
+   * }</pre>
+   *
+   * Or like the following on a static method:
+   *
+   * <pre>{@code
+   * @ActivityType("Activity")
+   * public record Activity() {
+   *   @MaximumDuration
+   *   public static Duration maximumDuration() {
+   *     return Duration.HOUR;
+   *   }
+   *
+   *   @EffectModel
+   *   public void run(Mission mission) {
+   *     if(mission.resourceA.equals(true){
+   *       delay(maximumDuration())
+   *     } else{
+   *       delay(Duration.MINUTE);
+   *     }
+   *   }
+   * }
+   * }</pre>
+   *
+   * This annotation is optional, but it is highly recommended if applicable. This annotation allows to perform less simulations.
+   *
+   */
+  @Retention(RetentionPolicy.CLASS)
+  @Target({ ElementType.FIELD, ElementType.METHOD })
+    @interface MaximumDuration {}
 }
