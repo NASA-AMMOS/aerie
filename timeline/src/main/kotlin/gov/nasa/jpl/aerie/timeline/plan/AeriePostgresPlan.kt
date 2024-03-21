@@ -33,19 +33,19 @@ data class AeriePostgresPlan(
 ): Plan {
 
   private val datasetId by lazy {
-    val statement = c.prepareStatement("select dataset_id from simulation_dataset where id = ?;")
+    val statement = c.prepareStatement("select dataset_id from merlin.simulation_dataset where id = ?;")
     statement.setInt(1, simDatasetId)
     getSingleIntQueryResult(statement)
   }
 
   private val simulationId by lazy {
-    val statement = c.prepareStatement("select simulation_id from simulation_dataset where id = ?;")
+    val statement = c.prepareStatement("select simulation_id from merlin.simulation_dataset where id = ?;")
     statement.setInt(1, simDatasetId)
     getSingleIntQueryResult(statement)
   }
 
   private val simulationInfo by lazy {
-    val statement = c.prepareStatement("select plan_id, simulation_start_time, simulation_end_time from simulation where id = ?;")
+    val statement = c.prepareStatement("select plan_id, simulation_start_time, simulation_end_time from merlin.simulation where id = ?;")
     statement.setInt(1, simulationId)
     val response = statement.executeQuery()
     if (!response.next()) throw DatabaseError("Expected exactly one result for query, found none: $statement")
@@ -67,7 +67,7 @@ data class AeriePostgresPlan(
   }
 
   private val planInfo by lazy {
-    val statement = c.prepareStatement("select start_time, duration from plan where id = ?;")
+    val statement = c.prepareStatement("select start_time, duration from merlin.plan where id = ?;")
     statement.setInt(1, simulationInfo.planId)
     intervalStyleStatement.execute()
     val response = statement.executeQuery()
@@ -92,12 +92,12 @@ data class AeriePostgresPlan(
 
   private val intervalStyleStatement = c.prepareStatement("set intervalstyle = 'iso_8601';")
   private val profileInfoStatement = c.prepareStatement(
-      "select id, duration from profile where dataset_id = ? and name = ?;"
+      "select id, duration from merlin.profile where dataset_id = ? and name = ?;"
   )
   private data class ProfileInfo(val id: Int, val duration: Duration)
 
   private val segmentsStatement = c.prepareStatement(
-      "select start_offset, dynamics, is_gap from profile_segment where profile_id = ? and dataset_id = ? order by start_offset asc;"
+      "select start_offset, dynamics, is_gap from merlin.profile_segment where profile_id = ? and dataset_id = ? order by start_offset asc;"
   )
 
   /***/ class DatabaseError(message: String): Error(message)
@@ -167,11 +167,11 @@ data class AeriePostgresPlan(
   }
 
   private val allInstancesStatement = c.prepareStatement(
-      "select start_offset, duration, attributes, activity_type_name, id from simulated_activity" +
+      "select start_offset, duration, attributes, activity_type_name, id from merlin.simulated_activity" +
           " where simulation_dataset_id = ?;"
   )
   private val filteredInstancesStatement = c.prepareStatement(
-      "select start_offset, duration, attributes, activity_type_name, id from simulated_activity" +
+      "select start_offset, duration, attributes, activity_type_name, id from merlin.simulated_activity" +
           " where simulation_dataset_id = ? and activity_type_name = ?;"
   )
   override fun <A: Any> instances(type: String?, deserializer: (SerializedValue) -> A): Instances<A> {
@@ -200,11 +200,11 @@ data class AeriePostgresPlan(
   }
 
   private val allDirectivesStatement = c.prepareStatement(
-      "select name, start_offset, type, arguments, id from activity_directive where plan_id = ?" +
+      "select name, start_offset, type, arguments, id from merlin.activity_directive where plan_id = ?" +
         " and start_offset > ?::interval and start_offset < ?::interval;"
   )
   private val filteredDirectivesStatement = c.prepareStatement(
-      "select name, start_offset, type, arguments, id from activity_directive where plan_id = ?" +
+      "select name, start_offset, type, arguments, id from merlin.activity_directive where plan_id = ?" +
           " and start_offset > ?::interval and start_offset < ?::interval and type = ?;"
   )
   override fun <A: Any> directives(type: String?, deserializer: (SerializedValue) -> A) = BaseTimeline(::Directives) { opts ->
