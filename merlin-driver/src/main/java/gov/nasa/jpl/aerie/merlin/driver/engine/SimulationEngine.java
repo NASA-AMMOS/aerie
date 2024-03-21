@@ -226,7 +226,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
       final var target = TaskId.generate();
-      SimulationEngine.this.spanTasks.put(scheduler.span, new MutableInt(1));
+      SimulationEngine.this.spanTasks.get(scheduler.span).increment();
       SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor)));
       SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
       frame.signal(JobId.forTask(target));
@@ -307,6 +307,14 @@ public final class SimulationEngine implements AutoCloseable {
 
     public boolean isActivity(final SpanId id) {
       return this.input.containsKey(id);
+    }
+
+    public boolean isDirective(SpanId id) {
+      return this.spanToPlannedDirective.containsKey(id);
+    }
+
+    public ActivityDirectiveId getDirective(SpanId id) {
+      return this.spanToPlannedDirective.get(id);
     }
 
     public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<SpanInfo>> {
@@ -428,11 +436,35 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
+    // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
+    final var activityParents = new HashMap<SpanId, SpanId>();
+    final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
+    engine.spans.forEach((span, state) -> {
+      if (!spanInfo.isActivity(span)) return;
+
+      var parent = state.parent();
+      while (parent.isPresent() && !spanInfo.isActivity(parent.get()) && !spanInfo.isDirective(parent.get())) {
+        parent = engine.spans.get(parent.get()).parent();
+      }
+
+      if (parent.isPresent()) {
+        if (spanInfo.isActivity(parent.get())) {
+          activityParents.put(span, parent.get());
+        } else if (spanInfo.isDirective(parent.get())) {
+          activityDirectiveIds.put(span, spanInfo.getDirective(parent.get()));
+        }
+      }
+    });
+
+    final var activityChildren = new HashMap<SpanId, List<SpanId>>();
+    activityParents.forEach((activity, parent) -> {
+      activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(activity);
+    });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(spanInfo.spanToPlannedDirective.size());
+    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
     final var usedSimulatedActivityIds = new HashSet<>();
-    for (final var entry : spanInfo.spanToPlannedDirective.entrySet()) {
+    for (final var entry : activityDirectiveIds.entrySet()) {
       spanToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
       usedSimulatedActivityIds.add(entry.getValue().id());
     }
@@ -445,33 +477,13 @@ public final class SimulationEngine implements AutoCloseable {
       spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
     }
 
-    // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
-    final var activityParents = new HashMap<SimulatedActivityId, SimulatedActivityId>();
-    engine.spans.forEach((span, state) -> {
-      if (!spanInfo.isActivity(span)) return;
-
-      var parent = state.parent();
-      while (parent.isPresent() && !spanInfo.isActivity(parent.get())) {
-        parent = engine.spans.get(parent.get()).parent();
-      }
-
-      if (parent.isPresent()) {
-        activityParents.put(spanToSimulatedActivityId.get(span), spanToSimulatedActivityId.get(parent.get()));
-      }
-    });
-
-    final var activityChildren = new HashMap<SimulatedActivityId, List<SimulatedActivityId>>();
-    activityParents.forEach((activity, parent) -> {
-      activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(activity);
-    });
-
     final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
     engine.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
       final var activityId = spanToSimulatedActivityId.get(span);
-      final var directiveId = spanInfo.spanToPlannedDirective.get(span); // will be null for non-directives
+      final var directiveId = activityDirectiveIds.get(span);
 
       if (state.endOffset().isPresent()) {
         final var inputAttributes = spanInfo.input().get(span);
@@ -482,9 +494,9 @@ public final class SimulationEngine implements AutoCloseable {
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             state.endOffset().get().minus(state.startOffset()),
-            activityParents.get(activityId),
-            activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId),
+            spanToSimulatedActivityId.get(activityParents.get(span)),
+            activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
+            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId),
             outputAttributes
         ));
       } else {
@@ -493,9 +505,9 @@ public final class SimulationEngine implements AutoCloseable {
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
-            activityParents.get(activityId),
-            activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId)
+            spanToSimulatedActivityId.get(activityParents.get(span)),
+            activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
+            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
         ));
       }
     });
@@ -690,8 +702,6 @@ public final class SimulationEngine implements AutoCloseable {
 
       SimulationEngine.this.spans.put(this.span, new Span(Optional.of(parentSpan), this.currentTime, Optional.empty()));
       SimulationEngine.this.spanTasks.put(this.span, new MutableInt(1));
-
-      SimulationEngine.this.spanTasks.get(parentSpan).increment();
     }
 
     @Override
