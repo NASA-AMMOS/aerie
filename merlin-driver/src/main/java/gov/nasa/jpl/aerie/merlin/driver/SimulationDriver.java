@@ -233,9 +233,11 @@ public final class SimulationDriver {
   {
     // Emit the current activity (defined by directiveId)
     return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
+      scheduler1.pushSpan();
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
     }), scheduler2 -> {
+      scheduler2.popSpan();
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
