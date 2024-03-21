@@ -199,7 +199,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (status instanceof TaskStatus.Completed<Return>) {
       // Propagate completion up the span hierarchy.
       // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
-      var span = progress.span();
+      var span = scheduler.span;
       while (true) {
         if (this.spanContributors.get(span).decrementAndGet() > 0) break;
         this.spanContributors.remove(span);
