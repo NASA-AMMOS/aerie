@@ -208,7 +208,8 @@ public final class SimulationEngine implements AutoCloseable {
 
     // Based on the task's return status, update its execution state and schedule its resumption.
     if (status instanceof TaskStatus.Completed<Return>) {
-      final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
+      final var children = new LinkedList<>(Optional.ofNullable(this.taskChildren.remove(task))
+                                            .orElseGet(Collections::emptySet));
 
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
@@ -218,14 +219,19 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
-      final var target = TaskId.generate();
-      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
-      SimulationEngine.this.taskParent.put(target, task);
-      SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
-      frame.signal(JobId.forTask(target));
-
-      this.tasks.put(task, progress.continueWith(s.continuation()));
-      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
+      if (s.tailCall()) {
+        this.tasks.put(task, new ExecutionState.InProgress<>(progress.startOffset, s.child().create(this.executor)));
+        this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
+      } else {
+        final var target = TaskId.generate();
+        this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
+        this.taskParent.put(target, task);
+        this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
+        frame.signal(JobId.forTask(target));
+        
+        this.tasks.put(task, progress.continueWith(s.continuation()));
+        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
+      }
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
@@ -438,19 +444,20 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var name = id.id();
       final var resource = state.resource();
+      final boolean allowRLE = resource.allowRunLengthCompression();
 
       switch (resource.getType()) {
         case "real" -> realProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
+                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics, allowRLE)));
 
         case "discrete" -> discreteProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
+                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics, allowRLE)));
 
         default ->
             throw new IllegalArgumentException(
@@ -602,11 +609,24 @@ public final class SimulationEngine implements AutoCloseable {
     <Dynamics> Target apply(Resource<Dynamics> resource, Dynamics dynamics);
   }
 
+  private static <Target>
+  void appendProfileSegment(ArrayList<ProfileSegment<Target>> profile, Duration duration, Target value,
+                            boolean allowRunLengthCompression) {
+    final int s = profile.size();
+    final ProfileSegment lastSeg = s > 0 ? profile.get(s - 1) : null;
+    if (allowRunLengthCompression && lastSeg != null && value.equals(lastSeg.dynamics())) {
+        profile.set(s - 1, new ProfileSegment<>(lastSeg.extent().plus(duration), value));
+    } else {
+      profile.add(new ProfileSegment<>(duration, value));
+    }
+  }
+
   private static <Target, Dynamics>
   List<ProfileSegment<Target>> serializeProfile(
       final Duration elapsedTime,
       final ProfilingState<Dynamics> state,
-      final Translator<Target> translator
+      final Translator<Target> translator,
+      final boolean allowRunLengthCompression
   ) {
     final var profile = new ArrayList<ProfileSegment<Target>>(state.profile().segments().size());
 
@@ -615,17 +635,20 @@ public final class SimulationEngine implements AutoCloseable {
       var segment = iter.next();
       while (iter.hasNext()) {
         final var nextSegment = iter.next();
-
-        profile.add(new ProfileSegment<>(
-            nextSegment.startOffset().minus(segment.startOffset()),
-            translator.apply(state.resource(), segment.dynamics())));
+        appendProfileSegment(profile,
+                             nextSegment.startOffset().minus(segment.startOffset()),
+                             translator.apply(state.resource(), segment.dynamics()),
+                             allowRunLengthCompression);
         segment = nextSegment;
       }
 
-      profile.add(new ProfileSegment<>(
-          elapsedTime.minus(segment.startOffset()),
-          translator.apply(state.resource(), segment.dynamics())));
+      appendProfileSegment(profile,
+                           elapsedTime.minus(segment.startOffset()),
+                           translator.apply(state.resource(), segment.dynamics()),
+                           allowRunLengthCompression);
     }
+
+    profile.trimToSize();
 
     return profile;
   }

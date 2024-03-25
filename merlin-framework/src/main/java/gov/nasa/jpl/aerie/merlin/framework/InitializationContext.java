@@ -62,6 +62,11 @@ public final class InitializationContext implements Context {
   }
 
   @Override
+  public <Return> void tailCall(final TaskFactory<Return> task) {
+    throw new IllegalStateException("Cannot yield during initialization");
+  }
+
+  @Override
   public void delay(final Duration duration) {
     throw new IllegalStateException("Cannot yield during initialization");
   }

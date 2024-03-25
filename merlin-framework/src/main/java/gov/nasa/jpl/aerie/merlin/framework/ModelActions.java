@@ -69,6 +69,18 @@ public /*non-final*/ class ModelActions {
     context.get().call(task);
   }
 
+  public static void tailCall(final Runnable task) {
+    tailCall(threaded(task));
+  }
+
+  public static <T> void tailCall(final Supplier<T> task) {
+    tailCall(threaded(task));
+  }
+
+  public static <T> void tailCall(final TaskFactory<T> task) {
+    context.get().tailCall(task);
+  }
+
   public static void defer(final Duration duration, final Runnable task) {
     spawn(replaying(() -> { delay(duration); spawn(task); }));
   }

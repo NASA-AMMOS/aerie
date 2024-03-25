@@ -53,6 +53,11 @@ public final class QueryContext implements Context {
   }
 
   @Override
+  public <Return> void tailCall(final TaskFactory<Return> task) {
+    throw new IllegalStateException("Cannot schedule tasks in a query-only context");
+  }
+
+  @Override
   public void delay(final Duration duration) {
     throw new IllegalStateException("Cannot yield in a query-only context");
   }

@@ -9,7 +9,8 @@ public sealed interface TaskStatus<Return> {
 
   record Delayed<Return>(Duration delay, Task<Return> continuation) implements TaskStatus<Return> {}
 
-  record CallingTask<Return>(TaskFactory<?> child, Task<Return> continuation) implements TaskStatus<Return> {}
+  record CallingTask<Return>(TaskFactory<?> child, Task<Return> continuation, boolean tailCall)
+    implements TaskStatus<Return> {}
 
   record AwaitingCondition<Return>(Condition condition, Task<Return> continuation) implements TaskStatus<Return> {}
 
@@ -23,7 +24,11 @@ public sealed interface TaskStatus<Return> {
   }
 
   static <Return> CallingTask<Return> calling(final TaskFactory<?> child, final Task<Return> continuation) {
-    return new CallingTask<>(child, continuation);
+    return new CallingTask<>(child, continuation, false);
+  }
+
+  static <Return> CallingTask<Return> tailCalling(final TaskFactory<?> child, final Task<Return> continuation) {
+    return new CallingTask<>(child, continuation, true);
   }
 
   static <Return> AwaitingCondition<Return> awaiting(final Condition condition, final Task<Return> continuation) {

@@ -208,6 +208,11 @@ public final class ThreadedTask<Return> implements Task<Return> {
     }
 
     @Override
+    public Scheduler tailCall(final TaskFactory<?> child) {
+      return this.yield(TaskStatus.tailCalling(child, ThreadedTask.this));
+    }
+
+    @Override
     public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
       return this.yield(TaskStatus.awaiting(condition, ThreadedTask.this));
     }
