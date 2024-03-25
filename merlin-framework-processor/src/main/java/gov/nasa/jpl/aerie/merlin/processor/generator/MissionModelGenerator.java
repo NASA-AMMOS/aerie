@@ -46,6 +46,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -265,7 +266,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .classBuilder(typeName)
             .addAnnotation(
                 AnnotationSpec
-                    .builder(javax.annotation.processing.Generated.class)
+                    .builder(Generated.class)
                     .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -327,6 +328,23 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                            )
                            .returns(Duration.class)
                            .build())
+            .addMethod(MethodSpec
+                           .methodBuilder("getChildren")
+                           .addModifiers(Modifier.PUBLIC)
+                           .addAnnotation(Override.class)
+                           .returns(ParameterizedTypeName.get(ClassName.get(Map.class), ClassName.get(String.class), ParameterizedTypeName.get(List.class, String.class)))
+                           .addStatement("final var result = new $T()", ParameterizedTypeName.get(ClassName.get(HashMap.class), ClassName.get(String.class), ParameterizedTypeName.get(List.class, String.class)))
+                           .addCode(
+                               missionModel
+                                   .activityTypes()
+                                   .stream()
+                                   .map(
+                                       activityTypeRecord ->
+                                           getChildrenStatement(missionModel, activityTypeRecord))
+                                   .reduce((x, y) -> x.add("$L", y.build()))
+                                   .orElse(CodeBlock.builder()).build())
+                           .addStatement("return result")
+                           .build())
 
             .build();
 
@@ -334,6 +352,26 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .builder(typeName.packageName(), typeSpec)
         .skipJavaLangImports(true)
         .build();
+  }
+
+  private CodeBlock.Builder getChildrenStatement(final MissionModelRecord missionModel, final ActivityTypeRecord activityTypeRecord){
+    String[] children = null;
+    //if the effect model is empty, an activity cannot have children
+    if(activityTypeRecord.effectModel().isEmpty()) children = new String[]{};
+    else if(activityTypeRecord.effectModel().get().children().isPresent()){
+      //if children have been declared with an annotation, record those
+      children = activityTypeRecord.effectModel().get().children().get();
+    } else {
+      //if children have not been declared with an annotation, assume the activity might generate all activity types
+      children = missionModel.activityTypes().stream().map(ActivityTypeRecord::name).toArray(String[]::new);
+    }
+    final var childrenString = String.join(",", Arrays.stream(children).map(child-> "\""+child + "\"").toList());
+
+    return CodeBlock
+        .builder()
+        .addStatement("result.put(\"$L\", $L)",
+                      activityTypeRecord.name(),
+                      CodeBlock.of("$T.of($N)", List.class, childrenString));
   }
 
   /** Generate `ActivityActions` class. */

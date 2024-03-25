@@ -11,6 +11,7 @@ public record EffectModelRecord(
     Optional<TypeMirror> returnType,
     Optional<String> durationParameter,
     Optional<String> fixedDurationExpr,
-    Optional<String> parametricDuration
+    Optional<String> parametricDuration,
+    Optional<String[]> children
 ) {
 }
