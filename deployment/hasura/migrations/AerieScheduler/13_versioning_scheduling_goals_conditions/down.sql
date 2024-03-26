@@ -6,6 +6,7 @@ RESTORE ORIGINAL
 */
 create table scheduling_goal (
   id integer generated always as identity,
+  old_id integer,
   revision integer not null default 0,
   name text not null,
   definition text not null,
@@ -62,9 +63,82 @@ create trigger update_logging_on_update_scheduling_goal_trigger
 /*
 ANALYSIS TABLES
 */
+/* Dropped FKs before data migration first */
+alter table scheduling_goal_analysis_satisfying_activities
+  drop constraint satisfying_activities_references_scheduling_goal;
+
+alter table scheduling_goal_analysis_created_activities
+  drop constraint created_activities_references_scheduling_goal;
+
+alter table scheduling_goal_analysis
+  drop constraint scheduling_goal_analysis_references_scheduling_goal;
+
+alter table scheduling_specification_goals
+  drop constraint scheduling_spec_goal_definition_exists,
+  drop constraint scheduling_spec_goal_exists;
+
+alter table metadata.scheduling_goal_tags
+drop constraint scheduling_goal_tags_goal_id_fkey;
+
+/*
+DATA MIGRATION
+*/
+-- Goals not on a model spec will not be kept, as the scheduler DB can't get the model id from the plan id
+-- Because multiple spec may be using the same goal/goal definition, we have to regenerate the id
+with specified_definition(goal_id, goal_revision, model_id, definition, definition_creation) as (
+  select gd.goal_id, gd.revision, s.model_id, gd.definition, gd.created_at
+    from scheduling_model_specification_goals s
+    left join scheduling_goal_definition gd using (goal_id)
+    where ((s.goal_revision is not null and s.goal_revision = gd.revision)
+        or (s.goal_revision is null and gd.revision = (select def.revision
+                                                       from scheduling_goal_definition def
+                                                       where def.goal_id = s.goal_id
+                                                       order by def.revision desc limit 1)))),
+  new_goal_ids(old_goal_id, new_goal_id) as (
+    insert into scheduling_goal(old_id, revision, name, definition, model_id, description,
+                                author, last_modified_by, created_date, modified_date)
+    select m.id, sd.goal_revision, m.name, sd.definition, sd.model_id, m.description,
+           m.owner, m.updated_by, m.created_at, greatest(m.updated_at::timestamptz, sd.definition_creation::timestamptz)
+    from scheduling_goal_metadata m
+    inner join specified_definition sd on m.id = sd.goal_id
+    returning old_id, id),
+  satisfying_acts as (
+    update scheduling_goal_analysis_satisfying_activities
+    set goal_id = ngi.new_goal_id
+    from new_goal_ids ngi
+    where goal_id = ngi.old_goal_id),
+  create_acts as (
+    update scheduling_goal_analysis_created_activities
+    set goal_id = ngi.new_goal_id
+    from new_goal_ids ngi
+    where goal_id = ngi.old_goal_id),
+  analysis as (
+    update scheduling_goal_analysis
+      set goal_id = ngi.new_goal_id
+      from new_goal_ids ngi
+      where goal_id = ngi.old_goal_id),
+  tags as (
+    update metadata.scheduling_goal_tags
+      set goal_id = ngi.new_goal_id
+      from new_goal_ids ngi
+      where goal_id = ngi.old_goal_id)
+  update scheduling_specification_goals
+    set goal_id = ngi.new_goal_id
+  from new_goal_ids ngi
+  where goal_id = ngi.old_goal_id;
+
+/*
+POST DATA MIGRATION TABLE CHANGES
+*/
+alter table scheduling_goal drop column old_id;
+drop trigger set_timestamp on scheduling_goal_metadata;
+drop function scheduling_goal_metadata_set_updated_at();
+
+/*
+ANALYSIS TABLES
+*/
 /* Dropped FKs are restored first */
 alter table scheduling_goal_analysis_satisfying_activities
-  drop constraint satisfying_activities_references_scheduling_goal,
   add constraint satisfying_activities_references_scheduling_goal
     foreign key (goal_id)
       references scheduling_goal
@@ -76,7 +150,6 @@ alter table scheduling_goal_analysis_satisfying_activities
   drop column goal_revision;
 
 alter table scheduling_goal_analysis_created_activities
-  drop constraint created_activities_references_scheduling_goal,
   add constraint created_activities_references_scheduling_goal
     foreign key (goal_id)
       references scheduling_goal
@@ -88,7 +161,6 @@ alter table scheduling_goal_analysis_created_activities
   drop column goal_revision;
 
 alter table scheduling_goal_analysis
-  drop constraint scheduling_goal_analysis_references_scheduling_goal,
   add constraint scheduling_goal_analysis_references_scheduling_goal
     foreign key (goal_id)
       references scheduling_goal
@@ -169,33 +241,6 @@ alter table scheduling_goal_analysis
       references scheduling_request (analysis_id)
       on update cascade
       on delete cascade;
-
-/*
-DATA MIGRATION
-*/
--- Goals not on a model spec will not be kept, as the scheduler DB can't get the model id from the plan id
--- Because multiple spec may be using the same goal/goal definition, we have to regenerate the id
-with specified_definition(goal_id, goal_revision, model_id, definition, definition_creation) as (
- select gd.goal_id, gd.revision, s.model_id, gd.definition, gd.created_at
-      from scheduling_model_specification_goals s
-      left join scheduling_goal_definition gd using (goal_id)
-      where ((s.goal_revision is not null and s.goal_revision = gd.revision)
-      or (s.goal_revision is null and gd.revision = (select def.revision
-                                                      from scheduling_goal_definition def
-                                                      where def.goal_id = s.goal_id
-                                                      order by def.revision desc limit 1)))
-)
-insert into scheduling_goal(revision, name, definition, model_id, description,
-                            author, last_modified_by, created_date, modified_date)
-select sd.goal_revision, m.name, sd.definition, sd.model_id, m.description,
-       m.owner, m.updated_by, m.created_at, greatest(m.updated_at::timestamptz, sd.definition_creation::timestamptz)
-  from scheduling_goal_metadata m
-  inner join specified_definition sd on m.id = sd.goal_id;
-/*
-POST DATA MIGRATION TABLE CHANGES
-*/
-drop trigger set_timestamp on scheduling_goal_metadata;
-drop function scheduling_goal_metadata_set_updated_at();
 
 /*
 SCHEDULING SPECIFICATION
@@ -287,8 +332,6 @@ language plpgsql;
 alter table scheduling_specification_goals
   add constraint scheduling_specification_unique_goal_id
     unique (goal_id),
-  drop constraint scheduling_spec_goal_definition_exists,
-  drop constraint scheduling_spec_goal_exists,
   add constraint scheduling_specification_goals_references_scheduling_goals
     foreign key (goal_id)
       references scheduling_goal
@@ -330,7 +373,6 @@ TAGS
 */
 drop table metadata.scheduling_goal_definition_tags;
 alter table metadata.scheduling_goal_tags
-drop constraint scheduling_goal_tags_goal_id_fkey,
 add foreign key (goal_id) references public.scheduling_goal
     on update cascade
     on delete cascade;
