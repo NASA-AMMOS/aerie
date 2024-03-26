@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
@@ -277,7 +278,10 @@ public final class Interval implements Comparable<Interval>{
 
   @Override
   public int compareTo(final Interval o) {
-    return start.compareTo(o.start);
+    int c = compareStarts(o);
+    if (c != 0) return c;
+    c = compareEnds(o);
+    return c;
   }
 
   public static int compareStartToStart(final Interval x, final Interval y) {

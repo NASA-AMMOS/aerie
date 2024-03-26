@@ -60,15 +60,14 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
   @Override
   public Windows changePoints() {
     final var result = IntervalMap.<Boolean>builder().set(this.profilePieces.map($ -> false));
-    for (int i = 0; i < this.profilePieces.size(); i++) {
-      final var segment = this.profilePieces.get(i);
-      if (i == 0) {
+    for (final var segment : profilePieces) {
+      if (segment == profilePieces.first()) {
         if (!segment.interval().contains(Duration.MIN_VALUE)) {
           result.unset(Interval.at(segment.interval().start));
         }
       } else {
-        final var previousSegment = this.profilePieces.get(i-1);
-        if (Interval.meets(previousSegment.interval(), segment.interval())) {
+        final var previousSegment = this.profilePieces.segments().lower(segment);
+        if (previousSegment != null && Interval.meets(previousSegment.interval(), segment.interval())) {
           if (!previousSegment.value().equals(segment.value())) {
             result.set(Interval.at(segment.interval().start), true);
           }
@@ -83,15 +82,16 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
 
   public Windows transitions(final SerializedValue oldState, final SerializedValue newState) {
     final var result = IntervalMap.<Boolean>builder().set(this.profilePieces.map($ -> false));
-    for (int i = 0; i < this.profilePieces.size(); i++) {
-      final var segment = this.profilePieces.get(i);
-      if (i == 0) {
+    for (final var segment : profilePieces) {
+    //for (int i = 0; i < this.profilePieces.size(); i++) {
+      //final var segment = this.profilePieces.get(i);
+      if (segment == profilePieces.first()) {
         if (segment.value().equals(newState) && !segment.interval().contains(Duration.MIN_VALUE)) {
           result.unset(Interval.at(segment.interval().start));
         }
       } else {
-        final var previousSegment = this.profilePieces.get(i-1);
-        if (Interval.meets(previousSegment.interval(), segment.interval())) {
+        final var previousSegment = this.profilePieces.segments().lower(segment);
+        if (previousSegment != null && Interval.meets(previousSegment.interval(), segment.interval())) {
           if (previousSegment.value().equals(oldState) && segment.value().equals(newState)) {
             result.set(Interval.at(segment.interval().start), true);
           }
