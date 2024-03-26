@@ -158,11 +158,8 @@ public class IntervalAlgebra {
    * @return whether the operands overlap
    */
   static boolean overlaps(Interval x, Interval y) {
-    // First try for a fast shortcut that doesn't require allocating a new interval.
-    if (!x.isEmpty() && !y.isEmpty()) {
-        return !endBeforeStart(x, y) && !endBeforeStart(y, x);
-    }
-    return !isEmpty(intersect(x, y));
+    if (x.isEmpty() || y.isEmpty()) return false;
+    return !endBeforeStart(x, y) && !endBeforeStart(y, x);
   }
 
   /**
@@ -173,14 +170,8 @@ public class IntervalAlgebra {
    * @return whether `outer` contains every point in `inner`
    */
   static boolean contains(Interval outer, Interval inner) {
-    // First try for a fast shortcut that doesn't require allocating a new interval.
-    if (!outer.isEmpty() && !inner.isEmpty()) {
-      return !startBeforeStart(inner, outer) && !endBeforeEnd(outer, inner);
-    }
-
-    // If `inner` doesn't overlap with the complement of `outer`,
-    // then `inner` must exist entirely within `outer`.
-    return !(overlaps(inner, strictUpperBoundsOf(outer)) || overlaps(inner, strictLowerBoundsOf(outer)));
+    if (outer.isEmpty() || inner.isEmpty()) return false;
+    return !startBeforeStart(inner, outer) && !endBeforeEnd(outer, inner);
   }
 
   /**
@@ -215,11 +206,8 @@ public class IntervalAlgebra {
    * @return whether the start point of x is before all points in y
    */
   static boolean startsBefore(Interval x, Interval y) {
-    // First try for a fast shortcut that doesn't require allocating a new interval.
-    if (!x.isEmpty() && !y.isEmpty()) {
-      return startBeforeStart(x, y);
-    }
-    return strictlyContains(strictLowerBoundsOf(y), strictLowerBoundsOf(x));
+    if (x.isEmpty() || y.isEmpty()) return false;
+    return startBeforeStart(x, y);
   }
 
   /**
@@ -230,11 +218,8 @@ public class IntervalAlgebra {
    * @return whether the end point of x is after all points in y
    */
   static boolean endsAfter(Interval x, Interval y) {
-    // First try for a fast shortcut that doesn't require allocating a new interval.
-    if (!x.isEmpty() && !y.isEmpty()) {
-      return endBeforeEnd(y, x);
-    }
-    return strictlyContains(strictUpperBoundsOf(y), strictUpperBoundsOf(x));
+    if (x.isEmpty() || y.isEmpty()) return false;
+    return endBeforeEnd(y, x);
   }
 
   /**
@@ -278,12 +263,9 @@ public class IntervalAlgebra {
    * @return whether the end point of x is strictly before all points in y
    */
   static boolean endsStrictlyBefore(Interval x, Interval y) {
-    // First try for a fast shortcut that doesn't require allocating a new interval.
-    if (!x.isEmpty() && !y.isEmpty()) {
-      return x.end.shorterThan(y.start) ||
-             (x.end.isEqualTo(y.start) && (!x.includesEnd() && !y.includesStart()));
-    }
-    return !isEmpty(intersect(strictUpperBoundsOf(x), strictLowerBoundsOf(y)));
+    if (x.isEmpty() || y.isEmpty()) return false;
+    return x.end.shorterThan(y.start) ||
+           (x.end.isEqualTo(y.start) && (!x.includesEnd() && !y.includesStart()));
   }
 
   /**
@@ -294,12 +276,8 @@ public class IntervalAlgebra {
    * @return whether x ends when y begins, with no overlap and no gap
    */
   static boolean meets(Interval x, Interval y) {
-    // First try for a fast shortcut that doesn't require allocating a new interval.
-    if (!x.isEmpty() && !y.isEmpty()) {
-      return x.end.isEqualTo(y.start) && (x.endInclusivity != y.startInclusivity);
-    }
-
-    return equals(strictUpperBoundsOf(x), strictUpperBoundsOf(strictLowerBoundsOf(y)));
+    if (x.isEmpty() || y.isEmpty()) return false;
+    return x.end.isEqualTo(y.start) && (x.endInclusivity != y.startInclusivity);
   }
 
   /**
