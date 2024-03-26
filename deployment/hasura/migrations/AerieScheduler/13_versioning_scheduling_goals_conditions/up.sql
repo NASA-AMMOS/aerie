@@ -160,18 +160,7 @@ alter table scheduling_specification_conditions
     foreign key (specification_id)
      references scheduling_specification
      on update cascade
-     on delete cascade,
-  drop constraint scheduling_specification_conditions_references_scheduling_conditions,
-  add constraint scheduling_specification_condition_exists
-    foreign key (condition_id)
-      references scheduling_condition_metadata
-      on update cascade
-      on delete restrict,
-  add constraint scheduling_specification_condition_definition_exists
-    foreign key (condition_id, condition_revision)
-     references scheduling_condition_definition
-     on update cascade
-     on delete restrict;
+     on delete cascade;
 
 comment on table scheduling_specification_conditions is e''
   'The set of scheduling conditions to be used on a given plan.';
@@ -251,6 +240,19 @@ create trigger set_timestamp
 before update on scheduling_condition_metadata
 for each row
 execute function scheduling_condition_metadata_set_updated_at();
+
+alter table scheduling_specification_conditions
+  drop constraint scheduling_specification_conditions_references_scheduling_conditions,
+  add constraint scheduling_specification_condition_exists
+    foreign key (condition_id)
+      references scheduling_condition_metadata
+      on update cascade
+      on delete restrict,
+  add constraint scheduling_specification_condition_definition_exists
+    foreign key (condition_id, condition_revision)
+     references scheduling_condition_definition
+     on update cascade
+     on delete restrict;
 
 /*
 DROP ORIGINAL
@@ -359,29 +361,6 @@ create trigger scheduling_goal_definition_set_revision
   before insert on scheduling_goal_definition
   for each row
   execute function scheduling_goal_definition_set_revision();
-
-
-/*
-TAGS
-*/
-alter table metadata.scheduling_goal_tags
-drop constraint scheduling_goal_tags_goal_id_fkey,
-add foreign key (goal_id) references public.scheduling_goal_metadata
-    on update cascade
-    on delete cascade;
-
-create table metadata.scheduling_goal_definition_tags (
-  goal_id integer not null,
-  goal_revision integer not null,
-  tag_id integer not null,
-  primary key (goal_id, goal_revision, tag_id),
-  foreign key (goal_id, goal_revision) references scheduling_goal_definition
-    on update cascade
-    on delete cascade
-);
-
-comment on table metadata.scheduling_goal_definition_tags is e''
-  'The tags associated with a specific scheduling condition definition.';
 
 /*
 SPECIFICATIONS
@@ -538,17 +517,6 @@ alter table scheduling_specification_goals
       references scheduling_specification
       on update cascade
       on delete cascade,
-  drop constraint scheduling_specification_goals_references_scheduling_goals,
-  add constraint scheduling_spec_goal_exists
-    foreign key (goal_id)
-      references scheduling_goal_metadata
-      on update cascade
-      on delete restrict,
-  add constraint scheduling_spec_goal_definition_exists
-    foreign key (goal_id, goal_revision)
-      references scheduling_goal_definition
-      on update cascade
-      on delete restrict,
   drop constraint scheduling_specification_unique_goal_id;
 
 comment on table scheduling_specification_goals is e''
@@ -705,6 +673,19 @@ POST DATA MIGRATION TABLE CHANGES
 alter table scheduling_goal_metadata
   alter column id set generated always;
 
+alter table scheduling_specification_goals
+  drop constraint scheduling_specification_goals_references_scheduling_goals,
+  add constraint scheduling_spec_goal_exists
+    foreign key (goal_id)
+      references scheduling_goal_metadata
+      on update cascade
+      on delete restrict,
+  add constraint scheduling_spec_goal_definition_exists
+    foreign key (goal_id, goal_revision)
+      references scheduling_goal_definition
+      on update cascade
+      on delete restrict;
+
 create function scheduling_goal_metadata_set_updated_at()
 returns trigger
 security definer
@@ -717,6 +698,28 @@ create trigger set_timestamp
 before update on scheduling_goal_metadata
 for each row
 execute function scheduling_goal_metadata_set_updated_at();
+
+/*
+TAGS
+*/
+alter table metadata.scheduling_goal_tags
+drop constraint scheduling_goal_tags_goal_id_fkey,
+add foreign key (goal_id) references public.scheduling_goal_metadata
+    on update cascade
+    on delete cascade;
+
+create table metadata.scheduling_goal_definition_tags (
+  goal_id integer not null,
+  goal_revision integer not null,
+  tag_id integer not null,
+  primary key (goal_id, goal_revision, tag_id),
+  foreign key (goal_id, goal_revision) references scheduling_goal_definition
+    on update cascade
+    on delete cascade
+);
+
+comment on table metadata.scheduling_goal_definition_tags is e''
+  'The tags associated with a specific scheduling condition definition.';
 
 /*
 SCHEDULING REQUEST
