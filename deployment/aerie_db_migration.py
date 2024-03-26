@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Migrate an AERIE Database"""
+"""Migrate the Aerie Database"""
 
 import os
 import argparse
@@ -90,7 +90,7 @@ def step_by_step_migration(db_migration, apply):
   input("Press Enter to continue...")
 
 def bulk_migration(db_migration, apply):
-  # Migrate each database
+  # Migrate the database
   exit_with = 0
   if apply:
     os.system(f'hasura migrate apply --database-name {db_migration.db_name} --dry-run --log-level WARN')
@@ -117,10 +117,8 @@ def bulk_migration(db_migration, apply):
   exit(exit_with)
 
 def mark_current_version(username, password, netloc):
-  # Convert db.name to the actual format of the db name: aerie_dbSuffix
-  connectionString = "postgres://"+username+":"+password+"@"+netloc+":5432/aerie"
-
   # Connect to DB
+  connectionString = "postgres://"+username+":"+password+"@"+netloc+":5432/aerie"
   with psycopg.connect(connectionString) as connection:
     # Open a cursor to perform database operations
     with connection.cursor() as cursor:
@@ -175,7 +173,7 @@ def main():
     HASURA_PATH = args.hasura_path
   MIGRATION_PATH = HASURA_PATH+"/migrations/Aerie"
 
-  # find all migration folders for the database
+  # Find all migration folders for the database
   migration = DB_Migration("Aerie")
   try:
     for root,dirs,files in os.walk(MIGRATION_PATH):
