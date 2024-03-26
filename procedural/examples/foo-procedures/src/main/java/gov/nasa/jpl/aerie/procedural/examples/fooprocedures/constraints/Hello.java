@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.procedural.examples.fooprocedures;
+package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.constraints;
 
 import gov.nasa.jpl.aerie.procedural.examples.fooprocedures.Helper;
 
