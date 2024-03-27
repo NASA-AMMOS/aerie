@@ -8,4 +8,8 @@ public interface Scheduler {
   <Event> void emit(Event event, Topic<Event> topic);
 
   void spawn(TaskFactory<?> task);
+
+  void pushSpan();
+
+  void popSpan();
 }

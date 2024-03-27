@@ -1083,6 +1083,7 @@ public final class AnchorSimulationTest {
       @Override
       public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
         return executor -> $ -> {
+          $.pushSpan();
           $.emit(this, delayedActivityDirectiveInputTopic);
           return TaskStatus.delayed(oneMinute, $$ -> {
             $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
@@ -1108,6 +1109,7 @@ public final class AnchorSimulationTest {
       @Override
       public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
         return executor -> scheduler -> {
+          scheduler.pushSpan();
           scheduler.emit(this, decomposingActivityDirectiveInputTopic);
           return TaskStatus.delayed(
               Duration.ZERO,

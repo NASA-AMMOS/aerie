@@ -36,6 +36,22 @@ public /*non-final*/ class ModelActions {
     });
   }
 
+  public static <T> T scoped(final Supplier<T> block) {
+    context.get().pushSpan();
+    try {
+      return block.get();
+    } finally {
+      context.get().popSpan();
+    }
+  }
+
+  public static void scoped(final Runnable block) {
+    scoped(() -> {
+      block.run();
+      return Unit.UNIT;
+    });
+  }
+
 
   public static <T> void emit(final T event, final Topic<T> topic) {
     context.get().emit(event, topic);
