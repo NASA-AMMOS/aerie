@@ -765,6 +765,10 @@ public final class SimulationEngine implements AutoCloseable {
       if (SimulationEngine.this.spanContributorCount.get(this.span).decrementAndGet() == 0) {
         SimulationEngine.this.spanContributorCount.remove(this.span);
         SimulationEngine.this.spans.compute(this.span, (_id, $) -> $.close(currentTime));
+        // Parent span contributor count remains constant, because this.span is removed, and this task is added
+      } else {
+        // Parent span contributor count increases by one, because this task is added without removing this.span
+        SimulationEngine.this.spanContributorCount.get(parentSpan).increment();
       }
 
       if (!SimulationEngine.this.spanContributors.spanHasContributors(this.span)) {
