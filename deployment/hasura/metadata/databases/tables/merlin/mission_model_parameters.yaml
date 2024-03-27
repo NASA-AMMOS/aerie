@@ -1,0 +1,29 @@
+table:
+  name: mission_model_parameters
+  schema: merlin
+configuration:
+  custom_name: "mission_model_parameters"
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [parameters]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

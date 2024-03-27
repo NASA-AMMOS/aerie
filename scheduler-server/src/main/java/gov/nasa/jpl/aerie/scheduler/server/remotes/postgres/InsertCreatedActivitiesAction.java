@@ -13,7 +13,7 @@ import java.util.Map;
 
 /*package-local*/ final class InsertCreatedActivitiesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into scheduling_goal_analysis_created_activities (analysis_id, goal_id, goal_revision, activity_id)
+    insert into scheduler.scheduling_goal_analysis_created_activities (analysis_id, goal_id, goal_revision, activity_id)
     values (?, ?, ?, ?)
     """;
 

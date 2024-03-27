@@ -15,7 +15,7 @@ import java.util.Optional;
       r.reason,
       r.canceled,
       r.dataset_id
-    from scheduling_request as r
+    from scheduler.scheduling_request as r
     where r.specification_id = ?
      and r.specification_revision = ?
      and r.plan_revision = ?

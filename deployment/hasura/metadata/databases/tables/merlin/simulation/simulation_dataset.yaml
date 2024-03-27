@@ -1,0 +1,69 @@
+table:
+  name: simulation_dataset
+  schema: merlin
+configuration:
+  custom_name: "simulation_dataset"
+object_relationships:
+- name: dataset
+  using:
+    foreign_key_constraint_on: dataset_id
+- name: simulation
+  using:
+    foreign_key_constraint_on: simulation_id
+- name: extent
+  using:
+    foreign_key_constraint_on:
+      column: simulation_dataset_id
+      table:
+        name: simulation_extent
+        schema: merlin
+array_relationships:
+- name: simulated_activities
+  using:
+    manual_configuration:
+      remote_table:
+        schema: merlin
+        name: simulated_activity
+      insertion_order: null
+      column_mapping:
+        id: simulation_dataset_id
+- name: constraint_runs
+  using:
+    foreign_key_constraint_on:
+      column: simulation_dataset_id
+      table:
+        name: constraint_run
+        schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [requested_by, canceled]
+      filter: {}
+  - role: user
+    permission:
+      columns: [canceled]
+      filter: {"simulation":{"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {"simulation":{"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}}
+# Insert is handled via Aerie Merlin

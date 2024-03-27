@@ -19,7 +19,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           e.topic_index,
           e.name,
           e.value_schema
-        from topic as e
+        from merlin.topic as e
         where
           e.dataset_id = ?
       """;

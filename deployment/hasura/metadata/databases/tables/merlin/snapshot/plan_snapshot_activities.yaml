@@ -1,0 +1,39 @@
+table:
+  name: plan_snapshot_activities
+  schema: merlin
+configuration:
+  custom_name: "plan_snapshot_activities"
+object_relationships:
+  - name: snapshot
+    using:
+      foreign_key_constraint_on: snapshot_id
+array_relationships:
+  - name: tags
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - directive_id
+          - snapshot_id
+        table:
+          name: snapshot_activity_tags
+          schema: tags
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

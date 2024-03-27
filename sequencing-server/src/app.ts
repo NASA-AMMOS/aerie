@@ -146,7 +146,7 @@ app.post('/put-dictionary', async (req, res, next) => {
   logger.info(`command-lib generated - path: ${commandDictionaryPath}`);
 
   const sqlExpression = `
-    insert into command_dictionary (command_types_typescript_path, mission, version, parsed_json)
+    insert into sequencing.command_dictionary (command_types_typescript_path, mission, version, parsed_json)
     values ($1, $2, $3, $4)
     on conflict (mission, version) do update
       set command_types_typescript_path = $1, parsed_json = $4

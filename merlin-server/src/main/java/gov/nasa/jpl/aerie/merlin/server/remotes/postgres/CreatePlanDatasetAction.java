@@ -15,7 +15,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
 /*package-local*/ final class CreatePlanDatasetAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into plan_dataset (plan_id, offset_from_plan_start, simulation_dataset_id)
+      insert into merlin.plan_dataset (plan_id, offset_from_plan_start, simulation_dataset_id)
       values (?, ?::timestamptz - ?::timestamptz, ?)
       returning dataset_id
       """;
@@ -44,7 +44,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
     );
 
     final var results = this.statement.executeQuery();
-    if (!results.next()) throw new FailedInsertException("plan_dataset");
+    if (!results.next()) throw new FailedInsertException("merlin.plan_dataset");
     final var datasetId = results.getLong(1);
 
     return new PlanDatasetRecord(planId, datasetId, simulationDatasetId, offsetFromPlanStart);

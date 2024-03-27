@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PresetTests {
-  private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
   private MerlinDatabaseTestHelper merlinHelper;
 
@@ -42,42 +40,19 @@ public class PresetTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    helper.clearTable("uploaded_file");
-    helper.clearTable("mission_model");
-    helper.clearTable("plan");
-    helper.clearTable("activity_directive");
-    helper.clearTable("simulation_template");
-    helper.clearTable("simulation");
-    helper.clearTable("dataset");
-    helper.clearTable("plan_dataset");
-    helper.clearTable("simulation_dataset");
-    helper.clearTable("plan_snapshot");
-    helper.clearTable("plan_latest_snapshot");
-    helper.clearTable("plan_snapshot_activities");
-    helper.clearTable("plan_snapshot_parent");
-    helper.clearTable("anchor_validation_status");
-    helper.clearTable("activity_presets");
-    helper.clearTable("preset_to_directive");
-    helper.clearTable("preset_to_snapshot_directive");
+    helper.clearSchema("merlin");
   }
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "aerie_merlin_test",
-        "Merlin Database Tests",
-        initSqlScriptFile
-    );
-    helper.startDatabase();
+    helper = new DatabaseTestHelper("aerie_preset_test", "Aerie Preset Tests");
     setConnection(helper);
     merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    helper.stopDatabase();
-    connection = null;
-    helper = null;
+    helper.close();
   }
 
   //region Helper Methods
@@ -88,12 +63,14 @@ public class PresetTests {
 
   Activity getActivity(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
-        SELECT *
-        FROM activity_directive
-        WHERE id = %d
-        AND plan_id = %d;
-      """.formatted(activityId, planId));
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          SELECT *
+          FROM merlin.activity_directive
+          WHERE id = %d
+          AND plan_id = %d;
+          """.formatted(activityId, planId));
       res.next();
       return new Activity(
           res.getInt("id"),
@@ -107,12 +84,14 @@ public class PresetTests {
 
   ArrayList<Activity> getActivities(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
-        SELECT *
-        FROM activity_directive
-        WHERE plan_id = %d
-        ORDER BY id;
-      """.formatted(planId));
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          SELECT *
+          FROM merlin.activity_directive
+          WHERE plan_id = %d
+          ORDER BY id;
+          """.formatted(planId));
 
       final var activities = new ArrayList<Activity>();
       while (res.next()){
@@ -138,24 +117,27 @@ public class PresetTests {
   void deletePreset(int presetId) throws SQLException {
     try (final var statement = connection.createStatement()){
       statement.execute(
-        """
-        DELETE FROM activity_presets
-        WHERE id = %d
-        """.formatted(presetId));
+          //language=sql
+          """
+          DELETE FROM merlin.activity_presets
+          WHERE id = %d
+          """.formatted(presetId));
     }
   }
 
   ArrayList<Activity> getActivitiesWithPreset(final int presetId) throws SQLException{
     try (final var statement = connection.createStatement()) {
       // Select from act dirs using the list of ids gotten from the join table preset to dirs
-      final var res = statement.executeQuery("""
-        SELECT ad.id, ad.plan_id, ad.name, ad.type, ad.arguments
-        FROM activity_directive ad,
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          SELECT ad.id, ad.plan_id, ad.name, ad.type, ad.arguments
+          FROM merlin.activity_directive ad,
             (SELECT activity_id, plan_id
-             FROM preset_to_directive
+             FROM merlin.preset_to_directive
              WHERE preset_id = %d) presets
-        WHERE (ad.id, ad.plan_id) = (presets.activity_id, presets.plan_id);
-      """.formatted(presetId));
+          WHERE (ad.id, ad.plan_id) = (presets.activity_id, presets.plan_id);
+          """.formatted(presetId));
 
       final var activities = new ArrayList<Activity>();
       while (res.next()){
@@ -173,11 +155,16 @@ public class PresetTests {
 
   Preset getPresetAssignedToActivity(final int activityId, final int planId) throws SQLException{
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
-      SELECT ap.id, ap.model_id, ap.name, ap.associated_activity_type, ap.arguments
-      FROM activity_presets ap, (SELECT preset_id from preset_to_directive WHERE (activity_id, plan_id) = (%d, %d)) o
-      WHERE ap.id = o.preset_id;
-      """.formatted(activityId, planId));
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          SELECT ap.id, ap.model_id, ap.name, ap.associated_activity_type, ap.arguments
+          FROM merlin.activity_presets ap,
+            (SELECT preset_id
+             FROM merlin.preset_to_directive
+             WHERE (activity_id, plan_id) = (%d, %d)) o
+          WHERE ap.id = o.preset_id;
+          """.formatted(activityId, planId));
       return res.next() ?
        new Preset(
           res.getInt("id"),

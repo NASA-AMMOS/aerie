@@ -1,0 +1,54 @@
+table:
+  name: dataset
+  schema: merlin
+configuration:
+  custom_name: "dataset"
+array_relationships:
+- name: profiles
+  using:
+    foreign_key_constraint_on:
+      column: dataset_id
+      table:
+        name: profile
+        schema: merlin
+- name: spans
+  using:
+    manual_configuration:
+      column_mapping:
+        id: dataset_id
+      insertion_order: null
+      remote_table:
+        name: span
+        schema: merlin
+- name: topics
+  using:
+    foreign_key_constraint_on:
+      column: dataset_id
+      table:
+        name: topic
+        schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [revision]
+      check: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

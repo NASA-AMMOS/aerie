@@ -1,0 +1,72 @@
+table:
+  name: scheduling_request
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_request"
+object_relationships:
+- name: scheduling_specification
+  using:
+    foreign_key_constraint_on: specification_id
+array_relationships:
+- name: goal_analysis
+  using:
+    foreign_key_constraint_on:
+      column: analysis_id
+      table:
+        name: scheduling_goal_analysis
+        schema: scheduler
+- name: satisfying_activities
+  using:
+    foreign_key_constraint_on:
+      column: analysis_id
+      table:
+        name: scheduling_goal_analysis_satisfying_activities
+        schema: scheduler
+- name: created_activities
+  using:
+    foreign_key_constraint_on:
+      column: analysis_id
+      table:
+        name: scheduling_goal_analysis_created_activities
+        schema: scheduler
+- name: simulation_dataset
+  using:
+    manual_configuration:
+      column_mapping:
+        dataset_id: dataset_id
+      remote_table:
+        name: simulation_dataset
+        schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+# Inserting/Updating is handled via the AerieScheduler
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [requested_by, canceled]
+      filter: {}
+  - role: user
+    permission:
+      columns: [canceled]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {}

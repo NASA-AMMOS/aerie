@@ -22,7 +22,7 @@ import java.util.Optional;
       to_char(spec.horizon_end, 'YYYY-DDD"T"HH24:MI:SS.FF6') as horizon_end,
       spec.simulation_arguments,
       spec.analysis_only
-    from scheduling_specification as spec
+    from scheduler.scheduling_specification as spec
       where spec.id = ?
     """;
 

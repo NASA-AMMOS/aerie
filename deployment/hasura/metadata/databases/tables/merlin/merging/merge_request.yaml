@@ -1,0 +1,67 @@
+table:
+  name: merge_request
+  schema: merlin
+configuration:
+  custom_name: "merge_request"
+object_relationships:
+- name: plan_receiving_changes
+  using:
+    manual_configuration:
+      column_mapping:
+        plan_id_receiving_changes: id
+      insertion_order: null
+      remote_table:
+        name: plan
+        schema: merlin
+- name: plan_snapshot_supplying_changes
+  using:
+    manual_configuration:
+      column_mapping:
+        snapshot_id_supplying_changes: snapshot_id
+      insertion_order: null
+      remote_table:
+        name: plan_snapshot
+        schema: merlin
+array_relationships:
+- name: comment
+  using:
+    foreign_key_constraint_on:
+      column: merge_request_id
+      table:
+        name: merge_request_comment
+        schema: merlin
+- name: conflicting_activities
+  using:
+    foreign_key_constraint_on:
+      column: merge_request_id
+      table:
+        name: conflicting_activities
+        schema: merlin
+- name: staged_activities
+  using:
+    foreign_key_constraint_on:
+      column: merge_request_id
+      table:
+        name: merge_staging_area
+        schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+# Insert/Update Permissions are not included because these actions are controlled via SQL functions
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {"status":{"_neq":"in-progress"}}

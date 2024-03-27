@@ -1,0 +1,57 @@
+table:
+  name: simulation
+  schema: merlin
+configuration:
+  custom_name: "simulation"
+object_relationships:
+- name: simulation_dataset
+  using:
+    foreign_key_constraint_on:
+      column: simulation_id
+      table:
+        name: simulation_dataset
+        schema: merlin
+- name: simulation_template
+  using:
+    foreign_key_constraint_on: simulation_template_id
+- name: plan
+  using:
+    foreign_key_constraint_on: plan_id
+array_relationships:
+- name: simulation_datasets
+  using:
+    foreign_key_constraint_on:
+      column: simulation_id
+      table:
+        name: simulation_dataset
+        schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [simulation_template_id, arguments, simulation_start_time, simulation_end_time]
+      filter: {}
+  - role: user
+    permission:
+      columns: [simulation_template_id, arguments, simulation_start_time, simulation_end_time]
+      filter: {"plan":{"_or":[{"owner":{"_eq":"X-Hasura-User-Id"}},{"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}
+  # Insert/Delete are handled via Postgres Triggers
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

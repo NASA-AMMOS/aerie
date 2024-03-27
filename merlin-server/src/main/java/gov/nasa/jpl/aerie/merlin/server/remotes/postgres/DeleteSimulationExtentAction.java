@@ -8,10 +8,10 @@ import java.sql.SQLException;
 
 /*package-local*/ final class DeleteSimulationExtentAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-        delete from simulation_extent
-        using simulation_dataset
-        where simulation_dataset.id = simulation_extent.simulation_dataset_id
-          and simulation_dataset.dataset_id = ?;
+        delete from merlin.simulation_extent se
+        using merlin.simulation_dataset sd
+        where sd.id = se.simulation_dataset_id
+          and sd.dataset_id = ?;
         """;
 
   private final PreparedStatement statement;

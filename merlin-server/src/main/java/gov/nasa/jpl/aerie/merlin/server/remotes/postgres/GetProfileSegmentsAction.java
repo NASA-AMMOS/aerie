@@ -20,7 +20,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         seg.start_offset,
         seg.dynamics,
         seg.is_gap
-      from profile_segment as seg
+      from merlin.profile_segment as seg
       where
         seg.dataset_id = ? and
         seg.profile_id = ?

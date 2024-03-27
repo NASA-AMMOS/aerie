@@ -1,0 +1,34 @@
+table:
+  name: expansion_set_to_rule
+  schema: sequencing
+configuration:
+  custom_name: "expansion_set_to_rule"
+object_relationships:
+- name: expansion_set
+  using:
+    foreign_key_constraint_on: set_id
+array_relationships:
+- name: expansion_rules
+  using:
+    manual_configuration:
+      column_mapping:
+        rule_id: id
+      remote_table:
+        name: expansion_rule
+        schema: sequencing
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true

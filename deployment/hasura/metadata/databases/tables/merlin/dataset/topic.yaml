@@ -1,0 +1,35 @@
+table:
+  name: topic
+  schema: merlin
+configuration:
+  custom_name: "topic"
+array_relationships:
+- name: events
+  using:
+    manual_configuration:
+      remote_table:
+        schema: merlin
+        name: event
+      column_mapping:
+        dataset_id: dataset_id
+        topic_index: topic_index
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

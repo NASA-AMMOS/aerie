@@ -13,7 +13,7 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintRe
 
 /* package local */ class InsertConstraintRunsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into constraint_run (constraint_id, constraint_revision, simulation_dataset_id, results)
+    insert into merlin.constraint_run (constraint_id, constraint_revision, simulation_dataset_id, results)
     values (?, ?, ?, ?::json)
   """;
 

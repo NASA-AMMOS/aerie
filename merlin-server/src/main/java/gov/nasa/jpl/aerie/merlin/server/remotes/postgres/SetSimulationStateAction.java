@@ -8,9 +8,9 @@ import java.sql.SQLException;
 
 /*package-local*/ final class SetSimulationStateAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-        update simulation_dataset
+        update merlin.simulation_dataset
           set
-            status = ?::status_t,
+            status = ?::util_functions.request_status,
             reason = ?::json
           where dataset_id = ?
         """;

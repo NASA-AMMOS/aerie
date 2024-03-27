@@ -20,7 +20,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       a.arguments,
       a.anchor_id,
       a.anchored_to_start
-    from activity_directive as a
+    from merlin.activity_directive as a
     where a.plan_id = ?
     """;
 

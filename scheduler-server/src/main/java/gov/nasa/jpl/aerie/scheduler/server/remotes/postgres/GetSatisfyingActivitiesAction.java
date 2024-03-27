@@ -18,7 +18,7 @@ import java.util.Map;
       s.goal_id,
       s.goal_revision,
       s.activity_id
-    from scheduling_goal_analysis_satisfying_activities as s
+    from scheduler.scheduling_goal_analysis_satisfying_activities as s
     where s.analysis_id = ?
     """;
 

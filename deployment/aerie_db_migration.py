@@ -21,19 +21,14 @@ class DB_Migration:
   def add_migration_step(self, _migration_step):
     self.steps = sorted(_migration_step, key=lambda x:int(x.split('_')[0]))
 
-def step_by_step_migration(database, apply):
-  clear_screen()
-  print('#' * len(database.db_name))
-  print(database.db_name)
-  print('#' * len(database.db_name))
-
+def step_by_step_migration(db_migration, apply):
   display_string = "\n\033[4mMIGRATION STEPS AVAILABLE:\033[0m\n"
-  _output = subprocess.getoutput(f'hasura migrate status --database-name {database.db_name}').split("\n")
+  _output = subprocess.getoutput(f'hasura migrate status --database-name {db_migration.db_name}').split("\n")
   del _output[0:3]
   display_string += _output[0] + "\n"
 
   # Filter out the steps that can't be applied given the current mode and currently applied steps
-  available_steps = database.steps.copy()
+  available_steps = db_migration.steps.copy()
   for i in range(1, len(_output)):
     split = list(filter(None, _output[i].split(" ")))
 
@@ -44,13 +39,13 @@ def step_by_step_migration(database, apply):
       return
 
     if apply:
-      if (len(split) == 4) or (not os.path.isfile(f'migrations/{database.db_name}/{split[0]}_{split[1]}/up.sql')):
+      if (len(split) == 4) or (not os.path.isfile(f'migrations/{db_migration.db_name}/{split[0]}_{split[1]}/up.sql')):
         available_steps.remove(f'{split[0]}_{split[1]}')
       else:
         display_string += _output[i] + "\n"
     else:
       if (len(split) == 5 and "Not Present" == (split[3] + " " + split[4])) \
-          or (not os.path.isfile(f'migrations/{database.db_name}/{split[0]}_{split[1]}/down.sql')):
+          or (not os.path.isfile(f'migrations/{db_migration.db_name}/{split[0]}_{split[1]}/down.sql')):
         available_steps.remove(f'{split[0]}_{split[1]}')
       else:
         display_string += _output[i] + "\n"
@@ -65,27 +60,27 @@ def step_by_step_migration(database, apply):
     timestamp = step.split("_")[0]
 
     if apply:
-      os.system(f'hasura migrate apply --version {timestamp} --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --version {timestamp} --database-name {db_migration.db_name} --dry-run --log-level WARN')
     else:
-      os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name} --dry-run --log-level WARN')
+      os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {db_migration.db_name} --dry-run --log-level WARN')
 
     print()
     _value = ''
-    while _value != "y" and _value != "n" and _value != "q":
+    while _value != "y" and _value != "n" and _value != "q" and _value != "quit":
       if apply:
-        _value = input(f'Apply {step}? (y/n): ').lower()
+        _value = input(f'Apply {step}? (y/n/\033[4mq\033[0muit): ').lower()
       else:
-        _value = input(f'Revert {step}? (y/n): ').lower()
+        _value = input(f'Revert {step}? (y/n/\033[4mq\033[0muit): ').lower()
 
-    if _value == "q":
+    if _value == "q" or _value == "quit":
       sys.exit()
     if _value == "y":
       if apply:
         print('Applying...')
-        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {database.db_name}')
+        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {db_migration.db_name}')
       else:
         print('Reverting...')
-        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {database.db_name}')
+        exit_code = os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {db_migration.db_name}')
       os.system('hasura metadata reload')
       print()
       if exit_code != 0:
@@ -94,59 +89,48 @@ def step_by_step_migration(database, apply):
       return
   input("Press Enter to continue...")
 
-def bulk_migration(migration_db, apply):
-  clear_screen()
+def bulk_migration(db_migration, apply):
   # Migrate each database
   exit_with = 0
-  for database in migration_db:
-    exit_with = exit_with << 1
-    print('#' * len(database.db_name))
-    print(database.db_name)
-    print('#' * len(database.db_name))
+  if apply:
+    os.system(f'hasura migrate apply --database-name {db_migration.db_name} --dry-run --log-level WARN')
+    exit_code = os.system(f'hasura migrate apply --database-name {db_migration.db_name}')
+    if exit_code != 0:
+      exit_with = 1
+  else:
+    os.system(f'hasura migrate apply --goto 1 --database-name {db_migration.db_name} --dry-run --log-level WARN &&'
+              f'hasura migrate apply --down 1 --database-name {db_migration.db_name} --dry-run --log-level WARN')
+    exit_code = os.system(f'hasura migrate apply --goto 1 --database-name {db_migration.db_name} &&'
+                          f'hasura migrate apply --down 1 --database-name {db_migration.db_name}')
+    if exit_code != 0:
+      exit_with = 1
 
-    if apply:
-      os.system(f'hasura migrate apply --database-name {database.db_name} --dry-run --log-level WARN')
-      exit_code = os.system(f'hasura migrate apply --database-name {database.db_name}')
-      if exit_code != 0:
-        exit_with += 1
-    else:
-      os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name} --dry-run --log-level WARN')
-      exit_code = os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name}')
-      if exit_code != 0:
-        exit_with += 1
-
-    os.system('hasura metadata reload')
+  os.system('hasura metadata reload')
 
   # Show the result after the migration
-  print(f'\n'
-        f'\n###############'
+  print(f'\n###############'
         f'\nDatabase Status'
         f'\n###############')
-  for database in migration_db:
-    os.system(f'hasura migrate status --database-name {database.db_name}')
+  _output = subprocess.getoutput(f'hasura migrate status --database-name {db_migration.db_name}').split("\n")
+  del _output[0:3]
+  print("\n".join(_output))
   exit(exit_with)
 
-def mark_current_version(dbs_to_apply, username, password, netloc):
-  for db in dbs_to_apply:
-    # Convert db.name to the actual format of the db name: aerie_dbSuffix
-    name = "aerie_"+db.db_name.removeprefix("Aerie").lower()
-    connectionString = "postgres://"+username+":"+password+"@"+netloc+":5432/"+name
-    current_schema = 0
+def mark_current_version(username, password, netloc):
+  # Convert db.name to the actual format of the db name: aerie_dbSuffix
+  connectionString = "postgres://"+username+":"+password+"@"+netloc+":5432/aerie"
 
-    # Connect to DB
-    with psycopg.connect(connectionString) as connection:
-      # Open a cursor to perform database operations
-      with connection.cursor() as cursor:
-        # Get the current schema version
-        try:
-          cursor.execute("SELECT migration_id FROM migrations.schema_migrations ORDER BY migration_id::int DESC LIMIT 1")
-        except psycopg.errors.UndefinedTable:
-          return
-        current_schema = int(cursor.fetchone()[0])
+  # Connect to DB
+  with psycopg.connect(connectionString) as connection:
+    # Open a cursor to perform database operations
+    with connection.cursor() as cursor:
+      # Get the current schema version
+      cursor.execute("SELECT migration_id FROM migrations.schema_migrations ORDER BY migration_id::int DESC LIMIT 1")
+      current_schema = int(cursor.fetchone()[0])
 
-    # Mark everything up to that as applied
-    for i in range(0, current_schema+1):
-      os.system('hasura migrate apply --skip-execution --version '+str(i)+' --database-name '+db.db_name+' >/dev/null 2>&1')
+  # Mark everything up to that as applied
+  for i in range(0, current_schema+1):
+    os.system('hasura migrate apply --skip-execution --version '+str(i)+' --database-name aerie >/dev/null 2>&1')
 
 def main():
   # Create a cli parser
@@ -157,24 +141,18 @@ def main():
   # Add arguments
   exclusive_args.add_argument(
     '-a', '--apply',
-    help="apply migration steps to specified databases",
+    help="apply migration steps to the database",
     action='store_true')
 
   exclusive_args.add_argument(
     '-r', '--revert',
-    help="revert migration steps to specified databases",
+    help="revert migration steps to the databases",
     action='store_true')
 
   parser.add_argument(
     '--all',
-    help="apply[revert] ALL unapplied[applied] migration steps to all databases if none are provided",
+    help="apply[revert] ALL unapplied[applied] migration steps to the database",
     action='store_true')
-
-  parser.add_argument(
-    '-db', '--db-names',
-    help="list of databases to migrate. migrates all if unspecified",
-    nargs='+',
-    default=[])
 
   parser.add_argument(
     '-p', '--hasura-path',
@@ -182,8 +160,7 @@ def main():
 
   parser.add_argument(
     '-e', '--env-path',
-    help="the path to the .env file used to deploy aerie. must define AERIE_USERNAME and AERIE_PASSWORD. defaults to .env",
-    default='.env')
+    help="the path to the .env file used to deploy aerie. must define AERIE_USERNAME and AERIE_PASSWORD")
 
   parser.add_argument(
     '-n', '--network-location',
@@ -196,45 +173,24 @@ def main():
   HASURA_PATH = "./hasura"
   if args.hasura_path:
     HASURA_PATH = args.hasura_path
-  MIGRATION_PATH = HASURA_PATH+"/migrations/"
+  MIGRATION_PATH = HASURA_PATH+"/migrations/Aerie"
 
-  # find all migration folders for each Aerie database
-  migration_db = []
-  to_migrate_set = set(args.db_names)
-  dbs_specified = True
-  if not to_migrate_set:
-    dbs_specified = False
-
+  # find all migration folders for the database
+  migration = DB_Migration("Aerie")
   try:
-    os.listdir(MIGRATION_PATH)
+    for root,dirs,files in os.walk(MIGRATION_PATH):
+      if dirs:
+        migration.add_migration_step(dirs)
   except FileNotFoundError as fne:
     print("\033[91mError\033[0m:"+ str(fne).split("]")[1])
     sys.exit(1)
-  for db in os.listdir(MIGRATION_PATH):
-    # ignore hidden folders
-    if db.startswith('.'):
-      continue
-    # Only process if the folder is on the list of databases or if we don't have a list of databases
-    if not dbs_specified or db in to_migrate_set:
-      migration = DB_Migration(db)
-      for root,dirs,files in os.walk(MIGRATION_PATH+db):
-        if dirs:
-          migration.add_migration_step(dirs)
-      if len(migration.steps) > 0:
-        # If reverting, reverse the list
-        if args.revert:
-          migration.steps.reverse()
-        migration_db.append(migration)
-        to_migrate_set.discard(db)
-
-  if to_migrate_set:
-    print("\033[91mError\033[0m: The following Database(s) do not contain migrations:\n\t"
-          +"\n\t".join(to_migrate_set))
-    sys.exit(1)
-
-  if not migration_db:
+  if len(migration.steps) <= 0:
     print("\033[91mError\033[0m: No database migrations found.")
     sys.exit(1)
+
+  # If reverting, reverse the list
+  if args.revert:
+    migration.steps.reverse()
 
   # Check that hasura cli is installed
   if not shutil.which('hasura'):
@@ -243,67 +199,48 @@ def main():
     os.system('hasura version')
 
   # Get the Username/Password
-  username = ""
-  password = ""
-  usernameFound = False
-  passwordFound = False
-  with open(args.env_path) as envFile:
-    for line in envFile:
-      if usernameFound and passwordFound:
-        break
-      line = line.strip()
-      if line.startswith("AERIE_USERNAME"):
-        username = line.removeprefix("AERIE_USERNAME=")
-        usernameFound = True
-        continue
-      if line.startswith("AERIE_PASSWORD"):
-        password = line.removeprefix("AERIE_PASSWORD=")
-        passwordFound = True
-        continue
-  if not usernameFound:
-    print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env_path+".")
-    sys.exit(1)
-  if not passwordFound:
-    print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env_path+".")
-    sys.exit(1)
+  username = os.environ.get('AERIE_USERNAME', "")
+  password = os.environ.get('AERIE_PASSWORD', "")
+
+  if args.env_path:
+    usernameFound = False
+    passwordFound = False
+    with open(args.env_path) as envFile:
+      for line in envFile:
+        if usernameFound and passwordFound:
+          break
+        line = line.strip()
+        if line.startswith("AERIE_USERNAME"):
+          username = line.removeprefix("AERIE_USERNAME=")
+          usernameFound = True
+          continue
+        if line.startswith("AERIE_PASSWORD"):
+          password = line.removeprefix("AERIE_PASSWORD=")
+          passwordFound = True
+          continue
+    if not usernameFound:
+      print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env_path+".")
+      sys.exit(1)
+    if not passwordFound:
+      print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env_path+".")
+      sys.exit(1)
 
   # Navigate to the hasura directory
   os.chdir(HASURA_PATH)
 
   # Mark all migrations previously applied to the databases to be updated as such
-  mark_current_version(migration_db, username, password, args.network_location)
+  mark_current_version(username, password, args.network_location)
 
+  clear_screen()
+  print(f'\n###############################'
+        f'\nAERIE DATABASE MIGRATION HELPER'
+        f'\n###############################')
   # Enter step-by-step mode if not otherwise specified
   if not args.all:
-    while True:
-      clear_screen()
-      print(f'\n###############################'
-            f'\nAERIE DATABASE MIGRATION HELPER'
-            f'\n###############################')
-
-      print(f'\n0) \033[4mQ\033[0muit the migration helper')
-      for migration_number in range(0,len(migration_db)):
-        print(f'\n{migration_number+1}) Database: {migration_db[migration_number].db_name}')
-        output = subprocess.getoutput(f'hasura migrate status --database-name {migration_db[migration_number].db_name}').split("\n")
-        del output[0:3]
-        print("\n".join(output))
-
-      value = -1
-      while value < 0 or value > len(migration_db):
-        _input = input(f"\nSelect a database to migrate (0-{len(migration_db)}): ").lower()
-        if _input == 'q' or _input == '0':
-          sys.exit()
-
-        try:
-          value = int(_input)
-        except ValueError:
-          value = -1
-
-      # Go step-by-step through the migrations available for the selected database
-      step_by_step_migration(migration_db[value-1], args.apply)
+    # Go step-by-step through the migrations available for the selected database
+    step_by_step_migration(migration, args.apply)
   else:
-    bulk_migration(migration_db, args.apply)
-  print()
+    bulk_migration(migration, args.apply)
 
 if __name__ == "__main__":
   main()

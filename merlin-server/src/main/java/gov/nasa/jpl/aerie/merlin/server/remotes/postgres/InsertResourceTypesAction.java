@@ -14,7 +14,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
 
 /*package-private*/ final class InsertResourceTypesAction implements AutoCloseable{
     private static final @Language("SQL") String sql = """
-    insert into resource_type (model_id, name, schema)
+    insert into merlin.resource_type (model_id, name, schema)
     values (?, ?, ?::json)
     on conflict (model_id, name) do update
     set schema = excluded.schema
@@ -46,12 +46,12 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
       for (int i : results) {
         if (i == Statement.EXECUTE_FAILED) {
           connection.rollback();
-          throw new FailedInsertException("resource_type");
+          throw new FailedInsertException("merlin.resource_type");
         }
         connection.commit();
       }
     } catch (BatchUpdateException bue){
-      throw new FailedInsertException("resource_type");
+      throw new FailedInsertException("merlin.resource_type");
     } finally {
       this.statement.getConnection().setAutoCommit(true);
     }

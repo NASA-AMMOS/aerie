@@ -8,9 +8,8 @@ import java.sql.SQLException;
 
 /*package-local*/ final class DeleteRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-    delete from scheduling_request
+    delete from scheduler.scheduling_request
     where
-      spec_id = ? and
       analysis_id = ?
     """;
 
@@ -20,9 +19,8 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(final long specId, final long analysisId) throws SQLException {
-    this.statement.setLong(1, specId);
-    this.statement.setLong(2, analysisId);
+  public void apply(final long analysisId) throws SQLException {
+    this.statement.setLong(1, analysisId);
 
     this.statement.execute();
   }

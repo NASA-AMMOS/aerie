@@ -34,11 +34,9 @@ spec:
               value: warn
             - name: MERLIN_GRAPHQL_URL
               value: http://hasura:8080/v1/graphql
-            - name: SEQUENCING_DB
-              value: aerie_sequencing
-            - name: SEQUENCING_DB_PORT
+            - name: AERIE_DB_PORT
               value: "5432"
-            - name: SEQUENCING_DB_SERVER
+            - name: AERIE_DB_HOST
               value: postgres
             - name: SEQUENCING_LOCAL_STORE
               value: /usr/src/app/sequencing_file_store
@@ -48,12 +46,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_USERNAME
+                  key: SEQUENCING_USERNAME
             - name: SEQUENCING_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_PASSWORD
+                  key: SEQUENCING_PASSWORD
       restartPolicy: Always
       volumes:
         - name: aerie-file-store
