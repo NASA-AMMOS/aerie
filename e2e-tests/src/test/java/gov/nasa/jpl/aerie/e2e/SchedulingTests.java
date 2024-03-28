@@ -736,7 +736,7 @@ public class SchedulingTests {
       // Insert the Plan
       fooPlan = hasura.createPlan(
           fooId,
-          "Foo Plan - Simulation Tests",
+          "Foo Plan - Scheduling Tests",
           "720:00:00",
           planStartTimestamp);
 

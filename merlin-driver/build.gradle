@@ -17,6 +17,9 @@ test {
   useJUnitPlatform {
     includeEngines 'jqwik', 'junit-jupiter'
   }
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 jacocoTestReport {
