@@ -198,52 +198,55 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed<Return>) {
-      // Propagate completion up the span hierarchy.
-      // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
-      var span = scheduler.span;
-      while (true) {
-        if (this.spanContributorCount.get(span).decrementAndGet() > 0) break;
-        this.spanContributorCount.remove(span);
+      switch (status) {
+        case TaskStatus.Completed<Return> s -> {
+          // Propagate completion up the span hierarchy.
+          // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
+          var span = scheduler.span;
+          while (true) {
+            if (this.spanContributorCount.get(span).decrementAndGet() > 0) break;
+            this.spanContributorCount.remove(span);
 
-        this.spans.compute(span, (_id, $) -> $.close(currentTime));
+            this.spans.compute(span, (_id, $) -> $.close(currentTime));
 
-        final var span$ = this.spans.get(span).parent;
-        if (span$.isEmpty()) break;
+            final var span$ = this.spans.get(span).parent;
+            if (span$.isEmpty()) break;
 
-        span = span$.get();
-      }
+            span = span$.get();
+          }
 
-      // Notify any blocked caller of our completion.
-      progress.caller().ifPresent($ -> {
-        if (this.blockedTasks.get($).decrementAndGet() == 0) {
-          this.blockedTasks.remove($);
-          this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
+          // Notify any blocked caller of our completion.
+          progress.caller().ifPresent($ -> {
+            if (this.blockedTasks.get($).decrementAndGet() == 0) {
+              this.blockedTasks.remove($);
+              this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
+            }
+          });
         }
-      });
-    } else if (status instanceof TaskStatus.Delayed<Return> s) {
-      if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
+        case TaskStatus.Delayed<Return> s -> {
+          if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
-      this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
-      this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.CallingTask<Return> s) {
-      final var target = TaskId.generate();
-      SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
-      SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor)));
-      SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
-      frame.signal(JobId.forTask(target));
+          this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
+          this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
+        }
+        case TaskStatus.CallingTask<Return> s -> {
+          final var target = TaskId.generate();
+          SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
+          SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor)));
+          SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
+          frame.signal(JobId.forTask(target));
 
-      this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
-    } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
-      final var condition = ConditionId.generate();
-      this.conditions.put(condition, s.condition());
-      this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
+          this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
+        }
+        case TaskStatus.AwaitingCondition<Return> s -> {
+          final var condition = ConditionId.generate();
+          this.conditions.put(condition, s.condition());
+          this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
-      this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
-      this.waitingTasks.put(condition, task);
-    } else {
-      throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
-    }
+          this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
+          this.waitingTasks.put(condition, task);
+        }
+      }
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */
