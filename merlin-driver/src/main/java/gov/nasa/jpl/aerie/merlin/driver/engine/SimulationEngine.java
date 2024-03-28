@@ -219,7 +219,7 @@ public final class SimulationEngine implements AutoCloseable {
       progress.caller().ifPresent($ -> {
         if (this.blockedTasks.get($).decrementAndGet() == 0) {
           this.blockedTasks.remove($);
-          this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
+          frame.signal(JobId.forTask($));
         }
       });
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
