@@ -268,6 +268,7 @@ public record SchedulingActivityDirective(
            && duration.isEqualTo(that.duration)
            && startOffset.isEqualTo(that.startOffset)
            && arguments.equals(that.arguments)
+           && Objects.equals(topParent, that.topParent)
            && Objects.equals(anchorId, that.anchorId)
            && (anchoredToStart == that.anchoredToStart);
   }

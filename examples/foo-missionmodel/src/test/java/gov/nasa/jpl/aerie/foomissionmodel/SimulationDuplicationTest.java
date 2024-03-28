@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
@@ -461,7 +462,7 @@ public class SimulationDuplicationTest {
       final CachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
-    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
+    return SimulationResultsComputerInputs.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
         Instant.EPOCH,
@@ -474,7 +475,8 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,
-        simulationEngineConfiguration));
+        simulationEngineConfiguration,
+        false));
   }
 
   static SimulationResults simulateWithCheckpoints(
@@ -484,7 +486,7 @@ public class SimulationDuplicationTest {
       final CachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
-    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
+    return SimulationResultsComputerInputs.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
         Instant.EPOCH,
@@ -497,7 +499,8 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,
-        simulationEngineConfiguration));
+        simulationEngineConfiguration,
+        false));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();

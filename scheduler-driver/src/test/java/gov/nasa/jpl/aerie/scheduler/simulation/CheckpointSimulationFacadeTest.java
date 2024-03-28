@@ -51,7 +51,7 @@ public class CheckpointSimulationFacadeTest {
       activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), SimulationUtility.getFooSchedulerModel().getDurationTypes().get(taskType.getKey())));
     }
     final var plan = makePlanA012(activityTypes);
-    newSimulationFacade = new SimulationFacade(
+    newSimulationFacade = new CheckpointSimulationFacade(
         fooMissionModel,
         SimulationUtility.getFooSchedulerModel(),
         new InMemoryCachedEngineStore(10),
@@ -72,7 +72,7 @@ public class CheckpointSimulationFacadeTest {
       activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), SimulationUtility.getFooSchedulerModel().getDurationTypes().get(taskType.getKey())));
     }
     final var plan = makePlanA012(activityTypes);
-    newSimulationFacade = new SimulationFacade(
+    newSimulationFacade = new CheckpointSimulationFacade(
         fooMissionModel,
         SimulationUtility.getFooSchedulerModel(),
         new InMemoryCachedEngineStore(10),
@@ -100,7 +100,7 @@ public class CheckpointSimulationFacadeTest {
     }
     final var plan = makePlanA012(activityTypes);
     final var cachedEngines = new InMemoryCachedEngineStore(10);
-    newSimulationFacade = new SimulationFacade(
+    newSimulationFacade = new CheckpointSimulationFacade(
         fooMissionModel,
         SimulationUtility.getFooSchedulerModel(),
         cachedEngines,

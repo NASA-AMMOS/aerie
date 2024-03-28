@@ -14,12 +14,14 @@ import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.model.PlanDiff;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,7 +45,7 @@ public class PrioritySolverTest {
             new Problem(
                     bananaMissionModel,
                     h,
-                    new SimulationFacade(
+                    new CheckpointSimulationFacade(
                         bananaMissionModel,
                         schedulerModel,
                         new InMemoryCachedEngineStore(15),
@@ -130,6 +133,26 @@ public class PrioritySolverTest {
   }
 
   @Test
+  public void test(){
+    final var problem = makeTestMissionAB();
+    final var plan = new PlanInMemory();
+    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
+    final var first =SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true);
+    final var second = SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true);
+    plan.add(first);
+    plan.add(second);
+    final var changeFirst = SchedulingActivityDirective.copyOf(first, ZERO);
+    final var plan3 = new PlanInMemory();
+    plan3.add(changeFirst);
+    final var plan2 = new PlanInMemory();
+    //final var diffs = PlanDiff.diff(plan, plan2);
+    //final  var diff2 = PlanDiff.diff(plan2, plan);
+    final var diff3 = PlanDiff.diff(plan, plan3);
+    System.out.println();
+
+  }
+
+  @Test
   public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
@@ -140,7 +163,7 @@ public class PrioritySolverTest {
 
     assertTrue(plan.isPresent());
     assertSetEquality(plan.get().getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(Duration.ZERO, problem.getSimulationFacade().totalSimulationTime());
+    assertEquals(ZERO, problem.getSimulationFacade().totalSimulationTime());
   }
 
   @Test
@@ -254,7 +277,7 @@ public class PrioritySolverTest {
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
     final var problem = makeTestMissionAB();
-    final var adHocFacade = new SimulationFacade(
+    final var adHocFacade = new CheckpointSimulationFacade(
         problem.getMissionModel(),
         problem.getSchedulerModel(),
         new InMemoryCachedEngineStore(10),

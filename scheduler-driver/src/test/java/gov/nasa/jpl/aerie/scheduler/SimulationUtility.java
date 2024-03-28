@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -46,7 +46,7 @@ public final class SimulationUtility {
     return new Problem(
         fooMissionModel,
         planningHorizon,
-        new SimulationFacade(
+        new CheckpointSimulationFacade(
             fooMissionModel,
             fooSchedulerModel,
             new InMemoryCachedEngineStore(simulationCacheSize),
@@ -65,7 +65,7 @@ public final class SimulationUtility {
     return new Problem(
         bananaMissionModel,
         planningHorizon,
-        new SimulationFacade(
+        new CheckpointSimulationFacade(
             bananaMissionModel,
             bananaSchedulerModel,
             new InMemoryCachedEngineStore(15),

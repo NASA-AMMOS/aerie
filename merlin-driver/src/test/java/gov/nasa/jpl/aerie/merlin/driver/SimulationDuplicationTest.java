@@ -129,7 +129,7 @@ public class SimulationDuplicationTest {
       final List<Duration> desiredCheckpoints,
       final CachedEngineStore engineStore
   ) {
-    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
+    return SimulationResultsComputerInputs.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         TestMissionModel.missionModel(),
         Map.of(),
         Instant.EPOCH,
@@ -142,7 +142,8 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
         CheckpointSimulationDriver.noCondition(),
         engineStore,
-        mockConfiguration()
+        mockConfiguration(),
+        false
         ));
   }
 }
