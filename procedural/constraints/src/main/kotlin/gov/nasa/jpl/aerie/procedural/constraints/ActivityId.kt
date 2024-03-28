@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.constraints
+package gov.nasa.jpl.aerie.procedural.constraints
 
 /** An activity ID, referencing either a directive or instance. */
 sealed interface ActivityId {

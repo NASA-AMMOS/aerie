@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.constraints
+package gov.nasa.jpl.aerie.procedural.constraints
 
 import gov.nasa.jpl.aerie.timeline.Interval
 import gov.nasa.jpl.aerie.timeline.payloads.IntervalLike
