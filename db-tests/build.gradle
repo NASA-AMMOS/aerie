@@ -18,6 +18,9 @@ jacocoTestReport {
 
 task e2eTest(type: Test) {
   useJUnitPlatform()
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 dependencies {

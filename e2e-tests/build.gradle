@@ -43,6 +43,10 @@ task e2eTest(type: Test) {
   // Run the tests in parallel to improve performance
   maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
   useJUnitPlatform()
+
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 dependencies {
