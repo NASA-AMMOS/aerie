@@ -3,13 +3,20 @@ package gov.nasa.jpl.aerie.foomissionmodel.models;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.dependency.Dependency;
+import gov.nasa.jpl.aerie.merlin.framework.dependency.EffectType;
+import gov.nasa.jpl.aerie.merlin.framework.dependency.Introspectable;
+import gov.nasa.jpl.aerie.merlin.framework.dependency.ModelDependencies;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
 import java.util.List;
 import java.util.function.Function;
 
+import static gov.nasa.jpl.aerie.merlin.framework.dependency.Dependency.resourceWrites;
+import static gov.nasa.jpl.aerie.merlin.framework.dependency.DependencyObjects.object;
+
 /** Simple data model inspired by Clipper's example data system model diagrams. */
-public final class SimpleData {
+public final class SimpleData implements Introspectable {
   public final InstrumentData a, b;
   public final RealResource totalVolume;
 
@@ -35,6 +42,8 @@ public final class SimpleData {
       this.activeRate = activeRate;
       this.volume = () -> this.ref.get().getVolume();
       this.rate = () -> this.ref.get().getRate();
+      ModelDependencies.add(
+          resourceWrites(object(this), object(this.ref), object(this.activeRate), object(this.volume), object(this.rate)));
     }
 
     private void setRate(final double newRate) {
@@ -60,6 +69,19 @@ public final class SimpleData {
       } else {
         this.deactivate();
       }
+    }
+  }
+
+  @Override
+  public List<Dependency> getDependencies(String methodName){
+    switch(methodName){
+      case "downlinkData":
+        return List.of(
+            Dependency.resourceWrite(object(this), object(this.a), EffectType.undefinedEffect()),
+            Dependency.resourceWrite(object(this), object(this.b), EffectType.undefinedEffect())
+        );
+      default:
+        return List.of();
     }
   }
 }
