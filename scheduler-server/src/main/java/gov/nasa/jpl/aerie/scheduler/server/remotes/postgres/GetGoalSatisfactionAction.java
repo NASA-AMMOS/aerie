@@ -12,6 +12,7 @@ import org.intellij.lang.annotations.Language;
   private final static @Language("SQL") String sql = """
     select
       goal.goal_id,
+      goal.goal_revision,
       goal.satisfied
     from scheduling_goal_analysis as goal
     where goal.analysis_id = ?
@@ -30,7 +31,7 @@ import org.intellij.lang.annotations.Language;
     final var goals = new HashMap<GoalId, Boolean>();
     while (resultSet.next()) {
       goals.put(
-          new GoalId(resultSet.getLong("goal_id")),
+          new GoalId(resultSet.getLong("goal_id"), resultSet.getLong("goal_revision")),
           resultSet.getBoolean("satisfied")
       );
     }

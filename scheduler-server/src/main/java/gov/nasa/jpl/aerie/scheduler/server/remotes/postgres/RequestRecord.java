@@ -7,6 +7,7 @@ public record RequestRecord(
     long specificationId,
     long analysisId,
     long specificationRevision,
+    long planRevision,
     Status status,
     Optional<ScheduleFailure> reason,
     boolean canceled,

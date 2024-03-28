@@ -1,0 +1,89 @@
+table:
+  name: scheduling_goal_definition
+  schema: public
+object_relationships:
+  - name: metadata
+    using:
+      foreign_key_constraint_on: goal_id
+array_relationships:
+  - name: analyses
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - goal_id
+          - goal_revision
+        table:
+          name: scheduling_goal_analysis
+          schema: public
+  - name: tags
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - goal_id
+          - goal_revision
+        table:
+          name: scheduling_goal_definition_tags
+          schema: metadata
+  - name: models_using
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - goal_id
+          - goal_revision
+        table:
+          name: scheduling_model_specification_goals
+          schema: public
+  - name: plans_using
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - goal_id
+          - goal_revision
+        table:
+          name: scheduling_specification_goals
+          schema: public
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+# This should have filtering based on privacy, but cross-database permissions restrictions prevent that
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [goal_id, definition]
+      check: {}
+      set:
+        author: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [goal_id, definition]
+      check: {"_or":[{"metadata":{"public":{"_eq":true}}},{"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}
+      set:
+        author: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [definition, author]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter:
+        {"_or":[
+          {"author": {"_eq": "X-Hasura-User-Id"}},
+          {"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}

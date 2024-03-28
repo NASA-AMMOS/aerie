@@ -1,0 +1,58 @@
+table:
+  name: scheduling_condition_definition_tags
+  schema: metadata
+configuration:
+  custom_name: "scheduling_condition_definition_tags"
+object_relationships:
+  - name: condition_definition
+    using:
+      foreign_key_constraint_on:
+        - condition_id
+        - condition_revision
+remote_relationships:
+  - name: tag
+    definition:
+      to_source:
+        relationship_type: object
+        source: AerieMerlin
+        table:
+          schema: metadata
+          name: tags
+        field_mapping:
+          tag_id: id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [condition_id, condition_revision, tag_id]
+      check: {}
+  - role: user
+    permission:
+      columns: [condition_id, condition_revision, tag_id]
+      check: {"condition_definition":{"_or":[
+        {"author":{"_eq":"X-Hasura-User-Id"}},
+        {"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {"condition_definition":{"_or":[
+        {"author":{"_eq":"X-Hasura-User-Id"}},
+        {"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}}

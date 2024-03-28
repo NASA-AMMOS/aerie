@@ -121,7 +121,7 @@ public final class LinearBoundaryConsistencySolver {
         while ((constraint = remainingConstraints.poll()) != null) {
           var V = constraint.constrainedVariable;
           var D = domains.get(V);
-          var newBound = constraint.bound.apply(domains).getDynamics().getOrThrow();
+          var newBound = constraint.bound.apply(domains);
           boolean domainChanged = switch (constraint.comparison) {
             case LessThanOrEquals -> D.restrictUpper(newBound);
             case GreaterThanOrEquals -> D.restrictLower(newBound);
@@ -313,23 +313,23 @@ public final class LinearBoundaryConsistencySolver {
         // Expiry for driven terms is captured by re-solving rather than expiring the solution.
         // If solver has a feedback loop from last iteration (which is common)
         // feeding that expiry in here can loop the solver forever.
-        var result = drivenTerm;
+        var result = drivenTerm.getDynamics().getOrThrow();
         for (var drivingVariable : drivingVariables) {
           var scale = controlledTerm.get(drivingVariable);
           var domain = domains.get(drivingVariable);
           var useLowerBound = (scale > 0) == (c == LessThanOrEquals);
           var domainBound = ExpiringMonad.map(
               useLowerBound ? domain.lowerBound() : domain.upperBound(),
-              b -> b.multiply(polynomial(-scale)));
-          result = add(result, () -> success(domainBound));
+              polynomial(-scale)::multiply);
+          result = ExpiringMonad.map(result, domainBound, Polynomial::add);
         }
-        return multiply(result, constant(inverseScale));
+        return ExpiringMonad.map(result, polynomial(inverseScale)::multiply);
       }, drivingVariables));
     }
   }
   // Directional constraints are useful for arc consistency, since they have input (driving) and output (constrained) variables.
   // However, many directional constraints are required in general to express one General constraint.
-  private record DirectionalConstraint(Variable constrainedVariable, InequalityComparison comparison, Function<Map<Variable, ? extends Domain>, Resource<Polynomial>> bound, Set<Variable> drivingVariables) {}
+  private record DirectionalConstraint(Variable constrainedVariable, InequalityComparison comparison, Function<Map<Variable, ? extends Domain>, Expiring<Polynomial>> bound, Set<Variable> drivingVariables) {}
 
   public static final class Domain {
     public final Variable variable;

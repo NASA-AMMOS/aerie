@@ -60,6 +60,10 @@ test {
 
   environment "CONSTRAINTS_DSL_COMPILER_ROOT", projectDir.toPath().resolve('constraints-dsl-compiler')
   environment "CONSTRAINTS_DSL_COMPILER_COMMAND", './build/main.js'
+
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 jacocoTestReport {

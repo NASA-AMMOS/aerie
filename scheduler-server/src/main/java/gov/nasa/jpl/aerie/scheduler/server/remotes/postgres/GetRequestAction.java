@@ -1,12 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import javax.json.Json;
-import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers;
-import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import org.intellij.lang.annotations.Language;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -21,9 +16,9 @@ import java.util.Optional;
       r.canceled,
       r.dataset_id
     from scheduling_request as r
-    where
-      r.specification_id = ? and
-      r.specification_revision = ?
+    where r.specification_id = ?
+     and r.specification_revision = ?
+     and r.plan_revision = ?
     """;
 
   private final PreparedStatement statement;
@@ -34,10 +29,12 @@ import java.util.Optional;
 
   public Optional<RequestRecord> get(
       final long specificationId,
-      final long specificationRevision
+      final long specificationRevision,
+      final long planRevision
   ) throws SQLException {
     this.statement.setLong(1, specificationId);
     this.statement.setLong(2, specificationRevision);
+    this.statement.setLong(3, planRevision);
 
     final var resultSet = this.statement.executeQuery();
     if (!resultSet.next()) return Optional.empty();
@@ -62,6 +59,7 @@ import java.util.Optional;
         specificationId,
         analysisId,
         specificationRevision,
+        planRevision,
         status,
         failureReason$,
         canceled,

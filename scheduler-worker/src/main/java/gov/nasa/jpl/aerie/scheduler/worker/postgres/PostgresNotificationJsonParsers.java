@@ -11,11 +11,13 @@ public final class PostgresNotificationJsonParsers {
   public static final JsonParser<PostgresSchedulingRequestNotificationPayload> postgresSchedulingRequestNotificationP
       = productP
       . field("specification_revision", longP)
+      . field("plan_revision", longP)
       . field("specification_id", longP)
       . field("analysis_id", longP)
       . map(
           untuple(PostgresSchedulingRequestNotificationPayload::new),
           $ -> tuple($.specificationRevision(),
+                     $.planRevision(),
                      $.specificationId(),
                      $.analysisId()));
 }

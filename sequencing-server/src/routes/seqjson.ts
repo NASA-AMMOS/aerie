@@ -137,25 +137,22 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
     }>(
       `
-        with joined_table as (select activity_instance_commands.commands,
-                                      activity_instance_commands.activity_instance_id,
-                                      activity_instance_commands.errors,
-                                      activity_instance_commands.expansion_run_id
-                              from sequence
-                                      join sequence_to_simulated_activity
-                                          on sequence.seq_id = sequence_to_simulated_activity.seq_id and
-                                              sequence.simulation_dataset_id =
-                                              sequence_to_simulated_activity.simulation_dataset_id
-                                      join activity_instance_commands
-                                          on sequence_to_simulated_activity.simulated_activity_id =
-                                              activity_instance_commands.activity_instance_id
-                                      join expansion_run
-                                          on activity_instance_commands.expansion_run_id = expansion_run.id
-                              where sequence.seq_id = $2
-                                and sequence.simulation_dataset_id = $1),
-              max_values as (select activity_instance_id, max(expansion_run_id) as max_expansion_run_id
-                            from joined_table
-                            group by activity_instance_id)
+        with joined_table as (
+          select  aic.commands,
+                  aic.activity_instance_id,
+                  aic.errors,
+                  aic.expansion_run_id
+          from sequence_to_simulated_activity ssa
+          join activity_instance_commands aic
+            on ssa.simulated_activity_id = aic.activity_instance_id
+          where (ssa.simulation_dataset_id, ssa.seq_id) = ($1, $2)),
+          max_values as (
+            select
+              activity_instance_id,
+              max(expansion_run_id) as max_expansion_run_id
+            from joined_table
+            group by activity_instance_id
+          )
         select joined_table.commands,
                 joined_table.activity_instance_id,
                 joined_table.errors
@@ -283,23 +280,16 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
         with
         joined_table as (
           select
-            activity_instance_commands.commands,
-            activity_instance_commands.activity_instance_id,
-            activity_instance_commands.errors,
-            activity_instance_commands.expansion_run_id,
-            sequence.seq_id,
-            sequence.simulation_dataset_id
-          from sequence
-            join sequence_to_simulated_activity
-              on sequence.seq_id = sequence_to_simulated_activity.seq_id
-                and sequence.simulation_dataset_id =
-                  sequence_to_simulated_activity.simulation_dataset_id
-            join activity_instance_commands
-              on sequence_to_simulated_activity.simulated_activity_id =
-                activity_instance_commands.activity_instance_id
-            join expansion_run
-              on activity_instance_commands.expansion_run_id = expansion_run.id
-          where (sequence.seq_id, sequence.simulation_dataset_id) in (${pgFormat('%L', inputTuples)})
+            aic.commands,
+            aic.activity_instance_id,
+            aic.errors,
+            aic.expansion_run_id,
+            ssa.seq_id,
+            ssa.simulation_dataset_id
+          from sequence_to_simulated_activity ssa
+          join activity_instance_commands aic
+            on ssa.simulated_activity_id = aic.activity_instance_id
+          where (ssa.seq_id, ssa.simulation_dataset_id) in (${pgFormat('%L', inputTuples)})
         ),
         max_values as (
           select
@@ -328,8 +318,8 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
     }>(
       `
         select metadata, seq_id, simulation_dataset_id
-        from sequence
-        where (sequence.seq_id, sequence.simulation_dataset_id) in (${pgFormat('%L', inputTuples)});
+        from sequence s
+        where (s.seq_id, s.simulation_dataset_id) in (${pgFormat('%L', inputTuples)});
       `,
     ),
   ]);
