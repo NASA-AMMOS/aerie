@@ -80,7 +80,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
   /** Schedule a new task to be performed at the given time. */
-  public <Return> SpanId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
+  public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state) {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var span = SpanId.generate();
@@ -184,9 +184,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Make progress in a task by stepping its associated effect model forward. */
-  private <Return> void stepEffectModel(
+  private <Output> void stepEffectModel(
       final TaskId task,
-      final ExecutionState<Return> progress,
+      final ExecutionState<Output> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
@@ -199,7 +199,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     // Based on the task's return status, update its execution state and schedule its resumption.
       switch (status) {
-        case TaskStatus.Completed<Return> s -> {
+        case TaskStatus.Completed<Output> s -> {
           // Propagate completion up the span hierarchy.
           // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
           var span = scheduler.span;
@@ -223,13 +223,13 @@ public final class SimulationEngine implements AutoCloseable {
             }
           });
         }
-        case TaskStatus.Delayed<Return> s -> {
+        case TaskStatus.Delayed<Output> s -> {
           if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
           this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
           this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
         }
-        case TaskStatus.CallingTask<Return> s -> {
+        case TaskStatus.CallingTask<Output> s -> {
           final var target = TaskId.generate();
           SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
           SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor)));
@@ -238,7 +238,7 @@ public final class SimulationEngine implements AutoCloseable {
 
           this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
         }
-        case TaskStatus.AwaitingCondition<Return> s -> {
+        case TaskStatus.AwaitingCondition<Output> s -> {
           final var condition = ConditionId.generate();
           this.conditions.put(condition, s.condition());
           this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
@@ -765,8 +765,8 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** The state of an executing task. */
-  private record ExecutionState<Return>(SpanId span, int shadowedSpans, Optional<TaskId> caller, Task<Return> state) {
-    public ExecutionState<Return> continueWith(final SpanId span, final int shadowedSpans, final Task<Return> newState) {
+  private record ExecutionState<Output>(SpanId span, int shadowedSpans, Optional<TaskId> caller, Task<Output> state) {
+    public ExecutionState<Output> continueWith(final SpanId span, final int shadowedSpans, final Task<Output> newState) {
       return new ExecutionState<>(span, shadowedSpans, this.caller, newState);
     }
   }
