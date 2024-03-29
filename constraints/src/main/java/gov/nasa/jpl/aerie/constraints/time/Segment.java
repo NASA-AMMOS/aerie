@@ -10,7 +10,6 @@ public record Segment<V>(Interval interval, V value) implements Comparable<Segme
     return new Segment<>(interval, value);
   }
 
-  //private Comparator<Segment<V>> comparator = Comparator.comparing(Segment<V>::interval).thenComparing(Segment::value, ObjectComparator.getInstance());
   @Override
   public int compareTo(final Segment<V> o) {
     final var comparator =
