@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
+import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
@@ -59,6 +60,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
       final PlanningHorizon planningHorizon,
       final SimulationEngineConfiguration simulationEngineConfiguration,
       final Supplier<Boolean> canceledListener){
+    if(cachedEngines.capacity() > 1) ThreadedTask.CACHE_READS = true;
     this.missionModel = missionModel;
     this.schedulerModel = schedulerModel;
     this.cachedEngines = cachedEngines;

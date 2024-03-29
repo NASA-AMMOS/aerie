@@ -138,7 +138,7 @@ public final class SchedulerWorkerAppDriver {
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
-        Integer.parseInt(getEnv("MAX_NB_CACHED_SIMULATION_ENGINE", "30"))
+        Integer.parseInt(getEnv("MAX_NB_CACHED_SIMULATION_ENGINE", "1"))
     );
   }
 }

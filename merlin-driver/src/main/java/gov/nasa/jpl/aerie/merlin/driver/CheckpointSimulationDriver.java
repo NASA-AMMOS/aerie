@@ -266,7 +266,7 @@ public class CheckpointSimulationDriver {
           final var nextTime = engine.peekNextTime().orElse(Duration.MAX_VALUE);
           if (shouldTakeCheckpoint.apply(new SimulationState(elapsedTime, nextTime, engine, schedule, activityToSpan))) {
             if(!avoidDuplication) cells.freeze();
-            LOGGER.info("Saving a simulation engine in memory");
+            LOGGER.info("Saving a simulation engine in memory at time " + elapsedTime + " (next time: " + nextTime + ")");
             final var newCachedEngine = new CachedSimulationEngine(
                 elapsedTime,
                 schedule,
