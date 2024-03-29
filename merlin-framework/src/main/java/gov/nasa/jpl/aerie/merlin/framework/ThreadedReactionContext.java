@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -53,24 +54,14 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public void spawn(final TaskFactory<?> task) {
-    this.scheduler.spawn(task);
+  public void spawn(final InSpan inSpan, final TaskFactory<?> task) {
+    this.scheduler.spawn(inSpan, task);
   }
 
   @Override
-  public <T> void call(final TaskFactory<T> task) {
+  public <T> void call(final InSpan inSpan, final TaskFactory<T> task) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.call(task);
-  }
-
-  @Override
-  public void pushSpan() {
-    this.scheduler.pushSpan();
-  }
-
-  @Override
-  public void popSpan() {
-    this.scheduler.popSpan();
+    this.scheduler = this.handle.call(inSpan, task);
   }
 
   @Override

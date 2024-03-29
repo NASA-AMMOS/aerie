@@ -395,7 +395,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final TaskFactory<Output> task,
       final Topic<ActivityDirectiveId> activityTopic) {
     return executor -> scheduler -> {
-      scheduler.pushSpan();
       scheduler.emit(directiveId, activityTopic);
       return task.create(executor).step(scheduler);
     };
