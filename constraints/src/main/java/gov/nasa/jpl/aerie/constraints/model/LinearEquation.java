@@ -15,7 +15,7 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive
 /**
  * A linear equation in point-slope form.
  */
-public final class LinearEquation {
+public final class LinearEquation implements Comparable<LinearEquation> {
   public final Duration initialTime;
   public final double initialValue;
   public final double rate;
@@ -184,5 +184,13 @@ public final class LinearEquation {
   @Override
   public int hashCode() {
     return Objects.hash(this.initialValue, this.initialTime, this.rate);
+  }
+
+  @Override
+  public int compareTo(final LinearEquation o) {
+    int c = Double.compare(this.valueAt(Duration.ZERO), o.valueAt(Duration.ZERO));
+    if (c != 0) return c;
+    c = Double.compare(this.valueAt(Duration.MINUTE), o.valueAt(Duration.MINUTE));
+    return c;
   }
 }
