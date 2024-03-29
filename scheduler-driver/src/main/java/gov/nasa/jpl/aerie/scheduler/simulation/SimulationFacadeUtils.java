@@ -130,7 +130,7 @@ public class SimulationFacadeUtils {
     }
   }
 
-  private static Optional<Duration> getActivityDuration(
+  public static Optional<Duration> getActivityDuration(
       final ActivityDirectiveId activityDirectiveId,
       final SimulationResultsComputerInputs simulationResultsInputs){
     return simulationResultsInputs.engine().getTaskDuration(simulationResultsInputs.activityDirectiveIdTaskIdMap().get(activityDirectiveId));

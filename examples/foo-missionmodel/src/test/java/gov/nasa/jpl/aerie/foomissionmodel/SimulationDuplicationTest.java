@@ -476,7 +476,7 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,
         simulationEngineConfiguration,
-        false));
+        true));
   }
 
   static SimulationResults simulateWithCheckpoints(
@@ -500,7 +500,7 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,
         simulationEngineConfiguration,
-        false));
+        true));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();

@@ -143,7 +143,7 @@ public class SimulationDuplicationTest {
         CheckpointSimulationDriver.noCondition(),
         engineStore,
         mockConfiguration(),
-        false
+        true
         ));
   }
 }

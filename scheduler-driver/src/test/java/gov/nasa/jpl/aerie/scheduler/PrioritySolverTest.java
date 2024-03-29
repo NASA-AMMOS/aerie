@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.PlanDiff;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -130,26 +129,6 @@ public class PrioritySolverTest {
     plan.add(SchedulingActivityDirective.of(actTypeB, t1hr, d1min, null, true));
     plan.add(SchedulingActivityDirective.of(actTypeB, t2hr, d1min, null, true));
     return plan;
-  }
-
-  @Test
-  public void test(){
-    final var problem = makeTestMissionAB();
-    final var plan = new PlanInMemory();
-    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    final var first =SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true);
-    final var second = SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true);
-    plan.add(first);
-    plan.add(second);
-    final var changeFirst = SchedulingActivityDirective.copyOf(first, ZERO);
-    final var plan3 = new PlanInMemory();
-    plan3.add(changeFirst);
-    final var plan2 = new PlanInMemory();
-    //final var diffs = PlanDiff.diff(plan, plan2);
-    //final  var diff2 = PlanDiff.diff(plan2, plan);
-    final var diff3 = PlanDiff.diff(plan, plan3);
-    System.out.println();
-
   }
 
   @Test

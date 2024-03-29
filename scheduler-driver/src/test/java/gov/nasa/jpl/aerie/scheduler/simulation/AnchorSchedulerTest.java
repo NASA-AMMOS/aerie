@@ -2,13 +2,17 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -25,7 +29,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import org.apache.commons.lang3.tuple.Triple;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,12 +50,6 @@ public class AnchorSchedulerTest {
   private final Duration tenDays = Duration.duration(10 * 60 * 60 * 24, Duration.SECONDS);
   private final static Duration oneMinute = Duration.of(60, Duration.SECONDS);
   private final Map<String, SerializedValue> arguments = Map.of("unusedArg", SerializedValue.of("test-param"));
-  private ResumableSimulationDriver<Object> driver;
-
-  @BeforeEach
-  void beforeEach() {
-    driver = new ResumableSimulationDriver<>(AnchorTestModel, tenDays, () -> false);
-  }
 
   @Nested
   public final class AnchorsSimulationDriverTests {
@@ -60,6 +57,25 @@ public class AnchorSchedulerTest {
     private final SerializedActivity serializedDecompositionDirective = new SerializedActivity("DecomposingActivityDirective", arguments);
     private final SerializedValue computedAttributes = new SerializedValue.MapValue(Map.of());
     private final Instant planStart = Instant.EPOCH;
+
+
+    public SimulationResultsComputerInputs simulateActivities( final Map<ActivityDirectiveId, ActivityDirective> schedule){
+      return CheckpointSimulationDriver.simulateWithCheckpoints(
+          AnchorTestModel,
+          schedule,
+          planStart,
+          tenDays,
+          planStart,
+          tenDays,
+          $ -> {},
+          () -> false,
+          CheckpointSimulationDriver.CachedSimulationEngine.empty(AnchorTestModel),
+          (a) -> false,
+          CheckpointSimulationDriver.stopOnceAllActivitiessAreFinished(),
+          new InMemoryCachedEngineStore(0),
+          new SimulationEngineConfiguration(Map.of(), planStart, new MissionModelId(1)),
+          true);
+    }
 
     /**
      * Asserts equality based on the following fields of SimulationResults:
@@ -215,16 +231,14 @@ public class AnchorSchedulerTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
-          tenDays, // simulation duration
+          tenDays.minus(Duration.of(9, Duration.MINUTE)), // simulation duration
           modelTopicList,
           new TreeMap<>() //events
       );
 
-      driver.simulateActivities(resolveToPlanStartAnchors);
-      final var actualSimResults = driver.getSimulationResultsUpTo(planStart, tenDays);
+      final var actualSimResults = SimulationResultsComputerInputs.computeResults(simulateActivities(resolveToPlanStartAnchors));
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
-      assertEquals(1, driver.getCountSimulationRestarts());
     }
 
     @Test
@@ -333,11 +347,9 @@ public class AnchorSchedulerTest {
           new TreeMap<>() //events
       );
 
-      driver.simulateActivities(activitiesToSimulate);
-      final var actualSimResults = driver.getSimulationResults(planStart);
+      final var actualSimResults = SimulationResultsComputerInputs.computeResults(simulateActivities(activitiesToSimulate));
 
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
-      assertEquals(1, driver.getCountSimulationRestarts());
     }
 
     @Test
@@ -350,8 +362,8 @@ public class AnchorSchedulerTest {
       activitiesToSimulate.put(
           new ActivityDirectiveId(1),
           new ActivityDirective(oneMinute, serializedDelayDirective, new ActivityDirectiveId(0), false));
-      driver.simulateActivities(activitiesToSimulate);
-      final var durationOfAnchoredActivity = driver.getActivityDuration(new ActivityDirectiveId(1));
+      final var simulationResults = simulateActivities(activitiesToSimulate);
+      final var durationOfAnchoredActivity = SimulationFacadeUtils.getActivityDuration(new ActivityDirectiveId(1), simulationResults);
       assertTrue(durationOfAnchoredActivity.isPresent());
     }
 
@@ -502,8 +514,8 @@ public class AnchorSchedulerTest {
           new SimulatedActivity(serializedDecompositionDirective.getTypeName(), Map.of(), Instant.EPOCH.plus(4, ChronoUnit.MINUTES), threeMinutes, null, List.of(), Optional.of(new ActivityDirectiveId(23)), computedAttributes));
 
       // Custom assertion, as Decomposition children can end up simulated in different positions between runs
-      driver.simulateActivities(activitiesToSimulate);
-      final var actualSimResults = driver.getSimulationResults(planStart);
+      ;
+      final var actualSimResults = SimulationResultsComputerInputs.computeResults(simulateActivities(activitiesToSimulate));
 
       assertEquals(planStart, actualSimResults.startTime);
       assertTrue(actualSimResults.unfinishedActivities.isEmpty());
@@ -595,7 +607,6 @@ public class AnchorSchedulerTest {
 
       // We have examined all the children
       assertTrue(childSimulatedActivities.isEmpty());
-      assertEquals(1, driver.getCountSimulationRestarts());
     }
 
     @Test
@@ -635,12 +646,10 @@ public class AnchorSchedulerTest {
           modelTopicList,
           new TreeMap<>() //events
       );
-      driver.simulateActivities(activitiesToSimulate);
-      final var actualSimResults = driver.getSimulationResults(planStart);
+      final var actualSimResults = SimulationResultsComputerInputs.computeResults(simulateActivities(activitiesToSimulate));
 
       assertEquals(3906, expectedSimResults.simulatedActivities.size());
       assertEqualsSimulationResults(expectedSimResults, actualSimResults);
-      assertEquals(1, driver.getCountSimulationRestarts());
     }
   }
 

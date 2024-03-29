@@ -68,7 +68,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     this.activityTypes = new HashMap<>();
     this.configuration = simulationEngineConfiguration;
     this.canceledListener = canceledListener;
-    this.resumableSimulationBehavior = cachedEngines.capacity() == 1;
+    this.resumableSimulationBehavior = cachedEngines.capacity() <= 1;
   }
 
   /**
@@ -237,7 +237,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
           stoppingCondition,
           cachedEngines,
           configuration,
-          resumableSimulationBehavior);
+          !resumableSimulationBehavior);
       if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
       this.totalSimulationTime = this.totalSimulationTime.plus(simulation.elapsedTime().minus(from));
       final var activityResults = SimulationResultsComputerInputs.computeActivitySimulationResults(simulation);
