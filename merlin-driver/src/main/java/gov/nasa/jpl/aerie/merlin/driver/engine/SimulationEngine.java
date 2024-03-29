@@ -26,7 +26,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -137,20 +139,28 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public EventGraph<Event> performJobs(
+  public Pair<EventGraph<Event>, Optional<Throwable>> performJobs(
       final Collection<JobId> jobs,
       final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime
   ) throws SpanException {
     var tip = EventGraph.<Event>empty();
+    Mutable<Optional<Throwable>> exception = new MutableObject<>(Optional.empty());
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
-        this.performJob(job, frame, currentTime, maximumTime);
+        try {
+          this.performJob(job, frame, currentTime, maximumTime);
+        } catch (Throwable ex) {
+          exception.setValue(Optional.of(ex));
+        }
       }));
-    }
 
-    return tip;
+      if (exception.getValue().isPresent()) {
+        return Pair.of(tip, exception.getValue());
+      }
+    }
+    return Pair.of(tip, Optional.empty());
   }
 
   /** Performs a single job. */
