@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -52,10 +52,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
 
   //mapping each activity name to its task id (in String form) in the simulation engine
-  private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
+  private final Map<ActivityDirectiveId, SpanId> plannedDirectiveToTask;
 
   //subset of plannedDirectiveToTask to check for scheduling dependent tasks
-  private final Map<ActivityDirectiveId, TaskId> toCheckForDependencyScheduling;
+  private final Map<ActivityDirectiveId, SpanId> toCheckForDependencyScheduling;
 
   //simulation results so far
   private SimulationResults lastSimResults;
@@ -317,7 +317,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask
           .values()
           .stream()
-          .allMatch(engine::isTaskComplete)) {
+          .allMatch($ -> engine.getSpan($).isComplete())) {
         allTaskFinished = true;
       }
 
@@ -340,7 +340,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public Optional<Duration> getActivityDuration(ActivityDirectiveId activityDirectiveId){
     //potential cause of non presence: (1) activity is outside plan bounds (2) activity has not been simulated yet
     if(!plannedDirectiveToTask.containsKey(activityDirectiveId)) return Optional.empty();
-    return engine.getTaskDuration(plannedDirectiveToTask.get(activityDirectiveId));
+    return engine.getSpan(plannedDirectiveToTask.get(activityDirectiveId)).duration();
   }
 
   private Set<ActivityDirectiveId> getSuccessorsToSchedule(final SimulationEngine engine) {
@@ -348,7 +348,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     final var iterator = toCheckForDependencyScheduling.entrySet().iterator();
     while(iterator.hasNext()){
       final var taskToCheck = iterator.next();
-      if(engine.isTaskComplete(taskToCheck.getValue())){
+      if(engine.getSpan(taskToCheck.getValue()).isComplete()){
         toSchedule.add(taskToCheck.getKey());
         iterator.remove();
       }

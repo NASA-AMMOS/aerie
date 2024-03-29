@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.function.Supplier;
@@ -54,7 +55,7 @@ public /*non-final*/ class ModelActions {
   }
 
   public static <T> void spawn(final TaskFactory<T> task) {
-    context.get().spawn(task);
+    context.get().spawn(InSpan.Parent, task);
   }
 
   public static void call(final Runnable task) {
@@ -66,7 +67,35 @@ public /*non-final*/ class ModelActions {
   }
 
   public static <T> void call(final TaskFactory<T> task) {
-    context.get().call(task);
+    context.get().call(InSpan.Parent, task);
+  }
+
+
+  public static <T> void spawnWithSpan(final Supplier<T> task) {
+    spawnWithSpan(threaded(task));
+  }
+
+  public static void spawnWithSpan(final Runnable task) {
+    spawnWithSpan(() -> {
+      task.run();
+      return Unit.UNIT;
+    });
+  }
+
+  public static <T> void spawnWithSpan(final TaskFactory<T> task) {
+    context.get().spawn(InSpan.Fresh, task);
+  }
+
+  public static void callWithSpan(final Runnable task) {
+    callWithSpan(threaded(task));
+  }
+
+  public static <T> void callWithSpan(final Supplier<T> task) {
+    callWithSpan(threaded(task));
+  }
+
+  public static <T> void callWithSpan(final TaskFactory<T> task) {
+    context.get().call(InSpan.Fresh, task);
   }
 
   public static void defer(final Duration duration, final Runnable task) {
@@ -83,6 +112,22 @@ public /*non-final*/ class ModelActions {
 
   public static void defer(final long quantity, final Duration unit, final TaskFactory<?> task) {
     spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
+  }
+
+  public static void deferWithSpan(final Duration duration, final Runnable task) {
+    spawn(replaying(() -> { delay(duration); spawnWithSpan(task); }));
+  }
+
+  public static void deferWithSpan(final Duration duration, final TaskFactory<?> task) {
+    spawn(replaying(() -> { delay(duration); spawnWithSpan(task); }));
+  }
+
+  public static void deferWithSpan(final long quantity, final Duration unit, final Runnable task) {
+    spawn(replaying(() -> { delay(quantity, unit); spawnWithSpan(task); }));
+  }
+
+  public static void deferWithSpan(final long quantity, final Duration unit, final TaskFactory<?> task) {
+    spawn(replaying(() -> { delay(quantity, unit); spawnWithSpan(task); }));
   }
 
 

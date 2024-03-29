@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -165,11 +166,11 @@ public final class SimulationDriver {
       }
 
       // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task);
+      final var spanId = engine.scheduleTask(elapsedTime, task);
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (!engine.isTaskComplete(taskId)) {
+      while (!engine.getSpan(spanId).isComplete()) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
 
         // Increment real time, if necessary.
@@ -232,7 +233,7 @@ public final class SimulationDriver {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
+    return executor -> scheduler0 -> TaskStatus.calling(InSpan.Fresh, (TaskFactory<Output>) (executor1 -> scheduler1 -> {
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
     }), scheduler2 -> {
@@ -240,7 +241,7 @@ public final class SimulationDriver {
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
       for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> scheduler3 ->
+        scheduler2.spawn(InSpan.Parent, executor2 -> scheduler3 ->
             // Delay until the dependent starts
             TaskStatus.delayed(dependent.getRight(), scheduler4 -> {
               final var dependentDirectiveId = dependent.getLeft();
@@ -258,7 +259,7 @@ public final class SimulationDriver {
 
               // Schedule the dependent
               // When it finishes, it will schedule the activities depending on it to know their start time
-              scheduler4.spawn(makeTaskFactory(
+              scheduler4.spawn(InSpan.Parent, makeTaskFactory(
                   dependentDirectiveId,
                   dependantTask,
                   schedule,

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public void spawn(final TaskFactory<?> task) {
+      public void spawn(final InSpan inSpan, final TaskFactory<?> task) {
         throw new UnsupportedOperationException();
       }
     };

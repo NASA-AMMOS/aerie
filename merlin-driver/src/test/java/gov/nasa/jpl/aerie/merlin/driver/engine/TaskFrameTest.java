@@ -28,7 +28,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class TaskFrameTest {
-  private static final TaskId ORIGIN = TaskId.generate();
+  private static final SpanId ORIGIN = SpanId.generate();
 
   // This regression test identified a bug in the LiveCells-chain-avoidance optimization in TaskFrame.
   @Test

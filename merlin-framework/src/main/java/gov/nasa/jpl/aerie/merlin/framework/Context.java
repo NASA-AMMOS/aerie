@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 
 import java.util.function.Function;
 
@@ -29,8 +30,8 @@ public interface Context {
   // Usable during simulation
   <Event> void emit(Event event, Topic<Event> topic);
 
-  void spawn(TaskFactory<?> task);
-  <Return> void call(TaskFactory<Return> task);
+  void spawn(InSpan inSpan, TaskFactory<?> task);
+  <Return> void call(InSpan inSpan, TaskFactory<Return> task);
 
   void delay(Duration duration);
   void waitUntil(Condition condition);
