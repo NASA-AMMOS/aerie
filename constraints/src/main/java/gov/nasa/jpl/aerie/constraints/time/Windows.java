@@ -636,11 +636,6 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     return new Windows(segments.select(intervals));
   }
 
-//  /** Delegated to {@link IntervalMap#get(int)} */
-//  public Segment<Boolean> get(final int index) {
-//    return segments.get(index);
-//  }
-
   /** Delegated to {@link IntervalMap#size()} */
   public int size() {
     return segments.size();

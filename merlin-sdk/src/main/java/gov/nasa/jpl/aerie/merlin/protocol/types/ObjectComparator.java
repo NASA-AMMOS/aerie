@@ -5,6 +5,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
+/**
+ * A generic comparator to use when you don't have one and need one.  This handles some common Collection types.
+ * There may be some others out there that could simplify or improve on this.
+ */
 public class ObjectComparator implements Comparator<Object> {
   private static gov.nasa.jpl.aerie.merlin.protocol.types.ObjectComparator INSTANCE = null;
 
@@ -56,6 +60,7 @@ public class ObjectComparator implements Comparator<Object> {
       int c = compare(((Map.Entry<?, ?>) o1).getKey(), ((Map.Entry<?, ?>) o2).getKey());
       if (c != 0) return c;
       c = compare(((Map.Entry<?, ?>) o1).getValue(), ((Map.Entry<?, ?>) o2).getValue());
+      return c;
     }
 
     // Fallback comparison
