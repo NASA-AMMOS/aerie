@@ -516,7 +516,7 @@ public final class SimulationEngine implements AutoCloseable {
             state.endOffset().get().minus(state.startOffset()),
             spanToSimulatedActivityId.get(activityParents.get(span)),
             activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId),
+            (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else {
