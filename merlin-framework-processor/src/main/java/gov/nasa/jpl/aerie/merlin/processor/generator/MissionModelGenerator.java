@@ -376,7 +376,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.spawn($L.getTaskFactory($L, $L))",
+                                    "$T.spawnWithSpan($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -403,7 +403,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.defer($L, $L.getTaskFactory($L, $L))",
+                                    "$T.deferWithSpan($L, $L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
@@ -459,7 +459,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.call($L.getTaskFactory($L, $L))",
+                                    "$T.callWithSpan($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -808,14 +808,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .map(effectModel -> CodeBlock
                             .builder()
                             .add(
-                                "return $T.$L(() -> $T.$L(() -> {$>\n$L$<}));\n",
+                                "return $T.$L(() -> {$>\n$L$<});\n",
                                 ModelActions.class,
                                 switch (effectModel.executor()) {
                                   case Threaded -> "threaded";
                                   case Replaying -> "replaying";
                                 },
-                                ModelActions.class,
-                                "scoped",
                                 effectModel.returnType()
                                     .map(returnType -> CodeBlock
                                         .builder()
@@ -837,7 +835,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .add(
                                 "return executor -> scheduler -> {$>\n$L$<};\n",
                                 CodeBlock.builder()
-                                    .addStatement("scheduler.pushSpan()")
                                     .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
                                     .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
