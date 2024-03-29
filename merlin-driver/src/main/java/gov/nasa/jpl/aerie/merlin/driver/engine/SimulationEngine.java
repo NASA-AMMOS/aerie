@@ -417,6 +417,33 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+  /**
+   * Get an Activity Directive Id from a SpanId, if the span is a descendent of a directive.
+   */
+  public static Optional<ActivityDirectiveId> getDirectiveIdFromSpan(
+      final SimulationEngine engine,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final SpanId spanId
+  ) {
+    // Collect per-span information from the event graph.
+    final var spanInfo = new SpanInfo();
+    for (final var point : timeline) {
+      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+
+      final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
+      p.events().evaluate(trait, trait::atom).accept(spanInfo);
+    }
+
+    // Identify the nearest ancestor directive
+    Optional<SpanId> directiveSpanId = Optional.of(spanId);
+    while (directiveSpanId.isPresent() && !spanInfo.isDirective(directiveSpanId.get())) {
+      directiveSpanId = engine.getSpan(directiveSpanId.get()).parent();
+    }
+    return directiveSpanId.map(spanInfo::getDirective);
+  }
+
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
   //   The Engine should only need to stream events of interest to a downstream consumer.

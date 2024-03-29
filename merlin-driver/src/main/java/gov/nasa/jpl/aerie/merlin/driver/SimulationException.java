@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
@@ -26,9 +27,21 @@ public class SimulationException extends RuntimeException {
   public final Duration elapsedTime;
   public final Instant instant;
   public final Throwable cause;
+  public final Optional<ActivityDirectiveId> directiveId;
 
   public SimulationException(final Duration elapsedTime, final Instant startTime, final Throwable cause) {
     super("Exception occurred " + formatDuration(elapsedTime) + " into the simulation at " + formatInstant(addDurationToInstant(startTime, elapsedTime)), cause);
+    this.directiveId = Optional.empty();
+    this.elapsedTime = elapsedTime;
+    this.instant = addDurationToInstant(startTime, elapsedTime);
+    this.cause = cause;
+  }
+
+  public SimulationException(final Duration elapsedTime, final Instant startTime, final ActivityDirectiveId directiveId, final Throwable cause) {
+    super("Exception occurred " + formatDuration(elapsedTime)
+            + " into the simulation at " + formatInstant(addDurationToInstant(startTime, elapsedTime))
+            + " while simulating activity directive with id " +directiveId.id(), cause);
+    this.directiveId = Optional.of(directiveId);
     this.elapsedTime = elapsedTime;
     this.instant = addDurationToInstant(startTime, elapsedTime);
     this.cause = cause;

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -137,6 +138,14 @@ public final class SimulationDriver {
             throw commit.getRight().get();
           }
         }
+      } catch (SpanException ex) {
+        // Swallowing the spanException as the internal `spanId` is not user meaningful info.
+        final var topics = missionModel.getTopics();
+        final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, timeline, topics, ex.spanId);
+        if(directiveId.isPresent()) {
+          throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
+        }
+        throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
