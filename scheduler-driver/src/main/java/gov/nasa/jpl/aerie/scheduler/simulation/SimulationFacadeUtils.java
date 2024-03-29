@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
@@ -79,8 +78,13 @@ public class SimulationFacadeUtils {
     toReplace.forEach(plan::replace);
   }
 
-  private static Optional<SimulatedActivity> findSimulatedActivityById(Collection<SimulatedActivity> simulatedActivities, final ActivityDirectiveId activityDirectiveId){
-    return simulatedActivities.stream().filter(a -> a.directiveId().isPresent() && a.directiveId().get().equals(activityDirectiveId)).findFirst();
+  private static Optional<SimulatedActivity> findSimulatedActivityById(
+      Collection<SimulatedActivity> simulatedActivities,
+      final ActivityDirectiveId activityDirectiveId
+  ){
+    return simulatedActivities.stream()
+                              .filter(a -> a.directiveId().isPresent() && a.directiveId().get().equals(activityDirectiveId))
+                              .findFirst();
   }
 
   public static void updatePlanWithChildActivities(
@@ -130,10 +134,14 @@ public class SimulationFacadeUtils {
     }
   }
 
-  private static Optional<Duration> getActivityDuration(
+  public static Optional<Duration> getActivityDuration(
       final ActivityDirectiveId activityDirectiveId,
-      final SimulationResultsComputerInputs simulationResultsInputs){
-    return simulationResultsInputs.engine().getSpan(simulationResultsInputs.activityDirectiveIdTaskIdMap().get(activityDirectiveId)).duration();
+      final SimulationResultsComputerInputs simulationResultsInputs
+  ){
+    return simulationResultsInputs.engine()
+                                  .getSpan(simulationResultsInputs.activityDirectiveIdTaskIdMap()
+                                                                  .get(activityDirectiveId))
+                                  .duration();
   }
 
   public static ActivityDirective schedulingActToActivityDir(

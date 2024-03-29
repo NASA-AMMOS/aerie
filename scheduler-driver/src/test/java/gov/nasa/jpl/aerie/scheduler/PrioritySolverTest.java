@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -132,23 +130,6 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void test(){
-    final var problem = makeTestMissionAB();
-    final var plan = new PlanInMemory();
-    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    final var first =SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true);
-    final var second = SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true);
-    plan.add(first);
-    plan.add(second);
-    final var changeFirst = SchedulingActivityDirective.copyOf(first, ZERO);
-    final var plan3 = new PlanInMemory();
-    plan3.add(changeFirst);
-    final var plan2 = new PlanInMemory();
-    //final var diffs = PlanDiff.diff(plan, plan2);
-    //final  var diff2 = PlanDiff.diff(plan2, plan);
-  }
-
-  @Test
   public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
@@ -177,7 +158,6 @@ public class PrioritySolverTest {
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    //1 full sim at the beginning + 3 sims for each act insertion
   }
 
   @Test
