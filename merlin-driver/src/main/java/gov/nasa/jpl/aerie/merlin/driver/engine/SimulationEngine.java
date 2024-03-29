@@ -142,7 +142,7 @@ public final class SimulationEngine implements AutoCloseable {
       final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime
-  ) {
+  ) throws SpanException {
     var tip = EventGraph.<Event>empty();
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
@@ -159,7 +159,7 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime,
       final Duration maximumTime
-  ) {
+  ) throws SpanException {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime);
     } else if (job instanceof JobId.SignalJobId j) {
@@ -174,7 +174,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Perform the next step of a modeled task. */
-  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) {
+  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) throws SpanException {
     // The handler for the next status of the task is responsible
     //   for putting an updated state back into the task set.
     var state = this.tasks.remove(task);
@@ -188,11 +188,15 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Output> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime
-  ) {
+  ) throws SpanException {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame);
-    final var status = progress.state().step(scheduler);
-
+    final TaskStatus<Output> status;
+    try {
+      status = progress.state().step(scheduler);
+    } catch (Throwable ex) {
+      throw new SpanException(scheduler.span, ex);
+    }
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
