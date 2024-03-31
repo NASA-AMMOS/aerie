@@ -27,15 +27,13 @@ public enum GQL {
     }"""),
   CANCEL_SCHEDULING("""
     mutation cancelScheduling($analysis_id: Int!) {
-      update_scheduling_request(where: {analysis_id: {_eq: $analysis_id}}, _set: {canceled: true}) {
-        returning {
-          analysis_id
-          specification_id
-          specification_revision
-          canceled
-          reason
-          status
-        }
+      update_scheduling_request_by_pk(pk_columns: {analysis_id: $analysis_id}, _set: {canceled: true}) {
+        analysis_id
+        specification_id
+        specification_revision
+        canceled
+        reason
+        status
       }
     }"""),
   CANCEL_SIMULATION("""
@@ -52,8 +50,8 @@ public enum GQL {
       constraintViolations(planId: $planId, simulationDatasetId: $simulationDatasetId) {
         success
         constraintId
+        constraintRevision
         constraintName
-        type
         results {
           resourceIds
           gaps {
@@ -97,21 +95,6 @@ public enum GQL {
         revision
       }
     }"""),
-  CREATE_SCHEDULING_GOAL("""
-    mutation CreateSchedulingGoal($goal: scheduling_goal_insert_input!) {
-      goal: insert_scheduling_goal_one(object: $goal) {
-        author
-        created_date
-        definition
-        description
-        id
-        last_modified_by
-        model_id
-        modified_date
-        name
-        revision
-      }
-    }"""),
   CREATE_SCHEDULING_SPEC_GOAL("""
     mutation CreateSchedulingSpecGoal($spec_goal: scheduling_specification_goals_insert_input!) {
       insert_scheduling_specification_goals_one(object: $spec_goal) {
@@ -141,7 +124,10 @@ public enum GQL {
     }"""),
   DELETE_CONSTRAINT("""
     mutation DeleteConstraint($id: Int!) {
-      delete_constraint_by_pk(id: $id) {
+      delete_constraint_specification(where: {constraint_id: {_eq: $id}}){
+        affected_rows
+      }
+      delete_constraint_metadata_by_pk(id: $id) {
         id
       }
     }"""),
@@ -172,12 +158,20 @@ public enum GQL {
           id
         }
       }
+      deleteConstraintSpec: delete_constraint_specification(where: {plan_id: {_eq: $id}}){
+        returning {
+          constraint_id
+          constraint_revision
+        }
+      }
     }"""),
   DELETE_SCHEDULING_GOAL("""
     mutation DeleteSchedulingGoal($goalId: Int!) {
-      delete_scheduling_goal_by_pk(id: $goalId) {
+      delete_scheduling_specification_goals(where: {goal_id: {_eq: $goalId}}){
+        affected_rows
+      }
+      delete_scheduling_goal_metadata_by_pk(id: $goalId) {
         name
-        definition
       }
     }"""),
   DELETE_SIMULATION_PRESET("""
@@ -213,11 +207,13 @@ public enum GQL {
   GET_CONSTRAINT_RUNS("""
     query getConstraintRuns($simulationDatasetId: Int!) {
       constraint_run(where: {simulation_dataset_id: {_eq: $simulationDatasetId}}) {
-        constraint_definition
         constraint_id
+        constraint_revision
         simulation_dataset_id
-        definition_outdated
         results
+        constraint_definition {
+          definition
+        }
       }
     }"""),
   GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK("""
@@ -279,13 +275,16 @@ public enum GQL {
           startOffset: start_offset
           type
         }
-        constraints {
-          definition
-          description
-          id
-          model_id
-          name
-          plan_id
+        constraint_specification {
+          constraint_id
+          constraint_revision
+          constraint_metadata{
+            name
+            description
+          }
+          constraint_definition {
+            definition
+          }
         }
         duration
         id
@@ -294,14 +293,6 @@ public enum GQL {
             name
             parameters
           }
-          constraints {
-            definition
-            description
-            id
-            model_id
-            name
-            plan_id
-          }
           id
           parameters {
             parameters
@@ -309,7 +300,7 @@ public enum GQL {
         }
         name
         revision
-        scheduling_specifications {
+        scheduling_specification {
           id
         }
         simulations {
@@ -368,14 +359,26 @@ public enum GQL {
       }
     }"""),
   GET_SCHEDULING_REQUEST("""
-    query GetSchedulingRequest($specificationId: Int!, $specificationRev: Int!) {
-      scheduling_request_by_pk(specification_id: $specificationId, specification_revision: $specificationRev) {
+    query GetSchedulingRequest($analysisId: Int!) {
+      scheduling_request_by_pk(analysis_id: $analysisId) {
         specification_id
         specification_revision
         analysis_id
         canceled
         reason
         status
+      }
+    }"""),
+  GET_SIMULATION_CONFIGURATION("""
+    query GetSimConfig($planId: Int!) {
+      sim_config: simulation(where: {plan_id: {_eq:$planId}}) {
+        id
+        revision
+        plan_id
+        simulation_template_id
+        arguments
+        simulation_start_time
+        simulation_end_time
       }
     }"""),
   GET_SIMULATION_DATASET("""
@@ -436,10 +439,10 @@ public enum GQL {
         }
       }
     }"""),
-  INSERT_CONSTRAINT("""
-    mutation insertConstraint($constraint: constraint_insert_input!) {
-      constraint: insert_constraint_one(object: $constraint) {
-        id
+  INSERT_PLAN_SPEC_CONSTRAINT("""
+    mutation insertConstraintAssignToPlanSpec($constraint: constraint_specification_insert_input!) {
+      constraint: insert_constraint_specification_one(object: $constraint){
+        constraint_id
       }
     }"""),
   INSERT_PROFILE("""
@@ -495,12 +498,58 @@ public enum GQL {
         simulationDatasetId
       }
     }"""),
+  SIMULATE_FORCE("""
+    query SimulateForce($plan_id: Int!, $force: Boolean) {
+      simulate(planId: $plan_id, force: $force){
+        status
+        reason
+        simulationDatasetId
+      }
+    }"""),
+  UPDATE_ACTIVITY_DIRECTIVE_ARGUMENTS("""
+    mutation updateActivityDirectiveArguments($id: Int!, $plan_id: Int!, $arguments: jsonb!) {
+      updateActivityDirectiveArguments: update_activity_directive_by_pk(
+        pk_columns: {id: $id, plan_id: $plan_id},
+        _set: {arguments: $arguments}
+      ) {
+        id
+      }
+  }"""),
   UPDATE_CONSTRAINT("""
     mutation updateConstraint($constraintId: Int!, $constraintDefinition: String!) {
-      update_constraint(where: {id: {_eq: $constraintId}}, _set: {definition: $constraintDefinition}) {
-        returning {
-          definition
+      constraint: insert_constraint_definition_one(object: {constraint_id: $constraintId, definition: $constraintDefinition}) {
+        definition
+        revision
+      }
+    }"""),
+  UPDATE_CONSTRAINT_SPEC_VERSION("""
+      mutation updateConstraintSpecVersion($plan_id: Int!, $constraint_id: Int!, $constraint_revision: Int!) {
+        update_constraint_specification_by_pk(
+          pk_columns: {constraint_id: $constraint_id, plan_id: $plan_id},
+          _set: {constraint_revision: $constraint_revision}
+        ) {
+          plan_id
+          constraint_id
+          constraint_revision
+          enabled
         }
+      }"""),
+  UPDATE_CONSTRAINT_SPEC_ENABLED("""
+      mutation updateConstraintSpecVersion($plan_id: Int!, $constraint_id: Int!, $enabled: Boolean!) {
+        update_constraint_specification_by_pk(
+          pk_columns: {constraint_id: $constraint_id, plan_id: $plan_id},
+          _set: {enabled: $enabled}
+        ) {
+          plan_id
+          constraint_id
+          constraint_revision
+          enabled
+        }
+      }"""),
+  UPDATE_GOAL_DEFINITION("""
+    mutation updateGoalDefinition($goal_id: Int!, $definition: String!) {
+      definition: insert_scheduling_goal_definition_one(object: {goal_id: $goal_id, definition: $definition}) {
+        revision
       }
     }"""),
   UPDATE_ROLE_ACTION_PERMISSIONS("""
@@ -512,6 +561,26 @@ public enum GQL {
         action_permissions
       }
     }"""),
+  UPDATE_SCHEDULING_SPEC_GOALS_ENABLED("""
+		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $enabled: Boolean!) {
+			update_scheduling_specification_goals_by_pk(
+			  pk_columns: {specification_id: $spec_id, goal_id: $goal_id},
+			  _set: {enabled: $enabled})
+			{
+				goal_revision
+				enabled
+			}
+		}"""),
+  UPDATE_SCHEDULING_SPEC_GOALS_VERSION("""
+		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $goal_revision: Int!) {
+			update_scheduling_specification_goals_by_pk(
+				pk_columns: {specification_id: $spec_id, goal_id: $goal_id},
+				_set: {goal_revision: $goal_revision})
+			{
+				goal_revision
+				enabled
+			}
+		}"""),
   UPDATE_SCHEDULING_SPECIFICATION_PLAN_REVISION("""
     mutation updateSchedulingSpec($planId: Int!, $planRev: Int!) {
       update_scheduling_specification(

@@ -6,7 +6,7 @@ plugins {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(19)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 
   withJavadocJar()
@@ -16,6 +16,9 @@ java {
 test {
   useJUnitPlatform {
     includeEngines 'jqwik', 'junit-jupiter'
+  }
+  testLogging {
+    exceptionFormat = 'full'
   }
 }
 

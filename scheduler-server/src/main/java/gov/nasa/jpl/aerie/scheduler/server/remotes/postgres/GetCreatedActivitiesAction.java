@@ -16,6 +16,7 @@ import java.util.Map;
   private static final @Language("SQL") String sql = """
     select
       c.goal_id,
+      c.goal_revision,
       c.activity_id
     from scheduling_goal_analysis_created_activities as c
     where c.analysis_id = ?
@@ -33,7 +34,7 @@ import java.util.Map;
 
     final var createdActivities = new HashMap<GoalId, List<ActivityDirectiveId>>();
     while (resultSet.next()) {
-      final var goalId = new GoalId(resultSet.getLong("goal_id"));
+      final var goalId = new GoalId(resultSet.getLong("goal_id"), resultSet.getLong("goal_revision"));
       final var activityId = new ActivityDirectiveId(resultSet.getLong("activity_id"));
 
       if (!createdActivities.containsKey(goalId)) createdActivities.put(goalId, new ArrayList<>());

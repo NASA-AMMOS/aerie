@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface ResultsCellRepository {
   ResultsProtocol.OwnerRole allocate(PlanId planId, String requestedBy);
+  ResultsProtocol.OwnerRole forceAllocate(PlanId planId, String requestedBy);
 
   Optional<ResultsProtocol.OwnerRole> claim(PlanId planId, Long datasetId);
 

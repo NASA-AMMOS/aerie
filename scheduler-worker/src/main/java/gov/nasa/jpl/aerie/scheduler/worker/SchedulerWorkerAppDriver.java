@@ -18,8 +18,8 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellR
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
-import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
+import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNotificationPayload;
 import gov.nasa.jpl.aerie.scheduler.worker.services.SchedulingDSLCompilationService;
@@ -65,7 +65,7 @@ public final class SchedulerWorkerAppDriver {
       new PostgresSpecificationRepository(hikariDataSource),
       new PostgresResultsCellRepository(hikariDataSource));
 
-    final var specificationService = new LocalSpecificationService(stores.specifications());
+    final var specificationService = new SpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
         merlinService,
         config.merlinFileStore(),
@@ -86,18 +86,20 @@ public final class SchedulerWorkerAppDriver {
         final var notification = notificationQueue.poll(1, TimeUnit.MINUTES);
         if (notification == null) continue;
         final var specificationRevision = notification.specificationRevision();
+        final var planRevision = notification.planRevision();
         final var specificationId = new SpecificationId(notification.specificationId());
+        final var analysisId = notification.analysisId();
 
         // Register as early as possible to avoid potentially missing a canceled signal
         canceledListener.register(specificationId);
 
-        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(specificationId);
+        final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(analysisId);
         if (owner.isEmpty()) {
           canceledListener.unregister();
           continue;
         }
 
-        final var revisionData = new SpecificationRevisionData(specificationRevision);
+        final var revisionData = new SpecificationRevisionData(specificationRevision, planRevision);
         final ResultsProtocol.WriterRole writer = owner.get();
         try {
           scheduleAgent.schedule(new ScheduleRequest(specificationId, revisionData), writer, canceledListener);

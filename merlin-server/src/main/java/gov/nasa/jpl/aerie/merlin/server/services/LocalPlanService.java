@@ -44,7 +44,7 @@ public final class LocalPlanService implements PlanService {
 
   @Override
   public Map<Long, Constraint> getConstraintsForPlan(final PlanId planId) throws NoSuchPlanException {
-    return this.planRepository.getAllConstraintsInPlan(planId);
+    return this.planRepository.getPlanConstraints(planId);
   }
 
   @Override

@@ -11,6 +11,19 @@ object_relationships:
       insertion_order: null
       column_mapping:
         analysis_id: analysis_id
+- name: goal_metadata
+  using:
+    manual_configuration:
+      column_mapping:
+        goal_id: id
+      remote_table:
+        name: scheduling_goal_metadata
+        schema: public
+- name: goal_definition
+  using:
+    foreign_key_constraint_on:
+      - goal_id
+      - goal_revision
 array_relationships:
 - name: satisfying_activities
   using:

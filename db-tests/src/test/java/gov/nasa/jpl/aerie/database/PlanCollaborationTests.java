@@ -2983,11 +2983,11 @@ public class PlanCollaborationTests {
   @Nested
   class PresetTests{
     private final gov.nasa.jpl.aerie.database.PresetTests presetTests = new gov.nasa.jpl.aerie.database.PresetTests();
+    { presetTests.setConnection(helper);}
 
     // Activities added in branches keep their preset information when merged
     @Test
     void presetPersistsWithAdd() throws SQLException{
-      presetTests.setConnection(helper);
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Add Preset Branch");
@@ -3010,7 +3010,6 @@ public class PlanCollaborationTests {
     // The preset set in the supplying activity persists
     @Test
     void presetPersistsWithModify() throws SQLException{
-      presetTests.setConnection(helper);
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int activityId = merlinHelper.insertActivity(planId);
@@ -3033,7 +3032,6 @@ public class PlanCollaborationTests {
     // If the preset used in a snapshot is deleted during the merge, the activity does not have a preset after the merge.
     @Test
     void postMergeNoPresetIfPresetDeleted() throws SQLException{
-      presetTests.setConnection(helper);
       merlinHelper.insertActivityType(missionModelId, "test-activity");
       final int planId = merlinHelper.insertPlan(missionModelId);
       final int branchId = duplicatePlan(planId, "Delete Preset Branch");
@@ -3052,6 +3050,61 @@ public class PlanCollaborationTests {
       assertTrue(presetActivities.isEmpty());
       assertNull(presetTests.getPresetAssignedToActivity(activityId, planId));
       assertNull(presetTests.getPresetAssignedToActivity(activityId, branchId));
+    }
+
+    // Presets set in prior snapshots don't affect the merge
+    @Test
+    void presetOnlyPullsFromSourceSnapshot() throws SQLException {
+      merlinHelper.insertActivityType(missionModelId, "test-activity");
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity");
+
+      // Create a manual snapshot with a preset
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
+      merlinHelper.assignPreset(presetId, activityId, planId, merlinHelper.admin.session());
+      createSnapshot(planId);
+
+      // Remove preset from plan before branching
+      merlinHelper.unassignPreset(presetId, activityId, planId);
+      final int branchId = duplicatePlan(planId, "Delete Preset Branch");
+      updateActivityName("new name", activityId, branchId);
+
+      // Merge
+      final int mergeRQId = createMergeRequest(planId, branchId);
+      beginMerge(mergeRQId);
+      commitMerge(mergeRQId);
+
+      // Assertions
+      assertNull(presetTests.getPresetAssignedToActivity(activityId, planId));
+      assertNull(presetTests.getPresetAssignedToActivity(activityId, branchId));
+    }
+
+    @Test
+    void presetUnaffectedByUnrelatedSnapshot() throws SQLException {
+      merlinHelper.insertActivityType(missionModelId, "test-activity");
+      final int presetId = merlinHelper.insertPreset(missionModelId, "Demo Preset", "test-activity");
+
+      // Create a snapshot of an unrelated plan with a preset set
+      final int unrelatedPlanId = merlinHelper.insertPlan(missionModelId);
+      final int unrelatedActivityId = merlinHelper.insertActivity(unrelatedPlanId);
+      merlinHelper.assignPreset(presetId, unrelatedActivityId, unrelatedPlanId, merlinHelper.admin.session());
+      createSnapshot(unrelatedPlanId);
+
+      // Setup working plan
+      final int planId = merlinHelper.insertPlan(missionModelId);
+      final int activityId = merlinHelper.insertActivity(planId);
+      final int branchId = duplicatePlan(planId, "Delete Preset Branch");
+      updateActivityName("new name", activityId, branchId);
+
+      // Merge
+      final int mergeRQId = createMergeRequest(planId, branchId);
+      beginMerge(mergeRQId);
+      commitMerge(mergeRQId);
+
+      // Assertions
+      assertNull(presetTests.getPresetAssignedToActivity(activityId, planId));
+      assertNull(presetTests.getPresetAssignedToActivity(activityId, branchId));
+      assertEquals(presetId, presetTests.getPresetAssignedToActivity(unrelatedActivityId, unrelatedPlanId).id());
     }
   }
 

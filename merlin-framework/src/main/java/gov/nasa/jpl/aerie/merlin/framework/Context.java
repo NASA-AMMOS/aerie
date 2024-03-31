@@ -37,6 +37,8 @@ public interface Context {
   }
 
   <Return> void call(TaskFactory<Return> task);
+  void pushSpan();
+  void popSpan();
 
   void delay(Duration duration);
   void waitUntil(Condition condition);

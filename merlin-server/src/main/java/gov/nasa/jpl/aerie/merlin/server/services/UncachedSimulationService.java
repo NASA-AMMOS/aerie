@@ -14,7 +14,7 @@ public record UncachedSimulationService (
 ) implements SimulationService {
 
   @Override
-  public ResultsProtocol.State getSimulationResults(final PlanId planId, final RevisionData revisionData, final String requestedBy) {
+  public ResultsProtocol.State getSimulationResults(final PlanId planId, final boolean forceResim, final RevisionData revisionData, final String requestedBy) {
     if (!(revisionData instanceof InMemoryRevisionData inMemoryRevisionData)) {
       throw new Error("UncachedSimulationService only accepts InMemoryRevisionData");
     }
@@ -40,7 +40,7 @@ public record UncachedSimulationService (
   @Override
   public Optional<SimulationResultsHandle> get(final PlanId planId, final RevisionData revisionData) {
     return Optional.ofNullable(
-        getSimulationResults(planId, revisionData, null) instanceof ResultsProtocol.State.Success s ?
+        getSimulationResults(planId, false, revisionData, null) instanceof ResultsProtocol.State.Success s ?
             s.results() :
             null);
   }

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.e2e;
 
 import com.microsoft.playwright.Playwright;
 import gov.nasa.jpl.aerie.e2e.types.ConstraintError;
+import gov.nasa.jpl.aerie.e2e.types.ConstraintRecord;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput;
 import gov.nasa.jpl.aerie.e2e.types.ExternalDataset.ProfileInput.ProfileSegmentInput;
 import gov.nasa.jpl.aerie.e2e.types.ValueSchema;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.*;
 import javax.json.Json;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -109,7 +111,6 @@ public class ConstraintsTests {
     assertTrue(constraintResponse.success());
     assertEquals(constraintId, constraintResponse.constraintId());
     assertEquals(constraintName, constraintResponse.constraintName());
-    assertEquals("plan", constraintResponse.type());
     // Check the Result
     assertTrue(constraintResponse.result().isPresent());
     final var constraintResult = constraintResponse.result().get();
@@ -133,6 +134,52 @@ public class ConstraintsTests {
   }
 
   @Test
+  void constraintsSucceedAgainstVariantWithUnits() throws IOException {
+    hasura.deleteActivity(planId, activityId);
+    hasura.deleteConstraint(constraintId);
+    var fruitConstraintName = "fruit_equals_3";
+    var fruitConstraintId = hasura.insertPlanConstraint(
+        fruitConstraintName,
+        planId,
+        "export default (): Constraint => Real.Resource(\"/fruit\").equal(3)",
+        "");
+    hasura.insertActivity(
+        planId,
+        "PeelBanana",
+        "1h",
+        Json.createObjectBuilder().add("peelDirection", "fromStem").build());
+
+    hasura.awaitSimulation(planId);
+    final var constraintsResponses = hasura.checkConstraints(planId);
+    assertEquals(1, constraintsResponses.size());
+
+    // Check the Response
+    final var constraintResponse = constraintsResponses.get(0);
+    assertTrue(constraintResponse.success());
+    assertEquals(fruitConstraintId, constraintResponse.constraintId());
+    assertEquals(fruitConstraintName, constraintResponse.constraintName());
+    // Check the Result
+    assertTrue(constraintResponse.result().isPresent());
+    final var constraintResult = constraintResponse.result().get();
+    // Resources
+    final var resources = constraintResult.resourceIds();
+    assertEquals(1, resources.size());
+    assertTrue(resources.contains("/fruit"));
+
+    // Violation
+    assertEquals(1, constraintResult.violations().size());
+    final var violation = constraintResult.violations().get(0);
+    assertEquals(1, violation.windows().size());
+
+    final long activityOffset = 60 * 60 * 1000000L; // 1h in micros
+
+    assertEquals(0, violation.windows().get(0).start());
+    assertEquals(activityOffset, violation.windows().get(0).end());
+    // Gaps
+    assertTrue(constraintResult.gaps().isEmpty());
+  }
+
+  @Test
   void constraintsSucceedNoViolations() throws IOException {
     // Delete activity to avoid violation
     hasura.deleteActivity(planId, activityId);
@@ -143,7 +190,6 @@ public class ConstraintsTests {
     assertTrue(constraintResponses.get(0).success());
     assertEquals(constraintId, constraintResponses.get(0).constraintId());
     assertEquals(constraintName, constraintResponses.get(0).constraintName());
-    assertEquals("plan", constraintResponses.get(0).type());
     assertTrue( constraintResponses.get(0).result().isPresent());
     assertEquals(0, constraintResponses.get(0).result().get().violations().size());
   }
@@ -161,7 +207,6 @@ public class ConstraintsTests {
 
     // Check properties
     final var cachedRun = cachedRuns.get(0);
-    assertFalse(cachedRun.definitionOutdated());
     assertEquals(constraintId, cachedRun.constraintId());
     assertEquals(simDatasetId, cachedRun.simDatasetId());
     assertEquals(constraintDefinition, cachedRun.constraintDefinition());
@@ -179,15 +224,16 @@ public class ConstraintsTests {
     // Delete activity to avoid violation
     hasura.deleteActivity(planId, activityId);
     final var simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
-    hasura.checkConstraints(planId);
+    final var constraintsResults = hasura.checkConstraints(planId);
     final var cachedRuns = hasura.getConstraintRuns(simDatasetId);
 
     // There's the correct number of results
     assertEquals(1, cachedRuns.size());
+    assertEquals(1, constraintsResults.size());
 
     // Check properties
     final var cachedRun = cachedRuns.get(0);
-    assertFalse(cachedRun.definitionOutdated());
+    assertEquals(constraintsResults.get(0).constraintRevision(), cachedRun.constraintRevision());
     assertEquals(constraintId, cachedRun.constraintId());
     assertEquals(simDatasetId, cachedRun.simDatasetId());
     assertEquals(constraintDefinition, cachedRun.constraintDefinition());
@@ -202,21 +248,6 @@ public class ConstraintsTests {
     assertEquals(0,results.gaps().size());
   }
 
-  @Test
-  void constraintCacheInvalidatedDefinition() throws IOException {
-    final int simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
-    hasura.checkConstraints(planId);
-
-    // Updating the constraint definition should mark the constraint run as invalid
-    final String newDefinition =
-        "export default (): Constraint => Real.Resource(\"/peel\").equal(Real.Resource(\"/fruit\"))";
-    hasura.updateConstraint(constraintId, newDefinition);
-
-    final var cachedRuns = hasura.getConstraintRuns(simDatasetId);
-    assertEquals(1, cachedRuns.size());
-    assertTrue(cachedRuns.get(0).definitionOutdated());
-  }
-
   /**
    * Test that an activity with a duration longer than one month is written to and read back from the database
    * successfully
@@ -228,7 +259,7 @@ public class ConstraintsTests {
   @Test
   void constraintsWorkMonthLongActivity() throws IOException {
     // Setup
-    hasura.updateConstraint(
+    hasura.updateConstraintDefinition(
         constraintId,
         "export default (): Constraint => Windows.During(ActivityType.ControllableDurationActivity).not()");
     hasura.deleteActivity(planId, activityId);
@@ -247,7 +278,6 @@ public class ConstraintsTests {
     assertTrue(constraintResponse.success());
     assertEquals(constraintId,constraintResponse.constraintId());
     assertEquals(constraintName, constraintResponse.constraintName());
-    assertEquals("plan", constraintResponse.type());
 
     //Check Result
     assertTrue(constraintResponse.result().isPresent());
@@ -281,7 +311,6 @@ public class ConstraintsTests {
     assertEquals(1, newConstraintResponses.size());
     assertEquals(constraintId, newConstraintResponses.get(0).constraintId());
     assertEquals(constraintName, newConstraintResponses.get(0).constraintName());
-    assertEquals("plan", newConstraintResponses.get(0).type());
     assertTrue(newConstraintResponses.get(0).result().isPresent());
     final var newConstraintResult = newConstraintResponses.get(0).result().get();
     assertTrue(newConstraintResult.violations().isEmpty());
@@ -296,7 +325,6 @@ public class ConstraintsTests {
     assertTrue(oldConstraintResponse.success());
     assertEquals(constraintId, oldConstraintResponse.constraintId());
     assertEquals(constraintName, oldConstraintResponse.constraintName());
-    assertEquals("plan", oldConstraintResponse.type());
     assertTrue(oldConstraintResponse.result().isPresent());
     final var constraintResult = oldConstraintResponse.result().get();
 
@@ -319,19 +347,103 @@ public class ConstraintsTests {
     assertTrue(constraintResult.gaps().isEmpty());
   }
 
+  /**
+   *  If a plan specifies a version of a constraint to use, then that version will be used
+   *  when checking constraints.
+   *
+   *  If the test fails with a compilation error, that means it used the latest version of the constraint
+   */
   @Test
-  void cachedRunsNotOutdatedOnResim() throws IOException {
-    final int oldSimDatasetId = hasura.awaitSimulation(planId).simDatasetId();
-    hasura.checkConstraints(planId);
-
-    // Delete Activity to make the simulation outdated, then resim
-    hasura.deleteActivity(planId, activityId);
+  void constraintVersionLocking() throws IOException {
     hasura.awaitSimulation(planId);
 
-    // Get the old run
-    final var cachedRuns = hasura.getConstraintRuns(oldSimDatasetId);
-    assertEquals(1, cachedRuns.size());
-    assertFalse(cachedRuns.get(0).definitionOutdated());
+    // Update the plan's constraint specification to use a specific version
+    hasura.updatePlanConstraintSpecVersion(planId, constraintId, 0);
+
+    // Update definition to have invalid syntax
+    final int newRevision = hasura.updateConstraintDefinition(
+        constraintId,
+        " error :-(");
+
+    // Check constraints -- should succeed
+    final var initResults = hasura.checkConstraints(planId);
+    assertEquals(1, initResults.size());
+    final var initConstraint = initResults.get(0);
+    assertEquals(constraintId, initConstraint.constraintId());
+    assertEquals(0, initConstraint.constraintRevision());
+    assertTrue(initConstraint.success());
+    assertTrue(initConstraint.errors().isEmpty());
+    assertTrue(initConstraint.result().isPresent());
+
+    // Update constraint spec to use invalid definition
+    hasura.updatePlanConstraintSpecVersion(planId, constraintId, newRevision);
+
+    // Check constraints -- should fail
+    final var badDefinitionResults = hasura.checkConstraints(planId);
+    assertEquals(1, badDefinitionResults.size());
+    final var badConstraint = badDefinitionResults.get(0);
+    assertEquals(constraintId, badConstraint.constraintId());
+    assertFalse(badConstraint.success());
+    assertEquals(constraintName, badConstraint.constraintName());
+    assertEquals(2, badConstraint.errors().size());
+    assertEquals("Constraint 'fruit_equal_peel' compilation failed:\n" +
+            " TypeError: TS2306 No default export. Expected a default export function with the signature: " +
+            "\"(...args: []) => Constraint | Promise<Constraint>\".",
+          badConstraint.errors().get(0).message());
+    assertEquals("Constraint 'fruit_equal_peel' compilation failed:\n TypeError: TS1109 Expression expected.",
+          badConstraint.errors().get(1).message());
+
+    // Update constraint spec to use initial definition
+    hasura.updatePlanConstraintSpecVersion(planId, constraintId, 0);
+
+    // Check constraints -- should match
+    assertEquals(initResults, hasura.checkConstraints(planId));
+  }
+
+  @Test
+  @DisplayName("Disabled Constraints are not checked")
+  void constraintIgnoreDisabled() throws IOException {
+    hasura.awaitSimulation(planId);
+    // Add a problematic constraint to the spec, then disable it
+    final String problemConstraintName = "bad constraint";
+    final int problemConstraintId = hasura.insertPlanConstraint(
+        problemConstraintName,
+        planId,
+        "error :-(",
+        "constraint that shouldn't compile");
+    try {
+      hasura.updatePlanConstraintSpecEnabled(planId, problemConstraintId, false);
+
+      // Check constraints -- Validate that only the enabled constraint is included
+      final var initResults = hasura.checkConstraints(planId);
+      assertEquals(1, initResults.size());
+      assertEquals(constraintId, initResults.get(0).constraintId());
+      assertTrue(initResults.get(0).success());
+
+      // Enable disabled constraint
+      hasura.updatePlanConstraintSpecEnabled(planId, problemConstraintId, true);
+
+      // Check constraints -- Validate that the other constraint is present and a failure
+      final var results = hasura.checkConstraints(planId);
+      results.sort(Comparator.comparing(ConstraintRecord::constraintId));
+      assertEquals(2, results.size());
+      assertEquals(constraintId, results.get(0).constraintId());
+      assertTrue(results.get(0).success());
+
+      final var problemResults = results.get(1);
+      assertEquals(problemConstraintId, problemResults.constraintId());
+      assertFalse(problemResults.success());
+      assertEquals(problemConstraintName, problemResults.constraintName());
+      assertEquals(2, problemResults.errors().size());
+      assertEquals("Constraint 'bad constraint' compilation failed:\n" +
+              " TypeError: TS2306 No default export. Expected a default export function with the signature: " +
+              "\"(...args: []) => Constraint | Promise<Constraint>\".",
+          problemResults.errors().get(0).message());
+      assertEquals("Constraint 'bad constraint' compilation failed:\n TypeError: TS1109 Expression expected.",
+          problemResults.errors().get(1).message());
+    } finally {
+      hasura.deleteConstraint(problemConstraintId);
+    }
   }
 
   @Nested
@@ -353,7 +465,7 @@ public class ConstraintsTests {
     @BeforeEach
     void beforeEach() throws IOException {
       // Change Constraint to be about MyBoolean
-      hasura.updateConstraint(
+      hasura.updateConstraintDefinition(
           constraintId,
           constraintDefinition);
       // Simulate Plan
@@ -382,7 +494,6 @@ public class ConstraintsTests {
       assertTrue(noDatasetResponses.get(0).success());
       assertEquals(constraintId, noDatasetResponses.get(0).constraintId());
       assertEquals(constraintName, noDatasetResponses.get(0).constraintName());
-      assertEquals("plan", noDatasetResponses.get(0).type());
       assertTrue(noDatasetResponses.get(0).result().isPresent());
       final var nRecordResults = noDatasetResponses.get(0).result().get();
 
@@ -392,7 +503,6 @@ public class ConstraintsTests {
       assertTrue(withDatasetResponses.get(0).success());
       assertEquals(constraintId, withDatasetResponses.get(0).constraintId());
       assertEquals(constraintName, withDatasetResponses.get(0).constraintName());
-      assertEquals("plan", withDatasetResponses.get(0).type());
       assertTrue(withDatasetResponses.get(0).result().isPresent());
       final var wRecordResults = withDatasetResponses.get(0).result().get();
 
@@ -445,7 +555,6 @@ public class ConstraintsTests {
       assertTrue(constraintResponse.success());
       assertEquals(constraintId, constraintResponse.constraintId());
       assertEquals(constraintName, constraintResponse.constraintName());
-      assertEquals("plan", constraintResponse.type());
       assertTrue(constraintResponse.result().isPresent());
       final var record = constraintResponse.result().get();
 
@@ -493,7 +602,6 @@ public class ConstraintsTests {
       final var constraintResponse = constraintResponses.get(0);
       assertEquals(constraintId, constraintResponse.constraintId());
       assertEquals(constraintName, constraintResponse.constraintName());
-      assertEquals("plan", constraintResponse.type());
       assertFalse(constraintResponse.success());
       assertTrue(constraintResponse.result().isEmpty());
       assertEquals(1,constraintResponse.errors().size());
@@ -517,62 +625,11 @@ public class ConstraintsTests {
       assertFalse(constraintResponse.success());
       assertEquals(constraintId, constraintResponse.constraintId());
       assertEquals(constraintName, constraintResponse.constraintName());
-      assertEquals("plan", constraintResponse.type());
       assertTrue(constraintResponse.result().isEmpty());
       assertEquals(1,constraintResponse.errors().size());
       final ConstraintError error = constraintResponse.errors().get(0);
       assertEquals("Constraint 'fruit_equal_peel' compilation failed:\n"
                    + " TypeError: TS2345 Argument of type '\"/my_boolean\"' is not assignable to parameter of type 'ResourceName'.",error.message());
-
     }
-
-    /**
-     *  This test case evaluates the scenario where a user initially has a functioning constraint.
-     *  However, during the modification process, they introduce a compilation error.
-     *  The goal is to confirm that the user can successfully fix the compilation error,
-     *  ensuring that the constraint compiles correctly and returns a valid response.
-     */
-    @Test
-    @DisplayName("If a constraint is updated and then reverted, Constraints will load the cached value from before the update.")
-    void constraintInvalidModification() throws IOException {
-      // Simulate the plan to insure a new simulation set
-      hasura.awaitSimulation(planId);
-
-      // Check the initial constraints responses it should compile
-      final var constraintsResponses = hasura.checkConstraints(planId);
-      assertEquals(1, constraintsResponses.size());
-      assertTrue(constraintsResponses.get(0).success());
-      assertEquals(constraintId, constraintsResponses.get(0).constraintId());
-      assertEquals(constraintName, constraintsResponses.get(0).constraintName());
-      assertEquals("plan", constraintsResponses.get(0).type());
-      // Attempt to update a constraint with an invalid syntax and capture the error response
-      hasura.updateConstraint(
-          constraintId,
-          WithExternalDatasets.constraintDefinition + "; error");
-
-      // Check the constraints response after the invalid modification
-      final var constraintsErrorResponses = hasura.checkConstraints(planId);
-      assertEquals(1, constraintsErrorResponses.size());
-      assertFalse(constraintsErrorResponses.get(0).success());
-      assertEquals(constraintId, constraintsErrorResponses.get(0).constraintId());
-      assertEquals(constraintName, constraintsErrorResponses.get(0).constraintName());
-      assertEquals("plan", constraintsErrorResponses.get(0).type());
-      assertTrue(constraintsErrorResponses.get(0).result().isEmpty());
-      assertEquals(1, constraintsErrorResponses.get(0).errors().size());
-
-      // Restore the original valid constraint
-      hasura.updateConstraint(
-          constraintId,
-          WithExternalDatasets.constraintDefinition);
-
-      // Check the constraints response after reverting to the valid constraint
-      final var constraintsCacheResponses = hasura.checkConstraints(planId);
-      assertEquals(1, constraintsCacheResponses.size());
-      assertTrue(constraintsCacheResponses.get(0).success());
-
-      // Ensure that the constraints responses are the same before and after the invalid modification
-      assertEquals(constraintsResponses, constraintsCacheResponses);
-    }
-
   }
 }

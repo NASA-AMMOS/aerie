@@ -90,6 +90,20 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   /**
+   * Forcibly allocate a simulation by updating the Simulation Configuration's revision
+   */
+  @Override
+  public ResultsProtocol.OwnerRole forceAllocate(PlanId planId, String requestedBy) {
+    try (final var connection = this.dataSource.getConnection();
+         final var updateSimConfig = new UpdateSimulationConfigurationRevisionAction(connection)) {
+      updateSimConfig.apply(planId.id());
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to allocation simulation cell", ex);
+    }
+    return allocate(planId, requestedBy);
+  }
+
+  /**
    * Claim a simulation
    *
    * <p>

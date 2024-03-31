@@ -11,11 +11,13 @@ import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.opentest4j.AssertionFailedError;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -143,11 +145,11 @@ public class SchedulingTests {
   @Test
   void twoInARow() throws IOException {
     // Setup: Add Goal
-    final int bakeBananaBreadGoalId = hasura.insertSchedulingGoal(
+    final int bakeBananaBreadGoalId = hasura.createSchedulingSpecGoal(
         "BakeBanana Scheduling Test Goal",
-        modelId,
-        bakeBananaGoalDefinition);
-    hasura.createSchedulingSpecGoal(bakeBananaBreadGoalId, schedulingSpecId, 0);
+        bakeBananaGoalDefinition,
+        schedulingSpecId,
+        0);
     try {
       // Schedule and get Plan
       hasura.awaitScheduling(schedulingSpecId);
@@ -174,14 +176,14 @@ public class SchedulingTests {
   @Test
   void schedulingRecurrenceGoal() throws IOException {
     // Setup: Add Goal
-    final int recurrenceGoalId = hasura.insertSchedulingGoal(
+    final int recurrenceGoalId = hasura.createSchedulingSpecGoal(
         "Recurrence Scheduling Test Goal",
-        modelId,
-        recurrenceGoalDefinition);
-    hasura.createSchedulingSpecGoal(recurrenceGoalId, schedulingSpecId, 0);
+        recurrenceGoalDefinition,
+        schedulingSpecId,
+        0);
     try {
       // Schedule and get Plan
-      hasura.awaitScheduling(schedulingSpecId);
+      hasura.awaitScheduling(schedulingSpecId, 100000000);
       final var plan = hasura.getPlan(planId);
       final var activities = plan.activityDirectives();
 
@@ -198,11 +200,11 @@ public class SchedulingTests {
   void schedulingCoexistenceGoal() throws IOException {
     // Setup: Add Goal and Activities
     insertActivities();
-    final int coexistenceGoalId = hasura.insertSchedulingGoal(
+    final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
         "Coexistence Scheduling Test Goal",
-        modelId,
-        coexistenceGoalDefinition);
-    hasura.createSchedulingSpecGoal(coexistenceGoalId, schedulingSpecId, 0);
+        coexistenceGoalDefinition,
+        schedulingSpecId,
+        0);
 
     try {
       // Schedule and get Plan
@@ -235,16 +237,16 @@ public class SchedulingTests {
   void schedulingMultipleGoals() throws IOException {
     // Setup: Add Goals
     insertActivities();
-    final int recurrenceGoalId = hasura.insertSchedulingGoal(
+    final int recurrenceGoalId = hasura.createSchedulingSpecGoal(
         "Recurrence Scheduling Test Goal",
-        modelId,
-        recurrenceGoalDefinition);
-    hasura.createSchedulingSpecGoal(recurrenceGoalId, schedulingSpecId, 0);
-    final int coexistenceGoalId = hasura.insertSchedulingGoal(
+        recurrenceGoalDefinition,
+        schedulingSpecId,
+        0);
+    final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
         "Coexistence Scheduling Test Goal",
-        modelId,
-        coexistenceGoalDefinition);
-    hasura.createSchedulingSpecGoal(coexistenceGoalId, schedulingSpecId, 1);
+        coexistenceGoalDefinition,
+        schedulingSpecId,
+        1);
     try {
       // Schedule and get Plan
       hasura.awaitScheduling(schedulingSpecId);
@@ -360,11 +362,11 @@ public class SchedulingTests {
       hasura.insertActivity(planId, "GrowBanana", "5h", JsonObject.EMPTY_JSON_OBJECT);
 
       // Setup: Add Goal
-      final int coexistenceGoalId = hasura.insertSchedulingGoal(
+      final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
           "Coexistence Scheduling Test Goal",
-          modelId,
-          coexistenceGoalDefinition);
-      hasura.createSchedulingSpecGoal(coexistenceGoalId, schedulingSpecId, 0);
+          coexistenceGoalDefinition,
+          schedulingSpecId,
+          0);
 
       try {
         hasura.updatePlanRevisionSchedulingSpec(planId);
@@ -411,11 +413,11 @@ public class SchedulingTests {
       hasura.awaitSimulation(planId);
       hasura.deleteSimTemplate(templateId); // Return to blank sim config args
 
-      final int plantGoal = hasura.insertSchedulingGoal(
+      final int plantGoal = hasura.createSchedulingSpecGoal(
           "Scheduling Test: When Plant < 300",
-          modelId,
-          plantCountGoalDefinition);
-      hasura.createSchedulingSpecGoal(plantGoal, schedulingSpecId, 0);
+          plantCountGoalDefinition,
+          schedulingSpecId,
+          0);
 
       try {
         hasura.awaitScheduling(schedulingSpecId);
@@ -458,11 +460,11 @@ public class SchedulingTests {
           List.of(new ProfileSegment("0h", false, Json.createValue(400))));
 
       // Insert Goal
-      final int plantGoal = hasura.insertSchedulingGoal(
+      final int plantGoal = hasura.createSchedulingSpecGoal(
           "Scheduling Test: When Plant < 300",
-          modelId,
-          plantCountGoalDefinition);
-      hasura.createSchedulingSpecGoal(plantGoal, schedulingSpecId, 0);
+          plantCountGoalDefinition,
+          schedulingSpecId,
+          0);
 
       try {
         hasura.awaitScheduling(schedulingSpecId);
@@ -486,11 +488,11 @@ public class SchedulingTests {
       hasura.awaitSimulation(planId);
 
       // Setup: Add Goal
-      final int coexistenceGoalId = hasura.insertSchedulingGoal(
+      final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
           "Coexistence Scheduling Test Goal",
-          modelId,
-          coexistenceGoalDefinition);
-      hasura.createSchedulingSpecGoal(coexistenceGoalId, schedulingSpecId, 0);
+          coexistenceGoalDefinition,
+          schedulingSpecId,
+          0);
 
       try {
         // Schedule and get Plan
@@ -544,16 +546,16 @@ public class SchedulingTests {
           false);
 
       // Add Goal
-      cardinalityGoalId = hasura.insertSchedulingGoal(
+      cardinalityGoalId = hasura.createSchedulingSpecGoal(
           "Cardinality and Decomposition Scheduling Test Goal",
-          modelId,
           """
           export default function cardinalityGoalExample() {
             return Goal.CardinalityGoal({
               activityTemplate: ActivityTemplates.parent({ label: "unlabeled"}),
               specification: { duration: Temporal.Duration.from({ seconds: 10 }) },
-          });}""");
-      hasura.createSchedulingSpecGoal(cardinalityGoalId, schedulingSpecId, 0);
+          });}""",
+          schedulingSpecId,
+          0);
     }
 
     @AfterEach
@@ -632,9 +634,8 @@ public class SchedulingTests {
           List.of(myBooleanProfile));
 
       // Insert Goal
-      edGoalId = hasura.insertSchedulingGoal(
+      edGoalId = hasura.createSchedulingSpecGoal(
           "On my_boolean true",
-          modelId,
           """
           export default function myGoal() {
             return Goal.CoexistenceGoal({
@@ -642,9 +643,9 @@ public class SchedulingTests {
               activityTemplate: ActivityTemplates.BiteBanana({ biteSize: 1, }),
               startsAt:TimingConstraint.singleton(WindowProperty.END)
             })
-          }""");
-      // Add the goal
-      hasura.createSchedulingSpecGoal(edGoalId, schedulingSpecId, 0);
+          }""",
+          schedulingSpecId,
+          0);
     }
 
     @AfterEach
@@ -730,12 +731,12 @@ public class SchedulingTests {
             gateway.uploadFooJar(),
             "Foo (e2e tests)",
             "aerie_e2e_tests",
-            "Simulation Tests");
+            "Scheduling Tests");
       }
       // Insert the Plan
       fooPlan = hasura.createPlan(
           fooId,
-          "Foo Plan - Simulation Tests",
+          "Foo Plan - Scheduling Tests",
           "720:00:00",
           planStartTimestamp);
 
@@ -749,17 +750,17 @@ public class SchedulingTests {
           false);
 
       // Add Goal
-      fooGoalId = hasura.insertSchedulingGoal(
+      fooGoalId = hasura.createSchedulingSpecGoal(
           "Foo Recurrence Test Goal",
-          fooId,
           """
           export default function recurrenceGoalExample() {
             return Goal.ActivityRecurrenceGoal({
               activityTemplate: ActivityTemplates.bar(),
               interval: Temporal.Duration.from({ hours: 2 }),
             });
-          }""");
-      hasura.createSchedulingSpecGoal(fooGoalId, fooSchedulingSpecId, 0);
+          }""",
+          fooSchedulingSpecId,
+          0);
     }
 
     @AfterEach
@@ -793,6 +794,82 @@ public class SchedulingTests {
       assertEquals(2, reasonData.size());
       assertTrue(reasonData.containsKey("location"));
       assertEquals("Scheduling was interrupted while "+ reasonData.getString("location"), reasonData.getString("message"));
+    }
+  }
+
+  @Nested
+  class VersioningSchedulingGoals {
+    @Test
+    void goalVersionLocking() throws IOException {
+      final int goalId = hasura.createSchedulingSpecGoal(
+          "coexistence goal",
+          coexistenceGoalDefinition,
+          schedulingSpecId,
+          0);
+
+      try {
+        // Update the plan's constraint specification to use a specific version
+        hasura.updateSchedulingSpecVersion(schedulingSpecId, goalId, 0);
+
+        // Update definition to have invalid syntax
+        final int newRevision = hasura.updateGoalDefinition(
+            goalId,
+            "error :-(");
+
+        // Schedule -- should succeed
+        final var initResults = hasura.awaitScheduling(schedulingSpecId);
+        assertEquals("complete", initResults.status());
+
+        // Update scheduling spec to use invalid definition
+        hasura.updateSchedulingSpecVersion(schedulingSpecId, goalId, newRevision);
+
+        // Schedule -- should fail
+        final var error = Assertions.assertThrows(
+            AssertionFailedError.class,
+            () -> hasura.awaitScheduling(schedulingSpecId));
+        final var expectedMsg = "Scheduling returned bad status failed with reason {\"data\":[{\"errors\":["
+                                + "{\"location\":{\"column\":1,\"line\":1},\"message\":\"TypeError: TS2306 No default "
+                                + "export. Expected a default export function with the signature:";
+        if (!error.getMessage().contains(expectedMsg)) {
+          throw error;
+        }
+      } finally {
+        hasura.deleteSchedulingGoal(goalId);
+      }
+    }
+
+    @Test
+    void schedulingIgnoreDisabledGoals() throws IOException {
+      // Add a problematic goal to the spec, then disable it
+      final int problemGoalId = hasura.createSchedulingSpecGoal(
+          "bad goal",
+          "error :-(",
+          "Goal that won't compile",
+          schedulingSpecId,
+          0);
+      try {
+        hasura.updateSchedulingSpecEnabled(schedulingSpecId, problemGoalId, false);
+
+        // Schedule -- Validate that the plan didn't change
+        hasura.awaitScheduling(schedulingSpecId);
+        assertEquals(0, hasura.getPlan(planId).activityDirectives().size());
+
+        // Enable disabled constraint
+        hasura.updateSchedulingSpecEnabled(schedulingSpecId, problemGoalId, true);
+
+        // Schedule -- Assert Fail
+        final var error = Assertions.assertThrows(
+            AssertionFailedError.class,
+            () -> hasura.awaitScheduling(schedulingSpecId));
+        final var expectedMsg = "Scheduling returned bad status failed with reason {\"data\":[{\"errors\":["
+                                + "{\"location\":{\"column\":1,\"line\":1},\"message\":\"TypeError: TS2306 No default "
+                                + "export. Expected a default export function with the signature:";
+        if (!error.getMessage().contains(expectedMsg)) {
+          throw error;
+        }
+      } finally {
+        hasura.deleteSchedulingGoal(problemGoalId);
+      }
     }
   }
 }

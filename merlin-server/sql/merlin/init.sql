@@ -50,12 +50,16 @@ begin;
   \ir tables/event.sql
 
   -- Analysis intents
-  \ir tables/constraint.sql
-
   \ir tables/mission_model_parameters.sql
   \ir tables/simulation_dataset.sql
   \ir tables/simulation_extent.sql
   \ir tables/plan_dataset.sql
+
+  -- Constraints
+  \ir tables/constraint_metadata.sql
+  \ir tables/constraint_definition.sql
+  \ir tables/constraint_specification.sql
+  \ir tables/constraint_model_specification.sql
   \ir tables/constraint_run.sql
 
   -- Plan Collaboration
@@ -83,6 +87,7 @@ begin;
   -- Table-specific Metadata
   \ir tables/metadata/activity_directive_tags.sql
   \ir tables/metadata/constraint_tags.sql
+  \ir tables/metadata/constraint_definition_tags.sql
   \ir tables/metadata/plan_snapshot_tags.sql
   \ir tables/metadata/plan_tags.sql
   \ir tables/metadata/snapshot_activity_tags.sql

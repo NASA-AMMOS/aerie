@@ -4,7 +4,7 @@ table:
 configuration:
   custom_name: "constraint_tags"
 object_relationships:
-  - name: constraint
+  - name: constraint_metadata
     using:
       foreign_key_constraint_on: constraint_id
   - name: tag
@@ -34,11 +34,11 @@ insert_permissions:
   - role: user
     permission:
       columns: [constraint_id, tag_id]
-      check: {"constraint":{"owner":{"_eq":"X-Hasura-User-Id"}}}
+      check: {"constraint_metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}
 delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
   - role: user
     permission:
-      filter: {"constraint":{"owner":{"_eq":"X-Hasura-User-Id"}}}
+      filter: {"constraint_metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}

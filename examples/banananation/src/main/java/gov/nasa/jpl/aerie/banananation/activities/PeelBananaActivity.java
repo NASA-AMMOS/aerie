@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.banananation.Mission;
+import gov.nasa.jpl.aerie.contrib.metadata.Unit;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
@@ -25,6 +26,7 @@ public final class PeelBananaActivity {
   }
 
   @Parameter
+  @Unit("direction")
   public PeelDirectionEnum peelDirection = PeelDirectionEnum.fromStem;
 
   @EffectModel

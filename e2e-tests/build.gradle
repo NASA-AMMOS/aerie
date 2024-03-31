@@ -5,7 +5,7 @@ plugins {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(19)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 }
 
@@ -43,9 +43,18 @@ task e2eTest(type: Test) {
   // Run the tests in parallel to improve performance
   maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
   useJUnitPlatform()
+
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 dependencies {
+  testImplementation project(":procedural:timeline")
+  testImplementation "com.zaxxer:HikariCP:5.1.0"
+  testImplementation("org.postgresql:postgresql:42.6.0")
+  testImplementation project(':merlin-driver')
+
   testImplementation 'com.microsoft.playwright:playwright:1.37.0'
 
   testImplementation 'org.glassfish:javax.json:1.1.4'

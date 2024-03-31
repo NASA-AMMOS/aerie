@@ -11,8 +11,8 @@ import java.util.Map;
 
 /*package-local*/ final class InsertGoalSatisfactionAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into scheduling_goal_analysis (analysis_id, goal_id, satisfied)
-    values (?, ?, ?)
+    insert into scheduling_goal_analysis (analysis_id, goal_id, goal_revision, satisfied)
+    values (?, ?, ?, ?)
     """;
 
   private final PreparedStatement statement;
@@ -23,9 +23,11 @@ import java.util.Map;
 
   public void apply(final long analysisId, final Map<GoalId, Boolean> goalSatisfactions) throws SQLException {
     for (final var entry : goalSatisfactions.entrySet()) {
+      final var goal = entry.getKey();
       this.statement.setLong(1, analysisId);
-      this.statement.setLong(2, entry.getKey().id());
-      this.statement.setBoolean(3, entry.getValue());
+      this.statement.setLong(2, goal.id());
+      this.statement.setLong(3, goal.revision());
+      this.statement.setBoolean(4, entry.getValue());
       this.statement.addBatch();
     }
 

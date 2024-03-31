@@ -289,11 +289,11 @@ public final class SimulationDriver<Model> {
     if (debug) System.out.println("SimulationDriver.simulateTask(" + task + ")");
 
     // Schedule all activities.
-    final var taskId = engine.scheduleTask(curTime().duration(), task, null);
+    final var spanId = engine.scheduleTask(curTime().duration(), task, null);
 
     // Drive the engine until we're out of time.
     // TERMINATION: Actually, we might never break if real time never progresses forward.
-    while (!engine.isTaskComplete(taskId)) {
+    while (!engine.getSpan(spanId).isComplete()) {
       engine.step(Duration.MAX_VALUE, $ -> {});
     }
     if (useResourceTracker) {
@@ -348,10 +348,11 @@ public final class SimulationDriver<Model> {
   {
     // Emit the current activity (defined by directiveId)
     return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
+      scheduler1.pushSpan();
       scheduler1.startDirective(directiveId, activityTopic);
-      //scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
     }), scheduler2 -> {
+      scheduler2.popSpan();
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents

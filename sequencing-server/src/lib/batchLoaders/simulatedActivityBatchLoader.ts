@@ -14,29 +14,41 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
   const result = await opts.graphqlClient.batchRequests<
     {
       data: {
-        simulated_activity: GraphQLSimulatedActivityInstance[];
+        simulation_dataset: {
+          id: number;
+          simulation: {
+            plan: {
+              id: number;
+              model_id: number;
+            };
+          };
+          simulation_start_time: string;
+          dataset: { spans: GQLSpan[] };
+        };
       };
     }[]
   >(
     keys.map(key => ({
       document: gql`
         query ($simulationDatasetId: Int!) {
-          simulated_activity(where: { simulation_dataset_id: { _eq: $simulationDatasetId } }) {
+          simulation_dataset: simulation_dataset_by_pk(id: $simulationDatasetId) {
             id
-            simulation_dataset {
-              id
-              simulation {
-                plan {
-                  model_id
-                }
+            simulation {
+              plan {
+                model_id
+                id
               }
             }
-            attributes
-            start_offset
-            start_time
-            end_time
-            duration
-            activity_type_name
+            simulation_start_time
+            dataset {
+              spans {
+                id
+                attributes
+                start_offset
+                duration
+                activity_type_name: type
+              }
+            }
           }
         }
       `,
@@ -48,18 +60,33 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
 
   return Promise.all(
     keys.map(async ({ simulationDatasetId }) => {
-      const simulatedActivities = result.find(
-        res => res.data.simulated_activity[0]?.simulation_dataset.id === simulationDatasetId,
-      )?.data.simulated_activity;
-      if (simulatedActivities === undefined) {
+      const simulation_dataset = result.find(res => res.data.simulation_dataset.id === simulationDatasetId)?.data
+        .simulation_dataset;
+      if (simulation_dataset === undefined) {
         return new ErrorWithStatusCode(`No simulation_dataset with id: ${simulationDatasetId}`, 404);
       }
+
+      const spans = simulation_dataset.dataset.spans;
+
+      const simulatedActivities: GraphQLSimulatedActivityInstance[] = spans.map(span => {
+        return {
+          id: span.id,
+          simulation_dataset_id: simulation_dataset.id,
+          plan_id: simulation_dataset.simulation.plan.id,
+          model_id: simulation_dataset.simulation.plan.model_id,
+          attributes: span.attributes,
+          duration: span.duration,
+          start_offset: span.start_offset,
+          simulation_start_time: simulation_dataset.simulation_start_time,
+          activity_type_name: span.activity_type_name,
+        };
+      });
       return Promise.all(
         simulatedActivities.map(async simulatedActivity =>
           mapGraphQLActivityInstance(
             simulatedActivity,
             await opts.activitySchemaDataLoader.load({
-              missionModelId: simulatedActivity.simulation_dataset.simulation.plan.model_id,
+              missionModelId: simulation_dataset.simulation.plan.model_id,
               activityTypeName: simulatedActivity.activity_type_name,
             }),
           ),
@@ -77,32 +104,41 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
   const result = await opts.graphqlClient.batchRequests<
     {
       data: {
-        simulated_activity: GraphQLSimulatedActivityInstance[];
+        simulation_dataset: {
+          id: number;
+          simulation_start_time: string;
+          simulation: {
+            plan: {
+              id: number;
+              model_id: number;
+            };
+          };
+          dataset: { spans: GQLSpan[] };
+        };
       };
     }[]
   >(
     keys.map(key => ({
       document: gql`
         query ($simulationDatasetId: Int!, $simulatedActivityId: Int!) {
-          simulated_activity(
-            where: { simulation_dataset_id: { _eq: $simulationDatasetId }, id: { _eq: $simulatedActivityId } }
-          ) {
+          simulation_dataset: simulation_dataset_by_pk(id: $simulationDatasetId) {
             id
-            simulation_dataset {
-              id
-              simulation {
-                plan {
-                  model_id
-                }
-                plan_id
+            simulation_start_time
+            simulation {
+              plan {
+                id
+                model_id
               }
             }
-            attributes
-            start_offset
-            start_time
-            end_time
-            duration
-            activity_type_name
+            dataset {
+              spans: spans(where: { id: { _eq: $simulatedActivityId } }) {
+                id
+                attributes
+                start_offset
+                duration
+                activity_type_name: type
+              }
+            }
           }
         }
       `,
@@ -115,21 +151,44 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
 
   return Promise.all(
     keys.map(async ({ simulationDatasetId, simulatedActivityId }) => {
-      const simulatedActivity = result.find(
-        res =>
-          res.data.simulated_activity[0]?.simulation_dataset.id === simulationDatasetId &&
-          res.data.simulated_activity[0]?.id === simulatedActivityId,
-      )?.data.simulated_activity[0];
-      if (simulatedActivity === undefined) {
+      const simulation_dataset = result.find(res =>
+        res.data?.simulation_dataset?.dataset?.spans?.some(span => span.id === simulatedActivityId),
+      )?.data.simulation_dataset;
+      if (simulation_dataset === undefined) {
+        return new ErrorWithStatusCode(`No simulation_dataset with id: ${simulationDatasetId}`, 404);
+      }
+
+      const spans = simulation_dataset?.dataset.spans;
+      if (spans === undefined || spans.length === 0 || spans[0] === undefined) {
         return new ErrorWithStatusCode(
           `No simulation_dataset with id: ${simulationDatasetId} and simulated activity id: ${simulatedActivityId}`,
           404,
         );
       }
+
+      if(spans.length > 1) {
+        return new ErrorWithStatusCode(
+            `Too many spans with simulated activity id ${simulatedActivityId} found for simulation_dataset with id ${simulationDatasetId}`,
+            404,
+        );
+      }
+
+      const span = spans[0];
+      const simulatedActivity: GraphQLSimulatedActivityInstance = {
+        id: span.id,
+        simulation_dataset_id: simulation_dataset.id,
+        plan_id: simulation_dataset.simulation.plan.id,
+        model_id: simulation_dataset.simulation.plan.model_id,
+        attributes: span.attributes,
+        duration: span.duration,
+        start_offset: span.start_offset,
+        simulation_start_time: simulation_dataset.simulation_start_time,
+        activity_type_name: span.activity_type_name,
+      };
       return mapGraphQLActivityInstance(
         simulatedActivity,
         await opts.activitySchemaDataLoader.load({
-          missionModelId: simulatedActivity.simulation_dataset.simulation.plan.model_id,
+          missionModelId: simulation_dataset.simulation.plan.model_id,
           activityTypeName: simulatedActivity.activity_type_name,
         }),
       );
@@ -173,25 +232,29 @@ export interface SimulatedActivity<
   activityTypeName: string;
 }
 
+export interface GQLSpan<
+  ActivityArguments extends Record<string, unknown> = Record<string, unknown>,
+  ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
+> {
+  id: number;
+  attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
+  start_offset: string;
+  duration: string;
+  activity_type_name: string;
+}
+
 export interface GraphQLSimulatedActivityInstance<
   ActivityArguments extends Record<string, unknown> = Record<string, unknown>,
   ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
 > {
   id: number;
-  simulation_dataset: {
-    id: number;
-    simulation: {
-      plan: {
-        model_id: number;
-      };
-      plan_id: number;
-    };
-  };
+  simulation_dataset_id: number;
+  plan_id: number;
+  model_id: number;
   attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   duration: string;
   start_offset: string;
-  start_time: string;
-  end_time: string;
+  simulation_start_time: string;
   activity_type_name: string;
 }
 
@@ -199,18 +262,28 @@ export function mapGraphQLActivityInstance(
   activityInstance: GraphQLSimulatedActivityInstance<any, any>,
   activitySchema: GraphQLActivitySchema,
 ): SimulatedActivity {
+  const duration = activityInstance.duration
+    ? Temporal.Duration.from(parse(activityInstance.duration).toISOString())
+    : null;
+  const startOffset: Temporal.Duration = Temporal.Duration.from(parse(activityInstance.start_offset).toISOString());
+  const startTime: Temporal.Instant = Temporal.Instant.from(activityInstance.simulation_start_time)
+    .toZonedDateTimeISO('UTC')
+    .add(startOffset)
+    .toInstant();
+  const endTime = duration ? startTime.toZonedDateTimeISO('UTC').add(duration).toInstant() : null;
+
   return {
     simulationDataset: {
       simulation: {
-        planId: activityInstance.simulation_dataset.simulation.plan_id,
+        planId: activityInstance.plan_id,
       },
     },
     id: activityInstance.id,
-    duration: activityInstance.duration ? Temporal.Duration.from(parse(activityInstance.duration).toISOString()) : null,
-    startOffset: Temporal.Duration.from(parse(activityInstance.start_offset).toISOString()),
-    startTime: Temporal.Instant.from(activityInstance.start_time),
-    endTime: activityInstance.end_time ? Temporal.Instant.from(activityInstance.end_time) : null,
-    simulationDatasetId: activityInstance.simulation_dataset.id,
+    duration,
+    startOffset,
+    startTime,
+    endTime,
+    simulationDatasetId: activityInstance.simulation_dataset_id,
     activityTypeName: activityInstance.activity_type_name,
     attributes: {
       arguments: Object.entries(activityInstance.attributes.arguments).reduce((acc, [key, value]) => {
@@ -219,7 +292,7 @@ export function mapGraphQLActivityInstance(
           acc[key] = convertType(value, param.schema);
         }
         return acc;
-      }, {} as { [attributeName: string]: any }),
+      }, {} as Record<string, any>),
       directiveId: activityInstance.attributes.directiveId,
       computed: activityInstance.attributes.computedAttributes
         ? convertType(activityInstance.attributes.computedAttributes, activitySchema.computed_attributes_value_schema)
@@ -231,6 +304,9 @@ export function mapGraphQLActivityInstance(
 function convertType(value: any, schema: Schema): any {
   switch (schema.type) {
     case SchemaTypes.Int:
+      if (value === null) {
+        return value;
+      }
       if (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER) {
         return value.toString();
       }
@@ -238,7 +314,10 @@ function convertType(value: any, schema: Schema): any {
     case SchemaTypes.Real:
       return value;
     case SchemaTypes.Duration:
-      return Temporal.Duration.from(parse(value).toISOString());
+      if (value !== null) {
+        return Temporal.Duration.from(parse(value).toISOString());
+      }
+      return value;
     case SchemaTypes.Boolean:
       return value;
     case SchemaTypes.Path:
@@ -246,15 +325,21 @@ function convertType(value: any, schema: Schema): any {
     case SchemaTypes.String:
       return value;
     case SchemaTypes.Series:
+      if (value === null) {
+        return value;
+      }
       return value.map((value: any) => convertType(value, schema.items));
     case SchemaTypes.Struct:
+      if (value === null) {
+        return value;
+      }
       const struct: { [attributeName: string]: any } = {};
       for (const [attributeKey, attributeSchema] of Object.entries(schema.items)) {
         struct[attributeKey] = convertType(value[attributeKey], attributeSchema);
       }
       return struct;
     case SchemaTypes.Variant:
-      if (schema.variants.length === 1 && schema.variants[0]?.key === 'VOID') {
+      if (value === null || (schema.variants.length === 1 && schema.variants[0]?.key === 'VOID')) {
         return null;
       }
       return value;

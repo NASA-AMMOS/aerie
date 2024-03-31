@@ -191,6 +191,14 @@ public final class ResponseSerializers {
       return Json.createObjectBuilder(serializeInstantiationException(f.ex()).asJsonObject())
           .add("type", "INSTANTIATION_ERRORS")
           .build();
+    } else if (response instanceof BulkArgumentValidationResponse.NoSuchMissionModelError m) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("type", "NO_SUCH_MISSION_MODEL")
+                 .add("errors", Json.createObjectBuilder()
+                     .add("noSuchMissionModelError", serializeNoSuchMissionModelException(m.ex()))
+                     .build())
+                 .build();
     }
 
     // This should never happen, but we don't have exhaustive pattern matching
@@ -326,7 +334,7 @@ public final class ResponseSerializers {
                    .add("success", JsonValue.FALSE)
                    .add("constraintId", constraint.id())
                    .add("constraintName", constraint.name())
-                   .add("type",constraint.type().name())
+                   .add("constraintRevision", constraint.revision())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
                            .add("message", "Internal error processing a constraint")
@@ -348,7 +356,7 @@ public final class ResponseSerializers {
                    .add("success", JsonValue.FALSE)
                    .add("constraintId", constraint.id())
                    .add("constraintName", constraint.name())
-                   .add("type",constraint.type().name())
+                   .add("constraintRevision", constraint.revision())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
                            .add("message", failable.getMessage())
@@ -364,7 +372,7 @@ public final class ResponseSerializers {
                  .add("success", JsonValue.TRUE)
                  .add("constraintId", constraint.id())
                  .add("constraintName", constraint.name())
-                 .add("type",constraint.type().name())
+                 .add("constraintRevision", constraint.revision())
                  .add("errors", JsonValue.EMPTY_JSON_ARRAY)
                  .add("results", serializeConstraintResult(constraintResult))
                  .build();
@@ -514,7 +522,7 @@ public final class ResponseSerializers {
                .add("success", JsonValue.FALSE)
                .add("constraintId", constraint.id())
                .add("constraintName", constraint.name())
-               .add("type",constraint.type().name())
+               .add("constraintRevision", constraint.revision())
                .add("errors", userCodeErrorArrayBuilder.build())
                .add("results", Json.createObjectBuilder().build())
                .build();

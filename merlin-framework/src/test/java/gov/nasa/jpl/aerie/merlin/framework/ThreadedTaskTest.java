@@ -38,6 +38,16 @@ public final class ThreadedTaskTest {
       }
 
       @Override
+      public void pushSpan() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void popSpan() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
       public <T> void endActivity(final T result, final Topic<T> outputTopic) {
         throw new UnsupportedOperationException();
       }

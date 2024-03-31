@@ -7,6 +7,7 @@ create table merge_request(
       status merge_request_status default 'pending',
       requester_username text,
       reviewer_username text,
+      updated_at timestamptz not null default now(),
       constraint merge_request_requester_exists
         foreign key (requester_username)
         references metadata.users
@@ -39,3 +40,16 @@ comment on column merge_request.requester_username is e''
   'The user who created this merge request.';
 comment on column merge_request.reviewer_username is e''
   'The user who reviews this merge request. Is empty until the request enters review.';
+
+create function merge_request_set_updated_at()
+returns trigger
+security definer
+language plpgsql as $$begin
+  new.updated_at = now();
+  return new;
+end$$;
+
+create trigger set_timestamp
+  before update or insert on merge_request
+  for each row
+execute function merge_request_set_updated_at();

@@ -1,16 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
-import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
-import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionSource;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
-import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -29,8 +25,8 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   {
     final SpecificationRecord specificationRecord;
     final PlanId planId;
-    final List<PostgresGoalRecord> postgresGoalRecords;
-    final List<PostgresSchedulingConditionRecord> postgresSchedulingConditionRecords;
+    final List<GoalRecord> goals;
+    final List<SchedulingConditionRecord> schedulingConditions;
     try (final var connection = this.dataSource.getConnection();
          final var getSpecificationAction = new GetSpecificationAction(connection);
          final var getSpecificationGoalsAction = new GetSpecificationGoalsAction(connection);
@@ -40,54 +36,37 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
           .get(specificationId.id())
           .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
       planId = new PlanId(specificationRecord.planId());
-      postgresGoalRecords = getSpecificationGoalsAction.get(specificationId.id());
-      postgresSchedulingConditionRecords = getSpecificationConditionsAction.get(specificationId.id());
+      goals = getSpecificationGoalsAction.get(specificationId.id());
+      schedulingConditions = getSpecificationConditionsAction.get(specificationId.id());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get scheduling specification", ex);
     }
 
-    final var goals = postgresGoalRecords
-        .stream()
-        .map((PostgresGoalRecord pgGoal) -> new GoalRecord(
-                new GoalId(pgGoal.id()),
-                new GoalSource(pgGoal.definition()),
-                pgGoal.enabled(),
-                pgGoal.simulateAfter()
-            ))
-        .toList();
-
-    final var globalSchedulingConditions = postgresSchedulingConditionRecords
-        .stream()
-        .map((PostgresSchedulingConditionRecord pgCondition) -> new GlobalSchedulingConditionRecord(
-            new GlobalSchedulingConditionSource(pgCondition.definition()),
-            pgCondition.enabled()
-        ))
-        .toList();
-
     return new Specification(
+        specificationId,
+        specificationRecord.revision(),
         planId,
         specificationRecord.planRevision(),
-        goals,
         specificationRecord.horizonStartTimestamp(),
         specificationRecord.horizonEndTimestamp(),
         specificationRecord.simulationArguments(),
         specificationRecord.analysisOnly(),
-        globalSchedulingConditions
+        goals,
+        schedulingConditions
     );
   }
 
   @Override
-  public RevisionData getSpecificationRevisionData(final SpecificationId specificationId)
+  public SpecificationRevisionData getSpecificationRevisionData(final SpecificationId specificationId)
   throws NoSuchSpecificationException
   {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getSpecificationAction = new GetSpecificationAction(connection)) {
-        final var specificationRevision = getSpecificationAction
+        final var spec = getSpecificationAction
             .get(specificationId.id())
-            .orElseThrow(() -> new NoSuchSpecificationException(specificationId))
-            .revision();
+            .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
 
-        return new SpecificationRevisionData(specificationRevision);
+        return new SpecificationRevisionData(spec.revision(), spec.planRevision());
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get scheduling specification revision data", ex);

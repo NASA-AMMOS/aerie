@@ -468,6 +468,10 @@ declare global {
       optionals?: { allowable_ranges?: VariableRange[]; allowable_values?: unknown[]; sc_name?: string },
   ): ENUM<N, E>;
 
+  function REF<T extends VARIABLE_INT | VARIABLE_UINT | VARIABLE_FLOAT | VARIABLE_STRING | VARIABLE_ENUM>(
+      type: T,
+  ): T;
+
   // @ts-ignore : 'GroundEpoch' and 'Step' found in JSON Spec
   function REQUEST(name: string, epoch: GroundEpoch, ...steps: [Step, ...Step[]]): RequestEpoch;
 
@@ -969,6 +973,7 @@ export class Variable implements VariableDeclaration {
 
   [k: string]: unknown;
   private kind: 'locals' | 'parameters' | 'unknown' = 'locals';
+  public reference: boolean = false;
   private readonly _enum_name?: string | undefined;
   // @ts-ignore : 'VariableRange: Request' found in JSON Spec
   private readonly _allowable_ranges?: VariableRange[] | undefined;
@@ -1044,8 +1049,13 @@ export class Variable implements VariableDeclaration {
     return variable;
   }
 
+  public setAsVariableReference() {
+    this.reference = true;
+  }
+
   public toReferenceString(): string {
-    return \`\${this.kind}.\${this.name}\`;
+    const _var = \`\${this.kind}.\${this.name}\`;
+    return this.reference ? \`\\nREF(\${_var}) --> "VERIFY: '\${_var}' is a Variable References"\\n\` : _var;
   }
 
   public toEDSLString(): string {
@@ -1215,6 +1225,24 @@ export function ENUM<const N extends string, const E extends string>(
 ): ENUM<N, E> {
   const { allowable_ranges, allowable_values, sc_name } = optionals || {};
   return { name, enum_name, type: VariableType.ENUM as unknown as VARIABLE_ENUM, allowable_ranges, allowable_values, sc_name };
+}
+
+export function REF<T extends VARIABLE_INT | VARIABLE_UINT | VARIABLE_FLOAT | VARIABLE_STRING | VARIABLE_ENUM>(
+    value: T,
+): T {
+  if (
+      Variable.isVariable(value) &&
+      (value.type === 'FLOAT' ||
+          value.type === 'INT' ||
+          value.type === 'STRING' ||
+          value.type === 'UINT' ||
+          value.type === 'ENUM')
+  ) {
+    const var_ref = new Variable({ name: value.name as unknown as string, type: value.type as T });
+    var_ref.setAsVariableReference();
+    return var_ref as unknown as T;
+  }
+  throw new Error('Invalid variable, make sure you use a defined local or parameter variable');
 }
 
 /**
@@ -3596,6 +3624,24 @@ function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parame
           return { hex_error: 'Remote property injection detected...' };
         } else {
           if (validate(argName)) {
+            // This is JPL mission specific for Variable References
+            if (arg.type === 'string') {
+              let variable = Variable.new({ name: arg.value, type: VariableType.INT });
+              if (localNames && localNames.length > 0) {
+                if (localNames.includes(arg.value)) {
+                  variable.setKind('locals');
+                  variable.setAsVariableReference();
+                  return { [argName]: variable };
+                }
+              }
+              if (parameterNames && parameterNames.length > 0) {
+                if (parameterNames.includes(arg.value)) {
+                  variable.setKind('parameters');
+                  variable.setAsVariableReference();
+                  return { [argName]: variable };
+                }
+              }
+            }
             return { [argName]: arg.value };
           }
           return { error: 'Remote property injection detected...' };
@@ -3651,17 +3697,14 @@ function convertValueToObject(value: any, key: string): any {
     case 'boolean':
       return { type: 'boolean', value: value, name: key };
     default:
-      if (
-          value instanceof Object &&
-          'name' in value &&
-          'type' in value &&
+      if (Variable.isVariable(value) &&
           (value.type === 'FLOAT' ||
               value.type === 'INT' ||
               value.type === 'STRING' ||
               value.type === 'UINT' ||
-              value.type === 'ENUM')
-      ) {
-        return { type: 'symbol', value: value.name, name: key };
+              value.type === 'ENUM')) {
+        // jpl specific support for Variable Reference
+        return { type: value.reference ? 'string' : 'symbol', value: value.name, name: key };
       } else if (
           value instanceof Object &&
           value.hex &&
@@ -4661,6 +4704,6 @@ export const Hardwares = {
 		HDW_BLENDER_DUMP: HDW_BLENDER_DUMP,
 };
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS, REQUESTS), Sequence, FLOAT, UINT,INT, STRING, ENUM, REQUEST}, Hardwares, Immediates);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS, REQUESTS), Sequence, FLOAT, UINT,INT, STRING, ENUM, REQUEST, REF}, Hardwares, Immediates);
 "
 `;

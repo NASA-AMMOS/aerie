@@ -12,9 +12,9 @@ public final class ConstraintResult {
   public final List<Interval> gaps;
 
   // The rest will be initialized after AST evaluation by the constraints action.
-  public ConstraintType constraintType;
   public List<String> resourceIds;
   public Long constraintId;
+  public Long constraintRevision;
   public String constraintName;
 
   public ConstraintResult() {
@@ -29,16 +29,16 @@ public final class ConstraintResult {
   public ConstraintResult(
       final List<Violation> violations,
       final List<Interval> gaps,
-      final ConstraintType constraintType,
       final List<String> resourceIds,
       final Long constraintId,
+      final Long constraintRevision,
       final String constraintName
   ) {
     this.violations = violations;
     this.gaps = gaps;
-    this.constraintType = constraintType;
     this.resourceIds = resourceIds;
     this.constraintId = constraintId;
+    this.constraintRevision = constraintRevision;
     this.constraintName = constraintName;
   }
 
@@ -70,14 +70,14 @@ public final class ConstraintResult {
     ConstraintResult that = (ConstraintResult) o;
     return violations.equals(that.violations)
            && gaps.equals(that.gaps)
-           && constraintType == that.constraintType
            && Objects.equals(resourceIds, that.resourceIds)
            && Objects.equals(constraintId, that.constraintId)
+           && Objects.equals(constraintRevision, that.constraintRevision)
            && Objects.equals(constraintName, that.constraintName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(violations, gaps, constraintType, resourceIds, constraintId, constraintName);
+    return Objects.hash(violations, gaps, resourceIds, constraintId, constraintRevision, constraintName);
   }
 }

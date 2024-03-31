@@ -33,7 +33,7 @@ Before you can run Aerie you must install and configure the following products o
   Make sure you update your `JAVA_HOME` environment variable. For example with [Zsh](https://www.zsh.org/) you can set your `.zshrc` to:
 
   ```sh
-  export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-19.jdk/Contents/Home"
+  export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home"
   ```
 
 - [PostgreSQL](https://www.postgresql.org) which is used for testing the database. You do not need this normally since Aerie runs Postgres in a Docker container for development, and you only need it for the [psql](https://www.postgresql.org/docs/current/app-psql.html) command-line tool. **Do not run the Postgres service locally** or it will clash with the Aerie Postgres Docker container. If you're on OSX you can use brew:
