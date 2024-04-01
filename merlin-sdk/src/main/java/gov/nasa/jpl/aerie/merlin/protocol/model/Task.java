@@ -26,5 +26,13 @@ public interface Task<Return> {
    */
   default void release() {}
 
+  /**
+   * Produce a copy of this Task that can be stepped independently from this Task
+   *
+   * <p>Clients must not invoke {@code duplicate()} after {@link #step(Scheduler)} or {@link #release()}
+   * has been invoked.</p>
+   * @param executor the executor to use for the new Task
+   * @return a copy of this Task that can be stepped independently from this Task
+   */
   Task<Return> duplicate(Executor executor);
 }
