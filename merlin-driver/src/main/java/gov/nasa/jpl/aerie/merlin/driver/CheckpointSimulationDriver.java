@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -380,7 +381,9 @@ public class CheckpointSimulationDriver {
         }
         final var taskId = engine.scheduleTask(
             computedStartTime,
-            makeTaskFactory(directiveIdToSchedule, task, activityTopic));
+            executor ->
+                Task.run(scheduler -> scheduler.emit(directiveIdToSchedule, activityTopic))
+                    .andThen(task.create(executor)));
         activityToTask.put(directiveIdToSchedule, taskId);
         if (resolved.containsKey(directiveIdToSchedule)) {
           toCheckForDependencyScheduling.put(directiveIdToSchedule, taskId);
@@ -388,13 +391,6 @@ public class CheckpointSimulationDriver {
       }
     }
     return toCheckForDependencyScheduling;
-  }
-
-  private static <Output> TaskFactory<Output> makeTaskFactory(
-      final ActivityDirectiveId directiveId,
-      final TaskFactory<Output> task,
-      final Topic<ActivityDirectiveId> activityTopic) {
-    return executor -> new DuplicatableTaskFactory<>(directiveId, task, activityTopic, executor);
   }
 
   public static Function<SimulationState, Boolean> stopOnceAllActivitiessAreFinished(){
