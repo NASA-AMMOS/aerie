@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -44,7 +44,7 @@ public class Problem {
   /**
    * global constraints in the mission model, indexed by name
    */
-  private final List<GlobalConstraint> globalConstraints
+  private final List<GlobalConstraintWithIntrospection> globalConstraints
       = new java.util.LinkedList<>();
 
   private final Map<String, LinearProfile> realExternalProfiles = new HashMap<>();
@@ -109,11 +109,11 @@ public class Problem {
    *
    * @param globalConstraint IN the global constraint
    */
-  public void add(GlobalConstraint globalConstraint) {
+  public void add(GlobalConstraintWithIntrospection globalConstraint) {
     this.globalConstraints.add(globalConstraint);
   }
 
-  public List<GlobalConstraint> getGlobalConstraints() {
+  public List<GlobalConstraintWithIntrospection> getGlobalConstraints() {
     return this.globalConstraints;
   }
 

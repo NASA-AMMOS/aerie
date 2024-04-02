@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.util.Optional;
+import java.util.Set;
 
 public class TimeExpressionRelativeBefore extends TimeExpressionRelative {
 
@@ -38,4 +39,9 @@ public class TimeExpressionRelativeBefore extends TimeExpressionRelative {
     public Optional<TimeAnchor> getAnchor() {
       return Optional.empty();
     }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    expr.extractResources(names);
+  }
 }

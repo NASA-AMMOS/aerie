@@ -445,7 +445,13 @@ public record ActivityExpression(
     );  }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+    if(this.durationRange != null) {
+      this.durationRange.getLeft().extractResources(names);
+      this.durationRange.getRight().extractResources(names);
+    }
+    this.arguments.forEach((name, pe)-> pe.extractResources(names));
+  }
 
   public Interval instantiateDurationInterval(
       final PlanningHorizon planningHorizon,

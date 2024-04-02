@@ -19,7 +19,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -955,7 +954,7 @@ public class PrioritySolver implements Solver {
       Plan plan,
       MissingActivityConflict mac,
       Windows windows,
-      Collection<GlobalConstraint> constraints,
+      Collection<GlobalConstraintWithIntrospection> constraints,
       EvaluationEnvironment evaluationEnvironment
   ) throws SchedulingInterruptedException {
     Windows tmp = windows;
@@ -966,7 +965,7 @@ public class PrioritySolver implements Solver {
     logger.debug("Computing simulation results until "+ tmp.maxTrueTimePoint().get().getKey() + " in order to compute global scheduling conditions");
     final var latestSimulationResults = this.getLatestSimResultsUpTo(tmp.maxTrueTimePoint().get().getKey());
     synchronizeSimulationWithSchedulerPlan();
-    for (GlobalConstraint gc : constraints) {
+    for (GlobalConstraintWithIntrospection gc : constraints) {
       if (gc instanceof GlobalConstraintWithIntrospection c) {
         tmp = c.findWindows(
             plan,

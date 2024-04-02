@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
+import java.util.Set;
 import java.util.Optional;
 
 public class TimeExpressionRelativeSimple extends TimeExpressionRelative {
@@ -57,4 +58,7 @@ public class TimeExpressionRelativeSimple extends TimeExpressionRelative {
 
     return retRange;
   }
+
+  @Override
+  public void extractResources(final Set<String> names) {}
 }
