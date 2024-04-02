@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -17,14 +18,19 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,7 +42,13 @@ public class PrioritySolverTest {
             new Problem(
                     bananaMissionModel,
                     h,
-                    new SimulationFacade(h, bananaMissionModel, schedulerModel, () -> false),
+                    new SimulationFacade(
+                        bananaMissionModel,
+                        schedulerModel,
+                        new InMemoryCachedEngineStore(15),
+                        h,
+                        new SimulationEngineConfiguration(Map.of(),Instant.EPOCH, new MissionModelId(1)),
+                        () -> false),
                     schedulerModel));
   }
 
@@ -77,9 +89,7 @@ public class PrioritySolverTest {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
-    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel, fooSchedulerModel, ()-> false), fooSchedulerModel);
+    return SimulationUtility.buildProblemFromFoo(h, 15);
   }
 
   private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2025-005T01:01:01.001"));
@@ -130,7 +140,6 @@ public class PrioritySolverTest {
 
     assertTrue(plan.isPresent());
     assertSetEquality(plan.get().getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -149,7 +158,7 @@ public class PrioritySolverTest {
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
+    //1 full sim at the beginning + 3 sims for each act insertion
   }
 
   @Test
@@ -171,7 +180,6 @@ public class PrioritySolverTest {
     final var eval = plan.getEvaluation().forGoal(goal);
     assertNotNull(eval);
     assertSetEquality(eval.getAssociatedActivities().stream().toList(), expectedPlan.getActivitiesByTime());
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -199,7 +207,6 @@ public class PrioritySolverTest {
     //TODO: may want looser expectation (eg allow flexibility as long as right repeat pattern met)
     assertTrue(plan.getActivitiesByTime().get(0).equalsInProperties(expectedPlan.getActivitiesByTime().get(0)));
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -231,7 +238,6 @@ public class PrioritySolverTest {
     //TODO: evaluation should have association of instances to goal
     //TODO: should ensure no other spurious acts yet need to ignore special interval activities
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   /**
@@ -243,20 +249,15 @@ public class PrioritySolverTest {
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
     final var problem = makeTestMissionAB();
-
     final var adHocFacade = new SimulationFacade(
-        problem.getPlanningHorizon(),
         problem.getMissionModel(),
         problem.getSchedulerModel(),
-        ()-> false);
-    adHocFacade.insertActivitiesIntoSimulation(makePlanA012(problem).getActivities());
-    adHocFacade.computeSimulationResultsUntil(problem.getPlanningHorizon().getEndAerie());
-    final var simResults = adHocFacade.getLatestDriverSimulationResults().get();
-    if(adHocFacade.getBidiActivityIdCorrespondence().isPresent())
-      problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults), adHocFacade.getBidiActivityIdCorrespondence().get());
-    else
-      problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults), null);
-
+        new InMemoryCachedEngineStore(10),
+        problem.getPlanningHorizon(),
+        new SimulationEngineConfiguration(Map.of(),Instant.EPOCH, new MissionModelId(1)),
+        () -> false);
+    final var simResults = adHocFacade.simulateWithResults(makePlanA012(problem), h.getEndAerie());
+    problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults.driverResults()), simResults.mapSchedulingIdsToActivityIds().get());
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
     final var goal = new CoexistenceGoal.Builder()
@@ -278,24 +279,11 @@ public class PrioritySolverTest {
     final var plan = solver.getNextSolution().orElseThrow();
     final var expectedPlan = makePlanAB012(problem);
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
   public void testCardGoalWithApplyWhen() throws SchedulingInterruptedException {
-    var planningHorizon = h;
-
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
-    Problem problem = new Problem(
-        fooMissionModel,
-        planningHorizon,
-        new SimulationFacade(
-            planningHorizon,
-            fooMissionModel,
-            fooSchedulerModel,
-            ()-> false),
-        SimulationUtility.getFooSchedulerModel());
+    final var problem = SimulationUtility.buildProblemFromFoo(h);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     //act at t=1hr and at t=2hrs
@@ -326,9 +314,5 @@ public class PrioritySolverTest {
     var plan = solver.getNextSolution().orElseThrow();
     //will insert an activity at the beginning of the plan in addition of the two already-present activities
     assertEquals(3, plan.getActivities().size());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
-
-
-
 }

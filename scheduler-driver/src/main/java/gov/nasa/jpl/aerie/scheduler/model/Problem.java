@@ -8,8 +8,8 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
 import org.apache.commons.collections4.BidiMap;
 
@@ -76,7 +76,11 @@ public class Problem {
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon, SimulationFacade simulationFacade, SchedulerModel schedulerModel) {
+  public Problem(
+      MissionModel<?> mission,
+      PlanningHorizon planningHorizon,
+      SimulationFacade simulationFacade,
+      SchedulerModel schedulerModel) {
     this.missionModel = mission;
     this.schedulerModel = schedulerModel;
     this.initialPlan = new PlanInMemory();
@@ -89,7 +93,7 @@ public class Problem {
     }
     this.simulationFacade = simulationFacade;
     if(this.simulationFacade != null) {
-      this.simulationFacade.setActivityTypes(this.getActivityTypes());
+      this.simulationFacade.addActivityTypes(this.getActivityTypes());
     }
     this.initialSimulationResults = Optional.empty();
   }
@@ -140,12 +144,16 @@ public class Problem {
    * @param initialSimulationResults optional initial simulation results associated to the initial plan
    * @param plan the initial seed plan that schedulers may start from
    */
-  public void setInitialPlan(final Plan plan, final Optional<SimulationResults> initialSimulationResults, final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds) {
+  public void setInitialPlan(
+      final Plan plan,
+      final Optional<SimulationResults> initialSimulationResults,
+      final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
+        plan,
         simulationResults,
-        SimulationResultsConverter.convertToConstraintModelResults(
-            simulationResults), Optional.ofNullable(mapSchedulingIdsToActivityIds)));
+        SimulationResultsConverter.convertToConstraintModelResults(simulationResults),
+        Optional.ofNullable(mapSchedulingIdsToActivityIds)));
   }
 
   /**

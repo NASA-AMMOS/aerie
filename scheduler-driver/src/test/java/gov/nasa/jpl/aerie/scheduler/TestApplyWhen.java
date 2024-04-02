@@ -23,37 +23,42 @@ import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansWrapperExpression;
 import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestApplyWhen {
-
   private static final Logger logger = LoggerFactory.getLogger(TestApplyWhen.class);
 
   ////////////////////////////////////////////RECURRENCE////////////////////////////////////////////
@@ -87,7 +92,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -120,7 +124,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -153,7 +156,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -186,7 +188,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -232,7 +233,6 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -275,7 +275,6 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -318,7 +317,6 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -363,7 +361,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(8, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(17, Duration.SECONDS), activityType)); //interval (len 4) needs to be 2 longer than the recurrence repeatingEvery (len 3)
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -408,7 +405,6 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     //assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));  //should fail, won't work if cutoff mid-activity - interval expected to be longer than activity duration!!!
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -440,7 +436,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -450,7 +445,6 @@ public class TestApplyWhen {
   public void testCardinality() throws SchedulingInterruptedException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(5, Duration.SECONDS));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -482,7 +476,6 @@ public class TestApplyWhen {
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(4, Duration.SECOND)); //1 gets added, then throws 4 warnings meaning it tried to schedule 5 in total, not the expected 8...
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -529,7 +522,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(3, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(13, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -577,7 +569,6 @@ public class TestApplyWhen {
     //assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(7, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(9, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -587,7 +578,6 @@ public class TestApplyWhen {
      */
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -621,7 +611,6 @@ public class TestApplyWhen {
                             .reduce(Duration.ZERO, Duration::plus);
     assertTrue(size >= 3 && size <= 10);
     assertTrue(totalDuration.dividedBy(Duration.SECOND) >= 16 && totalDuration.dividedBy(Duration.SECOND) <= 19);
-    assertEquals(9, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 
@@ -632,7 +621,6 @@ public class TestApplyWhen {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -673,19 +661,11 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertEquals(4, plan.get().getActivitiesByTime().size());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
   public void testCoexistenceJustFits() throws SchedulingInterruptedException {
-
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));//13, so it just fits in
-
-    var periodTre = new TimeRangeExpression.Builder()
-        .from(new Windows(false).set(period, true))
-        .build();
-
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -726,7 +706,6 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertEquals(5, plan.get().getActivitiesByTime().size());
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -741,11 +720,6 @@ public class TestApplyWhen {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
-    var periodTre = new TimeRangeExpression.Builder()
-        .from(new Windows(false).set(period, true))
-        .build();
-
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -765,7 +739,7 @@ public class TestApplyWhen {
         .ofType(actTypeA)
         .build();
 
-    //and cut off in the middle of one of the already present activities (period ends at 18)
+    //and cut off in the middle of one of the already present activities (period ends at 13)
     final var actTypeB = problem.getActivityType("BasicActivity");
     CoexistenceGoal goal = new CoexistenceGoal.Builder()
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
@@ -785,10 +759,7 @@ public class TestApplyWhen {
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
-    assertEquals(2, plan.get().getActivitiesByTime()
-                        .stream().filter($ -> $.duration().dividedBy(Duration.SECOND) == 2).toList()
-                        .size());
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
+    assertEquals(2, plan.get().getActivitiesByType().get(actTypeB).size());
   }
 
   @Test
@@ -800,7 +771,6 @@ public class TestApplyWhen {
     // GOAL WINDOW: [++++-------+++++++----]
     // RESULT:      [++-----------++-------]
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -853,7 +823,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(14, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(12, Duration.SECONDS), actTypeA));
-    assertEquals(4, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -865,7 +834,6 @@ public class TestApplyWhen {
     // GOAL WINDOW: [++++-----+++++-+++--+-++++++]
     // RESULT:      [-\\------++----++-------++--] (the first one won't be scheduled, ask Adrien) - FIXED
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(28)); //this boundary is inclusive.
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -927,7 +895,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(16, Duration.SECONDS), actTypeB));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(23, Duration.SECONDS), actTypeB));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(25, Duration.SECONDS), actTypeB));
-    assertEquals(6, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -942,7 +909,6 @@ public class TestApplyWhen {
        RESULT:            [++-------|++-]
      */
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(12));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -994,7 +960,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(8, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(10, Duration.SECONDS), actTypeA));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1008,7 +973,6 @@ public class TestApplyWhen {
        RESULT:      [++--++--++---++-]
      */
 
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(16));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -1060,7 +1024,6 @@ public class TestApplyWhen {
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(5, Duration.SECONDS), actTypeA));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(9, Duration.SECONDS), actTypeA));
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(14, Duration.SECONDS), actTypeA));
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1068,11 +1031,6 @@ public class TestApplyWhen {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
-    var periodTre = new TimeRangeExpression.Builder()
-        .from(new Windows(false).set(period, true))
-        .build();
-
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
 
@@ -1113,29 +1071,13 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertEquals(5, plan.get().getActivitiesByTime().size());
-    assertEquals(3, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
   public void testCoexistenceExternalResource() throws SchedulingInterruptedException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(25, Duration.SECONDS));
-
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var fooSchedulerMissionModel = SimulationUtility.getFooSchedulerModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-
-    final var simulationFacade = new SimulationFacade(
-        planningHorizon,
-        fooMissionModel,
-        fooSchedulerMissionModel,
-        ()-> false);
-    final var problem = new Problem(
-        fooMissionModel,
-        planningHorizon,
-        simulationFacade,
-        fooSchedulerMissionModel
-    );
-
+    final var problem = SimulationUtility.buildProblemFromFoo(planningHorizon);
     final var r3Value = Map.of("amountInMicroseconds", SerializedValue.of(6));
     final var r1 = new LinearProfile(new Segment<>(Interval.between(Duration.ZERO, Duration.SECONDS.times(5)), new LinearEquation(Duration.ZERO, 5, 1)));
     final var r2 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(5)));
@@ -1183,7 +1125,6 @@ public class TestApplyWhen {
     assertEquals(act.duration(), Duration.of(r3Value.get("amountInMicroseconds").asInt().get(), Duration.MICROSECONDS));
     assertEquals(startOfActivity, Duration.of(1, Duration.SECONDS));
     assertEquals(act.startOffset(), startOfActivity);
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1193,10 +1134,12 @@ public class TestApplyWhen {
     final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
 
-    final var simulationFacade = new SimulationFacade(
-        planningHorizon,
+    final var simulationFacade = new CheckpointSimulationFacade(
         bananaMissionModel,
         SimulationUtility.getBananaSchedulerModel(),
+        new InMemoryCachedEngineStore(10),
+        planningHorizon,
+        new SimulationEngineConfiguration(Map.of(), Instant.now(), new MissionModelId(0)),
         () -> false);
     final var problem = new Problem(
         bananaMissionModel,
@@ -1316,7 +1259,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(13, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(15, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(17, Duration.SECONDS), activityTypeDependent));
-    assertEquals(11, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1391,7 +1333,6 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(13, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(15, Duration.SECONDS), activityTypeDependent));
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(17, Duration.SECONDS), activityTypeDependent));
-    assertEquals(10, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -1473,6 +1414,5 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(13, Duration.SECONDS), activityTypeDependent));
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(15, Duration.SECONDS), activityTypeDependent));
     assertFalse(TestUtility.activityStartingAtTime(plan.get(), Duration.of(17, Duration.SECONDS), activityTypeDependent));
-    assertEquals(10, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

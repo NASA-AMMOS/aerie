@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LongDurationPlanTest {
@@ -59,7 +58,6 @@ public class LongDurationPlanTest {
 
     assertTrue(plan.isPresent());
     assertSetEquality(plan.get().getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -78,6 +76,5 @@ public class LongDurationPlanTest {
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertSetEquality(plan.getActivitiesByTime(), expectedPlan.getActivitiesByTime());
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }
