@@ -590,6 +590,13 @@ public enum GQL {
         affected_rows
       }
     }"""),
+  UPDATE_SIMULATION_ARGUMENTS("""
+    mutation updateSimulationArguments($plan_id: Int!, $arguments: jsonb!) {
+      update_simulation(where: {plan_id: {_eq: $plan_id}},
+      _set: { arguments: $arguments }) {
+        affected_rows
+       }
+    }"""),
   UPDATE_SIMULATION_BOUNDS("""
     mutation updateSimulationBounds($plan_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
       update_simulation(where: {plan_id: {_eq: $plan_id}},

@@ -397,6 +397,41 @@ public class HasuraRequests implements AutoCloseable {
     throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
   }
 
+    /**
+   * Simulate the specified plan with a timeout of 30 seconds.
+   * Used when the simulation is expected to fail.
+   */
+  public SimulationResponse awaitFailingSimulation(int planId) throws IOException {
+    return awaitFailingSimulation(planId, 30);
+  }
+
+  /**
+   * Simulate the specified plan with a set timeout.
+   * Used when the simulation is expected to fail.
+   *
+   * @param planId the plan to simulate
+   * @param timeout the length of the timeout, in seconds
+   */
+  public SimulationResponse awaitFailingSimulation(int planId, int timeout) throws IOException {
+    for(int i = 0; i < timeout; ++i){
+      final var response = simulate(planId);
+        switch (response.status()) {
+          case "pending", "incomplete" -> {
+            try {
+              Thread.sleep(1000); // 1s
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          }
+          case "failed" -> {
+            return response;
+          }
+          default -> fail("Simulation returned bad status " + response.status() + " with reason " +response.reason());
+        }
+    }
+    throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
+  }
+
   public int getSimulationId(int planId) throws IOException {
     final var variables = Json.createObjectBuilder().add("plan_id", planId).build();
     return makeRequest(GQL.GET_SIMULATION_ID, variables).getJsonArray("simulation").getJsonObject(0).getInt("id");
@@ -436,13 +471,21 @@ public class HasuraRequests implements AutoCloseable {
     makeRequest(GQL.DELETE_SIMULATION_PRESET, variables);
   }
 
+  public void updateSimArguments(int planId, JsonObject arguments) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("arguments", arguments)
+                              .build();
+    makeRequest(GQL.UPDATE_SIMULATION_ARGUMENTS, variables);
+  }
+
   public void updateSimBounds(int planId, String simStartTime, String simEndTime) throws IOException {
     final var variables = Json.createObjectBuilder()
                               .add("plan_id", planId)
                               .add("simulation_start_time", simStartTime)
                               .add("simulation_end_time", simEndTime)
                               .build();
-    makeRequest(GQL.UPDATE_SIMULATION_BOUNDS, variables).getJsonObject("update_simulation");
+    makeRequest(GQL.UPDATE_SIMULATION_BOUNDS, variables);
   }
   //endregion
 
