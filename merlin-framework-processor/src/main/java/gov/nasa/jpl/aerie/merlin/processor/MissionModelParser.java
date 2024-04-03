@@ -550,6 +550,7 @@ import java.util.stream.Collectors;
   {
     Optional<String> fixedDuration = Optional.empty();
     Optional<String> parameterizedDuration = Optional.empty();
+    Optional<String> maximumDuration = Optional.empty();
     for (final var element: activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.FixedDuration.class) != null) {
         if (fixedDuration.isPresent()) throw new InvalidMissionModelException(
@@ -581,6 +582,22 @@ import java.util.stream.Collectors;
         );
 
         parameterizedDuration = Optional.of(executableElement.getSimpleName().toString());
+      } else if (element.getAnnotation(ActivityType.MaximumDuration.class) != null){
+        if (maximumDuration.isPresent()) throw new InvalidMissionModelException(
+            "MaximumDuration annotation cannot be applied multiple times in one activity type."
+        );
+
+        if (element.getKind() == ElementKind.METHOD) {
+          if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException(
+              "MaximumDuration method annotation must be an executable element.");
+
+          if (!executableElement.getParameters().isEmpty()) throw new InvalidMissionModelException(
+              "MaximumDuration annotation must be applied to a method with no arguments."
+          );
+          maximumDuration = Optional.of(executableElement.getSimpleName().toString() + "()");
+        } else if (element.getKind() == ElementKind.FIELD) {
+          maximumDuration = Optional.of(element.getSimpleName().toString());
+        }
       }
     }
 
@@ -609,7 +626,7 @@ import java.util.stream.Collectors;
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration, maximumDuration));
     }
 
     return Optional.empty();

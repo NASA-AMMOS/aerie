@@ -302,6 +302,32 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addStatement("return result")
                     .build())
             .addMethod(MethodSpec
+                           .methodBuilder("getMaximumDurations")
+                           .addModifiers(Modifier.PUBLIC)
+                           .addAnnotation(Override.class)
+                           .returns(ParameterizedTypeName.get(Map.class, String.class, Duration.class))
+                           .addStatement("final var result = new $T()", ParameterizedTypeName.get(HashMap.class, String.class, Duration.class))
+                           .addCode(
+                               missionModel
+                                   .activityTypes()
+                                   .stream()
+                                   .filter(a -> a.effectModel().isPresent())
+                                   .filter(a -> a.effectModel().get().maximumDuration().isPresent())
+                                   .map(
+                                       activityTypeRecord ->
+                                           CodeBlock
+                                               .builder()
+                                               .addStatement("result.put(\"$L\", $L)",
+                                                             activityTypeRecord.name(),
+                                                             activityTypeRecord
+                                                                 .effectModel()
+                                                                 .map($ -> CodeBlock.of("$L.$L", activityTypeRecord.fullyQualifiedClass(), $.maximumDuration().get()))
+                                                                 .get()))
+                                   .reduce((x, y) -> x.add("$L", y.build()))
+                                   .orElse(CodeBlock.builder()).build())
+                           .addStatement("return result")
+                           .build())
+            .addMethod(MethodSpec
                            .methodBuilder("serializeDuration")
                            .addModifiers(Modifier.PUBLIC)
                            .addAnnotation(Override.class)

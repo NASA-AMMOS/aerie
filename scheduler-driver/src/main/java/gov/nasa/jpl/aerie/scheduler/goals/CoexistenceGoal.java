@@ -5,7 +5,10 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
@@ -15,10 +18,14 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -175,7 +182,11 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) { //TODO: check if interval gets split and if so, notify user?
+  public java.util.Collection<Conflict> getConflicts(
+      final Plan plan,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final SchedulerModel schedulerModel) { //TODO: check if interval gets split and if so, notify user?
 
     //NOTE: temporalContext IS A WINDOWS OVER WHICH THE GOAL APPLIES, USUALLY SOMETHING BROAD LIKE A MISSION PHASE
     //NOTE: expr IS A WINDOWS OVER WHICH A COEXISTENCEGOAL APPLIES, FOR EXAMPLE THE WINDOWS CORRESPONDING TO 5 SECONDS AFTER EVERY BASICACTIVITY IS SCHEDULED
@@ -266,11 +277,19 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
+          var temporalContext = this.temporalContext.evaluate(simulationResults, evaluationEnvironment);
+          final var activityCreationTemplateBuilt = activityCreationTemplate.build();
+          final var newEvaluationEnvironment = createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window);
+          final var newTemporalContext = boundTemporalContextWithSchedulerModel(
+                temporalContext,
+                schedulerModel,
+                activityCreationTemplateBuilt,
+                newEvaluationEnvironment);
           conflicts.add(new MissingActivityTemplateConflict(
               this,
-              this.temporalContext.evaluate(simulationResults, evaluationEnvironment),
-              activityCreationTemplate.build(),
-              createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window),
+              newTemporalContext,
+              activityCreationTemplateBuilt,
+              newEvaluationEnvironment,
               1,
               Optional.empty()));
         } else {
@@ -281,6 +300,22 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     }//for(anchorAct)
 
     return conflicts;
+  }
+
+  private Windows boundTemporalContextWithSchedulerModel(
+      final Windows baseTemporalContext,
+      final SchedulerModel schedulerModel,
+      final ActivityExpression activityTemplate,
+      final EvaluationEnvironment evaluationEnvironment){
+    var boundedTemporalContext = new Windows().add(baseTemporalContext);
+    var currentTemporalContextUpperBound = baseTemporalContext.maxTrueTimePoint().get().getKey();
+    final var reduced = activityTemplate.reduceTemporalConstraints(planHorizon, schedulerModel, evaluationEnvironment, List.of());
+    if(reduced.isPresent()) {
+      currentTemporalContextUpperBound = Duration.min(currentTemporalContextUpperBound, reduced.get().end().end);
+      //invalidate the end
+      boundedTemporalContext = boundedTemporalContext.and(new Windows(true).set(Interval.between(currentTemporalContextUpperBound, Interval.Inclusivity.Exclusive, Duration.MAX_VALUE, Interval.Inclusivity.Exclusive), false));
+    }
+    return boundedTemporalContext;
   }
 
   private EvaluationEnvironment createEvaluationEnvironmentFromAnchor(EvaluationEnvironment existingEnvironment, Segment<Optional<Spans.Metadata>> span){
