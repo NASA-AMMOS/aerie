@@ -100,7 +100,15 @@ public record SchedulingActivityDirective(
                                 parameters, topParent, anchorId, anchoredToStart);
   }
 
-  private static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
+  public static SchedulingActivityDirective of(
+      SchedulingActivityDirectiveId id,
+      ActivityType type,
+      Duration startOffset,
+      Duration duration,
+      Map<String, SerializedValue> parameters,
+      SchedulingActivityDirectiveId topParent,
+      SchedulingActivityDirectiveId anchorId,
+      boolean anchoredToStart) {
     return new SchedulingActivityDirective(
         id,
         type,
@@ -122,6 +130,18 @@ public record SchedulingActivityDirective(
         activityInstance.topParent,
         activityInstance.anchorId,
         activityInstance.anchoredToStart);
+  }
+
+  public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart, Duration startOffset){
+    return SchedulingActivityDirective.of(
+        activityInstance.id,
+        activityInstance.type,
+        startOffset,
+        activityInstance.duration,
+        new HashMap<>(activityInstance.arguments),
+        activityInstance.topParent,
+        anchorId,
+        anchoredToStart);
   }
 
   /**
