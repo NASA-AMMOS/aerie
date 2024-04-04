@@ -6,7 +6,8 @@
  */
 
 import * as AST from "./scheduler-ast.js";
-import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
+import {PersistentTimeAnchor} from "./scheduler-ast.js";
+import * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import {ActivityInstance} from "./constraints-edsl-fluent-api.js";
 import * as ConstraintsAST from "./constraints-ast.js";
 import {makeArgumentsDiscreteProfiles} from "./scheduler-mission-model-generated-code";
@@ -387,6 +388,7 @@ export class Goal {
     activityFinder?: ActivityExpression<B>
   } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+    persistentAnchor?: PersistentTimeAnchor,
     forEach:  ActivityExpression<T>,
     activityFinder?: ActivityExpression<B>
   }) & CoexistenceGoalTimingConstraints): Goal {
@@ -424,10 +426,19 @@ export class Goal {
       activityTemplate = opts.activityTemplate;
     }
 
+    let PersistentAnchortmp: PersistentTimeAnchor;
+
+    if ((opts as {persistentAnchor: PersistentTimeAnchor}).persistentAnchor !== undefined)
+      PersistentAnchortmp = (opts as {persistentAnchor: PersistentTimeAnchor}).persistentAnchor;
+    else
+      PersistentAnchortmp = PersistentTimeAnchor.DISABLED;
+
+
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       alias: alias,
       activityTemplate: activityTemplate,
+      persistentAnchor: PersistentAnchortmp,
       activityFinder: opts.activityFinder?.__astNode,
       forEach: localForEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
@@ -817,15 +828,16 @@ declare global {
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).
      * The activity is placed such that it starts at (startsAt) or ends at (endsAt) a certain offset from the window
      */
-    public static CoexistenceGoal <
+    public static CoexistenceGoal<
         T extends WindowsEDSL.Gen.ActivityType,
         S extends WindowsEDSL.Gen.ActivityType,
         B extends WindowsEDSL.Gen.ActivityType>(opts: ({
       activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-      forEach:  WindowsEDSL.Windows,
+      forEach:  WindowsEDSL.Windows | WindowsEDSL.Interval | Temporal.Instant,
       activityFinder?: ActivityExpression<B>
     } | {
       activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+      persistentAnchor?: PersistentTimeAnchor,
       forEach:  ActivityExpression<T>,
       activityFinder?: ActivityExpression<B>
     }) & CoexistenceGoalTimingConstraints): Goal
@@ -899,6 +911,7 @@ declare global {
   var WindowProperty: typeof AST.WindowProperty
   var Operator: typeof AST.TimingConstraintOperator
   var ActivityTypes: typeof WindowsEDSL.Gen.ActivityType
+  var PersistentTimeAnchor: typeof AST.PersistentTimeAnchor
 
   type Double = number;
   type Integer = number;
@@ -923,6 +936,7 @@ Object.assign(globalThis,
       GlobalSchedulingCondition,
       Goal,
       ActivityExpression,
+      PersistentTimeAnchor: AST.PersistentTimeAnchor,
       TimingConstraint: TimingConstraint,
       WindowProperty: AST.WindowProperty,
       Operator: AST.TimingConstraintOperator,
