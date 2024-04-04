@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 
@@ -58,6 +59,13 @@ public interface Plan {
    *
    * @return set of all activities in the plan ordered by start time
    */
+  /**
+   * replace and old activity by a new one
+   * @param oldAct Old Activity
+   * @param newAct New Activity
+   */
+  void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct);
+
   List<SchedulingActivityDirective> getActivitiesByTime();
 
   /**
@@ -80,6 +88,11 @@ public interface Plan {
    * @return set of all activities in the plan
    */
   Set<SchedulingActivityDirective> getActivities();
+
+  /**
+  * @return the set of anchors from all activities in the plan
+   */
+  Set<SchedulingActivityDirectiveId> getAnchorIds();
 
   /**
    * finds activity instances in the plan that meet the given criteria
@@ -106,4 +119,5 @@ public interface Plan {
    */
   Evaluation getEvaluation();
 
+  Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivityDirective actAnchorTo);
 }
