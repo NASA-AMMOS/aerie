@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+
 /**
  * A facade for simulating plans and processing simulation results.
  */
@@ -42,9 +45,8 @@ public class SimulationFacade implements AutoCloseable{
   private Map<String, ActivityType> activityTypes;
   private ResumableSimulationDriver<?> driver;
   private int itSimActivityId;
+  private final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds;
 
-  private final Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
-      planActDirectiveIdToSimulationActivityDirectiveId = new HashMap<>();
   private final Map<SchedulingActivityDirective, ActivityDirective> insertedActivities;
   //counts the total number of simulation restarts, used as performance metric in the scheduler
   private int pastSimulationRestarts;
@@ -117,6 +119,7 @@ public class SimulationFacade implements AutoCloseable{
     this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), canceledListener);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
+    this.mapSchedulingIdsToActivityIds = new DualHashBidiMap<>();
     this.activityTypes = new HashMap<>();
     this.pastSimulationRestarts = 0;
     this.initialPlan = new ArrayList<>();
@@ -146,8 +149,19 @@ public class SimulationFacade implements AutoCloseable{
   }
 
   public Map<SchedulingActivityDirectiveId, ActivityDirectiveId> getActivityIdCorrespondence(){
-    return planActDirectiveIdToSimulationActivityDirectiveId;
+    return new HashMap<>(mapSchedulingIdsToActivityIds);
   }
+
+  public Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> getBidiActivityIdCorrespondence(){
+    if(initialSimulationResults.isEmpty() || initialPlanHasBeenModified)
+      return Optional.ofNullable(mapSchedulingIdsToActivityIds);
+    else if(initialSimulationResults.isPresent())
+      return initialSimulationResults.get().mapSchedulingIdsToActivityIds();
+    else
+      return Optional.empty();
+  }
+
+
 
   /**
    * Fetches activity instance durations from last simulation
@@ -156,10 +170,10 @@ public class SimulationFacade implements AutoCloseable{
    * @return the duration if found in the last simulation, null otherwise
    */
   public Optional<Duration> getActivityDuration(final SchedulingActivityDirective schedulingActivityDirective) {
-    if(!planActDirectiveIdToSimulationActivityDirectiveId.containsKey(schedulingActivityDirective.getId())){
+    if(!mapSchedulingIdsToActivityIds.containsKey(schedulingActivityDirective.getId())){
       return Optional.empty();
     }
-    final var duration = driver.getActivityDuration(planActDirectiveIdToSimulationActivityDirectiveId.get(
+    final var duration = driver.getActivityDuration(mapSchedulingIdsToActivityIds.get(
         schedulingActivityDirective.getId()));
     return duration;
   }
@@ -190,9 +204,7 @@ public class SimulationFacade implements AutoCloseable{
     latestSimulationData.get().simulatedActivities.forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimulationData.driverResults(), activityInstanceId);
-      final var schedulingActId = planActDirectiveIdToSimulationActivityDirectiveId.entrySet().stream().filter(
-          entry -> entry.getValue().equals(rootParent)
-      ).findFirst().get().getKey();
+      final var schedulingActId = mapSchedulingIdsToActivityIds.inverseBidiMap().get(rootParent);
       final var activityInstance = SchedulingActivityDirective.of(
           activityTypes.get(activity.type()),
           this.planningHorizon.toDur(activity.start()),
@@ -234,7 +246,7 @@ public class SimulationFacade implements AutoCloseable{
     if(atLeastOneActualRemoval || earliestActStartTime.noLongerThan(this.driver.getCurrentSimulationEndTime())){
       allActivitiesToSimulate.addAll(insertedActivities.keySet());
       insertedActivities.clear();
-      planActDirectiveIdToSimulationActivityDirectiveId.clear();
+      mapSchedulingIdsToActivityIds.clear();
       logger.info("(Re)creating simulation driver because at least one removal("+atLeastOneActualRemoval+") or insertion in the past ("+earliestActStartTime+")");
       if (driver != null) {
         this.pastSimulationRestarts += driver.getCountSimulationRestarts();
@@ -272,8 +284,8 @@ public class SimulationFacade implements AutoCloseable{
    * @param replacement the replacement activity
    */
   public void replaceActivityFromSimulation(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement){
-    if(toBeReplaced.type() != replacement.type()||
-       toBeReplaced.startOffset() != replacement.startOffset()||
+    if(toBeReplaced.type() != replacement.type() ||
+       ((toBeReplaced.anchorId() == replacement.anchorId()) && toBeReplaced.startOffset() != replacement.startOffset()) ||
        !(toBeReplaced.arguments().equals(replacement.arguments()))) {
       throw new IllegalArgumentException("When replacing an activity, you can only update the duration");
     }
@@ -283,9 +295,9 @@ public class SimulationFacade implements AutoCloseable{
     final var associated = insertedActivities.get(toBeReplaced);
     insertedActivities.remove(toBeReplaced);
     insertedActivities.put(replacement, associated);
-    final var simulationId = this.planActDirectiveIdToSimulationActivityDirectiveId.get(toBeReplaced.id());
-    this.planActDirectiveIdToSimulationActivityDirectiveId.remove(toBeReplaced.id());
-    this.planActDirectiveIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
+    final var simulationId = this.mapSchedulingIdsToActivityIds.get(toBeReplaced.id());
+    mapSchedulingIdsToActivityIds.remove(toBeReplaced.id());
+    mapSchedulingIdsToActivityIds.put(replacement.id(), simulationId);
   }
 
   private void simulateActivities(final Collection<SchedulingActivityDirective> activities)
@@ -298,13 +310,12 @@ public class SimulationFacade implements AutoCloseable{
 
     for(final var activity : activitiesSortedByStartTime){
       final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
-      planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
+      mapSchedulingIdsToActivityIds.put(activity.getId(), activityIdSim);
     }
 
     for(final var activity : activitiesSortedByStartTime) {
       final var activityDirective = schedulingActToActivityDir(activity);
-      directivesToSimulate.put(
-          planActDirectiveIdToSimulationActivityDirectiveId.get(activity.getId()),
+      directivesToSimulate.put(mapSchedulingIdsToActivityIds.get(activity.getId()),
           activityDirective);
       insertedActivities.put(activity, activityDirective);
     }
@@ -336,7 +347,7 @@ public class SimulationFacade implements AutoCloseable{
       //compare references
       if(lastSimulationData == null || results != lastSimulationData.driverResults()) {
         //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results));
+        this.lastSimulationData = new SimulationData(results, SimulationResultsConverter.convertToConstraintModelResults(results), Optional.ofNullable(mapSchedulingIdsToActivityIds));
       }
     } catch (SchedulingInterruptedException e){
       throw e; //pass interruption up
@@ -369,13 +380,13 @@ public class SimulationFacade implements AutoCloseable{
       }
     }
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
-    if(activity.anchorId()!= null && !planActDirectiveIdToSimulationActivityDirectiveId.containsKey(activity.anchorId())){
+    if(activity.anchorId()!= null && !mapSchedulingIdsToActivityIds.containsKey(activity.anchorId())){
       throw new RuntimeException("Activity with id "+ activity.anchorId() + " referenced as an anchor by activity " + activity.toString() + " is not present in the plan");
     }
     return new ActivityDirective(
         activity.startOffset(),
         serializedActivity,
-        planActDirectiveIdToSimulationActivityDirectiveId.get(activity.anchorId()),
+        mapSchedulingIdsToActivityIds.get(activity.anchorId()),
         activity.anchoredToStart());
   }
 }

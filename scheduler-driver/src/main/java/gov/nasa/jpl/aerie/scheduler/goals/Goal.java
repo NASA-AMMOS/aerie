@@ -7,14 +7,18 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import org.apache.commons.collections4.BidiMap;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * describes some criteria that is desired in the solution plans
@@ -288,6 +292,7 @@ public class Goal {
   public java.util.Collection<Conflict> getConflicts(
       Plan plan,
       final SimulationResults simulationResults,
+      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel
       ) {

@@ -4,15 +4,19 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -113,6 +117,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
   public Collection<Conflict> getConflicts(
       final Plan plan,
       final SimulationResults simulationResults,
+      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) {
     final var conflicts = new java.util.LinkedList<Conflict>();
@@ -160,7 +165,11 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
           //REVIEW: pass the requested instance to conflict or otherwise cache it
           //        for the imminent request to create it in the plan
         } else {
-          conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+          conflicts.add(new MissingAssociationConflict(
+              this,
+              missingActAssociations,
+              Optional.empty(),
+              Optional.empty()));
         }
       }
     }//for(requestedAct)

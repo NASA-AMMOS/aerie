@@ -68,8 +68,10 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
-
+import java.util.HashSet;
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
@@ -140,7 +142,7 @@ public record SynchronousSchedulerAgent(
         final var initialSimulationResults = loadSimulationResults(planMetadata);
         //seed the problem with the initial plan contents
         final var loadedPlanComponents = loadInitialPlan(planMetadata, problem, initialSimulationResults);
-        problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults);
+        problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResults, loadedPlanComponents.mapSchedulingIdsToActivityIds);
         problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
@@ -237,6 +239,9 @@ public record SynchronousSchedulerAgent(
             activityToGoalId,
             schedulerMissionModel.schedulerModel()
         );
+        List<SchedulingActivityDirective> updatedActs = updateEverythingWithNewAnchorIds(solutionPlan, instancesToIds);
+        merlinService.updatePlanActivityDirectiveAnchors(specification.planId(), updatedActs, instancesToIds);
+
         final var planMetadataAfterChanges = merlinService.getPlanMetadata(specification.planId());
         final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadataAfterChanges, instancesToIds);
         //collect results and notify subscribers of success
@@ -280,6 +285,24 @@ public record SynchronousSchedulerAgent(
           .trace(e));
     }
   }
+
+  public List<SchedulingActivityDirective> updateEverythingWithNewAnchorIds(Plan solutionPlan, Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds){
+    ArrayList<SchedulingActivityDirective> updatedActs = new ArrayList<SchedulingActivityDirective>();
+    var planActs = new HashSet<>(solutionPlan.getActivities());
+    for (SchedulingActivityDirective act : planActs) {
+      if (act.anchorId() != null) {
+        SchedulingActivityDirective actAnchored = solutionPlan.getActivitiesById().get(act.anchorId());
+        SchedulingActivityDirective updatedAct = SchedulingActivityDirective.copyOf(act, new SchedulingActivityDirectiveId(instancesToIds.get(actAnchored).id()), act.anchoredToStart(), act.startOffset());
+        updatedActs.add(updatedAct);
+        solutionPlan.replaceActivity(act, updatedAct);
+        ActivityDirectiveId value = instancesToIds.get(act);
+        instancesToIds.remove(act);
+        instancesToIds.put(updatedAct, value);
+      }
+    }
+    return updatedActs;
+  }
+
 
   private Optional<SimulationResults> loadSimulationResults(final PlanMetadata planMetadata){
     try {
@@ -390,6 +413,7 @@ public record SynchronousSchedulerAgent(
       final Optional<SimulationResults> initialSimulationResults) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
+      BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds =  new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
       final var merlinPlan =  merlinService.getPlanActivityDirectives(planMetadata, problem);
       final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToDirectiveId = new HashMap<>();
       final var plan = new PlanInMemory();
@@ -426,17 +450,24 @@ public record SynchronousSchedulerAgent(
           throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
         }
         final var act = SchedulingActivityDirective.fromActivityDirective(elem.getKey(), activity, schedulerActType, actDuration);
-
         schedulingIdToDirectiveId.put(act.getId(), elem.getKey());
         plan.add(act);
+        if(initialSimulationResults.isPresent()){
+          for(final var simAct: initialSimulationResults.get().simulatedActivities.entrySet()){
+            if(simAct.getValue().directiveId().isPresent() &&
+               simAct.getValue().directiveId().get().equals(elem.getKey())){
+                mapSchedulingIdsToActivityIds.put(act.getId(), new ActivityDirectiveId(simAct.getKey().id()));
+            }
+          }
+        }
       }
-      return new PlanComponents(plan, merlinPlan, schedulingIdToDirectiveId);
+      return new PlanComponents(plan, mapSchedulingIdsToActivityIds, merlinPlan, schedulingIdToDirectiveId);
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }
   }
 
-  record PlanComponents(Plan schedulerPlan, MerlinPlan merlinPlan, Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idMap) {}
+  record PlanComponents(Plan schedulerPlan, BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds, MerlinPlan merlinPlan, Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idMap) {}
   record SchedulerMissionModel(MissionModel<?> missionModel, SchedulerModel schedulerModel) {}
 
   /**
