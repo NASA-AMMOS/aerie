@@ -7,8 +7,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeSimple;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
@@ -124,7 +124,7 @@ public class UncontrollableDurationTest {
         .build();
 
 
-    final var start = TimeExpression.atStart();
+    final var start = TimeExpressionRelative.atStart();
     final var coexistenceTriangle = new CoexistenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTrapezoidal)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
@@ -161,7 +161,7 @@ public class UncontrollableDurationTest {
         .build();
 
     //this time expression produces an interval [TimeAnchor.START, TimeAnchor.START + 2 Ms]
-    final var intervalStartTimeExpression = new TimeExpressionRelativeFixed(TimeAnchor.END, false);
+    final var intervalStartTimeExpression = new TimeExpressionRelativeSimple(TimeAnchor.END, false);
     intervalStartTimeExpression.addOperation(TimeUtility.Operator.PLUS, Duration.of(2, Duration.MICROSECONDS));
 
     final var coexistenceControllable = new CoexistenceGoal.Builder()
@@ -195,7 +195,7 @@ public class UncontrollableDurationTest {
         .build();
 
     //this time expression produces an interval [TimeAnchor.END, TimeAnchor.END + 2 Ms]
-    final var intervalStartTimeExpression = new TimeExpressionRelativeFixed(TimeAnchor.START, false);
+    final var intervalStartTimeExpression = new TimeExpressionRelativeSimple(TimeAnchor.START, false);
     intervalStartTimeExpression.addOperation(TimeUtility.Operator.PLUS, Duration.of(2, Duration.MINUTE));
 
     final var horizonExpression =  new SpansFromWindows(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)));

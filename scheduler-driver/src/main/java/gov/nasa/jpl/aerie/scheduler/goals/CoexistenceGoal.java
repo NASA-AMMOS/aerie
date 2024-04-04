@@ -15,7 +15,8 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
+import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
@@ -32,8 +33,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
  */
 public class CoexistenceGoal extends ActivityTemplateGoal {
 
-  private TimeExpression startExpr;
-  private TimeExpression endExpr;
+  private TimeExpressionRelative startExpr;
+  private TimeExpressionRelative endExpr;
   private DurationExpression durExpr;
   private String alias;
 
@@ -58,8 +59,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
     protected Expression<Spans> forEach;
 
-    public Builder startsAt(TimeExpression timeExpression) {
-      startExpr = timeExpression;
+    public Builder startsAt(TimeExpressionRelative TimeExpressionRelative) {
+      startExpr = TimeExpressionRelative;
       return getThis();
     }
 
@@ -69,48 +70,48 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    protected TimeExpression startExpr;
+    protected TimeExpressionRelative startExpr;
 
-    public Builder endsAt(TimeExpression timeExpression) {
-      endExpr = timeExpression;
+    public Builder endsAt(TimeExpressionRelative TimeExpressionRelative) {
+      endExpr = TimeExpressionRelative;
       return getThis();
     }
 
-    protected TimeExpression endExpr;
+    protected TimeExpressionRelative endExpr;
 
 
     public Builder startsAt(TimeAnchor anchor) {
-      startExpr = TimeExpression.fromAnchor(anchor);
+      startExpr = TimeExpressionRelative.fromAnchor(anchor);
       return getThis();
     }
 
     public Builder endsAt(TimeAnchor anchor) {
-      endExpr = TimeExpression.fromAnchor(anchor);
+      endExpr = TimeExpressionRelative.fromAnchor(anchor);
       return getThis();
     }
 
-    public Builder endsBefore(TimeExpression expr) {
-      endExpr = TimeExpression.endsBefore(expr);
+    public Builder endsBefore(TimeExpressionRelative expr) {
+      endExpr = TimeExpressionRelative.endsBefore(expr);
       return getThis();
     }
 
     public Builder startsAfterEnd() {
-      startExpr = TimeExpression.afterEnd();
+      startExpr = TimeExpressionRelative.afterEnd();
       return getThis();
     }
 
     public Builder startsAfterStart() {
-      startExpr = TimeExpression.afterStart();
+      startExpr = TimeExpressionRelative.afterStart();
       return getThis();
     }
 
     public Builder endsBeforeEnd() {
-      endExpr = TimeExpression.beforeEnd();
+      endExpr = TimeExpressionRelative.beforeEnd();
       return getThis();
     }
 
     public Builder endsAfterEnd() {
-      endExpr = TimeExpression.afterEnd();
+      endExpr = TimeExpressionRelative.afterEnd();
       return getThis();
     }
 

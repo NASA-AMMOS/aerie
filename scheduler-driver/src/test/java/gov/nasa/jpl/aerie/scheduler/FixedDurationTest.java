@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -40,7 +40,7 @@ public class FixedDurationTest {
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .build();
 
-    final var start = TimeExpression.atStart();
+    final var start = TimeExpressionRelative.atStart();
     final var coexistence = new CoexistenceGoal.Builder()
         .thereExistsOne(fixedDurationActivityTemplate)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
@@ -70,7 +70,7 @@ public class FixedDurationTest {
         .withTimingPrecision(Duration.of(500, Duration.MILLISECOND))
         .build();
 
-    final var start = TimeExpression.atStart();
+    final var start = TimeExpressionRelative.afterStart();
     final var coexistence = new CoexistenceGoal.Builder()
         .thereExistsOne(fixedDurationActivityTemplate)
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))

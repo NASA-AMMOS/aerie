@@ -4,12 +4,14 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-public class TimeExpressionBetween extends TimeExpression {
+import java.util.Optional;
 
-  private final TimeExpressionRelativeFixed lowerBound;
-  private final TimeExpressionRelativeFixed upperBound;
+public class TimeExpressionRelativeBinary extends TimeExpressionRelative {
 
-  public TimeExpressionBetween(TimeExpressionRelativeFixed lowerBound, TimeExpressionRelativeFixed upperBound) {
+  private final TimeExpressionRelativeSimple lowerBound;
+  private final TimeExpressionRelativeSimple upperBound;
+
+  public TimeExpressionRelativeBinary(TimeExpressionRelativeSimple lowerBound, TimeExpressionRelativeSimple upperBound) {
     this.lowerBound = lowerBound;
     this.upperBound = upperBound;
   }
@@ -20,4 +22,9 @@ public class TimeExpressionBetween extends TimeExpression {
     final var interval2 = upperBound.computeTime(simulationResults, plan, interval);
     return Interval.between(interval1.start, interval2.end);
   }
+
+  public Optional<TimeAnchor> getAnchor(){
+    return Optional.empty();
+  }
+
 }

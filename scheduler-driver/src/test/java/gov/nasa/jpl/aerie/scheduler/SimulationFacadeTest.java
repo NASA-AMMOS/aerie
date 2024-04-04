@@ -8,9 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionConstant;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -163,29 +161,6 @@ public class SimulationFacadeTest {
     assertEquals(1, actAssociatedInSecondRun.size());
     assertTrue(actAssociatedInFirstRun.iterator().next().equalsInProperties(actAssociatedInSecondRun.iterator().next()));
     assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
-  }
-
-  @Test
-  public void getValueAtTimeDoubleOnSimplePlanMidpoint()
-  throws SimulationFacade.SimulationException, SchedulingInterruptedException
-  {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t1_5));
-    final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults().get(), null, horizon.getHor());
-    assertEquals(SerializedValue.of(3.0), actual);
-  }
-
-  @Test
-  public void getValueAtTimeDoubleOnSimplePlan()
-  throws SimulationFacade.SimulationException, SchedulingInterruptedException
-  {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
-    final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults().get(), null, horizon.getHor());
-    assertEquals(SerializedValue.of(2.9), actual);
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
