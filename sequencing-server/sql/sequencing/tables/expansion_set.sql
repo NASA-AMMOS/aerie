@@ -5,6 +5,7 @@ create table expansion_set (
 
   command_dict_id integer not null,
   mission_model_id integer not null,
+  sequence_adaptation_id integer not null,
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -20,6 +21,9 @@ create table expansion_set (
 
   foreign key (command_dict_id)
     references command_dictionary (id)
+    on delete cascade,
+  foreign key (sequence_adaptation_id)
+    references sequence_adaptation (id)
     on delete cascade
 );
 

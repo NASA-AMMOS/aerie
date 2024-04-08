@@ -10,6 +10,7 @@ begin;
 
   -- Command Expansion Tables.
   \ir tables/command_dictionary.sql
+  \ir tables/sequence_adaptation.sql
   \ir tables/expansion_set.sql
   \ir tables/expansion_rule.sql
   \ir tables/expansion_set_to_rule.sql
