@@ -3,12 +3,14 @@ package gov.nasa.jpl.aerie.banananation;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.generated.ActivityActions;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ResourceId;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -399,7 +401,7 @@ public final class IncrementalSimTest {
   public void testPerformanceOfOneEditToScaledPlan() {
     if (debug) System.out.println("testPerformanceOfOneEditToScaledPlan()");
 
-    int scaleFactor = 1000;
+    int scaleFactor = 10000;
 
     final List<Integer> sizes = IntStream.rangeClosed(1, 20).boxed().map(i -> i * scaleFactor).toList();
     System.out.println("Numbers of activities to test: " + sizes);
@@ -407,6 +409,12 @@ public final class IncrementalSimTest {
     long spread = 5;
     Duration unit = SECONDS;
 
+    DurationValueMapper dvm = new DurationValueMapper();
+
+    final SerializedActivity growBanana1 =
+        new SerializedActivity("GrowBanana", Map.of("quantity", SerializedValue.of(1),
+                                                    "growingDuration", dvm.serializeValue(Duration.of(spread * 3, unit))));
+    final SerializedActivity growBanana3 = new SerializedActivity("GrowBanana", Map.of("quantity", SerializedValue.of(3)));
     final SerializedActivity biteBanana = new SerializedActivity("BiteBanana", Map.of());
 
     final SerializedActivity peelBanana = new SerializedActivity("PeelBanana", Map.of());
@@ -428,20 +436,25 @@ public final class IncrementalSimTest {
       Pair<Duration, SerializedActivity>[] pairs = new Pair[numActs];
       for (int i = 0; i < numActs; ++i) {
         pairs[i] = Pair.of(duration(spread * (i + 1), unit),
-                           changeProducerChiquita);
+                           growBanana1);
         ++i;
-        pairs[i] = Pair.of(duration(spread * (i + 1), unit),
-                           changeProducerDole);
+        if (i < numActs) {
+          pairs[i] = Pair.of(duration(spread * (i + 1), unit),
+                             peelBanana);
+        }
       }
       final Map<ActivityDirectiveId, ActivityDirective> schedule = SimulationUtility.buildSchedule(pairs);
 
       final var startTime = Instant.now();
-      final var simDuration = duration(spread * (numActs + 2), SECOND);
+      final var simDuration = duration(spread * (numActs + 2), unit);
 
       var timer = new Timer(INIT_SIM + " " + numActs, false);
+      long stepCount1 = TemporalEventSource._cellStepCount;
       final var driver = SimulationUtility.getDriver(simDuration);
       driver.simulate(schedule, startTime, simDuration, startTime, simDuration, () -> false, $ -> {});
       timer.stop(false);
+      long stepCount2 = TemporalEventSource._cellStepCount;
+      System.out.println("steps = " + (stepCount2 - stepCount1) + " = " + stepCount2 + " - " + stepCount1);
 
       timer = new Timer(COMP_RESULTS + " " + numActs, false);
       var simulationResults = driver.computeResults(startTime, simDuration);
@@ -452,17 +465,20 @@ public final class IncrementalSimTest {
 
       // Modify a directive in the schedule
       final Optional<ActivityDirectiveId> d0 = schedule.keySet().stream().findFirst();
-      long middleDirectiveNum = d0.get().id() + schedule.size() / 2;
+      long middleDirectiveNum = d0.get().id() + (schedule.size() / 4) * 2;  // get the middle growbanana (even number offset from d0)
       ActivityDirectiveId directiveId = new ActivityDirectiveId(middleDirectiveNum);  // get middle activity
       final ActivityDirective directive = schedule.get(directiveId);
-      schedule.put(directiveId, new ActivityDirective(directive.startOffset().plus(1, unit),
-                                                      directive.serializedActivity(), directive.anchorId(),
+      schedule.put(directiveId, new ActivityDirective(directive.startOffset().plus(1, unit),  // shifting forward 1
+                                                      growBanana3, directive.anchorId(),  // changing quantity from 1 to 3
                                                       directive.anchoredToStart()));
 
       timer = new Timer(INC_SIM + " " + numActs, false);
+      long stepCount3 = TemporalEventSource._cellStepCount;
       driver.initSimulation(simDuration);
       simulationResults = driver.diffAndSimulate(schedule, startTime, simDuration, startTime, simDuration);
       timer.stop(false);
+      long stepCount4 = TemporalEventSource._cellStepCount;
+      System.out.println("inc sim steps = " + (stepCount4 - stepCount3) + " = " + stepCount4 + " - " + stepCount3);
 
       timer = new Timer(COMP_INC_RESULTS + " " + numActs, false);
       simulationResults = driver.computeResults(startTime, simDuration);
@@ -504,7 +520,7 @@ public final class IncrementalSimTest {
   public void testPerformanceOfRepeatedSimsToScaledPlan() {
     if (debug) System.out.println("testPerformanceOfRepeatedSimsToScaledPlan()");
 
-    int scaleFactor = 10;
+    int scaleFactor = 10000;
     int numEdits = 50;
 
     final List<Integer> sizes = IntStream.rangeClosed(1, 5).boxed().map(i -> i * scaleFactor).toList();

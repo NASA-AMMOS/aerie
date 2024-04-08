@@ -312,15 +312,15 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
-    final MissionModel<?> missionModel = loadAndInstantiateMissionModel(message.missionModelId(),
-                                                                        message.simulationStartTime(),
-                                                                        SerializedValue.of(config));
-
     var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
     SimulationDriver<?> driver = simulationDrivers.get(planInfo);
 
     SimulationResultsInterface results;
     if (driver == null || !doingIncrementalSim) {
+      final MissionModel<?> missionModel = loadAndInstantiateMissionModel(message.missionModelId(),
+                                                                          message.simulationStartTime(),
+                                                                          SerializedValue.of(config));
+
       driver = new SimulationDriver<>(missionModel, message.planStartTime(), message.planDuration(),
                                       message.useResourceTracker());
       simulationDrivers.put(planInfo, driver);
