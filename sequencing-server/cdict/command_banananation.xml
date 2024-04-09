@@ -249,6 +249,83 @@
                 <prime_string_restriction prime_string_only="No" />
             </restricted_modes>
         </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_IF" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>Begin an if statement.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_ELSE_IF" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>Begin an else if statement.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_END_IF" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>End an if statement.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_BREAK" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>Break a loop.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_CONTINUE" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>Continue a loop.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_END_WHILE_LOOP" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>End a loop.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
+        <fsw_command opcode="0xFFFE" stem="CMD_WHILE" class="FSW">
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>Begin a loop.</description>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
         <hw_command opcode="0x0000" stem="HDW_BLENDER_DUMP">
           <categories>
             <ops_category>UPL</ops_category>
