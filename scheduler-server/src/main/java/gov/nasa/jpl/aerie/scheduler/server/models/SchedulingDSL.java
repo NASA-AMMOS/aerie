@@ -259,6 +259,7 @@ public class SchedulingDSL {
   }
 
   public sealed interface GoalSpecifier {
+    record Procedure(String jarName) implements GoalSpecifier {}
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
         Optional<ConstraintExpression.ActivityExpression> activityFinder,

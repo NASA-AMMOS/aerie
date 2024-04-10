@@ -24,6 +24,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Procedure;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -429,6 +430,8 @@ public class PrioritySolver implements Solver {
       satisfyCompositeGoal((CompositeAndGoal) goal);
     } else if (goal instanceof OptionGoal) {
       satisfyOptionGoal((OptionGoal) goal);
+    } else if (goal instanceof Procedure procedure) {
+
     } else {
       satisfyGoalGeneral(goal);
     }

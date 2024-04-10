@@ -10,6 +10,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -179,6 +180,10 @@ public record SynchronousSchedulerAgent(
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
+          if (goalRecord.definition().source().startsWith("// procedure")) {
+            compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(goalRecord.definition().source().substring(goalRecord.definition().source().indexOf("procedure") + 9).strip())));
+            continue;
+          }
           final var result = compileGoalDefinition(
               merlinService,
               planMetadata.planId(),
@@ -203,6 +208,9 @@ public record SynchronousSchedulerAgent(
           return;
         }
         for (final var compiledGoal : compiledGoals) {
+          if (compiledGoal.getValue() instanceof SchedulingDSL.GoalSpecifier.Procedure p) {
+
+          }
           final var goal = GoalBuilder
               .goalOfGoalSpecifier(
                   compiledGoal.getValue(),

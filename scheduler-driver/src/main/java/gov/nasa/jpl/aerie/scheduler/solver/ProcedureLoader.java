@@ -1,6 +1,5 @@
-package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.constraints;
+package gov.nasa.jpl.aerie.scheduler.solver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.procedural.constraints.Constraint;
 
 import java.io.IOException;
