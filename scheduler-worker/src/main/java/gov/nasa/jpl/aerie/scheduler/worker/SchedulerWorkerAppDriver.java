@@ -25,8 +25,12 @@ import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNot
 import gov.nasa.jpl.aerie.scheduler.worker.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.worker.services.SynchronousSchedulerAgent;
 import io.javalin.Javalin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class SchedulerWorkerAppDriver {
+  private static final Logger logger = LoggerFactory.getLogger(SchedulerWorkerAppDriver.class);
+
   public static void main(String[] args) throws Exception {
     final var config = loadConfiguration();
 
@@ -127,6 +131,11 @@ public final class SchedulerWorkerAppDriver {
   }
 
   private static WorkerAppConfiguration loadConfiguration() {
+    int maxNbCachedSimulationEngine = Integer.parseInt(getEnv("MAX_NB_CACHED_SIMULATION_ENGINES", "1"));
+    if (maxNbCachedSimulationEngine < 1) {
+      logger.warn("MAX_NB_CACHED_SIMULATION_ENGINES is " + maxNbCachedSimulationEngine + " but minimum is 1. Setting to 1.");
+      maxNbCachedSimulationEngine = 1;
+    }
     return new WorkerAppConfiguration(
         new PostgresStore(getEnv("AERIE_DB_SERVER", "postgres"),
                           getEnv("SCHEDULER_DB_USER", ""),
@@ -138,7 +147,7 @@ public final class SchedulerWorkerAppDriver {
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
-        Integer.parseInt(getEnv("MAX_NB_CACHED_SIMULATION_ENGINE", "1"))
+        maxNbCachedSimulationEngine
     );
   }
 }
