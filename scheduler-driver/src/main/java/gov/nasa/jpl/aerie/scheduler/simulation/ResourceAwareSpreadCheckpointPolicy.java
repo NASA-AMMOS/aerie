@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class ResourceAwareSpreadCheckpointPolicy implements Function<CheckpointS
       }
       if (endForSure && !desiredCheckpoints.contains(subHorizonEnd)) desiredCheckpoints.add(subHorizonEnd);
     }
-    this.function = SimulationDriver.desiredCheckpoints(desiredCheckpoints);
+    this.function = CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints);
   }
 
   @Override

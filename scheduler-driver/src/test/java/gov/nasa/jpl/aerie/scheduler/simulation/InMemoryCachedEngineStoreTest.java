@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,15 +23,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class InMemoryCachedEngineStoreTest {
   SimulationEngineConfiguration simulationEngineConfiguration;
   MissionModelId missionModelId;
+  InMemoryCachedEngineStore store;
 
   @BeforeEach
   void beforeEach(){
     this.missionModelId = new MissionModelId(1);
     this.simulationEngineConfiguration = new SimulationEngineConfiguration(Map.of(), Instant.EPOCH, this.missionModelId);
+    this.store = new InMemoryCachedEngineStore(2);
   }
 
-  public static SimulationDriver.CachedSimulationEngine getCachedEngine1(){
-    return new SimulationDriver.CachedSimulationEngine(
+  @AfterEach
+  void afterEach() {
+    this.store.close();
+  }
+
+  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine1(){
+    return new CheckpointSimulationDriver.CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(1), new ActivityDirective(Duration.HOUR, "ActivityType1", Map.of(), null, true),
@@ -44,8 +52,8 @@ public class InMemoryCachedEngineStoreTest {
     );
   }
 
-  public static SimulationDriver.CachedSimulationEngine getCachedEngine2(){
-    return new SimulationDriver.CachedSimulationEngine(
+  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine2(){
+    return new CheckpointSimulationDriver.CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(3), new ActivityDirective(Duration.HOUR, "ActivityType3", Map.of(), null, true),
@@ -59,8 +67,8 @@ public class InMemoryCachedEngineStoreTest {
     );
   }
 
-  public static SimulationDriver.CachedSimulationEngine getCachedEngine3(){
-    return new SimulationDriver.CachedSimulationEngine(
+  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine3(){
+    return new CheckpointSimulationDriver.CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(5), new ActivityDirective(Duration.HOUR, "ActivityType5", Map.of(), null, true),
@@ -77,25 +85,24 @@ public class InMemoryCachedEngineStoreTest {
   @Test
   public void duplicateTest(){
     final var store = new InMemoryCachedEngineStore(2);
-    store.save(SimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
-    store.save(SimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
-    store.save(SimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
+    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
+    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
+    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
     assertEquals(1, store.getCachedEngines(this.simulationEngineConfiguration).size());
   }
 
   @Test
   public void order(){
-    final var store = new InMemoryCachedEngineStore(2);
     final var cachedEngine1 = getCachedEngine1();
     final var cachedEngine2 = getCachedEngine2();
     final var cachedEngine3 = getCachedEngine3();
     store.save(cachedEngine1, this.simulationEngineConfiguration);
     store.save(cachedEngine2, this.simulationEngineConfiguration);
     final var cachedBeforeRegister = store.getCachedEngines(this.simulationEngineConfiguration);
-    //engines have 0 used, so they are ordered in descending creation date
+    // no engines have been used, so the cache is ordered in descending creation date
     assertEquals(cachedBeforeRegister.get(0).activityDirectives(), cachedEngine1.activityDirectives());
     assertEquals(cachedBeforeRegister.get(1).activityDirectives(), cachedEngine2.activityDirectives());
-    //engine1 has been used so it goes first in the list
+    //engine2 has been used so it goes first in the list
     store.registerUsed(cachedEngine2);
     final var cachedAfterRegister = store.getCachedEngines(this.simulationEngineConfiguration);
     assertEquals(cachedAfterRegister.get(0).activityDirectives(), cachedEngine2.activityDirectives());
@@ -105,6 +112,5 @@ public class InMemoryCachedEngineStoreTest {
     final var cachedAfterRemoveLast = store.getCachedEngines(this.simulationEngineConfiguration);
     assertEquals(cachedAfterRemoveLast.get(0).activityDirectives(), cachedEngine2.activityDirectives());
     assertEquals(cachedAfterRemoveLast.get(1).activityDirectives(), cachedEngine3.activityDirectives());
-    System.out.println();
   }
 }

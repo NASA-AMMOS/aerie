@@ -3,10 +3,14 @@ package gov.nasa.jpl.aerie.foomissionmodel;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.CachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
@@ -30,10 +34,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,6 +52,36 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SimulationDuplicationTest {
+  CachedEngineStore store;
+  final private class InfiniteCapacityEngineStore implements CachedEngineStore{
+    private final Map<SimulationEngineConfiguration, List<CheckpointSimulationDriver.CachedSimulationEngine>> store = new HashMap<>();
+    @Override
+    public void save(
+        final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine,
+        final SimulationEngineConfiguration configuration) {
+      store.computeIfAbsent(configuration, conf -> new ArrayList<>());
+      store.get(configuration).add(cachedSimulationEngine);
+    }
+
+    @Override
+    public List<CheckpointSimulationDriver.CachedSimulationEngine> getCachedEngines(final SimulationEngineConfiguration configuration) {
+      return store.get(configuration);
+    }
+  }
+
+  public static SimulationEngineConfiguration mockConfiguration(){
+    return new SimulationEngineConfiguration(
+        Map.of(),
+        Instant.EPOCH,
+        new MissionModelId(0)
+    );
+  }
+
+  @BeforeEach
+  void beforeEach(){
+    this.store = new InfiniteCapacityEngineStore();
+  }
+
   @BeforeAll
   static void beforeAll() {
     ThreadedTask.CACHE_READS = true;
@@ -99,9 +135,13 @@ public class SimulationDuplicationTest {
 
   @Test
   void testTrivialDuplicate() {
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+    final SimulationResults results = simulateWithCheckpoints(
         missionModel,
-        SimulationDriver.CachedSimulationEngine.empty(missionModel), List.of(Duration.of(5, MINUTES)), Map.of()
+        CheckpointSimulationDriver.CachedSimulationEngine.empty(missionModel),
+        List.of(Duration.of(5, MINUTES)),
+        Map.of(),
+        store,
+        mockConfiguration()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -110,13 +150,18 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
-    assertResultsEqual(expected, results.results());
-    final SimulationDriver.SimulationResultsWithCheckpoints newResults = simulateWithCheckpoints(
+        () -> false,
+        $ -> {});
+    assertResultsEqual(expected, results);
+    final var newResults = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(0), List.of(), Map.of()
+        store.getCachedEngines(mockConfiguration()).get(0),
+        List.of(),
+        Map.of(),
+        store,
+        mockConfiguration()
     );
-    assertResultsEqual(expected, newResults.results());
+    assertResultsEqual(expected, newResults);
   }
 
   @Test
@@ -125,10 +170,12 @@ public class SimulationDuplicationTest {
         new MissionModelBuilder(),
         Instant.EPOCH,
         new Configuration());
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+    final var results = simulateWithCheckpoints(
         missionModel,
         List.of(Duration.of(5, MINUTES)),
-        Map.of()
+        Map.of(),
+        store,
+        mockConfiguration()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -137,8 +184,9 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
-    assertResultsEqual(expected, results.results());
+        () -> false,
+        $ -> {});
+    assertResultsEqual(expected, results);
   }
 
   @Test
@@ -151,10 +199,12 @@ public class SimulationDuplicationTest {
         activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
         activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+    final var results = simulateWithCheckpoints(
         missionModel,
         List.of(Duration.of(5, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -163,19 +213,22 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
-    assertResultsEqual(expected, results.results());
+        () -> false,
+        $ -> {});
+    assertResultsEqual(expected, results);
 
-    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+    assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+    final var results2 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(0),
+        store.getCachedEngines(mockConfiguration()).get(0),
         List.of(Duration.of(5, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
 
-    assertResultsEqual(expected, results2.results());
+    assertResultsEqual(expected, results2);
   }
 
   @Test
@@ -188,10 +241,12 @@ public class SimulationDuplicationTest {
         activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
         activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+    final var results = simulateWithCheckpoints(
         missionModel,
         List.of(Duration.of(5, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -200,28 +255,33 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
-    assertResultsEqual(expected, results.results());
+        () -> false,
+        $ -> {});
+    assertResultsEqual(expected, results);
 
-    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+    assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+    final var results2 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(0),
+        store.getCachedEngines(mockConfiguration()).getFirst(),
         List.of(Duration.of(5, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
 
-    assertResultsEqual(expected, results2.results());
+    assertResultsEqual(expected, results2);
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+    final var results3 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(0),
+        store.getCachedEngines(mockConfiguration()).getFirst(),
         List.of(Duration.of(5, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
 
-    assertResultsEqual(expected, results3.results());
+    assertResultsEqual(expected, results3);
   }
 
   @Test
@@ -234,10 +294,12 @@ public class SimulationDuplicationTest {
         activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
         activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+    final var results = simulateWithCheckpoints(
         missionModel,
         List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -246,28 +308,33 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
-    assertResultsEqual(expected, results.results());
+        () -> false,
+        $ -> {});
+    assertResultsEqual(expected, results);
 
-    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+    assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+    final var results2 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(0),
+        store.getCachedEngines(mockConfiguration()).getFirst(),
         List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
 
-    assertResultsEqual(expected, results2.results());
+    assertResultsEqual(expected, results2);
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+    final var results3 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(1),
+        store.getCachedEngines(mockConfiguration()).get(1),
         List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
-        schedule
+        schedule,
+        store,
+        mockConfiguration()
     );
 
-    assertResultsEqual(expected, results3.results());
+    assertResultsEqual(expected, results3);
   }
 
   @Test
@@ -289,10 +356,12 @@ public class SimulationDuplicationTest {
         activity1,
         activity(390, SECONDS, "foo", Map.of("z", SerializedValue.of(999)))
     );
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+    final var results = simulateWithCheckpoints(
         missionModel,
         List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
-        schedule1
+        schedule1,
+        store,
+        mockConfiguration()
     );
     final SimulationResults expected1 = SimulationDriver.simulate(
         missionModel,
@@ -301,7 +370,8 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
+        () -> false,
+        $ -> {});
 
     final SimulationResults expected2 = SimulationDriver.simulate(
         missionModel,
@@ -310,28 +380,33 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false);
+        () -> false,
+        $ -> {});
 
-    assertResultsEqual(expected1, results.results());
+    assertResultsEqual(expected1, results);
 
-    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+    assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+    final var results2 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(0),
+        store.getCachedEngines(mockConfiguration()).getFirst(),
         List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
-        schedule2
+        schedule2,
+        store,
+        mockConfiguration()
     );
-    assertResultsEqual(expected2, results2.results());
+    assertResultsEqual(expected2, results2);
 
-    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+    final SimulationResults results3 = simulateWithCheckpoints(
         missionModel,
-        results.checkpoints().get(1),
+        store.getCachedEngines(mockConfiguration()).get(1),
         List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
-        schedule2
+        schedule2,
+        store,
+        mockConfiguration()
     );
 
-    assertResultsEqual(expected2, results3.results());
+    assertResultsEqual(expected2, results3);
   }
 
   private static long nextActivityDirectiveId = 0L;
@@ -389,13 +464,15 @@ public class SimulationDuplicationTest {
     assertEquals(expected, actual);
   }
 
-  static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
+  static SimulationResults simulateWithCheckpoints(
       final MissionModel<?> missionModel,
-      final SimulationDriver.CachedSimulationEngine cachedSimulationEngine,
+      final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine,
       final List<Duration> desiredCheckpoints,
-      final Map<ActivityDirectiveId, ActivityDirective> schedule
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final CachedEngineStore cachedEngineStore,
+      final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
-    return SimulationDriver.simulateWithCheckpoints(
+    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
         Instant.EPOCH,
@@ -405,15 +482,20 @@ public class SimulationDuplicationTest {
         $ -> {},
         () -> false,
         cachedSimulationEngine,
-        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
+        CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
+        CheckpointSimulationDriver.noCondition(),
+        cachedEngineStore,
+        simulationEngineConfiguration));
   }
 
-  static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
+  static SimulationResults simulateWithCheckpoints(
       final MissionModel<?> missionModel,
       final List<Duration> desiredCheckpoints,
-      final Map<ActivityDirectiveId, ActivityDirective> schedule
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final CachedEngineStore cachedEngineStore,
+      final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
-    return SimulationDriver.simulateWithCheckpoints(
+    return CheckpointSimulationDriver.computeResults(CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
         Instant.EPOCH,
@@ -422,8 +504,11 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         $ -> {},
         () -> false,
-        SimulationDriver.CachedSimulationEngine.empty(missionModel),
-        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
+        CheckpointSimulationDriver.CachedSimulationEngine.empty(missionModel),
+        CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
+        CheckpointSimulationDriver.noCondition(),
+        cachedEngineStore,
+        simulationEngineConfiguration));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -283,7 +284,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   static Map<String, MissionModel<?>> missionModelCache = new HashMap<>();
-  static Map<String, List<SimulationDriver.CachedSimulationEngine>> cachedEngines = new HashMap<>();
+  static Map<String, List<CheckpointSimulationDriver.CachedSimulationEngine>> cachedEngines = new HashMap<>();
 
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
