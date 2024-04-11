@@ -51,6 +51,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -524,19 +525,15 @@ public final class SimulationEngine implements AutoCloseable {
     return directiveSpanId.map(spanInfo::getDirective);
   }
 
-  /** Compute a set of results from the current state of simulation. */
-  // TODO: Move result extraction out of the SimulationEngine.
-  //   The Engine should only need to stream events of interest to a downstream consumer.
-  //   The Engine cannot be cognizant of all downstream needs.
-  // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
-  // TODO: Produce results for all tasks, not just those that have completed.
-  //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
-      final SimulationEngine engine,
-      final Instant startTime,
-      final Duration elapsedTime,
-      final Topic<ActivityDirectiveId> activityTopic,
+  public record SimulationActivityExtract(
+      Instant startTime,
+      Duration duration,
+      Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
+      Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities){}
+
+  private static SpanInfo computeTaskInfo(
       final TemporalEventSource timeline,
+      final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics
   ) {
     // Collect per-span information from the event graph.
@@ -548,37 +545,34 @@ public final class SimulationEngine implements AutoCloseable {
       final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
       p.events().evaluate(trait, trait::atom).accept(spanInfo);
     }
+    return spanInfo;
+  }
 
-    // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+  public static SimulationActivityExtract computeActivitySimulationResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics
+  ){
+    return computeActivitySimulationResults(
+        engine,
+        startTime,
+        elapsedTime,
+        computeTaskInfo(timeline, activityTopic, serializableTopics)
+    );
+  }
 
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
-      final var name = id.id();
-      final var resource = state.resource();
-
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
-      }
-    }
-
+  /**
+   * Computes only activity-related results when resources are not needed
+   */
+  public static SimulationActivityExtract computeActivitySimulationResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final SpanInfo spanInfo
+  ){
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<SpanId, SpanId>();
     final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
@@ -652,6 +646,80 @@ public final class SimulationEngine implements AutoCloseable {
         ));
       }
     });
+    return new SimulationActivityExtract(startTime, elapsedTime, simulatedActivities, unfinishedActivities);
+  }
+
+  public static SimulationResults computeResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics
+  ) {
+    return computeResults(
+        engine,
+        startTime,
+        elapsedTime,
+        activityTopic,
+        timeline,
+        serializableTopics,
+        engine.resources.keySet()
+                        .stream()
+                        .map(ResourceId::id)
+                        .collect(Collectors.toSet()));
+  }
+
+  /** Compute a set of results from the current state of simulation. */
+  // TODO: Move result extraction out of the SimulationEngine.
+  //   The Engine should only need to stream events of interest to a downstream consumer.
+  //   The Engine cannot be cognizant of all downstream needs.
+  // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
+  // TODO: Produce results for all tasks, not just those that have completed.
+  //   Planners need to be aware of failed or unfinished tasks.
+  public static SimulationResults computeResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Set<String> resourceNames
+  ) {
+    // Collect per-task information from the event graph.
+    final var taskInfo = computeTaskInfo(timeline, activityTopic, serializableTopics);
+
+    // Extract profiles for every resource.
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+
+    for (final var entry : engine.resources.entrySet()) {
+      final var id = entry.getKey();
+      final var state = entry.getValue();
+
+      final var name = id.id();
+      final var resource = state.resource();
+      if(!resourceNames.contains(name)) continue;
+      switch (resource.getType()) {
+        case "real" -> realProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
+
+        case "discrete" -> discreteProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
+
+        default ->
+            throw new IllegalArgumentException(
+                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
+      }
+    }
+
+    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, taskInfo);
 
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
@@ -688,8 +756,8 @@ public final class SimulationEngine implements AutoCloseable {
 
     return new SimulationResults(realProfiles,
                                  discreteProfiles,
-                                 simulatedActivities,
-                                 unfinishedActivities,
+                                 activityResults.simulatedActivities,
+                                 activityResults.unfinishedActivities,
                                  startTime,
                                  elapsedTime,
                                  topics,
@@ -904,6 +972,10 @@ public final class SimulationEngine implements AutoCloseable {
     public boolean isComplete() {
       return this.endOffset.isPresent();
     }
+  }
+
+  public boolean spanIsComplete(SpanId spanId) {
+    return this.spans.get(spanId).isComplete();
   }
 
   public SimulationEngine duplicate() {
