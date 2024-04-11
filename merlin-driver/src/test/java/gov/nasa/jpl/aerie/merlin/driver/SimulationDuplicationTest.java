@@ -127,11 +127,12 @@ public class SimulationDuplicationTest {
         () -> false,
         new SimulationDriver.CachedSimulationEngine(
             Duration.ZERO,
-            List.of(),
+            Map.of(),
             engine,
             cells,
             timeline.points(),
-            new Topic<>()
+            new Topic<>(),
+            missionModel
         ),
         SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
