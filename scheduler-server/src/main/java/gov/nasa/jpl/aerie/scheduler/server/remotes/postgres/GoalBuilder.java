@@ -22,15 +22,18 @@ import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Procedure;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.scheduler.solver.ProcedureLoader;
 import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -156,7 +159,15 @@ public class GoalBuilder {
               }
               return builder.build();
           }
-          case null, default -> throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
+
+          case SchedulingDSL.GoalSpecifier.Procedure source -> {
+            try {
+              final var procedure = ProcedureLoader.loadProcedure(Path.of(source.jarName()));
+              return new Procedure(procedure);
+            } catch (ProcedureLoader.ProcedureLoadException e) {
+              throw new RuntimeException(e);
+            }
+          }
       }
   }
 

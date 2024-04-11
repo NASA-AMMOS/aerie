@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
-import gov.nasa.jpl.aerie.procedural.constraints.Constraint;
+import gov.nasa.jpl.aerie.merlin.protocol.scheduling.Procedure;
+//import gov.nasa.jpl.aerie.timeline.ops.SerialConstantOps;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -11,30 +12,31 @@ import java.util.Objects;
 import java.util.jar.JarFile;
 
 public final class ProcedureLoader {
-  public static Constraint loadProcedure(final Path path, final String name, final String version)
+  public static Procedure loadProcedure(final Path path)
   throws ProcedureLoadException
   {
-    final var className = getImplementingClassName(path, name, version);
+    final var className = getImplementingClassName(path);
     final var classLoader = new URLClassLoader(new URL[] {pathToUrl(path)});
 
     try {
+//      var x = SerialConstantOps.class;
       final var pluginClass$ = classLoader.loadClass(className);
-      if (!Constraint.class.isAssignableFrom(pluginClass$)) {
-        throw new ProcedureLoadException(path, name, version);
+      if (!Procedure.class.isAssignableFrom(pluginClass$)) {
+        throw new ProcedureLoadException(path);
       }
 
-      return (Constraint) pluginClass$.getConstructor().newInstance();
+      return (Procedure) pluginClass$.getConstructor().newInstance();
     } catch (final ReflectiveOperationException ex) {
-      throw new ProcedureLoadException(path, name, version, ex);
+      throw new ProcedureLoadException(path, ex);
     }
   }
 
-  private static String getImplementingClassName(final Path jarPath, final String name, final String version)
+  private static String getImplementingClassName(final Path jarPath)
   throws ProcedureLoadException {
     try (final var jarFile = new JarFile(jarPath.toFile())) {
       return Objects.requireNonNull(jarFile.getManifest().getMainAttributes().getValue("Main-Class"));
     } catch (final IOException ex) {
-      throw new ProcedureLoadException(jarPath, name, version, ex);
+      throw new ProcedureLoadException(jarPath, ex);
     }
   }
 
@@ -49,18 +51,16 @@ public final class ProcedureLoader {
   }
 
   public static class ProcedureLoadException extends Exception {
-    private ProcedureLoadException(final Path path, final String name, final String version) {
-      this(path, name, version, null);
+    private ProcedureLoadException(final Path path) {
+      this(path, null);
     }
 
-    private ProcedureLoadException(final Path path, final String name, final String version, final Throwable cause) {
+    private ProcedureLoadException(final Path path, final Throwable cause) {
       super(
           String.format(
-              "No implementation found for `%s` at path `%s` wih name \"%s\" and version \"%s\"",
-              Constraint.class.getSimpleName(),
-              path,
-              name,
-              version),
+              "No implementation found for `%s` at path `%s`",
+              Procedure.class.getSimpleName(),
+              path),
           cause);
     }
   }
