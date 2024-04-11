@@ -40,7 +40,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -889,5 +888,9 @@ public final class SimulationEngine implements AutoCloseable {
 
   public SimulationEngine duplicate() {
     return new SimulationEngine(this);
+  }
+
+  public Optional<Duration> peekNextTime() {
+    return this.scheduledJobs.peekNextTime();
   }
 }

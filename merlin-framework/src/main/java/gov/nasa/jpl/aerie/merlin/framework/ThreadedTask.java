@@ -14,11 +14,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class ThreadedTask<Return> implements Task<Return> {
-  private final boolean CACHE_READS = Boolean.parseBoolean(getEnv("THREADED_TASK_CACHE_READS", "false"));
+  public static boolean CACHE_READS = Boolean.parseBoolean(getEnv("THREADED_TASK_CACHE_READS", "false"));
+  private final boolean cacheReads = CACHE_READS;
 
   private final Scoped<Context> rootContext;
   private final Supplier<Return> task;
@@ -98,6 +100,10 @@ public final class ThreadedTask<Return> implements Task<Return> {
   private void beginAsync() {
     final var handle = new ThreadedTaskHandle();
 
+    if (((ExecutorService) this.executor).isShutdown()) {
+      throw new RuntimeException("Executor is shut down!");
+    }
+
     this.executor.execute(() -> {
       final TaskRequest request;
       try {
@@ -146,7 +152,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final Consumer<Object> readLogger = CACHE_READS ? ThreadedTask.this.readLog::add : $ -> {};
+        final Consumer<Object> readLogger = cacheReads ? ThreadedTask.this.readLog::add : $ -> {};
         final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this, readLogger);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
@@ -260,7 +266,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
 
   @Override
   public Task<Return> duplicate(Executor executor) {
-    if (!CACHE_READS) {
+    if (!cacheReads) {
       throw new RuntimeException("Cannot duplicate threaded task without cached reads");
     }
     final ThreadedTask<Return> threadedTask = new ThreadedTask<>(executor, rootContext, task);
