@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -80,7 +81,10 @@ public final class SimulationDriver {
         {
           final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
           final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-          timeline.add(commit);
+          timeline.add(commit.getLeft());
+          if(commit.getRight().isPresent()) {
+            throw commit.getRight().get();
+          }
         }
 
         // Get all activities as close as possible to absolute time
@@ -88,7 +92,7 @@ public final class SimulationDriver {
         // Using HashMap explicitly because it allows `null` as a key.
         // `null` key means that an activity is not waiting on another activity to finish to know its start time
         HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-        if(!resolved.isEmpty()) {
+        if (!resolved.isEmpty()) {
           resolved.put(
               null,
               StartOffsetReducer.adjustStartOffset(
@@ -129,8 +133,19 @@ public final class SimulationDriver {
 
           // Run the jobs in this batch.
           final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-          timeline.add(commit);
+          timeline.add(commit.getLeft());
+          if (commit.getRight().isPresent()) {
+            throw commit.getRight().get();
+          }
         }
+      } catch (SpanException ex) {
+        // Swallowing the spanException as the internal `spanId` is not user meaningful info.
+        final var topics = missionModel.getTopics();
+        final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, timeline, topics, ex.spanId);
+        if(directiveId.isPresent()) {
+          throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
+        }
+        throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
@@ -140,6 +155,7 @@ public final class SimulationDriver {
     }
   }
 
+  // This method is used as a helper method for executing unit tests
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
     try (final var engine = new SimulationEngine()) {
@@ -161,8 +177,11 @@ public final class SimulationDriver {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+          timeline.add(commit.getLeft());
+          if(commit.getRight().isPresent()) {
+             throw new RuntimeException("Exception thrown while starting daemon tasks", commit.getRight().get());
+          }
       }
 
       // Schedule all activities.
@@ -182,7 +201,10 @@ public final class SimulationDriver {
 
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+        timeline.add(commit.getLeft());
+        if(commit.getRight().isPresent()) {
+          throw new RuntimeException("Exception thrown while simulating tasks", commit.getRight().get());
+        }
       }
     }
   }

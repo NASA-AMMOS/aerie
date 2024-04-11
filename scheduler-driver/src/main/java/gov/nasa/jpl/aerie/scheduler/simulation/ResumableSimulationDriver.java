@@ -15,8 +15,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -145,7 +143,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     this.engine.close();
   }
 
-  private void simulateUntil(Duration endTime) throws SchedulingInterruptedException{
+  private void simulateUntil(Duration endTime) throws SchedulingInterruptedException {
     long before = System.nanoTime();
     logger.info("Simulating until "+endTime);
     assert(endTime.noShorterThan(curTime));
@@ -161,7 +159,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         timeline.add(delta);
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+        timeline.add(commit.getLeft());
+        if (commit.getRight().isPresent()) {
+          throw new RuntimeException(commit.getRight().get());
+        }
 
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
@@ -309,7 +310,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      timeline.add(commit.getLeft());
+      if(commit.getRight().isPresent()) {
+        throw new RuntimeException(commit.getRight().get());
+      }
 
       scheduleActivities(getSuccessorsToSchedule(engine), schedule, resolved, missionModel, engine);
 

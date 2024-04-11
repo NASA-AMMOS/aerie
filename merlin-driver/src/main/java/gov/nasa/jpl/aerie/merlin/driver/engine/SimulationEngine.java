@@ -26,7 +26,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -137,20 +139,28 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public EventGraph<Event> performJobs(
+  public Pair<EventGraph<Event>, Optional<Throwable>> performJobs(
       final Collection<JobId> jobs,
       final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime
-  ) {
+  ) throws SpanException {
     var tip = EventGraph.<Event>empty();
+    Mutable<Optional<Throwable>> exception = new MutableObject<>(Optional.empty());
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
-        this.performJob(job, frame, currentTime, maximumTime);
+        try {
+          this.performJob(job, frame, currentTime, maximumTime);
+        } catch (Throwable ex) {
+          exception.setValue(Optional.of(ex));
+        }
       }));
-    }
 
-    return tip;
+      if (exception.getValue().isPresent()) {
+        return Pair.of(tip, exception.getValue());
+      }
+    }
+    return Pair.of(tip, Optional.empty());
   }
 
   /** Performs a single job. */
@@ -159,7 +169,7 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime,
       final Duration maximumTime
-  ) {
+  ) throws SpanException {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime);
     } else if (job instanceof JobId.SignalJobId j) {
@@ -174,7 +184,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Perform the next step of a modeled task. */
-  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) {
+  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) throws SpanException {
     // The handler for the next status of the task is responsible
     //   for putting an updated state back into the task set.
     var state = this.tasks.remove(task);
@@ -188,11 +198,15 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Output> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime
-  ) {
+  ) throws SpanException {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame);
-    final var status = progress.state().step(scheduler);
-
+    final TaskStatus<Output> status;
+    try {
+      status = progress.state().step(scheduler);
+    } catch (Throwable ex) {
+      throw new SpanException(scheduler.span, ex);
+    }
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
@@ -401,6 +415,33 @@ public final class SimulationEngine implements AutoCloseable {
         });
       }
     }
+  }
+
+  /**
+   * Get an Activity Directive Id from a SpanId, if the span is a descendent of a directive.
+   */
+  public static Optional<ActivityDirectiveId> getDirectiveIdFromSpan(
+      final SimulationEngine engine,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final SpanId spanId
+  ) {
+    // Collect per-span information from the event graph.
+    final var spanInfo = new SpanInfo();
+    for (final var point : timeline) {
+      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+
+      final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
+      p.events().evaluate(trait, trait::atom).accept(spanInfo);
+    }
+
+    // Identify the nearest ancestor directive
+    Optional<SpanId> directiveSpanId = Optional.of(spanId);
+    while (directiveSpanId.isPresent() && !spanInfo.isDirective(directiveSpanId.get())) {
+      directiveSpanId = engine.getSpan(directiveSpanId.get()).parent();
+    }
+    return directiveSpanId.map(spanInfo::getDirective);
   }
 
   /** Compute a set of results from the current state of simulation. */
