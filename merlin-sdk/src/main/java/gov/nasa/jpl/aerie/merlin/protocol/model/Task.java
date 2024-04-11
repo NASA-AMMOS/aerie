@@ -41,7 +41,9 @@ public interface Task<Output> {
    * @param executor the executor to use for the new Task
    * @return a copy of this Task that can be stepped independently from this Task
    */
-  Task<Output> duplicate(Executor executor);
+  default Task<Output> duplicate(Executor executor) {
+    throw new UnsupportedOperationException("Tasks must implement duplicate in order to be used in a simulation checkpoint");
+  }
 
   default <Output> Task<Output> andThen(Task<Output> task2) {
     return new Task<>() {
