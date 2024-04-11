@@ -427,7 +427,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
       updateSimulatedActivityParentsAction.apply(
           datasetId,
-          simulatedActivityRecords,
+          allActivityRecords,
           simIdToPgId);
     }
   }
