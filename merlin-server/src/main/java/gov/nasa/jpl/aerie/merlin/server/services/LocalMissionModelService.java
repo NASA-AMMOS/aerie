@@ -7,6 +7,10 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
@@ -277,6 +281,9 @@ public final class LocalMissionModelService implements MissionModelService {
         .getConfigurationType()
         .getEffectiveArguments(arguments);
   }
+
+  static Map<String, MissionModel<?>> missionModelCache = new HashMap<>();
+  static Map<String, List<SimulationDriver.CachedSimulationEngine>> cachedEngines = new HashMap<>();
 
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.

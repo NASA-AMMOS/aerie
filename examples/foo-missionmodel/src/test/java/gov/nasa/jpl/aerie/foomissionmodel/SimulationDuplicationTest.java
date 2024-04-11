@@ -8,9 +8,8 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -43,6 +42,7 @@ import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SimulationDuplicationTest {
@@ -99,10 +99,9 @@ public class SimulationDuplicationTest {
 
   @Test
   void testTrivialDuplicate() {
-    final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
     final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
         missionModel,
-        SimulationDriver.CachedSimulationEngine.empty(), List.of(Duration.of(5, MINUTES)), Map.of()
+        SimulationDriver.CachedSimulationEngine.empty(missionModel), List.of(Duration.of(5, MINUTES)), Map.of()
     );
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
@@ -179,6 +178,162 @@ public class SimulationDuplicationTest {
     assertResultsEqual(expected, results2.results());
   }
 
+  @Test
+  void testFooNonEmptyPlanMultipleResumes() {
+    final MissionModel<Mission> missionModel = makeMissionModel(
+        new MissionModelBuilder(),
+        Instant.EPOCH,
+        new Configuration());
+    final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
+        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+        missionModel,
+        List.of(Duration.of(5, MINUTES)),
+        schedule
+    );
+    final SimulationResults expected = SimulationDriver.simulate(
+        missionModel,
+        schedule,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        () -> false);
+    assertResultsEqual(expected, results.results());
+
+    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results2.results());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results3.results());
+  }
+
+  @Test
+  void testFooNonEmptyPlanMultipleCheckpointsMultipleResumes() {
+    final MissionModel<Mission> missionModel = makeMissionModel(
+        new MissionModelBuilder(),
+        Instant.EPOCH,
+        new Configuration());
+    final Map<ActivityDirectiveId, ActivityDirective> schedule = Map.ofEntries(
+        activity(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
+        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+        missionModel,
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule
+    );
+    final SimulationResults expected = SimulationDriver.simulate(
+        missionModel,
+        schedule,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        () -> false);
+    assertResultsEqual(expected, results.results());
+
+    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results2.results());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(1),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule
+    );
+
+    assertResultsEqual(expected, results3.results());
+  }
+
+  @Test
+  void testFooNonEmptyPlanMultipleCheckpointsMultipleResumesWithEdits() {
+    final MissionModel<Mission> missionModel = makeMissionModel(
+        new MissionModelBuilder(),
+        Instant.EPOCH,
+        new Configuration());
+    final Pair<ActivityDirectiveId, ActivityDirective> activity1 = activity(
+        1,
+        MINUTE,
+        "foo",
+        Map.of("z", SerializedValue.of(123)));
+    final Map<ActivityDirectiveId, ActivityDirective> schedule1 = Map.ofEntries(
+        activity1,
+        activity(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final Map<ActivityDirectiveId, ActivityDirective> schedule2 = Map.ofEntries(
+        activity1,
+        activity(390, SECONDS, "foo", Map.of("z", SerializedValue.of(999)))
+    );
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(
+        missionModel,
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule1
+    );
+    final SimulationResults expected1 = SimulationDriver.simulate(
+        missionModel,
+        schedule1,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        () -> false);
+
+    final SimulationResults expected2 = SimulationDriver.simulate(
+        missionModel,
+        schedule2,
+        Instant.EPOCH,
+        Duration.HOUR,
+        Instant.EPOCH,
+        Duration.HOUR,
+        () -> false);
+
+    assertResultsEqual(expected1, results.results());
+
+    assertEquals(Duration.of(5, MINUTES), results.checkpoints().get(0).startOffset());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results2 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(0),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule2
+    );
+    assertResultsEqual(expected2, results2.results());
+
+    final SimulationDriver.SimulationResultsWithCheckpoints results3 = simulateWithCheckpoints(
+        missionModel,
+        results.checkpoints().get(1),
+        List.of(Duration.of(5, MINUTES), Duration.of(6, MINUTES)),
+        schedule2
+    );
+
+    assertResultsEqual(expected2, results3.results());
+  }
+
   private static long nextActivityDirectiveId = 0L;
 
   private static Pair<ActivityDirectiveId, ActivityDirective> activity(final long quantity, final Duration unit, final String type) {
@@ -193,9 +348,6 @@ public class SimulationDuplicationTest {
   }
 
   private static Pair<ActivityDirectiveId, ActivityDirective> activity(final Duration startOffset, final String type, final Map<String, SerializedValue> args) {
-    if (nextActivityDirectiveId > 1) {
-      System.out.println();
-    }
     return Pair.of(new ActivityDirectiveId(nextActivityDirectiveId++), new ActivityDirective(startOffset, type, args, null, true));
   }
 
@@ -252,8 +404,8 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         $ -> {},
         () -> false,
-        desiredCheckpoints,
-        cachedSimulationEngine);
+        cachedSimulationEngine,
+        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
   static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
@@ -261,37 +413,6 @@ public class SimulationDuplicationTest {
       final List<Duration> desiredCheckpoints,
       final Map<ActivityDirectiveId, ActivityDirective> schedule
   ) {
-    final SimulationEngine engine = new SimulationEngine();
-    final TemporalEventSource timeline = new TemporalEventSource();
-    final LiveCells cells = new LiveCells(timeline, missionModel.getInitialCells());
-
-    // Begin tracking all resources.
-    for (final var entry : missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-
-      engine.trackResource(name, resource, Duration.ZERO);
-    }
-
-    {
-      // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-      {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
-        timeline.add(commit);
-      }
-    }
-
-    final var cachedSimulationEngine = new SimulationDriver.CachedSimulationEngine(
-        Duration.ZERO,
-        List.of(),
-        engine,
-        cells,
-        timeline.points(),
-        new Topic<>()
-    );
-
     return SimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,
@@ -301,8 +422,8 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         $ -> {},
         () -> false,
-        desiredCheckpoints,
-        cachedSimulationEngine);
+        SimulationDriver.CachedSimulationEngine.empty(missionModel),
+        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
@@ -428,7 +549,7 @@ public class SimulationDuplicationTest {
 
   static MissionModel<?> missionModel = new MissionModel<>(
       new Object(),
-      new LiveCells(null),
+      new LiveCells(new CausalEventSource()),
       Map.of(),
       List.of(
           new MissionModel.SerializableTopic<>(

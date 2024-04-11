@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class ThreadedTask<Return> implements Task<Return> {
-  public static boolean CACHE_READS = Boolean.parseBoolean(getEnv("THREADED_TASK_CACHE_READS", "false"));
+  public static boolean CACHE_READS = Boolean.parseBoolean(getEnv("THREADED_TASK_CACHE_READS", "true"));
   private final boolean cacheReads = CACHE_READS;
 
   private final Scoped<Context> rootContext;

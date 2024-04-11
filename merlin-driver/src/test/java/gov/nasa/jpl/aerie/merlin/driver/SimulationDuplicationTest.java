@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
@@ -20,6 +21,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Triple;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -74,7 +76,8 @@ public class SimulationDuplicationTest {
 
   @Test
   void testDuplicate() {
-    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(), List.of(Duration.of(5, MINUTES)));
+    final SimulationDriver.SimulationResultsWithCheckpoints results = simulateWithCheckpoints(SimulationDriver.CachedSimulationEngine.empty(
+        missionModel), List.of(Duration.of(5, MINUTES)));
     final SimulationResults expected = SimulationDriver.simulate(
         missionModel,
         Map.of(),
@@ -122,7 +125,6 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         $ -> {},
         () -> false,
-        desiredCheckpoints,
         new SimulationDriver.CachedSimulationEngine(
             Duration.ZERO,
             List.of(),
@@ -130,7 +132,8 @@ public class SimulationDuplicationTest {
             cells,
             timeline.points(),
             new Topic<>()
-        ));
+        ),
+        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
   static SimulationDriver.SimulationResultsWithCheckpoints simulateWithCheckpoints(
@@ -165,8 +168,8 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         $ -> {},
         () -> false,
-        desiredCheckpoints,
-        cachedEngine);
+        cachedEngine,
+        SimulationDriver.desiredCheckpoints(desiredCheckpoints));
   }
 
   private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
@@ -278,7 +281,7 @@ public class SimulationDuplicationTest {
 
   static MissionModel<?> missionModel = new MissionModel<>(
       new Object(),
-      new LiveCells(null),
+      new LiveCells(new CausalEventSource()),
       Map.of(),
       List.of(
           new MissionModel.SerializableTopic<>(
@@ -339,5 +342,10 @@ public class SimulationDuplicationTest {
         return this;
       }
     };
+  }
+
+  @AfterEach
+  void afterEach() {
+    assertEquals(SimulationDriver.cachedEngines.size(), SimulationEngine.getNumActiveSimulationEngines());
   }
 }
