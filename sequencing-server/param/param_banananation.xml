@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<param-def>
+  <header mission_name="Banana Nation" version="1.0.0.0" schema_version="1.0">
+    <spacecraft_ids>
+      <spacecraft_id value="62"/>
+    </spacecraft_ids>
+  </header>
+  <enum_definitions>
+    <enum_table name="boolean">
+      <values>
+        <enum symbol="FALSE" numeric="0"/>
+        <enum symbol="TRUE" numeric="1"/>
+      </values>
+    </enum_table>
+  </enum_definitions>
+  <parameter_groups>
+    <parameter_group param_group_name="SOME_PARAMS" group_desc="Arbitray collection">
+      <group_params>
+        <group_param>MESSAGE_OF_DAY</group_param>
+        <group_param>PARAM_ENUM_3</group_param>
+      </group_params>
+    </parameter_group>
+    <parameter_group param_group_name="ANOTHER_COLLECTION_PARAMS" group_desc="Arbitray collection">
+      <group_params>
+        <group_param>PARAM_INTEGER_1</group_param>
+      </group_params>
+    </parameter_group>
+  </parameter_groups>
+  <param param_id="0x12345678" param_name="MESSAGE_OF_DAY" parameter_version="1" location="NPM" managed_by="Ground">
+    <sysdesc>Welcome message</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>mod_str</module>
+      <ops_category>NONE</ops_category>
+    </categories>
+    <parameter_type>
+      <string_param max_bit_length="1016"/>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>Hello World</default_value>
+    <rationale>Wake up message</rationale>
+  </param>
+  <param param_id="0x01010101" param_name="PARAM_UNSIGNED_1" parameter_version="100" units="counts" location="NPM" managed_by="Ground">
+    <sysdesc>words and spaces</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>mod_name</module>
+      <ops_category>GDS</ops_category>
+    </categories>
+    <parameter_type>
+      <unsigned_int_param bit_length="16">
+        <range_of_values>
+          <include min="1" max="100"/>
+        </range_of_values>
+      </unsigned_int_param>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>1</default_value>
+    <rationale>Unknown</rationale>
+  </param>
+  <param param_id="0x02020202" param_name="PARAM_INTEGER_1" parameter_version="2" units="apples" location="NPM" managed_by="Ground">
+    <sysdesc>words and spaces</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>mod_name</module>
+      <ops_category>GDS</ops_category>
+    </categories>
+    <parameter_type>
+      <unsigned_int_param bit_length="16">
+        <range_of_values>
+          <include min="-100" max="100"/>
+        </range_of_values>
+      </unsigned_int_param>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>1</default_value>
+    <rationale>Unknown</rationale>
+  </param>
+  <param param_id="0xFEEDFEED" param_name="PARAM_ENUM_1" parameter_version="4" location="NPM" managed_by="Ground">
+    <sysdesc>a description</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>mod_name</module>
+      <ops_category>GDS</ops_category>
+    </categories>
+    <parameter_type>
+      <enum_param bit_length="8" enum_name="boolean"/>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>TRUE</default_value>
+    <rationale>Good reasons</rationale>
+  </param>
+  <param param_id="0xDEADBEEF" param_name="PARAM_ENUM_3" parameter_version="1" location="NPM" managed_by="Ground">
+    <sysdesc>a description</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>mod_name</module>
+      <ops_category>GDS</ops_category>
+    </categories>
+    <parameter_type>
+      <enum_param bit_length="8" enum_name="boolean"/>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>TRUE</default_value>
+    <rationale>Good reasons</rationale>
+  </param>
+  <param param_id="0x12344321" param_name="MIN_SUN_ANGLE" parameter_version="1" units="radians" location="NPM" managed_by="Ground">
+    <sysdesc>Keep out angle from sun for instrument health</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>POINTING</module>
+      <ops_category>SUN</ops_category>
+    </categories>
+    <parameter_type>
+      <float_param bit_length="64">
+        <range_of_values>
+          <include min="0" max="3.14"/>
+        </range_of_values>
+      </float_param>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>0.3</default_value>
+    <rationale>Damage to instruments</rationale>
+  </param>
+</param-def>
