@@ -37,7 +37,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -203,7 +202,20 @@ public final class SimulationEngine implements AutoCloseable {
     return batch;
   }
 
-  public record ResourceUpdate() {}
+  public record ResourceUpdate(Duration currentTime, Map<String, Object> updates) {
+    static ResourceUpdate init(Duration currentTime) {
+      return new ResourceUpdate(currentTime, new LinkedHashMap<>());
+    }
+    public <Dynamics> void log(String id, Dynamics dynamics) {
+      this.updates.put(id, dynamics);
+    }
+    public boolean isEmpty() {
+      return updates.isEmpty();
+    }
+    public int size() {
+      return updates.size();
+    }
+  }
 
   public record StepResult(
       List<EventGraph<Event>> commits,
@@ -221,20 +233,21 @@ public final class SimulationEngine implements AutoCloseable {
     if (this.closed) throw new IllegalStateException("Cannot perform jobs on closed simulation engine");
     var tip = EventGraph.<Event>empty();
     Mutable<Optional<Throwable>> exception = new MutableObject<>(Optional.empty());
+    final var resourceUpdate = ResourceUpdate.init(currentTime);
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
         try {
-          this.performJob(job, frame, currentTime, maximumTime);
+          this.performJob(job, frame, currentTime, maximumTime, resourceUpdate);
         } catch (Throwable ex) {
           exception.setValue(Optional.of(ex));
         }
       }));
 
       if (exception.getValue().isPresent()) {
-        return new StepResult(List.of(tip), new ResourceUpdate(), exception.getValue());
+        return new StepResult(List.of(tip), resourceUpdate, exception.getValue());
       }
     }
-    return new StepResult(List.of(tip), new ResourceUpdate(), Optional.empty());
+    return new StepResult(List.of(tip), resourceUpdate, Optional.empty());
   }
 
   /** Performs a single job. */
@@ -242,7 +255,8 @@ public final class SimulationEngine implements AutoCloseable {
       final JobId job,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final Duration maximumTime
+      final Duration maximumTime,
+      final ResourceUpdate resourceUpdate
   ) throws SpanException {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime);
@@ -251,7 +265,7 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (job instanceof JobId.ConditionJobId j) {
       this.updateCondition(j.id(), frame, currentTime, maximumTime);
     } else if (job instanceof JobId.ResourceJobId j) {
-      this.updateResource(j.id(), frame, currentTime);
+      this.updateResource(j.id(), frame, currentTime, resourceUpdate);
     } else {
       throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
     }
@@ -386,11 +400,12 @@ public final class SimulationEngine implements AutoCloseable {
   public void updateResource(
       final ResourceId resource,
       final TaskFrame<JobId> frame,
-      final Duration currentTime
-  ) {
+      final Duration currentTime,
+      final ResourceUpdate resourceUpdate) {
     if (this.closed) throw new IllegalStateException("Cannot update resource on closed simulation engine");
     final var querier = new EngineQuerier(frame);
-    this.resources.get(resource).append(currentTime, querier);
+    final var dynamics = this.resources.get(resource).getDynamics(querier);
+    resourceUpdate.log(resource.id(), dynamics);
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
 
