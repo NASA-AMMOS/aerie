@@ -158,10 +158,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         curTime = batch.offsetFromStart();
         timeline.add(delta);
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-        timeline.add(commit.getLeft());
-        if (commit.getRight().isPresent()) {
-          throw new RuntimeException(commit.getRight().get());
+        final var result = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
+        for (final var commit : result.commits()) {
+          timeline.add(commit);
+        }
+        if (result.error().isPresent()) {
+          throw new RuntimeException(result.error().get());
         }
 
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
@@ -309,10 +311,12 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       //   even if they occur at the same real time.
 
       // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit.getLeft());
-      if(commit.getRight().isPresent()) {
-        throw new RuntimeException(commit.getRight().get());
+      final var result = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
+      for (final var commit : result.commits()) {
+        timeline.add(commit);
+      }
+      if (result.error().isPresent()) {
+        throw new RuntimeException(result.error().get());
       }
 
       scheduleActivities(getSuccessorsToSchedule(engine), schedule, resolved, missionModel, engine);

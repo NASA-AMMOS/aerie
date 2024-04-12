@@ -138,8 +138,16 @@ public final class SimulationEngine implements AutoCloseable {
     return batch;
   }
 
+  public record ResourceUpdate() {}
+
+  public record StepResult(
+      List<EventGraph<Event>> commits,
+      ResourceUpdate resourceUpdate,
+      Optional<Throwable> error
+  ) {}
+
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public Pair<EventGraph<Event>, Optional<Throwable>> performJobs(
+  public StepResult performJobs(
       final Collection<JobId> jobs,
       final LiveCells context,
       final Duration currentTime,
@@ -157,10 +165,10 @@ public final class SimulationEngine implements AutoCloseable {
       }));
 
       if (exception.getValue().isPresent()) {
-        return Pair.of(tip, exception.getValue());
+        return new StepResult(List.of(tip), new ResourceUpdate(), exception.getValue());
       }
     }
-    return Pair.of(tip, Optional.empty());
+    return new StepResult(List.of(tip), new ResourceUpdate(), Optional.empty());
   }
 
   /** Performs a single job. */

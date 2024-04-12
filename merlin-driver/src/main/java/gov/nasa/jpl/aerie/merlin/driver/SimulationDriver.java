@@ -80,10 +80,12 @@ public final class SimulationDriver {
         engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
         {
           final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-          timeline.add(commit.getLeft());
-          if(commit.getRight().isPresent()) {
-            throw commit.getRight().get();
+          final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+          for (final var commit : result.commits()) {
+            timeline.add(commit);
+          }
+          if (result.error().isPresent()) {
+            throw result.error().get();
           }
         }
 
@@ -132,10 +134,12 @@ public final class SimulationDriver {
           }
 
           // Run the jobs in this batch.
-          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-          timeline.add(commit.getLeft());
-          if (commit.getRight().isPresent()) {
-            throw commit.getRight().get();
+          final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
+          for (final var commit : result.commits()) {
+            timeline.add(commit);
+          }
+          if (result.error().isPresent()) {
+            throw result.error().get();
           }
         }
       } catch (SpanException ex) {
@@ -177,11 +181,13 @@ public final class SimulationDriver {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-          timeline.add(commit.getLeft());
-          if(commit.getRight().isPresent()) {
-             throw new RuntimeException("Exception thrown while starting daemon tasks", commit.getRight().get());
-          }
+        final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+        for (final var commit : result.commits()) {
+          timeline.add(commit);
+        }
+        if (result.error().isPresent()) {
+          throw new RuntimeException("Exception thrown while starting daemon tasks", result.error().get());
+        }
       }
 
       // Schedule all activities.
@@ -200,10 +206,12 @@ public final class SimulationDriver {
         //   even if they occur at the same real time.
 
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit.getLeft());
-        if(commit.getRight().isPresent()) {
-          throw new RuntimeException("Exception thrown while simulating tasks", commit.getRight().get());
+        final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+        for (final var commit : result.commits()) {
+          timeline.add(commit);
+        }
+        if (result.error().isPresent()) {
+          throw new RuntimeException("Exception thrown while simulating tasks", result.error().get());
         }
       }
     }
