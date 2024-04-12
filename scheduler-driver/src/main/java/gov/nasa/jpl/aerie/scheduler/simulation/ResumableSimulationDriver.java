@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private SimulationEngine engine = new SimulationEngine();
   private LiveCells cells;
   private TemporalEventSource timeline = new TemporalEventSource();
+  private List<SimulationEngine.ResourceUpdate> resourceUpdates = new ArrayList<>();
   private final MissionModel<Model> missionModel;
   private final Duration planDuration;
   private JobSchedule.Batch<SimulationEngine.JobId> batch;
@@ -162,6 +164,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         for (final var commit : result.commits()) {
           timeline.add(commit);
         }
+        if (!result.resourceUpdate().isEmpty()) this.resourceUpdates.add(result.resourceUpdate());
         if (result.error().isPresent()) {
           throw new RuntimeException(result.error().get());
         }
@@ -259,7 +262,8 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
           endTime,
           activityTopic,
           timeline,
-          missionModel.getTopics());
+          missionModel.getTopics(),
+          resourceUpdates);
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
@@ -315,6 +319,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       for (final var commit : result.commits()) {
         timeline.add(commit);
       }
+      if (!result.resourceUpdate().isEmpty()) resourceUpdates.add(result.resourceUpdate());
       if (result.error().isPresent()) {
         throw new RuntimeException(result.error().get());
       }

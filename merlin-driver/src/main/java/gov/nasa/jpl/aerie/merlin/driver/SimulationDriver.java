@@ -15,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,10 @@ public final class SimulationDriver {
       // Specify a topic on which tasks can log the activity they're associated with.
       final var activityTopic = new Topic<ActivityDirectiveId>();
 
+      final var resourceBuffer = new ArrayList<SimulationEngine.ResourceUpdate>();
+      var resourceBufferSize = 0;
+      final var resourceBufferThreshold = 1024;
+
       try {
         // Start daemon task(s) immediately, before anything else happens.
         engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
@@ -83,6 +88,10 @@ public final class SimulationDriver {
           final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
           for (final var commit : result.commits()) {
             timeline.add(commit);
+          }
+          if (!result.resourceUpdate().isEmpty()) {
+            resourceBuffer.add(result.resourceUpdate());
+            resourceBufferSize += result.resourceUpdate().size();
           }
           if (result.error().isPresent()) {
             throw result.error().get();
@@ -135,11 +144,19 @@ public final class SimulationDriver {
 
           // Run the jobs in this batch.
           final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
+          if (!result.resourceUpdate().isEmpty()) {
+            resourceBuffer.add(result.resourceUpdate());
+            resourceBufferSize += result.resourceUpdate().size();
+          }
           for (final var commit : result.commits()) {
             timeline.add(commit);
           }
           if (result.error().isPresent()) {
             throw result.error().get();
+          }
+
+          if (resourceBufferSize > resourceBufferThreshold) {
+            // TODO stream to database
           }
         }
       } catch (SpanException ex) {
@@ -155,7 +172,7 @@ public final class SimulationDriver {
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
+      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics, resourceBuffer);
     }
   }
 

@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  private final Map<ResourceId, Resource<?>> resources = new HashMap<>();
 
   /** The set of all spans of work contributed to by modeled tasks. */
   private final Map<SpanId, Span> spans = new HashMap<>();
@@ -100,7 +101,7 @@ public final class SimulationEngine implements AutoCloseable {
   void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
     final var id = new ResourceId(name);
 
-    this.resources.put(id, ProfilingState.create(resource));
+    this.resources.put(id, resource);
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
   }
 
@@ -138,7 +139,20 @@ public final class SimulationEngine implements AutoCloseable {
     return batch;
   }
 
-  public record ResourceUpdate() {}
+  public record ResourceUpdate(Duration currentTime, Map<String, Object> updates) {
+    static ResourceUpdate init(Duration currentTime) {
+      return new ResourceUpdate(currentTime, new LinkedHashMap<>());
+    }
+    public <Dynamics> void log(String id, Dynamics dynamics) {
+      this.updates.put(id, dynamics);
+    }
+    public boolean isEmpty() {
+      return updates.isEmpty();
+    }
+    public int size() {
+      return updates.size();
+    }
+  }
 
   public record StepResult(
       List<EventGraph<Event>> commits,
@@ -155,20 +169,21 @@ public final class SimulationEngine implements AutoCloseable {
   ) throws SpanException {
     var tip = EventGraph.<Event>empty();
     Mutable<Optional<Throwable>> exception = new MutableObject<>(Optional.empty());
+    final var resourceUpdate = ResourceUpdate.init(currentTime);
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
         try {
-          this.performJob(job, frame, currentTime, maximumTime);
+          this.performJob(job, frame, currentTime, maximumTime, resourceUpdate);
         } catch (Throwable ex) {
           exception.setValue(Optional.of(ex));
         }
       }));
 
       if (exception.getValue().isPresent()) {
-        return new StepResult(List.of(tip), new ResourceUpdate(), exception.getValue());
+        return new StepResult(List.of(tip), resourceUpdate, exception.getValue());
       }
     }
-    return new StepResult(List.of(tip), new ResourceUpdate(), Optional.empty());
+    return new StepResult(List.of(tip), resourceUpdate, Optional.empty());
   }
 
   /** Performs a single job. */
@@ -176,7 +191,8 @@ public final class SimulationEngine implements AutoCloseable {
       final JobId job,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final Duration maximumTime
+      final Duration maximumTime,
+      final ResourceUpdate resourceUpdate
   ) throws SpanException {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime);
@@ -185,7 +201,7 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (job instanceof JobId.ConditionJobId j) {
       this.updateCondition(j.id(), frame, currentTime, maximumTime);
     } else if (job instanceof JobId.ResourceJobId j) {
-      this.updateResource(j.id(), frame, currentTime);
+      this.updateResource(j.id(), frame, currentTime, resourceUpdate);
     } else {
       throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
     }
@@ -317,10 +333,11 @@ public final class SimulationEngine implements AutoCloseable {
   public void updateResource(
       final ResourceId resource,
       final TaskFrame<JobId> frame,
-      final Duration currentTime
-  ) {
+      final Duration currentTime,
+      final ResourceUpdate resourceUpdate) {
     final var querier = new EngineQuerier(frame);
-    this.resources.get(resource).append(currentTime, querier);
+    final var dynamics = this.resources.get(resource).getDynamics(querier);
+    resourceUpdate.log(resource.id(), dynamics);
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
 
@@ -465,8 +482,21 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
       final TemporalEventSource timeline,
-      final Iterable<SerializableTopic<?>> serializableTopics
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final List<ResourceUpdate> resourceUpdates
   ) {
+    final Map<ResourceId, ProfilingState<?>> resourceProfiles = new LinkedHashMap<>();
+    for (final var entry : engine.resources.entrySet()) {
+      resourceProfiles.put(entry.getKey(), ProfilingState.create(entry.getValue()));
+    }
+
+    for (final var update : resourceUpdates) {
+      for (final var entry : update.updates().entrySet()) {
+        ProfilingState<?> profilingState = resourceProfiles.get(new ResourceId(entry.getKey()));
+        append(update.currentTime, profilingState, entry.getValue());
+      }
+    }
+
     // Collect per-span information from the event graph.
     final var spanInfo = new SpanInfo();
 
@@ -481,7 +511,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
 
-    for (final var entry : engine.resources.entrySet()) {
+    for (final var entry : resourceProfiles.entrySet()) {
       final var id = entry.getKey();
       final var state = entry.getValue();
 
@@ -622,6 +652,14 @@ public final class SimulationEngine implements AutoCloseable {
                                  elapsedTime,
                                  topics,
                                  serializedTimeline);
+  }
+
+  private static <V1, V2> void append(
+      final Duration currentTime,
+      ProfilingState<V2> profilingState,
+      V1 value
+  ) {
+    profilingState.profile().append(currentTime, (V2) value);
   }
 
   public Span getSpan(SpanId spanId) {
