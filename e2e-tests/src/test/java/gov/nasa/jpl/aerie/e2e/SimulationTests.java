@@ -564,7 +564,7 @@ public class SimulationTests {
       // The trace starts at the original exception and doesn't include the intermediary SimulationException
       final var expectedStart = """
           java.lang.RuntimeException: Daemon task exception raised.
-          \tat gov.nasa.jpl.aerie.foomissionmodel.Mission.lambda$new$1(Mission.java""";
+          \tat gov.nasa.jpl.aerie.foomissionmodel.Mission.lambda$new$0(Mission.java""";
       assertTrue(reason.trace().startsWith(expectedStart));
     }
 
