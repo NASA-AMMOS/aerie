@@ -8,6 +8,8 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulateOptions;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsWithoutProfiles;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
@@ -303,14 +305,22 @@ public final class LocalMissionModelService implements MissionModelService {
         message.missionModelId(),
         message.simulationStartTime(),
         SerializedValue.of(config));
+
+    List<SimulationEngine.ResourceUpdate> resourceUpdates = new ArrayList<>();
+
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return SimulationDriver.simulate(
+    final SimulationResultsWithoutProfiles partialResults = SimulationDriver.simulate(
         SimulateOptions.of(missionModel, message.planStartTime(), message.planDuration())
-            .simulationStartTime(message.simulationStartTime())
-            .simulationDuration(message.simulationDuration())
-            .schedule(message.activityDirectives())
-            .simulationCanceled(canceledListener)
-            .simulationExtentConsumer(simulationExtentConsumer));
+                       .simulationStartTime(message.simulationStartTime())
+                       .simulationDuration(message.simulationDuration())
+                       .schedule(message.activityDirectives())
+                       .simulationCanceled(canceledListener)
+                       .simulationExtentConsumer(simulationExtentConsumer),
+        resourceUpdates::add);
+
+    final var serializedProfiles = SimulationEngine.serializeProfiles(missionModel, resourceUpdates);
+
+    return SimulationResults.of(partialResults, serializedProfiles);
   }
 
   @Override

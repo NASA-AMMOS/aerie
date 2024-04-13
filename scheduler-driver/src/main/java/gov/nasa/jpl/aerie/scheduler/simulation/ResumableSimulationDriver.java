@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsWithoutProfiles;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
@@ -256,14 +257,14 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     final var before = System.nanoTime();
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
       if(canceledListener.get()) throw new SchedulingInterruptedException("computing simulation results");
-      lastSimResults = SimulationEngine.computeResults(
+      final var partialResults = SimulationEngine.computeResults(
           engine,
           startTimestamp,
           endTime,
           activityTopic,
           timeline,
-          missionModel.getTopics(),
-          resourceUpdates);
+          missionModel.getTopics());
+      lastSimResults = SimulationResults.of(partialResults, SimulationEngine.serializeProfiles(missionModel, resourceUpdates));
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }

@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsWithoutProfiles;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
@@ -476,27 +478,14 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
+  public static SimulationResultsWithoutProfiles computeResults(
       final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
       final TemporalEventSource timeline,
-      final Iterable<SerializableTopic<?>> serializableTopics,
-      final List<ResourceUpdate> resourceUpdates
+      final Iterable<SerializableTopic<?>> serializableTopics
   ) {
-    final Map<ResourceId, ProfilingState<?>> resourceProfiles = new LinkedHashMap<>();
-    for (final var entry : engine.resources.entrySet()) {
-      resourceProfiles.put(entry.getKey(), ProfilingState.create(entry.getValue()));
-    }
-
-    for (final var update : resourceUpdates) {
-      for (final var entry : update.updates().entrySet()) {
-        ProfilingState<?> profilingState = resourceProfiles.get(new ResourceId(entry.getKey()));
-        append(update.currentTime, profilingState, entry.getValue());
-      }
-    }
-
     // Collect per-span information from the event graph.
     final var spanInfo = new SpanInfo();
 
@@ -505,36 +494,6 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
       p.events().evaluate(trait, trait::atom).accept(spanInfo);
-    }
-
-    // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
-
-    for (final var entry : resourceProfiles.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
-      final var name = id.id();
-      final var resource = state.resource();
-
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
-      }
     }
 
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
@@ -644,15 +603,63 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    return new SimulationResults(realProfiles,
-                                 discreteProfiles,
-                                 simulatedActivities,
-                                 unfinishedActivities,
-                                 startTime,
-                                 elapsedTime,
-                                 topics,
-                                 serializedTimeline);
+    return new SimulationResultsWithoutProfiles(
+        startTime,
+        elapsedTime,
+        simulatedActivities,
+        unfinishedActivities,
+        topics,
+        serializedTimeline);
   }
+
+  public static SerializedProfiles serializeProfiles(
+      MissionModel<?> missionModel,
+      List<ResourceUpdate> resourceUpdates)
+  {
+    final Map<String, ProfilingState<?>> resourceProfiles = new LinkedHashMap<>();
+    for (final var entry : missionModel.getResources().entrySet()) {
+      resourceProfiles.put(entry.getKey(), ProfilingState.create(entry.getValue()));
+    }
+
+    for (final var update : resourceUpdates) {
+      for (final var entry : update.updates().entrySet()) {
+        ProfilingState<?> profilingState = resourceProfiles.get(entry.getKey());
+        append(update.currentTime, profilingState, entry.getValue());
+      }
+    }
+
+    // Extract profiles for every resource.
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegmentFromStart<RealDynamics>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegmentFromStart<SerializedValue>>>>();
+
+    for (final var entry : resourceProfiles.entrySet()) {
+      final var name = entry.getKey();
+      final var state = entry.getValue();
+
+      final var resource = state.resource();
+
+      switch (resource.getType()) {
+        case "real" -> realProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(state, SimulationEngine::extractRealDynamics)));
+
+        case "discrete" -> discreteProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(state, SimulationEngine::extractDiscreteDynamics)));
+
+        default ->
+            throw new IllegalArgumentException(
+                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
+      }
+    }
+    return new SerializedProfiles(realProfiles, discreteProfiles);
+  }
+
+  public record SerializedProfiles(Map<String, Pair<ValueSchema, List<ProfileSegmentFromStart<RealDynamics>>>> realProfiles, Map<String, Pair<ValueSchema, List<ProfileSegmentFromStart<SerializedValue>>>> discreteProfiles) {}
 
   private static <V1, V2> void append(
       final Duration currentTime,
@@ -676,12 +683,11 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private static <Target, Dynamics>
-  List<ProfileSegment<Target>> serializeProfile(
-      final Duration elapsedTime,
+  List<ProfileSegmentFromStart<Target>> serializeProfile(
       final ProfilingState<Dynamics> state,
       final Translator<Target> translator
   ) {
-    final var profile = new ArrayList<ProfileSegment<Target>>(state.profile().segments().size());
+    final var profile = new ArrayList<ProfileSegmentFromStart<Target>>(state.profile().segments().size());
 
     final var iter = state.profile().segments().iterator();
     if (iter.hasNext()) {
@@ -689,14 +695,14 @@ public final class SimulationEngine implements AutoCloseable {
       while (iter.hasNext()) {
         final var nextSegment = iter.next();
 
-        profile.add(new ProfileSegment<>(
-            nextSegment.startOffset().minus(segment.startOffset()),
+        profile.add(new ProfileSegmentFromStart<>(
+            segment.startOffset(),
             translator.apply(state.resource(), segment.dynamics())));
         segment = nextSegment;
       }
 
-      profile.add(new ProfileSegment<>(
-          elapsedTime.minus(segment.startOffset()),
+      profile.add(new ProfileSegmentFromStart<>(
+          segment.startOffset(),
           translator.apply(state.resource(), segment.dynamics())));
     }
 

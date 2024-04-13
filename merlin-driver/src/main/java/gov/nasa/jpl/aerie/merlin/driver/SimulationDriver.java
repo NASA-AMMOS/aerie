@@ -19,7 +19,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine.serializeProfiles;
 
 public final class SimulationDriver {
   public static <Model>
@@ -33,18 +36,24 @@ public final class SimulationDriver {
       final Supplier<Boolean> simulationCanceled
   )
   {
-    return simulate(
+    final var resourceUpdates = new ArrayList<SimulationEngine.ResourceUpdate>();
+
+    final var sansProfiles = simulate(
         SimulateOptions.of(missionModel, planStartTime, planDuration)
             .schedule(schedule)
             .simulationStartTime(simulationStartTime)
             .simulationDuration(simulationDuration)
             .simulationCanceled(simulationCanceled)
-            .simulationExtentConsumer($ -> {})
+            .simulationExtentConsumer($ -> {}),
+        resourceUpdates::add
     );
+
+    SimulationEngine.SerializedProfiles serializedProfiles = serializeProfiles(missionModel, resourceUpdates);
+    return SimulationResults.of(sansProfiles, serializedProfiles);
   }
 
   public static <Model>
-  SimulationResults simulate(final SimulateOptions<Model> options) {
+  SimulationResultsWithoutProfiles simulate(final SimulateOptions<Model> options, final Consumer<SimulationEngine.ResourceUpdate> resourceSink) {
     final var missionModel = options.missionModel();
     final var schedule = options.schedule();
     final var simulationStartTime = options.simulationStartTime();
@@ -74,10 +83,6 @@ public final class SimulationDriver {
       // Specify a topic on which tasks can log the activity they're associated with.
       final var activityTopic = new Topic<ActivityDirectiveId>();
 
-      final var resourceBuffer = new ArrayList<SimulationEngine.ResourceUpdate>();
-      var resourceBufferSize = 0;
-      final var resourceBufferThreshold = 1024;
-
       try {
         // Start daemon task(s) immediately, before anything else happens.
         engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
@@ -88,8 +93,7 @@ public final class SimulationDriver {
             timeline.add(commit);
           }
           if (!result.resourceUpdate().isEmpty()) {
-            resourceBuffer.add(result.resourceUpdate());
-            resourceBufferSize += result.resourceUpdate().size();
+            resourceSink.accept(result.resourceUpdate());
           }
           if (result.error().isPresent()) {
             throw result.error().get();
@@ -143,18 +147,13 @@ public final class SimulationDriver {
           // Run the jobs in this batch.
           final var result = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
           if (!result.resourceUpdate().isEmpty()) {
-            resourceBuffer.add(result.resourceUpdate());
-            resourceBufferSize += result.resourceUpdate().size();
+            resourceSink.accept(result.resourceUpdate());
           }
           for (final var commit : result.commits()) {
             timeline.add(commit);
           }
           if (result.error().isPresent()) {
             throw result.error().get();
-          }
-
-          if (resourceBufferSize > resourceBufferThreshold) {
-            // TODO stream to database
           }
         }
       } catch (SpanException ex) {
@@ -170,7 +169,7 @@ public final class SimulationDriver {
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics, resourceBuffer);
+      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
     }
   }
 

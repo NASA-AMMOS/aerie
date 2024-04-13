@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegmentFromStart;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -10,6 +12,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -54,5 +58,71 @@ public final class SimulationResults {
         + ", simulatedActivities=" + this.simulatedActivities
         + ", unfinishedActivities=" + this.unfinishedActivities
         + " }";
+  }
+
+  public static SimulationResults of(
+      SimulationResultsWithoutProfiles sansProfiles,
+      SimulationEngine.SerializedProfiles profiles
+  )
+  {
+    Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfilesWithExtent = new LinkedHashMap<>();
+    Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfilesWithExtent = new LinkedHashMap<>();
+
+    for (final var entry : profiles.realProfiles().entrySet()) {
+      final var profile = new ArrayList<ProfileSegment<RealDynamics>>();
+
+      final var iter = entry.getValue().getRight().iterator();
+      if (iter.hasNext()) {
+        var segment = iter.next();
+        while (iter.hasNext()) {
+          final var nextSegment = iter.next();
+
+          profile.add(new ProfileSegment<>(
+              nextSegment.startOffset().minus(segment.startOffset()),
+              segment.dynamics()));
+          segment = nextSegment;
+        }
+
+        profile.add(new ProfileSegment<>(
+            sansProfiles.duration(),
+            segment.dynamics()));
+      }
+
+      realProfilesWithExtent.put(entry.getKey(), Pair.of(entry.getValue().getLeft(), profile));
+    }
+
+    for (final var entry : profiles.discreteProfiles().entrySet()) {
+      final var profile = new ArrayList<ProfileSegment<SerializedValue>>();
+
+      final var iter = entry.getValue().getRight().iterator();
+      if (iter.hasNext()) {
+        var segment = iter.next();
+        while (iter.hasNext()) {
+          final var nextSegment = iter.next();
+
+          profile.add(new ProfileSegment<>(
+              nextSegment.startOffset().minus(segment.startOffset()),
+              segment.dynamics()));
+          segment = nextSegment;
+        }
+
+        profile.add(new ProfileSegment<>(
+            sansProfiles.duration(),
+            segment.dynamics()));
+      }
+
+      discreteProfilesWithExtent.put(entry.getKey(), Pair.of(entry.getValue().getLeft(), profile));
+    }
+
+    return new SimulationResults(
+        realProfilesWithExtent,
+        discreteProfilesWithExtent,
+        sansProfiles.simulatedActivities(),
+        sansProfiles.unfinishedActivities(),
+        sansProfiles.startTime(),
+        sansProfiles.duration(),
+        sansProfiles.topics(),
+        sansProfiles.events()
+    );
   }
 }
