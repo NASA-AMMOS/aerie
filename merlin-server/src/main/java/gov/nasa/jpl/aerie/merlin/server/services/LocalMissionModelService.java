@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulateOptions;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
@@ -298,19 +299,18 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
+    final var missionModel = loadAndInstantiateMissionModel(
+        message.missionModelId(),
+        message.simulationStartTime(),
+        SerializedValue.of(config));
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(
-            message.missionModelId(),
-            message.simulationStartTime(),
-            SerializedValue.of(config)),
-        message.activityDirectives(),
-        message.simulationStartTime(),
-        message.simulationDuration(),
-        message.planStartTime(),
-        message.planDuration(),
-        canceledListener,
-        simulationExtentConsumer);
+        SimulateOptions.of(missionModel, message.planStartTime(), message.planDuration())
+            .simulationStartTime(message.simulationStartTime())
+            .simulationDuration(message.simulationDuration())
+            .schedule(message.activityDirectives())
+            .simulationCanceled(canceledListener)
+            .simulationExtentConsumer(simulationExtentConsumer));
   }
 
   @Override

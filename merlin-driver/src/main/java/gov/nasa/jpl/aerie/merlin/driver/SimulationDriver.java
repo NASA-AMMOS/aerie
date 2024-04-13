@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class SimulationDriver {
@@ -35,27 +34,26 @@ public final class SimulationDriver {
   )
   {
     return simulate(
-        missionModel,
-        schedule,
-        simulationStartTime,
-        simulationDuration,
-        planStartTime,
-        planDuration,
-        simulationCanceled,
-        $ -> {});
+        SimulateOptions.of(missionModel, planStartTime, planDuration)
+            .schedule(schedule)
+            .simulationStartTime(simulationStartTime)
+            .simulationDuration(simulationDuration)
+            .simulationCanceled(simulationCanceled)
+            .simulationExtentConsumer($ -> {})
+    );
   }
 
   public static <Model>
-  SimulationResults simulate(
-      final MissionModel<Model> missionModel,
-      final Map<ActivityDirectiveId, ActivityDirective> schedule,
-      final Instant simulationStartTime,
-      final Duration simulationDuration,
-      final Instant planStartTime,
-      final Duration planDuration,
-      final Supplier<Boolean> simulationCanceled,
-      final Consumer<Duration> simulationExtentConsumer
-  ) {
+  SimulationResults simulate(final SimulateOptions<Model> options) {
+    final var missionModel = options.missionModel();
+    final var schedule = options.schedule();
+    final var simulationStartTime = options.simulationStartTime();
+    final var simulationDuration = options.simulationDuration();
+    final var planStartTime = options.planStartTime();
+    final var planDuration = options.planDuration();
+    final var simulationCanceled = options.simulationCanceled();
+    final var simulationExtentConsumer = options.simulationExtentConsumer();
+
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
