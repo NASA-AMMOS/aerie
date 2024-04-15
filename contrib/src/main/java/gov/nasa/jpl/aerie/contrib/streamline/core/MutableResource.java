@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.allocate;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResourceFlags.NAMING_EMITS;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.pure;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
@@ -22,8 +23,20 @@ import static java.util.stream.Collectors.joining;
 public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
   void emit(DynamicsEffect<D> effect);
   default void emit(String effectName, DynamicsEffect<D> effect) {
-    name(effect, effectName);
+    if (NAMING && NAMING_EMITS) {
+      name(effect, effectName);
+    }
     emit(effect);
+  }
+
+  default void emit(boolean forceNaming, String effectName, DynamicsEffect<D> effect) {
+    if (forceNaming) {
+      var oldNaming = NAMING;
+      NAMING = true;
+      name(effect, effectName);
+      NAMING = oldNaming;
+    }
+    emit(effectName, effect);
   }
 
   static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial) {
@@ -47,7 +60,9 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
 
       @Override
       public void emit(final DynamicsEffect<D> effect) {
-        augmentEffectName(effect);
+        if (NAMING && NAMING_EMITS) {
+          augmentEffectName(effect);
+        }
         cell.emit(effect);
       }
 
@@ -73,11 +88,19 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
   }
 
   static <D extends Dynamics<?, D>> void set(MutableResource<D> resource, D newDynamics) {
-    resource.emit("Set " + newDynamics, DynamicsMonad.effect(x -> newDynamics));
+    if (NAMING && NAMING_EMITS) {
+      resource.emit("Set " + newDynamics, DynamicsMonad.effect(x -> newDynamics));
+    } else {
+      resource.emit(DynamicsMonad.effect(x -> newDynamics));
+    }
   }
 
   static <D extends Dynamics<?, D>> void set(MutableResource<D> resource, Expiring<D> newDynamics) {
-    resource.emit("Set " + newDynamics, ErrorCatchingMonad.<Expiring<D>, Expiring<D>>map($ -> newDynamics)::apply);
+    if (NAMING && NAMING_EMITS) {
+      resource.emit("Set " + newDynamics, ErrorCatchingMonad.<Expiring<D>, Expiring<D>>map($ -> newDynamics)::apply);
+    } else {
+      resource.emit(ErrorCatchingMonad.<Expiring<D>, Expiring<D>>map($ -> newDynamics)::apply);
+    }
   }
 
   /**
@@ -119,6 +142,57 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
     MutableResourceFlags.PROFILE_GET_DYNAMICS = true;
     detectBusyCells();
   }
+
+  /**
+   * Turn on naming for events emitted from {@link MutableResource}s.  By default, it is turned off.
+   *
+   * <p>
+   *     Calling this method once before constructing your model will add user-defined and built-in
+   *     names for events emitted from every {@link MutableResource} via the {@link #emit(String, DynamicsEffect)}
+   *     There can be significant computational overhead for string operations and memory overhead for storing
+   *     strings for each event.  Thus, by default, it is turned off.
+   * </p>
+   *
+   * <p>
+   *     See {@link #nameEmits(boolean)} and {@link #areNamingEmits()}.
+   * </p>
+   *
+   */
+  static void nameEmits() {
+    nameEmits(true);
+  }
+
+  /**
+   * Turn on/off naming for events emitted from {@link MutableResource}s.  By default, it is turned off.
+   *
+   * <p>
+   *     Turning this on before constructing your model will add user-defined and built-in
+   *     names for events emitted from every {@link MutableResource} via the {@link #emit(String, DynamicsEffect)}
+   *     There can be significant computational overhead for string operations and memory overhead for storing
+   *     strings for each event.  Thus, by default, it is turned off.
+   * </p>
+   *
+   * <p>
+   *     See {@link #nameEmits()} and {@link #areNamingEmits()}.
+   * </p>
+   *
+   */
+  static void nameEmits(boolean value) {
+    NAMING_EMITS = value;
+  }
+
+  /**
+   * Check to see if the naming of emits is turned on.
+   * @return whether naming emits is turned on
+   *
+   * <p>
+   *     See {@link #nameEmits()} and {@link #nameEmits(boolean)}.
+   * </p>
+   *
+   */
+  static boolean areNamingEmits() {
+    return NAMING_EMITS;
+  }
 }
 
 /**
@@ -129,4 +203,5 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
 final class MutableResourceFlags {
   public static boolean DETECT_BUSY_CELLS = false;
   public static boolean PROFILE_GET_DYNAMICS = false;
+  public static boolean NAMING_EMITS = false;
 }

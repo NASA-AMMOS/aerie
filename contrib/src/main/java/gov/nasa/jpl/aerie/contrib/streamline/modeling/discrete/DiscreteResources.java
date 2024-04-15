@@ -267,7 +267,10 @@ public final class DiscreteResources {
       if (a) return true;
       throw new AssertionError(description);
     });
+    var oldNaming = NAMING;
+    NAMING = true;
     name(result, "Assertion: " + description);
+    NAMING = oldNaming;
     return result;
   }
 

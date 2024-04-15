@@ -13,6 +13,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.areNamingEmits;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
@@ -182,9 +183,10 @@ public final class Resources {
    * This is used primarily for building feedback loops in a resource derivation.
    */
   public static <D extends Dynamics<?, D>> void forward(Resource<D> source, MutableResource<D> destination) {
-    wheneverDynamicsChange(source, s -> destination.emit(
-            "Forward %s dynamics: %s".formatted(getName(source).orElse("anonymous"), s),
-            $ -> s));
+    wheneverDynamicsChange(source, s -> {
+      var name = (NAMING && areNamingEmits()) ? "Forward %s dynamics: %s".formatted(getName(source).orElse("anonymous"), s) : "";
+      destination.emit(name, $ -> s);
+    });
     addDependency(destination, source);
   }
 

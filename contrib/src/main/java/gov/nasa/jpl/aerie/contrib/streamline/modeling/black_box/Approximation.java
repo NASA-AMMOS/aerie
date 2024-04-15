@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.areNamingEmits;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
@@ -46,7 +47,11 @@ public final class Approximation {
   private static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> void updateApproximation(
       ErrorCatching<Expiring<D>> resourceDynamics, Function<Expiring<D>, Expiring<E>> approximation, MutableResource<E> result) {
     var newDynamics = resourceDynamics.map(approximation);
-    result.emit("Update approximation to " + newDynamics, $ -> newDynamics);
+    if (NAMING && areNamingEmits()) {
+      result.emit("Update approximation to " + newDynamics, $ -> newDynamics);
+    } else {
+      result.emit($ -> newDynamics);
+    }
   }
 
   /**

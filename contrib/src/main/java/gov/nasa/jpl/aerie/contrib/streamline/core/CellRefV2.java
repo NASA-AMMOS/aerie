@@ -120,7 +120,7 @@ public final class CellRefV2 {
       @Override
       public DynamicsEffect<D> sequentially(final DynamicsEffect<D> prefix, final DynamicsEffect<D> suffix) {
         final DynamicsEffect<D> result = x -> suffix.apply(prefix.apply(x));
-        name(result, "(%s) then (%s)".formatted(getEffectName(prefix), getEffectName(suffix)));
+        name(result, "(%s) then (%s)", getEffectName(prefix), getEffectName(suffix));
         return result;
       }
 
@@ -135,12 +135,12 @@ public final class CellRefV2 {
                   return failure(e);
                 }
               };
-          name(result, "(%s) and (%s)".formatted(getEffectName(left), getEffectName(right)));
+          name(result, "(%s) and (%s)", getEffectName(left), getEffectName(right));
           return result;
         } catch (Throwable e) {
           final DynamicsEffect<D> result = $ -> failure(e);
-          name(result, "Failed to combine concurrent effects: (%s) and (%s)".formatted(
-                  getEffectName(left), getEffectName(right)));
+          name(result, "Failed to combine concurrent effects: (%s) and (%s)",
+               getEffectName(left), getEffectName(right));
           return result;
         }
       }

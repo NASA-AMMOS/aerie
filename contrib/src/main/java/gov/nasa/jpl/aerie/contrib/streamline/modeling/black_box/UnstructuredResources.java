@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.NAMING;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.relative;
@@ -23,7 +24,9 @@ public final class UnstructuredResources {
 
   public static <A> Resource<Unstructured<A>> constant(A value) {
     var result = UnstructuredResourceApplicative.pure(value);
-    name(result, value.toString());
+    if (NAMING) {  // avoiding call to toString() if unnecessary
+      name(result, value.toString());
+    }
     return result;
   }
 
