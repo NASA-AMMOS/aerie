@@ -2,27 +2,32 @@ table:
   name: command_dictionary
   schema: public
 array_relationships:
-- name: expansion_sets
-  using:
-    foreign_key_constraint_on:
-      column: command_dict_id
-      table:
-        name: expansion_set
-        schema: public
+  - name: expansion_sets
+    using:
+      foreign_key_constraint_on:
+        column: command_dict_id
+        table:
+          name: expansion_set
+          schema: public
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      check: {}
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: '*'
+      columns: "*"
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: '*'
+      columns: "*"
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: '*'
+      columns: "*"
       filter: {}
       allow_aggregations: true
 delete_permissions:
