@@ -369,6 +369,12 @@ public enum GQL {
         status
       }
     }"""),
+  GET_SCHEDULING_SPECIFICATION_ID("""
+    query GetSchedulingSpec($planId: Int!) {
+      scheduling_spec: scheduling_specification(where: {plan_id: {_eq: $planId}}) {
+        id
+      }
+    }"""),
   GET_SIMULATION_CONFIGURATION("""
     query GetSimConfig($planId: Int!) {
       sim_config: simulation(where: {plan_id: {_eq:$planId}}) {
@@ -455,12 +461,6 @@ public enum GQL {
     mutation insertProfileSegment($segments: [profile_segment_insert_input!]!){
       insert_profile_segment(objects: $segments){
         affected_rows
-      }
-    }"""),
-  INSERT_SCHEDULING_SPECIFICATION("""
-    mutation MakeSchedulingSpec($scheduling_spec: scheduling_specification_insert_input!) {
-      scheduling_spec: insert_scheduling_specification_one(object: $scheduling_spec) {
-        id
       }
     }"""),
   INSERT_SIMULATION_DATASET("""

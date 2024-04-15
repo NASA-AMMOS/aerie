@@ -24,6 +24,7 @@ task e2eTest(type: Test) {
 }
 
 dependencies {
+  testImplementation 'org.jetbrains:annotations:16.0.2'
   testImplementation 'org.postgresql:postgresql:42.6.1'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'

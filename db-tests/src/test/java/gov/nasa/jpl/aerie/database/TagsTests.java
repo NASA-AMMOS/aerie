@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("SqlSourceToSinkFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TagsTests {
-  private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private final String constraintDefinition = "export default (): Constraint => Real.Resource(\"/fruit\").equal(Real.Resource(\"/peel\"))";
   private DatabaseTestHelper helper;
   private MerlinDatabaseTestHelper merlinHelper;
@@ -46,35 +45,13 @@ public class TagsTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    helper.clearTable("uploaded_file");
-    helper.clearTable("mission_model");
-    helper.clearTable("plan");
-    helper.clearTable("activity_directive");
-    helper.clearTable("simulation_template");
-    helper.clearTable("simulation");
-    helper.clearTable("dataset");
-    helper.clearTable("plan_dataset");
-    helper.clearTable("simulation_dataset");
-    helper.clearTable("plan_snapshot");
-    helper.clearTable("plan_latest_snapshot");
-    helper.clearTable("plan_snapshot_activities");
-    helper.clearTable("plan_snapshot_parent");
-    helper.clearTable("anchor_validation_status");
-    helper.clearTable("metadata.tags");
-    helper.clearTable("metadata.activity_directive_tags");
-    helper.clearTable("metadata.constraint_tags");
-    helper.clearTable("metadata.constraint_definition_tags");
-    helper.clearTable("metadata.snapshot_activity_tags");
+    helper.clearSchema("merlin");
+    helper.clearSchema("tags");
   }
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "aerie_merlin_test",
-        "Merlin Database Tests",
-        initSqlScriptFile
-    );
-    helper.startDatabase();
+    helper = new DatabaseTestHelper("aerie_tags_test", "Tags Tests");
     setConnection(helper);
     merlinHelper = new MerlinDatabaseTestHelper(connection);
     tagsUser = merlinHelper.insertUser("TagsTest");
@@ -82,9 +59,7 @@ public class TagsTests {
 
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    helper.stopDatabase();
-    connection = null;
-    helper = null;
+    helper.close();
   }
 
   //region Helper Functions
@@ -94,11 +69,12 @@ public class TagsTests {
   int insertTag(String name, String username) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
+          //language=sql
           """
-              INSERT INTO metadata.tags (name, owner)
-              VALUES ('%s', '%s')
-              RETURNING id;
-              """.formatted(name, username)
+          INSERT INTO tags.tags (name, owner)
+          VALUES ('%s', '%s')
+          RETURNING id;
+          """.formatted(name, username)
       );
       res.next();
       return res.getInt("id");
@@ -108,11 +84,12 @@ public class TagsTests {
   int insertTag(String name, String username, String color) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
+          //language=sql
           """
-              INSERT INTO metadata.tags (name, color, owner)
-              VALUES ('%s', '%s', '%s')
-              RETURNING id;
-              """.formatted(name, color, username)
+          INSERT INTO tags.tags (name, color, owner)
+          VALUES ('%s', '%s', '%s')
+          RETURNING id;
+          """.formatted(name, color, username)
       );
       res.next();
       return res.getInt("id");
@@ -122,8 +99,9 @@ public class TagsTests {
   Tag updateTagColor(int tagId, String color) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
+          //language=sql
           """
-          UPDATE metadata.tags
+          UPDATE tags.tags
           SET color = '%s'
           WHERE id = %d
           RETURNING id, name, color, owner
@@ -142,29 +120,29 @@ public class TagsTests {
   Tag updateTagName(int tagId, String name) throws SQLException {
     try(final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
+          //language=sql
           """
-          UPDATE metadata.tags
+          UPDATE tags.tags
           SET name = '%s'
           WHERE id = %d
           RETURNING id, name, color, owner
-          """.formatted(name, tagId)
-      );
+          """.formatted(name, tagId));
       res.next();
       return new Tag(
           res.getInt("id"),
           res.getString("name"),
           res.getString("color"),
-          res.getString("owner")
-      );
+          res.getString("owner"));
     }
   }
 
   Tag getTag(int id) throws SQLException {
     try(final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
+          //language=sql
           """
           SELECT id, name, color, owner
-          FROM metadata.tags
+          FROM tags.tags
           WHERE id = %d;
           """.formatted(id)
       );
@@ -181,9 +159,10 @@ public class TagsTests {
     try(final var statement = connection.createStatement()) {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
+          //language=sql
           """
           SELECT id, name, color, owner
-          FROM metadata.tags;
+          FROM tags.tags;
           """
       );
       while(res.next()) {
@@ -200,8 +179,9 @@ public class TagsTests {
   void deleteTag(int id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          DELETE FROM metadata.tags
+          DELETE FROM tags.tags
           WHERE id = %d;
           """.formatted(id));
     }
@@ -210,8 +190,9 @@ public class TagsTests {
   void assignTagToActivity(int directive_id, int plan_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          INSERT INTO metadata.activity_directive_tags (plan_id, directive_id, tag_id)
+          INSERT INTO tags.activity_directive_tags (plan_id, directive_id, tag_id)
           VALUES (%d, %d, %d)
           """.formatted(plan_id,directive_id,tag_id));
     }
@@ -220,8 +201,9 @@ public class TagsTests {
   void removeTagFromActivity(int directive_id, int plan_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          DELETE FROM metadata.activity_directive_tags
+          DELETE FROM tags.activity_directive_tags
           WHERE plan_id = %d
             AND directive_id = %d
             AND tag_id = %d;
@@ -233,14 +215,15 @@ public class TagsTests {
     try (final var statement = connection.createStatement()) {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
+          //language=sql
           """
-              SELECT id, name, color, owner
-              FROM metadata.tags t, metadata.activity_directive_tags adt
-              WHERE adt.tag_id = t.id
-                AND adt.plan_id = %d
-                AND adt.directive_id = %d
-              ORDER BY id;
-              """.formatted(plan_id, directive_id));
+          SELECT id, name, color, owner
+          FROM tags.tags t, tags.activity_directive_tags adt
+          WHERE adt.tag_id = t.id
+            AND adt.plan_id = %d
+            AND adt.directive_id = %d
+          ORDER BY id;
+          """.formatted(plan_id, directive_id));
       while (res.next()) {
         tags.add(new Tag(
             res.getInt("id"),
@@ -256,9 +239,10 @@ public class TagsTests {
     try (final var statement = connection.createStatement()) {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
+          //language=sql
           """
           SELECT id, name, color, owner
-          FROM metadata.tags t, metadata.snapshot_activity_tags sat
+          FROM tags.tags t, tags.snapshot_activity_tags sat
           WHERE sat.tag_id = t.id
             AND sat.snapshot_id = %d
             AND sat.directive_id = %d
@@ -278,8 +262,9 @@ public class TagsTests {
   void assignTagToPlan(int plan_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          INSERT INTO metadata.plan_tags (plan_id, tag_id)
+          INSERT INTO tags.plan_tags (plan_id, tag_id)
           VALUES (%d, %d)
           """.formatted(plan_id,tag_id));
     }
@@ -288,8 +273,9 @@ public class TagsTests {
   void removeTagFromPlan(int plan_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          DELETE FROM metadata.plan_tags
+          DELETE FROM tags.plan_tags
           WHERE plan_id = %d
             AND tag_id = %d;
           """.formatted(plan_id, tag_id));
@@ -300,9 +286,10 @@ public class TagsTests {
     try(final var statement = connection.createStatement()) {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
+          //language=sql
           """
           SELECT id, name, color, owner
-          FROM metadata.tags t, metadata.plan_tags pt
+          FROM tags.tags t, tags.plan_tags pt
           WHERE pt.tag_id = t.id
             AND pt.plan_id = %d
           ORDER BY id;
@@ -321,8 +308,9 @@ public class TagsTests {
   void assignTagToConstraint(int constraint_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          INSERT INTO metadata.constraint_tags (constraint_id, tag_id)
+          INSERT INTO tags.constraint_tags (constraint_id, tag_id)
           VALUES (%d, %d)
           """.formatted(constraint_id, tag_id));
     }
@@ -331,8 +319,9 @@ public class TagsTests {
   void assignTagToConstraintRevision(int constraint_id, int constraint_revision, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          INSERT INTO metadata.constraint_definition_tags (constraint_id, constraint_revision, tag_id)
+          INSERT INTO tags.constraint_definition_tags (constraint_id, constraint_revision, tag_id)
           VALUES (%d, %d, %d)
           """.formatted(constraint_id, constraint_revision, tag_id));
     }
@@ -341,8 +330,9 @@ public class TagsTests {
   void removeTagFromConstraint(int constraint_id, int tag_id) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          DELETE FROM metadata.constraint_tags
+          DELETE FROM tags.constraint_tags
           WHERE constraint_id = %d
             AND tag_id = %d;
           """.formatted(constraint_id, tag_id));
@@ -353,9 +343,10 @@ public class TagsTests {
     try (final var statement = connection.createStatement()) {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
+          //language=sql
           """
           SELECT id, name, color, owner
-          FROM metadata.tags t, metadata.constraint_tags ct
+          FROM tags.tags t, tags.constraint_tags ct
           WHERE ct.tag_id = t.id
             AND ct.constraint_id = %d
           ORDER BY id;
@@ -375,9 +366,10 @@ public class TagsTests {
     try (final var statement = connection.createStatement()) {
       final var tags = new ArrayList<Tag>();
       final var res = statement.executeQuery(
+          //language=sql
           """
           SELECT id, name, color, owner
-          FROM metadata.tags t, metadata.constraint_definition_tags ct
+          FROM tags.tags t, tags.constraint_definition_tags ct
           WHERE ct.tag_id = t.id
             AND ct.constraint_id = %d
             AND ct.constraint_revision = %d
@@ -396,13 +388,15 @@ public class TagsTests {
 
   int assignTagToActivityType(int modelId, String name, int tagId) throws SQLException{
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
-        UPDATE public.activity_type at
-        SET subsystem = %d
-        WHERE at.model_id = %d
-          AND at.name = '%s'
-        RETURNING subsystem;
-        """.formatted(tagId, modelId, name));
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          UPDATE merlin.activity_type at
+          SET subsystem = %d
+          WHERE at.model_id = %d
+            AND at.name = '%s'
+          RETURNING subsystem;
+          """.formatted(tagId, modelId, name));
       assertTrue(res.next());
       final int subsystem = res.getInt("subsystem");
       assertFalse(res.next());
@@ -413,13 +407,14 @@ public class TagsTests {
   void removeTagFromActivityType(int modelId, String name) throws SQLException {
      try (final var statement = connection.createStatement()) {
        final var res = statement.executeQuery(
-         """
-         UPDATE activity_type
-          SET subsystem = null
-          WHERE model_id = %d
-          AND name = '%s'
-          RETURNING subsystem
-         """.formatted(modelId, name));
+           //language=sql
+           """
+           UPDATE merlin.activity_type
+           SET subsystem = null
+           WHERE model_id = %d
+           AND name = '%s'
+           RETURNING subsystem
+           """.formatted(modelId, name));
        assertTrue(res.next());
        assertNull(res.getObject("subsystem"));
        assertFalse(res.next());

@@ -1,0 +1,73 @@
+table:
+  name: scheduling_specification
+  schema: scheduler
+configuration:
+  custom_name: "scheduling_specification"
+object_relationships:
+- name: plan
+  using:
+    foreign_key_constraint_on: plan_id
+array_relationships:
+- name: goals
+  using:
+    foreign_key_constraint_on:
+      column: specification_id
+      table:
+        name: scheduling_specification_goals
+        schema: scheduler
+- name: conditions
+  using:
+    foreign_key_constraint_on:
+      column: specification_id
+      table:
+        name: scheduling_specification_conditions
+        schema: scheduler
+- name: requests
+  using:
+    foreign_key_constraint_on:
+      column: specification_id
+      table:
+        name: scheduling_request
+        schema: scheduler
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+# TODO: Modify these once we have a solution for cross-db auth (These permissions should be based on plan ownership/collaboratorship)
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      check: {}
+  - role: user
+    permission:
+      columns: [plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      filter: {}
+  - role: user
+    permission:
+      columns: [plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {}

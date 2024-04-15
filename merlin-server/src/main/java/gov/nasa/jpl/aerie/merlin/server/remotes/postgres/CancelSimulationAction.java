@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 /*package local*/ final class CancelSimulationAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    update simulation_dataset
+    update merlin.simulation_dataset
         set canceled = true
         where dataset_id = ?
     """;

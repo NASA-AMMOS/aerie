@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.UUID;
 
+@SuppressWarnings("SqlSourceToSinkFlow")
 final class MerlinDatabaseTestHelper {
   private final Connection connection;
   final User admin;
@@ -26,10 +27,11 @@ final class MerlinDatabaseTestHelper {
   User insertUser(final String username, final String defaultRole) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
-              """
-              INSERT INTO metadata.users (username, default_role)
-              VALUES ('%s', '%s');
-              """.formatted(username, defaultRole)
+            //language=sql
+            """
+            INSERT INTO permissions.users (username, default_role)
+            VALUES ('%s', '%s');
+            """.formatted(username, defaultRole)
           );
     }
     return new User(
@@ -43,11 +45,12 @@ final class MerlinDatabaseTestHelper {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
+              //language=sql
               """
-                  INSERT INTO uploaded_file (path, name)
-                  VALUES ('test-path', 'test-name-%s')
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString())
+              INSERT INTO merlin.uploaded_file (path, name)
+              VALUES ('test-path', 'test-name-%s')
+              RETURNING id;
+              """.formatted(UUID.randomUUID().toString())
           );
       res.next();
       return res.getInt("id");
@@ -62,11 +65,12 @@ final class MerlinDatabaseTestHelper {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
+              //language=sql
               """
-                  INSERT INTO mission_model (name, mission, owner, version, jar_id)
-                  VALUES ('test-mission-model-%s', 'test-mission', '%s', '0', %s)
-                  RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), username, fileId)
+              INSERT INTO merlin.mission_model (name, mission, owner, version, jar_id)
+              VALUES ('test-mission-model-%s', 'test-mission', '%s', '0', %s)
+              RETURNING id;
+              """.formatted(UUID.randomUUID().toString(), username, fileId)
           );
       res.next();
       return res.getInt("id");
@@ -87,26 +91,37 @@ final class MerlinDatabaseTestHelper {
 
   int insertPlan(final int missionModelId, final String username, final String planName, final String start_time) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO plan (name, model_id, duration, start_time, owner)
-                  VALUES ('%s', '%s', '0', '%s', '%s')
-                  RETURNING id;"""
-                  .formatted(planName, missionModelId, start_time, username)
-          );
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          INSERT INTO merlin.plan (name, model_id, duration, start_time, owner)
+          VALUES ('%s', '%s', '0', '%s', '%s')
+          RETURNING id;
+          """.formatted(planName, missionModelId, start_time, username));
       res.next();
       return res.getInt("id");
+    }
+  }
+
+  void deletePlan(final int planId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.execute(
+          //language=sql
+          """
+          DELETE FROM merlin.plan
+          WHERE id = %d;
+          """.formatted(planId));
     }
   }
 
   void insertPlanCollaborator(final int planId, final String username) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.execute(
-        """
-        INSERT INTO plan_collaborators (plan_id, collaborator)
-        VALUES (%d, '%s');
-        """.formatted(planId, username)
+          //language=sql
+          """
+          INSERT INTO merlin.plan_collaborators (plan_id, collaborator)
+          VALUES (%d, '%s');
+          """.formatted(planId, username)
       );
     }
   }
@@ -127,15 +142,38 @@ final class MerlinDatabaseTestHelper {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
+              //language=sql
               """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments, last_modified_by, created_by)
-                  VALUES ('test-activity', '%s', '%s', '%s', '%s', '%s')
-                  RETURNING id;"""
-                  .formatted(planId, startOffset, arguments, user.name, user.name)
+              INSERT INTO merlin.activity_directive (type, plan_id, start_offset, arguments, last_modified_by, created_by)
+              VALUES ('test-activity', '%s', '%s', '%s', '%s', '%s')
+              RETURNING id;
+              """.formatted(planId, startOffset, arguments, user.name, user.name)
           );
 
       res.next();
       return res.getInt("id");
+    }
+  }
+
+  void updateActivityName(String newName, int activityId, int planId) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      statement.execute(
+          //language=sql
+          """
+          update merlin.activity_directive
+          set name = '%s'
+          where id = %d and plan_id = %d;
+          """.formatted(newName, activityId, planId));
+    }
+  }
+
+  void deleteActivityDirective(final int planId, final int activityId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate(
+        //language=sql
+        """
+        delete from merlin.activity_directive where id = %s and plan_id = %s
+        """.formatted(activityId, planId));
     }
   }
 
@@ -146,20 +184,22 @@ final class MerlinDatabaseTestHelper {
     try (final var statement = connection.createStatement()) {
       if (anchorId == -1) {
         statement.execute(
+            //language=sql
             """
-                update activity_directive
-                set anchor_id = null,
-                    anchored_to_start = %b
-                where id = %d and plan_id = %d;
-                """.formatted(anchoredToStart, activityId, planId));
+            update merlin.activity_directive
+            set anchor_id = null,
+                anchored_to_start = %b
+            where id = %d and plan_id = %d;
+            """.formatted(anchoredToStart, activityId, planId));
       } else {
         statement.execute(
+            //language=sql
             """
-                update activity_directive
-                set anchor_id = %d,
-                    anchored_to_start = %b
-                where id = %d and plan_id = %d;
-                """.formatted(anchorId, anchoredToStart, activityId, planId));
+            update merlin.activity_directive
+              set anchor_id = %d,
+                  anchored_to_start = %b
+            where id = %d and plan_id = %d;
+            """.formatted(anchorId, anchoredToStart, activityId, planId));
       }
     }
   }
@@ -167,8 +207,9 @@ final class MerlinDatabaseTestHelper {
   void insertActivityType(final int modelId, final String name) throws SQLException {
     try(final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          INSERT INTO activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema)
+          INSERT INTO merlin.activity_type (model_id, name, parameters, required_parameters, computed_attributes_value_schema)
           VALUES (%d, '%s', '{}', '[]', '{}');
           """.formatted(modelId, name)
       );
@@ -191,11 +232,12 @@ final class MerlinDatabaseTestHelper {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
+              //language=sql
               """
-                  INSERT INTO activity_presets (model_id, name, associated_activity_type, arguments, owner)
-                  VALUES (%d, '%s', '%s', '%s', '%s')
-                  RETURNING id;"""
-                  .formatted(modelId, name, associatedActivityType, arguments, username)
+              INSERT INTO merlin.activity_presets (model_id, name, associated_activity_type, arguments, owner)
+              VALUES (%d, '%s', '%s', '%s', '%s')
+              RETURNING id;
+              """.formatted(modelId, name, associatedActivityType, arguments, username)
           );
       res.next();
       return res.getInt("id");
@@ -204,8 +246,10 @@ final class MerlinDatabaseTestHelper {
 
   void assignPreset(int presetId, int activityId, int planId, String userSession) throws SQLException {
     try(final var statement = connection.createStatement()){
-      statement.execute("""
-         select hasura_functions.apply_preset_to_activity(%d, %d, %d, '%s'::json);
+      statement.execute(
+         //language=sql
+         """
+         select hasura.apply_preset_to_activity(%d, %d, %d, '%s'::json);
          """.formatted(presetId, activityId, planId, userSession));
     }
   }
@@ -215,7 +259,7 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       statement.execute(
          //language=sql
          """
-         delete from preset_to_directive
+         delete from merlin.preset_to_directive
          where (preset_id, activity_id, plan_id) = (%d, %d, %d);
          """.formatted(presetId, activityId, planId));
     }
@@ -225,13 +269,14 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
   int insertConstraint(String name, String definition, User user) throws SQLException {
     try(final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
+          //language=sql
           """
           WITH metadata(id, owner) AS (
-            INSERT INTO public.constraint_metadata(name, description, owner, updated_by)
+            INSERT INTO merlin.constraint_metadata(name, description, owner, updated_by)
             VALUES ('%s', 'Merlin DB Test Constraint', '%s', '%s')
             RETURNING id, owner
           )
-          INSERT INTO public.constraint_definition(constraint_id, definition, author)
+          INSERT INTO merlin.constraint_definition(constraint_id, definition, author)
           SELECT m.id, '%s', m.owner
           FROM metadata m
           RETURNING constraint_id;

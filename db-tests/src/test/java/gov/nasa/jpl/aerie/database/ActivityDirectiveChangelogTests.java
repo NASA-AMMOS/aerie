@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -16,9 +15,9 @@ import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("SqlSourceToSinkFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ActivityDirectiveChangelogTests {
-  private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
   private MerlinDatabaseTestHelper merlinHelper;
   private Connection connection;
@@ -33,28 +32,19 @@ public class ActivityDirectiveChangelogTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    helper.clearTable("uploaded_file");
-    helper.clearTable("mission_model");
-    helper.clearTable("plan");
-    helper.clearTable("activity_directive_changelog");
-    helper.clearTable("activity_directive");
+    helper.clearSchema("merlin");
   }
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "aerie_merlin_test",
-        "Merlin Database Tests",
-        initSqlScriptFile
-    );
-    helper.startDatabase();
+    helper = new DatabaseTestHelper("aerie_activity_changelog_test", "Activity Directive Changelog Tests");
     connection = helper.connection();
     merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    helper.stopDatabase();
+    helper.close();
     connection = null;
     helper = null;
   }
@@ -66,7 +56,7 @@ public class ActivityDirectiveChangelogTests {
           // language=sql
           """
           SELECT *
-          FROM activity_directive
+          FROM merlin.activity_directive
           WHERE id = %d
           AND plan_id = %d;
           """.formatted(activityId, planId));
@@ -92,13 +82,26 @@ public class ActivityDirectiveChangelogTests {
       );
     }
   }
-
+  private void updateActivityStartOffset(int planId, int activityDirectiveId, String newOffset) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var updatedRows = statement.executeQuery(
+          // language=sql
+          """
+          UPDATE merlin.activity_directive
+          SET start_offset = '%s'
+          WHERE plan_id = %d and id = %d
+          RETURNING id;
+          """.formatted(newOffset, planId, activityDirectiveId));
+      updatedRows.next();
+      assertEquals(activityDirectiveId, updatedRows.getInt(1));
+    }
+  }
   private void revertActivityDirectiveToChangelog(int planId, int activityDirectiveId, int revision) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.executeQuery(
           // language=sql
           """
-          SELECT hasura_functions.restore_activity_changelog(
+          SELECT hasura.restore_activity_changelog(
             _plan_id => %d,
             _activity_directive_id => %d,
             _revision => %d,
@@ -113,7 +116,7 @@ public class ActivityDirectiveChangelogTests {
           // language=sql
           """
           SELECT count(revision)
-          FROM activity_directive_changelog
+          FROM merlin.activity_directive_changelog
           WHERE plan_id = %d and activity_directive_id = %d;
           """.formatted(planId, activityDirectiveId)
       );
@@ -130,7 +133,7 @@ public class ActivityDirectiveChangelogTests {
           // language=sql
           """
           SELECT count(revision)
-          FROM activity_directive_changelog
+          FROM merlin.activity_directive_changelog
           WHERE plan_id = %d;
           """.formatted(planId)
       );
@@ -149,22 +152,8 @@ public class ActivityDirectiveChangelogTests {
   @Test
   void shouldCreateChangelogForUpdatedActDir() throws SQLException {
     final var activityId = merlinHelper.insertActivity(planId);
-
     assertEquals(1, getChangelogRevisionCount(planId, activityId));
-
-    try (final var statement = connection.createStatement()) {
-      final var updatedRows = statement.executeQuery(
-          // language=sql
-          """
-          UPDATE activity_directive
-          SET start_offset = '%s'
-          WHERE plan_id = %d and id = %d
-          RETURNING id;
-          """.formatted("01:01:01", planId, activityId));
-      updatedRows.next();
-      assertEquals(activityId, updatedRows.getInt(1));
-    }
-
+    updateActivityStartOffset(planId, activityId, "01:01:01");
     assertEquals(2, getChangelogRevisionCount(planId, activityId));
 }
     @Test
@@ -176,7 +165,7 @@ public class ActivityDirectiveChangelogTests {
             // language=sql
             """
             SELECT *
-            FROM activity_directive_changelog
+            FROM merlin.activity_directive_changelog
             WHERE plan_id = %d and activity_directive_id = %d;
             """.formatted(planId, activityId));
 
@@ -203,22 +192,10 @@ public class ActivityDirectiveChangelogTests {
   void shouldDeleteChangelogsOverRevisionLimit() throws SQLException {
     final var maxRevisionsLimit = 11;
     final var activityId = merlinHelper.insertActivity(planId);
-
     // randomly update activity directive > maxRevisionsLimit times
     for (int i = 0; i < maxRevisionsLimit * 2; i++) {
-      connection.createStatement()
-                .executeQuery(
-                    // language=sql
-                    """
-                    UPDATE activity_directive
-                    SET start_offset = '%02d'
-                    WHERE plan_id = %d and id = %d
-                    RETURNING id;
-                    """.formatted(i, planId, activityId)
-                )
-                .close();
+      updateActivityStartOffset(planId, activityId, "%02d");
     }
-
     assertEquals(maxRevisionsLimit, getChangelogRevisionCount(planId, activityId));
   }
 
@@ -266,7 +243,7 @@ public class ActivityDirectiveChangelogTests {
       statement.executeQuery(
           // language=sql
           """
-          UPDATE activity_directive
+          UPDATE merlin.activity_directive
           SET
             name = 'changed',
             start_offset = '01:01:01',

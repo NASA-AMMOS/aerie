@@ -14,7 +14,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
 /*package local*/ final class CreateSimulationDatasetAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into simulation_dataset
+    insert into merlin.simulation_dataset
       (
         simulation_id,
         simulation_start_time,
@@ -51,7 +51,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement.setString(5, requestedBy);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new FailedInsertException("simulation_dataset");
+      if (!results.next()) throw new FailedInsertException("merlin.simulation_dataset");
       final Status status;
       try {
         status = Status.fromString(results.getString(2));

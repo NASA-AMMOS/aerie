@@ -15,17 +15,17 @@ import java.util.Optional;
   // A plan without any enabled constraints will produce a placeholder row with nulls.
   private static final @Language("SQL") String sql = """
     select c.constraint_id, c.revision, c.name, c.description, c.definition
-    from plan p
+    from merlin.plan p
       left join (select cs.plan_id, cs.constraint_id, cd.revision, cm.name, cm.description, cd.definition
-                 from constraint_specification cs
-                   left join constraint_definition cd using (constraint_id)
-                   left join public.constraint_metadata cm on cs.constraint_id = cm.id
+                 from merlin.constraint_specification cs
+                   left join merlin.constraint_definition cd using (constraint_id)
+                   left join merlin.constraint_metadata cm on cs.constraint_id = cm.id
                  where cs.enabled
                    and ((cs.constraint_revision is not null
                            and cs.constraint_revision = cd.revision)
                           or (cs.constraint_revision is null
                                 and cd.revision = (select def.revision
-                                                   from constraint_definition def
+                                                   from merlin.constraint_definition def
                                                    where def.constraint_id = cs.constraint_id
                                                    order by def.revision desc limit 1)))
                    ) c

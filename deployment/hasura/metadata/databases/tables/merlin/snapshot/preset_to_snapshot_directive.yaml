@@ -1,0 +1,34 @@
+table:
+  name: preset_to_snapshot_directive
+  schema: merlin
+configuration:
+  custom_name: "preset_to_snapshot_directive"
+object_relationships:
+  - name: directive_applied_to
+    using:
+      foreign_key_constraint_on:
+        - activity_id
+        - snapshot_id
+  - name: preset_applied
+    using:
+      foreign_key_constraint_on: preset_id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

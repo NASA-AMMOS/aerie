@@ -142,11 +142,11 @@ public final class SchedulerAppDriver {
     return new AppConfiguration(
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27185")),
         logger.isDebugEnabled(),
-        new PostgresStore(getEnv("SCHEDULER_DB_SERVER", "postgres"),
+        new PostgresStore(getEnv("AERIE_DB_SERVER", "postgres"),
                           getEnv("SCHEDULER_DB_USER", ""),
-                          Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
+                          Integer.parseInt(getEnv("AERIE_DB_PORT", "5432")),
                           getEnv("SCHEDULER_DB_PASSWORD", ""),
-                          getEnv("SCHEDULER_DB", "aerie_scheduler")),
+                          "aerie"),
         URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
     );

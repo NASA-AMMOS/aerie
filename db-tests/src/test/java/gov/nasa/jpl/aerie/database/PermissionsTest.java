@@ -10,7 +10,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PermissionsTest {
-  private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private static final String testRole = "testRole";
   private enum FunctionPermissionKey {
     apply_preset,
@@ -70,24 +68,12 @@ public class PermissionsTest {
 
   @AfterEach
   void afterEach() throws SQLException {
-    helper.clearTable("uploaded_file");
-    helper.clearTable("mission_model");
-    helper.clearTable("activity_type");
-    helper.clearTable("plan");
-    helper.clearTable("plan_collaborators");
-    helper.clearTable("activity_directive");
-    helper.clearTable("simulation");
-    helper.clearTable("dataset");
+    helper.clearSchema("merlin");
   }
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "aerie_merlin_test",
-        "Merlin Database Tests",
-        initSqlScriptFile
-    );
-    helper.startDatabase();
+    helper = new DatabaseTestHelper("aerie_permissions_test", "Database Permissions Tests");
     connection = helper.connection();
     merlinHelper = new MerlinDatabaseTestHelper(connection);
     insertUserRole(testRole);
@@ -95,17 +81,17 @@ public class PermissionsTest {
 
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    helper.stopDatabase();
-    connection = null;
-    helper = null;
+    helper.close();
   }
 
   //region Helper Methods
   private String getRole(String session) throws SQLException {
     try(final var statement = connection.createStatement()){
-      final var resp = statement.executeQuery("""
-        select metadata.get_role('%s'::json)
-        """.formatted(session));
+      final var resp = statement.executeQuery(
+          //language=sql
+          """
+          select permissions.get_role('%s'::json)
+          """.formatted(session));
       resp.next();
       return resp.getString(1);
     }
@@ -113,9 +99,11 @@ public class PermissionsTest {
 
   private String getFunctionPermission(String function, String session) throws SQLException {
     try(final var statement = connection.createStatement()){
-      final var resp = statement.executeQuery("""
-        select metadata.get_function_permissions('%s', '%s'::json)
-        """.formatted(function, session));
+      final var resp = statement.executeQuery(
+          //language=sql
+          """
+          select permissions.get_function_permissions('%s', '%s'::json)
+          """.formatted(function, session));
       resp.next();
       return resp.getString(1);
     }
@@ -127,17 +115,21 @@ public class PermissionsTest {
 
   private void checkGeneralPermissions(String function, String permission, int planId, String username) throws SQLException {
     try(final var statement = connection.createStatement()){
-      statement.execute("""
-        call metadata.check_general_permissions('%s', '%s', %d, '%s')
-        """.formatted(function, permission, planId, username));
+      statement.execute(
+          //language=sql
+          """
+          call permissions.check_general_permissions('%s', '%s', %d, '%s')
+          """.formatted(function, permission, planId, username));
     }
   }
 
   private void raiseIfPlanMergePermission(String permission) throws SQLException {
     try(final var statement = connection.createStatement()){
-      statement.execute("""
-        select metadata.raise_if_plan_merge_permission('get_plan_history', '%s');
-      """.formatted(permission));
+      statement.execute(
+          //language=sql
+          """
+          select permissions.raise_if_plan_merge_permission('get_plan_history', '%s');
+          """.formatted(permission));
     }
   }
 
@@ -148,9 +140,11 @@ public class PermissionsTest {
       String username)
   throws SQLException {
     try(final var statement = connection.createStatement()){
-      statement.execute("""
-        call metadata.check_merge_permissions('create_merge_rq', '%s', %d, %d, '%s')
-        """.formatted(permission, planIdReceiving, planIdSupplying, username));
+      statement.execute(
+          //language=sql
+          """
+          call permissions.check_merge_permissions('create_merge_rq', '%s', %d, %d, '%s')
+          """.formatted(permission, planIdReceiving, planIdSupplying, username));
     }
   }
 
@@ -159,7 +153,7 @@ public class PermissionsTest {
       statement.execute(
         //language=sql
         """
-        insert into metadata.user_roles(role, description)
+        insert into permissions.user_roles(role, description)
         values ('%s', 'A role created during DBTests');
         """.formatted(role));
     }
@@ -175,7 +169,7 @@ public class PermissionsTest {
         statement.execute(
         //language=sql
         """
-        update metadata.user_role_permission
+        update permissions.user_role_permission
         set function_permissions = '%s'::jsonb
         where role = '%s';
         """.formatted(functionPermissionsJson, role));
@@ -183,7 +177,7 @@ public class PermissionsTest {
         statement.execute(
         //language=sql
         """
-        update metadata.user_role_permission
+        update permissions.user_role_permission
         set action_permissions = '%s'::jsonb
         where role = '%s';
         """.formatted(actionPermissionsJson, role));
@@ -192,7 +186,7 @@ public class PermissionsTest {
         statement.execute(
         //language=sql
         """
-        update metadata.user_role_permission
+        update permissions.user_role_permission
         set action_permissions = '%s'::jsonb,
             function_permissions = '%s'::jsonb
         where role = '%s';
@@ -277,7 +271,7 @@ public class PermissionsTest {
     @Test
     void invalidFunctionThrowsException() throws SQLException {
       final SQLException ex = assertThrows(SQLException.class, () -> getFunctionPermission("any", merlinHelper.viewer.session()));
-      if(!ex.getMessage().contains("invalid input value for enum metadata.function_permission_key: \"any\""))
+      if(!ex.getMessage().contains("invalid input value for enum permissions.function_permission_key: \"any\""))
         throw ex;
     }
   }
@@ -288,7 +282,7 @@ public class PermissionsTest {
     void invalidPermissionFails() throws SQLException {
       final int planId = merlinHelper.insertPlan(missionModelId, merlinHelper.admin.name());
       final SQLException ex = assertThrows(SQLException.class, () -> checkGeneralPermissions("any", planId, merlinHelper.admin.name()));
-      if(!ex.getMessage().contains("invalid input value for enum metadata.permission: \"any\""))
+      if(!ex.getMessage().contains("invalid input value for enum permissions.permission: \"any\""))
         throw ex;
     }
 
@@ -347,14 +341,18 @@ public class PermissionsTest {
     void specialApplyPresetOwnerPermission() throws SQLException {
       // Set up a custom role and two users with it
       try (final var statement = connection.createStatement()) {
-        statement.execute("""
-          insert into metadata.user_roles(role) values ('applyPresetOwner');
-        """);
-        statement.execute("""
-          update metadata.user_role_permission
-          set function_permissions = '{"apply_preset": "OWNER"}'
-          where role = 'applyPresetOwner';
-        """);
+        statement.execute(
+            //language=sql
+            """
+            insert into permissions.user_roles(role) values ('applyPresetOwner');
+            """);
+        statement.execute(
+            //language=sql
+            """
+            update permissions.user_role_permission
+            set function_permissions = '{"apply_preset": "OWNER"}'
+            where role = 'applyPresetOwner';
+          """);
       }
       final var userMerlin = merlinHelper.insertUser("Merlin", "applyPresetOwner");
       final var userFalcon = merlinHelper.insertUser("Falcon", "applyPresetOwner");
@@ -388,15 +386,19 @@ public class PermissionsTest {
 
       // Cleanup added role and users
       try (final var statement = connection.createStatement()) {
-        statement.execute("""
-          delete from metadata.users
-          where username = 'Merlin'
-          or username = 'Falcon';
-        """);
-        statement.execute("""
-          delete from metadata.user_roles
-          where role = 'applyPresetOwner';
-        """);
+        statement.execute(
+            //language=sql
+            """
+            delete from permissions.users
+            where username = 'Merlin'
+            or username = 'Falcon';
+            """);
+        statement.execute(
+            //language=sql
+            """
+            delete from permissions.user_roles
+            where role = 'applyPresetOwner';
+            """);
       }
     }
   }
@@ -406,7 +408,7 @@ public class PermissionsTest {
     @Test
     void invalidValueThrows() throws SQLException {
       final SQLException exception = assertThrows(SQLException.class, () -> raiseIfPlanMergePermission("any"));
-      if(!exception.getMessage().contains("invalid input value for enum metadata.permission: \"any\""))
+      if(!exception.getMessage().contains("invalid input value for enum permissions.permission: \"any\""))
         throw exception;
     }
 
@@ -440,7 +442,7 @@ public class PermissionsTest {
       final SQLException exception = assertThrows(
           SQLException.class,
           () -> checkMergePermissions("any", basePlan, viewerPlan, merlinHelper.user.name()));
-      if(!exception.getMessage().contains("invalid input value for enum metadata.permission: \"any\""))
+      if(!exception.getMessage().contains("invalid input value for enum permissions.permission: \"any\""))
         throw exception;
     }
 

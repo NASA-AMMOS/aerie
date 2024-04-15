@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Assumptions;
 
 import java.io.File;
@@ -13,23 +14,26 @@ import java.sql.SQLException;
 /**
  * Manages the test database.
  */
+@SuppressWarnings("SqlSourceToSinkFlow")
 public class DatabaseTestHelper {
-  private Connection connection;
+  private final Connection connection;
+  private final HikariDataSource hikariDataSource;
 
   private final String dbName;
   private final String appName;
-  private final File initSqlScriptFile;
+  private final File initSqlScriptFile = new File("../deployment/postgres-init-db/sql/init.sql");
 
-  public DatabaseTestHelper(String dbName, String appName, File initSqlScriptFile) {
+  public DatabaseTestHelper(String dbName, String appName) throws SQLException, IOException, InterruptedException {
     this.dbName = dbName;
     this.appName = appName;
-    this.initSqlScriptFile = initSqlScriptFile;
+    this.hikariDataSource = startDatabase();
+    this.connection = hikariDataSource.getConnection();
   }
 
   /**
    * Sets up the test database
    */
-  public void startDatabase() throws SQLException, IOException, InterruptedException {
+  private HikariDataSource startDatabase() throws IOException, InterruptedException {
     // Create test database and grant privileges
     {
       final var pb = new ProcessBuilder("psql",
@@ -78,16 +82,13 @@ public class DatabaseTestHelper {
 
     hikariConfig.setConnectionInitSql("set time zone 'UTC'");
 
-    final var hikariDataSource = new HikariDataSource(hikariConfig);
-
-    connection = hikariDataSource.getConnection();
+    return new HikariDataSource(hikariConfig);
   }
 
   /**
    * Tears down the test database
    */
-  public void stopDatabase() throws SQLException, IOException, InterruptedException {
-
+  public void close() throws SQLException, IOException, InterruptedException {
     Assumptions.assumeTrue(connection != null);
     connection.close();
 
@@ -105,15 +106,30 @@ public class DatabaseTestHelper {
     final var proc = pb.start();
     proc.waitFor();
     proc.destroy();
+    connection.close();
+    hikariDataSource.close();
   }
 
   public Connection connection() {
     return connection;
   }
 
-  public void clearTable(String table) throws SQLException {
+  public void clearTable(@Language(value="SQL", prefix="SELECT * FROM ") String table) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
+    }
+  }
+
+  public void clearSchema(@Language(value="SQL", prefix="DROP SCHEMA ") String schema) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          select tablename from pg_tables where schemaname = '%s';
+          """.formatted(schema));
+      while(res.next()) {
+        clearTable(schema+"."+res.getString("tablename"));
+      }
     }
   }
 }

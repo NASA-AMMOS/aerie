@@ -29,7 +29,7 @@ commandExpansionRouter.post('/put-expansion', async (req, res, next) => {
 
   const { rows } = await db.query(
     `
-    insert into expansion_rule (activity_type, expansion_logic, authoring_command_dict_id,
+    insert into sequencing.expansion_rule (activity_type, expansion_logic, authoring_command_dict_id,
                                 authoring_mission_model_id)
     values ($1, $2, $3, $4)
     returning id;
@@ -170,12 +170,12 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const { rows } = await db.query(
     `
         with expansion_set_id as (
-          insert into expansion_set (command_dict_id, mission_model_id, description, owner, name)
+          insert into sequencing.expansion_set (command_dict_id, mission_model_id, description, owner, name)
             values ($1, $2, $3, $4, $5)
             returning id),
-             rules as (select id, activity_type from expansion_rule where id = any ($6::int[]) order by id)
+             rules as (select id, activity_type from sequencing.expansion_rule where id = any ($6::int[]) order by id)
         insert
-        into expansion_set_to_rule (set_id, rule_id, activity_type)
+        into sequencing.expansion_set_to_rule (set_id, rule_id, activity_type)
         select a.id, b.id, b.activity_type
         from (select id from expansion_set_id) a,
              (select id, activity_type from rules) b
@@ -321,11 +321,11 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
   const { rows } = await db.query(
     `
         with expansion_run_id as (
-          insert into expansion_run (simulation_dataset_id, expansion_set_id)
+          insert into sequencing.expansion_run (simulation_dataset_id, expansion_set_id)
             values ($1, $2)
             returning id)
         insert
-        into activity_instance_commands (expansion_run_id,
+        into sequencing.activity_instance_commands (expansion_run_id,
                                          activity_instance_id,
                                          commands,
                                          errors)
@@ -361,8 +361,8 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
   const seqToSimulatedActivity = await db.query(
     `
       select seq_id, simulated_activity_id
-      from sequence_to_simulated_activity
-      where sequence_to_simulated_activity.simulated_activity_id in (${pgFormat(
+      from sequencing.sequence_to_simulated_activity
+      where sequencing.sequence_to_simulated_activity.simulated_activity_id in (${pgFormat(
         '%L',
         expandedActivityInstances.map(eai => eai.id),
       )})
@@ -375,12 +375,12 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
     const seqRows = await db.query(
       `
         select metadata, seq_id, simulation_dataset_id
-        from sequence
-        where sequence.seq_id in (${pgFormat(
+        from sequencing.sequence s
+        where s.seq_id in (${pgFormat(
           '%L',
           seqToSimulatedActivity.rows.map(row => row.seq_id),
         )})
-        and sequence.simulation_dataset_id = $1;
+        and s.simulation_dataset_id = $1;
       `,
       [simulationDatasetId],
     );
@@ -462,7 +462,7 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
       const { rows } = await db.query(
         `
-          insert into expanded_sequences (expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string)
+          insert into sequencing.expanded_sequences (expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string)
             values ($1, $2, $3, $4, $5)
             returning id
       `,

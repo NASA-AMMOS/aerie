@@ -124,11 +124,11 @@ public final class SchedulerWorkerAppDriver {
 
   private static WorkerAppConfiguration loadConfiguration() {
     return new WorkerAppConfiguration(
-        new PostgresStore(getEnv("SCHEDULER_WORKER_DB_SERVER", "postgres"),
-                          getEnv("SCHEDULER_WORKER_DB_USER", ""),
-                          Integer.parseInt(getEnv("SCHEDULER_WORKER_DB_PORT", "5432")),
-                          getEnv("SCHEDULER_WORKER_DB_PASSWORD", ""),
-                          getEnv("SCHEDULER_WORKER_DB", "aerie_scheduler")),
+        new PostgresStore(getEnv("AERIE_DB_SERVER", "postgres"),
+                          getEnv("SCHEDULER_DB_USER", ""),
+                          Integer.parseInt(getEnv("AERIE_DB_PORT", "5432")),
+                          getEnv("SCHEDULER_DB_PASSWORD", ""),
+                          "aerie"),
         URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
         Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),

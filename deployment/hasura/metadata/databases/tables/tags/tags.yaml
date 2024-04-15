@@ -1,0 +1,50 @@
+table:
+  name: tags
+  schema: tags
+configuration:
+  custom_name: "tags"
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, color]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [name, color]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, color, owner]
+      filter: {}
+  - role: user
+    permission:
+      columns: [name, color, owner]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
