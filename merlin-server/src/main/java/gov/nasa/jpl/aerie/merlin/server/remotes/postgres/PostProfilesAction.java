@@ -93,7 +93,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return profileRecords;
   }
 
-  private static <T> Duration sumDurations(final List<ProfileSegment<Optional<T>>> segments) {
+  public static <T> Duration sumDurations(final List<ProfileSegment<Optional<T>>> segments) {
     return segments.stream().reduce(
         Duration.ZERO,
         (acc, pair) -> acc.plus(pair.extent()),

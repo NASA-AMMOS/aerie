@@ -289,7 +289,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(
+  public SimulationResultsWithoutProfiles runSimulation(
       final CreateSimulationMessage message,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener)

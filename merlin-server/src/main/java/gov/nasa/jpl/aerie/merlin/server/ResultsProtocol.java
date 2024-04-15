@@ -2,9 +2,12 @@ package gov.nasa.jpl.aerie.merlin.server;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsWithoutProfiles;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 public final class ResultsProtocol {
@@ -38,7 +41,9 @@ public final class ResultsProtocol {
     //   it must still complete with `failWith()`.
     //   Otherwise, the reader would not be able to reclaim unique ownership
     //   of the underlying resource in order to deallocate it.
-    void succeedWith(SimulationResults results);
+    void succeedWith(SimulationResultsWithoutProfiles results);
+
+    void stream(StreamSegment segment);
 
     void failWith(SimulationFailure reason);
 
@@ -48,10 +53,12 @@ public final class ResultsProtocol {
       failWith(builder.build());
     }
 
-    void reportIncompleteResults(SimulationResults results);
+    void reportIncompleteResults(SimulationResultsWithoutProfiles results);
 
     void reportSimulationExtent(Duration extent);
   }
 
   public interface OwnerRole extends ReaderRole, WriterRole {}
+
+  public record StreamSegment(Duration startOffset, Map<String, SerializedValue> updatedValues) {}
 }

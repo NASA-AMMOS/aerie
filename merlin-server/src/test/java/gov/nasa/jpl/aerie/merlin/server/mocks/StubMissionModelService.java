@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsWithoutProfiles;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -73,13 +74,11 @@ public final class StubMissionModelService implements MissionModelService {
   public static final ValidationNotice UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURE = new ValidationNotice(List.of(),
       "Unconstructable activity instance");
 
-  public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(
-      Map.of(),
-      Map.of(),
-      Map.of(),
-      Map.of(),
+  public static final SimulationResultsWithoutProfiles SUCCESSFUL_SIMULATION_RESULTS = new SimulationResultsWithoutProfiles(
       Instant.EPOCH,
       Duration.ZERO,
+      Map.of(),
+      Map.of(),
       List.of(),
       new TreeMap<>());
 
@@ -195,7 +194,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public SimulationResults runSimulation(
+  public SimulationResultsWithoutProfiles runSimulation(
       final CreateSimulationMessage message,
       Consumer<Duration> simulationExtentConsumer,
       Supplier<Boolean> canceledListener)

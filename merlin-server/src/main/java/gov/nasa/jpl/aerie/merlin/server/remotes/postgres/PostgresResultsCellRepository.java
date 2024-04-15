@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsWithoutProfiles;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -22,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.intellij.lang.annotations.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,13 +31,20 @@ import javax.json.Json;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
+
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
   private static final Logger logger = LoggerFactory.getLogger(PostgresResultsCellRepository.class);
@@ -357,16 +366,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postSimulationResults(
       final Connection connection,
       final long datasetId,
-      final SimulationResults results,
+      final SimulationResultsWithoutProfiles results,
       final SimulationStateRecord state
   ) throws SQLException, NoSuchSimulationDatasetException
   {
-    final var simulationStart = new Timestamp(results.startTime);
-    final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
-    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet);
-    postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
-    insertSimulationTopics(connection, datasetId, results.topics);
-    insertSimulationEvents(connection, datasetId, results.events, simulationStart);
+    final var simulationStart = new Timestamp(results.startTime());
+    postActivities(connection, datasetId, results.simulatedActivities(), results.unfinishedActivities(), simulationStart);
+    insertSimulationTopics(connection, datasetId, results.topics());
+    insertSimulationEvents(connection, datasetId, results.events(), simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
       setSimulationStateAction.apply(datasetId, state);
@@ -529,7 +536,96 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void succeedWith(final SimulationResults results) {
+    public void stream(ResultsProtocol.StreamSegment segment) {
+      final @Language("SQL") String sql = """
+      insert into profile (dataset_id, name, type, duration)
+      values (?, ?, ?::jsonb, ?::interval)
+    """;
+
+      try (final var connection = dataSource.getConnection()) {
+        final var statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (final var postProfilesAction = new PostProfilesAction(connection)) {
+          final var resourceNames = new ArrayList<String>();
+          final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
+          final var durations = new ArrayList<Duration>();
+          for (final var entry : profileSet.realProfiles().entrySet()) {
+            final var resource = entry.getKey();
+            final var schema = entry.getValue().getLeft();
+            final var realResourceType = Pair.of("real", schema);
+            final var segments = entry.getValue().getRight();
+            final var duration = PostProfilesAction.sumDurations(segments);
+            resourceNames.add(resource);
+            resourceTypes.add(realResourceType);
+            durations.add(duration);
+            statement.setLong(1, datasetId);
+            statement.setString(2, resource);
+            statement.setString(3, realProfileTypeP.unparse(realResourceType).toString());
+            PreparedStatements.setDuration(statement, 4, duration);
+            statement.addBatch();
+          }
+
+          for (final var entry : profileSet.discreteProfiles().entrySet()) {
+            final var resource = entry.getKey();
+            final var schema = entry.getValue().getLeft();
+            final var resourceType = Pair.of("discrete", schema);
+            final var segments = entry.getValue().getRight();
+            final var duration = PostProfilesAction.sumDurations(segments);
+            resourceNames.add(resource);
+            resourceTypes.add(resourceType);
+            durations.add(duration);
+            statement.setLong(1, datasetId);
+            statement.setString(2, resource);
+            statement.setString(3, discreteProfileTypeP.unparse(resourceType).toString());
+            PreparedStatements.setDuration(statement, 4, duration);
+            statement.addBatch();
+          }
+
+          statement.executeBatch();
+          final var resultSet = statement.getGeneratedKeys();
+
+          final var profileRecords1 = new HashMap<String, ProfileRecord>(resourceNames.size());
+          for (int i = 0; i < resourceNames.size(); i++) {
+            final var resource = resourceNames.get(i);
+            final var type = resourceTypes.get(i);
+            final var duration = durations.get(i);
+            if (!resultSet.next()) throw new Error("Not enough generated IDs returned from batch insertion.");
+            final long id = resultSet.getLong(1);
+            profileRecords1.put(resource, new ProfileRecord(
+                id,
+                datasetId,
+                resource,
+                type,
+                duration
+            ));
+          }
+
+          final var profileRecords = (Map<String, ProfileRecord>) profileRecords1;
+          final var realProfiles = profileSet.realProfiles();
+          final var discreteProfiles = profileSet.discreteProfiles();
+          for (final var entry : profileRecords.entrySet()) {
+            final ProfileRecord record =  entry.getValue();
+            final var resource =  entry.getKey();
+            switch (record.type().getLeft()) {
+              case "real" -> try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
+                postProfileSegmentsAction.apply(datasetId, record, realProfiles.get(resource).getRight(), realDynamicsP);
+              }
+              case "discrete" -> try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
+                postProfileSegmentsAction.apply(
+                    datasetId,
+                    record,
+                    discreteProfiles.get(resource).getRight(), serializedValueP);
+              }
+              default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
+            }
+          }
+        }
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public void succeedWith(final SimulationResultsWithoutProfiles results) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
         postSimulationResults(connection, datasetId, results, SimulationStateRecord.success());
@@ -561,14 +657,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void reportIncompleteResults(final SimulationResults results) {
+    public void reportIncompleteResults(final SimulationResultsWithoutProfiles results) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
         final var reason = new SimulationFailure.Builder()
             .type("SIMULATION_CANCELED")
             .data(Json.createObjectBuilder()
-                    .add("elapsedTime", SimulationException.formatDuration(results.duration))
-                    .add("utcTimeDoy", SimulationException.formatInstant(Duration.addToInstant(results.startTime, results.duration)))
+                    .add("elapsedTime", SimulationException.formatDuration(results.duration()))
+                    .add("utcTimeDoy", SimulationException.formatInstant(Duration.addToInstant(results.startTime(), results.duration())))
                     .build())
             .message("Simulation run was canceled")
             .build();
