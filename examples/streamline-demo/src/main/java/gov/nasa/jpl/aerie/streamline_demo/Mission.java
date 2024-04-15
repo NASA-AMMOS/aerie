@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.nameEmits;
+
 public final class Mission {
   public final DataModel dataModel;
   public final ErrorTestingModel errorTestingModel;
@@ -14,6 +16,7 @@ public final class Mission {
     var registrar = new Registrar(registrar$, Registrar.ErrorBehavior.Log);
     if (config.traceResources) registrar.setTrace();
     if (config.profileResources) Resource.profileAllResources();
+    if (config.namingEmits) nameEmits();
     dataModel = new DataModel(registrar, config);
     errorTestingModel = new ErrorTestingModel(registrar, config);
     approximationModel = new ApproximationModel(registrar, config);

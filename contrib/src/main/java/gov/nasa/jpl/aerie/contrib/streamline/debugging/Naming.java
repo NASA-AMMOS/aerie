@@ -23,6 +23,8 @@ import java.util.stream.IntStream;
  * </p>
  */
 public final class Naming {
+  public static boolean NAMING = true;
+
   private Naming() {}
 
   // Use a WeakHashMap so that naming a thing doesn't prevent it from being garbage-collected.
@@ -45,6 +47,7 @@ public final class Naming {
    * If any of the args are anonymous, so is this thing.
    */
   public static <T> T name(T thing, String nameFormat, Object... args) {
+    if (!NAMING) return thing;
     // Only capture weak references to arguments, so we don't leak memory
     var args$ = Arrays.stream(args).map(WeakReference::new).toArray(WeakReference[]::new);
     NAMES.put(thing, context -> {

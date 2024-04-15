@@ -59,7 +59,7 @@ public class CauseError {
     if (effectName.isEmpty()) {
       resource.emit(effect);
     } else {
-      resource.emit(effectName, effect);
+      resource.emit(true, effectName, effect);
     }
   }
 

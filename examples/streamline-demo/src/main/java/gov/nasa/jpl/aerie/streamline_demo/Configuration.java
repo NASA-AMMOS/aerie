@@ -11,6 +11,9 @@ public final class Configuration {
   public boolean profileResources = false;
 
   @Parameter
+  public boolean namingEmits = false;
+
+  @Parameter
   public double approximationTolerance = 1e-2;
 
   @Parameter

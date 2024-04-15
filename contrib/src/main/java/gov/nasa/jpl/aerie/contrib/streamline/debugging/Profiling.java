@@ -172,11 +172,14 @@ public final class Profiling {
 
   private static long ANONYMOUS_ID = 0;
   private static void assignName(String typeName, Object profiledThing, String explicitName, Object originalThing) {
+    var oldNaming = NAMING;
+    NAMING = true;
     if (explicitName == null) {
       name(profiledThing, typeName + (ANONYMOUS_ID++) + " = %s", originalThing);
     } else {
       name(profiledThing, explicitName);
     }
+    NAMING = oldNaming;
   }
 
   private static <R> R accrue(Map<String, CallStats> statsMap, String name, Supplier<R> call) {
