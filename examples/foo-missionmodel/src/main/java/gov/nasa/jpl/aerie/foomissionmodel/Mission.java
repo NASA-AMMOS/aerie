@@ -81,6 +81,13 @@ public final class Mission {
         ModelActions.delay(Duration.SECOND);
       }
     });
+
+    if(config.raiseException) {
+      spawn(() -> {
+        delay(Duration.HOUR);
+        throw new RuntimeException("Daemon task exception raised.");
+      });
+    }
   }
 
   public void test() {

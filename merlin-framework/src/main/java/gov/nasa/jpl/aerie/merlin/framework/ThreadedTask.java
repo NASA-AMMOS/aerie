@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
@@ -203,8 +204,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler call(final TaskFactory<?> child) {
-      return this.yield(TaskStatus.calling(child, ThreadedTask.this));
+    public Scheduler call(final InSpan inSpan, final TaskFactory<?> child) {
+      return this.yield(TaskStatus.calling(inSpan, child, ThreadedTask.this));
     }
 
     @Override

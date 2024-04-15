@@ -92,12 +92,14 @@ public record SynchronousSimulationAgent (
             plan.configuration), extentListener::updateValue, canceledListener);
       }
     } catch (SimulationException ex) {
+      final var errorMsgBuilder = Json.createObjectBuilder()
+                    .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
+                    .add("utcTimeDoy", SimulationException.formatInstant(ex.instant));
+      ex.directiveId.ifPresent(directiveId -> errorMsgBuilder.add("executingDirectiveId", directiveId.id()));
       writer.failWith(b -> b
           .type("SIMULATION_EXCEPTION")
-          .data(Json.createObjectBuilder()
-                    .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
-                    .add("utcTimeDoy", SimulationException.formatInstant(ex.instant))
-                    .build())
+          .message(ex.cause.getMessage())
+          .data(errorMsgBuilder.build())
           .trace(ex.cause));
       return;
     } catch (final MissionModelService.NoSuchMissionModelException ex) {

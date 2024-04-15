@@ -41,6 +41,27 @@ array_relationships:
       table:
         name: resource_type
         schema: public
+remote_relationships:
+- name: scheduling_specification_conditions
+  definition:
+    to_source:
+      relationship_type: array
+      source: AerieScheduler
+      table:
+        schema: public
+        name: scheduling_model_specification_conditions
+      field_mapping:
+        id: model_id
+- name: scheduling_specification_goals
+  definition:
+    to_source:
+      relationship_type: array
+      source: AerieScheduler
+      table:
+        schema: public
+        name: scheduling_model_specification_goals
+      field_mapping:
+        id: model_id
 select_permissions:
   - role: aerie_admin
     permission:

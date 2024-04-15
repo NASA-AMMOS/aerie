@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
@@ -109,7 +110,11 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * arguments must be identical.
    */
   @Override
-  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults, final EvaluationEnvironment evaluationEnvironment) {
+  public Collection<Conflict> getConflicts(
+      final Plan plan,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final SchedulerModel schedulerModel) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //run the generator to see what acts are still desired

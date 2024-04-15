@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import javax.json.Json;
+import javax.json.JsonValue;
 import java.io.IOException;
 import java.util.Comparator;
 
@@ -363,6 +364,198 @@ public class SimulationTests {
       assertEquals(simConfig.arguments(), newSimConfig.arguments());
       assertEquals(simConfig.simulationStartTime(), newSimConfig.simulationStartTime());
       assertEquals(simConfig.simulationEndTime(), newSimConfig.simulationEndTime());
+    }
+  }
+
+  @Nested
+  class SimulationExceptionResponse {
+    private int fooId;
+    private int fooPlan;
+
+    @BeforeEach
+    void beforeEach() throws IOException, InterruptedException {
+      // Insert the Mission Model
+      // Foo contains ways to trigger exceptions on-demand
+      try (final var gateway = new GatewayRequests(playwright)) {
+        fooId = hasura.createMissionModel(
+            gateway.uploadFooJar(),
+            "Foo (e2e tests)",
+            "aerie_e2e_tests",
+            "Simulation Tests");
+      }
+      // Insert the Plan
+      fooPlan = hasura.createPlan(
+          fooId,
+          "Foo Plan - Error Simulation Tests",
+          "02:00:00",
+          planStartTimestamp);
+    }
+
+    @AfterEach
+    void afterEach() throws IOException {
+      // Remove Model and Plan
+      hasura.deletePlan(fooPlan);
+      hasura.deleteMissionModel(fooId);
+    }
+
+    /**
+     * If a directive throws an exception, the error response will include the executing directive id.
+     */
+    @Test
+    void directiveIdIncluded() throws IOException {
+      // Setup: Insert a directive that will throw
+      int dirId = hasura.insertActivity(
+          fooPlan,
+          "DaemonCheckerActivity",
+          "01:00:00",
+          Json.createObjectBuilder().add("minutesElapsed", 1).build());
+
+      final var simDatasetId = hasura.awaitFailingSimulation(fooPlan).simDatasetId();
+      final var simDataset = hasura.getSimulationDataset(simDatasetId);
+      assertEquals(SimulationDataset.SimulationStatus.failed, simDataset.status());
+
+      // The correct type of error was returned
+      assertTrue(simDataset.reason().isPresent());
+      final var reason = simDataset.reason().get();
+      assertEquals("SIMULATION_EXCEPTION", reason.type());
+
+      final var exception = reason.data();
+
+      // The error includes the directive id that was executing
+      assertTrue(exception.containsKey("executingDirectiveId"));
+      assertEquals(dirId, exception.getInt("executingDirectiveId"));
+
+      // The error message is correct
+      assertEquals("Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.\n\tExpected: 1 Actual: 59",
+                   reason.message());
+
+      // The error was thrown at the correct time
+      assertTrue(exception.containsKey("utcTimeDoy"));
+      assertEquals("2023-001T01:00:00", exception.getString("utcTimeDoy"));
+
+      // The trace starts at the original exception and doesn't include the intermediary SpanException and SimulationException
+      final var expectedStart = """
+          java.lang.RuntimeException: Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.
+          \tExpected: 1 Actual: 59
+          \tat gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonCheckerActivity.run(DaemonCheckerActivity.java""";
+      assertTrue(reason.trace().startsWith(expectedStart));
+    }
+
+    /**
+     * If a child span throws an exception, the error response will include the parent directive's id.
+     */
+    @Test
+    void directiveIdOnDescendant() throws IOException {
+      // Setup: Insert a directive that will throw
+      int dirId = hasura.insertActivity(
+          fooPlan,
+          "DaemonCheckerSpawner",
+          "01:00:00",
+          Json.createObjectBuilder().add("minutesElapsed", 1).add("spawnDelay", 1).build());
+
+      final var simDatasetId = hasura.awaitFailingSimulation(fooPlan).simDatasetId();
+      final var simDataset = hasura.getSimulationDataset(simDatasetId);
+      assertEquals(SimulationDataset.SimulationStatus.failed, simDataset.status());
+
+      // The correct type of error was returned
+      assertTrue(simDataset.reason().isPresent());
+      final var reason = simDataset.reason().get();
+      assertEquals("SIMULATION_EXCEPTION", reason.type());
+
+      final var exception = reason.data();
+
+      // The error includes the directive id that was executing
+      assertTrue(exception.containsKey("executingDirectiveId"));
+      assertEquals(dirId, exception.getInt("executingDirectiveId"));
+
+      // The error message is correct
+      assertEquals("Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.\n\tExpected: 1 Actual: 60",
+                   reason.message());
+
+      // The error was thrown at the correct time
+      assertTrue(exception.containsKey("utcTimeDoy"));
+      assertEquals("2023-001T01:01:00", exception.getString("utcTimeDoy"));
+
+      // The trace starts at the original exception and doesn't include the intermediary SpanException and SimulationException
+      final var expectedStart = """
+          java.lang.RuntimeException: Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.
+          \tExpected: 1 Actual: 60
+          \tat gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonCheckerActivity.run(DaemonCheckerActivity.java""";
+      assertTrue(reason.trace().startsWith(expectedStart));
+    }
+
+    /**
+     * If a daemon task throws an exception, the error response will not include any id
+     * but will include the exception message.
+     */
+    @Test
+    void noDirectiveIdOnDaemon() throws IOException {
+      // Set up: Update the config to force an exception 1hr into the plan
+      hasura.updateSimArguments(fooPlan, Json.createObjectBuilder().add("raiseException", JsonValue.TRUE).build());
+
+      final var simDatasetId = hasura.awaitFailingSimulation(fooPlan).simDatasetId();
+      final var simDataset = hasura.getSimulationDataset(simDatasetId);
+      assertEquals(SimulationDataset.SimulationStatus.failed, simDataset.status());
+
+      // The correct type of error was returned
+      assertTrue(simDataset.reason().isPresent());
+      final var reason = simDataset.reason().get();
+      assertEquals("SIMULATION_EXCEPTION", reason.type());
+
+      final var exception = reason.data();
+
+      // The error does not include any directive ids
+      assertFalse(exception.containsKey("executingDirectiveId"));
+
+      // The error message is correct
+      assertEquals("Daemon task exception raised.", reason.message());
+
+      // The error was thrown at the correct time
+      assertTrue(exception.containsKey("utcTimeDoy"));
+      assertEquals("2023-001T01:00:00", exception.getString("utcTimeDoy"));
+
+      // The trace starts at the original exception and doesn't include the intermediary SimulationException
+      final var expectedStart = """
+          java.lang.RuntimeException: Daemon task exception raised.
+          \tat gov.nasa.jpl.aerie.foomissionmodel.Mission.lambda$new$1(Mission.java""";
+      assertTrue(reason.trace().startsWith(expectedStart));
+    }
+
+    /**
+     * If a daemon task throws an exception while an activity directive is executing,
+     * the error response won't include the directive's id
+     */
+    @Test
+    void noDirectiveIdDaemonMidDirective() throws IOException {
+      // Set up: Update the config to force an exception 1hr into the plan
+      // and add an activity that will be executing at that time
+      hasura.updateSimArguments(fooPlan, Json.createObjectBuilder().add("raiseException", JsonValue.TRUE).build());
+      hasura.insertActivity(
+          fooPlan,
+          "DaemonCheckerSpawner",
+          "00:59:00",
+          Json.createObjectBuilder().add("minutesElapsed", 1).add("spawnDelay", 5).build());
+
+      final var simDatasetId = hasura.awaitFailingSimulation(fooPlan).simDatasetId();
+      final var simDataset = hasura.getSimulationDataset(simDatasetId);
+      assertEquals(SimulationDataset.SimulationStatus.failed, simDataset.status());
+
+      // The correct type of error was returned
+      assertTrue(simDataset.reason().isPresent());
+      final var reason = simDataset.reason().get();
+      assertEquals("SIMULATION_EXCEPTION", reason.type());
+
+      final var exception = reason.data();
+
+      // The error does not include any directive ids
+      assertFalse(exception.containsKey("executingDirectiveId"));
+
+      // The error message is correct
+      assertEquals("Daemon task exception raised.", reason.message());
+
+      // The error was thrown at the correct time
+      assertTrue(exception.containsKey("utcTimeDoy"));
+      assertEquals("2023-001T01:00:00", exception.getString("utcTimeDoy"));
     }
   }
 }

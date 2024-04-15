@@ -41,20 +41,20 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [model_id, goal_id, goal_revision]
+      columns: [model_id, goal_id, goal_revision, priority]
       check: {}
   - role: user
     permission:
-      columns: [model_id, goal_id, goal_revision]
+      columns: [model_id, goal_id, goal_revision, priority]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [goal_revision]
+      columns: [goal_revision, priority]
       filter: {}
   - role: user
     permission:
-      columns: [goal_revision]
+      columns: [goal_revision, priority]
       filter: {}
 delete_permissions:
   - role: aerie_admin

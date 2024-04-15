@@ -1,6 +1,6 @@
 {
   "name": "sequencing-server",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Aerie sequencing server",
   "type": "module",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "@js-temporal/polyfill": "~0.4.3",
     "@nasa-jpl/aerie-ampcs": "~1.0.1",
     "@nasa-jpl/aerie-ts-user-code-runner": "~0.6.0",
-    "@nasa-jpl/seq-json-schema": "1.0.19",
+    "@nasa-jpl/seq-json-schema": "1.0.20",
     "body-parser": "~1.20.1",
     "dataloader": "~2.2.0",
     "express": "~5.0.0-beta.1",

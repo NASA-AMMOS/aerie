@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -55,7 +56,7 @@ public final class MissionModel<Model> {
 
   public TaskFactory<Unit> getDaemon() {
     return executor -> scheduler -> {
-      MissionModel.this.daemons.forEach(scheduler::spawn);
+      MissionModel.this.daemons.forEach($ -> scheduler.spawn(InSpan.Fresh, $));
       return TaskStatus.completed(Unit.UNIT);
     };
   }
