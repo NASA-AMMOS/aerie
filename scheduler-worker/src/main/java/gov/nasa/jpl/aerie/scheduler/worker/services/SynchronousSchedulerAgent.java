@@ -175,8 +175,7 @@ public record SynchronousSchedulerAgent(
 
         compiledGlobalSchedulingConditions.forEach(problem::add);
 
-        final var orderedGoals = new ArrayList<Goal>();
-        final var goals = new HashMap<Goal, GoalId>();
+          final var goals = new HashMap<Goal, GoalId>();
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
@@ -207,10 +206,8 @@ public record SynchronousSchedulerAgent(
               .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
           return;
         }
+        final var orderedGoals = new ArrayList<Goal>();
         for (final var compiledGoal : compiledGoals) {
-          if (compiledGoal.getValue() instanceof SchedulingDSL.GoalSpecifier.Procedure p) {
-
-          }
           final var goal = GoalBuilder
               .goalOfGoalSpecifier(
                   compiledGoal.getValue(),

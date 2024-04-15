@@ -13,6 +13,7 @@ public class ProcedureLoadingTest {
     // Load jar from absolute filepath
     final Constraint constraint = ProcedureLoader.loadProcedure(Path.of(jarPath), "name", "version");
     // Run code
+    constraint.run(null, null);
 
   }
 }
