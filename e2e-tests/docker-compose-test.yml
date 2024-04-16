@@ -19,7 +19,7 @@ services:
       POSTGRES_PASSWORD: '${AERIE_PASSWORD}'
       POSTGRES_PORT: 5432
       POSTGRES_USER: '${AERIE_USERNAME}'
-    image: 'ghcr.io/nasa-ammos/aerie-gateway:develop'
+    image: 'ghcr.io/nasa-ammos/aerie-gateway:dev-2.7.1'
     ports: ['9000:9000']
     restart: always
     volumes:
@@ -111,7 +111,7 @@ services:
       PUBLIC_HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       PUBLIC_HASURA_SERVER_URL: http://hasura:8080/v1/graphql
       PUBLIC_HASURA_WEB_SOCKET_URL: ws://localhost:8080/v1/graphql
-    image: 'ghcr.io/nasa-ammos/aerie-ui:develop'
+    image: 'ghcr.io/nasa-ammos/aerie-ui:dev-2.7.1'
     ports: ['80:80']
     restart: always
   aerie_merlin_worker_1:
