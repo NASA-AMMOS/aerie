@@ -12,9 +12,24 @@ We would love for you to contribute to Aerie and help make it even better than i
 
 If you would like to chat about the question in real-time, you can reach out via [our Slack channel](https://join.slack.com/t/nasa-ammos/shared_invite/zt-1mlgmk5c2-MgqVSyKzVRUWrXy87FNqPw).
 
-## <a name="building"></a> Building Aerie
+## Prerequisites
+
+### Code of Conduct
+
+Our Code of Conduct helps facilitate a positive interaction environment for everyone involved with the team, and provides guidance on what to do if you experience problematic behavior. Read more in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and make sure you agree to its terms.
+
+### <a name="building"></a> Development Environment
 
 To build and develop Aerie please read through the [developer documentation](./DEVELOPER.md).
+
+### Communication Channels
+
+Before contributing changes to our project, it's a great idea to be familiar with our communication channels and to socialize your potential contributions to get feedback early. This will help give you context for your contributions, no matter their form.
+
+Our communication channels are:
+- [Issue tracking system](https://github.com/NASA-AMMOS/aerie/issues) - a regularly monitored area to report issues with our software or propose changes
+- [Discussion board](https://github.com/NASA-AMMOS/aerie/discussions) - a permanently archived place to hold conversations related to our project, and to propose as well as show+tell topics to the contributor team. This resource can be searched for old discussions.
+- [Our Slack channel](https://join.slack.com/t/nasa-ammos/shared_invite/zt-1mlgmk5c2-MgqVSyKzVRUWrXy87FNqPw) - a space for high-bandwidth communication with other users, as well as the development team.
 
 ## <a name="pr-guidelines"></a> Pull Request Guidelines
 
