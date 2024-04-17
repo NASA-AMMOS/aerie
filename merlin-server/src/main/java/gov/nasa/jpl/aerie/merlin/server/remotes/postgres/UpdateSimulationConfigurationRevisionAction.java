@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 /*package-local*/ final class UpdateSimulationConfigurationRevisionAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-        update simulation
+        update merlin.simulation
         set revision = revision
         where plan_id = ?;
         """;
