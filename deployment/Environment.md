@@ -23,7 +23,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `JAVA_OPTS`                           | Configuration for Merlin's logging level and output file                                                                    | `string`  | log level: warn. output: stderr |
 | `MERLIN_PORT`                         | Port number for the Merlin server                                                                                           | `number`  | 27183                           |
 | `MERLIN_LOCAL_STORE`                  | Local storage for Merlin in the container                                                                                   | `string`  | /usr/src/app/merlin_file_store  |
-| `MERLIN_DB_USER`                      | Username of the Merlin DB User                                                                                              | `string`  | merlin                          |
+| `MERLIN_DB_USER`                      | Username of the Merlin DB User                                                                                              | `string`  | merlin_service                  |
 | `MERLIN_DB_PASSWORD`                  | Password of the Merlin DB User                                                                                              | `string`  |                                 |
 | `UNTRUE_PLAN_START`                   | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on | `string`  |                                 |
 | `ENABLE_CONTINUOUS_VALIDATION_THREAD` | Flag to enable a worker thread that continuously computes and caches activity directive validation results                  | `boolean` | true                            |
@@ -37,7 +37,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `AERIE_DB_PORT`                          | The DB instance port number that Merlin will connect with                                                                   | `number` | 5432                                         |
 | `JAVA_OPTS`                              | Configuration for Merlin's logging level and output file                                                                    | `string` | log level: warn. output: stderr              |
 | `MERLIN_WORKER_LOCAL_STORE`              | The local storage as for the Merlin container                                                                               | `string` | /usr/src/app/merlin_file_store               |
-| `MERLIN_DB_USER`                         | Username of the Merlin DB User                                                                                              | `string` | merlin                                       |
+| `MERLIN_DB_USER`                         | Username of the Merlin DB User                                                                                              | `string` | merlin_service                               |
 | `MERLIN_DB_PASSWORD`                     | Password of the Merlin DB User                                                                                              | `string` | (this must the same as the Merlin container) |
 | `SIMULATION_PROGRESS_POLL_PERIOD_MILLIS` | Cadence at which the worker will report simulation progress to the database.                                                | `number` | 5000                                         |
 | `UNTRUE_PLAN_START`                      | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on | `string` |                                              |
@@ -51,7 +51,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `HASURA_GRAPHQL_ADMIN_SECRET` | The admin secret for Hasura which gives admin access if used.    | `string` |                                 |
 | `JAVA_OPTS`                   | Configuration for the scheduler's logging level and output file  | `string` | log level: warn. output: stderr |
 | `MERLIN_GRAPHQL_URL`          | URI of the Merlin graphql interface to call                      | `string` | http://hasura:8080/v1/graphql   |
-| `SCHEDULER_DB_USER`           | Username of the Scheduler DB User                                | `string` | scheduler                       |
+| `SCHEDULER_DB_USER`           | Username of the Scheduler DB User                                | `string` | scheduler_service               |
 | `SCHEDULER_DB_PASSWORD`       | Password of the Scheduler DB User                                | `string` |                                 |
 | `SCHEDULER_PORT`              | Port number for the scheduler server                             | `number` | 27185                           |
 
@@ -65,7 +65,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `JAVA_OPTS`                   | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
 | `MERLIN_GRAPHQL_URL`          | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
 | `MERLIN_LOCAL_STORE`          | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
-| `SCHEDULER_DB_USER`           | Username of the Scheduler DB User                                     | `string` | scheduler                                          |
+| `SCHEDULER_DB_USER`           | Username of the Scheduler DB User                                     | `string` | scheduler_service                                  |
 | `SCHEDULER_DB_PASSWORD`       | Password of the Scheduler DB User                                     | `string` |                                                    |
 | `SCHEDULER_OUTPUT_MODE`       | How scheduler output is sent back to Aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
 | `SCHEDULER_RULES_JAR`         | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
@@ -80,7 +80,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `LOG_FILE`                    | Either an output filepath to log to, or 'console'             | `string` | console                            |
 | `LOG_LEVEL`                   | Logging level for filtering logs                              | `string` | warn                               |
 | `MERLIN_GRAPHQL_URL`          | URI of the Aerie GraphQL API                                  | `string` | http://hasura:8080/v1/graphql      |
-| `SEQUENCING_DB_USER`          | Username of the Sequencing DB User                            | `string` | sequencing                         |
+| `SEQUENCING_DB_USER`          | Username of the Sequencing DB User                            | `string` | sequencing_service                 |
 | `SEQUENCING_DB_PASSWORD`      | Password of the Sequencing DB User                            | `string` |                                    |
 | `SEQUENCING_LOCAL_STORE`      | Local storage file storage in the container                   | `string` | /usr/src/app/sequencing_file_store |
 | `SEQUENCING_SERVER_PORT`      | Port the server listens on                                    | `number` | 27184                              |
