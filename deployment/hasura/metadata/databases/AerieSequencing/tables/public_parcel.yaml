@@ -1,0 +1,48 @@
+table:
+  name: parcel
+  schema: public
+object_relationships:
+  - name: command_dictionary
+    using:
+      foreign_key_constraint_on: command_dictionary_id
+  - name: sequence_adaptation
+    using:
+      foreign_key_constraint_on: sequence_adaptation_id
+array_relationships:
+  - name: parameter_dictionary
+    using:
+      foreign_key_constraint_on:
+        column: parcel_id
+        table:
+          name: parcel_to_parameter_dictionary
+          schema: public
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      check: {}
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [command_dictionary_id, name, sequence_adaptation_id]
+      filter: {}

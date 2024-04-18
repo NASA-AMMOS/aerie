@@ -11,5 +11,8 @@
 - "!include public_sequence.yaml"
 - "!include public_sequence_to_simulated_activity.yaml"
 - "!include public_user_sequence.yaml"
+- "!include public_parameter_dictionary.yaml"
+- "!include public_parcel.yaml"
+- "!include public_parcel_to_parameter_dictionary.yaml"
 # Metadata
 - "!include metadata/expansion_rule_tags.yaml"
