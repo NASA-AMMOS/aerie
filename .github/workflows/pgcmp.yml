@@ -273,7 +273,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
       - name: Start Postgres
-        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:14.8
+        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.2
       - name: Sleep for 5 Seconds
         run: sleep 5s
         shell: bash
