@@ -10,6 +10,7 @@ begin;
 
   -- Command Expansion Tables.
   \ir tables/command_dictionary.sql
+  \ir tables/parameter_dictionary.sql
   \ir tables/sequence_adaptation.sql
   \ir tables/expansion_set.sql
   \ir tables/expansion_rule.sql
@@ -20,6 +21,8 @@ begin;
   \ir tables/sequence_to_simulated_activity.sql
   \ir tables/user_sequence.sql
   \ir tables/expanded_sequences.sql
+  \ir tables/parcel.sql
+  \ir tables/parcel_to_parameter_dictionary.sql
 
   -- Table-specific Metadata
   \ir tables/metadata/expansion_rule_tags.sql
