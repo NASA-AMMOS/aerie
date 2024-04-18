@@ -53,7 +53,8 @@ begin
   insert into scheduler.scheduling_specification_goals (specification_id, goal_id, goal_revision, priority)
   select spec_id, msg.goal_id, msg.goal_revision, msg.priority
   from scheduler.scheduling_model_specification_goals msg
-  where msg.model_id = new.model_id;
+  where msg.model_id = new.model_id
+  order by msg.priority;
 
   insert into scheduler.scheduling_specification_conditions (specification_id, condition_id, condition_revision)
   select spec_id, msc.condition_id, msc.condition_revision
