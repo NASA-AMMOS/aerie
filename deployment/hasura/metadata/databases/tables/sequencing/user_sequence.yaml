@@ -26,25 +26,25 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [authoring_command_dict_id, definition, name]
+      columns: [definition, name, parcel_id]
       check: {}
       set:
         owner: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [definition, name, authoring_command_dict_id]
+      columns: [definition, name, parcel_id]
       check: {}
       set:
         owner: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [definition, name, authoring_command_dict_id, owner]
+      columns: [definition, name, owner, parcel_id]
       filter: {}
   - role: user
     permission:
-      columns: [definition, name, authoring_command_dict_id, owner]
-      filter: {"owner":{"_eq":"x-hasura-user-id"}}
+      columns: [definition, name, owner, parcel_id]
+      filter: { "owner": { "_eq": "x-hasura-user-id" } }
 delete_permissions:
   - role: aerie_admin
     permission:
