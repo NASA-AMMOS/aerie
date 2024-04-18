@@ -4,7 +4,6 @@ create table command_dictionary (
   mission text not null,
   version text not null,
   parsed_json jsonb not null default '{}',
-  type text not null,
 
   created_at timestamptz not null default now(),
 
@@ -24,7 +23,5 @@ comment on column command_dictionary.version is e''
   'A human-meaningful version qualifier.';
 comment on column command_dictionary.parsed_json is e''
   'The XML that has been parsed and converted to JSON';
-comment on column command_dictionary.type is e''
-  'The type of dictionary uploaded, command, channel, or parameter.';
 comment on constraint command_dictionary_natural_key on command_dictionary is e''
-  'There an only be one command dictionary of a given version for a given mission.';
+  'There can only be one command dictionary of a given version for a given mission.';
