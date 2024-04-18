@@ -1,17 +1,15 @@
 create table user_sequence (
-  authoring_command_dict_id integer not null,
   created_at timestamptz not null default now(),
   definition text not null,
   id integer generated always as identity,
   name text not null,
   owner text,
+  parcel_id integer not null,
   updated_at timestamptz not null default now(),
 
   constraint user_sequence_primary_key primary key (id)
 );
 
-comment on column user_sequence.authoring_command_dict_id is e''
-  'Command dictionary the user sequence was created with.';
 comment on column user_sequence.created_at is e''
   'Time the user sequence was created.';
 comment on column user_sequence.definition is e''
@@ -22,6 +20,8 @@ comment on column user_sequence.name is e''
   'Human-readable name of the user sequence.';
 comment on column user_sequence.owner is e''
   'The user responsible for this sequence.';
+comment on column user_sequence.parcel_id is e''
+  'Parcel the user sequence was created with.';
 comment on column user_sequence.updated_at is e''
   'Time the user sequence was last updated.';
 
