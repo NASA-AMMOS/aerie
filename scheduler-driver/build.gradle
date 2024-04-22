@@ -36,6 +36,9 @@ dependencies {
   implementation 'org.apache.commons:commons-collections4:4.4'
   implementation project(':merlin-framework')
 
+
+  implementation project(':procedural:constraints')
+
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':constraints')
   testImplementation project(':examples:banananation')
