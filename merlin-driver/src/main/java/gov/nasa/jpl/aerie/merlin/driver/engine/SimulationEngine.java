@@ -121,6 +121,9 @@ public final class SimulationEngine implements AutoCloseable {
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
   private HashMap<String, SimulatedActivityId> taskToSimulatedActivityId = null;
+  private HashMap<SpanId, SpanId> activityParents = null;
+  private HashMap<SpanId, List<SpanId>> activityChildren = null;
+  private HashMap<SpanId, ActivityDirectiveId> activityDirectiveIds = null;
 
 
   public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine,
@@ -173,6 +176,10 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<SpanId, MutableInt> spanContributorCount = new HashMap<>();
   private Map<TaskId, SpanId> taskToSpanMap = new HashMap<>();
   private Map<SpanId, SequencedSet<TaskId>> spanToTaskMap = new HashMap<>();
+
+  private HashMap<SpanId, SimulatedActivityId> spanToSimulatedActivityId = null;
+
+  private HashMap<ActivityDirectiveId, SimulatedActivityId> directiveToSimulatedActivityId = new HashMap<>();
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -655,8 +662,22 @@ public final class SimulationEngine implements AutoCloseable {
     }
     return s;
   }
-  public SequencedSet<TaskId> getTaskIds(SpanId spanId) {
+  public SequencedSet<TaskId> getTaskIds(final SpanId spanId) {
     var s = spanToTaskMap.get(spanId);
+    SpanId sId = spanId;
+    while (s == null) {
+      final Span span = spans.get(sId);
+      if (span != null) {
+        if (span.parent().isPresent()) {
+          sId = span.parent().get();
+          s = spanToTaskMap.get(sId);
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
+    }
     if (s == null && oldEngine != null) {
       return oldEngine.getTaskIds(spanId);  // TODO -- do we need caches to avoid walking a long chain of oldEngines?
     }
@@ -678,6 +699,17 @@ public final class SimulationEngine implements AutoCloseable {
       // NOTE -- We do not need filter out removed tasks because the directive would also be removed, in which case we do want the removed task.
     }
     return taskId;
+  }
+
+  public SimulatedActivityId getSimulatedActivityIdForDirectiveId(ActivityDirectiveId directiveId) {
+    SimulatedActivityId simId = null;
+    if (directiveToSimulatedActivityId != null) {
+      simId = directiveToSimulatedActivityId.get(directiveId);
+    }
+    if (simId == null && oldEngine != null) {
+      simId = oldEngine.getSimulatedActivityIdForDirectiveId(directiveId);
+    }
+    return simId;
   }
 
   public SpanId getSpanIdForDirectiveId(ActivityDirectiveId id) {
@@ -748,7 +780,19 @@ public final class SimulationEngine implements AutoCloseable {
   //private HashSet<TaskId> _missingOldSimulatedActivityIds = new HashSet<>(); // short circuit deeply nested searches for taskIds that have
   private SimulatedActivityId getSimulatedActivityIdForTaskId(TaskId taskId) {
     //if (_missingOldSimulatedActivityIds.contains(taskId)) return
-    var simId = taskToSimulatedActivityId == null ? null : taskToSimulatedActivityId.get(taskId.id());
+    SimulatedActivityId simId = null;
+    var spanId = getSpanId(taskId);
+    if (spanId == null && oldEngine != null) {
+      spanId = oldEngine.getSpanId(taskId);
+    }
+    if (spanId != null) {
+      if (spanToSimulatedActivityId != null) {
+        simId = spanToSimulatedActivityId.get(spanId);
+      } else if (oldEngine != null && oldEngine.spanToSimulatedActivityId != null) {
+        simId = oldEngine.spanToSimulatedActivityId.get(spanId);
+      }
+    }
+    //var simId = taskToSimulatedActivityId == null ? null : taskToSimulatedActivityId.get(taskId.id());
     if (simId == null && oldEngine != null) {
       // If this activity hasn't been seen in this simulation, it may be in a past one; this check avoids unnecessarily recursing
       if (this.isActivity(taskId)) {
@@ -758,9 +802,16 @@ public final class SimulationEngine implements AutoCloseable {
     return simId;
   }
 
-  public void removeActivity(final TaskId taskId) {
-    var simId = getSimulatedActivityIdForTaskId(taskId);
+  public void removeActivity(final ActivityDirectiveId directiveId) {
+    var simId = getSimulatedActivityIdForDirectiveId(directiveId);
+    if (simId == null) {
+      throw new RuntimeException("Could not find SimulatedActivityId for ActivityDirectiveId, " + directiveId);
+    }
     removedActivities.add(simId);
+    TaskId taskId = getTaskIdForDirectiveId(directiveId);
+    if (taskId == null) {
+      throw new RuntimeException("Could not find TaskId for ActivityDirectiveId, " + directiveId);
+    }
     removeTaskHistory(taskId, SubInstantDuration.MIN_VALUE, null);
   }
 
@@ -1561,8 +1612,8 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
-    final var activityParents = new HashMap<SpanId, SpanId>();
-    final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
+    activityParents = new HashMap<SpanId, SpanId>();
+    activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
@@ -1580,29 +1631,32 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    final var activityChildren = new HashMap<SpanId, List<SpanId>>();
+    activityChildren = new HashMap<SpanId, List<SpanId>>();
     activityParents.forEach((activity, parent) -> {
       activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(activity);
     });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
+    spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
     final var usedSimulatedActivityIds = new HashSet<>();
     for (final var entry : activityDirectiveIds.entrySet()) {
-      spanToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
+      var simActId = new SimulatedActivityId(entry.getValue().id());
+      spanToSimulatedActivityId.put(entry.getKey(), simActId);
+      directiveToSimulatedActivityId.put(entry.getValue(), simActId);
       usedSimulatedActivityIds.add(entry.getValue().id());
     }
     long counter = 1L;
     for (final var span : this.spans.keySet()) {
       if (!spanInfo.isActivity(span)) continue;
+
       if (spanToSimulatedActivityId.containsKey(span)) continue;
 
       while (usedSimulatedActivityIds.contains(counter)) counter++;
       spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
     }
 
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
-    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
+//    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+//    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
@@ -1786,8 +1840,12 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      var cell = timeline.getCell(query.query(), currentTime);
+      this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
+      this.referencedTopics.add(query.topic());
+
+      // TODO: Cache the state (until the query returns) to avoid unnecessary copies
+      //  if the same state is requested multiple times in a row.
+      final var state$ = this.frame.getState(query.query());
 
       this.queryTrackingInfo.ifPresent(info -> {
         if (isTaskStale(info.getMiddle(), currentTime)) {
@@ -1801,14 +1859,7 @@ public final class SimulationEngine implements AutoCloseable {
         }
       });
 
-      this.expiry = min(this.expiry, cell.getExpiry());
-      this.referencedTopics.add(query.topic());
-
-      // TODO: Cache the state (until the query returns) to avoid unnecessary copies
-      //  if the same state is requested multiple times in a row.
-      final var state$ = cell.getState();
-
-      return state$;
+      return state$.orElseThrow(IllegalArgumentException::new);
     }
 
     private static Optional<Duration> min(final Optional<Duration> a, final Optional<Duration> b) {
@@ -1853,7 +1904,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var query = (EngineCellId<?, State>) token;
 
       // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      var cell = timeline.getCell(query.query(), currentTime);
+      final var state$ = this.frame.getState(query.query());
 
       // Don't emit a noop event for the read if the task is not yet stale.
       // The time that this task becomes stale was determined when it was created.
@@ -1869,9 +1920,8 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
-      // if the same state is requested multiple times in a row.
-      final var state$ = cell.getState();
-      return state$;
+      //       if the same state is requested multiple times in a row.
+      return state$.orElseThrow(IllegalArgumentException::new);
     }
 
     @Override
@@ -2046,7 +2096,17 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private TaskId getTaskParent(TaskId taskId) {
-    var parent = this.taskParent.get(taskId);
+    var spanId = getSpanId(taskId);
+    TaskId parent = null;
+    if (spanId != null && activityParents != null && !activityParents.isEmpty()) {
+      var parentSpanId = activityParents.get(spanId);
+      if (parentSpanId != null) {
+        var tasks = getTaskIds(spanId);
+        if (tasks != null && !tasks.isEmpty()) {
+          parent = tasks.getFirst();
+        }
+      }
+    }
     if (parent == null && oldEngine != null) {
       parent = oldEngine.getTaskParent(taskId);
     }
@@ -2120,11 +2180,24 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public Set<TaskId> getTaskChildren(TaskId taskId) {
-    var children = this.taskChildren.get(taskId);
-    if (children == null && oldEngine != null) {
-      children = oldEngine.getTaskChildren(taskId);
+    var spanId = getSpanId(taskId);
+    Set<TaskId> taskChildren = null;
+    if (spanId != null && activityChildren != null && !activityChildren.isEmpty()) {
+      var childSpans = activityChildren.get(spanId);
+      if (childSpans != null) {
+        final Set<TaskId> children = new HashSet<>();
+        childSpans.forEach(s -> {
+          var tasks = getTaskIds(s);
+          if (tasks != null) children.addAll(tasks);
+        });
+        taskChildren = children;
+      }
     }
-    return children;
+    if (oldEngine != null && (taskChildren == null || taskChildren.isEmpty())) {
+      taskChildren = oldEngine.getTaskChildren(taskId);
+    }
+    if (taskChildren == null) taskChildren = Collections.emptySet();
+    return taskChildren;
   }
 
   public void rescheduleTask(TaskId taskId, Duration startOffset) {

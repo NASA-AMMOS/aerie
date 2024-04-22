@@ -1176,35 +1176,38 @@ public final class AnchorSimulationTest {
       }
     };
 
-    private static LinkedHashMap<Topic<?>, MissionModel.SerializableTopic<?>> _topics = new LinkedHashMap<>();
-    {
+    private static LinkedHashMap<Topic<?>, MissionModel.SerializableTopic<?>> _topics = null;
+    private static LinkedHashMap<Topic<?>, MissionModel.SerializableTopic<?>> getTopics() {
+      if (_topics != null) return _topics;
+      _topics = new LinkedHashMap<>();
       _topics.put(delayedActivityDirectiveInputTopic,
                   new MissionModel.SerializableTopic<>(
                       "ActivityType.Input.DelayActivityDirective",
                       delayedActivityDirectiveInputTopic,
                       testModelOutputType));
       _topics.put(delayedActivityDirectiveOutputTopic,
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Output.DelayActivityDirective",
-              delayedActivityDirectiveOutputTopic,
-              testModelOutputType));
+                  new MissionModel.SerializableTopic<>(
+                      "ActivityType.Output.DelayActivityDirective",
+                      delayedActivityDirectiveOutputTopic,
+                      testModelOutputType));
       _topics.put(decomposingActivityDirectiveInputTopic,
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Input.DecomposingActivityDirective",
-              decomposingActivityDirectiveInputTopic,
-              testModelOutputType));
+                  new MissionModel.SerializableTopic<>(
+                      "ActivityType.Input.DecomposingActivityDirective",
+                      decomposingActivityDirectiveInputTopic,
+                      testModelOutputType));
       _topics.put(decomposingActivityDirectiveOutputTopic,
-          new MissionModel.SerializableTopic<>(
-              "ActivityType.Output.DecomposingActivityDirective",
-              decomposingActivityDirectiveOutputTopic,
-              testModelOutputType));
+                  new MissionModel.SerializableTopic<>(
+                      "ActivityType.Output.DecomposingActivityDirective",
+                      decomposingActivityDirectiveOutputTopic,
+                      testModelOutputType));
+        return _topics;
     }
 
     /* package-private */ static final MissionModel<Object> AnchorTestModel = new MissionModel<>(
         new Object(),
         new LiveCells(null),
         Map.of(),
-        _topics,
+        getTopics(),
         Map.of(),
         DirectiveTypeRegistry.extract(
             new ModelType<>() {

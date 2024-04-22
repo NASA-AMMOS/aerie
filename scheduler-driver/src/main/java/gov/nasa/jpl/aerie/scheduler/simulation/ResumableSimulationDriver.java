@@ -399,7 +399,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       directives.putAll(engine.directivesDiff.get("modified"));
       engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE, null));
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
-      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(k));
     }
     if (directives.isEmpty()) {
       this.simulateUntil(this.planDuration);

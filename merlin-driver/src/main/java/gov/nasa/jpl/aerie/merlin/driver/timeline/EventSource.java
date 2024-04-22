@@ -8,6 +8,6 @@ public interface EventSource {
   Cursor cursor();
 
   interface Cursor {
-    void stepUp(Cell<?> cell);
+    <State> Cell<State> stepUp(Cell<State> cell);
   }
 }

@@ -39,9 +39,10 @@ public final class CausalEventSource implements EventSource {
     private int index = 0;
 
     @Override
-    public void stepUp(final Cell<?> cell) {
+    public <State> Cell<State> stepUp(final Cell<State> cell) {
       cell.apply(points, this.index, size);
       this.index = size;
+      return cell;
     }
   }
 }
