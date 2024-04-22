@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.procedural.constraints
 
+import gov.nasa.jpl.aerie.constraints.Violations
 import gov.nasa.jpl.aerie.timeline.CollectOptions
 import gov.nasa.jpl.aerie.timeline.plan.Plan
 

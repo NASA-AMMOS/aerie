@@ -1,9 +1,9 @@
-package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.constraints;
+package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.procedures;
 
 import gov.nasa.jpl.aerie.constraints.Violations;
 import gov.nasa.jpl.aerie.procedural.constraints.Constraint;
-import gov.nasa.jpl.aerie.timeline.collections.profiles.Real;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
+import gov.nasa.jpl.aerie.timeline.collections.profiles.Real;
 import gov.nasa.jpl.aerie.timeline.plan.SimulatedPlan;
 import org.jetbrains.annotations.NotNull;
 
