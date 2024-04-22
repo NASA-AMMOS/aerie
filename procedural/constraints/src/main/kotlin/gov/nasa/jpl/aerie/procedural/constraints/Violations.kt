@@ -72,8 +72,8 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
         )}
 
     private fun <V: IntervalLike<V>> V.getActivityId() = when (this) {
-      is Instance<*> -> InstanceId(id)
-      is Directive<*> -> DirectiveId(id)
+      is Instance<*> -> ActivityId.InstanceId(id)
+      is Directive<*> -> ActivityId.DirectiveId(id)
       else -> null
     }
   }
