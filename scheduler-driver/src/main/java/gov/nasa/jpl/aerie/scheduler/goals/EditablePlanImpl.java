@@ -47,7 +47,7 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
   @Override
   public long create(@NotNull final NewDirective directive) {
     this.uncommitted.add(directive);
-    return 0;
+    return 0; // TODO generate an id
   }
 
   @Override
