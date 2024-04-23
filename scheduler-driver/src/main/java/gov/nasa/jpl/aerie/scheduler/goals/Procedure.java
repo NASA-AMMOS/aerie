@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.scheduler.ProcedureLoader;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.timeline.Duration;
@@ -27,7 +29,7 @@ public class Procedure extends Goal {
     this.jarPath = jarPath;
   }
 
-  public void run(Evaluation eval, Plan plan) {
+  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel) {
     final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
     try {
         procedure = ProcedureLoader.loadProcedure(Path.of(jarPath));
@@ -37,7 +39,7 @@ public class Procedure extends Goal {
 
     List<SchedulingActivityDirective> newActivities = new ArrayList<>();
 
-    final var editablePlan = EditablePlanImpl.init();
+    final var editablePlan = EditablePlanImpl.init(missionModel, new Interval($(planHorizon.getStartAerie()), $(planHorizon.getEndAerie())));
     final var options = new CollectOptions(
         new Interval(Duration.ZERO,
                      Duration.microseconds(planHorizon.getEndAerie().in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS))));
