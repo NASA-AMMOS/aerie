@@ -41,7 +41,7 @@ public class Procedure extends Goal {
 
     List<SchedulingActivityDirective> newActivities = new ArrayList<>();
 
-    final var editablePlan = EditablePlanImpl.init(missionModel, new Interval($(planHorizon.getStartAerie()), $(planHorizon.getEndAerie())));
+    final var editablePlan = EditablePlanImpl.init(missionModel, new Interval($(planHorizon.getStartAerie()), $(planHorizon.getEndAerie())), null);
 
     /*
      TODO
