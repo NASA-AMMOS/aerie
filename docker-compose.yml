@@ -17,7 +17,7 @@ services:
       POSTGRES_PASSWORD: "${AERIE_PASSWORD}"
       POSTGRES_PORT: 5432
       POSTGRES_USER: "${AERIE_USERNAME}"
-    image: "ghcr.io/nasa-ammos/aerie-gateway:develop"
+    image: "ghcr.io/nasa-ammos/aerie-gateway:v2.6.2"
     ports: ["9000:9000"]
     restart: always
     volumes:
@@ -94,7 +94,7 @@ services:
       SEQUENCING_LOCAL_STORE: /usr/src/app/sequencing_file_store
       SEQUENCING_WORKER_NUM: 8
       SEQUENCING_MAX_WORKER_HEAP_MB: 1000
-      TRANSPILER_ENABLED : "true"
+      TRANSPILER_ENABLED: "true"
     image: aerie_sequencing
     ports: ["27184:27184"]
     restart: always
