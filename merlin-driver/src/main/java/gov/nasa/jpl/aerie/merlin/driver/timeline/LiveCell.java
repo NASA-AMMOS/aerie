@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 public final class LiveCell<State> {
-  public final Cell<State> cell;
+  public Cell<State> cell;
   public final EventSource.Cursor cursor;
 
   public LiveCell(final Cell<State> cell, final EventSource.Cursor cursor) {
@@ -10,7 +10,7 @@ public final class LiveCell<State> {
   }
 
   public Cell<State> get() {
-    this.cursor.stepUp(this.cell);
+    this.cell = this.cursor.stepUp(this.cell);
     return this.cell;
   }
 }

@@ -1759,8 +1759,12 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      var cell = timeline.getCell(query.query(), currentTime);
+      this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
+      this.referencedTopics.add(query.topic());
+
+      // TODO: Cache the state (until the query returns) to avoid unnecessary copies
+      //  if the same state is requested multiple times in a row.
+      final var state$ = this.frame.getState(query.query());
 
       this.queryTrackingInfo.ifPresent(info -> {
         if (isTaskStale(info.getRight(), currentTime)) {
@@ -1774,14 +1778,7 @@ public final class SimulationEngine implements AutoCloseable {
         }
       });
 
-      this.expiry = min(this.expiry, cell.getExpiry());
-      this.referencedTopics.add(query.topic());
-
-      // TODO: Cache the state (until the query returns) to avoid unnecessary copies
-      //  if the same state is requested multiple times in a row.
-      final var state$ = cell.getState();
-
-      return state$;
+      return state$.orElseThrow(IllegalArgumentException::new);
     }
 
     private static Optional<Duration> min(final Optional<Duration> a, final Optional<Duration> b) {
@@ -1812,7 +1809,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var query = (EngineCellId<?, State>) token;
 
       // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      var cell = timeline.getCell(query.query(), currentTime);
+      final var state$ = this.frame.getState(query.query());
 
       // Don't emit a noop event for the read if the task is not yet stale.
       // The time that this task becomes stale was determined when it was created.
@@ -1828,9 +1825,8 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
-      // if the same state is requested multiple times in a row.
-      final var state$ = cell.getState();
-      return state$;
+      //       if the same state is requested multiple times in a row.
+      return state$.orElseThrow(IllegalArgumentException::new);
     }
 
     @Override

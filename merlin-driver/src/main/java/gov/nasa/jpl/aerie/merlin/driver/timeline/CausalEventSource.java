@@ -1,9 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-
 import java.util.Arrays;
-import java.util.Optional;
 
 public final class CausalEventSource implements EventSource {
   public Event[] points = new Event[2];
@@ -39,9 +36,10 @@ public final class CausalEventSource implements EventSource {
     private int index = 0;
 
     @Override
-    public void stepUp(final Cell<?> cell) {
+    public <State> Cell<State> stepUp(final Cell<State> cell) {
       cell.apply(points, this.index, size);
       this.index = size;
+      return cell;
     }
   }
 }

@@ -223,11 +223,11 @@ public class ResourceTracker {
         private DenseTime offset = new DenseTime(0, Duration.ZERO);
 
         @Override
-        public void stepUp(final Cell<?> cell) {
+        public <State> Cell<State> stepUp(final Cell<State> cell) {
           System.out.println("stepUp(): BEGIN");
           if (brad) {
             timeline.stepUp(cell, SubInstantDuration.MAX_VALUE);
-            return;
+            return cell;
           }
           // Extend timeline iterator to the current limit
           for (var i = this.offset.pointCount; i < ResourceTrackerEventSource.this.limit.pointCount(); i++) {
@@ -253,6 +253,7 @@ public class ResourceTracker {
           }
 
           this.offset = ResourceTrackerEventSource.this.limit;
+          return cell;
         }
       };
     }

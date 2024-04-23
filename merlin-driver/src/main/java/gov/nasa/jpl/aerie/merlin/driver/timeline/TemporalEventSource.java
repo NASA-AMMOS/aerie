@@ -1074,8 +1074,13 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     }
 
     @Override
-    public void stepUp(final Cell<?> cell) {
+    public <State> Cell<State> stepUp(final Cell<State> cell) {
+      var cellTime =  getCellTime(cell);
+      if (cellTime.longerThan(curTime)) {
+        return getOrCreateCellInCache(cell.getTopic(), curTime());
+      }
       TemporalEventSource.this.stepUp(cell, curTime());
+      return cell;
     }
 
   }
