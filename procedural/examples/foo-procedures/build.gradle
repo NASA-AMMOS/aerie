@@ -67,8 +67,8 @@ tasks.create("generateConstraintJarTasks") {
       }
       minimize()
       dependencies {
-      //  exclude project(':procedural:timeline')
-      //  exclude dependency(":kotlin.*")
+//        exclude project(':procedural:timeline')
+//        exclude dependency(":kotlin.*")
       }
     }
   }
