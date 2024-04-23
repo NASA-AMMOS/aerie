@@ -289,6 +289,9 @@ public class SchedulingDSL {
         GoalSpecifier goal,
         Expression<Windows> windows
     ) implements GoalSpecifier {}
+    record Procedure(
+        String jarPath
+    ) implements GoalSpecifier {}
   }
 
   public record LinearResource(String name) {}
