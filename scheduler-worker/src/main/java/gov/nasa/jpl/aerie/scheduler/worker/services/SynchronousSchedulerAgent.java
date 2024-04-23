@@ -33,6 +33,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.goals.Procedure;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
@@ -192,6 +193,12 @@ public record SynchronousSchedulerAgent(
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
+          if (goalRecord.definition().source().startsWith("// procedure")) {
+            String jarPath = goalRecord.definition().source().substring("// procedure".length() + 1).strip();
+            jarPath = "/usr/src/app/procedures/" + jarPath;
+            compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(jarPath)));
+            continue;
+          }
           final var result = compileGoalDefinition(
               merlinDatabaseService,
               planMetadata.planId(),
