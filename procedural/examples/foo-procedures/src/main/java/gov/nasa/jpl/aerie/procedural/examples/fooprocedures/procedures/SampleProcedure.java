@@ -13,7 +13,11 @@ import java.util.Map;
 public class SampleProcedure implements Procedure {
   @Override
   public void run(EditablePlan plan, CollectOptions options) {
-    plan.create(new NewDirective(new AnyDirective(Map.of()), "name", "BiteBanana", Duration.hours(24)));
+    plan.create(new NewDirective(
+        new AnyDirective(Map.of()),
+        "name",
+        "BiteBanana",
+        Duration.hours(24)));
     plan.commit();
     var results = plan.simulate(new SimulateOptions());
     var size = results.instances().collect().size();
