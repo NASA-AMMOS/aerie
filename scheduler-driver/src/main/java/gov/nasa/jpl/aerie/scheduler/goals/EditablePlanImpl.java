@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduling.EditablePlan;
 import gov.nasa.jpl.aerie.scheduling.plan.Edit;
 import gov.nasa.jpl.aerie.scheduling.plan.NewDirective;
@@ -20,7 +19,7 @@ import gov.nasa.jpl.aerie.timeline.payloads.activities.Instance;
 import gov.nasa.jpl.aerie.timeline.plan.SimulationResults;
 import kotlin.jvm.functions.Function1;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,19 +28,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.scheduler.goals.Procedure.$;
 
-public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective> committed, MissionModel<?> missionModel, Interval planBounds) implements EditablePlan {
-  public static EditablePlanImpl init(final MissionModel<?> missionModel, Interval planBounds) {
-    return new EditablePlanImpl(new ArrayList<>(), new ArrayList<>(), missionModel, planBounds);
+public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective> committed, MissionModel<?> missionModel, Interval planBounds, MutableObject<SimulationResults> latestSimulationResults) implements EditablePlan {
+  public static EditablePlanImpl init(final MissionModel<?> missionModel, Interval planBounds, gov.nasa.jpl.aerie.merlin.driver.SimulationResults initialSimulationResults) {
+    final var plan = new EditablePlanImpl(new ArrayList<>(), new ArrayList<>(), missionModel, planBounds, new MutableObject<>(null));
+    if (initialSimulationResults != null) {
+      plan.latestSimulationResults.setValue(adaptSimulationResults(initialSimulationResults, plan::toRelative));
+    }
+    return plan;
   }
 
   @Nullable
   @Override
   public SimulationResults latestResults() {
-    return null;
+    return this.latestSimulationResults.getValue();
   }
 
   @Override
@@ -65,15 +68,18 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
   @NotNull
   @Override
   public SimulationResults simulate(@NotNull final SimulateOptions options) {
-    final var results = SimulationDriver.simulate(
+    this.latestSimulationResults.setValue(adaptSimulationResults(SimulationDriver.simulate(
         missionModel,
         Map.of(),
         this.toAbsolute(planBounds.start),
         $(planBounds.end),
         this.toAbsolute(planBounds.start),
         $(planBounds.end),
-        () -> false);
+        () -> false), this::toRelative));
+    return this.latestSimulationResults.getValue();
+  }
 
+  private static SimulationResults adaptSimulationResults(gov.nasa.jpl.aerie.merlin.driver.SimulationResults results, Function<Instant, Duration> toRelative) {
     return new SimulationResults() {
       @Override
       public boolean isStale() {
@@ -83,7 +89,7 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
       @NotNull
       @Override
       public Interval simBounds() {
-        return EditablePlanImpl.this.planBounds();
+        return new Interval(Duration.ZERO, $(results.duration));
       }
 
       @NotNull
@@ -94,13 +100,26 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
       {
         List<ProfileSegment<SerializedValue>> originalProfile;
         if (results.discreteProfiles.containsKey(name)) originalProfile = results.discreteProfiles.get(name).getRight();
-        else if (results.realProfiles.containsKey(name)) originalProfile = results.realProfiles.get(name).getRight().stream().map($ -> new ProfileSegment<>($.extent(), SerializedValue.of(Map.of("initial", SerializedValue.of($.dynamics().initial), "rate", SerializedValue.of($.dynamics().rate))))).toList();
+        else if (results.realProfiles.containsKey(name)) originalProfile = results.realProfiles
+            .get(name)
+            .getRight()
+            .stream()
+            .map($ -> new ProfileSegment<>(
+                $.extent(),
+                SerializedValue.of(Map.of(
+                    "initial",
+                    SerializedValue.of($.dynamics().initial),
+                    "rate",
+                    SerializedValue.of($.dynamics().rate)))))
+            .toList();
         else throw new IllegalArgumentException("No such resource " + name);
 
         final var profile = new ArrayList<Segment<SerializedValue>>();
         var elapsedTime = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
         for (final var entry : originalProfile) {
-          profile.add(new Segment<>(new Interval($(elapsedTime), $(elapsedTime.plus(entry.extent()))), entry.dynamics()));
+          profile.add(new Segment<>(
+              new Interval($(elapsedTime), $(elapsedTime.plus(entry.extent()))),
+              entry.dynamics()));
           elapsedTime = elapsedTime.plus(entry.extent());
         }
         return deserializer.invoke(profile);
@@ -122,7 +141,10 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
       }
 
       private Instances<AnyInstance> instances(Optional<String> typeFilter) {
-        record FinishedActivityAttributes(gov.nasa.jpl.aerie.merlin.protocol.types.Duration duration, SerializedValue computedAttributes) {}
+        record FinishedActivityAttributes(
+            gov.nasa.jpl.aerie.merlin.protocol.types.Duration duration,
+            SerializedValue computedAttributes
+        ) {}
         record CommonActivity(
             Map<String, SerializedValue> arguments,
             String type,
@@ -159,9 +181,14 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
         final var instances = new ArrayList<Instance<AnyInstance>>();
         for (final var a : activities) {
           if (typeFilter.isPresent() && !a.type().equals(typeFilter.get())) continue;
-          final Duration startTime = EditablePlanImpl.this.toRelative(a.startTime);
-          final Duration endTime = a.finishedActivityAttributes.map(FinishedActivityAttributes::duration).map(x -> startTime.plus($(x))).orElse(Duration.MAX_VALUE);
-          final SerializedValue computedAttributes = a.finishedActivityAttributes.map(FinishedActivityAttributes::computedAttributes).orElse(SerializedValue.of(Map.of()));
+          final Duration startTime = toRelative.apply(a.startTime);
+          final Duration endTime = a.finishedActivityAttributes
+              .map(FinishedActivityAttributes::duration)
+              .map(x -> startTime.plus($(x)))
+              .orElse(Duration.MAX_VALUE);
+          final SerializedValue computedAttributes = a.finishedActivityAttributes
+              .map(FinishedActivityAttributes::computedAttributes)
+              .orElse(SerializedValue.of(Map.of()));
           instances.add(new Instance<>(
               new AnyInstance(a.arguments, computedAttributes),
               a.type,
