@@ -43,6 +43,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -432,7 +433,14 @@ public class PrioritySolver implements Solver {
       satisfyOptionGoal((OptionGoal) goal);
     } else if (goal instanceof Procedure procedure) {
       if (!analysisOnly) {
-        procedure.run(evaluation, plan, problem.getMissionModel());
+        final var originalActivities = plan.getActivities();
+        procedure.run(evaluation, plan, problem.getMissionModel(), this.problem::getActivityType);
+        final var newActivities = plan.getActivities();
+          try {
+              simulationFacade.removeAndInsertActivitiesFromSimulation(originalActivities, newActivities);
+          } catch (SimulationFacade.SimulationException e) {
+              throw new RuntimeException(e);
+          }
       }
     } else {
       satisfyGoalGeneral(goal);

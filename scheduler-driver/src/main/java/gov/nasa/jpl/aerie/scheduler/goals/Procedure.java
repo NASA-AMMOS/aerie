@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 public class Procedure extends Goal {
 //  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
@@ -27,7 +28,7 @@ public class Procedure extends Goal {
     this.jarPath = jarPath;
   }
 
-  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel) {
+  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType) {
     final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
     try {
         procedure = ProcedureLoader.loadProcedure(Path.of(jarPath));
@@ -55,10 +56,8 @@ public class Procedure extends Goal {
 
     procedure.run(editablePlan, options);
 
-    var id = plan.getActivitiesById().keySet().stream().map(SchedulingActivityDirectiveId::id).max(Comparator.comparingLong($ -> $)).orElse(-1L);
     for (final var newDirective : editablePlan.committed()) {
-      final var newId = new SchedulingActivityDirectiveId(++id);
-      newActivities.add(new SchedulingActivityDirective(newId, new ActivityType(newDirective.getType()), newDirective.getStartTime(), Duration.ZERO, newDirective.getInner().arguments, null, null, true));
+      newActivities.add(SchedulingActivityDirective.of(lookupActivityType.apply(newDirective.getType()), newDirective.getStartTime(), Duration.ZERO, newDirective.getInner().arguments, null, null, true));
     }
 
     final var evaluation = eval.forGoal(this);
