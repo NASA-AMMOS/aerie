@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.scheduling.EditablePlan;
 import gov.nasa.jpl.aerie.scheduling.plan.Edit;
 import gov.nasa.jpl.aerie.scheduling.plan.NewDirective;
 import gov.nasa.jpl.aerie.scheduling.simulation.SimulateOptions;
-import gov.nasa.jpl.aerie.timeline.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.timeline.Interval;
 import gov.nasa.jpl.aerie.timeline.collections.Directives;
 import gov.nasa.jpl.aerie.timeline.collections.Instances;
@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-
-import static gov.nasa.jpl.aerie.scheduler.goals.Procedure.$;
 
 public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective> committed, MissionModel<?> missionModel, Interval planBounds, MutableObject<SimulationResults> latestSimulationResults) implements EditablePlan {
   public static EditablePlanImpl init(final MissionModel<?> missionModel, Interval planBounds, gov.nasa.jpl.aerie.merlin.driver.SimulationResults initialSimulationResults) {
@@ -72,9 +70,9 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
         missionModel,
         Map.of(),
         this.toAbsolute(planBounds.start),
-        $(planBounds.end),
+        planBounds.end,
         this.toAbsolute(planBounds.start),
-        $(planBounds.end),
+        planBounds.end,
         () -> false), this::toRelative));
     return this.latestSimulationResults.getValue();
   }
@@ -89,7 +87,7 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
       @NotNull
       @Override
       public Interval simBounds() {
-        return new Interval(Duration.ZERO, $(results.duration));
+        return new Interval(Duration.ZERO, results.duration);
       }
 
       @NotNull
@@ -118,7 +116,7 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
         var elapsedTime = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
         for (final var entry : originalProfile) {
           profile.add(new Segment<>(
-              new Interval($(elapsedTime), $(elapsedTime.plus(entry.extent()))),
+              new Interval(elapsedTime, elapsedTime.plus(entry.extent())),
               entry.dynamics()));
           elapsedTime = elapsedTime.plus(entry.extent());
         }
@@ -184,7 +182,7 @@ public record EditablePlanImpl(List<NewDirective> uncommitted, List<NewDirective
           final Duration startTime = toRelative.apply(a.startTime);
           final Duration endTime = a.finishedActivityAttributes
               .map(FinishedActivityAttributes::duration)
-              .map(x -> startTime.plus($(x)))
+              .map(x -> startTime.plus(x))
               .orElse(Duration.MAX_VALUE);
           final SerializedValue computedAttributes = a.finishedActivityAttributes
               .map(FinishedActivityAttributes::computedAttributes)

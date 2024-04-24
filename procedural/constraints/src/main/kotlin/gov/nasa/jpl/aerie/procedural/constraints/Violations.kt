@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.procedural.constraints
 
-import gov.nasa.jpl.aerie.procedural.constraints.ActivityId.DirectiveId
-import gov.nasa.jpl.aerie.procedural.constraints.ActivityId.InstanceId
 import gov.nasa.jpl.aerie.timeline.BaseTimeline
 import gov.nasa.jpl.aerie.timeline.BoundsTransformer
 import gov.nasa.jpl.aerie.timeline.Timeline
