@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.constraints;
 
-import gov.nasa.jpl.aerie.constraints.Violations;
+import gov.nasa.jpl.aerie.procedural.constraints.Violations;
 import gov.nasa.jpl.aerie.procedural.constraints.Constraint;
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
