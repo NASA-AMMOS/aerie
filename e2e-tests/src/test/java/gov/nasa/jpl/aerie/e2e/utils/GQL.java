@@ -265,6 +265,47 @@ public enum GQL {
         }
       }
     }"""),
+  GET_MODEL_EVENT_LOGS("""
+    query getModelLogs($modelId: Int!) {
+      mission_model: mission_model_by_pk(id:$modelId) {
+        id
+        name
+        version
+        refresh_activity_type_logs(order_by: {created_at: desc}) {
+          triggering_user
+          delivered
+          success
+          tries
+          created_at
+          status
+          error
+          error_message
+          error_type
+        }
+        refresh_model_parameter_logs(order_by: {created_at: desc}) {
+          triggering_user
+          delivered
+          success
+          tries
+          created_at
+          status
+          error
+          error_message
+          error_type
+        }
+        refresh_resource_type_logs(order_by: {created_at: desc}) {
+          triggering_user
+          delivered
+          success
+          tries
+          created_at
+          status
+          error
+          error_message
+          error_type
+        }
+      }
+    }"""),
   GET_PLAN("""
     query GetPlan($id: Int!) {
       plan: plan_by_pk(id: $id) {
