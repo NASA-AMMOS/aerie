@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.scheduling.plan.Edit;
 import gov.nasa.jpl.aerie.scheduling.plan.NewDirective;
 import gov.nasa.jpl.aerie.scheduling.simulation.SimulateOptions;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
-import gov.nasa.jpl.aerie.timeline.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.timeline.Interval;
 import gov.nasa.jpl.aerie.timeline.collections.Directives;
 import gov.nasa.jpl.aerie.timeline.payloads.activities.AnyDirective;
