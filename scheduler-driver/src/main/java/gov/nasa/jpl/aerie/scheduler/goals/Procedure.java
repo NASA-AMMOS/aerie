@@ -25,11 +25,13 @@ import java.util.function.Function;
 public class Procedure extends Goal {
   //  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
   private final String jarPath;
+  private final Map<String, SerializedValue> args;
 
-  public Procedure(final PlanningHorizon planningHorizon, String jarPath) {
+  public Procedure(final PlanningHorizon planningHorizon, String jarPath, Map<String, SerializedValue> args) {
     this.simulateAfter = true;
     this.planHorizon = planningHorizon;
     this.jarPath = jarPath;
+    this.args = args;
   }
 
   public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType) {
@@ -68,7 +70,7 @@ public class Procedure extends Goal {
 
     final var options = new CollectOptions(inMemoryPlan.totalBounds());
 
-    procedureMapper.deserialize(SerializedValue.of(Map.of())).run(editablePlan, options);
+    procedureMapper.deserialize(SerializedValue.of(this.args)).run(editablePlan, options);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
       // TODO emit warning

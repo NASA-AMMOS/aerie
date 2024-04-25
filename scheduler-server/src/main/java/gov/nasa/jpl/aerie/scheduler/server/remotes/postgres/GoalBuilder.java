@@ -161,7 +161,7 @@ public class GoalBuilder {
           }
 
           case SchedulingDSL.GoalSpecifier.Procedure g -> {
-            return new Procedure(planningHorizon, g.jarPath());
+            return new Procedure(planningHorizon, g.jarPath(), g.arguments());
           }
       }
   }
