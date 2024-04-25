@@ -917,6 +917,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.tasks.put(task, new ExecutionState<>(span, 0, Optional.empty(), state.create(this.executor), startTime));
     putSpanId(task, span);
 
+    if (trace) System.out.println("scheduleTask(" + startTime + "): TaskId = " + task + ", SpanId = " + span);
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
     return span;
@@ -1199,6 +1200,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Topic<Topic<?>> queryTopic) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(currentTime, progress.shadowedSpans(), task, progress.span(), progress.caller(), frame, queryTopic);
+    if (trace) System.out.println("Stepping task at " + currentTime + ": TaskId = " + task + ", progress.span() = " + progress.span() + ", progress.caller() = " + progress.caller() + ", progress.shadowedSpans() = " + progress.shadowedSpans());
     final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
@@ -1226,6 +1228,9 @@ public final class SimulationEngine implements AutoCloseable {
           progress.caller().ifPresent($ -> {
             if (this.blockedTasks.get($).decrementAndGet() == 0) {
               this.blockedTasks.remove($);
+              if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(blocked caller TaskId = " + $ + ", " + currentTime.duration() + ")");
+              SimulationEngine.this.taskParent.put(task, $);
+              SimulationEngine.this.taskChildren.computeIfAbsent($, x -> new HashSet<>()).add(task);
               this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime.duration()));
             }
           });
@@ -1233,6 +1238,7 @@ public final class SimulationEngine implements AutoCloseable {
         case TaskStatus.Delayed<Output> s -> {
           if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
           this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
+          if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(TaskId = " + task + ", " + currentTime.duration().plus(s.delay()) + ")");
           this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.duration().plus(s.delay())));
         }
         case TaskStatus.CallingTask<Output> s -> {
@@ -1674,7 +1680,7 @@ public final class SimulationEngine implements AutoCloseable {
             state.endOffset().get().minus(state.startOffset()),
             spanToSimulatedActivityId.get(activityParents.get(span)),
             activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId),
+            (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else {
@@ -1685,7 +1691,7 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             spanToSimulatedActivityId.get(activityParents.get(span)),
             activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
+            (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId)
         ));
       }
     });
@@ -2011,11 +2017,14 @@ public final class SimulationEngine implements AutoCloseable {
           }
         }
         // Record task information
+        if (trace) System.out.println("spawn TaskId = " + task + " from " + activeTask);
         SimulationEngine.this.spanContributorCount.get(this.span).increment();
         SimulationEngine.this.tasks.put(task, new ExecutionState<>(this.span, 0, this.caller,
                                                                    state.create(SimulationEngine.this.executor),
                                                                    currentTime.duration()));
         this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
+        SimulationEngine.this.taskParent.put(task, this.activeTask);
+        SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
         SimulationEngine.this.taskFactories.put(task, state);
         SimulationEngine.this.taskIdsForFactories.put(state, task);
         this.frame.signal(JobId.forTask(task));
@@ -2096,6 +2105,14 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private TaskId getTaskParent(TaskId taskId) {
+    var parent = this.taskParent.get(taskId);
+    if (parent == null && oldEngine != null) {
+      parent = oldEngine.getTaskParent(taskId);
+    }
+    return parent;
+  }
+
+  private TaskId getTaskParentFromSpan(TaskId taskId) {
     var spanId = getSpanId(taskId);
     TaskId parent = null;
     if (spanId != null && activityParents != null && !activityParents.isEmpty()) {
@@ -2180,8 +2197,17 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public Set<TaskId> getTaskChildren(TaskId taskId) {
+    var children = this.taskChildren.get(taskId);
+    if (children == null && oldEngine != null) {
+      children = oldEngine.getTaskChildren(taskId);
+    }
+    return children;
+  }
+
+  public Set<TaskId> getTaskChildrenFromSpans(TaskId taskId) {
     var spanId = getSpanId(taskId);
-    Set<TaskId> taskChildren = null;
+    var taskSeq = getTaskIds(spanId);
+    Set<TaskId> taskChildren = taskSeq == null ? null : taskSeq.stream().filter(t -> !t.equals(taskId)).collect(Collectors.toSet());
     if (spanId != null && activityChildren != null && !activityChildren.isEmpty()) {
       var childSpans = activityChildren.get(spanId);
       if (childSpans != null) {
@@ -2190,7 +2216,11 @@ public final class SimulationEngine implements AutoCloseable {
           var tasks = getTaskIds(s);
           if (tasks != null) children.addAll(tasks);
         });
-        taskChildren = children;
+        if (taskChildren == null || taskChildren.isEmpty()) {
+          taskChildren = children;
+        } else {
+          taskChildren.addAll(children);
+        }
       }
     }
     if (oldEngine != null && (taskChildren == null || taskChildren.isEmpty())) {
