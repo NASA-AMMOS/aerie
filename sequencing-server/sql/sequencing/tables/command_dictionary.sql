@@ -27,4 +27,4 @@ comment on column command_dictionary.version is e''
 comment on column command_dictionary.parsed_json is e''
   'The XML that has been parsed and converted to JSON';
 comment on constraint command_dictionary_natural_key on command_dictionary is e''
-  'There an only be one command dictionary of a given version for a given mission.';
+  'There can only be one command dictionary of a given version for a given mission.';

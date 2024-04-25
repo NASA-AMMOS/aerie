@@ -2,57 +2,57 @@ table:
   name: user_sequence
   schema: public
 object_relationships:
-- name: command_dictionary
-  using:
-    manual_configuration:
-      remote_table:
-        schema: public
-        name: command_dictionary
-      insertion_order: null
-      column_mapping:
-        authoring_command_dict_id: id
+  - name: command_dictionary
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: parcel
+        insertion_order: null
+        column_mapping:
+          parcel_id: id
 select_permissions:
   - role: aerie_admin
     permission:
-      columns: '*'
+      columns: "*"
       filter: {}
       allow_aggregations: true
   - role: user
     permission:
-      columns: '*'
+      columns: "*"
       filter: {}
       allow_aggregations: true
   - role: viewer
     permission:
-      columns: '*'
+      columns: "*"
       filter: {}
       allow_aggregations: true
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [authoring_command_dict_id, definition, name]
+      columns: [definition, name, parcel_id]
       check: {}
       set:
         owner: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [definition, name, authoring_command_dict_id]
+      columns: [definition, name, parcel_id]
       check: {}
       set:
         owner: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [definition, name, authoring_command_dict_id, owner]
+      columns: [definition, name, owner, parcel_id]
       filter: {}
   - role: user
     permission:
-      columns: [definition, name, authoring_command_dict_id, owner]
-      filter: {"owner":{"_eq":"x-hasura-user-id"}}
+      columns: [definition, name, owner, parcel_id]
+      filter: { "owner": { "_eq": "x-hasura-user-id" } }
 delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
   - role: user
     permission:
-      filter: {"owner":{"_eq":"x-hasura-user-id"}}
+      filter: { "owner": { "_eq": "x-hasura-user-id" } }
