@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SumParsers;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
@@ -17,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionP;
@@ -292,7 +294,8 @@ public class SchedulingDSL {
         Expression<Windows> windows
     ) implements GoalSpecifier {}
     record Procedure(
-        String jarPath
+        String jarPath,
+        Map<String, SerializedValue> arguments
     ) implements GoalSpecifier {}
   }
 

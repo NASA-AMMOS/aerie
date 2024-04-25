@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.worker.services;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,8 +11,11 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,12 +24,14 @@ import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -47,6 +53,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
@@ -75,6 +82,11 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+
+import javax.json.Json;
+import javax.json.stream.JsonParsingException;
 
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
@@ -193,10 +205,27 @@ public record SynchronousSchedulerAgent(
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
-          if (goalRecord.definition().source().startsWith("// procedure")) {
-            String jarPath = goalRecord.definition().source().substring("// procedure".length() + 1).strip();
+          final String definition = goalRecord.definition().source();
+          if (definition.startsWith("// procedure")) {
+            final var lines = new ArrayList<>(Arrays.stream(definition.split("\n")).toList());
+            final var firstLine = lines.removeFirst();
+            String jarPath = firstLine.substring("// procedure".length() + 1).strip();
             jarPath = "/usr/src/app/procedures/" + jarPath;
-            compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(jarPath)));
+
+            final var args = new LinkedHashMap<String, SerializedValue>();
+            for (var line : lines) {
+              if (!line.startsWith("// ")) continue;
+              line = line.substring(2).stripLeading();
+              final var name = line.substring(0, line.indexOf(" "));
+              final var value = line.substring(line.indexOf(" ")).strip();
+                try {
+                    final var serializedValue = parseJson(value, new SerializedValueJsonParser());
+                    args.put(name, serializedValue);
+                } catch (InvalidJsonException | InvalidEntityException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(jarPath, args)));
             continue;
           }
           final var result = compileGoalDefinition(
@@ -650,4 +679,15 @@ public record SynchronousSchedulerAgent(
     return new ScheduleResults(goalResults);
   }
 
+  private static <T> T parseJson(final String jsonStr, final JsonParser<T> parser)
+  throws InvalidJsonException, InvalidEntityException
+  {
+    try (final var reader = Json.createReader(new StringReader(jsonStr))) {
+      final var requestJson = reader.readValue();
+      final var result = parser.parse(requestJson);
+      return result.getSuccessOrThrow(reason -> new InvalidEntityException(List.of(reason)));
+    } catch (JsonParsingException e) {
+      throw new InvalidJsonException(e);
+    }
+  }
 }
