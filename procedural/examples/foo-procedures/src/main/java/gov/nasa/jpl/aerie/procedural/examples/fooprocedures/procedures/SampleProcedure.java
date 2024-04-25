@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.jpl.aerie.procedural.scheduling.Procedure;
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective;
 import gov.nasa.jpl.aerie.procedural.scheduling.simulation.SimulateOptions;
+import gov.nasa.jpl.aerie.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.timeline.payloads.activities.AnyDirective;
@@ -12,7 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public class SampleProcedure implements Procedure {
+@SchedulingProcedure
+public record SampleProcedure() implements Procedure {
   @Override
   public void run(EditablePlan plan, @NotNull CollectOptions options) {
     final var firstTime = Duration.hours(24);
