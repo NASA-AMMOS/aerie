@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.procedural.scheduling.Procedure;
+import gov.nasa.jpl.aerie.procedural.scheduling.ProcedureMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.jar.JarFile;
 
 public final class ProcedureLoader {
-  public static Procedure loadProcedure(final Path path)
+  public static ProcedureMapper<?> loadProcedure(final Path path)
   throws ProcedureLoadException
   {
     final var className = getImplementingClassName(path);
@@ -19,11 +19,11 @@ public final class ProcedureLoader {
 
     try {
       final var pluginClass$ = classLoader.loadClass(className);
-      if (!Procedure.class.isAssignableFrom(pluginClass$)) {
+      if (!ProcedureMapper.class.isAssignableFrom(pluginClass$)) {
         throw new ProcedureLoadException(path);
       }
 
-      return (Procedure) pluginClass$.getConstructor().newInstance();
+      return (ProcedureMapper<?>) pluginClass$.getConstructor().newInstance();
     } catch (final ReflectiveOperationException ex) {
       throw new ProcedureLoadException(path, ex);
     }
@@ -57,7 +57,7 @@ public final class ProcedureLoader {
       super(
           String.format(
               "No implementation found for `%s` at path `%s`",
-              Procedure.class.getSimpleName(),
+              ProcedureMapper.class.getSimpleName(),
               path),
           cause);
     }
