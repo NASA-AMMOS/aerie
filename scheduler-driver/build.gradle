@@ -37,7 +37,8 @@ dependencies {
   implementation project(':merlin-framework')
 
 
-  implementation project(':procedural:constraints')
+  implementation project(':procedural:scheduling')
+  implementation project(':procedural:timeline')
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':constraints')
