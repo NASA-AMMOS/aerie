@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.procedural.scheduling.ProcedureMapper;
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.Edit;
 import gov.nasa.jpl.aerie.scheduler.ProcedureLoader;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -16,6 +18,7 @@ import gov.nasa.jpl.aerie.timeline.Interval;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -30,9 +33,9 @@ public class Procedure extends Goal {
   }
 
   public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType) {
-    final gov.nasa.jpl.aerie.procedural.scheduling.Procedure procedure;
+    final ProcedureMapper<?> procedureMapper;
     try {
-      procedure = ProcedureLoader.loadProcedure(Path.of(jarPath));
+      procedureMapper = ProcedureLoader.loadProcedure(Path.of(jarPath));
     } catch (ProcedureLoader.ProcedureLoadException e) {
       throw new RuntimeException(e);
     }
@@ -65,7 +68,7 @@ public class Procedure extends Goal {
 
     final var options = new CollectOptions(inMemoryPlan.totalBounds());
 
-    procedure.run(editablePlan, options);
+    procedureMapper.deserialize(SerializedValue.of(Map.of())).run(editablePlan, options);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
       // TODO emit warning
