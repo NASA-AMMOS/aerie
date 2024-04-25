@@ -34,7 +34,8 @@ dependencies {
   implementation 'org.jgrapht:jgrapht-core:1.5.2'
   implementation 'org.slf4j:slf4j-simple:2.0.7'
 
-  implementation project(':procedural:constraints')
+  implementation project(':procedural:scheduling')
+  implementation project(':procedural:timeline')
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':constraints')
