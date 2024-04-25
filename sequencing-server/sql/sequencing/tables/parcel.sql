@@ -3,6 +3,7 @@ create table parcel (
 
   name text not null,
 
+  channel_dictionary_id integer not null,
   command_dictionary_id integer not null,
   sequence_adaptation_id integer default null,
 
@@ -13,6 +14,8 @@ create table parcel (
   constraint parcel_synthetic_key
     primary key (id),
 
+  foreign key (channel_dictionary_id)
+    references channel_dictionary (id),
   foreign key (command_dictionary_id)
     references command_dictionary (id),
   foreign key (sequence_adaptation_id)

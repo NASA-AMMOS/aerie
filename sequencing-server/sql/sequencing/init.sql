@@ -9,6 +9,7 @@ begin;
   \ir applied_migrations.sql
 
   -- Command Expansion Tables.
+  \ir tables/channel_dictionary.sql
   \ir tables/command_dictionary.sql
   \ir tables/parameter_dictionary.sql
   \ir tables/sequence_adaptation.sql
