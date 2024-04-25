@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 @SchedulingProcedure
-public record SampleProcedure() implements Procedure {
+public record SampleProcedure(int quantity) implements Procedure {
   @Override
   public void run(EditablePlan plan, @NotNull CollectOptions options) {
     final var firstTime = Duration.hours(24);
@@ -31,7 +31,7 @@ public record SampleProcedure() implements Procedure {
       currentTime = currentTime.plus(step);
     }
     plan.commit();
-    var results = plan.simulate(new SimulateOptions());
-    var size = results.instances().collect().size();
+//    var results = plan.simulate(new SimulateOptions());
+//    var size = results.instances().collect().size();
   }
 }
