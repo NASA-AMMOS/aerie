@@ -1,4 +1,5 @@
 - "!include public_activity_instance_commands.yaml"
+- "!include public_channel_dictionary.yaml"
 - "!include public_command_dictionary.yaml"
 - "!include public_expansion_rule.yaml"
 - "!include public_expansion_run.yaml"
