@@ -3,7 +3,7 @@ create table parcel (
 
   name text not null,
 
-  channel_dictionary_id integer not null,
+  channel_dictionary_id integer default null,
   command_dictionary_id integer not null,
   sequence_adaptation_id integer default null,
 
