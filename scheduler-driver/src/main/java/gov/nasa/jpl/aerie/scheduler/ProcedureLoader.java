@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.scheduling.Procedure;
+import gov.nasa.jpl.aerie.procedural.scheduling.Procedure;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
