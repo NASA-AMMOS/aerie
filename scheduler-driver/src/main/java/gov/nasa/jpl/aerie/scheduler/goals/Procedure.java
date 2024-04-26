@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.timeline.Interval;
+import gov.nasa.jpl.aerie.timeline.payloads.activities.DirectiveStart;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.nio.file.Path;
@@ -52,7 +53,7 @@ public class Procedure extends Goal {
         planHorizon
     );
 
-    final var nextUniqueDirectiveId = plan.getActivities().stream().map($ -> $.id().id()).max(Long::compare).orElse(0L) + 1;
+    final var nextUniqueDirectiveId = plan.getActivities().stream().map($ -> Math.abs($.id().id())).max(Long::compare).orElse(0L) + 1;
 
     final var editablePlan = new InMemoryEditablePlan(
         missionModel,
@@ -81,20 +82,35 @@ public class Procedure extends Goal {
     for (final var edit : editablePlan.getTotalDiff()) {
       if (edit instanceof Edit.Create c) {
         final var newDirective = c.getDirective();
-        newActivities.add(new SchedulingActivityDirective(
-            new SchedulingActivityDirectiveId(newDirective.id),
-            lookupActivityType.apply(newDirective.getType()),
-            newDirective.getStartTime(),
-            Duration.ZERO,
-            newDirective.inner.arguments,
-            null,
-            null,
-            true
-        ));
+        final var start = newDirective.getStart();
+        if (start instanceof DirectiveStart.Absolute) {
+          newActivities.add(new SchedulingActivityDirective(
+              new SchedulingActivityDirectiveId(newDirective.id),
+              lookupActivityType.apply(newDirective.getType()),
+              newDirective.getStartTime(),
+              Duration.ZERO,
+              newDirective.inner.arguments,
+              null,
+              null,
+              true
+          ));
+        } else if (start instanceof DirectiveStart.Anchor a) {
+          newActivities.add(new SchedulingActivityDirective(
+              new SchedulingActivityDirectiveId(newDirective.id),
+              lookupActivityType.apply(newDirective.getType()),
+              a.getOffset(),
+              Duration.ZERO,
+              newDirective.inner.arguments,
+              null,
+              new SchedulingActivityDirectiveId(a.getParentId()),
+              a.getAnchorPoint() == DirectiveStart.Anchor.AnchorPoint.Start
+          ));
+        } else {
+          throw new Error("unreachable directive start variant");
+        }
       } else {
         throw new IllegalStateException("Unexpected value: " + edit);
       }
-
     }
 
     final var evaluation = eval.forGoal(this);
