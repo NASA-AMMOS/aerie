@@ -1,14 +1,20 @@
 package gov.nasa.jpl.aerie.scheduler.goals
 
-import gov.nasa.jpl.aerie.merlin.driver.*
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.Commit
-import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.Edit
+import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective
 import gov.nasa.jpl.aerie.procedural.scheduling.simulation.SimulateOptions
 import gov.nasa.jpl.aerie.timeline.collections.Directives
+import gov.nasa.jpl.aerie.timeline.payloads.activities.DirectiveStart
 import gov.nasa.jpl.aerie.timeline.plan.Plan
+import java.time.Instant
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults as MerlinSimResults
 import gov.nasa.jpl.aerie.timeline.plan.SimulationResults as TimelineSimResults
 
@@ -17,7 +23,7 @@ data class InMemoryEditablePlan(
     private var nextUniqueDirectiveId: Long,
     private var latestMerlinResults: MerlinSimResults?,
     private val plan: Plan
-) : EditablePlan, Plan by plan {
+) : EditablePlan, Plan {
 
   private var latestTimelineResults: TimelineSimResults? = null
 
@@ -82,7 +88,7 @@ data class InMemoryEditablePlan(
 
     latestMerlinResults = SimulationDriver.simulate(
         missionModel,
-        java.util.Map.of(),
+        schedule,
         toAbsolute(simBounds.start),
         simBounds.duration(),
         toAbsolute(totalBounds().start),
@@ -92,6 +98,12 @@ data class InMemoryEditablePlan(
     return latestTimelineResults!!
   }
 
+  // These cannot be implemented with the by keyword,
+  // because directives() below needs a custom implementation.
+  override fun totalBounds() = plan.totalBounds()
+  override fun toRelative(abs: Instant) = plan.toRelative(abs)
+  override fun toAbsolute(rel: Duration) = plan.toAbsolute(rel)
+
   override fun <A : Any> directives(type: String?, deserializer: (SerializedValue) -> A): Directives<A> {
     val basePlan = plan.directives(type, deserializer)
 
@@ -99,14 +111,13 @@ data class InMemoryEditablePlan(
       val directives = collect(opts).toMutableList()
       for (edit in totalDiff + uncommittedChanges) {
         when (edit) {
-          is Edit.Create -> if (edit.directive.type == type && edit.directive.startTime in opts.bounds) directives.add(
+          is Edit.Create -> if (type == null || edit.directive.type == type && edit.directive.startTime in opts.bounds) directives.add(
               edit.directive.mapInner { deserializer(it.serialize()) }
           )
         }
       }
       directives
     }
-    // test if overloads in plan interface resolve to this correctly
   }
 
   private fun adaptSimulationResults() {
