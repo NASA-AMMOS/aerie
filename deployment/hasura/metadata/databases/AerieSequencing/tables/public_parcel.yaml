@@ -2,12 +2,12 @@ table:
   name: parcel
   schema: public
 object_relationships:
+  - name: channel_dictionary
+    using:
+      foreign_key_constraint_on: channel_dictionary_id
   - name: command_dictionary
     using:
       foreign_key_constraint_on: command_dictionary_id
-  - name: parameter_dictionary
-    using:
-      foreign_key_constraint_on: parameter_dictionary_id
   - name: sequence_adaptation
     using:
       foreign_key_constraint_on: sequence_adaptation_id
@@ -47,5 +47,5 @@ delete_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [command_dictionary_id, name, parameter_dictionary_id, sequence_adaptation_id]
+      columns: [channel_dictionary_id, command_dictionary_id, name, sequence_adaptation_id]
       filter: {}
