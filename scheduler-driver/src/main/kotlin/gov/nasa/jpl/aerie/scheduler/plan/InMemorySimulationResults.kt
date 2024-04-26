@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.goals
+package gov.nasa.jpl.aerie.scheduler.plan
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment

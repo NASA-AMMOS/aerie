@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.goals
+package gov.nasa.jpl.aerie.scheduler.plan
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
