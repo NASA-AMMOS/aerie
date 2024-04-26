@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "~0.4.3",
-    "@nasa-jpl/aerie-ampcs": "~1.0.4",
+    "@nasa-jpl/aerie-ampcs": "~1.0.5",
     "@nasa-jpl/aerie-ts-user-code-runner": "~0.6.0",
     "@nasa-jpl/seq-json-schema": "1.0.20",
     "body-parser": "~1.20.1",
