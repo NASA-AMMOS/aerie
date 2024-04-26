@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.procedural.scheduling.Procedure;
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective;
-import gov.nasa.jpl.aerie.scheduling.annotations.SchedulingProcedure;
+import gov.nasa.jpl.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Real;
 import gov.nasa.jpl.aerie.timeline.payloads.activities.AnyDirective;
