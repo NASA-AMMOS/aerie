@@ -141,11 +141,8 @@ public final class SimulationDriver {
       } catch (SpanException ex) {
         // Swallowing the spanException as the internal `spanId` is not user meaningful info.
         final var topics = missionModel.getTopics();
-        final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, timeline, topics, ex.spanId);
-        if(directiveId.isPresent()) {
-          throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
-        }
-        throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
+        final var spanContext = SimulationEngine.getSpanContext(engine, activityTopic, timeline, topics, ex.spanId);
+        throw new SimulationException(elapsedTime, simulationStartTime, spanContext, ex.cause);
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }

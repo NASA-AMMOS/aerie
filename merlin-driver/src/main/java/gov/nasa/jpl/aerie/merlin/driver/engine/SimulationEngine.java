@@ -418,9 +418,21 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /**
+   * Contextual information to help debugging when an error occurs in a span.
+   *
+   * @param directiveId The top-level directive id that caused this span to be created, if one exists.
+   * @param activityTrace The full hierarchy of serialized activities, starting with this span and continuing until the top-level span.
+   */
+  public record SpanContext(Optional<ActivityDirectiveId> directiveId, List<SerializedActivity> activityTrace) {
+    public static SpanContext empty() {
+      return new SpanContext(Optional.empty(), List.of());
+    }
+  }
+
+  /**
    * Get an Activity Directive Id from a SpanId, if the span is a descendent of a directive.
    */
-  public static Optional<ActivityDirectiveId> getDirectiveIdFromSpan(
+  public static SpanContext getSpanContext(
       final SimulationEngine engine,
       final Topic<ActivityDirectiveId> activityTopic,
       final TemporalEventSource timeline,
@@ -436,12 +448,15 @@ public final class SimulationEngine implements AutoCloseable {
       p.events().evaluate(trait, trait::atom).accept(spanInfo);
     }
 
-    // Identify the nearest ancestor directive
-    Optional<SpanId> directiveSpanId = Optional.of(spanId);
-    while (directiveSpanId.isPresent() && !spanInfo.isDirective(directiveSpanId.get())) {
-      directiveSpanId = engine.getSpan(directiveSpanId.get()).parent();
+    final var activityTrace = new ArrayList<SerializedActivity>();
+    Optional<SpanId> currentSpanId = Optional.of(spanId);
+    while (currentSpanId.isPresent() && !spanInfo.isDirective(currentSpanId.get())) {
+      if (spanInfo.isActivity(currentSpanId.get())) {
+        activityTrace.add(spanInfo.input().get(currentSpanId.get()));
+      }
+      currentSpanId = engine.getSpan(currentSpanId.get()).parent();
     }
-    return directiveSpanId.map(spanInfo::getDirective);
+    return new SpanContext(currentSpanId.map(spanInfo::getDirective), activityTrace);
   }
 
   /** Compute a set of results from the current state of simulation. */

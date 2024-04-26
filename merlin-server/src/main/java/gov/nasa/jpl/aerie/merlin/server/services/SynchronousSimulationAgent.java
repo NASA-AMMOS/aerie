@@ -95,7 +95,13 @@ public record SynchronousSimulationAgent (
       final var errorMsgBuilder = Json.createObjectBuilder()
                     .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
                     .add("utcTimeDoy", SimulationException.formatInstant(ex.instant));
-      ex.directiveId.ifPresent(directiveId -> errorMsgBuilder.add("executingDirectiveId", directiveId.id()));
+      ex.spanContext.directiveId().ifPresent(directiveId -> errorMsgBuilder.add("executingDirectiveId", directiveId.id()));
+      final var activityTrace = Json.createArrayBuilder();
+      for (final var activity : ex.spanContext.activityTrace()) {
+        activityTrace.add(activity.toString());
+      }
+      errorMsgBuilder.add("activityTrace", activityTrace);
+
       writer.failWith(b -> b
           .type("SIMULATION_EXCEPTION")
           .message(ex.cause.getMessage())
