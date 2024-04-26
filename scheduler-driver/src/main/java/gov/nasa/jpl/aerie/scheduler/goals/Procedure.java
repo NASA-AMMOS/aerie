@@ -11,11 +11,10 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan;
-import gov.nasa.jpl.aerie.scheduler.plan.InMemoryPlan;
+import gov.nasa.jpl.aerie.scheduler.plan.SchedulerToProcedurePlanAdapter;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.timeline.Interval;
 import gov.nasa.jpl.aerie.timeline.payloads.activities.DirectiveStart;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -23,7 +22,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 public class Procedure extends Goal {
@@ -48,7 +46,7 @@ public class Procedure extends Goal {
 
     List<SchedulingActivityDirective> newActivities = new ArrayList<>();
 
-    final var inMemoryPlan = new InMemoryPlan(
+    final var inMemoryPlan = new SchedulerToProcedurePlanAdapter(
         plan,
         planHorizon
     );

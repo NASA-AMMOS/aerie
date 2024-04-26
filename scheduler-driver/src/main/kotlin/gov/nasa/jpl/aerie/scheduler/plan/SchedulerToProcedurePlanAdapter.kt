@@ -15,7 +15,7 @@ import java.time.Instant
 import gov.nasa.jpl.aerie.scheduler.model.Plan as SchedulerPlan
 import gov.nasa.jpl.aerie.timeline.plan.Plan as TimelinePlan
 
-data class InMemoryPlan(
+data class SchedulerToProcedurePlanAdapter(
     private val schedulerPlan: SchedulerPlan,
     private val planningHorizon: PlanningHorizon,
 ): TimelinePlan, SchedulerPlan by schedulerPlan {
