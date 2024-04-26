@@ -21,12 +21,11 @@ public record SampleProcedure(int quantity) implements Procedure {
 
     var currentTime = firstTime;
     for (var i = 0; i < quantity; i++) {
-      plan.create(new NewDirective(
-          new AnyDirective(Map.of()),
-          "name",
+      plan.create(
           "BiteBanana",
-          new DirectiveStart.Absolute(currentTime)
-          ));
+          new DirectiveStart.Absolute(currentTime),
+          Map.of()
+      );
       currentTime = currentTime.plus(step);
     }
     plan.commit();

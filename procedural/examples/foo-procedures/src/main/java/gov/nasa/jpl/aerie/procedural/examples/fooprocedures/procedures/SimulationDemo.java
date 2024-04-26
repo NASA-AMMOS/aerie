@@ -25,43 +25,32 @@ public record SimulationDemo(int quantity) implements Procedure {
   public void run(EditablePlan plan, @NotNull CollectOptions options) {
     final var firstActivityTime = plan.toRelative(Instant.from(DOY_WITHOUT_ZONE_FORMATTER.parse("2024-115T07:00:00")));
 
-    plan.create(new NewDirective(
-        new AnyDirective(
-            Map.of("biteSize", SerializedValue.of(2))
-        ),
-        "First activity",
+    plan.create(
         "BiteBanana",
-        new DirectiveStart.Absolute(firstActivityTime)
-    ));
+        new DirectiveStart.Absolute(firstActivityTime),
+        Map.of("biteSize", SerializedValue.of(2))
+    );
 
     final var simResults = plan.simulate();
 
-    final var lowFruit = simResults.resource("/fruit", Real::deserialize).inspect(
-        $ -> System.out.println("low fruit: " + $)
-    ).lessThan(3.5).isolateTrue();
-    final var bites = simResults.instances("BiteBanana").inspect(
-        $ -> System.out.println("bites: " + $)
-    );
+    final var lowFruit = simResults.resource("/fruit", Real::deserialize).lessThan(3.5).isolateTrue();
+    final var bites = simResults.instances("BiteBanana");
 
-    final var connections = lowFruit.starts().shift(Duration.MINUTE.negate()).connectTo(bites.ends(), false);
+    final var connections = lowFruit.starts().shift(Duration.MINUTE.negate())
+                                    .connectTo(bites.ends(), false);
 
     for (final var connection: connections.collect(options)) {
-        assert connection.to != null;
-        plan.create(
-          new NewDirective(
-              new AnyDirective(
-                  Map.of(
-                      "quantity", SerializedValue.of(1),
-                      "growingDuration", SerializedValue.of(Duration.HOUR.dividedBy(Duration.MICROSECOND))
-                  )
-              ),
-              "Second Activity",
-              "GrowBanana",
-              new DirectiveStart.Anchor(
-                  connection.to.directiveId,
-                  Duration.minutes(30),
-                  DirectiveStart.Anchor.AnchorPoint.End
-              )
+      assert connection.to != null;
+      plan.create(
+          "GrowBanana",
+          new DirectiveStart.Anchor(
+              connection.to.directiveId,
+              Duration.minutes(30),
+              DirectiveStart.Anchor.AnchorPoint.End
+          ),
+          Map.of(
+              "quantity", SerializedValue.of(1),
+              "growingDuration", SerializedValue.of(Duration.HOUR.dividedBy(Duration.MICROSECOND))
           )
       );
     }
