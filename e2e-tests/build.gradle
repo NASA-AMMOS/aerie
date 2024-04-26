@@ -16,6 +16,10 @@ jacocoTestReport {
   }
 }
 
+test {
+  onlyIf { false }
+}
+
 task e2eTest(type: Test) {
   ext.parseEnvFile = { filePath ->
     file(filePath).readLines().each() {
