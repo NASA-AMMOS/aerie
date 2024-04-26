@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.procedural.scheduling.plan.Edit;
 import gov.nasa.jpl.aerie.scheduler.ProcedureLoader;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -14,12 +15,12 @@ import gov.nasa.jpl.aerie.timeline.Interval;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class Procedure extends Goal {
-//  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
+  //  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
   private final String jarPath;
 
   public Procedure(final PlanningHorizon planningHorizon, String jarPath) {
@@ -29,16 +30,28 @@ public class Procedure extends Goal {
   }
 
   public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType) {
-    final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
+    final gov.nasa.jpl.aerie.procedural.scheduling.Procedure procedure;
     try {
-        procedure = ProcedureLoader.loadProcedure(Path.of(jarPath));
+      procedure = ProcedureLoader.loadProcedure(Path.of(jarPath));
     } catch (ProcedureLoader.ProcedureLoadException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
 
     List<SchedulingActivityDirective> newActivities = new ArrayList<>();
 
-    final var editablePlan = EditablePlanImpl.init(missionModel, new Interval(planHorizon.getStartAerie(), planHorizon.getEndAerie()), null);
+    final var inMemoryPlan = new InMemoryPlan(
+        plan,
+        planHorizon
+    );
+
+    final var nextUniqueDirectiveId = plan.getActivities().stream().map($ -> $.id().id()).max(Long::compare).orElse(0L) + 1;
+
+    final var editablePlan = new InMemoryEditablePlan(
+        missionModel,
+        nextUniqueDirectiveId,
+        null,
+        inMemoryPlan
+    );
 
     /*
      TODO
@@ -50,14 +63,30 @@ public class Procedure extends Goal {
      Duration construction and arithmetic can be less awkward
      */
 
-    final var options = new CollectOptions(
-        new Interval(Duration.ZERO,
-                     Duration.microseconds(planHorizon.getEndAerie().in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS))));
+    final var options = new CollectOptions(inMemoryPlan.totalBounds());
 
     procedure.run(editablePlan, options);
 
-    for (final var newDirective : editablePlan.committed()) {
-      newActivities.add(SchedulingActivityDirective.of(lookupActivityType.apply(newDirective.getType()), newDirective.getStartTime(), Duration.ZERO, newDirective.getInner().arguments, null, null, true));
+    if (!editablePlan.getUncommittedChanges().isEmpty()) {
+      // TODO emit warning
+    }
+    for (final var edit : editablePlan.getTotalDiff()) {
+      if (edit instanceof Edit.Create c) {
+        final var newDirective = c.getDirective();
+        newActivities.add(new SchedulingActivityDirective(
+            new SchedulingActivityDirectiveId(newDirective.id),
+            lookupActivityType.apply(newDirective.getType()),
+            newDirective.getStartTime(),
+            Duration.ZERO,
+            newDirective.inner.arguments,
+            null,
+            null,
+            true
+        ));
+      } else {
+        throw new IllegalStateException("Unexpected value: " + edit);
+      }
+
     }
 
     final var evaluation = eval.forGoal(this);
