@@ -20,7 +20,7 @@ node {
 task assembleConstraintsDSLCompiler(type: NpmTask) {
   dependsOn processResources
   dependsOn npmInstall
-  args = ['run', 'build']
+  args = ['--silent', 'run', 'build']
   inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
   inputs.dir('src')
 }
@@ -29,7 +29,7 @@ task generateDocumentation(type: NpmTask) {
   dependsOn npmInstall
   dependsOn processResources
   dependsOn assembleConstraintsDSLCompiler
-  args = ['run', 'generate-doc']
+  args = ['--silent', 'run', 'generate-doc']
   inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
   inputs.dir('src')
 }
