@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.goals
+package gov.nasa.jpl.aerie.scheduler.plan
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
-import gov.nasa.jpl.aerie.procedural.scheduling.plan.Commit
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.Edit
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective
