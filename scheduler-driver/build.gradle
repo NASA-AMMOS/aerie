@@ -2,6 +2,7 @@ plugins {
   id 'java-library'
   id 'jacoco'
   id 'maven-publish'
+  id 'org.jetbrains.kotlin.jvm' version '1.9.23'
 }
 
 java {
@@ -43,6 +44,7 @@ dependencies {
   testImplementation project(':examples:foo-missionmodel')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
   testImplementation 'com.google.guava:guava-testlib:32.1.2-jre'
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -67,4 +69,7 @@ publishing {
       }
     }
   }
+}
+repositories {
+  mavenCentral()
 }
