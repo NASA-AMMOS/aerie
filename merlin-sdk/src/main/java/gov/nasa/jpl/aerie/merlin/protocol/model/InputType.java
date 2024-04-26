@@ -82,7 +82,7 @@ public interface InputType<T> {
 
   /**
    * Names a subset of parameters returned by {@link #getParameters()} whose absence on instantiation would
-   * certainly result in an {@link InvalidArgumentsException}.
+   * certainly result in an {@link InstantiationException}.
    *
    * <p> Providing a schematically-valid argument for every "required" parameter does not guarantee success in
    * instantiating a value of type {@code T}. For example, two parameters may be inter-derivable: if only one is not
@@ -121,7 +121,7 @@ public interface InputType<T> {
    *   The arguments determining a value of type {@code T}.
    * @return
    *   The instance of type {@code T} corresponding to the given arguments.
-   * @throws InvalidArgumentsException
+   * @throws InstantiationException
    *   When the given arguments do not uniquely (or at all) determine a value of type {@code T}.
    */
   // TODO: Define distinct exceptions for under-specification and over-specification failures,
@@ -189,7 +189,7 @@ public interface InputType<T> {
    *   The arguments determining a value of type {@code T}.
    * @return
    *   An ordered list of informational notices for a human operator.
-   * @throws InvalidArgumentsException
+   * @throws InstantiationException
    *   When the given arguments do not uniquely (or at all) determine a value of type {@code T}.
    * @see #instantiate(Map)
    * @see #getValidationFailures(T)
@@ -214,7 +214,7 @@ public interface InputType<T> {
    *   The arguments determining a value of type {@code T}.
    * @return
    *   The completed set of arguments determining the same unique value as the given arguments.
-   * @throws InvalidArgumentsException
+   * @throws InstantiationException
    *   When the given arguments do not uniquely (or at all) determine a value of type {@code T}.
    * @see #instantiate(Map)
    * @see #getArguments(T)

@@ -509,7 +509,7 @@ export class Goal {
    *
    *
    * NOTE: In order to avoid placing multiple activities at the same start time, the Cardinality goal introduces an assumed mutual exclusion constraint - namely that new activities will not be allowed to overlap with existing activities.
-   * @param opts an object containing the activity template and a  {@link ActivityCardinalityGoal} specification of what kind of cardinality is considered
+   * @param opts an object containing the activity template and a CardinalityGoalArguments specification of what kind of cardinality is considered
    */
   public static CardinalityGoal <A extends WindowsEDSL.Gen.ActivityType, B extends WindowsEDSL.Gen.ActivityType>(opts: {
     activityTemplate: ActivityTemplate<A>,
