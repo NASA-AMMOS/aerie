@@ -20,6 +20,8 @@ dependencies {
   testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
 //  dokkaHtmlPlugin 'org.jetbrains.dokka:kotlin-as-java-plugin:1.9.10'
 }
 

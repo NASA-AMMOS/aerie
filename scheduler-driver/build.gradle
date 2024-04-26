@@ -40,6 +40,8 @@ dependencies {
   testImplementation project(':examples:foo-missionmodel')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
   testImplementation 'com.google.guava:guava-testlib:32.1.2-jre'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 publishing {

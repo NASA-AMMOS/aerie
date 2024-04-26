@@ -95,4 +95,6 @@ dependencies {
   testImplementation project(':merlin-framework')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'net.jqwik:jqwik:1.6.5'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

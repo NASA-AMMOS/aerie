@@ -37,6 +37,8 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
 
   testFixturesImplementation project(':merlin-driver')
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 processResources {
