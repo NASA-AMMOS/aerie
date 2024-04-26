@@ -61,13 +61,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -574,6 +568,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
     for (final var act : orderedActivities) {
       var insertionObject = Json
           .createObjectBuilder()
+          .add("id", act.id().id())
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
           .add("start_offset", act.startOffset().toString())
@@ -596,6 +591,14 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }
       insertionObject.add("arguments", insertionObjectArguments.build());
+
+      if (act.anchorId() != null) {
+        insertionObject.add("anchor_id", Math.abs(act.anchorId().id()));
+        insertionObject.add("anchored_to_start", act.anchoredToStart());
+      } else {
+        insertionObject.add("anchored_to_start", true);
+      }
+
       insertionObjects.add(insertionObject.build());
     }
 
