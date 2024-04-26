@@ -10,8 +10,8 @@ import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.procedural.scheduling.ProcedureMapper;
-import gov.nasa.jpl.aerie.scheduling.annotations.SchedulingProcedure;
-import gov.nasa.jpl.aerie.scheduling.annotations.WithMappers;
+import gov.nasa.jpl.aerie.procedural.scheduling.annotations.SchedulingProcedure;
+import gov.nasa.jpl.aerie.procedural.scheduling.annotations.WithMappers;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
