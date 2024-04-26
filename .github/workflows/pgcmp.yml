@@ -120,7 +120,12 @@ jobs:
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-      - name: Dump Databases
+      - name: Clone PGCMP
+        uses: actions/checkout@v4
+        with:
+          repository: cbbrowne/pgcmp
+          path: pgcmp
+      - name: Dump Migrated Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
@@ -193,7 +198,7 @@ jobs:
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
-      - name: Dump Databases
+      - name: Dump Current Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
@@ -224,7 +229,7 @@ jobs:
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-      - name: Dump Databases
+      - name: Dump Migrated Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"

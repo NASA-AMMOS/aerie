@@ -48,7 +48,6 @@ public class MissionModelTests {
           "aerie_e2e_tests",
           "Mission Model Tests");
     }
-    Thread.sleep(1000);
   }
 
   @AfterAll
@@ -362,5 +361,65 @@ public class MissionModelTests {
       final var actualComputedAttributes = activityTypes.get(i).computedAttributes();
       assertEquals(expectedComputedAttributes, actualComputedAttributes);
     }
+  }
+
+  /**
+   * The logs for the Hasura events triggered during model upload are accessible.
+   */
+  @Test
+  void hasuraEventLogsAreAccessible() throws IOException {
+    final var modelLogs = hasura.awaitModelEventLogs(modelId);
+
+    assertEquals(modelId, modelLogs.modelId());
+    assertEquals("Banananation (e2e tests)", modelLogs.modelName());
+    assertEquals("Mission Model Tests", modelLogs.modelVersion());
+
+    // Check Activity Type Refresh Event Logs
+    final var activityTypeRefreshLogs = modelLogs.refreshActivityTypesLogs();
+    assertEquals(1, activityTypeRefreshLogs.size());
+    final var activityTypeLog = activityTypeRefreshLogs.get(0);
+
+    assertEquals("Aerie Legacy", activityTypeLog.triggeringUser());
+
+    assertTrue(activityTypeLog.delivered());
+    assertTrue(activityTypeLog.success());
+    assertEquals(1, activityTypeLog.tries());
+    assertEquals(200, activityTypeLog.status());
+
+    assertTrue(activityTypeLog.error().isEmpty());
+    assertTrue(activityTypeLog.errorMessage().isEmpty());
+    assertTrue(activityTypeLog.errorType().isEmpty());
+
+    // Check Model Parameter Refresh Event Logs
+    final var modelParamRefreshLogs = modelLogs.refreshModelParamsLogs();
+    assertEquals(1, modelParamRefreshLogs.size());
+    final var modelParamLog = modelParamRefreshLogs.get(0);
+
+    assertEquals("Aerie Legacy", modelParamLog.triggeringUser());
+
+    assertTrue(modelParamLog.delivered());
+    assertTrue(modelParamLog.success());
+    assertEquals(1, modelParamLog.tries());
+    assertEquals(200, modelParamLog.status());
+
+    assertTrue(modelParamLog.error().isEmpty());
+    assertTrue(modelParamLog.errorMessage().isEmpty());
+    assertTrue(modelParamLog.errorType().isEmpty());
+
+    // Check Resource Type Refresh Event Logs
+    final var resourceTypeRefreshLogs = modelLogs.refreshResourceTypesLogs();
+    assertEquals(1, resourceTypeRefreshLogs.size());
+    final var resourceTypeLog = resourceTypeRefreshLogs.get(0);
+
+    assertEquals("Aerie Legacy", resourceTypeLog.triggeringUser());
+
+    assertTrue(resourceTypeLog.delivered());
+    assertTrue(resourceTypeLog.success());
+    assertEquals(1, resourceTypeLog.tries());
+    assertEquals(200, resourceTypeLog.status());
+
+    assertTrue(resourceTypeLog.error().isEmpty());
+    assertTrue(resourceTypeLog.errorMessage().isEmpty());
+    assertTrue(resourceTypeLog.errorType().isEmpty());
   }
 }

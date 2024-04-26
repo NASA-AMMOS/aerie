@@ -57,6 +57,30 @@ array_relationships:
       table:
         name: scheduling_model_specification_goals
         schema: scheduler
+- name: refresh_activity_type_logs
+  using:
+    manual_configuration:
+      remote_table:
+        name: refresh_activity_type_logs
+        schema: hasura
+      column_mapping:
+        id: model_id
+- name: refresh_model_parameter_logs
+  using:
+    manual_configuration:
+      remote_table:
+        name: refresh_model_parameter_logs
+        schema: hasura
+      column_mapping:
+        id: model_id
+- name: refresh_resource_type_logs
+  using:
+    manual_configuration:
+      remote_table:
+        name: refresh_resource_type_logs
+        schema: hasura
+      column_mapping:
+        id: model_id
 select_permissions:
   - role: aerie_admin
     permission:

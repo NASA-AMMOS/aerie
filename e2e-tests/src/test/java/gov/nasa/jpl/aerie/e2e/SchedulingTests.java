@@ -97,7 +97,7 @@ public class SchedulingTests {
   }
 
   @BeforeEach
-  void beforeEach() throws IOException {
+  void beforeEach() throws IOException, InterruptedException {
     // Insert the Mission Model
     try (final var gateway = new GatewayRequests(playwright)) {
       modelId = hasura.createMissionModel(
@@ -105,8 +105,6 @@ public class SchedulingTests {
           "Banananation (e2e tests)",
           "aerie_e2e_tests",
           "Scheduling Tests");
-    } catch (InterruptedException e) {
-        throw new RuntimeException(e);
     }
     // Insert the Plan
     planId = hasura.createPlan(
