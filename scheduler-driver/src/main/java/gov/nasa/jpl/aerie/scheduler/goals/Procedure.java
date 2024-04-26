@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.timeline.Interval;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -75,7 +76,7 @@ public class Procedure extends Goal {
     procedureMapper.deserialize(SerializedValue.of(this.args)).run(editablePlan, options);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
-      // TODO emit warning
+      throw new NotImplementedException("emit warning");
     }
     for (final var edit : editablePlan.getTotalDiff()) {
       if (edit instanceof Edit.Create c) {
