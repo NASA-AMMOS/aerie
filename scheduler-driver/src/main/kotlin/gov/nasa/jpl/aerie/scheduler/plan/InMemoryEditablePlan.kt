@@ -120,6 +120,6 @@ data class InMemoryEditablePlan(
   }
 
   private fun adaptSimulationResults() {
-    latestTimelineResults = latestMerlinResults?.let { InMemorySimulationResults(it, false, plan) }
+    latestTimelineResults = latestMerlinResults?.let { MerlinToProcedureSimulationResultsAdapter(it, false, plan) }
   }
 }
