@@ -205,8 +205,10 @@ public final class SimulationDriver<Model> {
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (engine.hasJobsScheduledThrough(simulationDuration)) {
-        engine.step(simulationDuration, simulationExtentConsumer);
+      Duration t = Duration.ZERO;
+      while (engine.hasJobsScheduledThrough(simulationDuration) || t.noLongerThan(simulationDuration)) {
+        t = engine.step(simulationDuration, simulationExtentConsumer);
+        if (debug) System.out.println("======   t = " + t + "   ======");
       }
     } catch (Throwable ex) {
       throw new SimulationException(curTime().duration(), simulationStartTime, ex);

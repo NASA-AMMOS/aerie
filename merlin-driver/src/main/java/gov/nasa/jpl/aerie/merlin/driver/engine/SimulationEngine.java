@@ -1030,12 +1030,12 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public void step(final Duration maximumTime,
-                   final Consumer<Duration> simulationExtentConsumer) {
+  public Duration step(final Duration maximumTime,
+                       final Consumer<Duration> simulationExtentConsumer) {
     if (debug) System.out.println("step(): begin -- time = " + curTime() + ", step " + stepIndexAtTime);
     if (stepIndexAtTime == Integer.MAX_VALUE) stepIndexAtTime = 0;
     var timeOfNextJobs = timeOfNextJobs();
-    timeOfNextJobs = new SubInstantDuration(timeOfNextJobs().duration(), Math.max(timeOfNextJobs.index(), stepIndexAtTime));
+    timeOfNextJobs = new SubInstantDuration(timeOfNextJobs.duration(), Math.max(timeOfNextJobs.index(), stepIndexAtTime));
     var nextTime = timeOfNextJobs;
 
     Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads = null;
@@ -1076,6 +1076,15 @@ public final class SimulationEngine implements AutoCloseable {
       nextTime = SubInstantDuration.min(nextTime, conditionTime);
     }
 
+    if (nextTime.longerThan(maximumTime) || nextTime.isEqualTo(Duration.MAX_VALUE)) {
+      if (debug) System.out.println("step(): end -- time elapsed ("
+                                    + nextTime
+                                    + ") past maximum ("
+                                    + maximumTime
+                                    + ")");
+      return nextTime.duration();
+    }
+
     // Increment real time, if necessary.
     nextTime = SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, Integer.MAX_VALUE));
 //    var delta = timeForDelta.minus(curTime().duration());
@@ -1090,15 +1099,6 @@ public final class SimulationEngine implements AutoCloseable {
     Set<Topic<?>> invalidatedTopics = new HashSet<>();
 
     if (oldEngine != null) {
-
-      if (nextTime.longerThan(maximumTime) || nextTime.isEqualTo(Duration.MAX_VALUE)) {
-        if (debug) System.out.println("step(): end -- time elapsed ("
-                                      + curTime()
-                                      + ") past maximum ("
-                                      + maximumTime
-                                      + ")");
-        return;
-      }
 
       if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
         if (debug) System.out.println("earliestStaleTopics at " + nextTime + " = " + earliestStaleTopics);
@@ -1158,6 +1158,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
+    return curTime().duration();
   }
 
   /** Performs a single job. */
@@ -1216,7 +1217,7 @@ public final class SimulationEngine implements AutoCloseable {
             if (this.spanContributorCount.get(span).decrementAndGet() > 0) break;
             this.spanContributorCount.remove(span);
 
-           this.spans.compute(span, (_id, $) -> $.close(currentTime.duration()));
+            this.spans.compute(span, (_id, $) -> $.close(currentTime.duration()));
 
             final var span$ = this.spans.get(span).parent;
             if (span$.isEmpty()) break;
@@ -1238,7 +1239,7 @@ public final class SimulationEngine implements AutoCloseable {
         case TaskStatus.Delayed<Output> s -> {
           if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
           this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
-          if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(TaskId = " + task + ", " + currentTime.duration().plus(s.delay()) + ")");
+          if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(delayed TaskId = " + task + ", " + currentTime.duration().plus(s.delay()) + ")");
           this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.duration().plus(s.delay())));
         }
         case TaskStatus.CallingTask<Output> s -> {
@@ -1247,13 +1248,19 @@ public final class SimulationEngine implements AutoCloseable {
           SimulationEngine.this.tasks.put(target, new ExecutionState<>(scheduler.span, 0, Optional.of(task), s.child().create(this.executor), currentTime.duration()));
           SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
           frame.signal(JobId.forTask(target));
+          SimulationEngine.this.taskParent.put(target, task);
+          SimulationEngine.this.taskChildren.computeIfAbsent(task, x -> new HashSet<>()).add(target);
 
+          if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + target);
           this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
         }
         case TaskStatus.AwaitingCondition<Output> s -> {
           final var condition = ConditionId.generate(task);
           this.conditions.put(condition, s.condition());
-          this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime.duration()));
+          var jid = JobId.forCondition(condition);
+          var t = SubInstant.Conditions.at(currentTime.duration());
+          if (trace) System.out.println("stepEffectModel(TaskId=" + task + "): scheduling Condition job with conditionId = " + condition + ", AwaitingCondition s = " + s + ", condition = " + s.condition() + ", ConditionJobId = " + jid + ", at time " + t);
+          this.scheduledJobs.schedule(jid, t);
 
           this.tasks.put(task, progress.continueWith(scheduler.span, scheduler.shadowedSpans, s.continuation()));
           this.waitingTasks.put(condition, task);
