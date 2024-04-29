@@ -1,6 +1,6 @@
 {
   "name": "sequencing-server",
-  "version": "2.6.100",
+  "version": "2.6.103",
   "description": "Aerie sequencing server",
   "type": "module",
   "license": "MIT",
