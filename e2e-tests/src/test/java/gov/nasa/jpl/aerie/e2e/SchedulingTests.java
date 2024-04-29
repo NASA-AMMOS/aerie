@@ -23,6 +23,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -59,9 +60,21 @@ public class SchedulingTests {
         return Goal.CoexistenceGoal({
           forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
           activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
+          startsAt:TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+        })
+      }""";
+
+  private final String coexistenceGoalWithAnchorsDefinition =
+      """
+      export default function myGoal() {
+        return Goal.CoexistenceGoal({
+          forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+          activityTemplate: ActivityTemplates.BiteBanana({biteSize: 1}),
+          persistentAnchor: PersistentTimeAnchor.DISABLED,
           startsAt:TimingConstraint.singleton(WindowProperty.END)
         })
       }""";
+
   private final String plantCountGoalDefinition =
       """
       export default () => Goal.CoexistenceGoal({
@@ -129,6 +142,41 @@ public class SchedulingTests {
                                                           .add("growingDuration", 7200000000L) // 2h
                                                           .build());
     hasura.updatePlanRevisionSchedulingSpec(planId);
+  }
+
+  private void insertSatisfyingActivities() throws IOException {
+    // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
+    hasura.insertActivity(planId, "BiteBanana", "2h5m", Json.createObjectBuilder()
+                                                          .add("biteSize", 1) // 2h
+                                                          .build());
+    hasura.insertActivity(planId, "BiteBanana", "5h5m", Json.createObjectBuilder()
+                                                          .add("biteSize", 1) // 2h
+                                                          .build());
+    hasura.updatePlanRevisionSchedulingSpec(planId);
+  }
+
+  private ArrayList<Integer> insertAnchorActivities() throws IOException {
+    ArrayList<Integer> anchors = new ArrayList<Integer>();
+
+    // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
+    Integer id1 = hasura.insertActivity(planId, "GrowBanana", "0h",
+                                    Json.createObjectBuilder()
+                                        .add("growingDuration", 10800000L) // 3h
+                                        .build());
+    anchors.add(id1);
+    Integer id2 = hasura.insertActivity(planId, "GrowBanana", "5h",
+                                    Json.createObjectBuilder()
+                                                          .add("growingDuration", 10800000L) // 3h
+                                                          .build());
+    anchors.add(id1);
+    Integer id3 = hasura.insertActivity(planId, "GrowBanana", "10h",
+                                    Json.createObjectBuilder()
+                                        .add("growingDuration", 10800000L) // 3h
+                                        .build());
+    anchors.add(id3);
+    hasura.updatePlanRevisionSchedulingSpec(planId);
+
+    return anchors;
   }
 
   //reproduces issue #1165
@@ -224,6 +272,40 @@ public class SchedulingTests {
   }
 
   @Test
+  void schedulingCoexistenceGoalWithAnchor() throws IOException {
+    // Setup: Add Goal and Activities
+    ArrayList<Integer> anchors = insertAnchorActivities();
+    hasura.createSchedulingSpecGoal("Coexistence Scheduling Test Goal", coexistenceGoalWithAnchorsDefinition, schedulingSpecId, 0);
+
+
+    try {
+      // Schedule and get Plan
+      hasura.awaitScheduling(schedulingSpecId);
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(6, activities.size());
+
+      // Assert the correct number of each activity type exists
+      int growBananaCount = 0;
+      int biteBananaCount = 0;
+      for (final var activity : activities) {
+        switch (activity.type()) {
+          case "GrowBanana" -> growBananaCount++;
+          case "BiteBanana" -> biteBananaCount++;
+          default -> fail("Encountered unexpected activity type in plan: " + activity.type());
+        }
+      }
+      assertEquals(3, growBananaCount);
+      assertEquals(3, biteBananaCount);
+
+    } finally {
+      // Teardown: Delete Goal
+      hasura.deleteSchedulingGoal(schedulingSpecId);
+    }
+  }
+
+  @Test
   void schedulingMultipleGoals() throws IOException {
     // Setup: Add Goals
     insertActivities();
@@ -266,69 +348,139 @@ public class SchedulingTests {
     }
   }
 
+  /**
+   * This tests that Scheduling does not simulate if it has nothing to do and therefore returns a null datasetId
+   */
   @Test
   void schedulingPostsSimResults() throws IOException {
+      insertActivities();
+      final var schedulingResults = hasura.awaitScheduling(schedulingSpecId);
+      final var datasetId = schedulingResults.datasetId();
+
+      assertNull(datasetId);
+  }
+
+  /**
+   * This tests that Scheduling posts simulation results if the plan has not been simulated before scheduling
+   * and it has goals
+   */
+  @Test
+  void schedulingGoalPostsSimResults() throws IOException {
+    // Setup: Add Goal and Activities
     insertActivities();
-    final var schedulingResults = hasura.awaitScheduling(schedulingSpecId);
-    final int datasetId = schedulingResults.datasetId();
-    final var plan = hasura.getPlan(planId);
+    final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
+        "Coexistence Scheduling Test Goal",
+        coexistenceGoalDefinition,
+        schedulingSpecId,
+        0);
 
-    final var simResults = hasura.getSimulationDatasetByDatasetId(datasetId);
+    try {
+      // Schedule and get Plan
+      final var schedulingResults = hasura.awaitScheduling(schedulingSpecId, 360);
+      final int datasetId = schedulingResults.datasetId();
+      final var plan = hasura.getPlan(planId);
+      final var simResults = hasura.getSimulationDatasetByDatasetId(datasetId);
 
-    // All directive have their simulated activity
-    final var planActivities = plan.activityDirectives();
-    final var simActivities = simResults.activities();
-
-    assertEquals(2, planActivities.size());
-    assertEquals(planActivities.size(), simActivities.size());
-    for(int i = 0; i<planActivities.size(); ++i) {
-      assertEquals(planActivities.get(i).id(), simActivities.get(i).directiveId());
-      assertEquals(planActivities.get(i).startOffset(), simActivities.get(i).startOffset());
-    }
-
-    final var profiles = hasura.getProfiles(datasetId);
-    // Expect one profile per resource in the Banananation model
-    assertEquals(7, profiles.size());
-    assertTrue(profiles.keySet().containsAll(List.of(
-        "/flag",
-        "/flag/conflicted",
-        "/peel",
-        "/fruit",
-        "/plant",
-        "/producer",
-        "/data/line_count")));
-
-    // Fruit resource is impacted by the two GrowBananas, which each create two segments
-    final var fruitSegments = profiles.get("/fruit");
-    assertEquals(5, fruitSegments.size());
-    assertEquals("00:00:00", fruitSegments.get(0).startOffset()); // plan start
-    assertEquals("01:00:00", fruitSegments.get(1).startOffset()); // GB1 start
-    assertEquals("02:00:00", fruitSegments.get(2).startOffset()); // GB1 end
-    assertEquals("03:00:00", fruitSegments.get(3).startOffset()); // GB2 start
-    assertEquals("05:00:00", fruitSegments.get(4).startOffset()); // GB2 end
-
-    final var initialFruit = Json.createObjectBuilder().add("rate", 0.0).add("initial", 4.0).build();
-    assertEquals(initialFruit, fruitSegments.get(0).dynamics());
-
-    // Plant resource is impacted by the two GrowBananas, which each create one segment
-    final var plantSegments = profiles.get("/plant");
-    assertEquals(3, plantSegments.size());
-    assertEquals("00:00:00", plantSegments.get(0).startOffset()); // plan start
-    assertEquals("02:00:00", plantSegments.get(1).startOffset()); // GB1 end
-    assertEquals("05:00:00", plantSegments.get(2).startOffset()); // GB2 end
-
-    final var topics = hasura.getTopicsEvents(datasetId);
-    assertEquals(41, topics.size());
-    // Assert that the keys to be inspected are included
-    assertTrue(topics.containsKey("ActivityType.Input.GrowBanana"));
-    assertTrue(topics.containsKey("ActivityType.Output.GrowBanana"));
-    for(final var topic : topics.entrySet()) {
-      switch (topic.getKey()) {
-        case "ActivityType.Input.GrowBanana",
-            "ActivityType.Output.GrowBanana" -> assertEquals(2, topic.getValue().events().size());
-        // No other topic should have events
-        default -> assertTrue(topic.getValue().events().isEmpty());
+      // All directive have their simulated activity
+      final var planActivities = plan.activityDirectives();
+      final var simActivities = simResults.activities();
+      assertEquals(4, planActivities.size());
+      assertEquals(planActivities.size(), simActivities.size());
+      for(int i = 0; i<planActivities.size(); ++i) {
+        boolean match = false;
+        for(int j = 0; j<simActivities.size(); ++j) {
+          if (planActivities.get(i).id() == simActivities.get(j).directiveId() &&
+              planActivities.get(i).startOffset().equals(simActivities.get(j).startOffset())) {
+            match = true;
+            break;
+          }
+        }
+        assertTrue(match);;
       }
+
+      // All directive have their simulated activity
+      final var profiles = hasura.getProfiles(datasetId);
+      // Expect one profile per resource in the Banananation model
+      assertEquals(7, profiles.size());
+      assertTrue(profiles.keySet().containsAll(List.of(
+          "/flag",
+          "/flag/conflicted",
+          "/peel",
+          "/fruit",
+          "/plant",
+          "/producer",
+          "/data/line_count")));
+
+      // Fruit resource is impacted by the two GrowBananas (each creating two segments) and two BiteBananas (each creating one segment)
+      final var fruitSegments = profiles.get("/fruit");
+      assertEquals(7, fruitSegments.size());
+      assertEquals("00:00:00", fruitSegments.get(0).startOffset()); // plan start
+      assertEquals("01:00:00", fruitSegments.get(1).startOffset()); // GB1 start
+      assertEquals("02:00:00", fruitSegments.get(2).startOffset()); // GB1 end
+      assertEquals("02:05:00", fruitSegments.get(3).startOffset()); // BB1
+      assertEquals("03:00:00", fruitSegments.get(4).startOffset()); // GB2 start
+      assertEquals("05:00:00", fruitSegments.get(5).startOffset()); // GB2 end
+      assertEquals("05:05:00", fruitSegments.get(6).startOffset()); // BB2
+
+      // Flag resource is impacted by the two BiteBananas, each adding a segment
+      final var flagSegments = profiles.get("/flag");
+      assertEquals(3, flagSegments.size());
+      assertEquals("00:00:00", flagSegments.get(0).startOffset()); // plan start
+      assertEquals("02:05:00", flagSegments.get(1).startOffset()); // GB1 end
+      assertEquals("05:05:00", flagSegments.get(2).startOffset()); // GB2 end
+
+      final var initialFruit = Json.createObjectBuilder().add("rate", 0.0).add("initial", 4.0).build();
+      assertEquals(initialFruit, fruitSegments.get(0).dynamics());
+
+      // Plant resource is impacted by the two GrowBananas, which each create one segment
+      final var plantSegments = profiles.get("/plant");
+      assertEquals(3, plantSegments.size());
+      assertEquals("00:00:00", plantSegments.get(0).startOffset()); // plan start
+      assertEquals("02:00:00", plantSegments.get(1).startOffset()); // GB1 end
+      assertEquals("05:00:00", plantSegments.get(2).startOffset()); // GB2 end
+
+      final var topics = hasura.getTopicsEvents(datasetId);
+      assertEquals(41, topics.size());
+      // Assert that the keys to be inspected are included
+      assertTrue(topics.containsKey("ActivityType.Input.GrowBanana"));
+      assertTrue(topics.containsKey("ActivityType.Output.GrowBanana"));
+      for(final var topic : topics.entrySet()) {
+        switch (topic.getKey()) {
+          case "ActivityType.Input.GrowBanana",
+              "ActivityType.Output.GrowBanana" -> assertEquals(2, topic.getValue().events().size());
+          case "ActivityType.Input.BiteBanana",
+              "ActivityType.Output.BiteBanana" -> assertEquals(2, topic.getValue().events().size());
+          // No other topic should have events
+          default -> assertTrue(topic.getValue().events().isEmpty());
+        }
+      }
+    } finally {
+      // Teardown: Delete Goal
+      hasura.deleteSchedulingGoal(coexistenceGoalId);
+    }
+  }
+
+
+  /**
+   * This tests that Scheduling does not post simulation results if the plan has been simulated before scheduling
+   * and it only has satisfied goals
+   */
+  @Test
+  void schedulingPostsSimResultsWithSimulation() throws IOException {
+    insertActivities();
+    insertSatisfyingActivities();
+    final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
+        "Coexistence Scheduling Test Goal",
+        coexistenceGoalDefinition,
+        schedulingSpecId,
+        0);
+    try{
+      hasura.awaitSimulation(planId);
+      final var schedulingResults = hasura.awaitScheduling(schedulingSpecId);
+      assertNull(schedulingResults.datasetId());
+    } finally {
+      // Teardown: Delete Goal
+      hasura.deleteSchedulingGoal(coexistenceGoalId);
     }
   }
 

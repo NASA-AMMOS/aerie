@@ -252,7 +252,10 @@ public class PrioritySolverTest {
     adHocFacade.insertActivitiesIntoSimulation(makePlanA012(problem).getActivities());
     adHocFacade.computeSimulationResultsUntil(problem.getPlanningHorizon().getEndAerie());
     final var simResults = adHocFacade.getLatestDriverSimulationResults().get();
-    problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults));
+    if(adHocFacade.getBidiActivityIdCorrespondence().isPresent())
+      problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults), adHocFacade.getBidiActivityIdCorrespondence().get());
+    else
+      problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults), null);
 
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
