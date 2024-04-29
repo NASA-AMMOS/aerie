@@ -7,8 +7,8 @@ import java.util.Optional;
 public record ConstraintRecord(
     boolean success,
     int constraintId,
+    int constraintRevision,
     String constraintName,
-    String type,
     Optional<ConstraintResult> result,
     List<ConstraintError> errors
 
@@ -17,8 +17,8 @@ public record ConstraintRecord(
     return new ConstraintRecord(
         json.getBoolean("success"),
         json.getInt("constraintId"),
+        json.getInt("constraintRevision"),
         json.getString("constraintName"),
-        json.getString("type"),
         json.getJsonObject("results").isEmpty() ? Optional.empty() : Optional.of(ConstraintResult.fromJSON(json.getJsonObject("results"))),
         json.getJsonArray("errors").getValuesAs(ConstraintError::fromJSON));
   }

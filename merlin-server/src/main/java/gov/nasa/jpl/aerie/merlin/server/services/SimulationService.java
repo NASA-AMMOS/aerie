@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import java.util.Optional;
 
 public interface SimulationService {
-  ResultsProtocol.State getSimulationResults(PlanId planId, RevisionData revisionData, final String requestedBy);
+  ResultsProtocol.State getSimulationResults(PlanId planId, final boolean forceResim, RevisionData revisionData, final String requestedBy);
 
   Optional<SimulationResultsHandle> get(PlanId planId, RevisionData revisionData);
 

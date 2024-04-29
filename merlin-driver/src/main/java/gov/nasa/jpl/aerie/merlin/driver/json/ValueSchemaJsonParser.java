@@ -94,6 +94,7 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
         productP
             .field("type", literalP("variant"))
             .field("variants", listP(variantP))
+            .rest()
             .map(
                 untuple((type, variants) -> ValueSchema.ofVariant(variants)),
                 $ -> tuple(Unit.UNIT, $.asVariant().get()));

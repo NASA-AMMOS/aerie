@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 public record Specification(
+    SpecificationId specificationId,
+    long specificationRevision,
     PlanId planId,
     long planRevision,
-    List<GoalRecord> goalsByPriority,
     Timestamp horizonStartTimestamp,
     Timestamp horizonEndTimestamp,
     Map<String, SerializedValue> simulationArguments,
     boolean analysisOnly,
-    List<GlobalSchedulingConditionRecord> globalSchedulingConditions
+    List<GoalRecord> goalsByPriority,
+    List<SchedulingConditionRecord> schedulingConditions
 ) {}

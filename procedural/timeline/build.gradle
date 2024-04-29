@@ -1,0 +1,61 @@
+import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
+plugins {
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
+  id "org.jetbrains.kotlin.jvm" version "1.9.22"
+  id 'java-library'
+  id 'org.jetbrains.dokka' version '1.9.10'
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation project(':merlin-driver')
+  implementation project(':parsing-utilities')
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+//  dokkaHtmlPlugin 'org.jetbrains.dokka:kotlin-as-java-plugin:1.9.10'
+}
+
+tasks.withType(KotlinJvmCompile.class).configureEach {
+  jvmTargetValidationMode = JvmTargetValidationMode.WARNING
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+kotlin {
+  jvmToolchain(21)
+}
+
+dokkaHtmlPartial.configure {
+  dokkaSourceSets {
+     configureEach {
+      // used as project name in the header
+      moduleName.set("Timeline")
+
+      reportUndocumented.set(true)
+      failOnWarning.set(true)
+
+      // contains descriptions for the module and the packages
+      includes.from("MODULE_DOCS.md")
+
+      // adds source links that lead to this repository, allowing readers
+      // to easily find source code for inspected declarations
+      sourceLink {
+        localDirectory.set(file("timeline/src/main/kotlin"))
+        remoteUrl.set(new URL(
+            "https://github.com/NASA-AMMOS/aerie/blob/feat/java-timeline-library/timeline/src/main/kotlin/"
+        ))
+        remoteLineSuffix.set("#L")
+      }
+    }
+  }
+}

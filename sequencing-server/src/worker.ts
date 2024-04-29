@@ -26,7 +26,13 @@ export async function typecheckExpansion(opts: {
   expansionLogic: string;
   commandTypes: string;
   activityTypes: string;
+  activityTypeName?: string;
 }): Promise<SerializedResult<CacheItem, ReturnType<UserCodeError['toJSON']>[]>> {
+  const startTime = Date.now();
+  console.log(
+    `[ Worker ] started transpiling authoring logic ${opts.activityTypeName ? `- ${opts.activityTypeName}` : ''}`,
+  );
+
   const result = await codeRunner.preProcess(
     opts.expansionLogic,
     'ExpansionReturn',
@@ -37,6 +43,14 @@ export async function typecheckExpansion(opts: {
       ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, compilerTarget),
     ],
   );
+
+  const endTime = Date.now();
+  console.log(
+    `[ Worker ] finished transpiling ${opts.activityTypeName ? `- ${opts.activityTypeName}` : ''}, (${
+      (endTime - startTime) / 1000
+    } s)`,
+  );
+
   if (result.isOk()) {
     return Result.Ok(result.unwrap()).toJSON();
   } else {

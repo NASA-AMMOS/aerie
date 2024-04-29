@@ -11,4 +11,8 @@ public interface Scheduler {
   <T> void startActivity(T activity, Topic<T> inputTopic);
   <T> void endActivity(T result, Topic<T> outputTopic);
   <ActivityDirectiveId> void startDirective(ActivityDirectiveId directiveId, Topic<ActivityDirectiveId> activityTopic);
+
+  void pushSpan();
+
+  void popSpan();
 }

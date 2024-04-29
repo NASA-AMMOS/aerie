@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -93,40 +91,6 @@ public class ResumableSimulationTest {
     resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
     assertEquals(fiveHours, resumableSimulationDriver.getCurrentSimulationEndTime());
     assert(resumableSimulationDriver.getSimulationResults(Instant.now()).getUnfinishedActivities().size() == 1);
-  }
-
-  @Test
-  public void testThreadsReleased() throws SchedulingInterruptedException {
-    final var activity = new TestSimulatedActivity(
-        Duration.of(0, SECONDS),
-        new SerializedActivity("BasicActivity", Map.of()),
-        new ActivityDirectiveId(1));
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, ()-> false, useResourceTracker);
-    try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
-      for (var i = 0; i < 20000; i++) {
-        resumableSimulationDriver.initSimulation();
-        resumableSimulationDriver.clearActivitiesInserted();
-        resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
-        assertTrue(
-            executor.getActiveCount() < 100,
-            "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
-      }
-    }
-  }
-
-  private static ThreadPoolExecutor unsafeGetExecutor(final ResumableSimulationDriver<?> driver) {
-    try {
-      final var engineField = ResumableSimulationDriver.class.getDeclaredField("engine");
-      engineField.setAccessible(true);
-
-      final var executorField = SimulationEngine.class.getDeclaredField("executor");
-      executorField.setAccessible(true);
-
-      return (ThreadPoolExecutor) executorField.get(engineField.get(driver));
-    } catch (final ReflectiveOperationException ex) {
-      throw new RuntimeException(ex);
-    }
   }
 
   private ArrayList<TestSimulatedActivity> getActivities(){

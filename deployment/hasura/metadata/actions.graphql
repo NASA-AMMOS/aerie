@@ -97,7 +97,7 @@ type Query {
 }
 
 type Query {
-  simulate(planId: Int!): MerlinSimulationResponse
+  simulate(planId: Int!, force: Boolean): MerlinSimulationResponse
 }
 
 type Query {
@@ -281,8 +281,8 @@ type ResourceSamplesResponse {
 type ConstraintResponse {
   success: String!
   constraintId: Int!,
+  constraintRevision: Int!,
   constraintName: String!,
-  type: String!,
   errors: [UserCodeError!]!
   results: [ConstraintResult!]!
 }

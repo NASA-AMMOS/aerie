@@ -345,6 +345,9 @@ describe('Sequence', () => {
       local.setKind('locals')
       const parameter = Variable.new(ENUM('duration', 'POSSIBLE_DURATION'));
       parameter.setKind('parameters')
+      const reference = Variable.new(FLOAT('LO1FLOAT' ));
+      reference.setKind('parameters')
+      reference.setAsVariableReference()
       const sequence = Sequence.new({
         seqId: 'test',
         metadata: {},
@@ -378,6 +381,17 @@ describe('Sequence', () => {
           }).METADATA({
             author: 'ZZZZ',
           }),
+          CommandStem.new({
+            stem: 'TEST',
+            arguments: {
+              temperature: reference,
+              duration: 10,
+            },
+
+            absoluteTime: doyToInstant('2022-001T00:00:00.000' as DOY_STRING),
+          }).METADATA({
+            author: 'bbbb',
+          }),
         ],
       });
 
@@ -400,6 +414,12 @@ describe('Sequence', () => {
       A\`2021-001T00:00:00.000\`.TEST(locals.temp,parameters.duration)
         .METADATA({
           author: 'ZZZZ',
+        }),
+      A\`2022-001T00:00:00.000\`.TEST(
+      REF(parameters.LO1FLOAT) --> "VERIFY: 'parameters.LO1FLOAT' is a Variable References"
+      ,10)
+        .METADATA({
+          author: 'bbbb',
         }),
     ]),
   });`);

@@ -1,5 +1,5 @@
 create table metadata.scheduling_goal_tags (
-  goal_id integer references public.scheduling_goal
+  goal_id integer references public.scheduling_goal_metadata
     on update cascade
     on delete cascade,
   tag_id integer not null,

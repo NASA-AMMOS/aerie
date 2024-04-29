@@ -2,12 +2,17 @@ table:
   name: scheduling_specification_conditions
   schema: public
 object_relationships:
-- name: condition
-  using:
-    foreign_key_constraint_on: condition_id
-- name: specification
-  using:
-    foreign_key_constraint_on: specification_id
+  - name: condition_metadata
+    using:
+      foreign_key_constraint_on: condition_id
+  - name: condition_definition
+    using:
+      foreign_key_constraint_on:
+        - condition_id
+        - condition_revision
+  - name: specification
+    using:
+      foreign_key_constraint_on: specification_id
 select_permissions:
   - role: aerie_admin
     permission:
@@ -28,20 +33,20 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, condition_id, enabled]
+      columns: [specification_id, condition_id, condition_revision, enabled]
       check: {}
   - role: user
     permission:
-      columns: [specification_id, condition_id, enabled]
+      columns: [specification_id, condition_id, condition_revision, enabled]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [specification_id, condition_id, enabled]
+      columns: [condition_revision, enabled]
       filter: {}
   - role: user
     permission:
-      columns: [enabled]
+      columns: [condition_revision, enabled]
       filter: {}
 delete_permissions:
   - role: aerie_admin

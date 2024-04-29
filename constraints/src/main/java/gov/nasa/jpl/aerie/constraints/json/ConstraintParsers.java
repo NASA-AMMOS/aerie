@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
-import gov.nasa.jpl.aerie.constraints.model.ConstraintType;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
@@ -323,13 +322,13 @@ public final class ConstraintParsers {
       productP
           .field("violations", listP(violationP))
           .field("gaps", listP(intervalP))
-          .field("type", enumP(ConstraintType.class, Enum::name))
           .field("resourceIds", listP(stringP))
           .field("constraintId", longP)
+          .field("constraintRevision", longP)
           .field("constraintName", stringP)
           .map(
-              untuple((violations, gaps, constraintType, resourceNames, constraintId, constraintName) -> new ConstraintResult(violations, gaps, constraintType, resourceNames, constraintId, constraintName)),
-              $ -> tuple($.violations, $.gaps, $.constraintType, $.resourceIds, $.constraintId, $.constraintName)
+              untuple((violations, gaps, resourceNames, constraintId, constraintRevision, constraintName) -> new ConstraintResult(violations, gaps, resourceNames, constraintId, constraintRevision, constraintName)),
+              $ -> tuple($.violations, $.gaps, $.resourceIds, $.constraintId, $.constraintRevision, $.constraintName)
           );
 
   static final JsonParser<IntervalDuration> intervalDurationP =

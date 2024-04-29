@@ -76,6 +76,16 @@ public final class InitializationContext implements Context {
   }
 
   @Override
+  public void pushSpan() {
+    // Do nothing.
+  }
+
+  @Override
+  public void popSpan() {
+    // Do nothing.
+  }
+
+  @Override
   public void delay(final Duration duration) {
     throw new IllegalStateException("Cannot yield during initialization");
   }

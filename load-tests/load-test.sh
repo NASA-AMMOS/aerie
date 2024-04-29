@@ -46,3 +46,7 @@ curl -L "https://github.com/grafana/xk6-dashboard/releases/download/${version}/x
     --out "json=load-report.json" \
     --out "dashboard=period=1s&report=load-report.html" \
     ./dist/load-test.js
+./k6 run \
+    --out "json=load-report.json" \
+    --out "dashboard=period=1s&report=load-report.html" \
+    ./dist/db-lockup-test.js

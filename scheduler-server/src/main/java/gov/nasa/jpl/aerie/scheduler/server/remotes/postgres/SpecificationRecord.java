@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 
 import java.util.Map;
 
-public final record SpecificationRecord(
+public record SpecificationRecord(
     long id,
     long revision,
     long planId,

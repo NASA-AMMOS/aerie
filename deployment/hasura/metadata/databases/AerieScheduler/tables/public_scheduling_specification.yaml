@@ -1,6 +1,39 @@
 table:
   name: scheduling_specification
   schema: public
+array_relationships:
+- name: goals
+  using:
+    foreign_key_constraint_on:
+      column: specification_id
+      table:
+        name: scheduling_specification_goals
+        schema: public
+- name: conditions
+  using:
+    foreign_key_constraint_on:
+      column: specification_id
+      table:
+        name: scheduling_specification_conditions
+        schema: public
+- name: requests
+  using:
+    foreign_key_constraint_on:
+      column: specification_id
+      table:
+        name: scheduling_request
+        schema: public
+remote_relationships:
+- name: plan
+  definition:
+    to_source:
+      relationship_type: object
+      source: AerieMerlin
+      table:
+        schema: public
+        name: plan
+      field_mapping:
+        plan_id: id
 select_permissions:
   - role: aerie_admin
     permission:

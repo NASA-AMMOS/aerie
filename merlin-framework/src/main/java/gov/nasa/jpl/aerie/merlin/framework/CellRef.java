@@ -37,8 +37,8 @@ public final class CellRef<Event, State> {
   }
 
   public static <Effect, State>
-  CellRef<Effect, State> allocate(final State initialState, final CellType<Effect, State> applicator) {
-    return allocate(initialState, applicator, $ -> $);
+  CellRef<Effect, State> allocate(final State initialState, final CellType<Effect, State> cellType) {
+    return allocate(initialState, cellType, $ -> $);
   }
 
   public State get() {

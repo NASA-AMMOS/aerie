@@ -22,12 +22,12 @@ array_relationships:
       table:
         name: activity_directive
         schema: public
-- name: constraints
+- name: constraint_specification
   using:
     foreign_key_constraint_on:
       column: plan_id
       table:
-        name: constraint
+        name: constraint_specification
         schema: public
 - name: collaborators
   using:
@@ -67,10 +67,10 @@ array_relationships:
         name: plan
         schema: public
 remote_relationships:
-- name: scheduling_specifications
+- name: scheduling_specification
   definition:
     to_source:
-      relationship_type: array
+      relationship_type: object
       source: AerieScheduler
       table:
         schema: public

@@ -21,6 +21,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -30,8 +33,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Named.named;
 
 /**
  * Test the Action Bindings for the Merlin and Scheduler Servers
@@ -156,16 +161,17 @@ public class BindingsTests {
         // Returns a 404 if the PlanId is invalid
         // message is "no such plan"
         final String data = Json.createObjectBuilder()
-                                   .add("action", Json.createObjectBuilder().add("name", "simulate"))
-                                   .add("input", Json.createObjectBuilder().add("planId", -1))
-                                   .add("request_query", "")
-                                   .add("session_variables", admin.getSession())
-                                   .build()
-                                   .toString();
+                                .add("action", Json.createObjectBuilder().add("name", "simulate"))
+                                .add("input", Json.createObjectBuilder().add("planId", -1))
+                                .add("request_query", "")
+                                .add("session_variables", admin.getSession())
+                                .build()
+                                .toString();
         final var response = request.post("/getSimulationResults", RequestOptions.create().setData(data));
         assertEquals(404, response.status());
         assertEquals("no such plan", getBody(response).getString("message"));
       }
+
       @Test
       void unauthorized() {
         // Returns a 403 if Unauthorized
@@ -178,10 +184,12 @@ public class BindingsTests {
                                 .toString();
         final var response = request.post("/getSimulationResults", RequestOptions.create().setData(data));
         assertEquals(403, response.status());
-        assertEquals("User '"+nonOwner.name()+"' with role 'user' cannot perform 'simulate' because they are not "
-                     + "a 'PLAN_OWNER_COLLABORATOR' for plan with id '"+planId+"'",
-                     getBody(response).getString("message"));
+        assertEquals(
+            "User '" + nonOwner.name() + "' with role 'user' cannot perform 'simulate' because they are not "
+            + "a 'PLAN_OWNER_COLLABORATOR' for plan with id '" + planId + "'",
+            getBody(response).getString("message"));
       }
+
       @Test
       void valid() throws InterruptedException {
         // Returns a 200 otherwise
@@ -189,6 +197,35 @@ public class BindingsTests {
         final String data = Json.createObjectBuilder()
                                 .add("action", Json.createObjectBuilder().add("name", "simulate"))
                                 .add("input", Json.createObjectBuilder().add("planId", planId))
+                                .add("request_query", "")
+                                .add("session_variables", admin.getSession())
+                                .build()
+                                .toString();
+        final var response = request.post("/getSimulationResults", RequestOptions.create().setData(data));
+        assertEquals(200, response.status());
+        assertNotEquals("failed", getBody(response).getString("status"));
+        // Delay 1s to allow any workers to finish with the request
+        Thread.sleep(1000);
+      }
+
+      static Stream<Arguments> forceArgs() {
+        return Stream.of(
+            Arguments.arguments(named("valid, force is NULL", JsonValue.NULL)),
+            Arguments.arguments(named("valid, force is TRUE", JsonValue.TRUE)),
+            Arguments.arguments(named("valid, force is FALSE", JsonValue.FALSE))
+        );
+      }
+
+      @ParameterizedTest
+      @MethodSource("forceArgs")
+      void validWithForce(JsonValue force) throws InterruptedException {
+        // Returns a 200 otherwise
+        // "status" is not "failed"
+        final String data = Json.createObjectBuilder()
+                                .add("action", Json.createObjectBuilder().add("name", "simulate"))
+                                .add(
+                                    "input",
+                                    Json.createObjectBuilder().add("planId", planId).add("force", force))
                                 .add("request_query", "")
                                 .add("session_variables", admin.getSession())
                                 .build()

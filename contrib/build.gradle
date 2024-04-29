@@ -6,7 +6,7 @@ plugins {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(19)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 
   withJavadocJar()
@@ -15,6 +15,12 @@ java {
 
 test {
   useJUnitPlatform()
+  testLogging {
+    exceptionFormat = 'full'
+  }
+  if (project.hasProperty('excludeTests')) {
+    exclude project.property('excludeTests')
+  }
 }
 
 jacocoTestReport {

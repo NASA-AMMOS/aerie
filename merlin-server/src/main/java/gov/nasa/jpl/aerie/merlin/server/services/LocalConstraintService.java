@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 
-import java.util.List;
 import java.util.Map;
 
 public class LocalConstraintService implements ConstraintService {
@@ -24,7 +23,7 @@ public class LocalConstraintService implements ConstraintService {
   }
 
   @Override
-  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(List<Constraint> constraints, SimulationDatasetId simulationDatasetId) {
-    return constraintRepository.getValidConstraintRuns(constraints.stream().map(Constraint::id).toList(), simulationDatasetId);
+  public Map<Long, ConstraintRunRecord> getValidConstraintRuns(Map<Long, Constraint> constraints, SimulationDatasetId simulationDatasetId) {
+    return constraintRepository.getValidConstraintRuns(constraints, simulationDatasetId);
   }
 }

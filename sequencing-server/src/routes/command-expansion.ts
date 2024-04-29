@@ -1,6 +1,6 @@
-import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
+import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import pgFormat from 'pg-format';
-import { Context, db, piscina } from './../app.js';
+import { Context, db, piscina, promiseThrottler, typeCheckingCache } from './../app.js';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 import express from 'express';
 import { serializeWithTemporal } from './../utils/temporalSerializers.js';
@@ -13,6 +13,7 @@ import { unwrapPromiseSettledResults } from '../lib/batchLoaders/index.js';
 import { defaultSeqBuilder } from '../defaultSeqBuilder.js';
 import { ActivateStep, CommandStem, LoadStep } from './../lib/codegen/CommandEDSLPreface.js';
 import { getUsername } from '../utils/hasura.js';
+import * as crypto from 'crypto';
 
 const logger = getLogger('app');
 
@@ -54,17 +55,18 @@ commandExpansionRouter.post('/put-expansion', async (req, res, next) => {
     activityTypeName,
   });
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-
-  const result = Result.fromJSON(
-    await (piscina.run(
-      {
-        expansionLogic,
-        commandTypes: commandTypes,
-        activityTypes: activityTypescript,
-      },
-      { name: 'typecheckExpansion' },
-    ) as ReturnType<typeof typecheckExpansion>),
-  );
+  const result = await promiseThrottler.run(() => {
+    return (
+      piscina.run(
+        {
+          commandTypes: commandTypes,
+          activityTypes: activityTypescript,
+          activityTypeName: activityTypeName,
+        },
+        { name: 'typecheckExpansion' },
+      ) as ReturnType<typeof typecheckExpansion>
+    ).then(Result.fromJSON);
+  });
 
   res.status(200).json({ id, errors: result.isErr() ? result.unwrapErr() : [] });
   return next();
@@ -90,32 +92,65 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
       if (expansion instanceof Error) {
         throw new InheritedError(`Expansion with id: ${expansionIds[index]} could not be loaded`, expansion);
       }
+
+      const hash = crypto
+        .createHash('sha256')
+        .update(
+          JSON.stringify({
+            commandDictionaryId,
+            missionModelId,
+            id: expansion.id,
+            expansionLogic: expansion.expansionLogic,
+            activityType: expansion.activityType,
+          }),
+        )
+        .digest('hex');
+
+      if (typeCheckingCache.has(hash)) {
+        console.log(`Using cached typechecked data for ${expansion.activityType}`);
+        return typeCheckingCache.get(hash);
+      }
+
       const activitySchema = await context.activitySchemaDataLoader.load({
         missionModelId,
         activityTypeName: expansion.activityType,
       });
       const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-      const result = Result.fromJSON(
-        await (piscina.run(
-          {
-            expansionLogic: expansion.expansionLogic,
-            commandTypes: commandTypes,
-            activityTypes: activityTypescript,
-          },
-          { name: 'typecheckExpansion' },
-        ) as ReturnType<typeof typecheckExpansion>),
-      );
+      const typeCheckResult = promiseThrottler.run(() => {
+        return (
+          piscina.run(
+            {
+              expansionLogic: expansion.expansionLogic,
+              commandTypes: commandTypes,
+              activityTypes: activityTypescript,
+              activityTypeName: expansion.activityType,
+            },
+            { name: 'typecheckExpansion' },
+          ) as ReturnType<typeof typecheckExpansion>
+        ).then(Result.fromJSON);
+      });
 
-      return result;
+      typeCheckingCache.set(hash, typeCheckResult);
+      return typeCheckResult;
     }),
   );
 
   const errors = unwrapPromiseSettledResults(typecheckErrorPromises).reduce((accum, item) => {
-    if (item instanceof Error) {
-      accum.push(item);
-    } else if (item.isErr()) {
-      accum.push(...item.unwrapErr());
+    if (item && (item instanceof Error || item.isErr)) {
+      // Check for item's existence before accessing properties
+      if (item instanceof Error) {
+        accum.push(item);
+      } else if (item.isErr()) {
+        try {
+          accum.push(...item.unwrapErr()); // Handle potential errors within unwrapErr
+        } catch (error) {
+          accum.push(new Error('Failed to unwrap error: ' + error)); // Log unwrapErr errors
+        }
+      }
+    } else {
+      accum.push(new Error('Unexpected result in resolved promises')); // Handle unexpected non-error values
     }
+
     return accum;
   }, [] as (Error | ReturnType<UserCodeError['toJSON']>)[]);
 
@@ -168,14 +203,9 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
     context.expansionSetDataLoader.load({ expansionSetId }),
     context.simulatedActivitiesDataLoader.load({ simulationDatasetId }),
   ]);
+  const commandDictionaryId = expansionSet.commandDictionary.id;
+  const missionModelId = expansionSet.missionModel.id;
   const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
-
-  // Note: We are keeping the Promise in the cache so that we don't have to wait for resolution to insert into
-  // the cache and consequently end up doing the compilation multiple times because of a cache miss.
-  const expansionBuildArtifactsCache = new Map<
-    number,
-    Promise<Result<CacheItem, ReturnType<UserCodeError['toJSON']>[]>>
-  >();
 
   const settledExpansionResults = await Promise.allSettled(
     simulatedActivities.map(async simulatedActivity => {
@@ -205,21 +235,36 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
       }
       const activityTypes = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
-      if (!expansionBuildArtifactsCache.has(expansion.id)) {
-        const typecheckResult = (
-          piscina.run(
-            {
-              expansionLogic: expansion.expansionLogic,
-              commandTypes: commandTypes,
-              activityTypes,
-            },
-            { name: 'typecheckExpansion' },
-          ) as ReturnType<typeof typecheckExpansion>
-        ).then(Result.fromJSON);
-        expansionBuildArtifactsCache.set(expansion.id, typecheckResult);
-      }
+      const hash = crypto
+        .createHash('sha256')
+        .update(
+          JSON.stringify({
+            commandDictionaryId,
+            missionModelId,
+            id: expansion.id,
+            expansionLogic: expansion.expansionLogic,
+            activityType: expansion.activityType,
+          }),
+        )
+        .digest('hex');
+      if (!typeCheckingCache.has(hash)) {
+        const typeCheckResult = promiseThrottler.run(() => {
+          return (
+            piscina.run(
+              {
+                expansionLogic: expansion.expansionLogic,
+                commandTypes: commandTypes,
+                activityTypes: activityTypes,
+                activityTypeName: expansion.activityType,
+              },
+              { name: 'typecheckExpansion' },
+            ) as ReturnType<typeof typecheckExpansion>
+          ).then(Result.fromJSON);
+        });
 
-      const expansionBuildArtifacts = await expansionBuildArtifactsCache.get(expansion.id)!;
+        typeCheckingCache.set(hash, typeCheckResult);
+      }
+      const expansionBuildArtifacts = await typeCheckingCache.get(hash)!;
 
       if (expansionBuildArtifacts.isErr()) {
         return {
@@ -315,7 +360,7 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
   // Get all the sequence IDs that are assigned to simulated activities.
   const seqToSimulatedActivity = await db.query(
     `
-      select seq_id
+      select seq_id, simulated_activity_id
       from sequence_to_simulated_activity
       where sequence_to_simulated_activity.simulated_activity_id in (${pgFormat(
         '%L',
@@ -340,6 +385,17 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
       [simulationDatasetId],
     );
 
+    // Map seqIds to simulated activity ids so we only save expanded seqs for selected activites.
+    const seqIdToSimActivityId: Record<string, Set<number>> = {};
+
+    for (const row of seqToSimulatedActivity.rows) {
+      if (seqIdToSimActivityId[row.seq_id] === undefined) {
+        seqIdToSimActivityId[row.seq_id] = new Set();
+      }
+
+      seqIdToSimActivityId[row.seq_id]!.add(row.simulated_activity_id);
+    }
+
     // If the user has created a sequence, we can try to save the expanded sequences when an expansion runs.
     for (const seqRow of seqRows.rows) {
       const seqId = seqRow.seq_id;
@@ -360,9 +416,11 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
         return next();
       }
 
-      const sortedActivityInstances = (
+      let sortedActivityInstances = (
         simulatedActivities as Exclude<(typeof simulatedActivities)[number], Error>[]
       ).sort((a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset));
+
+      sortedActivityInstances = sortedActivityInstances.filter(ai => seqIdToSimActivityId[seqId]?.has(ai.id));
 
       const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
         const row = expandedActivityInstances.find(row => row.id === ai.id);
@@ -380,18 +438,19 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
         return {
           ...ai,
-          commands: row.commands?.map(c => {
-            switch (c.type) {
-              case 'command':
-                return CommandStem.fromSeqJson(c);
-              case 'load':
-                return LoadStep.fromSeqJson(c);
-              case 'activate':
-                return ActivateStep.fromSeqJson(c);
-              default:
-                throw new Error(`Unknown command type: ${c.type}`);
-            }
-          }) ?? null,
+          commands:
+            row.commands?.map(c => {
+              switch (c.type) {
+                case 'command':
+                  return CommandStem.fromSeqJson(c);
+                case 'load':
+                  return LoadStep.fromSeqJson(c);
+                case 'activate':
+                  return ActivateStep.fromSeqJson(c);
+                default:
+                  throw new Error(`Unknown command type: ${c.type}`);
+              }
+            }) ?? null,
           errors: errors as { message: string; stack: string; location: { line: number; column: number } }[],
         };
       });

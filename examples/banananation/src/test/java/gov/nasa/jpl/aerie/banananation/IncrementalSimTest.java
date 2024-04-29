@@ -139,7 +139,7 @@ public final class IncrementalSimTest {
 
   @Test
   public void testMoveActivityPastAnother() {
-    if (debug) System.out.println("testMoveActivityLater()");
+    if (debug) System.out.println("testMoveActivityPastAnother()");
 
     final var schedule = SimulationUtility.buildSchedule(
         Pair.of(

@@ -210,18 +210,34 @@ final class MerlinDatabaseTestHelper {
     }
   }
 
+void unassignPreset(int presetId, int activityId, int planId) throws SQLException {
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+         //language=sql
+         """
+         delete from preset_to_directive
+         where (preset_id, activity_id, plan_id) = (%d, %d, %d);
+         """.formatted(presetId, activityId, planId));
+    }
+  }
 
-  int insertConstraintPlan(int plan_id, String name, String definition, User user) throws SQLException {
+
+  int insertConstraint(String name, String definition, User user) throws SQLException {
     try(final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
           """
-          INSERT INTO public.constraint
-            (name, description, definition, plan_id, owner, updated_by)
-          VALUES ('%s', 'Merlin DB Test Constraint', '%s', %d, '%s', '%s')
-          RETURNING id;
-          """.formatted(name, definition, plan_id, user.name, user.name));
+          WITH metadata(id, owner) AS (
+            INSERT INTO public.constraint_metadata(name, description, owner, updated_by)
+            VALUES ('%s', 'Merlin DB Test Constraint', '%s', '%s')
+            RETURNING id, owner
+          )
+          INSERT INTO public.constraint_definition(constraint_id, definition, author)
+          SELECT m.id, '%s', m.owner
+          FROM metadata m
+          RETURNING constraint_id;
+          """.formatted(name, user.name, user.name, definition));
       res.next();
-      return res.getInt("id");
+      return res.getInt("constraint_id");
     }
   }
 }

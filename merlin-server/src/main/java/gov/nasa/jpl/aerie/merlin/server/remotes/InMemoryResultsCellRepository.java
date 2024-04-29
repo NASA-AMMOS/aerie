@@ -47,6 +47,11 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
+  public ResultsProtocol.OwnerRole forceAllocate(PlanId planId, String requestedBy) {
+    return allocate(planId, requestedBy);
+  }
+
+  @Override
   public Optional<ResultsProtocol.OwnerRole> claim(final PlanId planId, final Long datasetId) {
     return Optional.empty();
   }

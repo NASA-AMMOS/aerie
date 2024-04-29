@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

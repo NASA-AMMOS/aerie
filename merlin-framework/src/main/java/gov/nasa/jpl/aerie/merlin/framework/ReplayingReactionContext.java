@@ -89,6 +89,20 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
+  public void pushSpan() {
+    this.memory.doOnce(() -> {
+      this.scheduler.pushSpan();
+    });
+  }
+
+  @Override
+  public void popSpan() {
+    this.memory.doOnce(() -> {
+      this.scheduler.popSpan();
+    });
+  }
+
+  @Override
   public void delay(final Duration duration) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.

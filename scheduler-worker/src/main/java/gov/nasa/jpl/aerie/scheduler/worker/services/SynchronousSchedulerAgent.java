@@ -30,7 +30,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -63,7 +62,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
-import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
@@ -137,8 +135,8 @@ public record SynchronousSchedulerAgent(
       final var specification = specificationService.getSpecification(request.specificationId());
       //TODO: consider caching planMetadata, schedulerMissionModel, Problem, etc. in addition to SimulationFacade
       final var planMetadata = merlinService.getPlanMetadata(specification.planId());
-      ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
+      ensureRequestIsCurrent(specification, request);
       //create scheduler problem seeded with initial plan
       final var schedulerMissionModel = loadMissionModel(planMetadata);
       final var planningHorizon = new PlanningHorizon(
@@ -168,8 +166,7 @@ public record SynchronousSchedulerAgent(
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
         final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
-        specification.globalSchedulingConditions().forEach($ -> {
-          if (!$.enabled()) return;
+        specification.schedulingConditions().forEach($ -> {
           final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
               merlinService,
               planMetadata.planId(),
@@ -203,7 +200,6 @@ public record SynchronousSchedulerAgent(
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
-          if (!goalRecord.enabled()) continue;
           final var result = compileGoalDefinition(
               merlinService,
               planMetadata.planId(),
@@ -396,35 +392,20 @@ public record SynchronousSchedulerAgent(
   {
     return merlinService.getPlanRevision(planId);
   }
+
   /**
-   * confirms that specification revision still matches that expected by the scheduling request
+   * confirms that the scheduling request is still relevant
+   * (spec hasn't been updated between request being made and now)
    *
    * @param request the original request for scheduling, containing an intended starting specification revision
    * @throws ResultsProtocolFailure when the requested specification revision does not match the actual revision
    */
-  private void ensureRequestIsCurrent(final ScheduleRequest request) throws NoSuchSpecificationException {
-    final var currentRevisionData = specificationService.getSpecificationRevisionData(request.specificationId());
-    if (currentRevisionData.matches(request.specificationRev()) instanceof final RevisionData.MatchResult.Failure failure) {
-      throw new ResultsProtocolFailure("schedule specification with id %s is stale: %s".formatted(
-          request.specificationId(), failure));
+  private void ensureRequestIsCurrent(final Specification specification, final ScheduleRequest request)
+  throws NoSuchSpecificationException {
+    if (specification.specificationRevision() != request.specificationRev().specificationRevision()) {
+      throw new ResultsProtocolFailure("schedule specification with id %s is no longer at revision %d".formatted(
+          request.specificationId(), request.specificationRev().specificationRevision()));
     }
-  }
-
-  /**
-   * collects the scheduling goals that apply to the current scheduling run on the target plan
-   *
-   * @param planMetadata details of the plan container whose associated goals should be collected
-   * @param mission the mission model that the plan adheres to, possibly associating additional relevant goals
-   * @return the list of goals relevant to the target plan
-   * @throws ResultsProtocolFailure when the constraints could not be loaded, or the data stores could not be
-   *     reached
-   */
-  private List<GlobalConstraint> loadConstraints(final PlanMetadata planMetadata, final MissionModel<?> mission) {
-    //TODO: is the plan and mission model enough to find the relevant constraints? (eg what about sandbox toggling?)
-    //TODO: load global constraints from scheduler data store?
-    //TODO: load activity type constraints from somewhere (scheduler store? mission model?)
-    //TODO: somehow apply user control over which constraints to enforce during scheduling
-    return List.of();
   }
 
   /**

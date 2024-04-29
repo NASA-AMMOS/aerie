@@ -5,7 +5,7 @@ plugins {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(19)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 }
 
@@ -18,10 +18,13 @@ jacocoTestReport {
 
 task e2eTest(type: Test) {
   useJUnitPlatform()
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 dependencies {
-  testImplementation 'org.postgresql:postgresql:42.6.0'
+  testImplementation 'org.postgresql:postgresql:42.6.1'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
   testImplementation 'com.zaxxer:HikariCP:5.0.1'

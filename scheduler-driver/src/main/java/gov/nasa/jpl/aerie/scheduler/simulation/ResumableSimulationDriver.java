@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -65,10 +65,10 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   private static final Topic<ActivityDirectiveId> activityTopic = SimulationEngine.defaultActivityTopic;
 
   //mapping each activity name to its task id (in String form) in the simulation engine
-  private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
+  private final Map<ActivityDirectiveId, SpanId> plannedDirectiveToTask;
 
   //subset of plannedDirectiveToTask to check for scheduling dependent tasks
-  private final Map<ActivityDirectiveId, TaskId> toCheckForDependencyScheduling;
+  private final Map<ActivityDirectiveId, SpanId> toCheckForDependencyScheduling;
 
   //simulation results so far
   private SimulationResultsInterface lastSimResults;
@@ -369,7 +369,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
           plannedDirectiveToTask
           .values()
           .stream()
-          .allMatch(engine::isTaskComplete)) {
+          .allMatch($ -> engine.getSpan($).isComplete())) {
         allTaskFinished = true;
       }
 
@@ -397,9 +397,9 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
       directives = new HashMap<>(engine.directivesDiff.get("added"));
       directives.putAll(engine.directivesDiff.get("modified"));
-      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE, null));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE, null));
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
-      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(engine.oldEngine.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(k));
     }
     if (directives.isEmpty()) {
       this.simulateUntil(this.planDuration);
@@ -416,7 +416,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   public Optional<Duration> getActivityDuration(ActivityDirectiveId activityDirectiveId){
     //potential cause of non presence: (1) activity is outside plan bounds (2) activity has not been simulated yet
     if(!plannedDirectiveToTask.containsKey(activityDirectiveId)) return Optional.empty();
-    return engine.getTaskDuration(plannedDirectiveToTask.get(activityDirectiveId));
+    return engine.getSpan(plannedDirectiveToTask.get(activityDirectiveId)).duration();
   }
 
   private Set<ActivityDirectiveId> getSuccessorsToSchedule(final SimulationEngine engine) {
@@ -424,7 +424,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     final var iterator = toCheckForDependencyScheduling.entrySet().iterator();
     while(iterator.hasNext()){
       final var taskToCheck = iterator.next();
-      if(engine.isTaskComplete(taskToCheck.getValue())){
+      if(engine.getSpan(taskToCheck.getValue()).isComplete()){
         toSchedule.add(taskToCheck.getKey());
         iterator.remove();
       }
@@ -471,6 +471,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final Topic<ActivityDirectiveId> activityTopic) {
     return executor -> scheduler -> {
       scheduler.startDirective(directiveId, activityTopic);
+      scheduler.pushSpan();
       return task.create(executor).step(scheduler);
     };
   }

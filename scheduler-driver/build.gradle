@@ -6,13 +6,16 @@ plugins {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(19)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 }
 
 test {
   useJUnitPlatform()
-  maxHeapSize = "36g"
+  maxHeapSize = "11g"
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 
 jacocoTestReport {

@@ -35,7 +35,7 @@ public class HasuraRequests implements AutoCloseable {
   public HasuraRequests(Playwright playwright) {
     request = playwright.request().newContext(
             new APIRequest.NewContextOptions()
-                    .setBaseURL(BaseURL.HASURA.url).setTimeout(0));
+                    .setBaseURL(BaseURL.HASURA.url));
   }
 
   @Override
@@ -192,6 +192,16 @@ public class HasuraRequests implements AutoCloseable {
     return makeRequest(GQL.CREATE_ACTIVITY_DIRECTIVE, variables).getJsonObject("createActivityDirective").getInt("id");
   }
 
+  public void updateActivityDirectiveArguments(int planId, int activityId, JsonObject arguments) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("id", activityId)
+                              .add("arguments", arguments)
+                              .build();
+
+    makeRequest(GQL.UPDATE_ACTIVITY_DIRECTIVE_ARGUMENTS, variables);
+  }
+
   public void deleteActivity(int planId, int activityId) throws IOException {
     final var variables = Json.createObjectBuilder()
                               .add("plan_id", planId)
@@ -250,6 +260,16 @@ public class HasuraRequests implements AutoCloseable {
     return SimulationResponse.fromJSON(makeRequest(GQL.SIMULATE, variables).getJsonObject("simulate"));
   }
 
+  private SimulationResponse simulateForce(int planId, Boolean force) throws IOException {
+    final var variables = Json.createObjectBuilder().add("plan_id", planId);
+    if (force == null) {
+      variables.add("force", JsonValue.NULL);
+    } else {
+      variables.add("force", force);
+    }
+    return SimulationResponse.fromJSON(makeRequest(GQL.SIMULATE_FORCE, variables.build()).getJsonObject("simulate"));
+  }
+
   private SimulationDataset cancelSimulation(int simDatasetId, int timeout) throws IOException {
     final var variables = Json.createObjectBuilder().add("id", simDatasetId).build();
     makeRequest(GQL.CANCEL_SIMULATION, variables);
@@ -293,6 +313,47 @@ public class HasuraRequests implements AutoCloseable {
           }
           default -> fail("Simulation returned bad status " + response.status() + " with reason " +response.reason());
         }
+    }
+    throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
+  }
+
+    /**
+   * Simulate the specified plan, potentially forcibly, with a timeout of 30 seconds
+   * @param planId the plan to simulate
+   * @param force whether to forcibly resimulate in the event of an existing dataset.
+   */
+  public SimulationResponse awaitSimulation(int planId, Boolean force) throws IOException {
+    return awaitSimulation(planId, force, 30);
+  }
+
+  /**
+   * Simulate the specified plan, potentially forcibly, with a set timeout
+   * @param planId the plan to simulate
+   * @param force whether to forcibly resimulate in the event of an existing dataset.
+   * @param timeout the length of the timeout, in seconds
+   */
+  public SimulationResponse awaitSimulation(int planId, Boolean force, int timeout) throws IOException {
+    for (int i = 0; i < timeout; ++i) {
+      final SimulationResponse response;
+      // Only use force on the initial request to avoid an infinite loop of making new sim requests
+      if (i == 0) {
+        response = simulateForce(planId, force);
+      } else {
+        response = simulate(planId);
+      }
+      switch (response.status()) {
+        case "pending", "incomplete" -> {
+          try {
+            Thread.sleep(1000); // 1s
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        case "complete" -> {
+          return response;
+        }
+        default -> fail("Simulation returned bad status " + response.status() + " with reason " + response.reason());
+      }
     }
     throw new TimeoutError("Simulation timed out after " + timeout + " seconds");
   }
@@ -341,6 +402,13 @@ public class HasuraRequests implements AutoCloseable {
     return makeRequest(GQL.GET_SIMULATION_ID, variables).getJsonArray("simulation").getJsonObject(0).getInt("id");
   }
 
+  public SimulationConfiguration getSimConfig(int planId) throws IOException {
+    final var variables = Json.createObjectBuilder().add("planId", planId).build();
+    final var simConfig = makeRequest(GQL.GET_SIMULATION_CONFIGURATION, variables).getJsonArray("sim_config");
+    assertEquals(1, simConfig.size());
+    return SimulationConfiguration.fromJSON(simConfig.getJsonObject(0));
+  }
+
   public int insertAndAssociateSimTemplate(int modelId, String description, JsonObject arguments, int simConfigId)
   throws IOException
   {
@@ -387,18 +455,12 @@ public class HasuraRequests implements AutoCloseable {
 
   private SchedulingRequest cancelSchedulingRun(int analysisId, int timeout) throws IOException {
     final var variables = Json.createObjectBuilder().add("analysis_id", analysisId).build();
-    //assert that we only canceled one task
-    final var cancelRequest = makeRequest(GQL.CANCEL_SCHEDULING, variables)
-                                .getJsonObject("update_scheduling_request")
-                                .getJsonArray("returning");
-    assertEquals(1, cancelRequest.size());
-    final int specId = cancelRequest.getJsonObject(0).getInt("specification_id");
-    final int specRev = cancelRequest.getJsonObject(0).getInt("specification_revision");
+    makeRequest(GQL.CANCEL_SCHEDULING, variables);
     for(int i = 0; i <timeout; ++i) {
       try {
         Thread.sleep(1000); //1s
       } catch (InterruptedException ex) {throw new RuntimeException(ex);}
-      final var response = getSchedulingRequest(specId, specRev);
+      final var response = getSchedulingRequest(analysisId);
       // If reason is present, that means that the scheduler has posted
       // and we are not just seeing the side effects of `GQL.CANCEL_SCHEDULING`
       if(response.canceled() && response.reason().isPresent()) return response;
@@ -406,10 +468,9 @@ public class HasuraRequests implements AutoCloseable {
     throw new TimeoutError("Canceling scheduling timed out after " + timeout + " seconds");
   }
 
-  private SchedulingRequest getSchedulingRequest(int specificationId, int specificationRevision) throws IOException {
+  private SchedulingRequest getSchedulingRequest(int analysisId) throws IOException {
     final var variables = Json.createObjectBuilder()
-                              .add("specificationId", specificationId)
-                              .add("specificationRev", specificationRevision)
+                              .add("analysisId", analysisId)
                               .build();
     final var data = makeRequest(GQL.GET_SCHEDULING_REQUEST, variables).getJsonObject("scheduling_request_by_pk");
     return SchedulingRequest.fromJSON(data);
@@ -482,20 +543,6 @@ public class HasuraRequests implements AutoCloseable {
     throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
   }
 
-  public int insertSchedulingGoal(String name, int modelId, String definition) throws IOException {
-    return insertSchedulingGoal(name, modelId, definition, "");
-  }
-
-  public int insertSchedulingGoal(String name, int modelId, String definition, String description) throws IOException {
-    final var schedulingGoalInputBuilder = Json.createObjectBuilder()
-                                          .add("name", name)
-                                          .add("model_id", modelId)
-                                          .add("definition", definition)
-                                          .add("description", description);
-    final var variables = Json.createObjectBuilder().add("goal", schedulingGoalInputBuilder).build();
-    return makeRequest(GQL.CREATE_SCHEDULING_GOAL, variables).getJsonObject("goal").getInt("id");
-  }
-
   public void deleteSchedulingGoal(int goalId) throws IOException {
     final var variables = Json.createObjectBuilder().add("goalId", goalId).build();
     makeRequest(GQL.DELETE_SCHEDULING_GOAL, variables);
@@ -528,13 +575,67 @@ public class HasuraRequests implements AutoCloseable {
     makeRequest(GQL.UPDATE_SCHEDULING_SPECIFICATION_PLAN_REVISION, variables);
   }
 
-  public void createSchedulingSpecGoal(int goalId, int specificationId, int priority) throws IOException {
-    final var schedulingSpecGoalInsertBuilder = Json.createObjectBuilder()
-                                                    .add("goal_id", goalId)
-                                                    .add("specification_id", specificationId)
-                                                    .add("priority", priority);
-    final var variables = Json.createObjectBuilder().add("spec_goal", schedulingSpecGoalInsertBuilder).build();
-    makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables);
+  public int createSchedulingSpecGoal(
+      String name,
+      String definition,
+      int specificationId,
+      int priority
+  ) throws IOException {
+    return createSchedulingSpecGoal(name, definition, "", specificationId, priority);
+  }
+
+  public int createSchedulingSpecGoal(
+      String name,
+      String definition,
+      String description,
+      int specificationId,
+      int priority
+  ) throws IOException {
+    final var specGoalBuilder = Json.createObjectBuilder()
+                                    .add("goal_metadata",
+                                         Json.createObjectBuilder()
+                                             .add("data",
+                                                  Json.createObjectBuilder()
+                                                      .add("name", name)
+                                                      .add("description", description)
+                                                      .add("versions",
+                                                           Json.createObjectBuilder()
+                                                               .add("data",
+                                                                    Json.createArrayBuilder()
+                                                                        .add(Json.createObjectBuilder()
+                                                                                 .add("definition", definition))))))
+                                    .add("specification_id", specificationId)
+                                    .add("priority", priority);
+    final var variables = Json.createObjectBuilder().add("spec_goal", specGoalBuilder).build();
+    return makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
+            .getJsonObject("insert_scheduling_specification_goals_one")
+            .getInt("goal_id");
+  }
+
+  public int updateGoalDefinition(int goalId, String definition) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("goal_id", goalId)
+                              .add("definition", definition)
+                              .build();
+    return makeRequest(GQL.UPDATE_GOAL_DEFINITION, variables).getJsonObject("definition").getInt("revision");
+  }
+
+  public void updateSchedulingSpecEnabled(int schedulingSpecId, int goalId, boolean enabled) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("spec_id", schedulingSpecId)
+                              .add("goal_id", goalId)
+                              .add("enabled", enabled)
+                              .build();
+    makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_ENABLED, variables);
+  }
+
+  public void updateSchedulingSpecVersion(int schedulingSpecId, int goalId, int version) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("spec_id", schedulingSpecId)
+                              .add("goal_id", goalId)
+                              .add("goal_revision", version)
+                              .build();
+    makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_VERSION, variables);
   }
 
   public SchedulingDSLTypesResponse getSchedulingDslTypeScript(int missionModelId) throws IOException {
@@ -735,20 +836,46 @@ public class HasuraRequests implements AutoCloseable {
 
   public int insertPlanConstraint(String name, int planId, String definition, String description) throws IOException {
     final var constraintInsertBuilder = Json.createObjectBuilder()
-                                            .add("name", name)
                                             .add("plan_id", planId)
-                                            .add("definition", definition)
-                                            .add("description", description);
+                                            .add("constraint_metadata",
+                                                 Json.createObjectBuilder()
+                                                     .add("data",
+                                                          Json.createObjectBuilder()
+                                                              .add("name", name)
+                                                              .add("description", description)
+                                                              .add("versions",
+                                                                   Json.createObjectBuilder()
+                                                                       .add("data",
+                                                                            Json.createObjectBuilder()
+                                                                                .add("definition", definition)))));
     final var variables = Json.createObjectBuilder().add("constraint", constraintInsertBuilder).build();
-    return makeRequest(GQL.INSERT_CONSTRAINT, variables).getJsonObject("constraint").getInt("id");
+    return makeRequest(GQL.INSERT_PLAN_SPEC_CONSTRAINT, variables).getJsonObject("constraint").getInt("constraint_id");
   }
 
-  public void updateConstraint(int constraintId, String definition) throws IOException{
+  public void updatePlanConstraintSpecVersion(int planId, int constraintId, int constraintRevision) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("constraint_id", constraintId)
+                              .add("constraint_revision", constraintRevision)
+                              .build();
+    makeRequest(GQL.UPDATE_CONSTRAINT_SPEC_VERSION, variables);
+  }
+
+  public void updatePlanConstraintSpecEnabled(int planId, int constraintId, boolean enabled) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("plan_id", planId)
+                              .add("constraint_id", constraintId)
+                              .add("enabled", enabled)
+                              .build();
+    makeRequest(GQL.UPDATE_CONSTRAINT_SPEC_ENABLED, variables);
+  }
+
+  public int updateConstraintDefinition(int constraintId, String definition) throws IOException{
     final var variables = Json.createObjectBuilder()
                               .add("constraintId", constraintId)
                               .add("constraintDefinition", definition)
                               .build();
-    makeRequest(GQL.UPDATE_CONSTRAINT, variables);
+    return makeRequest(GQL.UPDATE_CONSTRAINT, variables).getJsonObject("constraint").getInt("revision");
   }
 
   public void deleteConstraint(int constraintId) throws IOException {

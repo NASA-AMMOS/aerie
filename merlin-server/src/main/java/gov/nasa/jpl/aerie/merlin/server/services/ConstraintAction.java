@@ -20,20 +20,17 @@ public class ConstraintAction {
   private final ConstraintsDSLCompilationService constraintsDSLCompilationService;
   private final ConstraintService constraintService;
   private final PlanService planService;
-  private final MissionModelService missionModelService;
   private final SimulationService simulationService;
 
   public ConstraintAction(
       final ConstraintsDSLCompilationService constraintsDSLCompilationService,
       final ConstraintService constraintService,
       final PlanService planService,
-      final MissionModelService missionModelService,
       final SimulationService simulationService
   ) {
     this.constraintsDSLCompilationService = constraintsDSLCompilationService;
     this.constraintService = constraintService;
     this.planService = planService;
-    this.missionModelService = missionModelService;
     this.simulationService = simulationService;
   }
 
@@ -60,21 +57,10 @@ public class ConstraintAction {
                                                         + " has not yet been simulated at its current revision"));
     }
 
-    final var constraintCode = new HashMap<Long, Constraint>();
+    final var constraintCode = new HashMap<>(this.planService.getConstraintsForPlan(planId));
     final var constraintResultMap = new HashMap<Constraint, Failable<?>>();
 
-    try {
-      constraintCode.putAll(this.missionModelService.getConstraints(plan.missionModelId));
-      constraintCode.putAll(this.planService.getConstraintsForPlan(planId));
-    } catch (final MissionModelService.NoSuchMissionModelException ex) {
-      throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
-    }
-
-
-    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode
-                                                                                      .values()
-                                                                                      .stream()
-                                                                                      .toList(), simDatasetId);
+    final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode, simDatasetId);
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
@@ -149,7 +135,6 @@ public class ConstraintAction {
         final var constraint = entry.getValue();
         final Expression<ConstraintResult> expression;
 
-        // TODO: cache these results, @JoelCourtney is this in reference to caching the output of the DSL compilation?
         final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult constraintCompilationResult;
         try {
           constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
@@ -238,8 +223,8 @@ public class ConstraintAction {
         ConstraintResult constraintResult = expression.evaluate(preparedResults, environment);
 
         constraintResult.constraintName = entry.getValue().name();
+        constraintResult.constraintRevision = entry.getValue().revision();
         constraintResult.constraintId = entry.getKey();
-        constraintResult.constraintType = entry.getValue().type();
         constraintResult.resourceIds = List.copyOf(names);
 
         constraintResultMap.put(constraint, Failable.of(constraintResult));
