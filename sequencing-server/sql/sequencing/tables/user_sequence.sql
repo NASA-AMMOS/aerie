@@ -1,6 +1,7 @@
 create table user_sequence (
   created_at timestamptz not null default now(),
   definition text not null,
+  seq_json jsonb,
   id integer generated always as identity,
   name text not null,
   owner text,
