@@ -6,6 +6,7 @@ create table parameter_dictionary (
   parsed_json jsonb not null default '{}',
 
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
 
   constraint parameter_dictionary_synthetic_key
       primary key (id),
@@ -25,3 +26,16 @@ comment on column parameter_dictionary.parsed_json is e''
   'The XML that has been parsed and converted to JSON';
 comment on constraint parameter_dictionary_natural_key on parameter_dictionary is e''
   'There can only be one dictionary of a given version for a given mission.';
+
+create function parameter_dictionary_set_updated_at()
+returns trigger
+security definer
+language plpgsql as $$begin
+  new.updated_at = now();
+  return new;
+end$$;
+
+create trigger set_timestamp
+before update on parameter_dictionary
+for each row
+execute function parameter_dictionary_set_updated_at();
