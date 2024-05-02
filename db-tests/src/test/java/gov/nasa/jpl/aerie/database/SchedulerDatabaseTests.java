@@ -5,6 +5,8 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +30,7 @@ class SchedulerDatabaseTests {
     helper.close();
   }
 
-  int getSpecification(final long planId) throws SQLException {
+  int getSpecificationId(final long planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
           //language=sql
@@ -38,6 +40,42 @@ class SchedulerDatabaseTests {
           """.formatted(planId));
       res.next();
       return res.getInt("id");
+    }
+  }
+
+  List<SpecificationEntry> getPlanSpecification(final int planSpecId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var spec = new ArrayList<SpecificationEntry>();
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          select goal_id, priority
+          from scheduler.scheduling_specification_goals
+          where specification_id = %d
+          order by priority;
+          """.formatted(planSpecId));
+      while(res.next()){
+        spec.add(new SpecificationEntry(res.getInt("goal_id"), res.getInt("priority")));
+      }
+      return spec;
+    }
+  }
+
+    List<SpecificationEntry> getModelSpecification(final int modelId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var spec = new ArrayList<SpecificationEntry>();
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          select goal_id, priority
+          from scheduler.scheduling_model_specification_goals
+          where model_id = %d
+          order by priority;
+          """.formatted(modelId));
+      while(res.next()){
+        spec.add(new SpecificationEntry(res.getInt("goal_id"), res.getInt("priority")));
+      }
+      return spec;
     }
   }
 
@@ -61,6 +99,220 @@ class SchedulerDatabaseTests {
     }
   }
 
+  void addGoalToModelSpec(int modelId, int goalId, int priority) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate(
+          //language=sql
+          """
+          insert into scheduler.scheduling_model_specification_goals(model_id, goal_id, priority)
+          values (%d, %d, %d);
+          """.formatted(modelId, goalId, priority));
+    }
+  }
+
+  void addGoalToPlanSpec(int planSpecId, int goalId, int priority) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate(
+          //language=sql
+          """
+          insert into scheduler.scheduling_specification_goals(specification_id, goal_id, priority)
+          values (%d, %d, %d);
+          """.formatted(planSpecId, goalId, priority));
+    }
+  }
+
+  private record SpecificationEntry(int goalId, int priority) {}
+
+  /**
+   * Tests the delete trigger on specifications against bulk deletes
+   */
+  @Nested
+  class BulkDeleteFromSpecifications {
+    private int modelId;
+    private int planSpecId;
+    private int[] goalIds;
+
+    @BeforeEach
+    void beforeEach() throws SQLException {
+      modelId = merlinHelper.insertMissionModel(merlinHelper.insertFileUpload());
+      planSpecId = getSpecificationId(merlinHelper.insertPlan(modelId));
+      goalIds = new int[20];
+      for(int i = 0; i < 20; i++){
+        goalIds[i] = insertGoal();
+        addGoalToModelSpec(modelId, goalIds[i], i);
+        addGoalToPlanSpec(planSpecId, goalIds[i], i);
+      }
+    }
+
+    @AfterEach
+    void afterEach() throws SQLException {
+      helper.clearSchema("merlin");
+      helper.clearSchema("scheduler");
+    }
+
+    // Delete every goal with a priority between [5 and 15], inclusive
+    @Test
+    void deleteConsecutivePlan() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        assertDoesNotThrow(() -> statement.executeUpdate(
+          //language=sql
+          """
+          delete from scheduler.scheduling_specification_goals
+          where specification_id = %d
+          and priority between 5 and 15;
+          """.formatted(planSpecId)));
+      }
+      final var spec = getPlanSpecification(planSpecId);
+      final var expectedSpec = List.of(
+          new SpecificationEntry(goalIds[0], 0),
+          new SpecificationEntry(goalIds[1], 1),
+          new SpecificationEntry(goalIds[2], 2),
+          new SpecificationEntry(goalIds[3], 3),
+          new SpecificationEntry(goalIds[4], 4),
+          new SpecificationEntry(goalIds[16], 5),
+          new SpecificationEntry(goalIds[17], 6),
+          new SpecificationEntry(goalIds[18], 7),
+          new SpecificationEntry(goalIds[19], 8)
+      );
+      assertEquals(9, spec.size());
+      assertEquals(expectedSpec, spec);
+    }
+
+    @Test
+    void deleteConsecutiveModel() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        assertDoesNotThrow(() -> statement.executeUpdate(
+          //language=sql
+          """
+          delete from scheduler.scheduling_model_specification_goals
+          where model_id = %d
+          and priority between 5 and 15;
+          """.formatted(modelId)));
+      }
+      final var spec = getModelSpecification(modelId);
+      final var expectedSpec = List.of(
+          new SpecificationEntry(goalIds[0], 0),
+          new SpecificationEntry(goalIds[1], 1),
+          new SpecificationEntry(goalIds[2], 2),
+          new SpecificationEntry(goalIds[3], 3),
+          new SpecificationEntry(goalIds[4], 4),
+          new SpecificationEntry(goalIds[16], 5),
+          new SpecificationEntry(goalIds[17], 6),
+          new SpecificationEntry(goalIds[18], 7),
+          new SpecificationEntry(goalIds[19], 8)
+      );
+      assertEquals(9, spec.size());
+      assertEquals(expectedSpec, spec);
+    }
+
+    // Delete every goal with a priority < 10 and > 15
+    @Test
+    void deleteGapPlan() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        assertDoesNotThrow(() -> statement.executeUpdate(
+          //language=sql
+          """
+          delete from scheduler.scheduling_specification_goals
+          where specification_id = %d
+          and (priority < 10 or priority > 15);
+          """.formatted(planSpecId)));
+      }
+      final var spec = getPlanSpecification(planSpecId);
+      final var expectedSpec = List.of(
+          new SpecificationEntry(goalIds[10], 0),
+          new SpecificationEntry(goalIds[11], 1),
+          new SpecificationEntry(goalIds[12], 2),
+          new SpecificationEntry(goalIds[13], 3),
+          new SpecificationEntry(goalIds[14], 4),
+          new SpecificationEntry(goalIds[15], 5)
+      );
+      assertEquals(6, spec.size());
+      assertEquals(expectedSpec, spec);
+    }
+
+    @Test
+    void deleteGapModel() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        assertDoesNotThrow(() -> statement.executeUpdate(
+          //language=sql
+          """
+          delete from scheduler.scheduling_model_specification_goals
+          where model_id = %d
+          and (priority < 10 or priority > 15);
+          """.formatted(modelId)));
+      }
+      final var spec = getModelSpecification(modelId);
+      final var expectedSpec = List.of(
+          new SpecificationEntry(goalIds[10], 0),
+          new SpecificationEntry(goalIds[11], 1),
+          new SpecificationEntry(goalIds[12], 2),
+          new SpecificationEntry(goalIds[13], 3),
+          new SpecificationEntry(goalIds[14], 4),
+          new SpecificationEntry(goalIds[15], 5)
+      );
+      assertEquals(6, spec.size());
+      assertEquals(expectedSpec, spec);
+    }
+
+    // Delete every goal with an odd priority
+    @Test
+    void deleteAlternatingPlan() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        assertDoesNotThrow(() -> statement.executeUpdate(
+          //language=sql
+          """
+          delete from scheduler.scheduling_specification_goals
+          where specification_id = %d
+          and mod(priority, 2) = 1;
+          """.formatted(planSpecId)));
+      }
+      final var spec = getPlanSpecification(planSpecId);
+      final var expectedSpec = List.of(
+          new SpecificationEntry(goalIds[0], 0),
+          new SpecificationEntry(goalIds[2], 1),
+          new SpecificationEntry(goalIds[4], 2),
+          new SpecificationEntry(goalIds[6], 3),
+          new SpecificationEntry(goalIds[8], 4),
+          new SpecificationEntry(goalIds[10], 5),
+          new SpecificationEntry(goalIds[12], 6),
+          new SpecificationEntry(goalIds[14], 7),
+          new SpecificationEntry(goalIds[16], 8),
+          new SpecificationEntry(goalIds[18], 9)
+      );
+      assertEquals(10, spec.size());
+      assertEquals(expectedSpec, spec);
+    }
+
+    @Test
+    void deleteAlternatingModel() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        assertDoesNotThrow(() -> statement.executeUpdate(
+          //language=sql
+          """
+          delete from scheduler.scheduling_model_specification_goals
+          where model_id = %d
+          and mod(priority, 2) = 1;
+          """.formatted(modelId)));
+      }
+      final var spec = getModelSpecification(modelId);
+      final var expectedSpec = List.of(
+          new SpecificationEntry(goalIds[0], 0),
+          new SpecificationEntry(goalIds[2], 1),
+          new SpecificationEntry(goalIds[4], 2),
+          new SpecificationEntry(goalIds[6], 3),
+          new SpecificationEntry(goalIds[8], 4),
+          new SpecificationEntry(goalIds[10], 5),
+          new SpecificationEntry(goalIds[12], 6),
+          new SpecificationEntry(goalIds[14], 7),
+          new SpecificationEntry(goalIds[16], 8),
+          new SpecificationEntry(goalIds[18], 9)
+      );
+      assertEquals(10, spec.size());
+      assertEquals(expectedSpec, spec);
+    }
+  }
+
+
   @Nested
   class TestSpecificationAndTemplateGoalTriggers {
     int[] specificationIds;
@@ -70,8 +322,8 @@ class SchedulerDatabaseTests {
     void beforeEach() throws SQLException {
       final int modelId = merlinHelper.insertMissionModel(merlinHelper.insertFileUpload());
       specificationIds = new int[]{
-          getSpecification(merlinHelper.insertPlan(modelId)),
-          getSpecification(merlinHelper.insertPlan(modelId))
+          getSpecificationId(merlinHelper.insertPlan(modelId)),
+          getSpecificationId(merlinHelper.insertPlan(modelId))
       };
       goalIds = new int[]{insertGoal(), insertGoal(), insertGoal(), insertGoal(), insertGoal(), insertGoal()};
     }
