@@ -9,14 +9,11 @@ create table scheduler.scheduling_specification_goals (
 
   constraint scheduling_specification_goals_primary_key
     primary key (specification_id, goal_id),
-  constraint scheduling_specification_goals_unique_priorities
-    unique (specification_id, priority) deferrable initially deferred,
   constraint scheduling_specification_goals_specification_exists
     foreign key (specification_id)
       references scheduler.scheduling_specification
       on update cascade
       on delete cascade,
-  constraint non_negative_specification_goal_priority check (priority >= 0),
   constraint scheduling_spec_goal_exists
     foreign key (goal_id)
       references scheduler.scheduling_goal_metadata
@@ -26,7 +23,11 @@ create table scheduler.scheduling_specification_goals (
     foreign key (goal_id, goal_revision)
       references scheduler.scheduling_goal_definition
       on update cascade
-      on delete restrict
+      on delete restrict,
+  constraint scheduling_specification_goals_unique_priorities
+    unique (specification_id, priority) deferrable initially deferred,
+  constraint non_negative_specification_goal_priority
+    check (priority >= 0)
 );
 
 comment on table scheduler.scheduling_specification_goals is e''
