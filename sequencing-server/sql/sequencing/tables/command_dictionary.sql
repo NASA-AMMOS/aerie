@@ -7,6 +7,7 @@ create table command_dictionary (
   parsed_json jsonb not null default '{}',
 
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
 
   constraint command_dictionary_synthetic_key
       primary key (id),
@@ -28,3 +29,16 @@ comment on column command_dictionary.parsed_json is e''
   'The XML that has been parsed and converted to JSON';
 comment on constraint command_dictionary_natural_key on command_dictionary is e''
   'There can only be one command dictionary of a given version for a given mission.';
+
+create function command_dictionary_set_updated_at()
+returns trigger
+security definer
+language plpgsql as $$begin
+  new.updated_at = now();
+  return new;
+end$$;
+
+create trigger set_timestamp
+before update on command_dictionary
+for each row
+execute function command_dictionary_set_updated_at();

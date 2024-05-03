@@ -8,6 +8,7 @@ create table parcel (
   sequence_adaptation_id integer default null,
 
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
 
   owner text,
 
@@ -21,3 +22,16 @@ create table parcel (
   foreign key (sequence_adaptation_id)
     references sequence_adaptation (id)
 );
+
+create function parcel_set_updated_at()
+returns trigger
+security definer
+language plpgsql as $$begin
+  new.updated_at = now();
+  return new;
+end$$;
+
+create trigger set_timestamp
+before update on parcel
+for each row
+execute function parcel_set_updated_at();
