@@ -39,8 +39,8 @@ public final class CellRefV2 {
       public void apply(Cell<D> cell, E effect) {
         cell.initialDynamics = effect.apply(cell.dynamics).match(
             ErrorCatching::success,
-            error -> failure(new RuntimeException(
-                "Applying '%s' failed.".formatted(getEffectName(effect)), error)));
+                error -> failure(new RuntimeException(
+                    "Applying effect '%s' failed.".formatted(getName(effect, "...")), error)));
         cell.dynamics = cell.initialDynamics;
         cell.elapsedTime = ZERO;
       }
@@ -120,7 +120,7 @@ public final class CellRefV2 {
       @Override
       public DynamicsEffect<D> sequentially(final DynamicsEffect<D> prefix, final DynamicsEffect<D> suffix) {
         final DynamicsEffect<D> result = x -> suffix.apply(prefix.apply(x));
-        name(result, "(%s) then (%s)".formatted(getEffectName(prefix), getEffectName(suffix)));
+        name(result, "(%s) then (%s)", prefix, suffix);
         return result;
       }
 
@@ -135,20 +135,15 @@ public final class CellRefV2 {
                   return failure(e);
                 }
               };
-          name(result, "(%s) and (%s)".formatted(getEffectName(left), getEffectName(right)));
+          name(result, "(%s) and (%s)", left, right);
           return result;
         } catch (Throwable e) {
           final DynamicsEffect<D> result = $ -> failure(e);
-          name(result, "Failed to combine concurrent effects: (%s) and (%s)".formatted(
-                  getEffectName(left), getEffectName(right)));
+          name(result, "Failed to combine concurrent effects: (%s) and (%s)", left, right);
           return result;
         }
       }
     };
-  }
-
-  private static <D extends Dynamics<?, D>, E extends DynamicsEffect<D>> String getEffectName(E effect) {
-    return getName(effect).orElse("anonymous effect");
   }
 
   public static class Cell<D> {
