@@ -1,8 +1,8 @@
 schema	migrations	migrations	missing in 1st DB	From Migration 0	2
 function definition	migrations	migrations.migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3
 function definition	migrations	migrations.migrations.mark_migration_rolled_back(character varying)	missing in 1st DB	From Migration 0	3
-function permissions	migrations	migrations.mark_migration_applied(character varying)-role:aerie	missing in 1st DB	From Migration 0	3
-function permissions	migrations	migrations.mark_migration_rolled_back(character varying)-role:aerie	missing in 1st DB	From Migration 0	3
+function permissions	migrations	migrations.mark_migration_applied(character varying)-role:aerie_test_username	missing in 1st DB	From Migration 0	3
+function permissions	migrations	migrations.mark_migration_rolled_back(character varying)-role:aerie_test_username	missing in 1st DB	From Migration 0	3
 function permissions	migrations	migrations.mark_migration_applied(character varying)-role:PUBLIC	missing in 1st DB	From Migration 0	3
 function permissions	migrations	migrations.mark_migration_rolled_back(character varying)-role:PUBLIC	missing in 1st DB	From Migration 0	3
 function owner	migrations	migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3

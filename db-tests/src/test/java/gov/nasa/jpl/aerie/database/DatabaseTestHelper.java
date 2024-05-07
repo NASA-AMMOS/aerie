@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 
 import java.io.File;
@@ -30,13 +31,20 @@ public class DatabaseTestHelper {
    * Sets up the test database
    */
   public void startDatabase() throws SQLException, IOException, InterruptedException {
+    // Load database admin credentials from the environment
+    final var aerieUsername = getEnv("AERIE_USERNAME");
+    final var aeriePassword = getEnv("AERIE_PASSWORD");
+
+    final var postgresUsername = getEnv("POSTGRES_USER");
+    final var postgresPassword = getEnv("POSTGRES_PASSWORD");
+
     // Create test database and grant privileges
     {
       final var pb = new ProcessBuilder("psql",
-                                        "postgresql://postgres:postgres@localhost:5432",
+                                        "postgresql://"+postgresUsername+":"+postgresPassword+"@localhost:5432/postgres",
                                         "-v", "ON_ERROR_STOP=1",
                                         "-c", "CREATE DATABASE " + dbName + ";",
-                                        "-c", "GRANT ALL PRIVILEGES ON DATABASE " + dbName + " TO aerie;"
+                                        "-c", "GRANT ALL PRIVILEGES ON DATABASE " + dbName + " TO "+aerieUsername+";"
       );
 
       final var proc = pb.start();
@@ -45,7 +53,7 @@ public class DatabaseTestHelper {
       final var errors = new String(proc.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
       Assumptions.assumeFalse(
           (  errors.contains("Connection refused")
-          || errors.contains("role \"postgres\" does not exist")));
+          || errors.contains("role \""+postgresUsername+"\" does not exist")));
       proc.waitFor();
       proc.destroy();
     }
@@ -54,9 +62,9 @@ public class DatabaseTestHelper {
     // Apparently, the previous privileges are insufficient on their own
     {
       final var pb = new ProcessBuilder("psql",
-                                        "postgresql://aerie:aerie@localhost:5432/" + dbName,
+                                        "postgresql://"+aerieUsername+":"+aeriePassword+"@localhost:5432/" + dbName,
                                         "-v", "ON_ERROR_STOP=1",
-                                        "-c", "ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO aerie;",
+                                        "-c", "ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO "+aerieUsername+";",
                                         "-c", "\\ir %s".formatted(initSqlScriptFile.getAbsolutePath())
       );
 
@@ -73,8 +81,9 @@ public class DatabaseTestHelper {
     hikariConfig.addDataSourceProperty("portNumber", "5432");
     hikariConfig.addDataSourceProperty("databaseName", dbName);
     hikariConfig.addDataSourceProperty("applicationName", appName);
-    hikariConfig.setUsername("aerie");
-    hikariConfig.setPassword("aerie");
+
+    hikariConfig.setUsername(aerieUsername);
+    hikariConfig.setPassword(aeriePassword);
 
     hikariConfig.setConnectionInitSql("set time zone 'UTC'");
 
@@ -91,12 +100,16 @@ public class DatabaseTestHelper {
     Assumptions.assumeTrue(connection != null);
     connection.close();
 
+    // Grab postgres credentials from environment
+    final var postgresUsername = getEnv("POSTGRES_USER");
+    final var postgresPassword = getEnv("POSTGRES_PASSWORD");
+
     // Clear out all data from the database on test conclusion
     // This is done WITH (FORCE) so there aren't issues with trying
     // to drop a database while there are connected sessions from
     // dev tools
     final var pb = new ProcessBuilder("psql",
-                                      "postgresql://postgres:postgres@localhost:5432",
+                                      "postgresql://"+postgresUsername+":"+postgresPassword+"@localhost:5432/postgres",
                                       "-v", "ON_ERROR_STOP=1",
                                       "-c", "DROP DATABASE IF EXISTS " + dbName + " WITH (FORCE);"
     );
@@ -109,6 +122,11 @@ public class DatabaseTestHelper {
 
   public Connection connection() {
     return connection;
+  }
+
+  private static String getEnv(final String key) {
+    final var env = System.getenv(key);
+    return env == null ? Assertions.fail("Could not find envvar: " + key) : env;
   }
 
   public void clearTable(String table) throws SQLException {
