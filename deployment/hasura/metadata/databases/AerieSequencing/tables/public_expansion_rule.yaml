@@ -39,14 +39,14 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id, description]
+      columns: [name, activity_type, expansion_logic, parcel_id, authoring_mission_model_id, description]
       check: {}
       set:
         owner: "x-hasura-user-id"
         updated_by: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [name, activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id, description]
+      columns: [name, activity_type, expansion_logic, parcel_id, authoring_mission_model_id, description]
       check: {}
       set:
         owner: "x-hasura-user-id"
@@ -54,7 +54,7 @@ insert_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, activity_type, expansion_logic, authoring_command_dict_id,
+      columns: [name, activity_type, expansion_logic, parcel_id,
                 authoring_mission_model_id, description, owner]
       filter: {}
       set:
