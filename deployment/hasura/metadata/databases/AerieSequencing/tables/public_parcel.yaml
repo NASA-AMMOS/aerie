@@ -19,6 +19,14 @@ array_relationships:
         table:
           name: parcel_to_parameter_dictionary
           schema: public
+  - name: expansion_sets
+    using:
+      foreign_key_constraint_on:
+        column: parcel_id
+        table:
+          name: expansion_set
+          schema: public
+
 insert_permissions:
   - role: aerie_admin
     permission:
