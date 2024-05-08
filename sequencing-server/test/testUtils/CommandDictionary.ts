@@ -10,7 +10,7 @@ export const commandDictionaryString = fs.readFileSync(
 
 export async function insertCommandDictionary(graphqlClient: GraphQLClient): Promise<{
   id: number;
-  command_types_typescript_path: string;
+  path: string;
   mission: string;
   version: string;
   parsed_json: CommandDictionary;
@@ -18,17 +18,17 @@ export async function insertCommandDictionary(graphqlClient: GraphQLClient): Pro
   const res = await graphqlClient.request<{
     uploadDictionary: {
       id: number;
-      command_types_typescript_path: string;
+      path: string;
       mission: string;
       version: string;
       parsed_json: CommandDictionary;
     };
   }>(
     gql`
-      mutation PutCommandDictionary($dictionary: String!) {
-        uploadDictionary(dictionary: $dictionary) {
+      mutation PutCommandDictionary($dictionary: String!, $type: String!) {
+        uploadDictionary(dictionary: $dictionary, type: $type) {
           id
-          command_types_typescript_path
+          path
           mission
           version
           parsed_json
@@ -38,6 +38,7 @@ export async function insertCommandDictionary(graphqlClient: GraphQLClient): Pro
     {
       // Generate a UUID for the command dictionary name and version to avoid conflicts when testing.
       dictionary: commandDictionaryString.replace(/(Banana Nation|1.0.0.0)/g, randomUUID()),
+      type: 'COMMAND',
     },
   );
 

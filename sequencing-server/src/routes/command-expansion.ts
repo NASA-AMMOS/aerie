@@ -24,17 +24,17 @@ commandExpansionRouter.post('/put-expansion', async (req, res, next) => {
 
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogic = req.body.input.expansionLogic as string;
-  const authoringCommandDictionaryId = req.body.input.parcelId as number | null;
+  const parcelId = req.body.input.parcelId as number | null;
   const authoringMissionModelId = req.body.input.authoringMissionModelId as number | null;
 
   const { rows } = await db.query(
     `
-    insert into sequencing.expansion_rule (activity_type, expansion_logic, authoring_command_dict_id,
+    insert into sequencing.expansion_rule (activity_type, expansion_logic, parcel_id,
                                 authoring_mission_model_id)
     values ($1, $2, $3, $4)
     returning id;
   `,
-    [activityTypeName, expansionLogic, authoringCommandDictionaryId, authoringMissionModelId],
+    [activityTypeName, expansionLogic, parcelId, authoringMissionModelId],
   );
 
   if (rows.length < 1) {
@@ -44,12 +44,13 @@ commandExpansionRouter.post('/put-expansion', async (req, res, next) => {
   const id = rows[0].id;
   logger.info(`POST /put-expansion: Updated expansion in the database: id=${id}`);
 
-  if (authoringMissionModelId == null || authoringCommandDictionaryId == null) {
+  if (authoringMissionModelId == null || parcelId == null) {
     res.status(200).json({ id });
     return next();
   }
 
-  const commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: authoringCommandDictionaryId });
+  const parcel = await context.parcelTypescriptDataLoader.load({ parcelId });
+  const commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: parcel.command_dictionary.id });
   const activitySchema = await context.activitySchemaDataLoader.load({
     missionModelId: authoringMissionModelId,
     activityTypeName,

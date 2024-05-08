@@ -1,6 +1,6 @@
 import type { GraphQLClient } from 'graphql-request';
 import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
-import { FallibleStatus } from '../src/types.js';
+import { FallibleStatus } from '../src/types/types';
 import {
   convertActivityDirectiveIdToSimulatedActivityId,
   insertActivityDirective,
@@ -18,8 +18,6 @@ import {
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
 import {
-  generateSequenceEDSL,
-  generateSequenceEDSLBulk,
   getSequenceSeqJson,
   getSequenceSeqJsonBulk,
   insertSequence,
@@ -28,15 +26,18 @@ import {
 } from './testUtils/Sequence.js';
 import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from './testUtils/Simulation.js';
 import { getGraphQLClient } from './testUtils/testUtils.js';
+import { insertParcel, removeParcel } from './testUtils/Parcel';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let commandDictionaryId: number;
+let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
   commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'sequenceGenerationTestParcel')).parcelId;
 });
 
 beforeEach(async () => {
@@ -50,6 +51,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  await removeParcel(graphqlClient, parcelId);
   await removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
@@ -77,6 +79,7 @@ describe('sequence generation', () => {
       ];
     }
     `,
+      parcelId,
     );
     expansionId2 = await insertExpansion(
       graphqlClient,
@@ -90,6 +93,7 @@ describe('sequence generation', () => {
       ];
     }
     `,
+      parcelId,
     );
     expansionId3 = await insertExpansion(
       graphqlClient,
@@ -133,12 +137,13 @@ describe('sequence generation', () => {
       ];
     }
     `,
+      parcelId,
     );
 
     expansionId4 = await insertExpansion(
-        graphqlClient,
-        'BakeBananaBread',
-        `
+      graphqlClient,
+      'BakeBananaBread',
+      `
       export default function MyExpansion(props: {
         activityInstance: ActivityType
       }): ExpansionReturn {
@@ -150,6 +155,7 @@ describe('sequence generation', () => {
           ];
       }
     `,
+      parcelId,
     );
   });
 
@@ -157,16 +163,17 @@ describe('sequence generation', () => {
     await removeExpansion(graphqlClient, expansionId1);
     await removeExpansion(graphqlClient, expansionId2);
     await removeExpansion(graphqlClient, expansionId3);
+    await removeExpansion(graphqlClient, expansionId4);
   });
 
   it('should return sequence seqjson', async () => {
     /** Begin Setup */
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
       expansionId1,
       expansionId2,
       expansionId3,
-      expansionId4
+      expansionId4,
     ]);
 
     // Create Activity Directives
@@ -174,7 +181,10 @@ describe('sequence generation', () => {
       insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
       insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes'),
       insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes'),
-      insertActivityDirective(graphqlClient, planId, 'BakeBananaBread', '90 minutes',{tbSugar : 1, glutenFree: false}),
+      insertActivityDirective(graphqlClient, planId, 'BakeBananaBread', '90 minutes', {
+        tbSugar: 1,
+        glutenFree: false,
+      }),
     ]);
 
     // Simulate Plan
@@ -212,9 +222,9 @@ describe('sequence generation', () => {
         activityId3,
       ),
       convertActivityDirectiveIdToSimulatedActivityId(
-          graphqlClient,
-          simulationArtifactPk.simulationDatasetId,
-          activityId4,
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId4,
       ),
     ]);
     /** End Setup */
@@ -428,7 +438,8 @@ describe('sequence generation', () => {
           },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
-      },{
+      },
+      {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
@@ -470,44 +481,44 @@ describe('sequence generation', () => {
       {
         args: [
           {
-            name: "arg_0",
-            type: "number",
-            value: 350
-          }
+            name: 'arg_0',
+            type: 'number',
+            value: 350,
+          },
         ],
         metadata: {
-          simulatedActivityId: simulatedActivityId4
+          simulatedActivityId: simulatedActivityId4,
         },
-        sequence: "BACKGROUND-A",
+        sequence: 'BACKGROUND-A',
         time: {
-          tag: "2022-203T00:00:00.000",
-          type: "ABSOLUTE"
+          tag: '2022-203T00:00:00.000',
+          type: 'ABSOLUTE',
         },
-        type: "load"
+        type: 'load',
       },
       {
         metadata: {
-          simulatedActivityId: simulatedActivityId4
+          simulatedActivityId: simulatedActivityId4,
         },
-        sequence: "BACKGROUND-B",
+        sequence: 'BACKGROUND-B',
         time: {
-          tag: "2022-204T00:00:00.000",
-          type: "ABSOLUTE"
+          tag: '2022-204T00:00:00.000',
+          type: 'ABSOLUTE',
         },
-        type: "activate"
+        type: 'activate',
       },
       {
         args: [],
         metadata: {
-          simulatedActivityId: simulatedActivityId4
+          simulatedActivityId: simulatedActivityId4,
         },
-        stem: "ADD_WATER",
+        stem: 'ADD_WATER',
         time: {
-          tag: "00:01:30.000",
-          type: "COMMAND_RELATIVE"
+          tag: '00:01:30.000',
+          type: 'COMMAND_RELATIVE',
         },
-        type: "command"
-      }
+        type: 'command',
+      },
     ]);
 
     /** Begin Cleanup */
@@ -527,7 +538,7 @@ describe('sequence generation', () => {
   it('should return sequence seqjson in bulk', async () => {
     /** Begin Setup */
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
       expansionId1,
       expansionId2,
       expansionId3,
@@ -1134,7 +1145,7 @@ describe('sequence generation', () => {
   it('should work for throwing expansions', async () => {
     /** Begin Setup */
     // Add throwing expansion
-    const expansionId4 = await insertExpansion(
+    const expansionId5 = await insertExpansion(
       graphqlClient,
       'BiteBanana',
       `
@@ -1142,14 +1153,15 @@ describe('sequence generation', () => {
         throw new Error('Unimplemented');
       }
       `,
+      parcelId,
     );
 
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
       expansionId1,
       expansionId2,
       expansionId3,
-      expansionId4,
+      expansionId5,
     ]);
 
     // Create Activity Directives
@@ -1470,14 +1482,14 @@ describe('sequence generation', () => {
       removeActivityDirective(graphqlClient, activityId2, planId),
       removeActivityDirective(graphqlClient, activityId3, planId),
     ]);
-    await removeExpansion(graphqlClient, expansionId4);
+    await removeExpansion(graphqlClient, expansionId5);
     await removeExpansionSet(graphqlClient, expansionSetId);
     /** End Cleanup */
   }, 30000);
 
   it('should work for throwing expansions in bulk', async () => {
     /** Begin Setup */
-    const expansionId4 = await insertExpansion(
+    const expansionId5 = await insertExpansion(
       graphqlClient,
       'BiteBanana',
       `
@@ -1485,13 +1497,14 @@ describe('sequence generation', () => {
         throw new Error('Unimplemented');
       }
       `,
+      parcelId,
     );
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
       expansionId1,
       expansionId2,
       expansionId3,
-      expansionId4,
+      expansionId5,
     ]);
 
     // Create Activity Directives
@@ -2113,7 +2126,7 @@ describe('sequence generation', () => {
       removeActivityDirective(graphqlClient, activityId7, planId),
       removeActivityDirective(graphqlClient, activityId8, planId),
     ]);
-    await removeExpansion(graphqlClient, expansionId4);
+    await removeExpansion(graphqlClient, expansionId5);
     await removeExpansionSet(graphqlClient, expansionSetId);
     /** End Cleanup */
   }, 30000);
@@ -2121,7 +2134,7 @@ describe('sequence generation', () => {
   it('should work for non-existent expansions', async () => {
     /** Begin Setup */
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
       expansionId1,
       expansionId2,
       expansionId3,
@@ -2450,7 +2463,7 @@ describe('sequence generation', () => {
   it('should work for non-existent expansions in bulk', async () => {
     /** Begin Setup */
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
       expansionId1,
       expansionId2,
       expansionId3,
@@ -3082,11 +3095,10 @@ describe('sequence generation', () => {
       ];
     }
     `,
+        parcelId,
       );
       // Create Expansion Set
-      const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-        expansionId,
-      ]);
+      const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
 
       // Create Activity Directives
       const [activityId1, activityId2] = await Promise.all([
@@ -3201,6 +3213,7 @@ describe('sequence generation', () => {
         removeActivityDirective(graphqlClient, activityId1, planId),
         removeActivityDirective(graphqlClient, activityId2, planId),
       ]);
+      await removeExpansion(graphqlClient, expansionId);
       await removeExpansionSet(graphqlClient, expansionSetId);
       /** End Cleanup */
     }, 30000);
@@ -3218,6 +3231,7 @@ describe('sequence generation', () => {
       ];
     }
     `,
+        parcelId,
       );
 
       const expansionId2 = await insertExpansion(
@@ -3231,9 +3245,10 @@ describe('sequence generation', () => {
       ];
     }
     `,
+        parcelId,
       );
       // Create Expansion Set
-      const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+      const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
         expansionId1,
         expansionId2,
       ]);
@@ -3355,11 +3370,10 @@ describe('sequence generation', () => {
       ];
     }
     `,
+        parcelId,
       );
       // Create Expansion Set
-      const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-        expansionId,
-      ]);
+      const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
 
       // Create Activity Directives
       const [activityId1] = await Promise.all([insertActivityDirective(graphqlClient, planId, 'GrowBanana')]);
@@ -3436,6 +3450,7 @@ describe('sequence generation', () => {
       await removeExpansionRun(graphqlClient, expansionRunPk);
       await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
       await Promise.all([removeActivityDirective(graphqlClient, activityId1, planId)]);
+      await removeExpansion(graphqlClient, expansionId);
       await removeExpansionSet(graphqlClient, expansionSetId);
       /** End Cleanup */
     }, 30000);
@@ -3453,12 +3468,11 @@ describe('sequence generation', () => {
       ];
     }
     `,
+        parcelId,
       );
       /** Begin Setup */
       // Create Expansion Set
-      const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-        expansionId,
-      ]);
+      const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
 
       // Create Activity Directives
       const [activityId1, activityId2, activityId3] = await Promise.all([
@@ -3547,6 +3561,7 @@ describe('sequence generation', () => {
         removeActivityDirective(graphqlClient, activityId2, planId),
         removeActivityDirective(graphqlClient, activityId3, planId),
       ]);
+      await removeExpansion(graphqlClient, expansionId);
       await removeExpansionSet(graphqlClient, expansionSetId);
       /** End Cleanup */
     }, 30000);
@@ -3564,12 +3579,11 @@ describe('sequence generation', () => {
       ];
     }
     `,
+        parcelId,
       );
       /** Begin Setup */
       // Create Expansion Set
-      const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-        expansionId,
-      ]);
+      const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
 
       // Create Activity Directives
       const [activityId1, activityId2, activityId3] = await Promise.all([
@@ -3658,6 +3672,7 @@ describe('sequence generation', () => {
         removeActivityDirective(graphqlClient, activityId2, planId),
         removeActivityDirective(graphqlClient, activityId3, planId),
       ]);
+      await removeExpansion(graphqlClient, expansionId);
       await removeExpansionSet(graphqlClient, expansionSetId);
       /** End Cleanup */
     }, 30000);
@@ -3685,10 +3700,11 @@ it('should provide start, end, and computed attributes on activities', async () 
       ];
     }
     `,
+    parcelId,
   );
 
-  const expansionSet0Id = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
-  await expand(graphqlClient, expansionSet0Id, simulationArtifactPk.simulationDatasetId);
+  const expansionSet0Id = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
+  const expansionRunPk = await expand(graphqlClient, expansionSet0Id, simulationArtifactPk.simulationDatasetId);
   const sequencePk = await insertSequence(graphqlClient, {
     seqId: 'test00000',
     simulationDatasetId: simulationArtifactPk.simulationDatasetId,
@@ -3744,510 +3760,10 @@ it('should provide start, end, and computed attributes on activities', async () 
   // Cleanup
   {
     await removeSequence(graphqlClient, sequencePk);
+    await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await Promise.all([removeActivityDirective(graphqlClient, activityId, planId)]);
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, expansionSet0Id);
   }
 }, 30000);
-
-describe('user sequence to seqjson', () => {
-  it('generate sequence seqjson from static sequence', async () => {
-    var results = await generateSequenceEDSL(
-      graphqlClient,
-      commandDictionaryId,
-      `
-      export default () =>
-      Sequence.new({
-        seqId: "test00001",
-        metadata: {},
-        steps: [
-            C.BAKE_BREAD,
-            A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
-            E(Temporal.Duration.from({ hours: -12, minutes: -1, seconds: -54 })).PACKAGE_BANANA({
-              lot_number: 1093,
-              bundle: [
-                {
-                  bundle_name: "Chiquita",
-                  number_of_bananas: 43
-                },
-                {
-                  bundle_name: "Dole",
-                  number_of_bananas: 12
-                }
-              ]
-            }),
-        ],
-      });
-    `,
-    );
-
-    expect(results.id).toBe('test00001');
-    expect(results.metadata).toEqual({});
-    expect(results.steps).toEqual([
-      {
-        type: 'command',
-        stem: 'BAKE_BREAD',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [],
-      },
-      {
-        type: 'command',
-        stem: 'PREHEAT_OVEN',
-        time: {
-          tag: '2020-060T03:45:19.000',
-          type: 'ABSOLUTE',
-        },
-        args: [{ name: 'temperature', type: 'number', value: 100 }],
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: {
-          tag: '-12:01:54.000',
-          type: 'EPOCH_RELATIVE',
-        },
-        args: [
-          { name: 'lot_number', type: 'number', value: 1093 },
-          {
-            name: 'bundle',
-            type: 'repeat',
-            value: [
-              [
-                {
-                  name: 'bundle_name',
-                  type: 'string',
-                  value: 'Chiquita',
-                },
-                {
-                  name: 'number_of_bananas',
-                  type: 'number',
-                  value: 43,
-                },
-              ],
-              [
-                {
-                  name: 'bundle_name',
-                  type: 'string',
-                  value: 'Dole',
-                },
-                {
-                  name: 'number_of_bananas',
-                  type: 'number',
-                  value: 12,
-                },
-              ],
-            ],
-          },
-        ],
-      },
-    ]);
-  }, 30000);
-
-  it('generate sequence seqjson from static sequence in bulk', async () => {
-    var results = await generateSequenceEDSLBulk(graphqlClient, [
-      {
-        commandDictionaryId,
-        edslBody: `
-            export default () =>
-            Sequence.new({
-              seqId: "test00001",
-              metadata: {},
-              steps: [
-                  C.BAKE_BREAD.DESCRIPTION("Bake bread"),
-                  A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
-                  E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
-                    lot_number: 1093,
-                    bundle: [
-                      {
-                        bundle_name: "Chiquita",
-                        number_of_bananas: 43
-                      },
-                      {
-                        bundle_name: "Dole",
-                        number_of_bananas: 12
-                      }
-                    ]
-                }),
-                R\`02:02:00.000\`.GROUND_BLOCK('GroundBlock2')
-                .ARGUMENTS([
-                  {
-                    name: 'intStartTime',
-                    type: 'number',
-                    value: 10,
-                  }
-                ])
-                .DESCRIPTION('Set the ground block time')
-                .METADATA({
-                  author: 'Ryan',
-                })
-                .MODELS([
-                  {
-                    offset: '00:10:00.001',
-                    value: true,
-                    variable: 'model_var_boolean',
-                  }
-                ])
-              ],
-            });
-          `,
-      },
-      {
-        commandDictionaryId,
-        edslBody: `
-            export default () =>
-            Sequence.new({
-              seqId: "test00002",
-              metadata: {},
-              steps: [
-                  C.BAKE_BREAD,
-                  A\`2020-061T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
-                  E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
-                    lot_number: 1093,
-                    bundle: [
-                      {
-                        bundle_name: "Chiquita",
-                        number_of_bananas: 43
-                      },
-                      {
-                        bundle_name: "Dole",
-                        number_of_bananas: 12
-                      }
-                    ]
-                  }).MODELS([{
-                    offset: '00:00:00.000',
-                    value: 1.234,
-                    variable: 'model_var_float',
-                  },{
-                    offset: '00:00:00.001',
-                    value: '-1234',
-                    variable: 'model_var_int',
-                  },{
-                    offset: '00:10:00.001',
-                    value: true,
-                    variable: 'model_var_boolean',
-                  }]),
-              ],
-              locals: [
-                {
-                  allowable_ranges: [
-                    {
-                      max: 3600,
-                      min: 1,
-                    },
-                  ],
-                  name: 'duration',
-                  type: 'UINT',
-                }
-              ],
-              parameters: [
-                {
-                  allowable_ranges: [
-                    {
-                      max: 3600,
-                      min: 1,
-                    },
-                  ],
-                  name: 'duration',
-                  type: 'UINT',
-                }
-              ],
-              hardware_commands: [
-                HDW_BLENDER_DUMP
-                .DESCRIPTION("FIRE THE PYROS")
-                .METADATA({author: 'rrgoetz'})
-              ],
-              immediate_commands: [
-                PEEL_BANANA({peelDirection: 'fromStem'})
-              ],
-              requests: [
-                A\`2020-173T20:00:00.000\`.REQUEST(
-                  'test_request1',
-                  R\`04:39:22.000\`.PREHEAT_OVEN({
-                    temperature: 360,
-                    }),
-                    C.ADD_WATER,
-                )
-                  .DESCRIPTION('Absolute-timed request object with all possible fields'),
-                REQUEST(
-                  'test_request1',
-                  {
-                    delta: '+00:30:00',
-                    name: 'test_ground_epoch',
-                  },
-                  C.ADD_WATER
-                )
-                  .DESCRIPTION('Ground-epoch timed request object with all possible fields')
-                  .METADATA({
-                    "author": "rrgoet"
-                   })
-              ],
-            });
-          `,
-      },
-    ]);
-
-    expect(results[0]!.id).toBe('test00001');
-    expect(results[0]!.metadata).toEqual({});
-    expect(results[0]!.steps).toEqual([
-      {
-        type: 'command',
-        stem: 'BAKE_BREAD',
-        description: 'Bake bread',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [],
-      },
-      {
-        type: 'command',
-        stem: 'PREHEAT_OVEN',
-        time: {
-          tag: '2020-060T03:45:19.000',
-          type: 'ABSOLUTE',
-        },
-        args: [{ value: 100, name: 'temperature', type: 'number' }],
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: {
-          tag: '12:06:54.000',
-          type: 'EPOCH_RELATIVE',
-        },
-        args: [
-          { name: 'lot_number', type: 'number', value: 1093 },
-          {
-            name: 'bundle',
-            type: 'repeat',
-            value: [
-              [
-                {
-                  name: 'bundle_name',
-                  type: 'string',
-                  value: 'Chiquita',
-                },
-                {
-                  name: 'number_of_bananas',
-                  type: 'number',
-                  value: 43,
-                },
-              ],
-              [
-                {
-                  name: 'bundle_name',
-                  type: 'string',
-                  value: 'Dole',
-                },
-                {
-                  name: 'number_of_bananas',
-                  type: 'number',
-                  value: 12,
-                },
-              ],
-            ],
-          },
-        ],
-      },
-      {
-        args: [
-          {
-            name: 'intStartTime',
-            type: 'number',
-            value: 10,
-          },
-        ],
-        description: 'Set the ground block time',
-        metadata: {
-          author: 'Ryan',
-        },
-        models: [
-          {
-            offset: '00:10:00.001',
-            value: true,
-            variable: 'model_var_boolean',
-          },
-        ],
-        name: 'GroundBlock2',
-        time: {
-          tag: '02:02:00.000',
-          type: 'COMMAND_RELATIVE',
-        },
-        type: 'ground_block',
-      },
-    ]);
-
-    expect(results[1]!.id).toBe('test00002');
-    expect(results[1]!.metadata).toEqual({});
-    expect(results[1]!.steps).toEqual([
-      {
-        type: 'command',
-        stem: 'BAKE_BREAD',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [],
-      },
-      {
-        type: 'command',
-        stem: 'PREHEAT_OVEN',
-        time: {
-          tag: '2020-061T03:45:19.000',
-          type: 'ABSOLUTE',
-        },
-        args: [{ value: 100, name: 'temperature', type: 'number' }],
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: {
-          tag: '12:06:54.000',
-          type: 'EPOCH_RELATIVE',
-        },
-        args: [
-          { name: 'lot_number', type: 'number', value: 1093 },
-          {
-            name: 'bundle',
-            type: 'repeat',
-            value: [
-              [
-                {
-                  name: 'bundle_name',
-                  type: 'string',
-                  value: 'Chiquita',
-                },
-                {
-                  name: 'number_of_bananas',
-                  type: 'number',
-                  value: 43,
-                },
-              ],
-              [
-                {
-                  name: 'bundle_name',
-                  type: 'string',
-                  value: 'Dole',
-                },
-                {
-                  name: 'number_of_bananas',
-                  type: 'number',
-                  value: 12,
-                },
-              ],
-            ],
-          },
-        ],
-        models: [
-          {
-            offset: '00:00:00.000',
-            value: 1.234,
-            variable: 'model_var_float',
-          },
-          {
-            offset: '00:00:00.001',
-            value: '-1234',
-            variable: 'model_var_int',
-          },
-          {
-            offset: '00:10:00.001',
-            value: true,
-            variable: 'model_var_boolean',
-          },
-        ],
-      },
-    ]);
-    expect(results[1]!.locals).toEqual([
-      {
-        allowable_ranges: [
-          {
-            max: 3600,
-            min: 1,
-          },
-        ],
-        name: 'duration',
-        type: 'UINT',
-      },
-    ]);
-    expect(results[1]!.parameters).toEqual([
-      {
-        allowable_ranges: [
-          {
-            max: 3600,
-            min: 1,
-          },
-        ],
-        name: 'duration',
-        type: 'UINT',
-      },
-    ]);
-    expect(results[1]!.hardware_commands).toEqual([
-      {
-        description: 'FIRE THE PYROS',
-        metadata: {
-          author: 'rrgoetz',
-        },
-        stem: 'HDW_BLENDER_DUMP',
-      },
-    ]);
-    expect(results[1]!.immediate_commands).toEqual([
-      {
-        args: [
-          {
-            name: 'peelDirection',
-            type: 'string',
-            value: 'fromStem',
-          },
-        ],
-        stem: 'PEEL_BANANA',
-      },
-    ]);
-    expect(results[1]!.requests).toEqual([
-      {
-        description: "Absolute-timed request object with all possible fields",
-        name: 'test_request1',
-        steps: [
-          {
-            args: [
-              {
-                name: 'temperature',
-                type: 'number',
-                value: 360,
-              },
-            ],
-            stem: 'PREHEAT_OVEN',
-            time: {
-              tag: '04:39:22.000',
-              type: 'COMMAND_RELATIVE',
-            },
-            type: 'command',
-          },
-          {
-            args: [],
-            stem: 'ADD_WATER',
-            time: {
-              type: 'COMMAND_COMPLETE',
-            },
-            type: 'command',
-          },
-        ],
-        time: {
-          "tag": "2020-173T20:00:00.000",
-          "type": "ABSOLUTE"
-        },
-        type: 'request',
-      },
-      {
-        description: 'Ground-epoch timed request object with all possible fields',
-        ground_epoch: {
-          "delta": "+00:30:00",
-          "name": "test_ground_epoch"
-        },
-        metadata: {
-          author: 'rrgoet',
-        },
-        name: 'test_request1',
-        steps: [
-          {
-            args: [],
-            stem: 'ADD_WATER',
-            time: { type: 'COMMAND_COMPLETE' },
-            type: 'command',
-          },
-        ],
-        type: 'request',
-      },
-    ]);
-  }, 30000);
-});
