@@ -5,9 +5,11 @@ import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/Activi
 import DataLoader from 'dataloader';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
+import { parcelBatchLoader } from './lib/batchLoaders/parcelBatchLoader.js';
 import type { typecheckExpansion } from './worker';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
-import { getLatestCommandDictionary, getLatestMissionModel, getExpansionRule } from './utils/hasura.js';
+import { getLatestParcel, getLatestMissionModel, getExpansionRule } from './utils/hasura.js';
+import type { Parcel } from './lib/batchLoaders/parcelBatchLoader.js';
 
 export async function backgroundTranspiler(numberOfThreads: number = 2) {
   if (graphqlClient === null) {
@@ -15,7 +17,13 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   }
 
   // Fetch latest mission model
-  const { mission_model_aggregate: {aggregate: {max: {id: missionModelId} } } } = await getLatestMissionModel(graphqlClient);
+  const {
+    mission_model_aggregate: {
+      aggregate: {
+        max: { id: missionModelId },
+      },
+    },
+  } = await getLatestMissionModel(graphqlClient);
   if (!missionModelId) {
     console.log(
       '[ Background Transpiler ] Unable to fetch the latest mission model. Aborting background transpiling...',
@@ -24,15 +32,21 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   }
 
   // Fetch latest command dictionary
-  const { command_dictionary_aggregate: {aggregate: {max: {id: commandDictionaryId} } } } = await getLatestCommandDictionary(graphqlClient);
-  if (!commandDictionaryId) {
+  const {
+    parcel_aggregate: {
+      aggregate: {
+        max: { id: parcelID },
+      },
+    },
+  } = await getLatestParcel(graphqlClient);
+  if (!parcelID) {
     console.log(
       '[ Background Transpiler ] Unable to fetch the latest command dictionary. Aborting background transpiling...',
     );
     return;
   }
 
-  const { expansion_rule } = await getExpansionRule(graphqlClient, missionModelId, commandDictionaryId);
+  const { expansion_rule } = await getExpansionRule(graphqlClient, missionModelId, parcelID);
 
   if (expansion_rule === null || expansion_rule.length === 0) {
     console.log(`[ Background Transpiler ] No expansion rules to transpile.`);
@@ -47,9 +61,23 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
     cacheKeyFn: objectCacheKeyFunction,
     name: null,
   });
+  const parcelTypescriptDataLoader = new DataLoader(parcelBatchLoader({ graphqlClient }), {
+    cacheKeyFn: objectCacheKeyFunction,
+    name: null,
+  });
+
+  const parcel: Parcel = await parcelTypescriptDataLoader.load({
+    parcelId: parcelID,
+  });
+
+  if (parcel === null) {
+    console.log(`[ Background Transpiler ] Unable to fetch parcel.
+    Aborting transpiling...`);
+    return;
+  }
 
   const commandTypes = await commandTypescriptDataLoader.load({
-    dictionaryId: commandDictionaryId,
+    dictionaryId: parcel.command_dictionary.id,
   });
 
   if (commandTypes === null) {
@@ -74,9 +102,12 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
             .createHash('sha256')
             .update(
               JSON.stringify({
-                commandDictionaryId,
+                parcelID: parcel.id,
+                commandDictionaryId: parcel.command_dictionary.id,
+                parameterDictionaryId: parcel.parameter_dictionary.map(parm => parm.parameter_dictionary.id),
+                ...(parcel.channel_dictionary ? { channelDictionaryId: parcel.channel_dictionary.id } : {}),
                 missionModelId,
-                id: expansion.id,
+                expansionId: expansion.id,
                 expansionLogic: expansion.expansion_logic,
                 activityType: expansion.activity_type,
               }),
