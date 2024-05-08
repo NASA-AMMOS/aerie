@@ -1,9 +1,10 @@
 create table channel_dictionary (
   id integer generated always as identity,
 
+  path text not null,
   mission text not null,
   version text not null,
-  parsed_json jsonb not null default '{}',
+  parsed_json jsonb not null default '{}', -- Todo: remove and create a endpoint for the frontend to use the path
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -18,6 +19,8 @@ comment on table channel_dictionary is e''
   'A Channel Dictionary for a mission.';
 comment on column channel_dictionary.id is e''
   'The synthetic identifier for this channel dictionary.';
+comment on column channel_dictionary.path is e''
+  'The location of channel dictionary json on the filesystem';
 comment on column channel_dictionary.mission is e''
   'A human-meaningful identifier for the mission described by the channel dictionary';
 comment on column channel_dictionary.version is e''

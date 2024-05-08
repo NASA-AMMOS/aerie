@@ -1,9 +1,10 @@
 create table parameter_dictionary (
   id integer generated always as identity,
 
+  path text not null,
   mission text not null,
   version text not null,
-  parsed_json jsonb not null default '{}',
+  parsed_json jsonb not null default '{}', -- Todo: remove and create a endpoint for the frontend to use the path
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -18,6 +19,8 @@ comment on table parameter_dictionary is e''
   'A Parameter Dictionary for a mission.';
 comment on column parameter_dictionary.id is e''
   'The synthetic identifier for this parameter dictionary.';
+comment on column parameter_dictionary.path is e''
+  'The location of parameter dictionary json on the filesystem';
 comment on column parameter_dictionary.mission is e''
   'A human-meaningful identifier for the mission described by the parameter dictionary';
 comment on column parameter_dictionary.version is e''
