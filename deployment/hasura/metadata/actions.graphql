@@ -26,21 +26,21 @@ type Mutation {
 }
 
 type Mutation {
-  uploadDictionary(dictionary: String!): CommandDictionaryResponse
+  uploadDictionary(dictionary: String!, type: String!): DictionaryResponse
 }
 
 type Mutation {
   addCommandExpansionTypeScript(
     activityTypeName: String!
     expansionLogic: String!
-    authoringCommandDictionaryId: Int
+    parcelId: Int
     authoringMissionModelId: Int
   ): AddCommandExpansionResponse
 }
 
 type Mutation {
   createExpansionSet(
-    commandDictionaryId: Int!,
+    parcelId: Int!,
     missionModelId: Int!,
     expansionIds: [Int!]!,
     description: String,
@@ -138,33 +138,10 @@ type Query {
   getSequenceSeqJsonBulk(inputs: [GetSequenceSeqJsonsInput!]!): [GetSeqJsonResponse!]!
 }
 
-type Query {
-  getUserSequenceSeqJson(commandDictionaryID: Int!, edslBody: String!): GetSeqJsonResponse!
-    @deprecated(reason: "Use bulk query getUserSequenceSeqJsonBulk instead")
-}
-
-input GetUserSequenceSeqJsonBulkInput {
-  commandDictionaryId: Int!
-  edslBody: String!
-}
-
-type Query {
-  getUserSequenceSeqJsonBulk(inputs: [GetUserSequenceSeqJsonBulkInput!]!): [GetSeqJsonResponse!]!
-}
-
 type GetSeqJsonResponse implements Fallible {
   status: FallibleStatus!
   errors: [UserCodeError!]!
   seqJson: SequenceSeqJson
-}
-
-type Query {
-  getEdslForSeqJson(seqJson: SequenceSeqJson!): String!
-    @deprecated(reason: "Use bulk query getEdslForSeqJsonBulk instead")
-}
-
-type Query {
-  getEdslForSeqJsonBulk(seqJsons: [SequenceSeqJson!]!): [String!]!
 }
 
 enum MerlinSimulationStatus {
@@ -234,13 +211,14 @@ type TypescriptFile {
   content: String
 }
 
-type CommandDictionaryResponse {
+type DictionaryResponse {
   id: Int!
-  command_types_typescript_path: String!
+  path: String!
   mission: String!
   version: String!
   parsed_json: CommandDictionary!
   created_at: String!
+  type : String!
 }
 
 type ExpansionSetResponse {
