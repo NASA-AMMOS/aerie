@@ -5,6 +5,8 @@ import type * as ampcs from '@nasa-jpl/aerie-ampcs';
 import fs from 'fs';
 import reservedWords from 'reserved-words';
 import { getEnv } from '../../env.js';
+import type { ChannelDictionary, ParameterDictionary } from '@nasa-jpl/aerie-ampcs';
+import { DictionaryType } from '../../types/types.js';
 
 const typescriptReservedWords = ['boolean', 'string', 'number'];
 
@@ -134,7 +136,7 @@ ${doc}
   const value = `
 ${doc}
 function ${fswCommandName}(...args:
-\t\t| [ ${argsWithType.map(arg => convertObjectArgsToPassByPosition(arg.name,arg.type)).join(',')} ]
+\t\t| [ ${argsWithType.map(arg => convertObjectArgsToPassByPosition(arg.name, arg.type)).join(',')} ]
 \t\t| [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
   return ImmediateStem.new({
     stem: '${fswCommandName}',
@@ -142,7 +144,9 @@ function ${fswCommandName}(...args:
   }) as ${fswCommandName}_IMMEDIATE;
 }
 function ${fswCommandName}_STEP(...args:
-\t\t|[ ${argsWithType.map(arg => `${convertObjectArgsToPassByPosition(arg.name,arg.type)} ${argumentTypeToVariable(arg.type)}`).join(',')} ]
+\t\t|[ ${argsWithType
+    .map(arg => `${convertObjectArgsToPassByPosition(arg.name, arg.type)} ${argumentTypeToVariable(arg.type)}`)
+    .join(',')} ]
 \t\t|[{ ${argsWithType.map(arg => arg.name + ': ' + arg.type + `${argumentTypeToVariable(arg.type)}`).join(',')} }]) {
   return CommandStem.new({
     stem: '${fswCommandName}',
@@ -152,26 +156,18 @@ function ${fswCommandName}_STEP(...args:
 
   const interfaces = `
 \tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[
-\t\t | [ ${argsWithType
-      .map(arg => convertObjectArgsToPassByPosition(arg.name,arg.type))
-    .join(',')}]
-\t\t | [{ ${argsWithType
-      .map(arg => arg.name + ': ' + arg.type)
-      .join(',')} }]]> {}
+\t\t | [ ${argsWithType.map(arg => convertObjectArgsToPassByPosition(arg.name, arg.type)).join(',')}]
+\t\t | [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]]> {}
 \tinterface ${fswCommandName}_STEP extends CommandStem<[
 \t\t | [ ${argsWithType
-      .map(arg => `${convertObjectArgsToPassByPosition(arg.name,arg.type)} ${argumentTypeToVariable(arg.type)}`)
+    .map(arg => `${convertObjectArgsToPassByPosition(arg.name, arg.type)} ${argumentTypeToVariable(arg.type)}`)
     .join(',')}]
 \t\t | [{ ${argsWithType
-      .map(arg => arg.name + ': ' + arg.type + `${argumentTypeToVariable(arg.type)}`)
-      .join(',')} }]]> {}
+    .map(arg => arg.name + ': ' + arg.type + `${argumentTypeToVariable(arg.type)}`)
+    .join(',')} }]]> {}
 \tfunction ${fswCommandName}(...args:
-\t\t| [ ${argsWithType
-      .map(arg => convertObjectArgsToPassByPosition(arg.name,arg.type))
-    .join(',')}]
-\t\t| [{ ${argsWithType
-      .map(arg => arg.name + ': ' + arg.type)
-      .join(',')} }]) : ${fswCommandName}_IMMEDIATE`;
+\t\t| [ ${argsWithType.map(arg => convertObjectArgsToPassByPosition(arg.name, arg.type)).join(',')}]
+\t\t| [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) : ${fswCommandName}_IMMEDIATE`;
 
   return {
     value,
@@ -212,11 +208,11 @@ function ${fswCommandName}_STEP(...args:
  * //   channel_num: U16
  * // ]>"
  */
-function convertObjectArgsToPassByPosition(name : string, type: string){
+function convertObjectArgsToPassByPosition(name: string, type: string) {
   // remove ' around name
   name = name.replace(/'/g, '');
   // change [] to {} and ; to ,
-  type = type.replace(/[{;}]/g, (match) => {
+  type = type.replace(/[{;}]/g, match => {
     switch (match) {
       case '{':
         return '[';
@@ -245,29 +241,28 @@ function convertObjectArgsToPassByPosition(name : string, type: string){
    *       channel_num: U16
    *     ]>
    */
-  type = type.replace(/'([^']+)':/g, '$1:')
+  type = type.replace(/'([^']+)':/g, '$1:');
 
-  return `${name} : ${type}`
-
+  return `${name} : ${type}`;
 }
 
 /**
  * Match the argument types in the command dictionary with the corresponding variable types
  * for both local and parameter in the seqjson specification.
  */
-function argumentTypeToVariable(argumentType : string) : string{
+function argumentTypeToVariable(argumentType: string): string {
   if (argumentType.startsWith('F')) {
-    return "| VARIABLE_FLOAT";
+    return '| VARIABLE_FLOAT';
   } else if (argumentType.startsWith('I')) {
-    return "| VARIABLE_INT";
+    return '| VARIABLE_INT';
   } else if (argumentType.startsWith('U')) {
-    return "| VARIABLE_UINT";
+    return '| VARIABLE_UINT';
   } else if (argumentType.startsWith('VarString')) {
-    return "| VARIABLE_STRING";
+    return '| VARIABLE_STRING';
   } else if (argumentType.startsWith('(')) {
-    return "| VARIABLE_ENUM";
+    return '| VARIABLE_ENUM';
   } else {
-    return ''
+    return '';
   }
 }
 function generateHwCommandCode(hwCommand: ampcs.HwCommand): { value: string; interfaces: string } {
@@ -355,21 +350,45 @@ function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.Enum
   }
 }
 
-export async function processDictionary(dictionary: ampcs.CommandDictionary) {
-  const prefaceUrl = new URL('./CommandEDSLPreface.ts', import.meta.url);
-  const jsonSpecUrl = new URL('../../../node_modules/@nasa-jpl/seq-json-schema/types.ts', import.meta.url);
+export async function processDictionary(
+  dictionary: ampcs.CommandDictionary | ampcs.ChannelDictionary | ampcs.ParameterDictionary,
+  type: 'COMMAND' | 'CHANNEL' | 'PARAMETER' = 'COMMAND',
+): Promise<string> {
   const folder = `${getEnv().STORAGE}/${dictionary.header.mission_name.toLowerCase()}/`;
-  const fileName = `command_lib.${dictionary.header.version}.ts`;
-  const prefaceString = await fs.promises.readFile(prefaceUrl.pathname, 'utf8');
-  const jsonSpecString = `/** START Sequence JSON Spec */
+
+  switch (type) {
+    case DictionaryType.COMMAND: {
+      const prefaceUrl = new URL('./CommandEDSLPreface.ts', import.meta.url);
+      const jsonSpecUrl = new URL('../../../node_modules/@nasa-jpl/seq-json-schema/types.ts', import.meta.url);
+      const fileName = `command_lib.${dictionary.header.version}.ts`;
+      const prefaceString = await fs.promises.readFile(prefaceUrl.pathname, 'utf8');
+      const jsonSpecString = `/** START Sequence JSON Spec */
   //https://github.com/NASA-AMMOS/seq-json-schema/blob/develop/types.ts\n
   ${await fs.promises.readFile(jsonSpecUrl.pathname, 'utf8')}
   \n/** END Sequence JSON Spec */`;
 
-  const { values, declarations } = generateTypescriptCode(dictionary); //update sql table store seprate
+      const { values, declarations } = generateTypescriptCode(dictionary as ampcs.CommandDictionary); //update sql table store seprate
 
-  await fs.promises.mkdir(folder, { recursive: true });
+      await fs.promises.mkdir(folder, { recursive: true });
 
-  await fs.promises.writeFile(folder + fileName, prefaceString + jsonSpecString + declarations + values, { flag: 'w' });
-  return folder + fileName;
+      await fs.promises.writeFile(folder + fileName, prefaceString + jsonSpecString + declarations + values, {
+        flag: 'w',
+      });
+      return folder + fileName;
+    }
+    case DictionaryType.CHANNEL: {
+      const fileName = `channel_lib.${dictionary.header.version}.ts`;
+      await fs.promises.mkdir(folder, { recursive: true });
+      await fs.promises.writeFile(folder + fileName, JSON.stringify(dictionary as ChannelDictionary), { flag: 'w' });
+      return folder + fileName;
+    }
+    case DictionaryType.PARAMETER: {
+      const fileName = `parameter_lib.${dictionary.header.version}.ts`;
+      await fs.promises.mkdir(folder, { recursive: true });
+      await fs.promises.writeFile(folder + fileName, JSON.stringify(dictionary as ParameterDictionary), { flag: 'w' });
+      return folder + fileName;
+    }
+    default:
+      return 'Error processing command dictionary';
+  }
 }
