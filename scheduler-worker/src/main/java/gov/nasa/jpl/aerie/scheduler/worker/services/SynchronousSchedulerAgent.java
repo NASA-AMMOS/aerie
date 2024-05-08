@@ -287,15 +287,15 @@ public record SynchronousSchedulerAgent(
   }
 
   public List<SchedulingActivityDirective> updateEverythingWithNewAnchorIds(Plan solutionPlan, Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds){
-    ArrayList<SchedulingActivityDirective> updatedActs = new ArrayList<SchedulingActivityDirective>();
-    var planActs = new HashSet<>(solutionPlan.getActivities());
-    for (SchedulingActivityDirective act : planActs) {
+    final var updatedActs = new ArrayList<SchedulingActivityDirective>();
+    final var planActs = new HashSet<>(solutionPlan.getActivities());
+    for (final var act : planActs) {
       if (act.anchorId() != null) {
-        SchedulingActivityDirective actAnchored = solutionPlan.getActivitiesById().get(act.anchorId());
-        SchedulingActivityDirective updatedAct = SchedulingActivityDirective.copyOf(act, new SchedulingActivityDirectiveId(instancesToIds.get(actAnchored).id()), act.anchoredToStart(), act.startOffset());
+        final var actAnchored = solutionPlan.getActivitiesById().get(act.anchorId());
+        final var updatedAct = SchedulingActivityDirective.copyOf(act, new SchedulingActivityDirectiveId(instancesToIds.get(actAnchored).id()), act.anchoredToStart(), act.startOffset());
         updatedActs.add(updatedAct);
         solutionPlan.replaceActivity(act, updatedAct);
-        ActivityDirectiveId value = instancesToIds.get(act);
+        final var value = instancesToIds.get(act);
         instancesToIds.remove(act);
         instancesToIds.put(updatedAct, value);
       }
@@ -413,7 +413,7 @@ public record SynchronousSchedulerAgent(
       final Optional<SimulationResults> initialSimulationResults) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
-      BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds =  new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
+      final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds =  new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
       final var merlinPlan =  merlinService.getPlanActivityDirectives(planMetadata, problem);
       final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToDirectiveId = new HashMap<>();
       final var plan = new PlanInMemory();

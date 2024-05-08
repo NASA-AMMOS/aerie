@@ -29,7 +29,7 @@ public abstract class TimeExpressionRelative {
   protected final List<Pair<TimeUtility.Operator, Duration>> operations = new ArrayList<>();
 
 
-  public static TimeExpressionRelative fromAnchor(TimeAnchor anchor) {
+  public static TimeExpressionRelative fromAnchor(final TimeAnchor anchor) {
     return new TimeExpressionRelativeSimple(anchor, true);
   }
 
@@ -42,28 +42,28 @@ public abstract class TimeExpressionRelative {
     return new TimeExpressionRelativeSimple(TimeAnchor.START, true);
   }
 
-  public static TimeExpressionRelative offsetByAfterStart(Duration dur) {
+  public static TimeExpressionRelative offsetByAfterStart(final Duration dur) {
     final var te = new TimeExpressionRelativeSimple(TimeAnchor.START, true);
     te.operations.add(Pair.of(TimeUtility.Operator.PLUS, dur));
     return te;
   }
 
 
-  public static TimeExpressionRelative offsetByBeforeStart(Duration dur) {
+  public static TimeExpressionRelative offsetByBeforeStart(final Duration dur) {
     final var te = new TimeExpressionRelativeSimple(TimeAnchor.START, true);
     te.operations.add(Pair.of(TimeUtility.Operator.MINUS, dur));
     return te;
   }
 
 
-  public static TimeExpressionRelative offsetByAfterEnd(Duration dur) {
+  public static TimeExpressionRelative offsetByAfterEnd(final Duration dur) {
     final var te = new TimeExpressionRelativeSimple(TimeAnchor.END, true);
     te.operations.add(Pair.of(TimeUtility.Operator.PLUS, dur));
     return te;
   }
 
 
-  public static TimeExpressionRelative offsetByBeforeEnd(Duration dur) {
+  public static TimeExpressionRelative offsetByBeforeEnd(final Duration dur) {
     final var te = new TimeExpressionRelativeSimple(TimeAnchor.END, true);
     te.operations.add(Pair.of(TimeUtility.Operator.MINUS, dur));
     return te;
@@ -108,26 +108,26 @@ public abstract class TimeExpressionRelative {
     }
 
 
-    public Builder name(String name) {
+    public Builder name(final String name) {
       this.name = name;
       return getThis();
     }
 
-    public Builder from(TimeExpressionRelative otherExpr) {
+    public Builder from(final TimeExpressionRelative otherExpr) {
       fromExpression = otherExpr;
       return getThis();
     }
 
     TimeExpressionRelative fromExpression;
 
-    public Builder from(TimeAnchor anchor) {
+    public Builder from(final TimeAnchor anchor) {
       fromAnchor = anchor;
       return getThis();
     }
 
     TimeAnchor fromAnchor;
 
-    public Builder minus(Duration dur) {
+    public Builder minus(final Duration dur) {
       operations.add(Pair.of(TimeUtility.Operator.MINUS, dur));
       return getThis();
     }
@@ -137,7 +137,7 @@ public abstract class TimeExpressionRelative {
       return getThis();
     }
 
-    public Builder plus(Duration dur) {
+    public Builder plus(final Duration dur) {
       operations.add(Pair.of(TimeUtility.Operator.PLUS, dur));
       return getThis();
     }

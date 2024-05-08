@@ -357,7 +357,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
               Optional.empty()
           ));
         } else {
-            var actsToAssociate = missingActAssociationsWithAnchor.isEmpty() ? missingActAssociationsWithoutAnchor : missingActAssociationsWithAnchor;
+            final var actsToAssociate = missingActAssociationsWithAnchor.isEmpty() ? missingActAssociationsWithoutAnchor : missingActAssociationsWithAnchor;
             conflicts.add(new MissingAssociationConflict(
                 this,
                 actsToAssociate,

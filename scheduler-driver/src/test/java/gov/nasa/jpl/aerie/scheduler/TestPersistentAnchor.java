@@ -84,14 +84,14 @@ public class TestPersistentAnchor {
     );
   }
 
-  public boolean allAnchorsIncluded(TestData testData) {
+  public boolean allAnchorsIncluded(final TestData testData) {
     if(testData.actsToBeAnchored == null || testData.actsToBeAnchored.isEmpty())
       return true;
     if(testData.plan.isEmpty())
       return false;
 
     Set<SchedulingActivityDirectiveId> planActivityAnchors = testData.plan.get().getAnchorIds();
-    for(SchedulingActivityDirective act : testData.actsToBeAnchored){
+    for(final var act : testData.actsToBeAnchored){
       if(!planActivityAnchors.contains(act.anchorId()))
         return false;
     }
@@ -104,7 +104,7 @@ public class TestPersistentAnchor {
    * @param testData
    * @return
    */
-  public boolean checkAnchoredActivities(TestData testData, boolean allowCreationAnchors, boolean missingActAssociationsWithAnchor) {
+  public boolean checkAnchoredActivities(final TestData testData, final boolean allowCreationAnchors, final boolean missingActAssociationsWithAnchor) {
     if(testData.actsWithAnchor == null || testData.actsWithAnchor.isEmpty())
       return true;
     if(testData.plan.isEmpty())
@@ -114,19 +114,19 @@ public class TestPersistentAnchor {
                                                                             .map(SchedulingActivityDirective::id)
                                                                             .collect(Collectors.toSet());
 
-    Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> mapIdToActivity = testData.plan.get().getActivitiesById();
+    final var mapIdToActivity = testData.plan.get().getActivitiesById();
 
     if (allowCreationAnchors || missingActAssociationsWithAnchor){
-      for (SchedulingActivityDirective act: testData.actsWithAnchor){
-        SchedulingActivityDirective directive = mapIdToActivity.get(act.id());
+      for (final var act: testData.actsWithAnchor){
+        final var directive = mapIdToActivity.get(act.id());
         if (directive.anchorId() == null || !anchorIds.contains(directive.anchorId()))
           return false;
         anchorIds.remove(directive.anchorId());
       }
     }
 
-    for (SchedulingActivityDirective act: testData.actsNewAnchored){
-      SchedulingActivityDirective directive = mapIdToActivity.get(act.id());
+    for (final var act: testData.actsNewAnchored){
+      final var directive = mapIdToActivity.get(act.id());
       if (directive.anchorId() == null || !anchorIds.contains(directive.anchorId()))
         return false;
       anchorIds.remove(directive.anchorId());
@@ -141,15 +141,15 @@ public class TestPersistentAnchor {
    * @param testData
    * @return
    */
-  public boolean checkUnanchoredActivities(TestData testData) {
+  public boolean checkUnanchoredActivities(final TestData testData) {
     if(testData.actsWithoutAnchorNotAnchored == null || testData.actsWithoutAnchorNotAnchored.isEmpty())
       return true;
     if(testData.plan.isEmpty())
       return false;
 
-    Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> mapIdToActivity = testData.plan.get().getActivitiesById();
-    for (SchedulingActivityDirective act: testData.actsWithoutAnchorNotAnchored){
-      SchedulingActivityDirective directive = mapIdToActivity.get(act.id());
+    final var mapIdToActivity = testData.plan.get().getActivitiesById();
+    for (final var act: testData.actsWithoutAnchorNotAnchored){
+      final var directive = mapIdToActivity.get(act.id());
       if (directive.anchorId() != null)
         return false;
     }
@@ -419,14 +419,13 @@ public class TestPersistentAnchor {
   /* Test cases in which the goal is created with TimeExpression endsAt
    */
 
-  public TestData createTestCaseStartsAt(PersistentTimeAnchor persistentAnchor,  boolean missingActAssociationsWithAnchor, boolean missingActAssociationsWithoutAnchor, int activityDurationHours, int goalStartPeriodHours, int goalEndPeriodHours, TimeAnchor timeAnchor, TimeExpressionRelative timeExpression, long relativeOffsetHours)
+  public TestData createTestCaseStartsAt(final PersistentTimeAnchor persistentAnchor,  final boolean missingActAssociationsWithAnchor, final boolean missingActAssociationsWithoutAnchor, final int activityDurationHours, final int goalStartPeriodHours, final int goalEndPeriodHours, final TimeAnchor timeAnchor, final TimeExpressionRelative timeExpression, final long relativeOffsetHours)
   throws SchedulingInterruptedException
   {
-    ArrayList<SchedulingActivityDirective> actsToBeAnchored = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateActsAlreadyAnchor = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateActsWithoutAnchorAnchored = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateActsWithoutAnchorNotAnchored = new ArrayList<>();
-    ArrayList<SchedulingActivityDirective> templateNewActsAnchored;
+    var actsToBeAnchored = new ArrayList<SchedulingActivityDirective>();
+    var templateActsAlreadyAnchor = new ArrayList<SchedulingActivityDirective>();
+    var templateActsWithoutAnchorAnchored = new ArrayList<SchedulingActivityDirective>();
+    var templateActsWithoutAnchorNotAnchored = new ArrayList<SchedulingActivityDirective>();
 
     final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
@@ -574,8 +573,7 @@ public class TestPersistentAnchor {
 
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
-
-    templateNewActsAnchored = new ArrayList<>(plan.get().getActivities());
+    var templateNewActsAnchored = new ArrayList<>(plan.get().getActivities());
     templateNewActsAnchored.removeAll(partialPlan.getActivities());
 
 

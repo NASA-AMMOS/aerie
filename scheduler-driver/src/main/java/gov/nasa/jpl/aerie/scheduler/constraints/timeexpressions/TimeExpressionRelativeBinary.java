@@ -11,7 +11,7 @@ public class TimeExpressionRelativeBinary extends TimeExpressionRelative {
   private final TimeExpressionRelativeSimple lowerBound;
   private final TimeExpressionRelativeSimple upperBound;
 
-  public TimeExpressionRelativeBinary(TimeExpressionRelativeSimple lowerBound, TimeExpressionRelativeSimple upperBound) {
+  public TimeExpressionRelativeBinary(final TimeExpressionRelativeSimple lowerBound, final TimeExpressionRelativeSimple upperBound) {
     this.lowerBound = lowerBound;
     this.upperBound = upperBound;
   }
