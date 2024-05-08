@@ -608,4 +608,23 @@ public final class IncrementalSimTest {
       }
     }
   }
+
+  public void convertDiscreteToCanonicalTimeline(SimulationResultsInterface simulationResults, Map<String, ArrayList<ProfileSegment<SerializedValue>>> discreteProfiles) {
+    for (Map.Entry<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> entry: simulationResults.getDiscreteProfiles().entrySet()) {
+      var resourceList = new ArrayList<ProfileSegment<SerializedValue>>();
+      var resourceName = entry.getKey();
+      discreteProfiles.put(resourceName, new ArrayList<>());
+      for (ProfileSegment<SerializedValue> segment: entry.getValue().getValue()) {
+        if (discreteProfiles.get(resourceName).isEmpty()) {
+          discreteProfiles.get(resourceName).add(segment);
+        } else {
+          if (segment.dynamics().equals(discreteProfiles.get(resourceName).getLast().dynamics())) {
+            discreteProfiles.get(resourceName).set(discreteProfiles.get(resourceName).size() - 1, new ProfileSegment<SerializedValue>(Duration.add(segment.extent(), discreteProfiles.get(resourceName).getLast().extent()), segment.dynamics()));
+          } else {
+            discreteProfiles.get((resourceName)).add(segment);
+          }
+        }
+      }
+    }
+  }
 }
