@@ -6,35 +6,14 @@ import fs from 'fs';
 
 export const expansionSetBatchLoader: BatchLoader<
   { expansionSetId: number },
-  ExpansionSet,
+  ExpansionSetData,
   { graphqlClient: GraphQLClient }
 > = opts => async keys => {
-  const { expansion_set } = await opts.graphqlClient.request<{
-    expansion_set: {
-      id: number;
-      command_dictionary: {
-        id: number;
-        command_types_typescript_path: string;
-      };
-      mission_model: {
-        id: number;
-        activity_types: GraphQLActivitySchema[];
-      };
-      expansion_rules: {
-        id: number;
-        activity_type: string;
-        expansion_logic: string;
-      }[];
-    }[];
-  }>(
+  const { expansion_set } = await opts.graphqlClient.request<ExpansionSets>(
     gql`
       query GetExpansionSet($expansionSetIds: [Int!]!) {
-        expansion_set(where: { id: { _in: $expansionSetIds } }) {
+        expansion_set(where: { id: { _in: $expansionSetIds }, parcel: {} }) {
           id
-          command_dictionary {
-            id
-            command_types_typescript_path
-          }
           mission_model {
             id
             activity_types {
@@ -47,6 +26,23 @@ export const expansionSetBatchLoader: BatchLoader<
             id
             activity_type
             expansion_logic
+          }
+          parcel {
+            id
+            command_dictionary {
+              path
+              id
+            }
+            channel_dictionary {
+              path
+              id
+            }
+            parameter_dictionary {
+              parameter_dictionary {
+                path
+                id
+              }
+            }
           }
         }
       }
@@ -62,15 +58,53 @@ export const expansionSetBatchLoader: BatchLoader<
       if (expansionSet === undefined) {
         return new ErrorWithStatusCode(`No expansion_set with id: ${expansionSetId}`, 404);
       }
-      const commandTypes = await fs.promises.readFile(
-        expansionSet.command_dictionary.command_types_typescript_path,
-        'utf8',
+      const commandTypes = await fs.promises.readFile(expansionSet.parcel.command_dictionary.path, 'utf8');
+      const channelTypes = JSON.parse(
+        expansionSet.parcel.channel_dictionary
+          ? await fs.promises.readFile(expansionSet.parcel.channel_dictionary.path, 'utf8')
+          : '{}',
       );
+      const paramerterTypes = await Promise.allSettled(
+        expansionSet.parcel.parameter_dictionary.map(async param => {
+          return {
+            parameter_dictionary: {
+              parsedJson: JSON.parse(await fs.promises.readFile(param.parameter_dictionary.path, 'utf8')),
+              id: param.parameter_dictionary.id,
+            },
+          };
+        }),
+      );
+
+      const paramerterResults: {
+        parameter_dictionary: {
+          parsedJson: string;
+          id: number;
+        };
+      }[] = [];
+      for (const result of paramerterTypes) {
+        if (result.status === 'fulfilled') {
+          paramerterResults.push(result.value);
+        }
+      }
+
       return {
         id: expansionSet.id,
-        commandDictionary: {
-          id: expansionSet.command_dictionary.id,
-          commandTypesTypeScript: commandTypes,
+        parcel: {
+          id: expansionSet.parcel.id,
+          command_dictionary: {
+            id: expansionSet.parcel.command_dictionary.id,
+            commandTypesTypeScript: commandTypes,
+          },
+          ...(expansionSet.parcel.channel_dictionary
+            ? {
+                channel_dictionary: {
+                  id: expansionSet.parcel.channel_dictionary.id,
+                  parsedJson: channelTypes,
+                },
+              }
+            : {}),
+
+          parameter_dictionary: paramerterResults,
         },
         missionModel: {
           id: expansionSet.mission_model.id,
@@ -81,16 +115,62 @@ export const expansionSetBatchLoader: BatchLoader<
           activityType: expansionRule.activity_type,
           expansionLogic: expansionRule.expansion_logic,
         })),
-      };
+      } as ExpansionSetData;
     }),
   );
 };
 
+export type ExpansionSets = {
+  expansion_set: ExpansionSet[];
+};
 export interface ExpansionSet {
   id: number;
-  commandDictionary: {
+  mission_model: {
     id: number;
-    commandTypesTypeScript: string;
+    activity_types: GraphQLActivitySchema[];
+  };
+  expansion_rules: {
+    id: number;
+    activity_type: string;
+    expansion_logic: string;
+  }[];
+  parcel: {
+    id: number;
+    command_dictionary: {
+      path: string;
+      id: number;
+    };
+    parameter_dictionary: {
+      parameter_dictionary: {
+        path: string;
+        id: number;
+      };
+    }[];
+    channel_dictionary?: {
+      path: string;
+      id: number;
+    };
+  };
+}
+
+export interface ExpansionSetData {
+  id: number;
+  parcel: {
+    id: number;
+    command_dictionary: {
+      commandTypesTypeScript: string;
+      id: number;
+    };
+    parameter_dictionary: {
+      parameter_dictionary: {
+        id: number;
+        parsedJson: string;
+      };
+    }[];
+    channel_dictionary?: {
+      id: number;
+      parsedJson: string;
+    };
   };
   missionModel: {
     id: number;

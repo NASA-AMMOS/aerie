@@ -5,7 +5,7 @@ import * as fs from 'node:fs';
 
 import ts from 'typescript';
 import { CacheItem, UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-
+import type { ChannelDictionary, ParameterDictionary } from '@nasa-jpl/aerie-ampcs';
 import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import type { CommandStem } from './lib/codegen/CommandEDSLPreface.js';
 import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
@@ -13,9 +13,20 @@ import { deserializeWithTemporal } from './utils/temporalSerializers.js';
 import { Result, SerializedResult } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 
 const temporalPolyfillTypes = fs.readFileSync(
-  new URL('../src/TemporalPolyfillTypes.ts', import.meta.url).pathname,
+  new URL('../src/types/TemporalPolyfillTypes.ts', import.meta.url).pathname,
   'utf8',
 );
+
+const channelDictionaryTypes: string = fs.readFileSync(
+  new URL('./types/ChannelTypes.ts', import.meta.url).pathname,
+  'utf-8',
+);
+
+const parameterDictionaryTypes: string = fs.readFileSync(
+  new URL('./types/ParameterTypes.ts', import.meta.url).pathname,
+  'utf-8',
+);
+
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
 const compilerTarget = options.target ?? ts.ScriptTarget.ES2021;
@@ -36,11 +47,15 @@ export async function typecheckExpansion(opts: {
   const result = await codeRunner.preProcess(
     opts.expansionLogic,
     'ExpansionReturn',
-    ['{ activityInstance: ActivityType }'],
+    [
+      '{ activityInstance: ActivityType, channelDictionary: ChannelDictionary, parameterDictionaries: ParameterDictionary[] }',
+    ],
     [
       ts.createSourceFile('command-types.ts', opts.commandTypes, compilerTarget),
       ts.createSourceFile('activity-types.ts', opts.activityTypes, compilerTarget),
       ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, compilerTarget),
+      ts.createSourceFile('ChannelTypes.ts', channelDictionaryTypes, compilerTarget),
+      ts.createSourceFile('ParameterDictionaryTypes.ts', parameterDictionaryTypes, compilerTarget),
     ],
   );
 
@@ -87,6 +102,8 @@ export async function executeEDSL(opts: {
 
 export async function executeExpansionFromBuildArtifacts(opts: {
   buildArtifacts: CacheItem;
+  channelData?: ChannelDictionary;
+  parameterData: ParameterDictionary[];
   serializedActivityInstance: SimulatedActivity;
 }): Promise<SerializedResult<ReturnType<CommandStem['toSeqJson']>[], ReturnType<UserCodeError['toJSON']>[]>> {
   const activityInstance = deserializeWithTemporal(opts.serializedActivityInstance) as SimulatedActivity;
@@ -94,6 +111,8 @@ export async function executeExpansionFromBuildArtifacts(opts: {
     [
       {
         activityInstance: SimulatedActivity;
+        channelDictionary: ChannelDictionary | undefined;
+        parameterDictionaries: ParameterDictionary[];
       },
     ],
     ExpansionReturn
@@ -103,6 +122,8 @@ export async function executeExpansionFromBuildArtifacts(opts: {
     [
       {
         activityInstance,
+        channelDictionary: opts.channelData,
+        parameterDictionaries: opts.parameterData,
       },
     ],
     3000,
