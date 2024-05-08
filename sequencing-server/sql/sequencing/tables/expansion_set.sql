@@ -3,9 +3,8 @@ create table expansion_set (
   name text not null,
   description text not null default '',
 
-  command_dict_id integer not null,
+  parcel_id integer not null,
   mission_model_id integer not null,
-  sequence_adaptation_id integer,
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -13,17 +12,14 @@ create table expansion_set (
   owner text,
   updated_by text,
 
-  constraint expansion_set_unique_name_per_dict_and_model
-    unique (mission_model_id, command_dict_id, name),
+  constraint expansion_set_unique_name_per_parcel_and_model
+    unique (mission_model_id, parcel_id, name),
 
   constraint expansion_set_primary_key
     primary key (id),
 
-  foreign key (command_dict_id)
-    references command_dictionary (id)
-    on delete cascade,
-  foreign key (sequence_adaptation_id)
-    references sequence_adaptation (id)
+  foreign key (parcel_id)
+    references parcel (id)
     on delete cascade
 );
 
@@ -31,8 +27,8 @@ comment on table expansion_set is e''
   'A binding of a command dictionary to a mission model.';
 comment on column expansion_set.id is e''
   'The synthetic identifier for the set.';
-comment on column expansion_set.command_dict_id is e''
-  'The ID of a command dictionary.';
+comment on column expansion_set.parcel_id is e''
+  'The ID of a parcel.';
 comment on column expansion_set.mission_model_id is e''
   'The ID of a mission model.';
 comment on column expansion_set.name is e''

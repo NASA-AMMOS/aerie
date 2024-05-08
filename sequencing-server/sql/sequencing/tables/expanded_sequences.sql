@@ -5,7 +5,6 @@ create table expanded_sequences (
   seq_id text not null,
   simulation_dataset_id int not null,
   expanded_sequence jsonb not null,
-  edsl_string text not null,
 
   created_at timestamptz not null default now(),
 

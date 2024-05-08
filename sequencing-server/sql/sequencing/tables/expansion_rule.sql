@@ -5,7 +5,7 @@ create table expansion_rule (
   activity_type text not null,
   expansion_logic text not null,
 
-  authoring_command_dict_id integer,
+  parcel_id integer not null,
   authoring_mission_model_id integer,
 
   created_at timestamptz not null default now(),
@@ -16,8 +16,8 @@ create table expansion_rule (
 
   description text not null default '',
 
-  constraint expansion_rule_unique_name_per_dict_and_model
-    unique (authoring_mission_model_id, authoring_command_dict_id, name),
+  constraint expansion_rule_unique_name_per_parcel_and_model
+    unique (authoring_mission_model_id, parcel_id, name),
 
   constraint expansion_rule_primary_key
   primary key (id),
@@ -25,8 +25,8 @@ create table expansion_rule (
   constraint expansion_rule_activity_type_foreign_key
     unique (id, activity_type),
 
-  foreign key (authoring_command_dict_id)
-    references command_dictionary (id)
+  foreign key (parcel_id)
+    references parcel (id)
     on delete set null
 );
 comment on table expansion_rule is e''
@@ -37,8 +37,8 @@ comment on column expansion_rule.activity_type is e''
   'The user selected activity type.';
 comment on column expansion_rule.expansion_logic is e''
   'The expansion logic used to generate commands.';
-comment on column expansion_rule.authoring_command_dict_id is e''
-  'The id of the command dictionary to be used for authoring of this expansion.';
+comment on column expansion_rule.parcel_id is e''
+  'The id of the parcel used for authoring of this expansion.';
 comment on column expansion_rule.authoring_mission_model_id is e''
   'The id of the mission model to be used for authoring of this expansion.';
 comment on column expansion_rule.owner is e''
