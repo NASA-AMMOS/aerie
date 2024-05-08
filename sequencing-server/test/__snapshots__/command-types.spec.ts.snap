@@ -4382,6 +4382,76 @@ declare global {
 	interface EAT_BANANA_IMMEDIATE extends ImmediateStem<[]> {}
 	interface EAT_BANANA_STEP extends CommandStem<[]> {}
 	const EAT_BANANA: EAT_BANANA_IMMEDIATE;
+
+
+
+/**
+* Begin an if statement.
+*
+*/
+	interface CMD_IF_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_IF_STEP extends CommandStem<[]> {}
+	const CMD_IF: CMD_IF_IMMEDIATE;
+
+
+
+/**
+* Begin an else if statement.
+*
+*/
+	interface CMD_ELSE_IF_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_ELSE_IF_STEP extends CommandStem<[]> {}
+	const CMD_ELSE_IF: CMD_ELSE_IF_IMMEDIATE;
+
+
+
+/**
+* End an if statement.
+*
+*/
+	interface CMD_END_IF_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_END_IF_STEP extends CommandStem<[]> {}
+	const CMD_END_IF: CMD_END_IF_IMMEDIATE;
+
+
+
+/**
+* Break a loop.
+*
+*/
+	interface CMD_BREAK_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_BREAK_STEP extends CommandStem<[]> {}
+	const CMD_BREAK: CMD_BREAK_IMMEDIATE;
+
+
+
+/**
+* Continue a loop.
+*
+*/
+	interface CMD_CONTINUE_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_CONTINUE_STEP extends CommandStem<[]> {}
+	const CMD_CONTINUE: CMD_CONTINUE_IMMEDIATE;
+
+
+
+/**
+* End a loop.
+*
+*/
+	interface CMD_END_WHILE_LOOP_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_END_WHILE_LOOP_STEP extends CommandStem<[]> {}
+	const CMD_END_WHILE_LOOP: CMD_END_WHILE_LOOP_IMMEDIATE;
+
+
+
+/**
+* Begin a loop.
+*
+*/
+	interface CMD_WHILE_IMMEDIATE extends ImmediateStem<[]> {}
+	interface CMD_WHILE_STEP extends CommandStem<[]> {}
+	const CMD_WHILE: CMD_WHILE_IMMEDIATE;
 		
 /**
 * Dump the blender configuration file.
@@ -4403,6 +4473,13 @@ declare global {
 		PACKAGE_BANANA: typeof PACKAGE_BANANA_STEP,
 		PICK_BANANA: typeof PICK_BANANA_STEP,
 		EAT_BANANA: typeof EAT_BANANA_STEP,
+		CMD_IF: typeof CMD_IF_STEP,
+		CMD_ELSE_IF: typeof CMD_ELSE_IF_STEP,
+		CMD_END_IF: typeof CMD_END_IF_STEP,
+		CMD_BREAK: typeof CMD_BREAK_STEP,
+		CMD_CONTINUE: typeof CMD_CONTINUE_STEP,
+		CMD_END_WHILE_LOOP: typeof CMD_END_WHILE_LOOP_STEP,
+		CMD_WHILE: typeof CMD_WHILE_STEP,
 	};
 
 	const Hardwares : {
@@ -4423,6 +4500,13 @@ const argumentOrders = {
 	'PACKAGE_BANANA': ['lot_number','bundle','bundle_name','number_of_bananas'],
 	'PICK_BANANA': [],
 	'EAT_BANANA': [],
+	'CMD_IF': [],
+	'CMD_ELSE_IF': [],
+	'CMD_END_IF': [],
+	'CMD_BREAK': [],
+	'CMD_CONTINUE': [],
+	'CMD_END_WHILE_LOOP': [],
+	'CMD_WHILE': [],
 };
 
 
@@ -4662,6 +4746,104 @@ const EAT_BANANA_STEP: EAT_BANANA_STEP = CommandStem.new({
 	arguments: [],
 });
 
+
+/**
+* Begin an if statement.
+*
+*/
+const CMD_IF: CMD_IF_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_IF',
+	arguments: [],
+});
+const CMD_IF_STEP: CMD_IF_STEP = CommandStem.new({
+	stem: 'CMD_IF',
+	arguments: [],
+});
+
+
+/**
+* Begin an else if statement.
+*
+*/
+const CMD_ELSE_IF: CMD_ELSE_IF_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_ELSE_IF',
+	arguments: [],
+});
+const CMD_ELSE_IF_STEP: CMD_ELSE_IF_STEP = CommandStem.new({
+	stem: 'CMD_ELSE_IF',
+	arguments: [],
+});
+
+
+/**
+* End an if statement.
+*
+*/
+const CMD_END_IF: CMD_END_IF_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_END_IF',
+	arguments: [],
+});
+const CMD_END_IF_STEP: CMD_END_IF_STEP = CommandStem.new({
+	stem: 'CMD_END_IF',
+	arguments: [],
+});
+
+
+/**
+* Break a loop.
+*
+*/
+const CMD_BREAK: CMD_BREAK_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_BREAK',
+	arguments: [],
+});
+const CMD_BREAK_STEP: CMD_BREAK_STEP = CommandStem.new({
+	stem: 'CMD_BREAK',
+	arguments: [],
+});
+
+
+/**
+* Continue a loop.
+*
+*/
+const CMD_CONTINUE: CMD_CONTINUE_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_CONTINUE',
+	arguments: [],
+});
+const CMD_CONTINUE_STEP: CMD_CONTINUE_STEP = CommandStem.new({
+	stem: 'CMD_CONTINUE',
+	arguments: [],
+});
+
+
+/**
+* End a loop.
+*
+*/
+const CMD_END_WHILE_LOOP: CMD_END_WHILE_LOOP_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_END_WHILE_LOOP',
+	arguments: [],
+});
+const CMD_END_WHILE_LOOP_STEP: CMD_END_WHILE_LOOP_STEP = CommandStem.new({
+	stem: 'CMD_END_WHILE_LOOP',
+	arguments: [],
+});
+
+
+/**
+* Begin a loop.
+*
+*/
+const CMD_WHILE: CMD_WHILE_IMMEDIATE = ImmediateStem.new({
+	stem: 'CMD_WHILE',
+	arguments: [],
+});
+const CMD_WHILE_STEP: CMD_WHILE_STEP = CommandStem.new({
+	stem: 'CMD_WHILE',
+	arguments: [],
+});
+
 /**
 * Dump the blender configuration file.
 *
@@ -4683,6 +4865,13 @@ export const Commands = {
 		PACKAGE_BANANA: PACKAGE_BANANA_STEP,
 		PICK_BANANA: PICK_BANANA_STEP,
 		EAT_BANANA: EAT_BANANA_STEP,
+		CMD_IF: CMD_IF_STEP,
+		CMD_ELSE_IF: CMD_ELSE_IF_STEP,
+		CMD_END_IF: CMD_END_IF_STEP,
+		CMD_BREAK: CMD_BREAK_STEP,
+		CMD_CONTINUE: CMD_CONTINUE_STEP,
+		CMD_END_WHILE_LOOP: CMD_END_WHILE_LOOP_STEP,
+		CMD_WHILE: CMD_WHILE_STEP,
 };
 
 export const Immediates = {
@@ -4698,6 +4887,13 @@ export const Immediates = {
 		PACKAGE_BANANA: PACKAGE_BANANA,
 		PICK_BANANA: PICK_BANANA,
 		EAT_BANANA: EAT_BANANA,
+		CMD_IF: CMD_IF,
+		CMD_ELSE_IF: CMD_ELSE_IF,
+		CMD_END_IF: CMD_END_IF,
+		CMD_BREAK: CMD_BREAK,
+		CMD_CONTINUE: CMD_CONTINUE,
+		CMD_END_WHILE_LOOP: CMD_END_WHILE_LOOP,
+		CMD_WHILE: CMD_WHILE,
 };
 
 export const Hardwares = {
