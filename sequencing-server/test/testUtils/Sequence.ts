@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
-import { FallibleStatus } from '../../src/types.js';
+import { FallibleStatus } from '../../src/types/types';
 import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
 
 export async function insertSequence(

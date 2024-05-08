@@ -44,7 +44,7 @@ it('should return command types', async () => {
   );
 
   expect(getCommandTypeScript.status).toBe(Status.SUCCESS);
-  expect(getCommandTypeScript.typescriptFiles.length).toEqual(2);
+  expect(getCommandTypeScript.typescriptFiles.length).toEqual(4);
   expect(getCommandTypeScript.typescriptFiles).toEqual([
     {
       content: expect.any(String),
@@ -53,6 +53,14 @@ it('should return command types', async () => {
     {
       content: expect.any(String),
       filePath: 'TemporalPolyfillTypes.ts',
+    },
+    {
+      content: expect.any(String),
+      filePath: 'ChannelTypes.ts',
+    },
+    {
+      content: expect.any(String),
+      filePath: 'ParameterTypes.ts',
     },
   ]);
   expect(getCommandTypeScript.typescriptFiles[0]!.content).toMatchSnapshot();

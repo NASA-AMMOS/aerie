@@ -4,13 +4,18 @@ export async function insertExpansion(
   graphqlClient: GraphQLClient,
   activityTypeName: string,
   expansionLogic: string,
+  parcelId: number,
 ): Promise<number> {
   const res = await graphqlClient.request<{
     addCommandExpansionTypeScript: { id: number };
   }>(
     gql`
-      mutation AddCommandExpansion($activityTypeName: String!, $expansionLogic: String!) {
-        addCommandExpansionTypeScript(activityTypeName: $activityTypeName, expansionLogic: $expansionLogic) {
+      mutation AddCommandExpansion($activityTypeName: String!, $expansionLogic: String!, $parcelId: Int!) {
+        addCommandExpansionTypeScript(
+          activityTypeName: $activityTypeName
+          expansionLogic: $expansionLogic
+          parcelId: $parcelId
+        ) {
           id
         }
       }
@@ -18,6 +23,7 @@ export async function insertExpansion(
     {
       activityTypeName,
       expansionLogic,
+      parcelId,
     },
   );
   return res.addCommandExpansionTypeScript.id;
@@ -40,25 +46,25 @@ export async function removeExpansion(graphqlClient: GraphQLClient, expansionId:
 
 export async function insertExpansionSet(
   graphqlClient: GraphQLClient,
-  commandDictionaryId: number,
+  parcelId: number,
   missionModelId: number,
   expansionIds: number[],
   description?: string,
-  name?: string
+  name?: string,
 ): Promise<number> {
   const res = await graphqlClient.request<{
     createExpansionSet: { id: number };
   }>(
     gql`
       mutation AddExpansionSet(
-        $commandDictionaryId: Int!,
-        $missionModelId: Int!,
-        $expansionIds: [Int!]!,
-        $description: String,
+        $parcelId: Int!
+        $missionModelId: Int!
+        $expansionIds: [Int!]!
+        $description: String
         $name: String
       ) {
         createExpansionSet(
-          commandDictionaryId: $commandDictionaryId
+          parcelId: $parcelId
           missionModelId: $missionModelId
           expansionIds: $expansionIds
           description: $description
@@ -69,11 +75,11 @@ export async function insertExpansionSet(
       }
     `,
     {
-      commandDictionaryId,
+      parcelId,
       missionModelId,
       expansionIds,
       description,
-      name
+      name,
     },
   );
   return res.createExpansionSet.id;
@@ -142,13 +148,11 @@ export async function getExpandedSequence(
   seqId: string,
 ): Promise<{
   expandedSequence: Sequence;
-  edslString: string;
 }> {
   const result = await graphqlClient.request<{
     expanded_sequences: [
       {
         expanded_sequence: Sequence;
-        edsl_string: string;
       },
     ];
   }>(
@@ -156,7 +160,6 @@ export async function getExpandedSequence(
       query GetExpandedSequence($expansionRunId: Int!, $seqId: String!) {
         expanded_sequences(where: { expansion_run_id: { _eq: $expansionRunId }, seq_id: { _eq: $seqId } }) {
           expanded_sequence
-          edsl_string
         }
       }
     `,
@@ -168,7 +171,6 @@ export async function getExpandedSequence(
 
   return {
     expandedSequence: result.expanded_sequences[0].expanded_sequence,
-    edslString: result.expanded_sequences[0].edsl_string,
   };
 }
 
