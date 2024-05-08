@@ -3,14 +3,6 @@ table:
   schema: sequencing
 configuration:
   custom_name: "command_dictionary"
-array_relationships:
-- name: expansion_sets
-  using:
-    foreign_key_constraint_on:
-      column: command_dict_id
-      table:
-        name: expansion_set
-        schema: sequencing
 select_permissions:
   - role: aerie_admin
     permission:
