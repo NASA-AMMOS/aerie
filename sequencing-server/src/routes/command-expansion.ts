@@ -24,7 +24,7 @@ commandExpansionRouter.post('/put-expansion', async (req, res, next) => {
 
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogic = req.body.input.expansionLogic as string;
-  const authoringCommandDictionaryId = req.body.input.authoringCommandDictionaryId as number | null;
+  const authoringCommandDictionaryId = req.body.input.parcelId as number | null;
   const authoringMissionModelId = req.body.input.authoringMissionModelId as number | null;
 
   const { rows } = await db.query(
@@ -76,15 +76,37 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const context: Context = res.locals['context'];
   const username = getUsername(req.body.session_variables, req.headers.authorization);
 
-  const commandDictionaryId = req.body.input.commandDictionaryId as number;
+  const parcelId = req.body.input.parcelId as number;
   const missionModelId = req.body.input.missionModelId as number;
   const expansionIds = req.body.input.expansionIds as number[];
   const description = req.body.input.description as string | null;
   const name = req.body.input.name as string;
 
-  const [expansions, commandTypes] = await Promise.all([
+  const [expansions, parcel] = await Promise.all([
     context.expansionDataLoader.loadMany(expansionIds.map(id => ({ expansionId: id }))),
-    context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId }),
+    context.parcelTypescriptDataLoader.load({ parcelId }),
+  ]);
+
+  if (!parcel) {
+    throw new InheritedError(`No parcel found with id: ${parcelId}`, {
+      name: 'ParcelNotFoundError',
+      stack: null,
+      // @ts-ignore  Message is not spread when it comes from an Error object because it's a getter
+      message: `No parcel found with id: ${parcelId}`,
+    });
+  }
+
+  if (!parcel.command_dictionary) {
+    throw new InheritedError(`No command dictionary within id: ${parcelId}`, {
+      name: 'CommandDictionaryNotFoundError',
+      stack: null,
+      // @ts-ignore  Message is not spread when it comes from an Error object because it's a getter
+      message: `No command dictionary within id: ${parcelId}`,
+    });
+  }
+
+  const [commandTypes] = await Promise.all([
+    context.commandTypescriptDataLoader.load({ dictionaryId: parcel.command_dictionary.id }),
   ]);
 
   const typecheckErrorPromises = await Promise.allSettled(
@@ -97,9 +119,12 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
         .createHash('sha256')
         .update(
           JSON.stringify({
-            commandDictionaryId,
+            parcelID: parcel.id,
+            commandDictionaryId: parcel.command_dictionary.id,
+            parameterDictionaryId: parcel.parameter_dictionary.map(param => param.parameter_dictionary.id),
+            ...(parcel.channel_dictionary ? { channelDictionaryId: parcel.channel_dictionary.id } : {}),
             missionModelId,
-            id: expansion.id,
+            expansionId: expansion.id,
             expansionLogic: expansion.expansionLogic,
             activityType: expansion.activityType,
           }),
@@ -170,7 +195,7 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
   const { rows } = await db.query(
     `
         with expansion_set_id as (
-          insert into sequencing.expansion_set (command_dict_id, mission_model_id, description, owner, name)
+          insert into sequencing.expansion_set (parcel_id, mission_model_id, description, owner, name)
             values ($1, $2, $3, $4, $5)
             returning id),
              rules as (select id, activity_type from sequencing.expansion_rule where id = any ($6::int[]) order by id)
@@ -181,7 +206,7 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
              (select id, activity_type from rules) b
         returning (select id from expansion_set_id);
       `,
-    [commandDictionaryId, missionModelId, description ?? '', username, name ?? '', expansionIds],
+    [parcelId, missionModelId, description ?? '', username, name ?? '', expansionIds],
   );
 
   if (rows.length < 1) {
@@ -203,9 +228,9 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
     context.expansionSetDataLoader.load({ expansionSetId }),
     context.simulatedActivitiesDataLoader.load({ simulationDatasetId }),
   ]);
-  const commandDictionaryId = expansionSet.commandDictionary.id;
+
   const missionModelId = expansionSet.missionModel.id;
-  const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
+  const commandTypes = expansionSet.parcel.command_dictionary.commandTypesTypeScript;
 
   const settledExpansionResults = await Promise.allSettled(
     simulatedActivities.map(async simulatedActivity => {
@@ -239,9 +264,14 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
         .createHash('sha256')
         .update(
           JSON.stringify({
-            commandDictionaryId,
+            parcelID: expansionSet.parcel.id,
+            commandDictionaryId: expansionSet.parcel.command_dictionary.id,
+            parameterDictionaryId: expansionSet.parcel.parameter_dictionary.map(param => param.parameter_dictionary.id),
+            ...(expansionSet.parcel.channel_dictionary
+              ? { channelDictionaryId: expansionSet.parcel.channel_dictionary.id }
+              : {}),
             missionModelId,
-            id: expansion.id,
+            expansionId: expansion.id,
             expansionLogic: expansion.expansionLogic,
             activityType: expansion.activityType,
           }),
@@ -280,6 +310,8 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
         await (piscina.run(
           {
             serializedActivityInstance: serializeWithTemporal(simulatedActivity),
+            channelData: expansionSet.parcel.channel_dictionary?.parsedJson,
+            parameterData: expansionSet.parcel.parameter_dictionary.map(param => param.parameter_dictionary.parsedJson),
             buildArtifacts,
           },
           { name: 'executeExpansionFromBuildArtifacts' },
@@ -462,11 +494,11 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
 
       const { rows } = await db.query(
         `
-          insert into sequencing.expanded_sequences (expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence, edsl_string)
-            values ($1, $2, $3, $4, $5)
+          insert into sequencing.expanded_sequences (expansion_run_id, seq_id, simulation_dataset_id, expanded_sequence)
+            values ($1, $2, $3, $4)
             returning id
       `,
-        [expansionRunId, seqId, simulationDatasetId, sequence.toSeqJson(), sequence.toEDSLString()],
+        [expansionRunId, seqId, simulationDatasetId, sequence.toSeqJson()],
       );
 
       if (rows.length < 1) {
