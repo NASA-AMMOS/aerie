@@ -5,12 +5,13 @@ import express from 'express';
 import pgFormat from 'pg-format';
 import { defaultSeqBuilder } from './../defaultSeqBuilder.js';
 import Ajv from 'ajv/dist/2020.js';
+// @ts-ignore
 import schema from '@nasa-jpl/seq-json-schema/schema.json' assert { type: 'json' };
 import { ActivateStep, LoadStep, Sequence } from './../lib/codegen/CommandEDSLPreface.js';
 import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
 import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
-import type { Command , Activate, Load} from '@nasa-jpl/seq-json-schema/types';
-import { FallibleStatus } from './../types.js';
+import type { Command, Activate, Load } from '@nasa-jpl/seq-json-schema/types';
+import { FallibleStatus } from '../types/types.js';
 import { assertDefined, assertOne } from './../utils/assertions.js';
 import { isResolved } from './../utils/typeguards.js';
 import type { executeEDSL } from './../worker.js';
@@ -212,18 +213,19 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     }
     return {
       ...ai,
-      commands: row.commands?.map(c => {
-        switch (c.type) {
-          case 'command':
-            return CommandStem.fromSeqJson(c);
-          case 'load':
-            return LoadStep.fromSeqJson(c);
-          case 'activate':
-            return ActivateStep.fromSeqJson(c)
-          default:
-            throw new Error(`Unknown command type: ${c}`);
-        }
-      }) ?? null,
+      commands:
+        row.commands?.map(c => {
+          switch (c.type) {
+            case 'command':
+              return CommandStem.fromSeqJson(c);
+            case 'load':
+              return LoadStep.fromSeqJson(c);
+            case 'activate':
+              return ActivateStep.fromSeqJson(c);
+            default:
+              throw new Error(`Unknown command type: ${c}`);
+          }
+        }) ?? null,
       errors: row.errors,
     };
   });
@@ -375,18 +377,19 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
         }
         return {
           ...ai,
-          commands: row.commands?.map(c => {
-            switch (c.type) {
-              case 'command':
-                return CommandStem.fromSeqJson(c);
-              case 'load':
-                return LoadStep.fromSeqJson(c);
-              case 'activate':
-                return ActivateStep.fromSeqJson(c)
-              default:
-                throw new Error(`Unknown command type: ${c}`);
-            }
-          }) ?? null,
+          commands:
+            row.commands?.map(c => {
+              switch (c.type) {
+                case 'command':
+                  return CommandStem.fromSeqJson(c);
+                case 'load':
+                  return LoadStep.fromSeqJson(c);
+                case 'activate':
+                  return ActivateStep.fromSeqJson(c);
+                default:
+                  throw new Error(`Unknown command type: ${c}`);
+              }
+            }) ?? null,
           errors: row.errors,
         };
       });
