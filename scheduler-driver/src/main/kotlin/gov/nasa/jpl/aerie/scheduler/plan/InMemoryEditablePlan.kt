@@ -1,30 +1,33 @@
 package gov.nasa.jpl.aerie.scheduler.plan
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.Edit
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective
 import gov.nasa.jpl.aerie.procedural.scheduling.simulation.SimulateOptions
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade
 import gov.nasa.jpl.aerie.timeline.collections.Directives
+import gov.nasa.jpl.aerie.timeline.payloads.activities.AnyDirective
+import gov.nasa.jpl.aerie.timeline.payloads.activities.Directive
 import gov.nasa.jpl.aerie.timeline.payloads.activities.DirectiveStart
 import gov.nasa.jpl.aerie.timeline.plan.Plan
 import java.time.Instant
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults as MerlinSimResults
+import kotlin.jvm.optionals.getOrNull
+import kotlin.math.absoluteValue
 import gov.nasa.jpl.aerie.timeline.plan.SimulationResults as TimelineSimResults
 
 data class InMemoryEditablePlan(
     private val missionModel: MissionModel<*>,
     private var nextUniqueDirectiveId: Long,
-    private var latestMerlinResults: MerlinSimResults?,
-    private val plan: Plan
+    private val plan: Plan,
+    private val simulationFacade: SimulationFacade,
+    private val lookupActivityType: (String) -> ActivityType
 ) : EditablePlan, Plan {
-
-  private var latestTimelineResults: TimelineSimResults? = null
 
   private val commits = mutableListOf<Commit>()
   var uncommittedChanges = mutableListOf<Edit>()
@@ -33,23 +36,23 @@ data class InMemoryEditablePlan(
   val totalDiff: List<Edit>
     get() = commits.flatMap { it.diff }
 
-  init {
-    adaptSimulationResults()
-  }
-
-  override fun latestResults() = latestTimelineResults
+  override fun latestResults() = simulationFacade.latestDriverSimulationResults.getOrNull()?.let { MerlinToProcedureSimulationResultsAdapter(it, false, plan, simulationFacade.activityIdCorrespondence) }
 
   override fun create(directive: NewDirective): Long {
-    class ParentSearchException(size: Int): Exception("Expected one activity with matching parent id, found $size")
+    class ParentSearchException(id: Long, size: Int): Exception("Expected one parent activity with id $id, found $size")
     val id = nextUniqueDirectiveId++
-    val parent = if (directive.start is DirectiveStart.Anchor) {
-      val parentList = directives()
-          .filter { it.id == (directive.start as DirectiveStart.Anchor).parentId }
-          .collect(totalBounds())
-      if (parentList.size != 1) throw ParentSearchException(parentList.size)
-      parentList.first()
-    } else null
-    uncommittedChanges.add(Edit.Create(directive.resolve(id, parent)))
+    val parent = when (val s = directive.start) {
+      is DirectiveStart.Anchor -> {
+        val parentList = directives()
+            .filter { it.id.absoluteValue == s.parentId.absoluteValue }
+            .collect(totalBounds())
+        if (parentList.size != 1) throw ParentSearchException(s.parentId, parentList.size)
+        parentList.first()
+      }
+      is DirectiveStart.Absolute -> null
+    }
+    val resolved = directive.resolve(id, parent)
+    uncommittedChanges.add(Edit.Create(resolved))
     return id
   }
 
@@ -64,37 +67,14 @@ data class InMemoryEditablePlan(
   }
 
   override fun simulate(options: SimulateOptions): TimelineSimResults {
-    // TODO: make configurable
-    val simBounds = totalBounds()
-
-    val allDirectives = directives().collect(simBounds)
-
-    val schedule = mutableMapOf<ActivityDirectiveId, ActivityDirective>()
-    for (directive in allDirectives) {
-      val id = ActivityDirectiveId(directive.id)
-      schedule[id] = ActivityDirective(
-          directive.startTime,
-          directive.type,
-          directive.inner.arguments,
-          if (directive.start is DirectiveStart.Anchor) {
-            ActivityDirectiveId((directive.start as DirectiveStart.Anchor).parentId)
-          } else null,
-          if (directive.start is DirectiveStart.Anchor) {
-            (directive.start as DirectiveStart.Anchor).anchorPoint == DirectiveStart.Anchor.AnchorPoint.Start
-          } else true
-      )
+    val plan = totalDiff.map {
+      when (it) {
+        is Edit.Create -> it.directive.toSchedulingActivityDirective(lookupActivityType)
+      }
     }
-
-    latestMerlinResults = SimulationDriver.simulate(
-        missionModel,
-        schedule,
-        toAbsolute(simBounds.start),
-        simBounds.duration(),
-        toAbsolute(totalBounds().start),
-        totalBounds().duration()
-    ) { false }
-    adaptSimulationResults()
-    return latestTimelineResults!!
+    simulationFacade.removeAndInsertActivitiesFromSimulation(plan, plan)
+    simulationFacade.computeSimulationResultsUntil(options.pause.resolve(this))
+    return latestResults()!!
   }
 
   // These cannot be implemented with the by keyword,
@@ -119,7 +99,22 @@ data class InMemoryEditablePlan(
     }
   }
 
-  private fun adaptSimulationResults() {
-    latestTimelineResults = latestMerlinResults?.let { MerlinToProcedureSimulationResultsAdapter(it, false, plan) }
+  companion object {
+    @JvmStatic fun Directive<AnyDirective>.toSchedulingActivityDirective(lookupActivityType: (String) -> ActivityType) = SchedulingActivityDirective(
+        SchedulingActivityDirectiveId(id),
+        lookupActivityType(type),
+        when (val s = start) {
+          is DirectiveStart.Absolute -> s.time
+          is DirectiveStart.Anchor -> s.offset
+        },
+        Duration.ZERO,
+        inner.arguments,
+        null,
+        when (val s = start) {
+          is DirectiveStart.Absolute -> null
+          is DirectiveStart.Anchor -> SchedulingActivityDirectiveId(s.parentId)
+        },
+        start is DirectiveStart.Anchor && (start as DirectiveStart.Anchor).anchorPoint == DirectiveStart.Anchor.AnchorPoint.Start
+    )
   }
 }

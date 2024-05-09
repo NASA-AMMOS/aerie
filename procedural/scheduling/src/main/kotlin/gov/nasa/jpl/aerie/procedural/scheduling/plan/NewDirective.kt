@@ -27,17 +27,22 @@ data class NewDirective(
    * @param id The id for the new directive.
    * @param parent The activity this activity is anchored to, if applicable.
    */
-  fun resolve(id: Long, parent: Directive<*>?): Directive<AnyDirective> {
-    if (start is DirectiveStart.Anchor) {
-      if (parent == null) throw IllegalArgumentException("Parent must provided when anchor is not null")
-      start.estimatedStart = parent.startTime + start.offset
-    }
-    return Directive(
-        inner,
-        name,
-        id,
-        type,
-        start
-    )
-  }
+  fun resolve(id: Long, parent: Directive<*>?) = Directive(
+      inner,
+      name,
+      id,
+      type,
+      when (start) {
+        is DirectiveStart.Absolute -> start
+        is DirectiveStart.Anchor -> {
+          if (parent == null) throw IllegalArgumentException("Parent must provided when anchor is not null")
+          DirectiveStart.Anchor(
+              parent.id,
+              start.offset,
+              start.anchorPoint,
+              parent.startTime + start.offset
+          )
+        }
+      }
+  )
 }
