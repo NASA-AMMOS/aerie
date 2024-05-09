@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId
 import gov.nasa.jpl.aerie.timeline.Interval
 import gov.nasa.jpl.aerie.timeline.collections.Instances
 import gov.nasa.jpl.aerie.timeline.util.duration.rangeTo
@@ -14,13 +15,16 @@ import gov.nasa.jpl.aerie.timeline.plan.Plan
 import gov.nasa.jpl.aerie.timeline.plan.SimulationResults
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults as MerlinSimResults
 
 class MerlinToProcedureSimulationResultsAdapter(
-    private val results: MerlinSimResults,
+    private val results: gov.nasa.jpl.aerie.merlin.driver.SimulationResults,
     private val stale: Boolean,
-    private val plan: Plan
+    private val plan: Plan,
+    activityIdCorrespondence: Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
 ): SimulationResults {
+
+  private val idMap: Map<Long, Long> = activityIdCorrespondence.entries.associateBy({ it.value.id }) { it.key.id }
+
   override fun isStale() = stale
 
   override fun simBounds(): Interval {
@@ -104,11 +108,12 @@ class MerlinToProcedureSimulationResultsAdapter(
           "arguments" to SerializedValue.of(a.arguments),
           "computedAttributes" to computedAttributes
       ))
+      val mappedId = if (idMap.containsKey(a.directiveId)) idMap[a.directiveId] else a.directiveId
       instances.add(Instance(
           deserializer(serializedActivity),
           a.type,
           a.spanId,
-          a.directiveId,
+          mappedId,
           Interval(startTime, endTime)
       ))
     }

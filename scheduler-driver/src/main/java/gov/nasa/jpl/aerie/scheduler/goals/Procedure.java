@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan;
 import gov.nasa.jpl.aerie.scheduler.plan.SchedulerToProcedurePlanAdapter;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulingActivityDirective;
 
 public class Procedure extends Goal {
   //  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
@@ -36,7 +39,7 @@ public class Procedure extends Goal {
     this.args = args;
   }
 
-  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType) {
+  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType, SimulationFacade simulationFacade) {
     final ProcedureMapper<?> procedureMapper;
     try {
       procedureMapper = ProcedureLoader.loadProcedure(Path.of(jarPath));
@@ -56,8 +59,9 @@ public class Procedure extends Goal {
     final var editablePlan = new InMemoryEditablePlan(
         missionModel,
         nextUniqueDirectiveId,
-        null,
-        inMemoryPlan
+        inMemoryPlan,
+        simulationFacade,
+        lookupActivityType::apply
     );
 
     /*
@@ -79,33 +83,7 @@ public class Procedure extends Goal {
     }
     for (final var edit : editablePlan.getTotalDiff()) {
       if (edit instanceof Edit.Create c) {
-        final var newDirective = c.getDirective();
-        final var start = newDirective.getStart();
-        if (start instanceof DirectiveStart.Absolute) {
-          newActivities.add(new SchedulingActivityDirective(
-              new SchedulingActivityDirectiveId(newDirective.id),
-              lookupActivityType.apply(newDirective.getType()),
-              newDirective.getStartTime(),
-              Duration.ZERO,
-              newDirective.inner.arguments,
-              null,
-              null,
-              true
-          ));
-        } else if (start instanceof DirectiveStart.Anchor a) {
-          newActivities.add(new SchedulingActivityDirective(
-              new SchedulingActivityDirectiveId(newDirective.id),
-              lookupActivityType.apply(newDirective.getType()),
-              a.getOffset(),
-              Duration.ZERO,
-              newDirective.inner.arguments,
-              null,
-              new SchedulingActivityDirectiveId(a.getParentId()),
-              a.getAnchorPoint() == DirectiveStart.Anchor.AnchorPoint.Start
-          ));
-        } else {
-          throw new Error("unreachable directive start variant");
-        }
+        newActivities.add(toSchedulingActivityDirective(c.getDirective(), lookupActivityType::apply));
       } else {
         throw new IllegalStateException("Unexpected value: " + edit);
       }
