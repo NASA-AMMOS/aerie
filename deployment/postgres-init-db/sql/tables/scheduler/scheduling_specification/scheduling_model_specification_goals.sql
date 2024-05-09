@@ -123,11 +123,16 @@ execute function scheduler.update_scheduling_model_specification_goal_func();
 create function scheduler.delete_scheduling_model_specification_goal_func()
   returns trigger
   language plpgsql as $$
+  declare
+    r scheduler.scheduling_model_specification_goals;
 begin
-  update scheduler.scheduling_model_specification_goals
-  set priority = priority - 1
-  where model_id = old.model_id
-    and priority > old.priority;
+  -- Perform updates in reverse-priority order to ensure that there are no gaps
+  for r in select * from removed_rows order by priority desc loop
+    update scheduler.scheduling_model_specification_goals
+    set priority = priority - 1
+    where model_id = r.model_id
+      and priority > r.priority;
+  end loop;
   return null;
 end;
 $$;
@@ -137,5 +142,6 @@ comment on function scheduler.delete_scheduling_model_specification_goal_func() 
 
 create trigger delete_scheduling_model_specification_goal
   after delete on scheduler.scheduling_model_specification_goals
-  for each row
+  referencing old table as removed_rows
+  for each statement
 execute function scheduler.delete_scheduling_model_specification_goal_func();
