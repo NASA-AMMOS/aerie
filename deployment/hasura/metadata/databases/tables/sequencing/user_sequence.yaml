@@ -4,9 +4,9 @@ table:
 configuration:
   custom_name: "user_sequence"
 object_relationships:
-- name: command_dictionary
+- name: parcel
   using:
-    foreign_key_constraint_on: authoring_command_dict_id
+    foreign_key_constraint_on: parcel_id
 select_permissions:
   - role: aerie_admin
     permission:

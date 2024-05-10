@@ -1,4 +1,4 @@
-create table sequence_adaptation (
+create table sequencing.sequence_adaptation (
   id integer generated always as identity,
 
   adaptation text not null,
@@ -11,20 +11,12 @@ create table sequence_adaptation (
     primary key (id)
 );
 
-comment on table sequence_adaptation is e''
+comment on table sequencing.sequence_adaptation is e''
   'A custom adaptation used to overwrite variable and linting rules for the sequence editor';
-comment on column sequence_adaptation.adaptation is e''
+comment on column sequencing.sequence_adaptation.adaptation is e''
   'The adaptation code.';
 
-create function sequence_adaptation_set_updated_at()
-returns trigger
-security definer
-language plpgsql as $$begin
-  new.updated_at = now();
-  return new;
-end$$;
-
 create trigger set_timestamp
-before update on sequence_adaptation
+before update on sequencing.sequence_adaptation
 for each row
-execute function sequence_adaptation_set_updated_at();
+execute function util_functions.set_updated_at();

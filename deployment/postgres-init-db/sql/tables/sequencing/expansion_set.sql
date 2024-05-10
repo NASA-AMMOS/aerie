@@ -19,7 +19,7 @@ create table sequencing.expansion_set (
     primary key (id),
 
   foreign key (parcel_id)
-    references parcel (id)
+    references sequencing.parcel (id)
     on delete cascade,
   foreign key (mission_model_id)
     references merlin.mission_model

@@ -26,7 +26,7 @@ create table sequencing.expansion_rule (
     unique (id, activity_type),
 
   foreign key (parcel_id)
-    references parcel (id)
+    references sequencing.parcel (id)
     on delete set null,
   foreign key (authoring_mission_model_id)
     references merlin.mission_model

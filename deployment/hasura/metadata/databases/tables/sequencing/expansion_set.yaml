@@ -4,9 +4,9 @@ table:
 configuration:
   custom_name: "expansion_set"
 object_relationships:
-- name: command_dictionary
+- name: parcel
   using:
-    foreign_key_constraint_on: command_dict_id
+    foreign_key_constraint_on: parcel_id
 - name: mission_model
   using:
     foreign_key_constraint_on: mission_model_id
@@ -46,7 +46,7 @@ select_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, description, command_dict_id, mission_model_id, owner]
+      columns: [name, description, parcel_id, mission_model_id, owner]
       filter: {}
       set:
         updated_by: "x-hasura-user-id"
