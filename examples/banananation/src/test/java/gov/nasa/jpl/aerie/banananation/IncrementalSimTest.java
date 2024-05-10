@@ -1,23 +1,19 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
-import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
-import gov.nasa.jpl.aerie.banananation.generated.ActivityActions;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ResourceId;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Array;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -610,21 +606,54 @@ public final class IncrementalSimTest {
   }
 
   public void convertDiscreteToCanonicalTimeline(SimulationResultsInterface simulationResults, Map<String, ArrayList<ProfileSegment<SerializedValue>>> discreteProfiles) {
+
+  public Map<String, ArrayList<ProfileSegment<SerializedValue>>> convertDiscreteToCanonicalTimeline(SimulationResultsInterface simulationResults) {
+    Map<String, ArrayList<ProfileSegment<SerializedValue>>> discreteProfiles = new HashMap<>();
     for (Map.Entry<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> entry: simulationResults.getDiscreteProfiles().entrySet()) {
-      var resourceList = new ArrayList<ProfileSegment<SerializedValue>>();
       var resourceName = entry.getKey();
       discreteProfiles.put(resourceName, new ArrayList<>());
+      ArrayList<ProfileSegment<SerializedValue>> discreteValues = discreteProfiles.get(resourceName);
       for (ProfileSegment<SerializedValue> segment: entry.getValue().getValue()) {
-        if (discreteProfiles.get(resourceName).isEmpty()) {
-          discreteProfiles.get(resourceName).add(segment);
+        if (discreteValues.isEmpty()) {
+          discreteValues.add(segment);
         } else {
-          if (segment.dynamics().equals(discreteProfiles.get(resourceName).getLast().dynamics())) {
-            discreteProfiles.get(resourceName).set(discreteProfiles.get(resourceName).size() - 1, new ProfileSegment<SerializedValue>(Duration.add(segment.extent(), discreteProfiles.get(resourceName).getLast().extent()), segment.dynamics()));
+          SerializedValue lastValue = discreteValues.getLast().dynamics();
+          SerializedValue newValue = segment.dynamics();
+          if (newValue.equals(lastValue)) {
+            Duration lastDuration = discreteValues.getLast().extent();
+            Duration newDuration = segment.extent();
+            discreteValues.set(discreteValues.size() - 1, new ProfileSegment<SerializedValue>(Duration.add(newDuration, lastDuration), lastValue));
           } else {
-            discreteProfiles.get((resourceName)).add(segment);
+            discreteValues.add(segment);
           }
         }
       }
     }
+    return discreteProfiles;
+  }
+
+  public Map<String, ArrayList<ProfileSegment<RealDynamics>>> convertRealToCanonicalTimeline(SimulationResultsInterface simulationResults) {
+    Map<String, ArrayList<ProfileSegment<RealDynamics>>> realProfiles = new HashMap<>();
+    for (Map.Entry<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> entry: simulationResults.getRealProfiles().entrySet()) {
+      var resourceName = entry.getKey();
+      realProfiles.put(resourceName, new ArrayList<>());
+      ArrayList<ProfileSegment<RealDynamics>> realValues = realProfiles.get(resourceName);
+      for (ProfileSegment<RealDynamics> segment: entry.getValue().getValue()) {
+        if (realValues.isEmpty()) {
+          realValues.add(segment);
+        } else {
+          RealDynamics lastDynamics = realValues.getLast().dynamics();
+          RealDynamics newDynamics = segment.dynamics();
+          if (lastDynamics.equals(newDynamics)) {
+            Duration lastExtent = realValues.getLast().extent();
+            Duration newExtent = segment.extent();
+            realValues.set(realValues.size() - 1, new ProfileSegment<RealDynamics>(Duration.add(lastExtent, newExtent), lastDynamics));
+          } else {
+            realValues.add(segment);
+          }
+        }
+      }
+    }
+    return realProfiles;
   }
 }
