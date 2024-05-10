@@ -2,7 +2,10 @@ create table scheduler.scheduling_goal_definition(
   goal_id integer not null,
   revision integer not null default 0,
 
-  definition text not null,
+  type scheduler.goal_type not null default 'EDSL',
+  definition text,
+  uploaded_jar_id integer,
+  parameter_schema jsonb,
   author text,
   created_at timestamptz not null default now(),
 
@@ -13,6 +16,11 @@ create table scheduler.scheduling_goal_definition(
     references scheduler.scheduling_goal_metadata
     on update cascade
     on delete cascade,
+  constraint scheduling_procedure_has_uploaded_jar
+    foreign key (uploaded_jar_id)
+      references merlin.uploaded_file
+      on update cascade
+      on delete set null, -- up for debate
   constraint goal_definition_author_exists
     foreign key (author)
     references permissions.users
@@ -24,8 +32,14 @@ comment on table scheduler.scheduling_goal_definition is e''
   'The specific revisions of a scheduling goal''s definition';
 comment on column scheduler.scheduling_goal_definition.revision is e''
   'An identifier of this definition.';
+comment on column scheduler.scheduling_goal_definition.type is e''
+  'The type of this goal definition, "EDSL" or "JAR".';
 comment on column scheduler.scheduling_goal_definition.definition is e''
   'An executable expression in the Merlin scheduling language.';
+comment on column scheduler.scheduling_goal_definition.parameter_schema is e''
+  'TODO';
+comment on column scheduler.scheduling_goal_definition.uploaded_jar_id is e''
+  'The foreign key to the uploaded_file entry containing the procedure jar';
 comment on column scheduler.scheduling_goal_definition.author is e''
   'The user who authored this revision.';
 comment on column scheduler.scheduling_goal_definition.created_at is e''
