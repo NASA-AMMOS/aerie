@@ -1754,7 +1754,7 @@ public class SchedulingIntegrationTests {
         List.of(
             new Segment<>(Interval.between(HOURS.times(2), HOURS.times(4)), SerializedValue.of(true))
         )
-    ).assignGaps(new DiscreteProfile(List.of(new Segment(Interval.FOREVER, SerializedValue.of(false)))));
+    ).assignGaps(new DiscreteProfile(List.of(new Segment<>(Interval.FOREVER, SerializedValue.of(false)))));
 
     final var results = runScheduler(
         BANANANATION,

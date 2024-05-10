@@ -111,8 +111,8 @@ public class SchedulingDSL {
               untuple(TimingConstraint.ActivityTimingConstraintFlexibleRange::new),
               (TimingConstraint.ActivityTimingConstraintFlexibleRange $) -> tuple($.lowerBound(), $.upperBound(), $.singleton()));
 
-  private static final JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP(
-  MerlinService.MissionModelTypes activityTypes)
+  private static JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP(
+          MerlinService.MissionModelTypes activityTypes)
   {
     return
         productP
@@ -129,6 +129,7 @@ public class SchedulingDSL {
   /**
    * This convert is in a helper function in order to define the generic variables T1 and T2
    */
+  @SuppressWarnings("unchecked")
   private static <T1 extends TimingConstraint, T2 extends TimingConstraint>
   Convert<
       Pair<Pair<Pair<Pair<Pair<Pair<ActivityTemplate, Optional<ConstraintExpression.ActivityExpression>>, String>, ConstraintExpression>, Optional<T1>>, Optional<T2>>, Boolean>,
@@ -145,8 +146,8 @@ public class SchedulingDSL {
     ));
   }
 
-  private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
-      MerlinService.MissionModelTypes activityTypes) {
+  private static JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
+          MerlinService.MissionModelTypes activityTypes) {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
@@ -243,7 +244,7 @@ public class SchedulingDSL {
             globalSchedulingConditionP)
   )));
 
-  public static final JsonParser<GoalSpecifier> schedulingJsonP(MerlinService.MissionModelTypes missionModelTypes){
+  public static JsonParser<GoalSpecifier> schedulingJsonP(MerlinService.MissionModelTypes missionModelTypes){
     return goalSpecifierF(missionModelTypes);
   }
 

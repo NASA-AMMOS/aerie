@@ -321,15 +321,16 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeConstraintResults(final Map<Constraint, Failable<?>> resultMap) {
+  @SuppressWarnings("unchecked")
+  public static JsonValue serializeConstraintResults(final Map<Constraint, Fallible<?>> resultMap) {
     var results = resultMap.entrySet().stream().map(entry -> {
 
       final var constraint = entry.getKey();
-      final var failable = entry.getValue();
+      final var fallible = entry.getValue();
 
-      // There should always be a failable but this is here
+      // There should always be a fallible but this is here
       // just in case
-      if (failable.getOptional().isEmpty()) {
+      if (fallible.getOptional().isEmpty()) {
         return Json.createObjectBuilder()
                    .add("success", JsonValue.FALSE)
                    .add("constraintId", constraint.id())
@@ -345,13 +346,13 @@ public final class ResponseSerializers {
       }
 
       // failure was a compilation error
-      if (failable.isFailure()
-          && failable.getOptional().get() instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) {
-        return serializeConstraintCompileErrors(constraint, (Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error>) failable);
+      if (fallible.isFailure()
+          && fallible.getOptional().get() instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) {
+        return serializeConstraintCompileErrors(constraint, (Fallible<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error>) fallible);
       }
 
       // failure that are errors exceptions that were captured
-      if (failable.isFailure()) {
+      if (fallible.isFailure()) {
         return Json.createObjectBuilder()
                    .add("success", JsonValue.FALSE)
                    .add("constraintId", constraint.id())
@@ -359,7 +360,7 @@ public final class ResponseSerializers {
                    .add("constraintRevision", constraint.revision())
                    .add("errors", Json.createArrayBuilder().add(
                        Json.createObjectBuilder()
-                           .add("message", failable.getMessage())
+                           .add("message", fallible.getMessage())
                            .add("stack", "")
                            .add("location", JsonValue.EMPTY_JSON_OBJECT).build()).build())
                    .add("results", JsonValue.EMPTY_JSON_OBJECT)
@@ -367,7 +368,7 @@ public final class ResponseSerializers {
       }
 
       // successful runs
-      var constraintResult = (ConstraintResult) failable.getOptional().get();
+      var constraintResult = (ConstraintResult) fallible.getOptional().get();
       return Json.createObjectBuilder()
                  .add("success", JsonValue.TRUE)
                  .add("constraintId", constraint.id())
@@ -377,7 +378,7 @@ public final class ResponseSerializers {
                  .add("results", serializeConstraintResult(constraintResult))
                  .build();
 
-    }).collect(Collectors.toList());
+    }).toList();
 
     final var resultsArrayBuilder = Json.createArrayBuilder();
     results.forEach(resultsArrayBuilder::add);
@@ -386,34 +387,30 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
-    if (response instanceof GetSimulationResultsAction.Response.Pending r) {
-      return Json
-          .createObjectBuilder()
-          .add("status", "pending")
-          .add("simulationDatasetId", r.simulationDatasetId())
-          .build();
-    } else if (response instanceof GetSimulationResultsAction.Response.Incomplete r) {
-      return Json
-          .createObjectBuilder()
-          .add("status", "incomplete")
-          .add("simulationDatasetId", r.simulationDatasetId())
-          .build();
-    } else if (response instanceof GetSimulationResultsAction.Response.Failed r) {
-      return Json
-          .createObjectBuilder()
-          .add("status", "failed")
-          .add("simulationDatasetId", r.simulationDatasetId())
-          .add("reason", MerlinParsers.simulationFailureP.unparse(r.reason()))
-          .build();
-    } else if (response instanceof GetSimulationResultsAction.Response.Complete r) {
-      return Json
-          .createObjectBuilder()
-          .add("status", "complete")
-          .add("simulationDatasetId", r.simulationDatasetId())
-          .build();
-     } else {
-      throw new UnexpectedSubtypeError(GetSimulationResultsAction.Response.class, response);
-    }
+      return switch (response) {
+          case GetSimulationResultsAction.Response.Pending r -> Json
+                  .createObjectBuilder()
+                  .add("status", "pending")
+                  .add("simulationDatasetId", r.simulationDatasetId())
+                  .build();
+          case GetSimulationResultsAction.Response.Incomplete r -> Json
+                  .createObjectBuilder()
+                  .add("status", "incomplete")
+                  .add("simulationDatasetId", r.simulationDatasetId())
+                  .build();
+          case GetSimulationResultsAction.Response.Failed r -> Json
+                  .createObjectBuilder()
+                  .add("status", "failed")
+                  .add("simulationDatasetId", r.simulationDatasetId())
+                  .add("reason", MerlinParsers.simulationFailureP.unparse(r.reason()))
+                  .build();
+          case GetSimulationResultsAction.Response.Complete r -> Json
+                  .createObjectBuilder()
+                  .add("status", "complete")
+                  .add("simulationDatasetId", r.simulationDatasetId())
+                  .build();
+          case null -> throw new IllegalArgumentException("simulation results action response was null");
+      };
   }
 
   public static JsonValue serializeTimestamp(final TemporalAccessor instant) {
@@ -430,7 +427,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeFailures(final List<String> failures) {
-    if (failures.size() > 0) {
+    if (!failures.isEmpty()) {
       return Json.createObjectBuilder()
                  .add("success", JsonValue.FALSE)
                  .add("errors", Json.createArrayBuilder(failures))
@@ -443,7 +440,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeValidationNotices(final List<ValidationNotice> notices) {
-    if (notices.size() > 0) {
+    if (!notices.isEmpty()) {
       return Json.createObjectBuilder()
           .add("success", JsonValue.FALSE)
           .add("errors", serializeIterable(ResponseSerializers::serializeValidationNotice, notices))
@@ -499,7 +496,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeConstraintCompileErrors(final Constraint constraint, final Failable<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error> ex) {
+  public static JsonValue serializeConstraintCompileErrors(final Constraint constraint, final Fallible<ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error> ex) {
 
     final var userCodeError = ex
         .getOptional()
@@ -513,7 +510,7 @@ public final class ResponseSerializers {
                                                        .add("line", UserCodeError.location().line())
                                                        .add("column", UserCodeError.location().column()).build())
                                   .build())
-        .collect(Collectors.toList());
+        .toList();
 
     final var userCodeErrorArrayBuilder = Json.createArrayBuilder();
     userCodeError.forEach(userCodeErrorArrayBuilder::add);

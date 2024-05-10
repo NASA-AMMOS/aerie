@@ -142,9 +142,6 @@ public final class MissionModelProcessor implements Processor {
         }
 
         for (final var generatedFile : generatedFiles) {
-          this.messager.printMessage(
-              Diagnostic.Kind.NOTE,
-              "Generating " + generatedFile.packageName + "." + generatedFile.typeSpec.name);
           generatedFile.writeTo(this.filer);
         }
       } catch (final InvalidMissionModelException ex) {

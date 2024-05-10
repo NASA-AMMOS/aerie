@@ -40,7 +40,7 @@ task assembleSchedulingDSLCompiler(type: NpmTask) {
   dependsOn copyConstraintsTypescript
   dependsOn processResources
   dependsOn npmInstall
-  args = ['run', 'build']
+  args = ['--silent', 'run', 'build']
   inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
   inputs.dir('src')
 }
@@ -50,7 +50,7 @@ task generateDocumentation(type: NpmTask) {
   dependsOn processResources
   dependsOn copyConstraintsTypescript
   dependsOn assembleSchedulingDSLCompiler
-  args = ['run', 'generate-doc']
+  args = ['--silent', 'run', 'generate-doc']
   inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
   inputs.dir('src')
 }
@@ -123,6 +123,8 @@ dependencies {
   testImplementation testFixtures(project(':scheduler-server'))
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 publishing {

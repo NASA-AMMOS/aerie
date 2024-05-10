@@ -9,7 +9,7 @@ node {
 
 task assemble(type: NpmTask) {
   dependsOn npmInstall
-  args = ['run', 'build']
+  args = ['--silent', 'run', 'build']
 }
 
 task build {
@@ -28,5 +28,5 @@ task clean(type: Delete) {
 
 task e2eTest(type: NpmTask) {
   dependsOn npmInstall
-  args = ['run', 'test']
+  args = ['--silent', 'run', 'test']
 }
