@@ -7,7 +7,11 @@
  */
 begin;
   -- Tables
+  \ir tables/sequencing/channel_dictionary.sql
   \ir tables/sequencing/command_dictionary.sql
+  \ir tables/sequencing/parameter_dictionary.sql
+  \ir tables/sequencing/sequence_adaptation.sql
+  \ir tables/sequencing/parcel.sql
   \ir tables/sequencing/expansion_set.sql
   \ir tables/sequencing/expansion_rule.sql
   \ir tables/sequencing/expansion_set_to_rule.sql
@@ -15,10 +19,12 @@ begin;
   \ir tables/sequencing/activity_instance_commands.sql
   \ir tables/sequencing/sequence.sql
   \ir tables/sequencing/sequence_to_simulated_activity.sql
+  \ir tables/sequencing/parcel_to_parameter_dictionary.sql
   \ir tables/sequencing/user_sequence.sql
   \ir tables/sequencing/expanded_sequences.sql
 
   -- Views
   \ir views/sequencing/expansion_set_rule_view.sql
   \ir views/sequencing/rule_expansion_set_view.sql
+
 end;

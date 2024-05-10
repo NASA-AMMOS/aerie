@@ -1,6 +1,8 @@
 table:
   name: parcel
-  schema: public
+  schema: sequencing
+configuration:
+  custom_name: "parcel"
 object_relationships:
   - name: channel_dictionary
     using:
@@ -18,15 +20,14 @@ array_relationships:
         column: parcel_id
         table:
           name: parcel_to_parameter_dictionary
-          schema: public
+          schema: sequencing
   - name: expansion_sets
     using:
       foreign_key_constraint_on:
         column: parcel_id
         table:
           name: expansion_set
-          schema: public
-
+          schema: sequencing
 insert_permissions:
   - role: aerie_admin
     permission:

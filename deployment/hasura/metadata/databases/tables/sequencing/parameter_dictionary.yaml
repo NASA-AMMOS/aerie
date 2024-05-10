@@ -1,18 +1,13 @@
 table:
-  name: sequence_adaptation
-  schema: public
+  name: parameter_dictionary
+  schema: sequencing
+configuration:
+  custom_name: "parameter_dictionary"
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [adaptation]
+      columns: "*"
       check: {}
-update_permissions:
-  - role: aerie_admin
-    permission:
-      columns: [adaptation]
-      filter: {}
-      set:
-        updated_by: "x-hasura-user-id"
 select_permissions:
   - role: aerie_admin
     permission:

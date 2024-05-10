@@ -1,4 +1,4 @@
-create table parcel (
+create table sequencing.parcel (
   id integer generated always as identity,
 
   name text not null,
@@ -16,22 +16,27 @@ create table parcel (
     primary key (id),
 
   foreign key (channel_dictionary_id)
-    references channel_dictionary (id),
+    references sequencing.channel_dictionary (id),
   foreign key (command_dictionary_id)
-    references command_dictionary (id),
+    references sequencing.command_dictionary (id),
   foreign key (sequence_adaptation_id)
-    references sequence_adaptation (id)
+    references sequencing.sequence_adaptation (id)
 );
 
-create function parcel_set_updated_at()
-returns trigger
-security definer
-language plpgsql as $$begin
-  new.updated_at = now();
-  return new;
-end$$;
+comment on table sequencing.parcel is e''
+  'A bundled containing dictionaries and an adaptation file.';
+comment on column sequencing.parcel.id is e''
+  'The synthetic identifier for this parcel.';
+comment on column sequencing.parcel.name is e''
+  'The name of the parcel.';
+comment on column sequencing.parcel.channel_dictionary_id is e''
+  'The identifier for the channel dictionary.';
+comment on column sequencing.parcel.command_dictionary_id is e''
+  'The identifier for the command dictionary.';
+comment on column sequencing.parcel.sequence_adaptation_id is e''
+  'The identifier for the adaptation file.';
 
 create trigger set_timestamp
-before update on parcel
+before update on sequencing.parcel
 for each row
-execute function parcel_set_updated_at();
+execute function util_functions.set_updated_at();

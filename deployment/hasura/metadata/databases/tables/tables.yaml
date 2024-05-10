@@ -154,6 +154,11 @@
 - "!include sequencing/sequence.yaml"
 - "!include sequencing/sequence_to_simulated_activity.yaml"
 - "!include sequencing/user_sequence.yaml"
+- "!include sequencing/channel_dictionary.yaml"
+- "!include sequencing/parameter_dictionary.yaml"
+- "!include sequencing/parcel.yaml"
+- "!include sequencing/parcel_to_parameter_dictionary.yaml"
+- "!include sequencing/sequence_adaptation.yaml"
 
 ############
 #### UI ####
