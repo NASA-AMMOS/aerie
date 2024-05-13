@@ -44,7 +44,7 @@ jobs:
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
-          repository: cbbrowne/pgcmp
+          repository: NASA-AMMOS/pgcmp
           path: pgcmp
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -112,7 +112,7 @@ jobs:
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
-          repository: cbbrowne/pgcmp
+          repository: NASA-AMMOS/pgcmp
           path: pgcmp
       - name: Dump Migrated Database
         run: |
@@ -175,7 +175,7 @@ jobs:
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
-          repository: cbbrowne/pgcmp
+          repository: NASA-AMMOS/pgcmp
           path: pgcmp
       - name: Dump Current Database
         run: |
@@ -236,7 +236,7 @@ jobs:
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
-          repository: cbbrowne/pgcmp
+          repository: NASA-AMMOS/pgcmp
           path: pgcmp
       - name: Setup Postgres Client (psql)
         # ubuntu-latest does not currently have psql-16 in its apt library, so we cannot just run
@@ -297,7 +297,7 @@ jobs:
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
-          repository: cbbrowne/pgcmp
+          repository: NASA-AMMOS/pgcmp
           path: pgcmp
       - name: Setup Postgres Client (psql)
         # ubuntu-latest does not currently have psql-16 in its apt library, so we cannot just run
@@ -312,7 +312,7 @@ jobs:
           sudo apt update
           sudo apt -y install postgresql-client-16
       - name: Start Postgres
-        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:14.1
+        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.2
       - name: Sleep for 5 Seconds
         run: sleep 5s
         shell: bash
