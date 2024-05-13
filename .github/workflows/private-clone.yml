@@ -1,0 +1,28 @@
+name: Clone Private Repo Test
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - dev-[0-9]+.[0-9]+.[0-9]+
+  push:
+    branches:
+      - develop
+    tags:
+      - v*
+  workflow_dispatch:
+
+jobs:
+  clone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Clone Private Repo
+        uses: actions/checkout@v4
+        with:
+          repository: NASA-AMMOS/aerie-orbiter-model
+          path: aerie-orbiter-model
+          ref: main
+      - name: Run LS in cloned repo
+        run: ls -ltr aerie-orbiter-model
