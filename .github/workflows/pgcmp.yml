@@ -16,6 +16,22 @@ on:
       - v*
   workflow_dispatch:
 
+env:
+  AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
+  AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
+  HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
+  HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
+  POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
+  POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+  GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
+  GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
+  MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
+  MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
+  SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
+  SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
+  SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
+  SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
+
 jobs:
   dump-db-base:
     runs-on: ubuntu-latest
@@ -35,9 +51,17 @@ jobs:
         with:
           python-version: "3.10"
       - name: Setup Postgres Client (psql)
+        # ubuntu-latest does not currently have psql-16 in its apt library, so we cannot just run
+        # sudo apt update && sudo apt-get install --yes postgresql-client-16
+        # Current instructions are from https://www.postgresql.org/download/linux/ubuntu/
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
+          sudo apt update
+          sudo apt install curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt update
+          sudo apt -y install postgresql-client-16
       - name: Setup Hasura CLI
         run: sudo curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
       - name: Start Postgres
@@ -46,28 +70,10 @@ jobs:
           docker compose up -d postgres hasura
           docker images
           docker ps -a
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-          POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
-          POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
-          GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
-          GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
-          MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
-          MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
-          SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
-          SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
-          SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
-          SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
-          HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
-          HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 1 Minute
         run: sleep 60s
         shell: bash
       - name: Dump v2.8.0 Database
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
           mkdir pgdumpV2_8_0
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
@@ -90,21 +96,6 @@ jobs:
           docker compose up -d postgres hasura
           docker images
           docker ps -a
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-          POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
-          POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
-          GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
-          GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
-          MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
-          MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
-          SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
-          SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
-          SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
-          SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
-          HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
-          HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 30 seconds
         run: sleep 30s
         shell: bash
@@ -118,18 +109,12 @@ jobs:
           python -m pip install -r requirements.txt
           python aerie_db_migration.py --apply --all
           cd ..
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
       - name: Dump Migrated Database
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
           mkdir pgdumpmigrated
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
@@ -162,9 +147,17 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
       - name: Setup Postgres Client (psql)
+        # ubuntu-latest does not currently have psql-16 in its apt library, so we cannot just run
+        # sudo apt update && sudo apt-get install --yes postgresql-client-16
+        # Current instructions are from https://www.postgresql.org/download/linux/ubuntu/
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
+          sudo apt update
+          sudo apt install curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt update
+          sudo apt -y install postgresql-client-16
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -176,21 +169,6 @@ jobs:
           docker compose up -d postgres hasura
           docker images
           docker ps -a
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-          POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
-          POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
-          GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
-          GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
-          MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
-          MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
-          SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
-          SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
-          SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
-          SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
-          HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
-          HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 1 Minute
         run: sleep 60s
         shell: bash
@@ -200,9 +178,6 @@ jobs:
           repository: cbbrowne/pgcmp
           path: pgcmp
       - name: Dump Current Database
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
           mkdir pgdumpcurrent
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
@@ -227,13 +202,7 @@ jobs:
           python -m pip install -r requirements.txt
           python aerie_db_migration.py --revert --all
           cd ..
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
       - name: Dump Migrated Database
-        env:
-          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
-          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
           mkdir pgdumpmigrateddown
           PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
@@ -270,9 +239,17 @@ jobs:
           repository: cbbrowne/pgcmp
           path: pgcmp
       - name: Setup Postgres Client (psql)
+        # ubuntu-latest does not currently have psql-16 in its apt library, so we cannot just run
+        # sudo apt update && sudo apt-get install --yes postgresql-client-16
+        # Current instructions are from https://www.postgresql.org/download/linux/ubuntu/
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
+          sudo apt update
+          sudo apt install curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt update
+          sudo apt -y install postgresql-client-16
       - name: Start Postgres
         run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.2
       - name: Sleep for 5 Seconds
@@ -323,9 +300,17 @@ jobs:
           repository: cbbrowne/pgcmp
           path: pgcmp
       - name: Setup Postgres Client (psql)
+        # ubuntu-latest does not currently have psql-16 in its apt library, so we cannot just run
+        # sudo apt update && sudo apt-get install --yes postgresql-client-16
+        # Current instructions are from https://www.postgresql.org/download/linux/ubuntu/
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
+          sudo apt update
+          sudo apt install curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt update
+          sudo apt -y install postgresql-client-16
       - name: Start Postgres
         run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:14.1
       - name: Sleep for 5 Seconds
