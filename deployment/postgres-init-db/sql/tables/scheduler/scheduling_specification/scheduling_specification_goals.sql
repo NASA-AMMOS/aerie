@@ -4,11 +4,12 @@ create table scheduler.scheduling_specification_goals (
   goal_revision integer, -- latest is null
   priority integer not null,
   enabled boolean not null default true,
+  arguments jsonb not null default '{}'::jsonb,
 
   simulate_after boolean not null default true,
 
   constraint scheduling_specification_goals_primary_key
-    primary key (specification_id, goal_id),
+    primary key (specification_id, goal_id, arguments),
   constraint scheduling_specification_goals_specification_exists
     foreign key (specification_id)
       references scheduler.scheduling_specification
