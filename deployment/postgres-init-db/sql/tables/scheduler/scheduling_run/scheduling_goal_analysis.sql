@@ -3,9 +3,10 @@ create table scheduler.scheduling_goal_analysis (
   goal_id integer not null,
   goal_revision integer not null,
   satisfied boolean not null,
+  arguments jsonb not null default '{}'::jsonb, -- follows scheduling_spec_goals.parameter_schema
 
   constraint scheduling_goal_analysis_primary_key
-    primary key (analysis_id, goal_id, goal_revision),
+    primary key (analysis_id, goal_id, goal_revision, arguments),
   constraint scheduling_goal_analysis_references_scheduling_request
     foreign key (analysis_id)
       references scheduler.scheduling_request (analysis_id)
@@ -28,3 +29,5 @@ comment on column scheduler.scheduling_goal_analysis.goal_revision is e''
   'The associated version of the goal definition used.';
 comment on column scheduler.scheduling_goal_analysis.satisfied is e''
   'Whether the associated goal was satisfied by the scheduling run.';
+comment on column scheduler.scheduling_goal_analysis.arguments is e''
+  'The "as run" arguments passed to this goal during the scheduling run';
