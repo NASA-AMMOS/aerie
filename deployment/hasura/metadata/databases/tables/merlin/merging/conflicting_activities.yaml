@@ -1,0 +1,34 @@
+table:
+  name: conflicting_activities
+  schema: merlin
+configuration:
+  custom_name: "conflicting_activities"
+object_relationships:
+  - name: merge_request
+    using:
+      foreign_key_constraint_on: merge_request_id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [resolution]
+      filter: {}
+  - role: user
+    permission:
+      columns: [resolution]
+      filter: {"merge_request":{"plan_receiving_changes":{"owner":{"_eq":"X-Hasura-User-Id"}}}}

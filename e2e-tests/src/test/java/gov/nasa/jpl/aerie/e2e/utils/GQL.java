@@ -265,6 +265,47 @@ public enum GQL {
         }
       }
     }"""),
+  GET_MODEL_EVENT_LOGS("""
+    query getModelLogs($modelId: Int!) {
+      mission_model: mission_model_by_pk(id:$modelId) {
+        id
+        name
+        version
+        refresh_activity_type_logs(order_by: {created_at: desc}) {
+          triggering_user
+          delivered
+          success
+          tries
+          created_at
+          status
+          error
+          error_message
+          error_type
+        }
+        refresh_model_parameter_logs(order_by: {created_at: desc}) {
+          triggering_user
+          delivered
+          success
+          tries
+          created_at
+          status
+          error
+          error_message
+          error_type
+        }
+        refresh_resource_type_logs(order_by: {created_at: desc}) {
+          triggering_user
+          delivered
+          success
+          tries
+          created_at
+          status
+          error
+          error_message
+          error_type
+        }
+      }
+    }"""),
   GET_PLAN("""
     query GetPlan($id: Int!) {
       plan: plan_by_pk(id: $id) {
@@ -369,6 +410,12 @@ public enum GQL {
         status
       }
     }"""),
+  GET_SCHEDULING_SPECIFICATION_ID("""
+    query GetSchedulingSpec($planId: Int!) {
+      scheduling_spec: scheduling_specification(where: {plan_id: {_eq: $planId}}) {
+        id
+      }
+    }"""),
   GET_SIMULATION_CONFIGURATION("""
     query GetSimConfig($planId: Int!) {
       sim_config: simulation(where: {plan_id: {_eq:$planId}}) {
@@ -455,12 +502,6 @@ public enum GQL {
     mutation insertProfileSegment($segments: [profile_segment_insert_input!]!){
       insert_profile_segment(objects: $segments){
         affected_rows
-      }
-    }"""),
-  INSERT_SCHEDULING_SPECIFICATION("""
-    mutation MakeSchedulingSpec($scheduling_spec: scheduling_specification_insert_input!) {
-      scheduling_spec: insert_scheduling_specification_one(object: $scheduling_spec) {
-        id
       }
     }"""),
   INSERT_SIMULATION_DATASET("""
@@ -589,6 +630,13 @@ public enum GQL {
       {
         affected_rows
       }
+    }"""),
+  UPDATE_SIMULATION_ARGUMENTS("""
+    mutation updateSimulationArguments($plan_id: Int!, $arguments: jsonb!) {
+      update_simulation(where: {plan_id: {_eq: $plan_id}},
+      _set: { arguments: $arguments }) {
+        affected_rows
+       }
     }"""),
   UPDATE_SIMULATION_BOUNDS("""
     mutation updateSimulationBounds($plan_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {

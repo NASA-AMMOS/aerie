@@ -30,7 +30,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -706,7 +705,7 @@ public class PrioritySolver implements Solver {
     final var lastSimulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie());
     synchronizeSimulationWithSchedulerPlan();
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
-    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, evaluationEnvironment);
+    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, evaluationEnvironment, this.problem.getSchedulerModel());
     assert rawConflicts != null;
     return rawConflicts;
   }
@@ -947,52 +946,16 @@ public class PrioritySolver implements Solver {
       final EvaluationEnvironment evaluationEnvironment
   ) throws SchedulingInterruptedException {
     final var planningHorizon = this.problem.getPlanningHorizon();
-    final var taskNetwork = new TaskNetworkAdapter(new TaskNetwork());
-    taskNetwork.addAct(name);
-    if (interval != null) {
-      taskNetwork.addEnveloppe(name, "interval", interval.start, interval.end);
-    }
-    taskNetwork.addEnveloppe(name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
-    if (activityExpression.startRange() != null) {
-      taskNetwork.addStartInterval(name, activityExpression.startRange().start, activityExpression.startRange().end);
-    }
-    if (activityExpression.endRange() != null) {
-      taskNetwork.addEndInterval(name, activityExpression.endRange().start, activityExpression.endRange().end);
-    }
-    Optional<Duration> durRequirementLower = Optional.empty();
-    Optional<Duration> durRequirementUpper = Optional.empty();;
-    if (activityExpression.durationRange() != null) {
-      try {
-        durRequirementLower = activityExpression.durationRange().getLeft()
-                                                                         .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
-                                                                         .valueAt(Duration.ZERO)
-                                                                         .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
-        durRequirementUpper = activityExpression.durationRange().getRight()
-                                                                         .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
-                                                                         .valueAt(Duration.ZERO)
-                                                                         .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+    final var envelopes = new ArrayList<Interval>();
+    if(interval != null) envelopes.add(interval);
+    final var reduced = activityExpression.reduceTemporalConstraints(
+        planningHorizon,
+        this.problem.getSchedulerModel(),
+        evaluationEnvironment,
+        envelopes);
 
-      } catch (NullPointerException e) {
-        throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
-      }
-      if(durRequirementLower.isPresent() && durRequirementUpper.isPresent()) {
-        taskNetwork.addDurationInterval(name, durRequirementLower.get(), durRequirementUpper.get());
-      }
-    }
-    final var success = taskNetwork.solveConstraints();
-    if (!success) {
-      logger.debug("Inconsistent static temporal constraints, cannot place activity in interval");
-      logger.debug("Start range " + activityExpression.startRange());
-      logger.debug("End range " + activityExpression.endRange());
-      logger.debug(
-          "Duration range [" +
-          (durRequirementLower.isPresent() ? durRequirementLower.get() : "-inf") +
-          ", " +
-          (durRequirementUpper.isPresent() ? durRequirementUpper.get() : "+inf"));
-      logger.debug("Interval range " + interval);
-      return Optional.empty();
-    }
-    final var solved = taskNetwork.getAllData(name);
+    if(reduced.isEmpty()) return Optional.empty();
+    final var solved = reduced.get();
 
     //the domain of user/scheduling temporal constraints have been reduced with the STN,
     //now it is time to find an assignment compatible

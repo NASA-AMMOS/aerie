@@ -8,7 +8,6 @@ node {
 }
 
 task assemble(type: NpmTask) {
-  dependsOn processResources
   dependsOn npmInstall
   args = ['run', 'build']
 }
@@ -24,7 +23,6 @@ task build {
 //}
 
 task clean(type: Delete) {
-  dependsOn undoDistributeSql
   delete 'build'
 }
 

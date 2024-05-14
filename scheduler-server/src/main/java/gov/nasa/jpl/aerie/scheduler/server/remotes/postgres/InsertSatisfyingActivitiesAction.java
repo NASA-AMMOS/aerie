@@ -13,7 +13,7 @@ import java.util.Map;
 
 /*package-local*/ final class InsertSatisfyingActivitiesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    insert into scheduling_goal_analysis_satisfying_activities (analysis_id, goal_id, goal_revision, activity_id)
+    insert into scheduler.scheduling_goal_analysis_satisfying_activities (analysis_id, goal_id, goal_revision, activity_id)
     values (?, ?, ?, ?)
     """;
 
@@ -40,7 +40,7 @@ import java.util.Map;
 
     final var resultSet = this.statement.executeBatch();
     for (final var result : resultSet) {
-      if (result == Statement.EXECUTE_FAILED) throw new FailedInsertException("scheduling_goal_analysis_satisfying_activities");
+      if (result == Statement.EXECUTE_FAILED) throw new FailedInsertException("scheduler.scheduling_goal_analysis_satisfying_activities");
     }
   }
 

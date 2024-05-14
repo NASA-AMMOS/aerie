@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -63,26 +64,18 @@ public final class InitializationContext implements Context {
 
 
   @Override
-  public void spawn(final TaskFactory<?> task) {
+  public void spawn(final InSpan _inSpan, final TaskFactory<?> task) {
+    // As top-level tasks, daemons always get their own span.
+    // TODO: maybe produce a warning if inSpan is not Fresh in initialization context
     this.builder.daemon(null, task);
   }
-  public void spawn(final String taskName, final TaskFactory<?> task) {
+  public void spawn(final String taskName, final InSpan _inSpan, final TaskFactory<?> task) {
     this.builder.daemon(taskName, task);
   }
 
   @Override
-  public <Return> void call(final TaskFactory<Return> task) {
+  public <Return> void call(final InSpan inSpan, final TaskFactory<Return> task) {
     throw new IllegalStateException("Cannot yield during initialization");
-  }
-
-  @Override
-  public void pushSpan() {
-    // Do nothing.
-  }
-
-  @Override
-  public void popSpan() {
-    // Do nothing.
   }
 
   @Override

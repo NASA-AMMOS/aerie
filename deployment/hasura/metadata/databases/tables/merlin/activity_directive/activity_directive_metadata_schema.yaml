@@ -1,0 +1,43 @@
+table:
+  name: activity_directive_metadata_schema
+  schema: merlin
+configuration:
+  custom_name: "activity_directive_metadata_schema"
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, schema, created_at]
+      check: {}
+  - role: user
+    permission:
+      columns: [key, schema, created_at]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, schema, created_at]
+      filter: {}
+  - role: user
+    permission:
+      columns: [key, schema, created_at]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

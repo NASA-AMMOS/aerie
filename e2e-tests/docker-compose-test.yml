@@ -14,11 +14,10 @@ services:
       LOG_LEVEL: debug
       NODE_TLS_REJECT_UNAUTHORIZED: '0'
       PORT: 9000
-      POSTGRES_AERIE_MERLIN_DB: aerie_merlin
-      POSTGRES_HOST: postgres
-      POSTGRES_PASSWORD: '${AERIE_PASSWORD}'
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: '${AERIE_USERNAME}'
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      GATEWAY_DB_USER: "${GATEWAY_USERNAME}"
+      GATEWAY_DB_PASSWORD: "${GATEWAY_PASSWORD}"
     image: 'ghcr.io/nasa-ammos/aerie-gateway:develop'
     ports: ['9000:9000']
     restart: always
@@ -33,11 +32,10 @@ services:
     environment:
       HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
       HASURA_GRAPHQL_URL: http://hasura:8080/v1/graphql
-      MERLIN_DB: 'aerie_merlin'
-      MERLIN_DB_PASSWORD: '${AERIE_PASSWORD}'
-      MERLIN_DB_PORT: 5432
-      MERLIN_DB_SERVER: postgres
-      MERLIN_DB_USER: '${AERIE_USERNAME}'
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      MERLIN_DB_USER: "${MERLIN_USERNAME}"
+      MERLIN_DB_PASSWORD: "${MERLIN_PASSWORD}"
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       MERLIN_PORT: 27183
       JAVA_OPTS: >
@@ -60,11 +58,10 @@ services:
     environment:
       HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
-      SCHEDULER_DB: 'aerie_scheduler'
-      SCHEDULER_DB_PASSWORD: '${AERIE_PASSWORD}'
-      SCHEDULER_DB_PORT: 5432
-      SCHEDULER_DB_SERVER: postgres
-      SCHEDULER_DB_USER: '${AERIE_USERNAME}'
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      SCHEDULER_DB_USER: "${SCHEDULER_USERNAME}"
+      SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SCHEDULER_PORT: 27185
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
@@ -88,11 +85,11 @@ services:
       LOG_LEVEL: debug
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       SEQUENCING_SERVER_PORT: 27184
-      SEQUENCING_DB: aerie_sequencing
-      SEQUENCING_DB_PASSWORD: '${AERIE_PASSWORD}'
-      SEQUENCING_DB_PORT: 5432
-      SEQUENCING_DB_SERVER: postgres
-      SEQUENCING_DB_USER: '${AERIE_USERNAME}'
+      AERIE_DB_NAME: aerie
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      SEQUENCING_DB_USER: "${SEQUENCING_USERNAME}"
+      SEQUENCING_DB_PASSWORD: "${SEQUENCING_PASSWORD}"
       SEQUENCING_LOCAL_STORE: /usr/src/app/sequencing_file_store
     image: aerie_sequencing
     ports: ['27184:27184']
@@ -121,11 +118,11 @@ services:
     container_name: aerie_merlin_worker_1
     depends_on: ['postgres']
     environment:
-      MERLIN_WORKER_DB: 'aerie_merlin'
-      MERLIN_WORKER_DB_PASSWORD: '${AERIE_PASSWORD}'
-      MERLIN_WORKER_DB_PORT: 5432
-      MERLIN_WORKER_DB_SERVER: postgres
-      MERLIN_WORKER_DB_USER: '${AERIE_USERNAME}'
+      AERIE_DB_NAME: aerie
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      MERLIN_DB_USER: "${MERLIN_USERNAME}"
+      MERLIN_DB_PASSWORD: "${MERLIN_PASSWORD}"
       MERLIN_WORKER_LOCAL_STORE: /usr/src/app/merlin_file_store
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
@@ -144,11 +141,11 @@ services:
     container_name: aerie_merlin_worker_2
     depends_on: ['postgres']
     environment:
-      MERLIN_WORKER_DB: 'aerie_merlin'
-      MERLIN_WORKER_DB_PASSWORD: '${AERIE_PASSWORD}'
-      MERLIN_WORKER_DB_PORT: 5432
-      MERLIN_WORKER_DB_SERVER: postgres
-      MERLIN_WORKER_DB_USER: '${AERIE_USERNAME}'
+      AERIE_DB_NAME: aerie
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      MERLIN_DB_USER: "${MERLIN_USERNAME}"
+      MERLIN_DB_PASSWORD: "${MERLIN_PASSWORD}"
       MERLIN_WORKER_LOCAL_STORE: /usr/src/app/merlin_file_store
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
@@ -169,11 +166,11 @@ services:
     environment:
       HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
-      SCHEDULER_WORKER_DB: "aerie_scheduler"
-      SCHEDULER_WORKER_DB_PASSWORD: "${AERIE_PASSWORD}"
-      SCHEDULER_WORKER_DB_PORT: 5432
-      SCHEDULER_WORKER_DB_SERVER: postgres
-      SCHEDULER_WORKER_DB_USER: "${AERIE_USERNAME}"
+      AERIE_DB_NAME: aerie
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      SCHEDULER_DB_USER: "${SCHEDULER_USERNAME}"
+      SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
@@ -195,11 +192,10 @@ services:
     environment:
       HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
-      SCHEDULER_WORKER_DB: "aerie_scheduler"
-      SCHEDULER_WORKER_DB_PASSWORD: "${AERIE_PASSWORD}"
-      SCHEDULER_WORKER_DB_PORT: 5432
-      SCHEDULER_WORKER_DB_SERVER: postgres
-      SCHEDULER_WORKER_DB_USER: "${AERIE_USERNAME}"
+      AERIE_DB_HOST: postgres
+      AERIE_DB_PORT: 5432
+      SCHEDULER_DB_USER: "${SCHEDULER_USERNAME}"
+      SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
@@ -216,13 +212,10 @@ services:
     container_name: hasura
     depends_on: ['postgres']
     environment:
-      AERIE_MERLIN_DATABASE_URL: 'postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_merlin'
+      AERIE_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie?options=-c%20search_path%3Dutil_functions%2Chasura%2Cpermissions%2Ctags%2Cmerlin%2Cscheduler%2Csequencing%2Cpublic"
       AERIE_MERLIN_URL: "http://aerie_merlin:27183"
-      AERIE_SCHEDULER_DATABASE_URL: 'postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_scheduler'
       AERIE_SCHEDULER_URL: "http://aerie_scheduler:27185"
-      AERIE_SEQUENCING_DATABASE_URL: 'postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_sequencing'
       AERIE_SEQUENCING_URL: "http://aerie_sequencing:27184"
-      AERIE_UI_DATABASE_URL: 'postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_ui'
       HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
       HASURA_GRAPHQL_DEV_MODE: 'true'
       HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
@@ -244,7 +237,15 @@ services:
       POSTGRES_USER: '${POSTGRES_USER}'
       AERIE_USERNAME: '${AERIE_USERNAME}'
       AERIE_PASSWORD: '${AERIE_PASSWORD}'
-    image: postgres:14.8
+      GATEWAY_DB_USER: "${GATEWAY_USERNAME}"
+      GATEWAY_DB_PASSWORD: "${GATEWAY_PASSWORD}"
+      MERLIN_DB_USER: "${MERLIN_USERNAME}"
+      MERLIN_DB_PASSWORD: "${MERLIN_PASSWORD}"
+      SCHEDULER_DB_USER: "${SCHEDULER_USERNAME}"
+      SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
+      SEQUENCING_DB_USER: "${SEQUENCING_USERNAME}"
+      SEQUENCING_DB_PASSWORD: "${SEQUENCING_PASSWORD}"
+    image: postgres:16.2
     ports: ['5432:5432']
     restart: always
     volumes:

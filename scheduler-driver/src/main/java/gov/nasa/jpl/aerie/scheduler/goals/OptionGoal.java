@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.solver.optimizers.Optimizer;
@@ -29,9 +30,11 @@ public class OptionGoal extends Goal {
   }
 
   @Override
-  public java.util.Collection<Conflict> getConflicts(Plan plan,
-                                                     final SimulationResults simulationResults,
-                                                     final EvaluationEnvironment evaluationEnvironment) {
+  public java.util.Collection<Conflict> getConflicts(
+      final Plan plan,
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment,
+      final SchedulerModel schedulerModel) {
     throw new NotImplementedException("Conflict detection is performed at solver level");
   }
 

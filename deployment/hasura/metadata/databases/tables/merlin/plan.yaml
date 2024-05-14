@@ -1,0 +1,120 @@
+table:
+  name: plan
+  schema: merlin
+configuration:
+  custom_name: "plan"
+object_relationships:
+- name: mission_model
+  using:
+    foreign_key_constraint_on: model_id
+- name: parent_plan
+  using:
+    foreign_key_constraint_on: parent_id
+- name: scheduling_specification
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: scheduling_specification
+        schema: scheduler
+array_relationships:
+- name: activity_directives
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: activity_directive
+        schema: merlin
+- name: constraint_specification
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: constraint_specification
+        schema: merlin
+- name: collaborators
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: plan_collaborators
+        schema: merlin
+- name: datasets
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: plan_dataset
+        schema: merlin
+- name: simulations
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: simulation
+        schema: merlin
+- name: tags
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: plan_tags
+        schema: tags
+- name: child_plans
+  using:
+    foreign_key_constraint_on:
+      column: parent_id
+      table:
+        name: plan
+        schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, duration, model_id, parent_id, start_time, description]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [name, duration, model_id, parent_id, start_time, description]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [name, owner, duration, model_id, parent_id, start_time, description]
+      filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [name, owner, description]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}

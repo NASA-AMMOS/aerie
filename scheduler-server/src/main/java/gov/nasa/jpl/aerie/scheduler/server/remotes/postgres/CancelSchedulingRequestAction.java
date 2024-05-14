@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 /*package-local*/ final class CancelSchedulingRequestAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    update scheduling_request
+    update scheduler.scheduling_request
       set
         canceled = true
       where

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@SuppressWarnings("SqlSourceToSinkFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnchorTests {
-  private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
   private DatabaseTestHelper helper;
   private MerlinDatabaseTestHelper merlinHelper;
 
@@ -40,42 +39,19 @@ public class AnchorTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    helper.clearTable("uploaded_file");
-    helper.clearTable("mission_model");
-    helper.clearTable("plan");
-    helper.clearTable("activity_directive");
-    helper.clearTable("simulation_template");
-    helper.clearTable("simulation");
-    helper.clearTable("dataset");
-    helper.clearTable("plan_dataset");
-    helper.clearTable("simulation_dataset");
-    helper.clearTable("plan_snapshot");
-    helper.clearTable("plan_latest_snapshot");
-    helper.clearTable("plan_snapshot_activities");
-    helper.clearTable("plan_snapshot_parent");
-    helper.clearTable("merge_request");
-    helper.clearTable("merge_staging_area");
-    helper.clearTable("conflicting_activities");
-    helper.clearTable("anchor_validation_status");
+    helper.clearSchema("merlin");
   }
 
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-    helper = new DatabaseTestHelper(
-        "aerie_merlin_test",
-        "Merlin Database Tests",
-        initSqlScriptFile
-    );
-    helper.startDatabase();
+    helper = new DatabaseTestHelper("aerie_anchor_test", "Anchor Tests");
     connection = helper.connection();
     merlinHelper = new MerlinDatabaseTestHelper(connection);
   }
 
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    helper.stopDatabase();
-    connection = null;
-    helper = null;
+    helper.close();
   }
 
   //region Helper Methods
@@ -83,8 +59,9 @@ public class AnchorTests {
   private void updateOffsetFromAnchor(PGInterval newOffset, int activityId, int planId) throws SQLException {
     try(final var statement = connection.createStatement()) {
       statement.execute(
+          //language=sql
           """
-          update activity_directive
+          update merlin.activity_directive
           set start_offset = '%s'
           where id = %d and plan_id = %d;
           """.formatted(newOffset.toString(), activityId, planId));
@@ -93,12 +70,14 @@ public class AnchorTests {
 
   private Activity getActivity(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res = statement.executeQuery(
+        //language=sql
+        """
         SELECT id, plan_id, start_offset, anchor_id, anchored_to_start, approximate_start_time
-        FROM activity_directive_extended
+        FROM merlin.activity_directive_extended
         WHERE id = %d
         AND plan_id = %d;
-      """.formatted(activityId, planId));
+        """.formatted(activityId, planId));
       res.next();
       return new Activity(
           res.getInt("id"),
@@ -113,12 +92,14 @@ public class AnchorTests {
 
   private ArrayList<Activity> getActivities(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
+      final var res = statement.executeQuery(
+        //language=sql
+        """
         SELECT *
-        FROM activity_directive_extended
+        FROM merlin.activity_directive_extended
         WHERE plan_id = %d
         ORDER BY id;
-      """.formatted(planId));
+        """.formatted(planId));
 
       final var activities = new ArrayList<Activity>();
       while (res.next()){
@@ -135,22 +116,16 @@ public class AnchorTests {
     }
   }
 
-  private void deleteActivityDirective(final int planId, final int activityId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement.executeUpdate("""
-        delete from activity_directive where id = %s and plan_id = %s
-      """.formatted(activityId, planId));
-    }
-  }
-
   private AnchorValidationStatus getValidationStatus(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement.executeQuery("""
-        SELECT *
-        FROM anchor_validation_status
-        WHERE activity_id = %d
-        AND plan_id = %d;
-      """.formatted(activityId, planId));
+      final var res = statement.executeQuery(
+          //language=sql
+          """
+          SELECT *
+          FROM merlin.anchor_validation_status
+          WHERE activity_id = %d
+          AND plan_id = %d;
+          """.formatted(activityId, planId));
       res.next();
       return new AnchorValidationStatus(
           res.getInt("activity_id"),
@@ -166,15 +141,13 @@ public class AnchorTests {
 
   int insertActivityWithAnchor(final int planId, final PGInterval startOffset, final int anchorId, final boolean anchoredToStart) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
+      final var res = statement.executeQuery(
+              //language=sql
               """
-                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments, anchor_id, anchored_to_start)
-                  VALUES ('test-activity', '%s', '%s', '{}', %d, %b)
-                  RETURNING id;"""
-                  .formatted(planId, startOffset.toString(), anchorId, anchoredToStart)
-          );
-
+              INSERT INTO merlin.activity_directive (type, plan_id, start_offset, arguments, anchor_id, anchored_to_start)
+              VALUES ('test-activity', '%s', '%s', '{}', %d, %b)
+              RETURNING id;
+              """.formatted(planId, startOffset.toString(), anchorId, anchoredToStart));
       res.next();
       return res.getInt("id");
     }
@@ -857,7 +830,7 @@ public class AnchorTests {
       insertActivityWithAnchor(planId, new PGInterval("0 seconds"), anchorId, true);
 
       try {
-        deleteActivityDirective(planId, anchorId);
+        merlinHelper.deleteActivityDirective(planId, anchorId);
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains(
@@ -876,51 +849,57 @@ public class AnchorTests {
       try (final var statement = connection.createStatement()) {
         // Reanchor to Plan Start
         var results = statement.executeQuery(
+            //language=sql
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, null, '%s'::json)
-                """.formatted(activityId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_plan_start(%d, null, '%s'::json)
+            """.formatted(activityId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         results = statement.executeQuery(
+            //language=sql
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_plan_start(null, %d, '%s'::json)
-                """.formatted(planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_plan_start(null, %d, '%s'::json)
+            """.formatted(planId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         // Reanchor to ascendant anchor
         results = statement.executeQuery(
+            //language=sql
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, null, '%s'::json)
-                """.formatted(activityId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_to_anchor(%d, null, '%s'::json)
+            """.formatted(activityId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         results = statement.executeQuery(
+            //language=sql
             """
-                select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(null, %d, '%s'::json)
-                """.formatted(planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_to_anchor(null, %d, '%s'::json)
+            """.formatted(planId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         // Delete Remaining Chain
         results = statement.executeQuery(
+            //language=sql
             """
-                select hasura_functions.delete_activity_by_pk_delete_subtree(%d, null, '%s'::json)
-                """.formatted(activityId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_delete_subtree(%d, null, '%s'::json)
+            """.formatted(activityId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
 
         results = statement.executeQuery(
+            //language=sql
             """
-                select hasura_functions.delete_activity_by_pk_delete_subtree(null, %d, '%s'::json)
-                """.formatted(planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_delete_subtree(null, %d, '%s'::json)
+            """.formatted(planId, merlinHelper.admin.session()));
         if (results.next()) {
           fail();
         }
@@ -933,9 +912,10 @@ public class AnchorTests {
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
+            //language=sql
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(-1, %d, '%s'::json)
-             """.formatted(planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_plan_start(-1, %d, '%s'::json)
+            """.formatted(planId, merlinHelper.admin.session()));
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains("Activity Directive -1 does not exist in Plan "+planId)){
@@ -945,9 +925,10 @@ public class AnchorTests {
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
+            //language=sql
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(-1, %d, '%s'::json)
-             """.formatted(planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_to_anchor(-1, %d, '%s'::json)
+            """.formatted(planId, merlinHelper.admin.session()));
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains("Activity Directive -1 does not exist in Plan "+planId)){
@@ -957,9 +938,10 @@ public class AnchorTests {
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
+            //language=sql
             """
-             select hasura_functions.delete_activity_by_pk_delete_subtree(-1, %d, '%s'::json)
-             """.formatted(planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_delete_subtree(-1, %d, '%s'::json)
+            """.formatted(planId, merlinHelper.admin.session()));
         fail();
       } catch (SQLException ex){
         if(!ex.getMessage().contains("Activity Directive -1 does not exist in Plan "+planId)){
@@ -1001,9 +983,10 @@ public class AnchorTests {
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
+            //language=sql
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d, '%s'::json)
-             """.formatted(baseId, planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_to_anchor(%d, %d, '%s'::json)
+            """.formatted(baseId, planId, merlinHelper.admin.session()));
       }
 
       final var remainingActivities = getActivities(planId);
@@ -1059,9 +1042,10 @@ public class AnchorTests {
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
+            //language=sql
             """
-             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d, '%s'::json)
-             """.formatted(baseId, planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_reanchor_plan_start(%d, %d, '%s'::json)
+            """.formatted(baseId, planId, merlinHelper.admin.session()));
       }
 
       final var remainingActivities = getActivities(planId);
@@ -1107,9 +1091,10 @@ public class AnchorTests {
 
       try(final var statement = connection.createStatement()) {
         statement.execute(
+            //language=sql
             """
-             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d, '%s'::json)
-             """.formatted(baseId, planId, merlinHelper.admin.session()));
+            select hasura.delete_activity_by_pk_delete_subtree(%d, %d, '%s'::json)
+            """.formatted(baseId, planId, merlinHelper.admin.session()));
       }
 
       final var remainingActivities = getActivities(planId);

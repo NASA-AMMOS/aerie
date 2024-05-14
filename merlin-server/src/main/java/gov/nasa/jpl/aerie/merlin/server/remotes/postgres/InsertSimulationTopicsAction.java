@@ -13,7 +13,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
 
 /*package-local*/ final class InsertSimulationTopicsAction implements AutoCloseable {
   @Language("SQL") private static final String sql = """
-      insert into topic (dataset_id, topic_index, name, value_schema)
+      insert into merlin.topic (dataset_id, topic_index, name, value_schema)
       values (?, ?, ?, ?::jsonb)
     """;
 

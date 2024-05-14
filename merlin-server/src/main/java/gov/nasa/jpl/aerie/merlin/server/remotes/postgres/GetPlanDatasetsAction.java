@@ -20,7 +20,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         p.dataset_id,
         p.offset_from_plan_start,
         p.simulation_dataset_id
-      from plan_dataset as p
+      from merlin.plan_dataset as p
       where
         p.plan_id = ? and (p.simulation_dataset_id is null or p.simulation_dataset_id = ?)
     """;

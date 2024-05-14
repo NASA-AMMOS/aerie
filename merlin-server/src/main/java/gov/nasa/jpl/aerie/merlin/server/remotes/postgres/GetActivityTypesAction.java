@@ -25,7 +25,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       a.parameters,
       a.required_parameters,
       a.computed_attributes_value_schema
-    from activity_type as a
+    from merlin.activity_type as a
     where a.model_id = ?
     """;
 

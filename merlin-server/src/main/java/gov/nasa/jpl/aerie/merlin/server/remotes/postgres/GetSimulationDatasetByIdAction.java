@@ -18,7 +18,7 @@ public class GetSimulationDatasetByIdAction implements AutoCloseable {
           to_char(d.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
           to_char(d.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time,
           d.dataset_id as dataset_id
-      from simulation_dataset as d
+      from merlin.simulation_dataset as d
       where
         d.id = ?
     """;

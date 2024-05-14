@@ -37,22 +37,20 @@ spec:
               value: warn
             - name: PORT
               value: "9000"
-            - name: POSTGRES_AERIE_MERLIN_DB
-              value: aerie_merlin
-            - name: POSTGRES_HOST
+            - name: AERIE_DB_HOST
               value: postgres
-            - name: POSTGRES_PORT
+            - name: AERIE_DB_PORT
               value: "5432"
-            - name: POSTGRES_USER
+            - name: GATEWAY_DB_USER
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_USERNAME
-            - name: POSTGRES_PASSWORD
+                  key: GATEWAY_USERNAME
+            - name: GATEWAY_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: dev-env
-                  key: AERIE_PASSWORD
+                  key: GATEWAY_PASSWORD
       volumes:
         - name: aerie-file-store
           persistentVolumeClaim:

@@ -4,16 +4,10 @@ on:
   pull_request:
     paths:
       - "deployment/hasura/migrations/**"
-      - "merlin-server/sql/**"
-      - "sequencing-server/sql/**"
-      - "scheduler-server/sql/**"
       - "deployment/postgres-init-db/sql/**"
   push:
     paths:
       - "deployment/hasura/migrations/**"
-      - "merlin-server/sql/**"
-      - "sequencing-server/sql/**"
-      - "scheduler-server/sql/**"
       - "deployment/postgres-init-db/sql/**"
     branches:
       - develop
@@ -27,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: e2e-test
     steps:
-      - name: Checkout v1.0.1
+      - name: Checkout v2.8.0
         uses: actions/checkout@v4
         with:
-          ref: "v1.0.1"
+          ref: "v2.8.0"
       - name: Clone PGCMP
         uses: actions/checkout@v4
         with:
@@ -46,12 +40,6 @@ jobs:
           sudo apt-get install --yes postgresql-client
       - name: Setup Hasura CLI
         run: sudo curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v2
-      - name: Distribute SQL and Assemble Java
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          arguments: distributeSQL
       - name: Start Postgres
         run: |
           docker compose up -d postgres hasura
@@ -62,27 +50,36 @@ jobs:
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+          GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
+          GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
+          MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
+          MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
+          SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
+          SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
+          SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
+          SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
           HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
           HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 1 Minute
         run: sleep 60s
         shell: bash
-      - name: Dump v1.0.1 Database
+      - name: Dump v2.8.0 Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
-          mkdir pgdumpv1_0_1
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_merlin PGCMPOUTPUT=./pgdumpv1_0_1/AerieMerlinV1_0_1 PGCLABEL=AerieMerlinV1_0_1 PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_scheduler PGCMPOUTPUT=./pgdumpv1_0_1/AerieSchedulerV1_0_1 PGCLABEL=AerieSchedulerV1_0_1 PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_sequencing PGCMPOUTPUT=./pgdumpv1_0_1/AerieSequencingV1_0_1 PGCLABEL=AerieSequencingV1_0_1 PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpv1_0_1/AerieUIV1_0_1 PGCLABEL=AerieUIV1_0_1 PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
+          mkdir pgdumpV2_8_0
+          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
+          PGCMPOUTPUT=./pgdumpV2_8_0/AerieV2_8_0 \
+          PGCLABEL=AerieV2_8_0 \
+          PGBINDIR=/usr/bin \
+          ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
         uses: actions/upload-artifact@v4
         with:
-          name: v1_0_1-db-dump
-          path: pgdumpv1_0_1
+          name: v2_8_0-db-dump
+          path: pgdumpV2_8_0
           retention-days: 1
       - name: Checkout Latest
         uses: actions/checkout@v4
@@ -97,6 +94,14 @@ jobs:
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+          GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
+          GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
+          MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
+          MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
+          SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
+          SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
+          SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
+          SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
           HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
           HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 30 seconds
@@ -120,16 +125,17 @@ jobs:
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
-      - name: Dump Databases
+      - name: Dump Migrated Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
           mkdir pgdumpmigrated
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_merlin PGCMPOUTPUT=./pgdumpmigrated/AerieMerlinMigrated PGCLABEL=AerieMerlinMigrated PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_scheduler PGCMPOUTPUT=./pgdumpmigrated/AerieSchedulerMigrated PGCLABEL=AerieSchedulerMigrated PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_sequencing PGCMPOUTPUT=./pgdumpmigrated/AerieSequencingMigrated PGCLABEL=AerieSequencingMigrated PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpmigrated/AerieUIMigrated PGCLABEL=AerieUIMigrated PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
+          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
+          PGCMPOUTPUT=./pgdumpmigrated/AerieMigratedUp \
+          PGCLABEL=AerieMigratedUp \
+          PGBINDIR=/usr/bin \
+          ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
         uses: actions/upload-artifact@v4
@@ -158,12 +164,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v2
-      - name: Distribute SQL
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          arguments: distributeSQL
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -180,6 +180,14 @@ jobs:
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+          GATEWAY_USERNAME: "${{secrets.GATEWAY_USERNAME}}"
+          GATEWAY_PASSWORD: "${{secrets.GATEWAY_PASSWORD}}"
+          MERLIN_USERNAME: "${{secrets.MERLIN_USERNAME}}"
+          MERLIN_PASSWORD: "${{secrets.MERLIN_PASSWORD}}"
+          SCHEDULER_USERNAME: "${{secrets.SCHEDULER_USERNAME}}"
+          SCHEDULER_PASSWORD: "${{secrets.SCHEDULER_PASSWORD}}"
+          SEQUENCING_USERNAME: "${{secrets.SEQUENCING_USERNAME}}"
+          SEQUENCING_PASSWORD: "${{secrets.SEQUENCING_PASSWORD}}"
           HASURA_GRAPHQL_ADMIN_SECRET: "${{secrets.HASURA_GRAPHQL_ADMIN_SECRET}}"
           HASURA_GRAPHQL_JWT_SECRET: "${{secrets.HASURA_GRAPHQL_JWT_SECRET}}"
       - name: Sleep for 1 Minute
@@ -190,22 +198,23 @@ jobs:
         with:
           repository: cbbrowne/pgcmp
           path: pgcmp
-      - name: Dump Databases
+      - name: Dump Current Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
-          mkdir pgdumpraw
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_merlin PGCMPOUTPUT=./pgdumpraw/AerieMerlinRaw PGCLABEL=AerieMerlinRaw PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_scheduler PGCMPOUTPUT=./pgdumpraw/AerieSchedulerRaw PGCLABEL=AerieSchedulerRaw PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_sequencing PGCMPOUTPUT=./pgdumpraw/AerieSequencingRaw PGCLABEL=AerieSequencingRaw PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpraw/AerieUIRaw PGCLABEL=AerieUIRaw PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
+          mkdir pgdumpcurrent
+          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
+          PGCMPOUTPUT=./pgdumpcurrent/AerieCurrent \
+          PGCLABEL=AerieCurrent \
+          PGBINDIR=/usr/bin \
+          ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
         uses: actions/upload-artifact@v4
         with:
-          name: raw-sql-db-dump
-          path: pgdumpraw
+          name: current-sql-db-dump
+          path: pgdumpcurrent
           retention-days: 1
       - name: Migrate Latest to Base
         run: |
@@ -220,16 +229,17 @@ jobs:
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-      - name: Dump Databases
+      - name: Dump Migrated Database
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
         run: |
           mkdir pgdumpmigrateddown
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_merlin PGCMPOUTPUT=./pgdumpmigrateddown/AerieMerlinMigratedDown PGCLABEL=AerieMerlinMigratedDown PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_scheduler PGCMPOUTPUT=./pgdumpmigrateddown/AerieSchedulerMigratedDown PGCLABEL=AerieSchedulerMigratedDown PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_sequencing PGCMPOUTPUT=./pgdumpmigrateddown/AerieSequencingMigratedDown PGCLABEL=AerieSequencingMigratedDown PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
-          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie_ui PGCMPOUTPUT=./pgdumpmigrateddown/AerieUIMigratedDown PGCLABEL=AerieUIMigratedDown PGBINDIR=/usr/bin ./pgcmp/pgcmp-dump
+          PGURI=postgres://"${AERIE_USERNAME}":"${AERIE_PASSWORD}"@localhost:5432/aerie \
+          PGCMPOUTPUT=./pgdumpmigrateddown/AerieMigratedDown \
+          PGCLABEL=AerieMigratedDown \
+          PGBINDIR=/usr/bin \
+          ./pgcmp/pgcmp-dump
         shell: bash
       - name: Share Database Dump
         uses: actions/upload-artifact@v4
@@ -263,7 +273,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
       - name: Start Postgres
-        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:14.1
+        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.2
       - name: Sleep for 5 Seconds
         run: sleep 5s
         shell: bash
@@ -274,8 +284,8 @@ jobs:
           path: pgcmp/pgdumpmigrated
       - uses: actions/download-artifact@v4
         with:
-          name: raw-sql-db-dump
-          path: pgcmp/pgdumpraw
+          name: current-sql-db-dump
+          path: pgcmp/pgdumpcurrent
       - name: Compare Databases
         id: dbcmp
         run: |
@@ -323,8 +333,8 @@ jobs:
       - name: Download Shared Dumps
         uses: actions/download-artifact@v4
         with:
-          name: v1_0_1-db-dump
-          path: pgcmp/pgdumpv1_0_1
+          name: v2_8_0-db-dump
+          path: pgcmp/pgdumpV2_8_0
       - uses: actions/download-artifact@v4
         with:
           name: migrated-down-db-dump
@@ -333,8 +343,6 @@ jobs:
         id: dbcmp
         run: |
           cp ./.github/scripts/compareDatabasesDown.sh pgcmp/compareDatabases.sh
-          cp ./.github/scripts/explanations pgcmp/explanations
-          cat ./.github/scripts/explanations ./.github/scripts/explanations_merlin_down > pgcmp/explanations_merlin
           cd pgcmp
           ./compareDatabases.sh
         shell: bash

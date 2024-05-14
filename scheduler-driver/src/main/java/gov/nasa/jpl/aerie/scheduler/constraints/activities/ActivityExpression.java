@@ -13,21 +13,30 @@ import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
+import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
+import kotlin.DeepRecursiveFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 /**
  * the criteria used to identify activity instances in scheduling goals
@@ -58,7 +67,7 @@ public record ActivityExpression(
     Interval endRange,
     Pair<Expression<? extends Profile<?>>, Expression<? extends Profile<?>>> durationRange,
     ActivityType type,
-    java.util.regex.Pattern nameRe,
+    Pattern nameRe,
     Map<String, ProfileExpression<?>> arguments
 ) implements Expression<Spans> {
 
@@ -86,7 +95,7 @@ public record ActivityExpression(
     protected @Nullable Interval startsIn;
     protected @Nullable Interval endsIn;
     protected @Nullable Pair<Expression<? extends Profile<?>>, Expression<? extends Profile<?>>> durationIn;
-    protected java.util.regex.Pattern nameRe;
+    protected Pattern nameRe;
 
     public Builder withArgument(String argument, SerializedValue val) {
       arguments.put(argument, new ProfileExpression<>(new DiscreteValue(val)));
@@ -298,7 +307,7 @@ public record ActivityExpression(
   }
 
   public boolean matches(
-      final @NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act,
+      final @NotNull ActivityInstance act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly) {
@@ -318,11 +327,11 @@ public record ActivityExpression(
       final var dur = act.interval.duration();
       final Optional<Duration> durRequirementLower = this.durationRange.getLeft()
           .evaluate(simulationResults, evaluationEnvironment)
-          .valueAt(Duration.ZERO)
+          .valueAt(ZERO)
           .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
       final Optional<Duration> durRequirementUpper = this.durationRange.getRight()
           .evaluate(simulationResults, evaluationEnvironment)
-          .valueAt(Duration.ZERO)
+          .valueAt(ZERO)
           .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
       if(durRequirementLower.isEmpty() && durRequirementUpper.isEmpty()){
         throw new RuntimeException("ActivityExpression is malformed, duration bounds are absent but the range is not null");
@@ -377,6 +386,66 @@ public record ActivityExpression(
 
   @Override
   public void extractResources(final Set<String> names) { }
+
+  public Interval instantiateDurationInterval(
+      final PlanningHorizon planningHorizon,
+      final EvaluationEnvironment evaluationEnvironment
+      ){
+    if(durationRange == null) return null;
+    Optional<Duration> durRequirementLower = Optional.empty();
+    Optional<Duration> durRequirementUpper = Optional.empty();
+    try {
+      durRequirementLower = durationRange().getLeft()
+                                                     .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
+                                                     .valueAt(ZERO)
+                                                     .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      durRequirementUpper = durationRange().getRight()
+                                                     .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
+                                                     .valueAt(ZERO)
+                                                     .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+    } catch (NullPointerException e) {
+      throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
+    }
+    if(durRequirementLower.isPresent() && durRequirementUpper.isPresent()) {
+      return Interval.between(durRequirementLower.get(), durRequirementUpper.get());
+    }
+    return null;
+  }
+
+  public Optional<TaskNetworkAdapter.TNActData> reduceTemporalConstraints(
+      final PlanningHorizon planningHorizon,
+      final SchedulerModel schedulerModel,
+      final EvaluationEnvironment evaluationEnvironment,
+      final List<Interval> enveloppes){
+
+    var maximumDuration = Duration.MAX_VALUE;
+    final var activityTypeMaximumDuration = schedulerModel.getMaximumDurations().get(this.type().getName());
+    if(activityTypeMaximumDuration != null){
+      maximumDuration = Duration.min(maximumDuration, activityTypeMaximumDuration);
+    }
+
+    final var durationType = schedulerModel.getDurationTypes().get(this.type.getName());
+    if(durationType instanceof DurationType.Fixed fixed){
+      maximumDuration = Duration.min(maximumDuration, fixed.duration());
+    }
+
+    var instantiateDurationInterval = this.instantiateDurationInterval(planningHorizon, evaluationEnvironment);
+    var minimumDuration = ZERO;
+    if(instantiateDurationInterval != null){
+      minimumDuration = Duration.max(minimumDuration, instantiateDurationInterval.start);
+      maximumDuration = Duration.min(maximumDuration, instantiateDurationInterval.end);
+    }
+
+    final var durationInterval = Interval.between(minimumDuration, maximumDuration);
+
+    final var allEnveloppes = new ArrayList<Interval>(enveloppes);
+    allEnveloppes.add(planningHorizon.getHor());
+    return TaskNetworkAdapter.reduceActivityTemporalConstraints(
+        startRange(),
+        endRange(),
+        durationInterval,
+        allEnveloppes);
+    }
 
   /**
    * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not

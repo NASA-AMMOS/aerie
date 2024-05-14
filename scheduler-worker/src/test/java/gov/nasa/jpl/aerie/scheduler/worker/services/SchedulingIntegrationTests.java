@@ -1520,6 +1520,37 @@ public class SchedulingIntegrationTests {
     assertEquals(Duration.of(4, HOURS), growBanana.startOffset());
   }
 
+  private static List<ActivityDirective> onePickEveryTenMinutes(final Interval interval){
+    final var plan = new ArrayList<ActivityDirective>();
+    for(var cur = interval.start; cur.shorterThan(interval.end); cur = cur.plus(Duration.of(10, MINUTES))){
+      plan.add(new ActivityDirective(
+          cur,
+          "PickBanana",
+          Map.of("quantity", SerializedValue.of(100)),
+          null,
+          true));
+    }
+    return plan;
+  }
+
+  @Test
+  void testBigCoexistence(){
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        onePickEveryTenMinutes(PLANNING_HORIZON.getHor()),
+        List.of(new SchedulingGoal(new GoalId(0L, 0L), """
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: ActivityExpression.ofType(ActivityTypes.PickBanana),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
+                 })
+               }""", true)),
+        PLANNING_HORIZON);
+    assertEquals(1152, results.updatedPlan().size());
+  }
+
   @Test
   void testNotEqualTo_satisfied() {
     // Initial plant count is 200 in default configuration

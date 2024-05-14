@@ -17,6 +17,26 @@ jacocoTestReport {
 }
 
 task e2eTest(type: Test) {
+  ext.parseEnvFile = { filePath ->
+    file(filePath).readLines().each() {
+      if (!it.isEmpty() && !it.startsWith("#")) {
+        def (key, value) = it.tokenize('=')
+        if (key.startsWith("export ")) {
+          key = key.split("export ")[1];
+        }
+        if (System.getenv(key) == null) {
+          environment key, value
+        }
+      }
+    }
+  }
+
+  if(file('../e2e-tests/.env').exists()) {
+    parseEnvFile('../e2e-tests/.env')
+  } else if(file('../.env').exists()){
+    parseEnvFile('../.env')
+  }
+
   useJUnitPlatform()
   testLogging {
     exceptionFormat = 'full'
@@ -24,6 +44,7 @@ task e2eTest(type: Test) {
 }
 
 dependencies {
+  testImplementation 'org.jetbrains:annotations:16.0.2'
   testImplementation 'org.postgresql:postgresql:42.6.1'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'

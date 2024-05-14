@@ -1,0 +1,32 @@
+table:
+  name: snapshot_activity_tags
+  schema: tags
+configuration:
+  custom_name: "snapshot_activity_tags"
+object_relationships:
+  - name: snapshot_activity_directive
+    using:
+      foreign_key_constraint_on: [snapshot_id, directive_id]
+  - name: tag
+    using:
+      foreign_key_constraint_on: tag_id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

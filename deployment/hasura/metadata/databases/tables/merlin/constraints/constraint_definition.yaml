@@ -1,0 +1,102 @@
+table:
+  name: constraint_definition
+  schema: merlin
+configuration:
+  custom_name: "constraint_definition"
+object_relationships:
+  - name: metadata
+    using:
+      foreign_key_constraint_on: constraint_id
+array_relationships:
+  - name: models_using
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - constraint_id
+          - constraint_revision
+        table:
+          name: constraint_model_specification
+          schema: merlin
+  - name: plans_using
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - constraint_id
+          - constraint_revision
+        table:
+          name: constraint_specification
+          schema: merlin
+  - name: tags
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - constraint_id
+          - constraint_revision
+        table:
+          name: constraint_definition_tags
+          schema: tags
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+# Select is allowed if:
+#  - the constraint is public,
+#  - the user is the owner, or
+#  - the user has permission to edit a constraint specification it is on, or
+#  - the constraint is on their plan's model spec
+      filter: {"metadata": {"_or":[
+        {"public":{"_eq":true}},
+        {"owner":{"_eq":"X-Hasura-User-Id"}},
+        {"plans_using":{"plan":{"_or":[
+          {"owner":{"_eq":"X-Hasura-User-Id"}},
+          {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}},
+        {"models_using":{"model":{"_or":[
+          {"owner":{"_eq":"X-Hasura-User-Id"}},
+          {"plans":{"_or":[
+            {"owner":{"_eq":"X-Hasura-User-Id"}},
+            {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}]}}}]}}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {"metadata": {"_or":[
+        {"public":{"_eq":true}},
+        {"owner":{"_eq":"X-Hasura-User-Id"}},
+        {"plans_using":{"plan":{"_or":[
+          {"owner":{"_eq":"X-Hasura-User-Id"}},
+          {"collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}}]}}},
+        {"models_using":{"model":{"owner":{"_eq":"X-Hasura-User-Id"}}}}]}}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [constraint_id, definition]
+      check: {}
+      set:
+        author: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [constraint_id, definition]
+      check: {"_or":[{"metadata":{"public":{"_eq":true}}},{"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}
+      set:
+        author: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [definition, author]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter:
+        {"_or":[
+          {"author": {"_eq": "X-Hasura-User-Id"}},
+          {"metadata":{"owner":{"_eq":"X-Hasura-User-Id"}}}]}

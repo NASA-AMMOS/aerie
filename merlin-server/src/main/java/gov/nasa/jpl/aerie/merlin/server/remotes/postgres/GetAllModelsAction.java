@@ -12,8 +12,8 @@ import java.util.Map;
 /*package-local*/ final class GetAllModelsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select m.id, m.mission, m.name, m.version, m.owner, f.path
-    from mission_model as m
-    inner join uploaded_file as f on m.jar_id = f.id
+    from merlin.mission_model as m
+    inner join merlin.uploaded_file as f on m.jar_id = f.id
     """;
 
   private final PreparedStatement statement;
