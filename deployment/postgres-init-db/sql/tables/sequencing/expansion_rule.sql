@@ -5,7 +5,7 @@ create table sequencing.expansion_rule (
   activity_type text not null,
   expansion_logic text not null,
 
-  parcel_id integer not null,
+  parcel_id integer,
   authoring_mission_model_id integer,
 
   created_at timestamptz not null default now(),

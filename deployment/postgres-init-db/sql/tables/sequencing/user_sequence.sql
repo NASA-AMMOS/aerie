@@ -1,8 +1,8 @@
 create table sequencing.user_sequence (
+  id integer generated always as identity,
   created_at timestamptz not null default now(),
   definition text not null,
   seq_json jsonb,
-  id integer generated always as identity,
   name text not null,
   owner text,
   parcel_id integer not null,
@@ -23,6 +23,8 @@ comment on column sequencing.user_sequence.created_at is e''
   'Time the user sequence was created.';
 comment on column sequencing.user_sequence.definition is e''
   'The user sequence definition string.';
+comment on column sequencing.user_sequence.seq_json is e''
+  'The SeqJson representation of the user sequence.';
 comment on column sequencing.user_sequence.id is e''
   'ID of the user sequence.';
 comment on column sequencing.user_sequence.name is e''

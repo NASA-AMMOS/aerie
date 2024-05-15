@@ -1,11 +1,6 @@
 create table sequencing.parcel_to_parameter_dictionary (
-  id integer generated always as identity,
-
   parcel_id integer not null,
   parameter_dictionary_id integer not null,
-
-  constraint parcel_to_parameter_dictionary_synthetic_key
-    primary key (id),
 
   foreign key (parcel_id)
     references sequencing.parcel (id)

@@ -1,7 +1,7 @@
 create table sequencing.parameter_dictionary (
   id integer generated always as identity,
 
-  path text not null,
+  dictionary_path text not null,
   mission text not null,
   version text not null,
   parsed_json jsonb not null default '{}', -- Todo: remove and create a endpoint for the frontend to use the path
@@ -19,7 +19,7 @@ comment on table sequencing.parameter_dictionary is e''
   'A Parameter Dictionary for a mission.';
 comment on column sequencing.parameter_dictionary.id is e''
   'The synthetic identifier for this parameter dictionary.';
-comment on column sequencing.parameter_dictionary.path is e''
+comment on column sequencing.parameter_dictionary.dictionary_path is e''
   'The location of parameter dictionary json on the filesystem';
 comment on column sequencing.parameter_dictionary.mission is e''
   'A human-meaningful identifier for the mission described by the parameter dictionary';

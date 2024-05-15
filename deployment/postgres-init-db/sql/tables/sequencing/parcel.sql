@@ -3,8 +3,8 @@ create table sequencing.parcel (
 
   name text not null,
 
-  channel_dictionary_id integer default null,
   command_dictionary_id integer not null,
+  channel_dictionary_id integer default null,
   sequence_adaptation_id integer default null,
 
   created_at timestamptz not null default now(),
@@ -16,15 +16,22 @@ create table sequencing.parcel (
     primary key (id),
 
   foreign key (channel_dictionary_id)
-    references sequencing.channel_dictionary (id),
+    references sequencing.channel_dictionary (id)
+    on delete set null,
   foreign key (command_dictionary_id)
-    references sequencing.command_dictionary (id),
+    references sequencing.command_dictionary (id)
+    on delete cascade,
   foreign key (sequence_adaptation_id)
     references sequencing.sequence_adaptation (id)
+    on delete set null,
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null
 );
 
 comment on table sequencing.parcel is e''
-  'A bundled containing dictionaries and an adaptation file.';
+  'A bundled containing dictionaries and a sequence adaptation file.';
 comment on column sequencing.parcel.id is e''
   'The synthetic identifier for this parcel.';
 comment on column sequencing.parcel.name is e''
@@ -34,7 +41,7 @@ comment on column sequencing.parcel.channel_dictionary_id is e''
 comment on column sequencing.parcel.command_dictionary_id is e''
   'The identifier for the command dictionary.';
 comment on column sequencing.parcel.sequence_adaptation_id is e''
-  'The identifier for the adaptation file.';
+  'The identifier for the sequence adaptation file.';
 
 create trigger set_timestamp
 before update on sequencing.parcel

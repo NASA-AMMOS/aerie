@@ -8,13 +8,18 @@ create table sequencing.sequence_adaptation (
   updated_by text,
 
   constraint sequence_adaptation_synthetic_key
-    primary key (id)
+    primary key (id),
+
+  foreign key (updated_by)
+    references permissions.users
+    on update cascade
+    on delete set null
 );
 
 comment on table sequencing.sequence_adaptation is e''
   'A custom adaptation used to overwrite variable and linting rules for the sequence editor';
 comment on column sequencing.sequence_adaptation.adaptation is e''
-  'The adaptation code.';
+  'The sequencing adaptation code.';
 
 create trigger set_timestamp
 before update on sequencing.sequence_adaptation
