@@ -213,10 +213,10 @@ type TypescriptFile {
 
 type DictionaryResponse {
   id: Int!
-  path: String!
+  dictionary_path: String!
   mission: String!
   version: String!
-  parsed_json: CommandDictionary!
+  parsed_json: Dictionary!
   created_at: String!
   type : String!
 }
@@ -306,6 +306,6 @@ scalar CommandSeqJson
 
 scalar SequenceSeqJson
 
-scalar CommandDictionary
+scalar Dictionary
 
 scalar Any

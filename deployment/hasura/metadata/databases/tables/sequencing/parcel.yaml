@@ -14,7 +14,7 @@ object_relationships:
     using:
       foreign_key_constraint_on: sequence_adaptation_id
 array_relationships:
-  - name: parameter_dictionary
+  - name: parameter_dictionaries
     using:
       foreign_key_constraint_on:
         column: parcel_id
@@ -28,11 +28,6 @@ array_relationships:
         table:
           name: expansion_set
           schema: sequencing
-insert_permissions:
-  - role: aerie_admin
-    permission:
-      columns: "*"
-      check: {}
 select_permissions:
   - role: aerie_admin
     permission:
@@ -49,12 +44,19 @@ select_permissions:
       columns: "*"
       filter: {}
       allow_aggregations: true
-delete_permissions:
+insert_permissions:
   - role: aerie_admin
     permission:
-      filter: {}
+      columns: "*"
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
       columns: [channel_dictionary_id, command_dictionary_id, name, sequence_adaptation_id]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
       filter: {}
