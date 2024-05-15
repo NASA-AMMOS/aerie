@@ -8,9 +8,10 @@ create table sequencing.parcel (
   sequence_adaptation_id integer default null,
 
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-
   owner text,
+  updated_at timestamptz not null default now(),
+  updated_by text,
+
 
   constraint parcel_synthetic_key
     primary key (id),
@@ -25,6 +26,10 @@ create table sequencing.parcel (
     references sequencing.sequence_adaptation (id)
     on delete set null,
   foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
+  foreign key (updated_by)
     references permissions.users
     on update cascade
     on delete set null

@@ -181,23 +181,19 @@ drop table sequencing.parcel_to_parameter_dictionary;
 drop table sequencing.parameter_dictionary;
 
 --------------------------------------
+---- Drop the Parcel Table
+--------------------------------------
+drop table sequencing.parcel;
+
+--------------------------------------
 ---- Drop the Seq Adaptation Table
 --------------------------------------
-alter table sequencing.parcel
-  drop constraint parcel_sequence_adaptation_id_fkey;
 drop table sequencing.sequence_adaptation;
 
 --------------------------------------
 ---- Drop the Channel Dictionary Table
 --------------------------------------
-alter table sequencing.parcel
-  drop constraint parcel_channel_dictionary_id_fkey;
 drop table sequencing.channel_dictionary;
-
---------------------------------------
----- Drop the Parcel Table
---------------------------------------
-drop table sequencing.parcel;
 
 call migrations.mark_migration_rolled_back('3');
 

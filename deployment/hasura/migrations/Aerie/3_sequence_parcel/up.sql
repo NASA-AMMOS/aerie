@@ -44,15 +44,18 @@ execute function util_functions.set_updated_at();
 --------------------------------------
 create table sequencing.sequence_adaptation (
   id integer generated always as identity,
-
   adaptation text not null,
-
   created_at timestamptz not null default now(),
+  owner text,
   updated_at timestamptz not null default now(),
   updated_by text,
 
   constraint sequence_adaptation_synthetic_key
     primary key (id),
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
   foreign key (updated_by)
     references permissions.users
     on update cascade
@@ -83,20 +86,27 @@ create table sequencing.parcel (
  sequence_adaptation_id integer default null,
 
  created_at timestamptz not null default now(),
- updated_at timestamptz not null default now(),
-
  owner text,
+ updated_at timestamptz not null default now(),
+ updated_by text,
 
  constraint parcel_synthetic_key
    primary key (id),
 
  foreign key (channel_dictionary_id)
-   references sequencing.channel_dictionary (id),
+   references sequencing.channel_dictionary (id)
+   on delete set null,
  foreign key (command_dictionary_id)
-   references sequencing.command_dictionary (id),
+   references sequencing.command_dictionary (id)
+   on delete cascade,
  foreign key (sequence_adaptation_id)
-   references sequencing.sequence_adaptation (id),
+   references sequencing.sequence_adaptation (id)
+   on delete set null,
  foreign key (owner)
+   references permissions.users
+   on update cascade
+   on delete set null,
+  foreign key (updated_by)
    references permissions.users
    on update cascade
    on delete set null
@@ -121,14 +131,11 @@ create trigger set_timestamp
 execute function util_functions.set_updated_at();
 
 --- populate table with data
-insert into sequencing.parcel (name, channel_dictionary_id, command_dictionary_id, sequence_adaptation_id, created_at, updated_at, owner)
+insert into sequencing.parcel (name, command_dictionary_id, owner, updated_by)
 select
     'Parcel ' || cd.id as name,
-    null,
     cd.id,
-    null,
-    now(),
-    now(),
+    'Aerie Legacy',
     'Aerie Legacy'
 from sequencing.command_dictionary cd;
 
@@ -280,33 +287,26 @@ alter table sequencing.expansion_set
 --------------------------------------
 
 alter table sequencing.expansion_rule
-  add column parcel_id integer;
+  add column parcel_id integer,
+  add foreign key (parcel_id)
+    references sequencing.parcel (id)
+    on delete set null;
 
 comment on column sequencing.expansion_rule.parcel_id is e''
   'The id of the parcel to be used for authoring of this expansion.';
 
 --- Data Migration
 
---- drop rule with no command dictionary
-delete from sequencing.expansion_rule er
-where authoring_command_dict_id is null;
-
 update sequencing.expansion_rule sr
 set parcel_id = p.id
 from sequencing.parcel p
 where p.command_dictionary_id = sr.authoring_command_dict_id;
 
-alter table sequencing.expansion_rule
-  alter column parcel_id set not null;
 ---
 
 alter table sequencing.expansion_rule
   add constraint expansion_rule_unique_name_per_parcel_and_model
     unique (authoring_mission_model_id, parcel_id, name),
-
-  add foreign key (parcel_id)
-    references sequencing.parcel (id)
-    on delete set null,
 
   drop constraint expansion_rule_unique_name_per_dict_and_model,
   drop constraint expansion_rule_authoring_command_dict_id_fkey;
@@ -327,8 +327,8 @@ select str.set_id,
        rule.updated_by,
        rule.description
 from sequencing.expansion_set_to_rule str
-       left join sequencing.expansion_rule rule
-                 on str.rule_id = rule.id;
+left join sequencing.expansion_rule rule
+on str.rule_id = rule.id;
 
 alter table sequencing.expansion_rule
   drop column authoring_command_dict_id;

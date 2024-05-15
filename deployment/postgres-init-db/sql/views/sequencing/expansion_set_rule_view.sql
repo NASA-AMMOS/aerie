@@ -11,6 +11,7 @@ select str.set_id,
 			 rule.owner,
 			 rule.updated_by,
 			 rule.description
-from sequencing.expansion_set_to_rule str left join sequencing.expansion_rule rule
-  on str.rule_id = rule.id;
+from sequencing.expansion_set_to_rule str
+left join sequencing.expansion_rule rule
+on str.rule_id = rule.id;
 

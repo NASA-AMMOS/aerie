@@ -1,15 +1,17 @@
 create table sequencing.sequence_adaptation (
   id integer generated always as identity,
-
   adaptation text not null,
-
   created_at timestamptz not null default now(),
+  owner text,
   updated_at timestamptz not null default now(),
   updated_by text,
 
   constraint sequence_adaptation_synthetic_key
     primary key (id),
-
+  foreign key (owner)
+    references permissions.users
+    on update cascade
+    on delete set null,
   foreign key (updated_by)
     references permissions.users
     on update cascade

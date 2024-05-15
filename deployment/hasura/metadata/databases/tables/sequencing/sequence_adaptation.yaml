@@ -26,10 +26,11 @@ insert_permissions:
       check: {}
       set:
         updated_by: "x-hasura-user-id"
+        owner: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [adaptation]
+      columns: [adaptation, owner]
       filter: {}
       set:
         updated_by: "x-hasura-user-id"
