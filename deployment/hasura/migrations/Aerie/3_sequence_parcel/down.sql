@@ -75,6 +75,7 @@ select str.set_id,
        rule.activity_type,
        rule.expansion_logic,
        rule.authoring_command_dict_id,
+       rule.authoring_mission_model_id,
        rule.created_at,
        rule.updated_at,
        rule.name,
@@ -115,10 +116,9 @@ alter table sequencing.expansion_set
 
   add foreign key (command_dict_id)
     references sequencing.command_dictionary (id)
-    on delete cascade;
+    on delete cascade,
 
-
-drop constraint expansion_set_unique_name_per_parcel_and_model;
+  drop constraint expansion_set_unique_name_per_parcel_and_model,
   drop constraint expansion_set_parcel_id_fkey;
 
 drop view sequencing.rule_expansion_set_view;
