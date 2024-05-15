@@ -7,7 +7,7 @@ export type Parcel = {
   command_dictionary: {
     id: number;
   };
-  parameter_dictionary: {
+  parameter_dictionaries: {
     parameter_dictionary: {
       id: number;
     };
@@ -28,7 +28,7 @@ export const parcelBatchLoader: BatchLoader<{ parcelId: number }, Parcel, { grap
         query GetParcels($parcelIds: [Int!]!) {
           parcel(where: { id: { _in: $parcelIds } }) {
             id
-            parameter_dictionary(where: { parcel_id: { _in: $parcelIds } }) {
+            parameter_dictionaries {
               parameter_dictionary {
                 id
               }

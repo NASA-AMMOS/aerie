@@ -31,7 +31,7 @@ class CommandExpansionDatabaseTests {
       final var insertDictionary = statement.executeQuery(
           //language=sql
           """
-        insert into sequencing.command_dictionary (path, mission,version)
+        insert into sequencing.command_dictionary (dictionary_path, mission,version)
         values ('test-path','test-mission','1')
         returning id, created_at, updated_at
         """);

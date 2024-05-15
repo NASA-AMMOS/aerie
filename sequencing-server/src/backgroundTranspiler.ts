@@ -104,7 +104,7 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
               JSON.stringify({
                 parcelID: parcel.id,
                 commandDictionaryId: parcel.command_dictionary.id,
-                parameterDictionaryId: parcel.parameter_dictionary.map(parm => parm.parameter_dictionary.id),
+                parameterDictionaryId: parcel.parameter_dictionaries.map(parm => parm.parameter_dictionary.id),
                 ...(parcel.channel_dictionary ? { channelDictionaryId: parcel.channel_dictionary.id } : {}),
                 missionModelId,
                 expansionId: expansion.id,

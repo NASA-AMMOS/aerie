@@ -30,16 +30,16 @@ export const expansionSetBatchLoader: BatchLoader<
           parcel {
             id
             command_dictionary {
-              path
+              dictionary_path
               id
             }
             channel_dictionary {
-              path
+              dictionary_path
               id
             }
-            parameter_dictionary {
+            parameter_dictionaries {
               parameter_dictionary {
-                path
+                dictionary_path
                 id
               }
             }
@@ -58,24 +58,24 @@ export const expansionSetBatchLoader: BatchLoader<
       if (expansionSet === undefined) {
         return new ErrorWithStatusCode(`No expansion_set with id: ${expansionSetId}`, 404);
       }
-      const commandTypes = await fs.promises.readFile(expansionSet.parcel.command_dictionary.path, 'utf8');
+      const commandTypes = await fs.promises.readFile(expansionSet.parcel.command_dictionary.dictionary_path, 'utf8');
       const channelTypes = JSON.parse(
         expansionSet.parcel.channel_dictionary
-          ? await fs.promises.readFile(expansionSet.parcel.channel_dictionary.path, 'utf8')
+          ? await fs.promises.readFile(expansionSet.parcel.channel_dictionary.dictionary_path, 'utf8')
           : '{}',
       );
       const paramerterTypes = await Promise.allSettled(
-        expansionSet.parcel.parameter_dictionary.map(async param => {
+        expansionSet.parcel.parameter_dictionaries.map(async param => {
           return {
             parameter_dictionary: {
-              parsedJson: JSON.parse(await fs.promises.readFile(param.parameter_dictionary.path, 'utf8')),
+              parsedJson: JSON.parse(await fs.promises.readFile(param.parameter_dictionary.dictionary_path, 'utf8')),
               id: param.parameter_dictionary.id,
             },
           };
         }),
       );
 
-      const paramerterResults: {
+      const parameterResults: {
         parameter_dictionary: {
           parsedJson: string;
           id: number;
@@ -83,7 +83,7 @@ export const expansionSetBatchLoader: BatchLoader<
       }[] = [];
       for (const result of paramerterTypes) {
         if (result.status === 'fulfilled') {
-          paramerterResults.push(result.value);
+          parameterResults.push(result.value);
         }
       }
 
@@ -104,7 +104,7 @@ export const expansionSetBatchLoader: BatchLoader<
               }
             : {}),
 
-          parameter_dictionary: paramerterResults,
+          parameter_dictionaries: parameterResults,
         },
         missionModel: {
           id: expansionSet.mission_model.id,
@@ -137,17 +137,17 @@ export interface ExpansionSet {
   parcel: {
     id: number;
     command_dictionary: {
-      path: string;
+      dictionary_path: string;
       id: number;
     };
-    parameter_dictionary: {
+    parameter_dictionaries: {
       parameter_dictionary: {
-        path: string;
+        dictionary_path: string;
         id: number;
       };
     }[];
     channel_dictionary?: {
-      path: string;
+      dictionary_path: string;
       id: number;
     };
   };
@@ -161,7 +161,7 @@ export interface ExpansionSetData {
       commandTypesTypeScript: string;
       id: number;
     };
-    parameter_dictionary: {
+    parameter_dictionaries: {
       parameter_dictionary: {
         id: number;
         parsedJson: string;

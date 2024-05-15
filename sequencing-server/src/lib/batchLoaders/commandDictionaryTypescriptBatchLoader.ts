@@ -11,14 +11,14 @@ export const commandDictionaryTypescriptBatchLoader: BatchLoader<
   const { command_dictionary } = await opts.graphqlClient.request<{
     command_dictionary: {
       id: number;
-      path: string;
+      dictionary_path: string;
     }[];
   }>(
     gql`
       query GetCommandDictionaries($dictionaryIds: [Int!]!) {
         command_dictionary(where: { id: { _in: $dictionaryIds } }) {
           id
-          path
+          dictionary_path
         }
       }
     `,
@@ -33,7 +33,7 @@ export const commandDictionaryTypescriptBatchLoader: BatchLoader<
       if (dict === undefined) {
         return new ErrorWithStatusCode(`No dictionary with id: ${dictionaryId}`, 404);
       }
-      return fs.promises.readFile(dict.path, 'utf8');
+      return fs.promises.readFile(dict.dictionary_path, 'utf8');
     }),
   );
 };

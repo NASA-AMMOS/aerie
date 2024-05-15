@@ -36,7 +36,7 @@ export async function insertParcel(
 export async function removeParcel(graphqlClient: GraphQLClient, parcelId: number): Promise<void> {
   return graphqlClient.request(
     gql`
-      mutation PutParcel($parcelId: Int!) {
+      mutation RemoveParcel($parcelId: Int!) {
         delete_parcel_by_pk(id: $parcelId) {
           id
         }

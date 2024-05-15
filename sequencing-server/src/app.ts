@@ -181,21 +181,21 @@ app.post('/put-dictionary', async (req, res, next) => {
   dictionaryPath = await processDictionary(parsedDictionary, type);
   logger.info(`lib generated - path: ${dictionaryPath}`);
 
-  let db_name = 'command_dictionary';
+  let db_table_name = 'command_dictionary';
   switch (type) {
     case DictionaryType.CHANNEL:
-      db_name = 'channel_dictionary';
+      db_table_name = 'channel_dictionary';
       break;
     case DictionaryType.PARAMETER:
-      db_name = 'parameter_dictionary';
+      db_table_name = 'parameter_dictionary';
       break;
   }
   const sqlExpression = `
-    insert into sequencing.${db_name} (path, mission, version, parsed_json)
+    insert into sequencing.${db_table_name} (dictionary_path, mission, version, parsed_json)
     values ($1, $2, $3, $4)
     on conflict (mission, version) do update
-      set path = $1, parsed_json = $4
-    returning id, path, mission, version, parsed_json, created_at;
+      set dictionary_path = $1, parsed_json = $4
+    returning id, dictionary_path, mission, version, parsed_json, created_at;
   `;
 
   const { rows } = await db.query(sqlExpression, [

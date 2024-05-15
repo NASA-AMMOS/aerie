@@ -122,7 +122,7 @@ commandExpansionRouter.post('/put-expansion-set', async (req, res, next) => {
           JSON.stringify({
             parcelID: parcel.id,
             commandDictionaryId: parcel.command_dictionary.id,
-            parameterDictionaryId: parcel.parameter_dictionary.map(param => param.parameter_dictionary.id),
+            parameterDictionaryId: parcel.parameter_dictionaries.map(param => param.parameter_dictionary.id),
             ...(parcel.channel_dictionary ? { channelDictionaryId: parcel.channel_dictionary.id } : {}),
             missionModelId,
             expansionId: expansion.id,
@@ -267,7 +267,9 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
           JSON.stringify({
             parcelID: expansionSet.parcel.id,
             commandDictionaryId: expansionSet.parcel.command_dictionary.id,
-            parameterDictionaryId: expansionSet.parcel.parameter_dictionary.map(param => param.parameter_dictionary.id),
+            parameterDictionaryId: expansionSet.parcel.parameter_dictionaries.map(
+              param => param.parameter_dictionary.id,
+            ),
             ...(expansionSet.parcel.channel_dictionary
               ? { channelDictionaryId: expansionSet.parcel.channel_dictionary.id }
               : {}),
@@ -312,7 +314,9 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
           {
             serializedActivityInstance: serializeWithTemporal(simulatedActivity),
             channelData: expansionSet.parcel.channel_dictionary?.parsedJson,
-            parameterData: expansionSet.parcel.parameter_dictionary.map(param => param.parameter_dictionary.parsedJson),
+            parameterData: expansionSet.parcel.parameter_dictionaries.map(
+              param => param.parameter_dictionary.parsedJson,
+            ),
             buildArtifacts,
           },
           { name: 'executeExpansionFromBuildArtifacts' },
