@@ -28,6 +28,7 @@ public final class Mission {
   public final Counter<Integer> plant;
   public final Register<String> producer;
   public final Register<Integer> dataLineCount;
+  public final Warnings warnings;
 
   public Mission(final Registrar registrar, final Configuration config) {
     this.fruit = new Accumulator(config.initialConditions().fruit(), 0.0);
@@ -36,6 +37,7 @@ public final class Mission {
     this.plant = Counter.ofInteger(config.initialPlantCount());
     this.producer = Register.forImmutable(config.initialProducer());
     this.dataLineCount = Register.forImmutable(countLines(config.initialDataPath()));
+    this.warnings = new Warnings();
 
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
@@ -45,6 +47,7 @@ public final class Mission {
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
     registrar.topic("/producer", this.producer.ref, new StringValueMapper());
+    registrar.topic("Warnings", this.warnings.ref, new StringValueMapper());
 
     // Load SPICE in the Mission constructor
     try {
