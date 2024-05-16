@@ -339,29 +339,15 @@ alter table sequencing.expansion_rule
 ---------------------------------------
 
 alter table sequencing.command_dictionary
-  add column dictionary_path text,
   add column updated_at timestamptz not null default now();
 
-comment on column sequencing.command_dictionary.dictionary_path is e''
-  'The location of command dictionary types (.ts) on the filesystem';
+alter table sequencing.command_dictionary
+  rename column command_types_typescript_path to dictionary_path;
 
 create trigger set_timestamp
   before update on sequencing.command_dictionary
   for each row
 execute function util_functions.set_updated_at();
-
---- Data Migration
-update sequencing.command_dictionary
-set dictionary_path = command_types_typescript_path
-where dictionary_path is null;
-
-alter table sequencing.command_dictionary
-  alter column dictionary_path set not null;
-
----
-
-alter table sequencing.command_dictionary
-  drop column command_types_typescript_path;
 
 ------------------------------------
 --- Modify Expanded Sequences Table

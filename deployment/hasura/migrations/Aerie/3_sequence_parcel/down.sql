@@ -3,41 +3,21 @@
 --- Modify Expanded Sequences Table
 ------------------------------------
 alter table sequencing.expanded_sequences
-  add column edsl_string text;
-
-update sequencing.expanded_sequences
-set edsl_string = '{}'
-where edsl_string is null;
+  add column edsl_string text not null default '{}';
 
 alter table sequencing.expanded_sequences
-  alter column edsl_string set not null;
+  alter column edsl_string drop default;
 
 ------------------------------------------
 ---- Modify the Command Dictionary Table
 ------------------------------------------
-
-alter table sequencing.command_dictionary
-  add column command_types_typescript_path text;
-
---- Data Migration
-update sequencing.command_dictionary
-set command_types_typescript_path = dictionary_path
-where command_types_typescript_path is null;
-
-
-alter table sequencing.command_dictionary
-  alter column command_types_typescript_path set not null;
-
----
-
 drop trigger set_timestamp on sequencing.command_dictionary;
 
-comment on column sequencing.command_dictionary.command_types_typescript_path is e''
-  'The location of command dictionary types (.ts) on the filesystem';
+alter table sequencing.command_dictionary
+  rename column dictionary_path to command_types_typescript_path;
 
 alter table sequencing.command_dictionary
-  drop column updated_at,
-  drop column dictionary_path;
+  drop column updated_at;
 
 --------------------------------------
 ---- Modify the Expansion Rule Table
@@ -49,10 +29,10 @@ comment on column sequencing.expansion_rule.authoring_command_dict_id is e''
   'The id of the command dictionary to be used for authoring of this expansion.';
 
 --- Data Migration
-update sequencing.expansion_rule
+update sequencing.expansion_rule er
 set authoring_command_dict_id = p.command_dictionary_id
-from sequencing.expansion_rule er
-       inner join sequencing.parcel p on er.parcel_id = p.id;
+from sequencing.parcel p
+where er.parcel_id = p.id;
 
 ---
 
@@ -100,10 +80,10 @@ comment on column sequencing.expansion_set.command_dict_id is e''
   'The ID of a command dictionary';
 
 --- Data Migration
-update sequencing.expansion_set
+update sequencing.expansion_set es
 set command_dict_id = p.command_dictionary_id
-from sequencing.expansion_set es
-       inner join sequencing.parcel p on es.parcel_id = p.id;
+from sequencing.parcel p
+where es.parcel_id = p.id;
 
 ---
 
@@ -156,10 +136,10 @@ comment on column sequencing.user_sequence.authoring_command_dict_id is e''
   'Command dictionary the user sequence was created with.';
 
 --- Data Migration
-update sequencing.user_sequence
+update sequencing.user_sequence us
 set authoring_command_dict_id = p.command_dictionary_id
-from sequencing.user_sequence us
-       inner join sequencing.parcel p on us.parcel_id = p.id;
+from sequencing.parcel p
+where us.parcel_id = p.id;
 
 alter table sequencing.user_sequence
   alter column authoring_command_dict_id set not null;
