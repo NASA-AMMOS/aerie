@@ -67,7 +67,6 @@ public final class SchedulerWorkerAppDriver {
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
         merlinService,
         config.merlinFileStore(),
-        config.missionRuleJarPath(),
         config.outputMode(),
         schedulingDSLCompilationService);
 

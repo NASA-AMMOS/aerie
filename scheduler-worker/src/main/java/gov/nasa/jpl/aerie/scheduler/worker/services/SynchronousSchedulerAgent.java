@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +36,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.goals.Procedure;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
@@ -94,7 +92,6 @@ public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
     MerlinService.OwnerRole merlinService,
     Path modelJarsDir,
-    Path goalsJarPath,
     PlanOutputMode outputMode,
     SchedulingDSLCompilationService schedulingDSLCompilationService
 )
@@ -103,7 +100,6 @@ public record SynchronousSchedulerAgent(
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinService);
     Objects.requireNonNull(modelJarsDir);
-    Objects.requireNonNull(goalsJarPath);
     Objects.requireNonNull(schedulingDSLCompilationService);
   }
 
