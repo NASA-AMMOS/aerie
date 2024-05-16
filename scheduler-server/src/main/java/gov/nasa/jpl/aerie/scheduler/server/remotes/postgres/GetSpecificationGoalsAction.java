@@ -15,7 +15,7 @@ import java.util.List;
 
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      select s.goal_id, gd.revision, gm.name, gd.definition, s.simulate_after, gd.type, encode(f.path, 'escape'), s.arguments
+      select s.goal_id, gd.revision, gm.name, gd.definition, s.simulate_after, gd.type, encode(f.path, 'escape') as path, s.arguments
       from scheduler.scheduling_specification_goals s
       left join scheduler.scheduling_goal_definition gd using (goal_id)
       left join scheduler.scheduling_goal_metadata gm on s.goal_id = gm.id
@@ -48,14 +48,14 @@ import java.util.List;
       final var definition = resultSet.getString("definition");
       final var simulateAfter = resultSet.getBoolean("simulate_after");
       final var type = resultSet.getString("type");
-      final var path = Path.of(resultSet.getString("path"));
+      final var path = resultSet.getString("path");
       final var args = resultSet.getString("arguments");
-      if (type.equals("JAR")) {
-        goals.add(new GoalRecord(new GoalId(id, revision), name, new GoalType.JAR(path, args), simulateAfter));
-      } else {
-        goals.add(new GoalRecord(new GoalId(id, revision), name, new GoalType.EDSL(definition), simulateAfter));
-
-      }
+      goals.add(new GoalRecord(
+            new GoalId(id, revision),
+            name,
+            type.equals("JAR") ? new GoalType.JAR(Path.of(path), args) : new GoalType.EDSL(definition),
+            simulateAfter
+      ));
     }
 
     return goals;
