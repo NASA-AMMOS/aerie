@@ -3,8 +3,10 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import org.intellij.lang.annotations.Language;
 
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -13,10 +15,11 @@ import java.util.List;
 
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      select s.goal_id, gd.revision, gm.name, gd.definition, s.simulate_after
+      select s.goal_id, gd.revision, gm.name, gd.definition, s.simulate_after, gd.type, encode(f.path, 'escape'), s.arguments
       from scheduler.scheduling_specification_goals s
       left join scheduler.scheduling_goal_definition gd using (goal_id)
       left join scheduler.scheduling_goal_metadata gm on s.goal_id = gm.id
+      left join merlin.uploaded_file f on gd.uploaded_jar_id = f.id
       where s.specification_id = ?
       and s.enabled
       and ((s.goal_revision is not null and s.goal_revision = gd.revision)
@@ -44,7 +47,15 @@ import java.util.List;
       final var name = resultSet.getString("name");
       final var definition = resultSet.getString("definition");
       final var simulateAfter = resultSet.getBoolean("simulate_after");
-      goals.add(new GoalRecord(new GoalId(id, revision), name, new GoalSource(definition), simulateAfter));
+      final var type = resultSet.getString("type");
+      final var path = Path.of(resultSet.getString("path"));
+      final var args = resultSet.getString("arguments");
+      if (type.equals("JAR")) {
+        goals.add(new GoalRecord(new GoalId(id, revision), name, new GoalType.JAR(path, args), simulateAfter));
+      } else {
+        goals.add(new GoalRecord(new GoalId(id, revision), name, new GoalType.EDSL(definition), simulateAfter));
+
+      }
     }
 
     return goals;
