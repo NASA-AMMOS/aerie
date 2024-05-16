@@ -51,13 +51,14 @@ insert_permissions:
       check: {}
       set:
         owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [channel_dictionary_id, command_dictionary_id, name, sequence_adaptation_id]
+      columns: [channel_dictionary_id, command_dictionary_id, name, sequence_adaptation_id, owner]
       filter: {}
       set:
-        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:
