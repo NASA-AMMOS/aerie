@@ -3,7 +3,7 @@ select str.set_id,
 			 rule.id,
 			 rule.activity_type,
 			 rule.expansion_logic,
-			 rule.authoring_command_dict_id,
+			 rule.parcel_id,
 			 rule.authoring_mission_model_id,
 			 rule.created_at,
 			 rule.updated_at,
@@ -11,6 +11,7 @@ select str.set_id,
 			 rule.owner,
 			 rule.updated_by,
 			 rule.description
-from sequencing.expansion_set_to_rule str left join sequencing.expansion_rule rule
-  on str.rule_id = rule.id;
+from sequencing.expansion_set_to_rule str
+left join sequencing.expansion_rule rule
+on str.rule_id = rule.id;
 

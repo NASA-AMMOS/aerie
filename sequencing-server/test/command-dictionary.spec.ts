@@ -16,11 +16,9 @@ beforeAll(async () => {
 describe('upload command dictionary', () => {
   it('should upload a command dictionary and all of the fields should be populated correctly', async () => {
     // During the test we use a uuid for the mission so there's no conflicting command dictionaries.
-    const { id, command_types_typescript_path, mission, parsed_json } = await insertCommandDictionary(graphqlClient);
+    const { id, dictionary_path, mission, parsed_json } = await insertCommandDictionary(graphqlClient);
 
-    expect(command_types_typescript_path).toBe(
-      `/usr/src/app/sequencing_file_store/${mission}/command_lib.${mission}.ts`,
-    );
+    expect(dictionary_path).toBe(`/usr/src/app/sequencing_file_store/${mission}/command_lib.${mission}.ts`);
 
     expect(parsed_json).toStrictEqual(
       ampcs.parse(commandDictionaryString.replace(/(Banana Nation|1.0.0.0)/g, mission)),

@@ -401,8 +401,8 @@ export async function getLatestMissionModel(graphqlClient: GraphQLClient): Promi
   );
 }
 
-export async function getLatestCommandDictionary(graphqlClient: GraphQLClient): Promise<{
-  command_dictionary_aggregate: {
+export async function getLatestParcel(graphqlClient: GraphQLClient): Promise<{
+  parcel_aggregate: {
     aggregate: {
       max: {
         id: number;
@@ -411,7 +411,7 @@ export async function getLatestCommandDictionary(graphqlClient: GraphQLClient): 
   };
 }> {
   return graphqlClient.request<{
-    command_dictionary_aggregate: {
+    parcel_aggregate: {
       aggregate: {
         max: {
           id: number;
@@ -420,8 +420,8 @@ export async function getLatestCommandDictionary(graphqlClient: GraphQLClient): 
     };
   }>(
     gql`
-      query GetLatestCommandDictionary {
-        command_dictionary_aggregate(order_by: { created_at: asc }) {
+      query GetLatestParcel {
+        parcel_aggregate(order_by: { created_at: asc }) {
           aggregate {
             max {
               id
@@ -436,7 +436,7 @@ export async function getLatestCommandDictionary(graphqlClient: GraphQLClient): 
 export async function getExpansionRule(
   graphqlClient: GraphQLClient,
   missionModelId: number,
-  commandDictionaryId: number,
+  parcelId: number,
 ): Promise<{
   expansion_rule: {
     id: number;
@@ -453,7 +453,7 @@ export async function getExpansionRule(
   }>(
     gql`
         query GetExpansonLogic {
-          expansion_rule(where: {authoring_command_dict_id: {_eq: ${commandDictionaryId}}, authoring_mission_model_id: {_eq: ${missionModelId} }}) {
+          expansion_rule(where: {parcel_id: {_eq: ${parcelId} }, authoring_mission_model_id: {_eq: ${missionModelId} }}) {
             id
             activity_type
             expansion_logic

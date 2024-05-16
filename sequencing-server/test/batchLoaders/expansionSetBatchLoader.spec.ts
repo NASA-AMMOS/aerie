@@ -4,16 +4,19 @@ import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionMode
 import { insertExpansion, insertExpansionSet, removeExpansion, removeExpansionSet } from '../testUtils/Expansion';
 import { insertCommandDictionary, removeCommandDictionary } from '../testUtils/CommandDictionary';
 import { getGraphQLClient } from '../testUtils/testUtils.js';
+import { insertParcel, removeParcel } from '../testUtils/Parcel';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let expansionId: number;
 let expansionSetId: number;
 let commandDictionaryId: number;
+let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
   commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'expansionSetBatchLoaderTestParcel')).parcelId;
 });
 
 beforeAll(async () => {
@@ -26,6 +29,7 @@ beforeAll(async () => {
     return BAKE_BREAD;
   }
   `,
+    parcelId,
   );
   expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
 });
@@ -33,6 +37,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeExpansionSet(graphqlClient, expansionSetId);
   await removeExpansion(graphqlClient, expansionId);
+  await removeParcel(graphqlClient, parcelId);
   await removeCommandDictionary(graphqlClient, commandDictionaryId);
   await removeMissionModel(graphqlClient, missionModelId);
   await removeMissionModel(graphqlClient, missionModelId);

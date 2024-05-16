@@ -1,8 +1,13 @@
 table:
-  name: command_dictionary
+  name: parameter_dictionary
   schema: sequencing
 configuration:
-  custom_name: "command_dictionary"
+  custom_name: "parameter_dictionary"
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      check: {}
 select_permissions:
   - role: aerie_admin
     permission:

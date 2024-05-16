@@ -1,25 +1,30 @@
 table:
-  name: command_dictionary
+  name: channel_dictionary
   schema: sequencing
 configuration:
-  custom_name: "command_dictionary"
+  custom_name: "channel_dictionary"
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      check: { }
 select_permissions:
   - role: aerie_admin
     permission:
       columns: "*"
-      filter: {}
+      filter: { }
       allow_aggregations: true
   - role: user
     permission:
       columns: "*"
-      filter: {}
+      filter: { }
       allow_aggregations: true
   - role: viewer
     permission:
       columns: "*"
-      filter: {}
+      filter: { }
       allow_aggregations: true
 delete_permissions:
   - role: aerie_admin
     permission:
-      filter: {}
+      filter: { }

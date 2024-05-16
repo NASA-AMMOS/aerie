@@ -6,21 +6,23 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "npm run build:clean; tsc -p tsconfig.build.json; npm run copy-preface; npm run copy-temporal-polyfill",
+    "build": "npm run build:clean; tsc -p tsconfig.build.json; npm run copy-preface; npm run copy-temporal-polyfill; npm run copy-channel-types; npm run copy-parameter-types;",
     "build:clean": "rm -rf ./build",
     "copy-preface": "cp ./src/lib/codegen/CommandEDSLPreface.ts ./build/lib/codegen/CommandEDSLPreface.ts;",
-    "copy-temporal-polyfill": "cp ./src/TemporalPolyfillTypes.ts ./build/TemporalPolyfillTypes.ts;",
+    "copy-temporal-polyfill": "cp src/types/TemporalPolyfillTypes.ts ./build/types/TemporalPolyfillTypes.ts;",
+    "copy-channel-types": "cp src/types/ChannelTypes.ts ./build/types/ChannelTypes.ts;",
+    "copy-parameter-types": "cp src/types/ParameterTypes.ts ./build/types/ParameterTypes.ts;",
     "debug": "node --inspect=0.0.0.0:9229 --experimental-vm-modules ./build/app.js",
     "dev": "npm run build && concurrently -n \"tsc,node\" -c \"blue,red\" \"npm run ts-watch\" \"npm run dev-server\"",
     "dev-server": "supervisor -- --inspect=0.0.0.0 --experimental-vm-modules ./build/app.js",
     "format": "npx prettier --config ./.prettierrc -w ./src ./test",
     "start": "node --experimental-vm-modules ./build/app.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
-    "ts-watch": "npm run copy-preface; npm run copy-temporal-polyfill; tsc -p tsconfig.build.json --watch"
+    "ts-watch": "npm run copy-preface; npm run copy-temporal-polyfill; npm run copy-channel-types; npm run copy-parameter-types; tsc -p tsconfig.build.json --watch"
   },
   "dependencies": {
     "@js-temporal/polyfill": "~0.4.3",
-    "@nasa-jpl/aerie-ampcs": "~1.0.1",
+    "@nasa-jpl/aerie-ampcs": "~1.0.5",
     "@nasa-jpl/aerie-ts-user-code-runner": "~0.6.0",
     "@nasa-jpl/seq-json-schema": "1.0.20",
     "body-parser": "~1.20.1",

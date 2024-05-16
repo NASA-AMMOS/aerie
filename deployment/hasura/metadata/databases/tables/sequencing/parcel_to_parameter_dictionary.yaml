@@ -1,8 +1,15 @@
 table:
-  name: command_dictionary
+  name: parcel_to_parameter_dictionary
   schema: sequencing
 configuration:
-  custom_name: "command_dictionary"
+  custom_name: "parcel_to_parameter_dictionary"
+object_relationships:
+  - name: parcel
+    using:
+      foreign_key_constraint_on: parcel_id
+  - name: parameter_dictionary
+    using:
+      foreign_key_constraint_on: parameter_dictionary_id
 select_permissions:
   - role: aerie_admin
     permission:
@@ -19,6 +26,11 @@ select_permissions:
       columns: "*"
       filter: {}
       allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      check: {}
 delete_permissions:
   - role: aerie_admin
     permission:

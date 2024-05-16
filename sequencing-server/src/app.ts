@@ -12,6 +12,7 @@ import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatc
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
+import { parcelBatchLoader } from './lib/batchLoaders/parcelBatchLoader.js';
 import { InferredDataloader, objectCacheKeyFunction } from './lib/batchLoaders/index.js';
 import {
   simulatedActivitiesBatchLoader,
@@ -28,6 +29,8 @@ import type { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/mon
 import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { PromiseThrottler } from './utils/PromiseThrottler.js';
 import { backgroundTranspiler } from './backgroundTranspiler.js';
+import type { CommandDictionary, ParameterDictionary } from '@nasa-jpl/aerie-ampcs';
+import { DictionaryType } from './types/types.js';
 
 const logger = getLogger('app');
 
@@ -51,7 +54,18 @@ export const piscina = new Piscina({
 export const promiseThrottler = new PromiseThrottler(parseInt(getEnv().SEQUENCING_WORKER_NUM) - 2);
 export const typeCheckingCache = new Map<string, Promise<Result<CacheItem, ReturnType<UserCodeError['toJSON']>[]>>>();
 
-const temporalPolyfillTypes = fs.readFileSync(new URL('TemporalPolyfillTypes.ts', import.meta.url).pathname, 'utf-8');
+const temporalPolyfillTypes = fs.readFileSync(
+  new URL('./types/TemporalPolyfillTypes.ts', import.meta.url).pathname,
+  'utf-8',
+);
+const channelDictionaryTypes: string = fs.readFileSync(
+  new URL('./types/ChannelTypes.ts', import.meta.url).pathname,
+  'utf-8',
+);
+const parameterDictionaryTypes: string = fs.readFileSync(
+  new URL('./types/ParameterTypes.ts', import.meta.url).pathname,
+  'utf-8',
+);
 
 export type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>;
@@ -62,6 +76,7 @@ export type Context = {
   >;
   expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>;
   expansionDataLoader: InferredDataloader<typeof expansionBatchLoader>;
+  parcelTypescriptDataLoader: InferredDataloader<typeof parcelBatchLoader>;
 };
 
 app.use(async (req: Request, res: Response, next: NextFunction) => {
@@ -117,6 +132,10 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       cacheKeyFn: objectCacheKeyFunction,
       name: null,
     }),
+    parcelTypescriptDataLoader: new DataLoader(parcelBatchLoader({ graphqlClient }), {
+      cacheKeyFn: objectCacheKeyFunction,
+      name: null,
+    }),
   } as Context;
   return next();
 });
@@ -134,27 +153,53 @@ app.get('/health', (_: Request, res: Response) => {
 
 app.post('/put-dictionary', async (req, res, next) => {
   const dictionary = req.body.input.dictionary as string;
+  const type = req.body.input.type as string;
   logger.info(`Dictionary received`);
 
-  // Note we ignore comments when parsing dictionary because the parser breaks otherwise.
-  const parsedDictionary = ampcs.parse(dictionary, null, { ignoreComment: true });
+  let parsedDictionary: CommandDictionary | ChannelDictionary | ParameterDictionary;
+  let dictionaryPath: string = '';
+  switch (type) {
+    case DictionaryType.COMMAND: {
+      parsedDictionary = ampcs.parse(dictionary, null, { ignoreComment: true });
+      break;
+    }
+    case DictionaryType.CHANNEL: {
+      parsedDictionary = ampcs.parseChannelDictionary(dictionary);
+      break;
+    }
+    case DictionaryType.PARAMETER: {
+      parsedDictionary = ampcs.parseParameterDictionary(dictionary);
+      break;
+    }
+    default:
+      throw new Error(`POST /dictionary: Unsupported dictionary type: ${type}`);
+  }
+
   logger.info(
-    `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`,
+    `dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`,
   );
+  dictionaryPath = await processDictionary(parsedDictionary, type);
+  logger.info(`lib generated - path: ${dictionaryPath}`);
 
-  const commandDictionaryPath = await processDictionary(parsedDictionary);
-  logger.info(`command-lib generated - path: ${commandDictionaryPath}`);
-
+  let db_table_name = 'command_dictionary';
+  switch (type) {
+    case DictionaryType.CHANNEL:
+      db_table_name = 'channel_dictionary';
+      break;
+    case DictionaryType.PARAMETER:
+      db_table_name = 'parameter_dictionary';
+      break;
+  }
   const sqlExpression = `
-    insert into sequencing.command_dictionary (command_types_typescript_path, mission, version, parsed_json)
+    insert into sequencing.${db_table_name} (dictionary_path, mission, version, parsed_json)
     values ($1, $2, $3, $4)
     on conflict (mission, version) do update
-      set command_types_typescript_path = $1, parsed_json = $4
-    returning id, command_types_typescript_path, mission, version, parsed_json, created_at;
+      set dictionary_path = $1, parsed_json = $4
+    returning id, dictionary_path, mission, version, parsed_json, created_at;
   `;
 
   const { rows } = await db.query(sqlExpression, [
-    commandDictionaryPath,
+    dictionaryPath,
     parsedDictionary.header.mission_name,
     parsedDictionary.header.version,
     parsedDictionary,
@@ -164,6 +209,7 @@ app.post('/put-dictionary', async (req, res, next) => {
     throw new Error(`POST /dictionary: No command dictionary was updated in the database`);
   }
   const [row] = rows;
+  row.type = type;
   res.status(200).json(row);
   return next();
 });
@@ -186,6 +232,14 @@ app.post('/get-command-typescript', async (req, res, next) => {
         {
           filePath: 'TemporalPolyfillTypes.ts',
           content: temporalPolyfillTypes,
+        },
+        {
+          filePath: 'ChannelTypes.ts',
+          content: channelDictionaryTypes,
+        },
+        {
+          filePath: 'ParameterTypes.ts',
+          content: parameterDictionaryTypes,
         },
       ],
       reason: null,

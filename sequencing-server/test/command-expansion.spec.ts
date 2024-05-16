@@ -21,15 +21,18 @@ import { createPlan, removePlan } from './testUtils/Plan.js';
 import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from './testUtils/Simulation.js';
 import { getGraphQLClient, waitMs } from './testUtils/testUtils';
 import { insertSequence, linkActivityInstance } from './testUtils/Sequence.js';
+import { insertParcel, removeParcel } from './testUtils/Parcel';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let commandDictionaryId: number;
+let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
   commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'expansionTestParcel')).parcelId;
 });
 
 beforeEach(async () => {
@@ -43,7 +46,8 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  removeCommandDictionary(graphqlClient, commandDictionaryId);
+  await removeParcel(graphqlClient, parcelId);
+  await removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
 afterEach(async () => {
@@ -70,6 +74,7 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
 
     groundEventExpansion = await insertExpansion(
@@ -82,6 +87,7 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
 
     groundBlockExpansion = await insertExpansion(
@@ -94,12 +100,13 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
 
     activateLoadExpansion = await insertExpansion(
-        graphqlClient,
-        'BakeBananaBread',
-        `export default function MyExpansion(props: {
+      graphqlClient,
+      'BakeBananaBread',
+      `export default function MyExpansion(props: {
           activityInstance: ActivityType
         }): ExpansionReturn {
           const { activityInstance } = props;
@@ -108,6 +115,7 @@ describe('expansion', () => {
             A("2022-204T00:00:00").ACTIVATE("BACKGROUND-B"),];
         }
         `,
+      parcelId,
     );
   });
 
@@ -120,24 +128,26 @@ describe('expansion', () => {
 
   it('should fail when the user creates an expansion set with a ground block', async () => {
     try {
-      expect(
-        await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [groundBlockExpansion]),
-      ).toThrow();
+      expect(await insertExpansionSet(graphqlClient, parcelId, missionModelId, [groundBlockExpansion])).toThrow();
     } catch (e) {}
-  });
+  }, 30000);
 
   it('should fail when the user creates an expansion set with a ground event', async () => {
     try {
-      expect(
-        await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [groundEventExpansion]),
-      ).toThrow();
+      expect(await insertExpansionSet(graphqlClient, parcelId, missionModelId, [groundEventExpansion])).toThrow();
     } catch (e) {}
   }, 30000);
 
   it('should expand load and activate steps ', async () => {
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [activateLoadExpansion]);
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [activateLoadExpansion]);
 
-    const activityId = await insertActivityDirective(graphqlClient, planId, 'BakeBananaBread',"30 seconds 0 milliseconds",{tbSugar : 1, glutenFree: false});
+    const activityId = await insertActivityDirective(
+      graphqlClient,
+      planId,
+      'BakeBananaBread',
+      '30 seconds 0 milliseconds',
+      { tbSugar: 1, glutenFree: false },
+    );
 
     // Simulate Plan
     const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
@@ -148,11 +158,10 @@ describe('expansion', () => {
     expect(expansionSetId).toBeGreaterThan(0);
     expect(expansionRunPk).toBeGreaterThan(0);
 
-
     const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
-        graphqlClient,
-        simulationArtifactPk.simulationDatasetId,
-        activityId,
+      graphqlClient,
+      simulationArtifactPk.simulationDatasetId,
+      activityId,
     );
 
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
@@ -160,7 +169,7 @@ describe('expansion', () => {
     const { activity_instance_commands } = await graphqlClient.request<{
       activity_instance_commands: { commands: ReturnType<CommandStem['toSeqJson']>; errors: string[] }[];
     }>(
-        gql`
+      gql`
         query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId: Int!) {
           activity_instance_commands(
             where: {
@@ -172,10 +181,10 @@ describe('expansion', () => {
           }
         }
       `,
-        {
-          expansionRunId,
-          simulatedActivityId,
-        },
+      {
+        expansionRunId,
+        simulatedActivityId,
+      },
     );
 
     expect(activity_instance_commands.length).toBe(1);
@@ -184,16 +193,18 @@ describe('expansion', () => {
     }
     expect(activity_instance_commands[0]?.commands).toEqual([
       {
-        args: [{
-          name: "arg_0",
-          type: "number",
-          value: 350
-        }],
+        args: [
+          {
+            name: 'arg_0',
+            type: 'number',
+            value: 350,
+          },
+        ],
         metadata: { simulatedActivityId },
         sequence: 'BACKGROUND-A',
         time: {
-          tag: "2022-203T00:00:00.000",
-          type: "ABSOLUTE"
+          tag: '2022-203T00:00:00.000',
+          type: 'ABSOLUTE',
         },
         type: 'load',
       },
@@ -201,13 +212,12 @@ describe('expansion', () => {
         metadata: { simulatedActivityId },
         sequence: 'BACKGROUND-B',
         time: {
-          tag: "2022-204T00:00:00.000",
-          type: "ABSOLUTE"
+          tag: '2022-204T00:00:00.000',
+          type: 'ABSOLUTE',
         },
         type: 'activate',
       },
     ]);
-
 
     await removeExpansionRun(graphqlClient, expansionRunPk);
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
@@ -217,7 +227,7 @@ describe('expansion', () => {
   }, 30000);
 
   it('should allow an activity type and command to have the same name', async () => {
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
 
     await insertActivityDirective(graphqlClient, planId, 'GrowBanana');
 
@@ -253,8 +263,9 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
 
     const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
@@ -315,8 +326,9 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
 
     const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
@@ -388,9 +400,10 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
     // Create Expansion Set
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
 
     // Create Activity Directives
     const [activityId] = await Promise.all([insertActivityDirective(graphqlClient, planId, 'GrowBanana')]);
@@ -416,7 +429,7 @@ describe('expansion', () => {
     const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
     /** End Setup */
 
-    const { expandedSequence, edslString } = await getExpandedSequence(graphqlClient, expansionRunPk, sequencePk.seqId);
+    const { expandedSequence } = await getExpandedSequence(graphqlClient, expansionRunPk, sequencePk.seqId);
 
     expect(expandedSequence).toEqual({
       id: 'test00000',
@@ -442,26 +455,6 @@ describe('expansion', () => {
       ],
     });
 
-    expect(edslString).toEqual(`export default () =>
-  Sequence.new({
-    seqId: 'test00000',
-    metadata: {
-      planId: ${planId},
-      simulationDatasetId: ${simulationArtifactPk.simulationDatasetId},
-      timeSorted: false,
-    },
-    steps: ({ locals, parameters }) => ([
-      A\`2023-091T10:00:00.000\`.ADD_WATER
-        .METADATA({
-          simulatedActivityId: ${simulatedActivityId},
-        }),
-      R\`04:00:00.000\`.GROW_BANANA(10,7200)
-        .METADATA({
-          simulatedActivityId: ${simulatedActivityId},
-        }),
-    ]),
-  });`);
-
     // Cleanup
     await removeActivityDirective(graphqlClient, activityId, planId);
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
@@ -482,11 +475,19 @@ describe('expansion', () => {
       ];
     }
     `,
+      parcelId,
     );
-    const name = "test name";
-    const description = "test desc";
+    const name = 'test name';
+    const description = 'test desc';
 
-    const testProvidedExpansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId], description, name);
+    const testProvidedExpansionSetId = await insertExpansionSet(
+      graphqlClient,
+      parcelId,
+      missionModelId,
+      [expansionId],
+      description,
+      name,
+    );
     expect(testProvidedExpansionSetId).not.toBeNull();
     expect(testProvidedExpansionSetId).toBeDefined();
     expect(testProvidedExpansionSetId).toBeNumber();
@@ -495,14 +496,14 @@ describe('expansion', () => {
     expect(testProvidedResp.expansion_set_by_pk.name).toBe(name);
     expect(testProvidedResp.expansion_set_by_pk.description).toBe(description);
 
-    const testDefaultExpansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    const testDefaultExpansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
     expect(testDefaultExpansionSetId).not.toBeNull();
     expect(testDefaultExpansionSetId).toBeDefined();
     expect(testDefaultExpansionSetId).toBeNumber();
 
     const testDefaultResp = await getExpansionSet(graphqlClient, testDefaultExpansionSetId);
-    expect(testDefaultResp.expansion_set_by_pk.name).toBe("");
-    expect(testDefaultResp.expansion_set_by_pk.description).toBe("");
+    expect(testDefaultResp.expansion_set_by_pk.name).toBe('');
+    expect(testDefaultResp.expansion_set_by_pk.description).toBe('');
 
     // Cleanup
     await removeExpansion(graphqlClient, expansionId);

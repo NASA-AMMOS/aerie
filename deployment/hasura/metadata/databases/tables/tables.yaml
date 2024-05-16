@@ -143,6 +143,7 @@
 #### SEQUENCING ####
 ####################
 - "!include sequencing/activity_instance_commands.yaml"
+- "!include sequencing/channel_dictionary.yaml"
 - "!include sequencing/command_dictionary.yaml"
 - "!include sequencing/expansion_rule.yaml"
 - "!include sequencing/expansion_run.yaml"
@@ -150,8 +151,12 @@
 - "!include sequencing/expansion_set_to_rule.yaml"
 - "!include sequencing/expansion_set.yaml"
 - "!include sequencing/expansion_set_rule_view.yaml"
+- "!include sequencing/parameter_dictionary.yaml"
+- "!include sequencing/parcel.yaml"
+- "!include sequencing/parcel_to_parameter_dictionary.yaml"
 - "!include sequencing/rule_expansion_set_view.yaml"
 - "!include sequencing/sequence.yaml"
+- "!include sequencing/sequence_adaptation.yaml"
 - "!include sequencing/sequence_to_simulated_activity.yaml"
 - "!include sequencing/user_sequence.yaml"
 
