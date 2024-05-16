@@ -20,7 +20,7 @@ create table scheduler.scheduling_goal_definition(
     foreign key (uploaded_jar_id)
       references merlin.uploaded_file
       on update cascade
-      on delete set null, -- up for debate
+      on delete restrict,
   constraint goal_definition_author_exists
     foreign key (author)
     references permissions.users
