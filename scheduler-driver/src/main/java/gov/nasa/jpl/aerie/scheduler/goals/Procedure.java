@@ -29,10 +29,10 @@ import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulin
 
 public class Procedure extends Goal {
   //  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
-  private final String jarPath;
-  private final Map<String, SerializedValue> args;
+  private final Path jarPath;
+  private final SerializedValue args;
 
-  public Procedure(final PlanningHorizon planningHorizon, String jarPath, Map<String, SerializedValue> args) {
+  public Procedure(final PlanningHorizon planningHorizon, Path jarPath, SerializedValue args) {
     this.simulateAfter = true;
     this.planHorizon = planningHorizon;
     this.jarPath = jarPath;
@@ -42,7 +42,7 @@ public class Procedure extends Goal {
   public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType, SimulationFacade simulationFacade) {
     final ProcedureMapper<?> procedureMapper;
     try {
-      procedureMapper = ProcedureLoader.loadProcedure(Path.of(jarPath));
+      procedureMapper = ProcedureLoader.loadProcedure(jarPath);
     } catch (ProcedureLoader.ProcedureLoadException e) {
       throw new RuntimeException(e);
     }
@@ -76,7 +76,7 @@ public class Procedure extends Goal {
 
     final var options = new CollectOptions(inMemoryPlan.totalBounds());
 
-    procedureMapper.deserialize(SerializedValue.of(this.args)).run(editablePlan, options);
+    procedureMapper.deserialize(this.args).run(editablePlan, options);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
       throw new NotImplementedException("emit warning");
