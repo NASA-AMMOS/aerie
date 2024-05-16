@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -292,8 +293,8 @@ public class SchedulingDSL {
         Expression<Windows> windows
     ) implements GoalSpecifier {}
     record Procedure(
-        String jarPath,
-        Map<String, SerializedValue> arguments
+        Path jarPath,
+        SerializedValue arguments
     ) implements GoalSpecifier {}
   }
 

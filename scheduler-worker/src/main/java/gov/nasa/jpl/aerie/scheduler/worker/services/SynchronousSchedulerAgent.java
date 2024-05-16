@@ -58,6 +58,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
@@ -84,7 +85,6 @@ import javax.json.stream.JsonParsingException;
  *
  * @param merlinService interface for querying plan and mission model details from merlin
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
- * @param goalsJarPath path to jar file to load scheduling goals from (interim solution for user input goals)
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
@@ -186,43 +186,33 @@ public record SynchronousSchedulerAgent(
         final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
-          final String definition = goalRecord.definition().source();
-          if (definition.startsWith("// procedure")) {
-            final var lines = new ArrayList<>(Arrays.stream(definition.split("\n")).toList());
-            final var firstLine = lines.removeFirst();
-            String jarPath = firstLine.substring("// procedure".length() + 1).strip();
-            jarPath = "/usr/src/app/procedures/" + jarPath;
-
-            final var args = new LinkedHashMap<String, SerializedValue>();
-            for (var line : lines) {
-              if (!line.startsWith("// ")) continue;
-              line = line.substring(2).stripLeading();
-              final var name = line.substring(0, line.indexOf(" "));
-              final var value = line.substring(line.indexOf(" ")).strip();
-                try {
-                    final var serializedValue = parseJson(value, new SerializedValueJsonParser());
-                    args.put(name, serializedValue);
-                } catch (InvalidJsonException | InvalidEntityException e) {
-                    throw new RuntimeException(e);
-                }
+          switch (goalRecord.type()) {
+            case GoalType.EDSL edsl -> {
+              final var result = compileGoalDefinition(
+                  merlinService,
+                  planMetadata.planId(),
+                  edsl.source(),
+                  schedulingDSLCompilationService,
+                  externalProfiles.resourceTypes());
+              if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+                compiledGoals.add(Pair.of(goalRecord, r.value()));
+              } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+                failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
+              } else {
+                throw new Error("Unhandled variant of %s: %s".formatted(
+                    SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
+                    result));
+              }
             }
-            compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(jarPath, args)));
-            continue;
-          }
-          final var result = compileGoalDefinition(
-              merlinService,
-              planMetadata.planId(),
-              goalRecord.definition(),
-              schedulingDSLCompilationService,
-              externalProfiles.resourceTypes());
-          if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
-            compiledGoals.add(Pair.of(goalRecord, r.value()));
-          } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
-            failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
-          } else {
-            throw new Error("Unhandled variant of %s: %s".formatted(
-                SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
-                result));
+            case GoalType.JAR jar -> {
+              try {
+                final var serializedValue = parseJson(jar.args(), new SerializedValueJsonParser());
+                compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(jar.path(), serializedValue)));
+              } catch (InvalidJsonException | InvalidEntityException e) {
+                throw new RuntimeException(e);
+              }
+
+            }
           }
         }
         if (!failedGoals.isEmpty()) {
@@ -358,14 +348,14 @@ public record SynchronousSchedulerAgent(
   private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileGoalDefinition(
       final MerlinService.ReaderRole merlinService,
       final PlanId planId,
-      final GoalSource goalDefinition,
+      final String source,
       final SchedulingDSLCompilationService schedulingDSLCompilationService,
       final Collection<ResourceType> additionalResourceTypes)
   {
     return schedulingDSLCompilationService.compileSchedulingGoalDSL(
         merlinService,
         planId,
-        goalDefinition.source(),
+        source,
         additionalResourceTypes
     );
   }
