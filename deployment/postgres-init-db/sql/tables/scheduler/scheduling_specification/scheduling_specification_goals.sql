@@ -9,7 +9,7 @@ create table scheduler.scheduling_specification_goals (
   simulate_after boolean not null default true,
 
   constraint scheduling_specification_goals_primary_key
-    primary key (specification_id, goal_id, arguments),
+    primary key (specification_id, goal_id),
   constraint scheduling_specification_goals_specification_exists
     foreign key (specification_id)
       references scheduler.scheduling_specification
