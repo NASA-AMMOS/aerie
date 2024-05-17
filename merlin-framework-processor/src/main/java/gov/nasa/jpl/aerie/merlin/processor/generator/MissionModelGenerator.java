@@ -302,6 +302,32 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addStatement("return result")
                     .build())
             .addMethod(MethodSpec
+                           .methodBuilder("getMaximumDurations")
+                           .addModifiers(Modifier.PUBLIC)
+                           .addAnnotation(Override.class)
+                           .returns(ParameterizedTypeName.get(Map.class, String.class, Duration.class))
+                           .addStatement("final var result = new $T()", ParameterizedTypeName.get(HashMap.class, String.class, Duration.class))
+                           .addCode(
+                               missionModel
+                                   .activityTypes()
+                                   .stream()
+                                   .filter(a -> a.effectModel().isPresent())
+                                   .filter(a -> a.effectModel().get().maximumDuration().isPresent())
+                                   .map(
+                                       activityTypeRecord ->
+                                           CodeBlock
+                                               .builder()
+                                               .addStatement("result.put(\"$L\", $L)",
+                                                             activityTypeRecord.name(),
+                                                             activityTypeRecord
+                                                                 .effectModel()
+                                                                 .map($ -> CodeBlock.of("$L.$L", activityTypeRecord.fullyQualifiedClass(), $.maximumDuration().get()))
+                                                                 .get()))
+                                   .reduce((x, y) -> x.add("$L", y.build()))
+                                   .orElse(CodeBlock.builder()).build())
+                           .addStatement("return result")
+                           .build())
+            .addMethod(MethodSpec
                            .methodBuilder("serializeDuration")
                            .addModifiers(Modifier.PUBLIC)
                            .addAnnotation(Override.class)
@@ -376,7 +402,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.spawn($L.getTaskFactory($L, $L))",
+                                    "$T.spawnWithSpan($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -403,7 +429,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.defer($L, $L.getTaskFactory($L, $L))",
+                                    "$T.deferWithSpan($L, $L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
@@ -459,7 +485,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.call($L.getTaskFactory($L, $L))",
+                                    "$T.callWithSpan($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -808,14 +834,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .map(effectModel -> CodeBlock
                             .builder()
                             .add(
-                                "return $T.$L(() -> $T.$L(() -> {$>\n$L$<}));\n",
+                                "return $T.$L(() -> {$>\n$L$<});\n",
                                 ModelActions.class,
                                 switch (effectModel.executor()) {
                                   case Threaded -> "threaded";
                                   case Replaying -> "replaying";
                                 },
-                                ModelActions.class,
-                                "scoped",
                                 effectModel.returnType()
                                     .map(returnType -> CodeBlock
                                         .builder()
@@ -837,7 +861,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .add(
                                 "return executor -> scheduler -> {$>\n$L$<};\n",
                                 CodeBlock.builder()
-                                    .addStatement("scheduler.pushSpan()")
                                     .addStatement("scheduler.startActivity($L, this.$L)", "activity", "inputTopic")
                                     .addStatement("scheduler.endActivity($T.UNIT, this.$L)", Unit.class, "outputTopic")
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)

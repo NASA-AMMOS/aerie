@@ -1,0 +1,42 @@
+table:
+  name: resource_profile
+  schema: merlin
+configuration:
+  custom_name: "resource_profile"
+object_relationships:
+- name: dataset
+  using:
+    manual_configuration:
+      remote_table:
+        name: dataset
+        schema: merlin
+      column_mapping:
+        dataset_id: id
+- name: profile
+  using:
+    manual_configuration:
+      remote_table:
+        name: profile
+        schema: merlin
+      column_mapping:
+        profile_id: id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

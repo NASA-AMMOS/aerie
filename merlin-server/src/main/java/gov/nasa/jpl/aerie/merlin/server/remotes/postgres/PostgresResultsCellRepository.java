@@ -98,7 +98,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
          final var updateSimConfig = new UpdateSimulationConfigurationRevisionAction(connection)) {
       updateSimConfig.apply(planId.id());
     } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to allocation simulation cell", ex);
+      throw new DatabaseException("Failed to allocate simulation cell", ex);
     }
     return allocate(planId, requestedBy);
   }

@@ -142,8 +142,8 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
                   aic.activity_instance_id,
                   aic.errors,
                   aic.expansion_run_id
-          from sequence_to_simulated_activity ssa
-          join activity_instance_commands aic
+          from sequencing.sequence_to_simulated_activity ssa
+          join sequencing.activity_instance_commands aic
             on ssa.simulated_activity_id = aic.activity_instance_id
           where (ssa.simulation_dataset_id, ssa.seq_id) = ($1, $2)),
           max_values as (
@@ -168,9 +168,9 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     }>(
       `
         select metadata
-        from sequence
-        where sequence.seq_id = $2
-          and sequence.simulation_dataset_id = $1;
+        from sequencing.sequence s
+        where s.seq_id = $2
+          and s.simulation_dataset_id = $1;
       `,
       [simulationDatasetId, seqId],
     ),
@@ -286,8 +286,8 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
             aic.expansion_run_id,
             ssa.seq_id,
             ssa.simulation_dataset_id
-          from sequence_to_simulated_activity ssa
-          join activity_instance_commands aic
+          from sequencing.sequence_to_simulated_activity ssa
+          join sequencing.activity_instance_commands aic
             on ssa.simulated_activity_id = aic.activity_instance_id
           where (ssa.seq_id, ssa.simulation_dataset_id) in (${pgFormat('%L', inputTuples)})
         ),
@@ -318,7 +318,7 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
     }>(
       `
         select metadata, seq_id, simulation_dataset_id
-        from sequence s
+        from sequencing.sequence s
         where (s.seq_id, s.simulation_dataset_id) in (${pgFormat('%L', inputTuples)});
       `,
     ),

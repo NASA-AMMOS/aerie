@@ -13,7 +13,7 @@ java {
 
 node {
   nodeProjectDir = file("${project.projectDir.toPath().resolve("constraints-dsl-compiler")}")
-  version = '18.13.0'
+  version = '20.12.1'
   download = true
 }
 

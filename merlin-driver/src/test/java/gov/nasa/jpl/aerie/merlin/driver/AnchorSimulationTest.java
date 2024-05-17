@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -1084,7 +1085,6 @@ public final class AnchorSimulationTest {
       @Override
       public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
         return executor -> $ -> {
-          $.pushSpan();
           $.startActivity(this, delayedActivityDirectiveInputTopic);
           return TaskStatus.delayed(oneMinute, $$ -> {
             $$.endActivity(Unit.UNIT, delayedActivityDirectiveOutputTopic);
@@ -1110,20 +1110,19 @@ public final class AnchorSimulationTest {
       @Override
       public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
         return executor -> scheduler -> {
-          scheduler.pushSpan();
           scheduler.startActivity(this, decomposingActivityDirectiveInputTopic);
           return TaskStatus.delayed(
               Duration.ZERO,
               $ -> {
                 try {
-                  $.spawn(delayedActivityDirective.getTaskFactory(null, null));
+                  $.spawn(InSpan.Fresh, delayedActivityDirective.getTaskFactory(null, null));
                 } catch (final InstantiationException ex) {
                   throw new Error("Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                       ex.toString()));
                 }
                 return TaskStatus.delayed(Duration.of(120, Duration.SECOND), $$ -> {
                   try {
-                    $$.spawn(delayedActivityDirective.getTaskFactory(null, null));
+                    $$.spawn(InSpan.Fresh, delayedActivityDirective.getTaskFactory(null, null));
                   } catch (final InstantiationException ex) {
                     throw new Error(
                         "Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(

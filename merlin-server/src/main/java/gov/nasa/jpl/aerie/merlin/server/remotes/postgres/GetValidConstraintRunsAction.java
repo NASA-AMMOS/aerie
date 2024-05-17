@@ -21,7 +21,7 @@ final class GetValidConstraintRunsAction implements AutoCloseable {
       cr.constraint_revision,
       cr.simulation_dataset_id,
       cr.results
-    from constraint_run as cr
+    from merlin.constraint_run as cr
     where cr.constraint_id = any(?)
     and cr.simulation_dataset_id = ?;
   """;

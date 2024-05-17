@@ -6,11 +6,10 @@ import { getEnv } from './env.js';
 const { Pool: DbPool } = pg;
 
 const {
-  POSTGRES_AERIE_SEQUENCING_DB,
-  POSTGRES_HOST: host,
-  POSTGRES_PASSWORD: password,
-  POSTGRES_PORT: port,
-  POSTGRES_USER: user,
+  AERIE_DB_HOST: host,
+  AERIE_DB_PORT: port,
+  SEQUENCING_DB_USER: user,
+  SEQUENCING_DB_PASSWORD: password,
 } = getEnv();
 
 const logger = getLogger('packages/db/db');
@@ -25,7 +24,7 @@ export class DbExpansion {
   static init() {
     try {
       const config: PoolConfig = {
-        database: POSTGRES_AERIE_SEQUENCING_DB,
+        database: 'aerie',
         host,
         password,
         port: parseInt(port, 10),

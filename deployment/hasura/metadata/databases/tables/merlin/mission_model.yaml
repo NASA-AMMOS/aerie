@@ -1,0 +1,168 @@
+table:
+  name: mission_model
+  schema: merlin
+configuration:
+  custom_name: "mission_model"
+object_relationships:
+- name: parameters
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: mission_model_parameters
+        schema: merlin
+- name: uploaded_file
+  using:
+    foreign_key_constraint_on: jar_id
+array_relationships:
+- name: activity_types
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: activity_type
+        schema: merlin
+- name: constraint_specification
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: constraint_model_specification
+        schema: merlin
+- name: plans
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: plan
+        schema: merlin
+- name: resource_types
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: resource_type
+        schema: merlin
+- name: scheduling_specification_conditions
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: scheduling_model_specification_conditions
+        schema: scheduler
+- name: scheduling_specification_goals
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: scheduling_model_specification_goals
+        schema: scheduler
+- name: refresh_activity_type_logs
+  using:
+    manual_configuration:
+      remote_table:
+        name: refresh_activity_type_logs
+        schema: hasura
+      column_mapping:
+        id: model_id
+- name: refresh_model_parameter_logs
+  using:
+    manual_configuration:
+      remote_table:
+        name: refresh_model_parameter_logs
+        schema: hasura
+      column_mapping:
+        id: model_id
+- name: refresh_resource_type_logs
+  using:
+    manual_configuration:
+      remote_table:
+        name: refresh_resource_type_logs
+        schema: hasura
+      column_mapping:
+        id: model_id
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [mission, name, version, description, jar_id]
+      check: {}
+      set:
+        owner: 'x-hasura-user-id'
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [mission, name, version, description, owner]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+
+event_triggers:
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+    update:
+      columns:
+      - id
+      - revision
+      - jar_id
+      - mission
+      - name
+      - version
+      - owner
+  name: refreshActivityTypes
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 300
+  webhook: "{{AERIE_MERLIN_URL}}/refreshActivityTypes"
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+    update:
+      columns:
+      - id
+      - revision
+      - jar_id
+      - mission
+      - name
+      - version
+      - owner
+  name: refreshModelParameters
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 300
+  webhook: "{{AERIE_MERLIN_URL}}/refreshModelParameters"
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+    update:
+      columns:
+        - jar_id
+  name: refreshResourceTypes
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 300
+  webhook: "{{AERIE_MERLIN_URL}}/refreshResourceTypes"

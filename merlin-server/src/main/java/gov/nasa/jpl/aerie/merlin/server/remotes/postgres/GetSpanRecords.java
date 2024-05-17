@@ -27,7 +27,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         a.start_offset,
         a.duration,
         a.attributes
-      from span as a
+      from merlin.span as a
       where
         a.dataset_id = ?
     """;

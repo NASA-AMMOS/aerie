@@ -18,7 +18,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           t.revision,
           t.description,
           t.arguments
-      from simulation_template as t
+      from merlin.simulation_template as t
       where t.id = ?
     """;
 

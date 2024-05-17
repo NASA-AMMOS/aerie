@@ -1,0 +1,50 @@
+table:
+  name: activity_presets
+  schema: merlin
+configuration:
+  custom_name: "activity_presets"
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, associated_activity_type, arguments]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+  - role: user
+    permission:
+      columns: [model_id, name, associated_activity_type, arguments]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, associated_activity_type, arguments, owner]
+      filter: {}
+  - role: user
+    permission:
+      columns: [name, arguments, owner]
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter: {"owner":{"_eq":"X-Hasura-User-Id"}}

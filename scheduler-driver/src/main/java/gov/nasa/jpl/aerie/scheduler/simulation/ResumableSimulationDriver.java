@@ -5,9 +5,11 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.ResourceTracker;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -199,7 +201,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
     this.engine.close();
   }
 
-  private void simulateUntil(Duration endTime) throws SchedulingInterruptedException{
+  private void simulateUntil(Duration endTime) throws SchedulingInterruptedException {
     if (debug) System.out.println("simulateUntil(" + endTime + ")");
     long before = System.nanoTime();
     logger.info("Simulating until "+endTime);
@@ -327,63 +329,72 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
   }
   private void reallySimulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   throws SchedulingInterruptedException {
-    final var before = System.nanoTime();
-    if (debug) System.out.println("ResumableSimulationDriver.simulate(" + schedule + ")");
+    try {
+      final var before = System.nanoTime();
+      if (debug) System.out.println("ResumableSimulationDriver.simulate(" + schedule + ")");
 
-    if (schedule.isEmpty()) {
-      throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
-    }
-
-    // Get all activities as close as possible to absolute time, then schedule all activities.
-    // Using HashMap explicitly because it allows `null` as a key.
-    // `null` key means that an activity is not waiting on another activity to finish to know its start time
-    HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
-        planDuration,
-        schedule).compute();
-    // Filter out activities that are before the plan start
-    resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
-    final var toSchedule = new HashSet<ActivityDirectiveId>();
-    toSchedule.add(null);
-    scheduleActivities(
-        toSchedule,
-        schedule,
-        resolved,
-        missionModel
-    );
-
-    var allTaskFinished = false;
-
-    // Increment real time, if necessary.
-
-    //once all tasks are finished, we need to wait for events triggered at the same time
-    while (!allTaskFinished) {
-      if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
-
-      // Run the jobs in this batch.
-      engine.step(Duration.MAX_VALUE, $ -> {});
-
-      scheduleActivities(getSuccessorsToSchedule(engine), schedule, resolved, missionModel);
-
-      // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime().duration()) &&
-          plannedDirectiveToTask
-          .values()
-          .stream()
-          .allMatch($ -> engine.getSpan($).isComplete())) {
-        allTaskFinished = true;
+      if (schedule.isEmpty()) {
+        throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
       }
 
-      if(engine.timeOfNextJobs().longerThan(planDuration)){
-        break;
-      }
+      // Get all activities as close as possible to absolute time, then schedule all activities.
+      // Using HashMap explicitly because it allows `null` as a key.
+      // `null` key means that an activity is not waiting on another activity to finish to know its start time
+      HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+          planDuration,
+          schedule).compute();
+      // Filter out activities that are before the plan start
+      resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
+      final var toSchedule = new HashSet<ActivityDirectiveId>();
+      toSchedule.add(null);
+      scheduleActivities(
+          toSchedule,
+          schedule,
+          resolved,
+          missionModel
+      );
 
+      var allTaskFinished = false;
+
+      // Increment real time, if necessary.
+
+      //once all tasks are finished, we need to wait for events triggered at the same time
+      while (!allTaskFinished) {
+        if(canceledListener.get()) throw new SchedulingInterruptedException("simulating");
+
+        // Run the jobs in this batch.
+        engine.step(Duration.MAX_VALUE, $ -> {});
+
+        scheduleActivities(getSuccessorsToSchedule(engine), schedule, resolved, missionModel);
+
+        // all tasks are complete : do not exit yet, there might be event triggered at the same time
+        if (!plannedDirectiveToTask.isEmpty() && engine.timeOfNextJobs().longerThan(curTime().duration()) &&
+            plannedDirectiveToTask
+            .values()
+            .stream()
+            .allMatch($ -> engine.getSpan($).isComplete())) {
+          allTaskFinished = true;
+        }
+
+        if(engine.timeOfNextJobs().longerThan(planDuration)){
+          break;
+        }
+
+      }
+      if (useResourceTracker) {
+        // Replay the timeline to collect resource profiles
+        engine.generateResourceProfiles(curTime().duration());
+      }
+      lastSimResults = null;
+      this.durationSinceRestart+= System.nanoTime() - before;
+    } catch (SpanException ex) {
+      // Swallowing the spanException as the internal `spanId` is not user meaningful info.
+      final var topics = missionModel.getTopics();
+      final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, engine.timeline, topics, ex.spanId);
+      throw new RuntimeException(ex);
+    } catch (Throwable ex) {
+      throw new RuntimeException(ex);
     }
-    if (useResourceTracker) {
-      // Replay the timeline to collect resource profiles
-      engine.generateResourceProfiles(curTime().duration());
-    }
-    lastSimResults = null;
-    this.durationSinceRestart+= System.nanoTime() - before;
   }
 
   public void diffAndSimulate(
@@ -471,7 +482,6 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
       final Topic<ActivityDirectiveId> activityTopic) {
     return executor -> scheduler -> {
       scheduler.startDirective(directiveId, activityTopic);
-      scheduler.pushSpan();
       return task.create(executor).step(scheduler);
     };
   }

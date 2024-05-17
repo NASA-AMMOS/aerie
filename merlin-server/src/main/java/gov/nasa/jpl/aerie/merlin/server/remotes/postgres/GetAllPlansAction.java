@@ -18,7 +18,7 @@ import java.util.List;
       p.model_id,
       to_char(p.start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time,
       to_char(p.start_time + p.duration, 'YYYY-DDD"T"HH24:MI:SS.FF6') as end_time
-    from plan as p
+    from merlin.plan as p
     """;
 
   private final PreparedStatement statement;

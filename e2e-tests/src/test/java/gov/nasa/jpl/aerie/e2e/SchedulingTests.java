@@ -97,7 +97,7 @@ public class SchedulingTests {
   }
 
   @BeforeEach
-  void beforeEach() throws IOException {
+  void beforeEach() throws IOException, InterruptedException {
     // Insert the Mission Model
     try (final var gateway = new GatewayRequests(playwright)) {
       modelId = hasura.createMissionModel(
@@ -105,8 +105,6 @@ public class SchedulingTests {
           "Banananation (e2e tests)",
           "aerie_e2e_tests",
           "Scheduling Tests");
-    } catch (InterruptedException e) {
-        throw new RuntimeException(e);
     }
     // Insert the Plan
     planId = hasura.createPlan(
@@ -114,15 +112,7 @@ public class SchedulingTests {
         "Test Plan - Scheduling Tests",
         "24:00:00",
         planStartTimestamp);
-
-    // Insert Scheduling Spec
-    schedulingSpecId = hasura.insertSchedulingSpecification(
-        planId,
-        hasura.getPlanRevision(planId),
-        planStartTimestamp,
-        planEndTimestamp,
-        JsonValue.EMPTY_JSON_OBJECT,
-        false);
+    schedulingSpecId = hasura.getSchedulingSpecId(planId);
   }
 
   @AfterEach
@@ -536,15 +526,7 @@ public class SchedulingTests {
           "2136:00:00",
           planStartTimestamp);
 
-      // Insert Scheduling Spec
-      schedulingSpecId = hasura.insertSchedulingSpecification(
-          longPlanId,
-          hasura.getPlanRevision(longPlanId),
-          planStartTimestamp,
-          "2023-090T00:00:00.000",
-          JsonValue.EMPTY_JSON_OBJECT,
-          false);
-
+      schedulingSpecId = hasura.getSchedulingSpecId(longPlanId);
       // Add Goal
       cardinalityGoalId = hasura.createSchedulingSpecGoal(
           "Cardinality and Decomposition Scheduling Test Goal",
@@ -739,15 +721,7 @@ public class SchedulingTests {
           "Foo Plan - Scheduling Tests",
           "720:00:00",
           planStartTimestamp);
-
-      // Insert Scheduling Spec
-      fooSchedulingSpecId = hasura.insertSchedulingSpecification(
-          fooPlan,
-          hasura.getPlanRevision(fooPlan),
-          planStartTimestamp,
-          "2023-01-31T00:00:00+00:00",
-          JsonValue.EMPTY_JSON_OBJECT,
-          false);
+      fooSchedulingSpecId = hasura.getSchedulingSpecId(fooPlan);
 
       // Add Goal
       fooGoalId = hasura.createSchedulingSpecGoal(

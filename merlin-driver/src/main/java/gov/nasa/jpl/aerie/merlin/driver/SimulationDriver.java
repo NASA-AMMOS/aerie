@@ -3,9 +3,11 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -95,7 +97,11 @@ public final class SimulationDriver<Model> {
     trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
-    startDaemons(curTime().duration());
+    try {
+      startDaemons(curTime().duration());
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
     engine.scheduleTask(
@@ -203,16 +209,25 @@ public final class SimulationDriver<Model> {
           engine.defaultActivityTopic
       );
 
-      // Drive the engine until we're out of time.
+      // Drive the engine until we're out of time or until simulation is canceled.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
       Duration t = Duration.ZERO;
-      while (engine.hasJobsScheduledThrough(simulationDuration) || t.noLongerThan(simulationDuration)) {
+      while (!simulationCanceled.get() && (engine.hasJobsScheduledThrough(simulationDuration) || t.noLongerThan(simulationDuration))) {
         t = engine.step(simulationDuration, simulationExtentConsumer);
         if (debug) System.out.println("======   t = " + t + "   ======");
       }
+    } catch (SpanException ex) {
+      // Swallowing the spanException as the internal `spanId` is not user meaningful info.
+      final var topics = missionModel.getTopics();
+      final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, engine.timeline, topics, ex.spanId);
+      if(directiveId.isPresent()) {
+        throw new SimulationException(curTime().duration(), simulationStartTime, directiveId.get(), ex.cause);
+      }
+      throw new SimulationException(curTime().duration(), simulationStartTime, ex.cause);
     } catch (Throwable ex) {
       throw new SimulationException(curTime().duration(), simulationStartTime, ex);
     }
+
 
     // A query depends on an event if
     // - that event has the same topic as the query
@@ -232,7 +247,7 @@ public final class SimulationDriver<Model> {
     return null;
   }
 
-  private void startDaemons(Duration time) {
+  private void startDaemons(Duration time) throws Throwable {
     if (!this.rerunning) {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
       engine.step(Duration.MAX_VALUE, $ -> {});
@@ -286,8 +301,9 @@ public final class SimulationDriver<Model> {
     return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationCanceled, simulationExtentConsumer);
   }
 
+  // This method is used as a helper method for executing unit tests
   public <Return> //static <Model, Return>
-  void simulateTask(final TaskFactory<Return> task) {
+  void simulateTask(final TaskFactory<Return> task) throws Throwable {
     if (debug) System.out.println("SimulationDriver.simulateTask(" + task + ")");
 
     // Schedule all activities.
@@ -349,17 +365,15 @@ public final class SimulationDriver<Model> {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
-      scheduler1.pushSpan();
+    return executor -> scheduler0 -> TaskStatus.calling(InSpan.Fresh, (TaskFactory<Output>) (executor1 -> scheduler1 -> {
       scheduler1.startDirective(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1);
     }), scheduler2 -> {
-      scheduler2.popSpan();
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
       for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> scheduler3 ->
+        scheduler2.spawn(InSpan.Parent, executor2 -> scheduler3 ->
             // Delay until the dependent starts
             TaskStatus.delayed(dependent.getRight(), scheduler4 -> {
               final var dependentDirectiveId = dependent.getLeft();
@@ -377,7 +391,7 @@ public final class SimulationDriver<Model> {
 
               // Schedule the dependent
               // When it finishes, it will schedule the activities depending on it to know their start time
-              scheduler4.spawn(makeTaskFactory(
+              scheduler4.spawn(InSpan.Parent, makeTaskFactory(
                   dependentDirectiveId,
                   dependantTask,
                   schedule,

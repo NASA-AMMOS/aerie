@@ -1,0 +1,57 @@
+table:
+  name: activity_type
+  schema: merlin
+configuration:
+  custom_name: "activity_type"
+object_relationships:
+  - name: subsystem_tag
+    using:
+      foreign_key_constraint_on: subsystem
+array_relationships:
+  - name: presets
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - model_id
+          - associated_activity_type
+        table:
+          name: activity_presets
+          schema: merlin
+  - name: expansion_rules
+    using:
+      manual_configuration:
+        column_mapping:
+          name: activity_type
+        remote_table:
+          name: expansion_rule
+          schema: sequencing
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [model_id, name, parameters, required_parameters, computed_attributes_value_schema, subsystem]
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

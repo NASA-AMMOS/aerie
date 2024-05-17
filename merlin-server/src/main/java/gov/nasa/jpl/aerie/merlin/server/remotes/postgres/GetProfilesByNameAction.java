@@ -18,7 +18,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         p.name,
         p.type,
         p.duration
-      from profile as p
+      from merlin.profile as p
       where
         p.dataset_id = ?
         and p.name = any(?)
