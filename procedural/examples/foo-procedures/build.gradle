@@ -134,7 +134,9 @@ private String findFirstMatchingDir(String pattern) {
 
 private String findFirstMatchingBuildDir(String pattern) {
   String found = null
-  file("build/generated/sources").eachDirRecurse { dir -> if (dir.path.contains(pattern)) found = dir.path }
+  final generatedDir = file("build/generated/sources")
+  generatedDir.mkdirs()
+  generatedDir.eachDirRecurse { dir -> if (dir.path.contains(pattern)) found = dir.path }
   return found
 }
 
