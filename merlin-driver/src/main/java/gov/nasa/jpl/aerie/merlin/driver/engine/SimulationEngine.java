@@ -41,6 +41,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -778,10 +779,8 @@ public final class SimulationEngine implements AutoCloseable {
   private HashMap<TaskId, TreeMap<Duration, List<EventGraph<Event>>>> _oldEventsByTask = new HashMap<>();
 
 
-  // TODO -- make recursive calls here non-recursive (like in getCombinedEventsByTask()),
-  // TODO -- including getSimulatedActivityIdForTaskId(), setCurTime(), and CombinedSimulationResults
-
   //private HashSet<TaskId> _missingOldSimulatedActivityIds = new HashSet<>(); // short circuit deeply nested searches for taskIds that have
+  // TODO -- If called convert to be iterative instead of recursive
   private SimulatedActivityId getSimulatedActivityIdForTaskId(TaskId taskId) {
     //if (_missingOldSimulatedActivityIds.contains(taskId)) return
     SimulatedActivityId simId = null;
@@ -1477,9 +1476,10 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public void setCurTime(SubInstantDuration time) {
-    this.timeline.setCurTime(time);
-    if (this.oldEngine != null) {
-      this.oldEngine.setCurTime(time);
+    var currEngine = this;
+    while (currEngine != null) {
+      currEngine.timeline.setCurTime(time);
+      currEngine = currEngine.oldEngine;
     }
   }
 
@@ -1840,14 +1840,29 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public SimulationResultsInterface getCombinedSimulationResults() {
-    if (this.simulationResults == null ) {
-      return computeResults(this.startTime, Duration.MAX_VALUE, defaultActivityTopic);
-      //      return computeResults(this.startTime, curTime(), defaultActivityTopic);
+    SimulationEngine currEngine = this;
+    ArrayList<SimulationResultsInterface> simResults = new ArrayList<>();
+    ArrayList<TemporalEventSource> timelines = new ArrayList<>();
+    while (currEngine != null) {
+      if (currEngine.simulationResults == null) {
+        simResults.add(computeResults(currEngine.startTime, Duration.MAX_VALUE, defaultActivityTopic));
+      } else {
+        simResults.add(currEngine.simulationResults);
+      }
+      timelines.add(currEngine.timeline);
+      currEngine = currEngine.oldEngine;
     }
-    if (oldEngine == null) {
-      return this.simulationResults;
+    if (simResults.size() == 1) {
+      return simResults.getFirst();
+    } else {
+      SimulationResultsInterface combinedSimResults = null;
+      SimulationResultsInterface oldSimResults = simResults.getLast();
+      for (int i=simResults.size() - 2; i >= 0; i--) {
+        combinedSimResults = new CombinedSimulationResults(simResults.get(i), oldSimResults, timelines.get(i));
+        oldSimResults = combinedSimResults;
+      }
+      return combinedSimResults;
     }
-    return new CombinedSimulationResults(this.simulationResults, oldEngine.getCombinedSimulationResults(), timeline);
   }
 
   public Span getSpan(SpanId spanId) {
