@@ -332,8 +332,10 @@ public record SynchronousSchedulerAgent(
         schedDirectiveToMerlinId.entrySet().stream()
                                 .collect(Collectors.toMap(
                                     (a) -> new SchedulingActivityDirectiveId(a.getKey().id().id()), Map.Entry::getValue));
-    final var schedID_to_simID =
-        simulationFacade.getActivityIdCorrespondence();
+    final var temp_SchedID_to_simID = simulationFacade.getBidiActivityIdCorrespondence();
+    if(temp_SchedID_to_simID.isEmpty())
+      return Optional.empty();
+    final var schedID_to_simID = new HashMap<>(temp_SchedID_to_simID.get());
     final var simID_to_MerlinID =
         schedID_to_simID.entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getValue,

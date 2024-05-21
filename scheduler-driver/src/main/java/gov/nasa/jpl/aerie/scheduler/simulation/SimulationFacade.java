@@ -148,17 +148,10 @@ public class SimulationFacade implements AutoCloseable{
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
   }
 
-  public Map<SchedulingActivityDirectiveId, ActivityDirectiveId> getActivityIdCorrespondence(){
-    return new HashMap<>(mapSchedulingIdsToActivityIds);
-  }
-
   public Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> getBidiActivityIdCorrespondence(){
     if(initialSimulationResults.isEmpty() || initialPlanHasBeenModified)
       return Optional.ofNullable(mapSchedulingIdsToActivityIds);
-    else if(initialSimulationResults.isPresent())
-      return initialSimulationResults.get().mapSchedulingIdsToActivityIds();
-    else
-      return Optional.empty();
+    else return initialSimulationResults.get().mapSchedulingIdsToActivityIds();
   }
 
 
