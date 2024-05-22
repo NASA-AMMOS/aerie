@@ -207,7 +207,7 @@ public record SynchronousSchedulerAgent(
             case GoalType.JAR jar -> {
               try {
                 final var serializedValue = parseJson(jar.args(), new SerializedValueJsonParser());
-                compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(jar.path(), serializedValue)));
+                compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(modelJarsDir.resolve(jar.path()), serializedValue)));
               } catch (InvalidJsonException | InvalidEntityException e) {
                 throw new RuntimeException(e);
               }
