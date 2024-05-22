@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.procedural.scheduling.ProcedureMapper;
 
 import java.io.IOException;
