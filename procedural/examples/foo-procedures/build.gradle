@@ -30,9 +30,9 @@ tasks.register('buildAllSchedulingProcedureJars') {
   group = 'SchedulingProcedureJars'
 
   dependsOn "generateSchedulingProcedureJarTasks"
-  dependsOn(provider {
+  dependsOn {
     tasks.findAll { task -> task.name.startsWith('buildSchedulingProcedureJar_') }
-  })
+  }
 }
 
 tasks.create("generateSchedulingProcedureJarTasks") {
@@ -55,15 +55,15 @@ tasks.create("generateSchedulingProcedureJarTasks") {
   files.toList().each { file ->
     final nameWithoutExtension = file.name.replace(".java", "")
     final taskName = "buildSchedulingProcedureJar_${nameWithoutExtension}"
-    final jarName = "${nameWithoutExtension}-procedure"
 
-    println "Generating ${taskName} task, which will build ${project.name}-${jarName}.jar"
+    println "Generating ${taskName} task, which will build ${nameWithoutExtension}.jar"
 
     tasks.create(taskName, ShadowJar) {
       group = 'SchedulingProcedureJars'
       configurations = [project.configurations.compileClasspath]
       from sourceSets.main.output
-      archiveClassifier.set(jarName) // set output jar name
+      archiveBaseName = "" // clear
+      archiveClassifier.set(nameWithoutExtension) // set output jar name
       manifest {
         attributes 'Main-Class': getMainClassFromGeneratedFile(file)
       }
