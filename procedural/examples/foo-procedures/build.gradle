@@ -26,56 +26,6 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
 
-tasks.register('buildAllConstraintJars') {
-  group = 'ConstraintJars'
-
-  dependsOn "generateConstraintJarTasks"
-  dependsOn(provider {
-    tasks.findAll { task -> task.name.startsWith('buildConstraintJar_') }
-  })
-}
-
-tasks.create("generateConstraintJarTasks") {
-  group = 'ConstraintJars'
-
-  final constraintsDir = findFirstMatchingDir("constraints");
-
-  if (constraintsDir == null) {
-    println "No constraints folder found"
-    return
-  }
-  println "Generating jar tasks for the following constraints directory: ${constraintsDir}"
-
-  final files = file(constraintsDir).listFiles()
-  if (files.length == 0) {
-    println "No constraints available within folder ${constraintsDir}"
-    return
-  }
-
-  files.toList().each { file ->
-    final nameWithoutExtension = file.name.replace(".java", "")
-    final taskName = "buildConstraintJar_${nameWithoutExtension}"
-    final jarName = "${nameWithoutExtension}-constraint"
-
-    println "Generating ${taskName} task, which will build ${project.name}-${jarName}.jar"
-
-    tasks.create(taskName, ShadowJar) {
-      group = 'ConstraintJars'
-      configurations = [project.configurations.compileClasspath]
-      from sourceSets.main.output
-      archiveClassifier.set(jarName) // set output jar name
-      manifest {
-        attributes 'Main-Class': getMainClassFromFile(file)
-      }
-      minimize()
-      dependencies {
-//        exclude project(':procedural:timeline')
-//        exclude dependency(":kotlin.*")
-      }
-    }
-  }
-}
-
 tasks.register('buildAllSchedulingProcedureJars') {
   group = 'SchedulingProcedureJars'
 
@@ -126,26 +76,12 @@ tasks.create("generateSchedulingProcedureJarTasks") {
   }
 }
 
-private String findFirstMatchingDir(String pattern) {
-  String found = null
-  file("src").eachDirRecurse { dir -> if (dir.path.contains(pattern)) found = dir.path }
-  return found
-}
-
 private String findFirstMatchingBuildDir(String pattern) {
   String found = null
   final generatedDir = file("build/generated/sources")
   generatedDir.mkdirs()
   generatedDir.eachDirRecurse { dir -> if (dir.path.contains(pattern)) found = dir.path }
   return found
-}
-
-private static String getMainClassFromFile(File file) {
-  final fileString = file.toString()
-  final prefix = "src/main/java/"
-  final index = fileString.indexOf(prefix) + prefix.length()
-  final trimmed = fileString.substring(index).replace(".java", "")
-  return trimmed.replace("/", ".")
 }
 
 private static String getMainClassFromGeneratedFile(File file) {
