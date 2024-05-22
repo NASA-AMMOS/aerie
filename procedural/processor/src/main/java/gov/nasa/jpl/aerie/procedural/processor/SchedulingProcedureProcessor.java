@@ -129,7 +129,7 @@ public final class SchedulingProcedureProcessor implements Processor {
 
       generatedFiles.add(JavaFile
           .builder(generatedClassName.packageName() + ".procedures", TypeSpec
-              .classBuilder(procedure.getSimpleName().toString() + "Mapper")
+              .classBuilder(procedure.getSimpleName().toString())
               .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
               .addSuperinterface(ParameterizedTypeName.get(ClassName.get(ProcedureMapper.class), procedureType))
               .addMethod(MethodSpec
