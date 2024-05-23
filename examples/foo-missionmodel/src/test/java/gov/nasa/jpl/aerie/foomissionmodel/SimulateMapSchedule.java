@@ -49,12 +49,12 @@ public class SimulateMapSchedule {
 
       simulationResults.realProfiles.forEach((name, samples) -> {
         System.out.println(name + ":");
-        samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.extent(), point.dynamics()));
+        samples.segments().forEach(point -> System.out.format("\t%s\t%s\n", point.extent(), point.dynamics()));
       });
 
       simulationResults.discreteProfiles.forEach((name, samples) -> {
         System.out.println(name + ":");
-        samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.extent(), point.dynamics()));
+        samples.segments().forEach(point -> System.out.format("\t%s\t%s\n", point.extent(), point.dynamics()));
       });
 
     simulationResults.simulatedActivities.forEach((name, activity) -> {

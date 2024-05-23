@@ -113,14 +113,14 @@ public class ConstraintAction {
               profile.getKey(),
               DiscreteProfile.fromExternalProfile(
                   offsetFromSimulationStart,
-                  profile.getValue().getRight()));
+                  profile.getValue().segments()));
         }
         for (final var profile : profileSet.realProfiles().entrySet()) {
           realExternalProfiles.put(
               profile.getKey(),
               LinearProfile.fromExternalProfile(
                   offsetFromSimulationStart,
-                  profile.getValue().getRight()));
+                  profile.getValue().segments()));
         }
       }
 
@@ -195,7 +195,7 @@ public class ConstraintAction {
 
             for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
               if (!realProfiles.containsKey(_entry.getKey())) {
-                realProfiles.put(_entry.getKey(), LinearProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+                realProfiles.put(_entry.getKey(), LinearProfile.fromSimulatedProfile(_entry.getValue().segments()));
               }
             }
 
@@ -203,7 +203,7 @@ public class ConstraintAction {
               if (!discreteProfiles.containsKey(_entry.getKey())) {
                 discreteProfiles.put(
                     _entry.getKey(),
-                    DiscreteProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+                    DiscreteProfile.fromSimulatedProfile(_entry.getValue().segments()));
               }
             }
           } catch (InputMismatchException ex) {

@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -102,7 +103,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    */
   private static final java.time.Duration httpTimeout = java.time.Duration.ofSeconds(60);
 
-  public record DatasetMetadata(DatasetId datasetId, Duration offsetFromPlanStart){};
+  public record DatasetMetadata(DatasetId datasetId, Duration offsetFromPlanStart){}
 
   private record SimulationId(long id){}
 
@@ -168,9 +169,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     }
   }
 
-  protected Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException,
-                                                                                                    MerlinServiceException
-  {
+  protected Optional<JsonObject> postRequest(final String query, final JsonObject variables)
+  throws IOException, MerlinServiceException {
     try {
       //TODO: (mem optimization) use streams here to avoid several copies of strings
       final var reqBody = Json
@@ -988,13 +988,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           realProfiles.put(name,
                            LinearProfile.fromExternalProfile(
                                datasetMetadata.offsetFromPlanStart,
-                               profile.getRight()));
+                               profile.segments()));
         });
         profiles.discreteProfiles().forEach((name, profile) -> {
           discreteProfiles.put(name,
                                DiscreteProfile.fromExternalProfile(
                                    datasetMetadata.offsetFromPlanStart,
-                                   profile.getRight()));
+                                   profile.segments()));
         });
         resourceTypes.addAll(extractResourceTypes(profiles));
       }
@@ -1005,10 +1005,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   private Collection<ResourceType> extractResourceTypes(final ProfileSet profileSet){
     final var resourceTypes = new ArrayList<ResourceType>();
     profileSet.realProfiles().forEach((name, profile) -> {
-      resourceTypes.add(new ResourceType(name, profile.getLeft()));
+      resourceTypes.add(new ResourceType(name, profile.schema()));
     });
     profileSet.discreteProfiles().forEach((name, profile) -> {
-      resourceTypes.add(new ResourceType(name, profile.getLeft()));
+      resourceTypes.add(new ResourceType(name, profile.schema()));
     });
     return resourceTypes;
   }
@@ -1046,25 +1046,25 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return new UnwrappedProfileSet(unwrapProfiles(profileSet.realProfiles()), unwrapProfiles(profileSet.discreteProfiles()));
   }
 
-  private <Dynamics> HashMap<String, Pair<ValueSchema, List<ProfileSegment<Dynamics>>>> unwrapProfiles(Map<String, Pair<ValueSchema,List<ProfileSegment<Optional<Dynamics>>>>> profiles)
-  throws MerlinServiceException
-  {
-    final var unwrapped = new HashMap<String,Pair<ValueSchema, List<ProfileSegment<Dynamics>>>>();
+  private <Dynamics> HashMap<String, ResourceProfile<Dynamics>> unwrapProfiles(
+      Map<String,ResourceProfile<Optional<Dynamics>>> profiles
+  ) {
+    final var unwrapped = new HashMap<String, ResourceProfile<Dynamics>>();
     for(final var profile: profiles.entrySet()) {
       final var unwrappedSegments = new ArrayList<ProfileSegment<Dynamics>>();
-      for (final var segment : profile.getValue().getRight()) {
+      for (final var segment : profile.getValue().segments()) {
         if (segment.dynamics().isPresent()) {
           unwrappedSegments.add(new ProfileSegment<>(segment.extent(), segment.dynamics().get()));
         }
       }
-      unwrapped.put(profile.getKey(), Pair.of(profile.getValue().getLeft(), unwrappedSegments));
+      unwrapped.put(profile.getKey(), ResourceProfile.of(profile.getValue().schema(), unwrappedSegments));
     }
     return unwrapped;
   }
 
   private ProfileSet parseProfiles(JsonArray dataset){
-    Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles = new HashMap<>();
-    Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles = new HashMap<>();
+    Map<String, ResourceProfile<Optional<RealDynamics>>> realProfiles = new HashMap<>();
+    Map<String, ResourceProfile<Optional<SerializedValue>>> discreteProfiles = new HashMap<>();
     for(final var profile :dataset){
       final var name = profile.asJsonObject().getString("name");
       final var type = profile.asJsonObject().getJsonObject("type");
@@ -1081,7 +1081,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return new ProfileSet(realProfiles, discreteProfiles);
   }
 
-  public <Dynamics> Pair<ValueSchema, List<ProfileSegment<Optional<Dynamics>>>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
+  public <Dynamics> ResourceProfile<Optional<Dynamics>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
     // Profile segments are stored with their start offset relative to simulation start
     // We must convert these to durations describing how long each segment lasts
     final var type = chooseP(discreteValueSchemaTypeP, realValueSchemaTypeP).parse(profile.getJsonObject("type")).getSuccessOrThrow();
@@ -1123,7 +1123,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         segments.add(new ProfileSegment<>(duration, dynamics));
       }
     }
-    return Pair.of(type, segments);
+    return ResourceProfile.of(type, segments);
   }
 
   private Map<SimulatedActivityId, SimulatedActivity> parseSimulatedActivities(JsonArray simulatedActivitiesArray, Instant simulationStart)
@@ -1284,10 +1284,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         Duration::plus
     );
   }
-  private HashMap<String, ProfileRecord> postResourceProfiles(DatasetId datasetId,
-                                                              final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
-                                                              final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles)
-  throws MerlinServiceException, IOException
+  private HashMap<String, ProfileRecord> postResourceProfiles(
+      DatasetId datasetId,
+      final Map<String,ResourceProfile<Optional<RealDynamics>>> realProfiles,
+      final Map<String,ResourceProfile<Optional<SerializedValue>>> discreteProfiles
+  ) throws MerlinServiceException, IOException
   {
     final var req = """
         mutation($profiles: [profile_insert_input!]!) {
@@ -1304,9 +1305,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var durations = new ArrayList<Duration>();
     for (final var entry : realProfiles.entrySet()) {
       final var resource = entry.getKey();
-      final var schema = entry.getValue().getLeft();
+      final var schema = entry.getValue().schema();
       final var realResourceType = Pair.of("real", schema);
-      final var segments = entry.getValue().getRight();
+      final var segments = entry.getValue().segments();
       final var duration = sumDurations(segments);
       resourceNames.add(resource);
       resourceTypes.add(realResourceType);
@@ -1321,9 +1322,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     }
     for (final var entry : discreteProfiles.entrySet()) {
       final var resource = entry.getKey();
-      final var schema = entry.getValue().getLeft();
+      final var schema = entry.getValue().schema();
       final var resourceType = Pair.of("discrete", schema);
-      final var segments = entry.getValue().getRight();
+      final var segments = entry.getValue().segments();
       final var duration = sumDurations(segments);
       resourceNames.add(resource);
       resourceTypes.add(resourceType);
@@ -1379,11 +1380,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         case "real" -> postRealProfileSegments(
             datasetId,
             record,
-            realProfiles.get(resource).getRight());
+            realProfiles.get(resource).segments());
         case "discrete" -> postDiscreteProfileSegments(
             datasetId,
             record,
-            discreteProfiles.get(resource).getRight());
+            discreteProfiles.get(resource).segments());
         default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
       }
     }

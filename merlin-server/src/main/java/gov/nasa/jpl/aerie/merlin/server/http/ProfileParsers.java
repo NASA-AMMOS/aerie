@@ -2,17 +2,15 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.DiscreteProfile;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.RealProfile;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -75,15 +73,15 @@ public final class ProfileParsers {
       = mapP(chooseP(realProfileP, discreteProfileP))
       . map(
           profiles -> {
-            final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>>();
-            final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>>();
+            final var realProfiles = new HashMap<String, ResourceProfile<Optional<RealDynamics>>>();
+            final var discreteProfiles = new HashMap<String, ResourceProfile<Optional<SerializedValue>>>();
             for (final var entry : profiles.entrySet()) {
               final var name = entry.getKey();
               final var profile = entry.getValue();
               if (profile instanceof RealProfile p) {
-                realProfiles.put(name, Pair.of(p.schema(), p.segments()));
+                realProfiles.put(name, ResourceProfile.of(p.schema(), p.segments()));
               } else if (profile instanceof DiscreteProfile p) {
-                discreteProfiles.put(name, Pair.of(p.schema(), p.segments()));
+                discreteProfiles.put(name, ResourceProfile.of(p.schema(), p.segments()));
               } else {
                 // If this happens, then the parser must have been updated without updating the mapping code
                 // It should not be possible to reach this point unless a new profile type is introduced and we
@@ -98,11 +96,11 @@ public final class ProfileParsers {
             profileSet
                 .realProfiles()
                 .forEach((name, profile) ->
-                             profiles.put(name, new RealProfile(profile.getLeft(), profile.getRight())));
+                             profiles.put(name, new RealProfile(profile.schema(), profile.segments())));
             profileSet
                 .discreteProfiles()
                 .forEach((name, profile) ->
-                             profiles.put(name, new DiscreteProfile(profile.getLeft(), profile.getRight())));
+                             profiles.put(name, new DiscreteProfile(profile.schema(), profile.segments())));
             return profiles;
           }
       );
