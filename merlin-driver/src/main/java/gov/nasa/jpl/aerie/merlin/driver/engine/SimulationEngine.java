@@ -58,12 +58,7 @@ import java.util.function.Consumer;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
-  private static int numActiveSimulationEngines = 0;
   private boolean closed = false;
-
-  public static int getNumActiveSimulationEngines() {
-    return numActiveSimulationEngines;
-  }
 
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs;
@@ -100,7 +95,6 @@ public final class SimulationEngine implements AutoCloseable {
   private Duration elapsedTime;
 
   public SimulationEngine(LiveCells initialCells) {
-    numActiveSimulationEngines++;
     timeline = new TemporalEventSource();
     cells = new LiveCells(timeline, initialCells);
     elapsedTime = Duration.ZERO;
@@ -120,7 +114,6 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private SimulationEngine(SimulationEngine other) {
-    numActiveSimulationEngines++;
     other.timeline.freeze();
     other.cells.freeze();
 
@@ -547,7 +540,6 @@ public final class SimulationEngine implements AutoCloseable {
   /** Resets all tasks (freeing any held resources). The engine should not be used after being closed. */
   @Override
   public void close() {
-    numActiveSimulationEngines--;
     cells.freeze();
     timeline.freeze();
 
@@ -992,10 +984,6 @@ public final class SimulationEngine implements AutoCloseable {
 
   private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
     return event.extract(serializableTopic.topic(), serializableTopic.outputType()::serialize);
-  }
-
-  private interface Translator<Target> {
-    <Dynamics> Target apply(Resource<Dynamics> resource, Dynamics dynamics);
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
