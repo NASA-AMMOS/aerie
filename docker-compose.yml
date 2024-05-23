@@ -74,7 +74,8 @@ services:
   aerie_sequencing:
     build:
       context: ./sequencing-server
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      #dockerfile: Dockerfile.dev #-- Uncomment for development
     container_name: aerie_sequencing
     depends_on: ["postgres"]
     environment:
@@ -93,6 +94,7 @@ services:
       TRANSPILER_ENABLED: "true"
     image: aerie_sequencing
     ports: ["27184:27184"]
+    #ports: [ "27184:27184",'9229:9229'] #-- Uncomment for development
     restart: always
     volumes:
       - ./sequencing-server:/app:cached
