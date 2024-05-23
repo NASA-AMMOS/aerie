@@ -138,32 +138,32 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   private fun inequalityHelper(other: SerialNumericOps<*, *>, f: LinearEquation.(LinearEquation) -> Booleans) =
       flatMap2Values(::Booleans, other.toReal()) { l, r, _ -> l.f(r) }
 
-
-  override fun changes() =
-      unsafeOperate(::Booleans) { opts ->
-        val bounds = opts.bounds
-        var previous: Segment<LinearEquation>? = null
-        val result = collect(CollectOptions(bounds, false)).flatMap { currentSegment: Segment<LinearEquation> ->
-          val currentInterval = currentSegment.interval
-          val leftEdge = if (
-              previous !== null &&
-              previous!!.interval.compareEndToStart(currentInterval) == 0 &&
-              currentInterval.includesStart()
-          ) {
-            previous!!.value.valueAt(currentInterval.start) == currentSegment.value.valueAt(currentInterval.start)
-          } else if (currentInterval.compareStarts(bounds) == 0) {
-            currentSegment.value.rate != 0.0
-          } else {
-            null
-          }
-          previous = currentSegment
-          listOfNotNull(
-              Segment(Interval.at(currentInterval.start), leftEdge).transpose(),
-              Segment(Interval.between(currentInterval.start, currentInterval.end, Interval.Inclusivity.Exclusive), currentSegment.value.rate != 0.0)
-          )
-        }
-        truncateList(result, opts)
+  private fun detectChangesInternal(leftEdgeFilter: (Double, Double) -> Boolean, continuousFilter: (Double) -> Boolean) = unsafeOperate(::Booleans) { opts ->
+    val bounds = opts.bounds
+    var previous: Segment<LinearEquation>? = null
+    val result = collect(CollectOptions(bounds, false)).flatMap { currentSegment: Segment<LinearEquation> ->
+      val currentInterval = currentSegment.interval
+      val leftEdge = if (
+        previous !== null &&
+        previous!!.interval.compareEndToStart(currentInterval) == 0 &&
+        currentInterval.includesStart()
+      ) {
+        leftEdgeFilter(previous!!.value.valueAt(currentInterval.start), currentSegment.value.valueAt(currentInterval.start))
+      } else if (currentInterval.compareStarts(bounds) == 0) {
+        continuousFilter(currentSegment.value.rate)
+      } else {
+        null
       }
+      previous = currentSegment
+      listOfNotNull(
+        Segment(Interval.at(currentInterval.start), leftEdge).transpose(),
+        Segment(Interval.between(currentInterval.start, currentInterval.end, Interval.Inclusivity.Exclusive), continuousFilter(currentSegment.value.rate))
+      )
+    }
+    truncateList(result, opts)
+  }
+
+  override fun changes() = detectChangesInternal({ l, r -> l != r }, { it != 0.0 })
 
   /**
    * Returns a [Booleans] that is true whenever this discontinuously transitions between
@@ -176,6 +176,9 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   ))
 
   override fun shiftedDifference(range: Duration) = shift(-range).minus(this)
+
+  override fun increases() = detectChangesInternal({ l, r -> l < r }, { it > 0.0})
+  override fun decreases() = detectChangesInternal({ l, r -> l > r }, { it < 0.0})
 
   /**
    * An exception for linear profile operations; usually thrown in contexts that
