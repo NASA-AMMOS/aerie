@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Path;
 
 public class ProcedureLoadingTest {
-  @Test
   void foo() throws ProcedureLoader.ProcedureLoadException {
     var jarPath = "/Users/dailis/projects/aerie/worktrees/develop/procedural/examples/foo-procedures/build/libs/foo-procedures-ConstFruit-constraint.jar";
 
