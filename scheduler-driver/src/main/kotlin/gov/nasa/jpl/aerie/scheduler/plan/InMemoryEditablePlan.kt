@@ -3,23 +3,23 @@ package gov.nasa.jpl.aerie.scheduler.plan
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
-import gov.nasa.jpl.aerie.procedural.scheduling.plan.Edit
-import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan
-import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective
-import gov.nasa.jpl.aerie.procedural.scheduling.simulation.SimulateOptions
+import gov.nasa.ammos.aerie.procedural.scheduling.plan.Edit
+import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan
+import gov.nasa.ammos.aerie.procedural.scheduling.plan.NewDirective
+import gov.nasa.ammos.aerie.procedural.scheduling.simulation.SimulateOptions
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade
-import gov.nasa.jpl.aerie.timeline.collections.Directives
-import gov.nasa.jpl.aerie.timeline.payloads.activities.AnyDirective
-import gov.nasa.jpl.aerie.timeline.payloads.activities.Directive
-import gov.nasa.jpl.aerie.timeline.payloads.activities.DirectiveStart
-import gov.nasa.jpl.aerie.timeline.plan.Plan
+import gov.nasa.ammos.aerie.timeline.collections.Directives
+import gov.nasa.ammos.aerie.timeline.payloads.activities.AnyDirective
+import gov.nasa.ammos.aerie.timeline.payloads.activities.Directive
+import gov.nasa.ammos.aerie.timeline.payloads.activities.DirectiveStart
+import gov.nasa.ammos.aerie.timeline.plan.Plan
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
-import gov.nasa.jpl.aerie.timeline.plan.SimulationResults as TimelineSimResults
+import gov.nasa.ammos.aerie.timeline.plan.SimulationResults as TimelineSimResults
 
 data class InMemoryEditablePlan(
     private val missionModel: MissionModel<*>,
