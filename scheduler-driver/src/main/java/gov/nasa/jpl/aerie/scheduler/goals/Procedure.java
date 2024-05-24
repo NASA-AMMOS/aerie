@@ -74,9 +74,7 @@ public class Procedure extends Goal {
      Duration construction and arithmetic can be less awkward
      */
 
-    final var options = new CollectOptions(inMemoryPlan.totalBounds());
-
-    procedureMapper.deserialize(this.args).run(editablePlan, options);
+    procedureMapper.deserialize(this.args).run(editablePlan);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
       throw new NotImplementedException("emit warning");

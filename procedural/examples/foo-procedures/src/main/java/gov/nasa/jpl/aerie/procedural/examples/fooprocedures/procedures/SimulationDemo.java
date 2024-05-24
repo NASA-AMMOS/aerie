@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.procedures;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.procedural.scheduling.Procedure;
+import gov.nasa.jpl.aerie.procedural.scheduling.Rule;
 import gov.nasa.jpl.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
@@ -17,9 +17,9 @@ import java.time.temporal.ChronoField;
 import java.util.Map;
 
 @SchedulingProcedure
-public record SimulationDemo(int quantity) implements Procedure {
+public record SimulationDemo(int quantity) implements Rule {
   @Override
-  public void run(EditablePlan plan, @NotNull CollectOptions options) {
+  public void run(EditablePlan plan) {
 //    final var firstActivityTime = plan.toRelative(Instant.from(DOY_WITHOUT_ZONE_FORMATTER.parse("2024-128T07:00:00")));
 //
 //    plan.create(
@@ -37,7 +37,7 @@ public record SimulationDemo(int quantity) implements Procedure {
     final var connections = lowFruit.starts().shift(Duration.MINUTE.negate())
                                     .connectTo(bites.ends(), false);
 
-    for (final var connection: connections.collect(options)) {
+    for (final var connection: connections.collect()) {
       assert connection.to != null;
       plan.create(
           "GrowBanana",
