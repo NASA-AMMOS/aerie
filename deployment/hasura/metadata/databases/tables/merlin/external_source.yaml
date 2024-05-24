@@ -1,0 +1,56 @@
+table:
+  name: external_source
+  schema: merlin
+configuration:
+  custom_name: "external_source"
+object_relationships:
+- name: uploaded_file
+  using:
+    foreign_key_constraint_on: file_id
+array_relationships:
+  - name: external_events
+    using:
+      foreign_key_constraint_on:
+        column: source_id
+        table:
+          name: external_event
+          schema: merlin
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, file_id, source_type, valid_at, start_time, end_time, metadata]
+      check: {}
+  - role: user
+    permission:
+      columns: [key, file_id, source_type, valid_at, start_time, end_time, metadata]
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [key, file_id, source_type, valid_at, start_time, end_time, metadata]
+      filter: {}
+#  - role: user # justified???
+#    permission:
+#      columns: [valid_at, metadata]
+#      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}
+  # yser deletions too???
