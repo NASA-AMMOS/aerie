@@ -45,4 +45,17 @@ class RealTest {
     )
   }
 
+  @Test
+  fun sample() {
+    val profile = Real(
+      Segment(seconds(0) .. seconds(2), LinearEquation(0)),
+      Segment(seconds(2) .. seconds(5), LinearEquation(seconds(0), 1.0, 1.0)),
+      Segment(seconds(20) .. seconds(25), LinearEquation(seconds(20), 5.0, -2.0)),
+    )
+
+    assertEquals(0.0, profile.sample(seconds(1)))
+    assertEquals(5.0, profile.sample(seconds(4)))
+    assertEquals(null, profile.sample(seconds(10)))
+    assertEquals(3.0, profile.sample(seconds(21)))
+  }
 }
