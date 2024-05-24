@@ -5,14 +5,14 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId
-import gov.nasa.jpl.aerie.timeline.Interval
-import gov.nasa.jpl.aerie.timeline.collections.Instances
-import gov.nasa.jpl.aerie.timeline.util.duration.rangeTo
-import gov.nasa.jpl.aerie.timeline.ops.coalesce.CoalesceSegmentsOp
-import gov.nasa.jpl.aerie.timeline.payloads.Segment
-import gov.nasa.jpl.aerie.timeline.payloads.activities.Instance
-import gov.nasa.jpl.aerie.timeline.plan.Plan
-import gov.nasa.jpl.aerie.timeline.plan.SimulationResults
+import gov.nasa.ammos.aerie.timeline.Interval
+import gov.nasa.ammos.aerie.timeline.collections.Instances
+import gov.nasa.ammos.aerie.timeline.util.duration.rangeTo
+import gov.nasa.ammos.aerie.timeline.ops.coalesce.CoalesceSegmentsOp
+import gov.nasa.ammos.aerie.timeline.payloads.Segment
+import gov.nasa.ammos.aerie.timeline.payloads.activities.Instance
+import gov.nasa.ammos.aerie.timeline.plan.Plan
+import gov.nasa.ammos.aerie.timeline.plan.SimulationResults
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 

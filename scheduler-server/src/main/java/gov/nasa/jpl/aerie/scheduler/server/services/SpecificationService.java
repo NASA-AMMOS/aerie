@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
-import gov.nasa.jpl.aerie.procedural.scheduling.ProcedureMapper;
+import gov.nasa.ammos.aerie.procedural.scheduling.ProcedureMapper;
 import gov.nasa.jpl.aerie.scheduler.ProcedureLoader;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSchedulingGoalException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
