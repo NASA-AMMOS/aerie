@@ -5,9 +5,11 @@ import gov.nasa.jpl.aerie.timeline.Interval.Companion.at
 import gov.nasa.jpl.aerie.timeline.Interval.Companion.between
 import gov.nasa.jpl.aerie.timeline.Interval.Inclusivity.Exclusive
 import gov.nasa.jpl.aerie.timeline.Interval.Inclusivity.Inclusive
+import gov.nasa.jpl.aerie.timeline.collections.profiles.Constants
 import gov.nasa.jpl.aerie.timeline.payloads.Segment
 import gov.nasa.jpl.aerie.timeline.collections.profiles.Numbers
 import gov.nasa.jpl.aerie.timeline.util.duration.rangeTo
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.Test
 
@@ -34,5 +36,20 @@ class SerialConstantTest {
         ),
         result
     )
+  }
+
+  @Test
+  fun sample() {
+    val profile = Constants(
+      Segment(seconds(0) .. seconds(2), "a"),
+      Segment(seconds(2) .. seconds(5), "b"),
+      Segment(seconds(20) .. seconds(25), "c"),
+    )
+
+    assertEquals("a", profile.sample(seconds(1)))
+    assertEquals("b", profile.sample(seconds(4)))
+    assertEquals(null, profile.sample(seconds(10)))
+    assertEquals("c", profile.sample(seconds(21)))
+    assertEquals("y", profile.sample(seconds(101)))
   }
 }
