@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.procedural.scheduling.ProcedureMapper;
+import gov.nasa.ammos.aerie.procedural.scheduling.ProcedureMapper;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
