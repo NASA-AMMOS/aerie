@@ -20,9 +20,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
     SerialNumericOps<LinearEquation, Real>,
     LinearOps<Real>
 {
-  constructor(v: Int): this(v.toDouble())
-  constructor(v: Long): this(v.toDouble())
-  constructor(v: Double): this(LinearEquation(v))
+  constructor(v: Number): this(LinearEquation(v.toDouble()))
   constructor(eq: LinearEquation): this(Segment(Interval.MIN_MAX, eq))
   constructor(vararg segments: Segment<LinearEquation>): this(segments.asList())
   constructor(segments: List<Segment<LinearEquation>>): this(BaseTimeline(::Real, preprocessList(segments, Segment<LinearEquation>::valueEquals)))
@@ -179,6 +177,16 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
 
   override fun increases() = detectChangesInternal({ l, r -> l < r }, { it > 0.0})
   override fun decreases() = detectChangesInternal({ l, r -> l > r }, { it < 0.0})
+
+  private class UnreachableValueAtException: Exception("internal error. a serial profile had multiple values at the same time.")
+
+  /** Calculates the value of the profile at the given time. */
+  fun sample(time: Duration): Double? {
+    val list = collect(CollectOptions(Interval.at(time), true))
+    if (list.isEmpty()) return null
+    if (list.size > 1) throw UnreachableValueAtException()
+    return list[0].value.valueAt(time)
+  }
 
   /**
    * An exception for linear profile operations; usually thrown in contexts that
