@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.procedural.examples.fooprocedures.procedures;
 
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.EditablePlan;
-import gov.nasa.jpl.aerie.procedural.scheduling.Procedure;
+import gov.nasa.jpl.aerie.procedural.scheduling.Rule;
 import gov.nasa.jpl.aerie.procedural.scheduling.plan.NewDirective;
 import gov.nasa.jpl.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.jpl.aerie.timeline.CollectOptions;
@@ -13,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 @SchedulingProcedure
-public record SampleProcedure(int quantity) implements Procedure {
+public record SampleProcedure(int quantity) implements Rule {
   @Override
-  public void run(EditablePlan plan, @NotNull CollectOptions options) {
+  public void run(EditablePlan plan) {
     final var firstTime = Duration.hours(24);
     final var step = Duration.hours(6);
 
