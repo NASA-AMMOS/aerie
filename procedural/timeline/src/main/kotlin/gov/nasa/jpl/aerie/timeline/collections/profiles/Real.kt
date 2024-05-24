@@ -158,7 +158,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
         Segment(Interval.between(currentInterval.start, currentInterval.end, Interval.Inclusivity.Exclusive), continuousFilter(currentSegment.value.rate))
       )
     }
-    truncateList(result, opts)
+    truncateList(result, opts, true, true)
   }
 
   override fun changes() = detectChangesInternal({ l, r -> l != r }, { it != 0.0 })
