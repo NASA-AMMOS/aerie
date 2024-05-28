@@ -26,12 +26,12 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, event_type, source_id, time, duration, properties]
+      columns: [key, event_type, source_id, start_time, duration, properties]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, event_type, source_id, time, duration, properties]
+      columns: [key, event_type, source_id, start_time, duration, properties]
       filter: {}
 delete_permissions:
   - role: aerie_admin
