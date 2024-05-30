@@ -1,5 +1,4 @@
-drop trigger set_timestamp on view_to_mission_model;
-
-drop table view_to_mission_model;
+alter table merlin.mission_model
+  drop column default_view_id;
 
 call migrations.mark_migration_rolled_back('4');

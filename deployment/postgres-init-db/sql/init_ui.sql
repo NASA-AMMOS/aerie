@@ -10,5 +10,4 @@ begin;
   \ir tables/ui/extensions.sql
   \ir tables/ui/extension_roles.sql
   \ir tables/ui/view.sql
-  \ir tables/ui/view_to_mission_model.sql
 end;

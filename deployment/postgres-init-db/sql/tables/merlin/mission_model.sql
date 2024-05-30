@@ -6,6 +6,7 @@ create table merlin.mission_model (
   name text not null,
   version text not null,
   description text not null default '',
+  default_view_id integer default null,
 
   owner text,
   jar_id integer not null,
@@ -24,6 +25,9 @@ create table merlin.mission_model (
   constraint mission_model_owner_exists
     foreign key (owner) references permissions.users
     on update cascade
+    on delete set null,
+  foreign key (default_view_id)
+    references ui.view
     on delete set null
 );
 
@@ -48,6 +52,8 @@ comment on column merlin.mission_model.created_at is e''
   'The time this mission model was uploaded into Aerie.';
 comment on column merlin.mission_model.description is e''
   'A human-meaningful description of the mission model.';
+comment on column merlin.mission_model.default_view_id is e''
+  'The ID of an option default view for the mission model.';
 
 create trigger increment_revision_mission_model_update
 before update on merlin.mission_model
