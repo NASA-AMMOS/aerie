@@ -165,4 +165,5 @@
 ############
 - "!include ui/extension_roles.yaml"
 - "!include ui/extensions.yaml"
+- "!include ui/view_to_mission_model.yaml"
 - "!include ui/view.yaml"
