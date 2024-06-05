@@ -3290,7 +3290,6 @@ export function hmsToDuration(hms: HMS_STRING, epoch: boolean = false): Temporal
 
   if (!epoch) {
     if (isNegative) {throw new Error(\`Signed time (+/-) is not allowed for Relative Times: \${hms}\`);}
-    if (daysNum !== 0) {throw new Error(\`Day (DDD) is not allowed for Relative Times: \${hms}\`);}
   }
   return Temporal.Duration.from({
     days: isNegative ? -daysNum : daysNum,
