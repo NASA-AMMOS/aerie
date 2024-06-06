@@ -9,20 +9,15 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan;
 import gov.nasa.jpl.aerie.scheduler.plan.SchedulerToProcedurePlanAdapter;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
-import gov.nasa.ammos.aerie.timeline.CollectOptions;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.ammos.aerie.timeline.payloads.activities.DirectiveStart;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulingActivityDirective;
