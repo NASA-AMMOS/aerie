@@ -273,6 +273,7 @@ public enum GQL {
         version
         refresh_activity_type_logs(order_by: {created_at: desc}) {
           triggering_user
+          pending
           delivered
           success
           tries
@@ -284,6 +285,7 @@ public enum GQL {
         }
         refresh_model_parameter_logs(order_by: {created_at: desc}) {
           triggering_user
+          pending
           delivered
           success
           tries
@@ -295,6 +297,7 @@ public enum GQL {
         }
         refresh_resource_type_logs(order_by: {created_at: desc}) {
           triggering_user
+          pending
           delivered
           success
           tries
