@@ -10,6 +10,8 @@ CREATE TABLE merlin.external_source (
     metadata jsonb
 );
 
+COMMENT ON TABLE merlin.external_source IS 'A table for externally imported event sources.';
+
 -- Ensure the id is serial.
 CREATE SEQUENCE merlin.external_source_id_seq
     AS integer
