@@ -53,7 +53,7 @@ comment on column merlin.mission_model.created_at is e''
 comment on column merlin.mission_model.description is e''
   'A human-meaningful description of the mission model.';
 comment on column merlin.mission_model.default_view_id is e''
-  'The ID of an option default view for the mission model.';
+  'The ID of an optional default view for the mission model.';
 
 create trigger increment_revision_mission_model_update
 before update on merlin.mission_model
