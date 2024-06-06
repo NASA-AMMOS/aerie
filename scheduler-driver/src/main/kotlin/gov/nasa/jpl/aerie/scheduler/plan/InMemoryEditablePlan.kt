@@ -71,7 +71,7 @@ data class InMemoryEditablePlan(
       when (it) {
         is Edit.Create -> it.directive.toSchedulingActivityDirective(lookupActivityType)
       }
-    }
+    } + plan.directives().collect().map { it.toSchedulingActivityDirective(lookupActivityType) }
     simulationFacade.removeAndInsertActivitiesFromSimulation(plan, plan)
     simulationFacade.computeSimulationResultsUntil(options.pause.resolve(this))
     return latestResults()!!
