@@ -7,6 +7,8 @@ CREATE TABLE merlin.plan_external_source (
     owner text
 );
 
+COMMENT ON TABLE merlin.plan_external_source IS 'A table for linking externally imported event sources & plans.';
+
 -- Ensure the id is serial
 CREATE SEQUENCE merlin.plan_external_source_id_seq
     AS integer
@@ -29,6 +31,7 @@ ALTER TABLE ONLY merlin.plan_external_source
 ALTER TABLE ONLY merlin.plan_external_source
     ADD CONSTRAINT unique_plan_external_source UNIQUE (plan_id, external_source_id);
 
+COMMENT ON CONSTRAINT unique_plan_external_source ON merlin.plan_external_source IS 'The tuple (plan_id, external_source_id) must be unique!';
 
 -- Add foreign keys
 ALTER TABLE ONLY merlin.plan_external_source
