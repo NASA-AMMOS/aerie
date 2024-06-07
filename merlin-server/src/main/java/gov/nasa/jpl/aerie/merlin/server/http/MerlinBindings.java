@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.permissions.Action;
@@ -126,6 +127,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -140,6 +143,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -154,6 +159,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -171,6 +178,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -286,6 +295,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -307,6 +318,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -329,6 +342,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -348,6 +363,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -373,6 +390,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 
@@ -391,6 +410,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final LocalMissionModelService.MissionModelLoadException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeMissionModelLoadException(ex).toString());
     }
   }
 

@@ -94,12 +94,10 @@ public final class LocalMissionModelService implements MissionModelService {
    * @param missionModelId The ID of the mission model to load.
    * @return The set of all activity types in the named mission model, indexed by name.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
-   * @throws MissionModelLoadException If the mission model cannot be loaded -- the JAR may be invalid, or the mission model
-   * it contains may not abide by the expected contract at load time.
    */
   @Override
   public Map<String, ActivityType> getActivityTypes(final String missionModelId)
-  throws NoSuchMissionModelException, MissionModelLoadException
+  throws NoSuchMissionModelException
   {
     try {
       return missionModelRepository.getActivityTypes(missionModelId);
