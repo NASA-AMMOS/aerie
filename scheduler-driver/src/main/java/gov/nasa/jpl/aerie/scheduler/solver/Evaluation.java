@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 import java.util.Collections;
 import java.util.Map;
@@ -181,6 +181,21 @@ public class Evaluation {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Replace an old activity by a new one in every goal
+   * @param oldAct Old Activity
+   * @param newAct New Activity
+   */
+  public void updateGoalEvals(final SchedulingActivityDirective oldAct, final SchedulingActivityDirective newAct) {
+    for (GoalEvaluation goalEval : goalEvals.values()) {
+      if (goalEval.acts.containsKey(oldAct)) {
+        Boolean value = goalEval.acts.get(oldAct);
+        goalEval.acts.remove(oldAct);
+        goalEval.acts.put(newAct, value);
+      }
+    }
   }
 
 }

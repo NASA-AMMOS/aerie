@@ -27,7 +27,6 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers;
-import gov.nasa.jpl.aerie.scheduler.server.graphql.ProfileParsers;
 import gov.nasa.jpl.aerie.scheduler.server.http.EventGraphFlattener;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
@@ -464,8 +463,22 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
     //Create
     ids.putAll(createActivityDirectives(planId, toAdd, activityToGoalId, schedulerModel));
-
     return ids;
+  }
+
+@Override
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
+  throws MerlinServiceException, IOException
+  {
+    for (SchedulingActivityDirective act: acts) {
+      final var request = """
+          mutation {
+            update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
+              id
+            }
+          }""".formatted(instancesToIds.get(act).id(), planId.id(), act.anchorId().id());
+      final var response = postRequest(request);
+    }
   }
 
   /**
@@ -564,7 +577,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           .createObjectBuilder()
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
-          .add("start_offset", act.startOffset().toString());
+          .add("start_offset", act.startOffset().toString())
+          .add("anchored_to_start", act.anchoredToStart());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();

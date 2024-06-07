@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -31,6 +32,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,8 +195,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts)
-  throws SchedulingInterruptedException {
+  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts, boolean actsFromInitialPlan) throws SchedulingInterruptedException{
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
     logger.info("Inserting new activities in the plan to check plan validity");
@@ -233,7 +234,7 @@ public class PrioritySolver implements Solver {
 
     if(allGood) {
       logger.info("New activities have been inserted in the plan successfully");
-      if(!acts.isEmpty()) simulationFacade.initialSimulationResultsAreStale();
+      if(!acts.isEmpty() && !actsFromInitialPlan) simulationFacade.initialSimulationResultsAreStale();
       //update plan with regard to simulation
       for(var act: acts) {
         plan.add(act);
@@ -286,7 +287,7 @@ public class PrioritySolver implements Solver {
     //turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
-    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime());
+    checkAndInsertActs(problem.getInitialPlan().getActivitiesByTime(), true);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
@@ -322,6 +323,18 @@ public class PrioritySolver implements Solver {
     plan.remove(toRemoveFromPlan);
     plan.add(toAddToPlan);
     return replaced;
+  }
+
+  /**
+   * For activities that have a null duration (in an initial plan for example) and that have been simulated, we pull the duration and
+   * replace the original instance with a new instance that includes the duration, both in the plan and the simulation facade
+   */
+  public void replaceActivity(SchedulingActivityDirective actOld, SchedulingActivityDirective actNew) {
+    simulationFacade.replaceActivityFromSimulation(actOld, actNew);
+    generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getLeft().equals(actOld) ? Pair.of(actNew, pair.getRight()): pair).collect(Collectors.toList());
+    generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getRight().equals(actOld) ? Pair.of(pair.getLeft(), actNew): pair).collect(Collectors.toList());
+    plan.remove(actOld);
+    plan.add(actNew);
   }
 
   /**
@@ -467,7 +480,7 @@ public class PrioritySolver implements Solver {
             //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
             evaluation.forGoal(goal).associate(act, false);
           }
-          final var insertionResult = checkAndInsertActs(actsToInsert);
+          final var insertionResult = checkAndInsertActs(actsToInsert, false);
           if(insertionResult.success()) {
             for(var act: insertionResult.activitiesInserted()){
               evaluation.forGoal(goal).associate(act, false);
@@ -607,7 +620,7 @@ public class PrioritySolver implements Solver {
         //add the activities to the output plan
         if (!acts.isEmpty()) {
           logger.info("Found activity to satisfy missing activity instance conflict");
-          final var insertionResult = checkAndInsertActs(acts);
+          final var insertionResult = checkAndInsertActs(acts, false);
           if(insertionResult.success){
             evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
             itConflicts.remove();
@@ -632,7 +645,7 @@ public class PrioritySolver implements Solver {
           //add the activities to the output plan
           if (!acts.isEmpty()) {
             logger.info("Found activity to satisfy missing activity template conflict");
-            final var insertionResult = checkAndInsertActs(acts);
+            final var insertionResult = checkAndInsertActs(acts, false);
             if(insertionResult.success()){
 
               evaluation.forGoal(goal).associate(insertionResult.activitiesInserted(), true);
@@ -666,11 +679,42 @@ public class PrioritySolver implements Solver {
             narrowed = narrowByResourceConstraints(actWindow, List.of(stateConstraints));
           }
           if(narrowed.includes(actWindow)){
-            //decision-making here, we choose the first satisfying activity
-            evaluation.forGoal(goal).associate(act, false);
-            itConflicts.remove();
-            logger.info("Activity " + act + " has been associated to goal " + goal.getName() +" to satisfy conflict " + i);
-            break;
+            // If existing activity is a match but is missing the anchor, then the appropriate anchorId has been included in MissingAssociationConflict.
+            // In that case, a new activity must be created as a copy of act but including the anchorId. This activity is then added to all appropriate data structures and the association is created
+            if (missingAssociationConflict.getAnchorIdTo().isPresent()){
+              SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingAssociationConflict.getAnchorIdTo().get());
+              Duration startOffset = act.startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor));
+              // In case the goal requires generation of anchors, then check that the anchor is to the Start. Otherwise (anchor to End), make sure that there is a positive offset
+              if(missingAssociationConflict.getAnchorToStart().isEmpty() || missingAssociationConflict.getAnchorToStart().get() || startOffset.longerThan(Duration.ZERO)){
+                var replacementAct = SchedulingActivityDirective.copyOf(
+                    act,
+                    missingAssociationConflict.getAnchorIdTo().get(),
+                    missingAssociationConflict.getAnchorToStart().get(),
+                    startOffset
+                );
+                replaceActivity(act,replacementAct);
+                //decision-making here, we choose the first satisfying activity
+                evaluation.forGoal(goal).associate(replacementAct, false);
+                itConflicts.remove();
+                logger.info("Activity " + replacementAct + " has been associated to goal " + goal.getName() +" to satisfy conflict " + i);
+                break;
+              }
+               else{
+                logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
+               }
+            }
+            else {
+              //decision-making here, we choose the first satisfying activity
+              evaluation.forGoal(goal).associate(act, false);
+              itConflicts.remove();
+              logger.info("Activity "
+                          + act
+                          + " has been associated to goal "
+                          + goal.getName()
+                          + " to satisfy conflict "
+                          + i);
+              break;
+            }
           } else{
             logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
           }
@@ -705,7 +749,8 @@ public class PrioritySolver implements Solver {
     final var lastSimulationResults = this.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie());
     synchronizeSimulationWithSchedulerPlan();
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
-    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, evaluationEnvironment, this.problem.getSchedulerModel());
+    final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds = simulationFacade.getBidiActivityIdCorrespondence();
+    final var rawConflicts = goal.getConflicts(plan, lastSimulationResults, mapSchedulingIdsToActivityIds, evaluationEnvironment, this.problem.getSchedulerModel());
     assert rawConflicts != null;
     return rawConflicts;
   }
@@ -812,11 +857,33 @@ public class PrioritySolver implements Solver {
         //REVIEW: not yet handling multiple activities at a time
         logger.info("Instantiating activity in windows " + startWindows.trueSegmentsToString());
         final var act = createOneActivity(
-            missingTemplate.getActTemplate(),
+            missingTemplate,
             goal.getName() + "_" + java.util.UUID.randomUUID(),
             startWindows,
             missing.getEvaluationEnvironment());
-        act.ifPresent(newActs::add);
+        if(act.isPresent()){
+          if (missingTemplate.getAnchorId().isPresent()) {
+            final SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
+            int includePredDuration = 0;
+            if (missingTemplate.getAnchorToStart().isPresent()) {
+              includePredDuration = missingTemplate.getAnchorToStart().get() ? 0 : 1;
+            }
+            final Duration dur = predecessor.duration().times(includePredDuration);
+            final Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
+            // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
+            if(((MissingActivityTemplateConflict) missing).getAnchorToStart().isEmpty() || ((MissingActivityTemplateConflict) missing).getAnchorToStart().get() || startOffset.noShorterThan(Duration.ZERO)){
+              final var actWithAnchor = Optional.of(SchedulingActivityDirective.copyOf(act.get(), missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
+              newActs.add(actWithAnchor.get());
+            }
+            else{
+              logger.info("Activity " + act + " could not be associated to goal " + goal.getName() + " because of goal constraints");
+            }
+          }
+          else{
+            newActs.add(act.get());
+          }
+        }
+        //is an exception that act is empty?
       }
 
     }//if(startWindows)
@@ -923,22 +990,23 @@ public class PrioritySolver implements Solver {
    * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
   public @NotNull Optional<SchedulingActivityDirective> createOneActivity(
-      final ActivityExpression activityExpression,
+      final MissingActivityTemplateConflict missingConflict,
       final String name,
       final Windows windows,
-      final EvaluationEnvironment evaluationEnvironment
-  ) throws SchedulingInterruptedException {
+      final EvaluationEnvironment evaluationEnvironment) throws SchedulingInterruptedException
+  {
     //REVIEW: how to properly export any flexibility to instance?
     logger.info("Trying to create one activity, will loop through possible windows");
     for (var window : windows.iterateEqualTo(true)) {
       logger.info("Trying in window " + window);
-      var activity = instantiateActivity(activityExpression, name, window, evaluationEnvironment);
+      var activity = instantiateActivity(missingConflict.getActTemplate(), name, window, missingConflict.getEvaluationEnvironment());
       if (activity.isPresent()) {
-        return activity;
+          return activity;
       }
     }
     return Optional.empty();
   }
+
   private Optional<SchedulingActivityDirective> instantiateActivity(
       final ActivityExpression activityExpression,
       final String name,
