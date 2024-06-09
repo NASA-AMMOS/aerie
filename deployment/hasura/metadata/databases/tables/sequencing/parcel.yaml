@@ -1,0 +1,65 @@
+table:
+  name: parcel
+  schema: sequencing
+configuration:
+  custom_name: "parcel"
+object_relationships:
+  - name: channel_dictionary
+    using:
+      foreign_key_constraint_on: channel_dictionary_id
+  - name: command_dictionary
+    using:
+      foreign_key_constraint_on: command_dictionary_id
+  - name: sequence_adaptation
+    using:
+      foreign_key_constraint_on: sequence_adaptation_id
+array_relationships:
+  - name: parameter_dictionaries
+    using:
+      foreign_key_constraint_on:
+        column: parcel_id
+        table:
+          name: parcel_to_parameter_dictionary
+          schema: sequencing
+  - name: expansion_sets
+    using:
+      foreign_key_constraint_on:
+        column: parcel_id
+        table:
+          name: expansion_set
+          schema: sequencing
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [channel_dictionary_id, command_dictionary_id, name, sequence_adaptation_id, owner]
+      filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

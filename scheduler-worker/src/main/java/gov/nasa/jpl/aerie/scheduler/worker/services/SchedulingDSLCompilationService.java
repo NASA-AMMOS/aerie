@@ -33,10 +33,11 @@ public class SchedulingDSLCompilationService {
     final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
     final var schedulingDslCompilerCommand = System.getenv("SCHEDULING_DSL_COMPILER_COMMAND");
     final var nodePath = System.getenv("NODE_PATH");
-    this.nodeProcess = new ProcessBuilder(nodePath, "--experimental-vm-modules", schedulingDslCompilerCommand)
+    final var processBuilder = new ProcessBuilder(nodePath, "--experimental-vm-modules", schedulingDslCompilerCommand)
         .redirectError(ProcessBuilder.Redirect.INHERIT)
-        .directory(new File(schedulingDslCompilerRoot))
-        .start();
+        .directory(new File(schedulingDslCompilerRoot));
+    processBuilder.environment().put("NODE_NO_WARNINGS", "1");
+    this.nodeProcess = processBuilder.start();
 
     final var inputStream = this.nodeProcess.outputWriter();
     inputStream.write("ping\n");

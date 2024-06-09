@@ -28,6 +28,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
@@ -506,6 +507,7 @@ class SchedulingDSLCompilationServiceTests {
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
+              persistentAnchor: PersistentTimeAnchor.START,
               activityTemplate: (span) => ActivityTemplates.SampleActivity1({
                 variant: 'option2',
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2.0}]},
@@ -523,6 +525,7 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+                  Optional.of(PersistentTimeAnchor.START),
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -563,6 +566,7 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+                  Optional.of(PersistentTimeAnchor.DISABLED),
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -589,6 +593,7 @@ class SchedulingDSLCompilationServiceTests {
           export default function() {
             return Goal.CoexistenceGoal({
               activityFinder: ActivityExpression.build(ActivityTypes.SampleActivity1, {variant:'option2'}),
+              persistentAnchor: PersistentTimeAnchor.START,
               activityTemplate: (span) => ActivityTemplates.SampleActivity1({
                 variant: 'option2',
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2.0}]},
@@ -606,6 +611,7 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+                  Optional.of(PersistentTimeAnchor.START),
               Optional.of(new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity1", Optional.of(
                   new StructExpressionAt(Map.of("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))))
               ))),
@@ -638,7 +644,7 @@ class SchedulingDSLCompilationServiceTests {
               startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ seconds : 1 }))
             })
           }
-        """);
+    """);
 
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
@@ -655,6 +661,7 @@ class SchedulingDSLCompilationServiceTests {
                       Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
                   ))
               ),
+              Optional.of(PersistentTimeAnchor.DISABLED),
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -702,6 +709,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
                                                  ))
               ),
+                  Optional.of(PersistentTimeAnchor.DISABLED),
               Optional.empty(),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2", Optional.empty()),
@@ -857,6 +865,7 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
+                  Optional.of(PersistentTimeAnchor.DISABLED),
               Optional.empty(),
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
@@ -897,6 +906,7 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1ParametersWithDurationReference()
               ),
+                  Optional.of(PersistentTimeAnchor.DISABLED),
               Optional.empty(),
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),

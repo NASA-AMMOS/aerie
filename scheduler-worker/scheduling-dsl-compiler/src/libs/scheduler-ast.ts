@@ -73,6 +73,7 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate<any>,
+  persistentAnchor: PersistentTimeAnchor | undefined,
   activityFinder: ActivityExpression<any> | undefined,
   alias: string,
   forEach: WindowsExpressions.WindowsExpression | ActivityExpression<any>,
@@ -88,7 +89,7 @@ export interface ActivityExpression<A extends ConstraintEDSL.Gen.ActivityType> {
 }
 
 export type TimeExpression =
-    | TimeExpressionRelativeFixed
+    | TimeExpressionRelativeSimple
 
 export enum TimeExpressionOperator {
   Plus = "TimeExpressionOperatorPlus",
@@ -100,7 +101,13 @@ export enum TimeAnchor {
   End = "End"
 }
 
-export interface TimeExpressionRelativeFixed {
+export enum PersistentTimeAnchor {
+  DISABLED = "DISABLED",
+  START = "START",
+  END = "END"
+}
+
+export interface TimeExpressionRelativeSimple {
   anchor: TimeAnchor,
   fixed: boolean  // true means op(anchor, operand) is exactly the time, false means it's a range between op(anchor, operand) and anchor
   operation: {

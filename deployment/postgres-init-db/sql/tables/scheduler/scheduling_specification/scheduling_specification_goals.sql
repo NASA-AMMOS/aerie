@@ -9,14 +9,11 @@ create table scheduler.scheduling_specification_goals (
 
   constraint scheduling_specification_goals_primary_key
     primary key (specification_id, goal_id),
-  constraint scheduling_specification_goals_unique_priorities
-    unique (specification_id, priority) deferrable initially deferred,
   constraint scheduling_specification_goals_specification_exists
     foreign key (specification_id)
       references scheduler.scheduling_specification
       on update cascade
       on delete cascade,
-  constraint non_negative_specification_goal_priority check (priority >= 0),
   constraint scheduling_spec_goal_exists
     foreign key (goal_id)
       references scheduler.scheduling_goal_metadata
@@ -26,7 +23,11 @@ create table scheduler.scheduling_specification_goals (
     foreign key (goal_id, goal_revision)
       references scheduler.scheduling_goal_definition
       on update cascade
-      on delete restrict
+      on delete restrict,
+  constraint scheduling_specification_goals_unique_priorities
+    unique (specification_id, priority) deferrable initially deferred,
+  constraint non_negative_specification_goal_priority
+    check (priority >= 0)
 );
 
 comment on table scheduler.scheduling_specification_goals is e''
@@ -134,11 +135,16 @@ execute function scheduler.update_scheduling_specification_goal_func();
 create function scheduler.delete_scheduling_specification_goal_func()
   returns trigger
   language plpgsql as $$
+  declare
+    r scheduler.scheduling_specification_goals;
 begin
-  update scheduler.scheduling_specification_goals
-  set priority = priority - 1
-  where specification_id = old.specification_id
-    and priority > old.priority;
+  -- Perform updates in reverse-priority order to ensure that there are no gaps
+  for r in select * from removed_rows order by priority desc loop
+    update scheduler.scheduling_specification_goals
+    set priority = priority - 1
+    where specification_id = r.specification_id
+      and priority > r.priority;
+  end loop;
   return null;
 end;
 $$;
@@ -148,7 +154,8 @@ comment on function scheduler.delete_scheduling_specification_goal_func() is e''
 
 create trigger delete_scheduling_specification_goal
   after delete on scheduler.scheduling_specification_goals
-  for each row
+  referencing old table as removed_rows
+  for each statement
 execute function scheduler.delete_scheduling_specification_goal_func();
 
 create function scheduler.increment_spec_revision_on_goal_spec_update()
@@ -164,6 +171,7 @@ end$$;
 create trigger increment_revision_on_goal_update
   before insert or update on scheduler.scheduling_specification_goals
   for each row
+  when (pg_trigger_depth() < 1)
   execute function scheduler.increment_spec_revision_on_goal_spec_update();
 
 create function scheduler.increment_spec_revision_on_goal_spec_delete()

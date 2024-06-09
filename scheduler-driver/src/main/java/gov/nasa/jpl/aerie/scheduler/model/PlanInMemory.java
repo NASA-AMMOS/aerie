@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * an in-memory solution to a planning problem including a schedule of activities
@@ -140,6 +141,12 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableList(orderedActs);
   }
 
+  public void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct){
+    this.remove(oldAct);
+    this.add(newAct);
+    this.evaluation.updateGoalEvals(oldAct, newAct);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -151,6 +158,13 @@ public class PlanInMemory implements Plan {
   @Override
   public Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
     return Collections.unmodifiableMap(actsById);
+  }
+
+@Override
+  public Set<SchedulingActivityDirectiveId> getAnchorIds() {
+    return actsSet.stream()
+                  .map(SchedulingActivityDirective::anchorId)
+                  .collect(Collectors.toSet());
   }
 
   /**
@@ -174,7 +188,7 @@ public class PlanInMemory implements Plan {
     LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
-        if (template.matches(act, simulationResults, evaluationEnvironment, true)) {
+        if (template.matches(act, simulationResults, evaluationEnvironment, true, this)) {
           matched.add(act);
         }
       }
@@ -198,4 +212,16 @@ public class PlanInMemory implements Plan {
     return evaluation;
   }
 
+  @Override
+  public Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivityDirective act){
+    if(act == null)
+      return null;
+    if(act.anchorId() != null){
+      SchedulingActivityDirective parent = this.getActivitiesById().get(act.anchorId());
+      if(!act.anchoredToStart() && parent.duration() == null)
+        throw new IllegalArgumentException("Cannot calculate the absolute duration for an activity that is not anchored to the start while the parent doesn't have duration");
+      return calculateAbsoluteStartOffsetAnchoredActivity(parent).plus(act.anchoredToStart() ? act.startOffset() : act.startOffset().plus(parent.duration()));
+    }
+    return act.startOffset();
+  }
 }

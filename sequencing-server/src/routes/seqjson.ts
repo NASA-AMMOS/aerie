@@ -1,119 +1,18 @@
 import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
-import { Context, db, piscina } from './../app.js';
-import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
+import { Context, db } from './../app.js';
 import express from 'express';
 import pgFormat from 'pg-format';
 import { defaultSeqBuilder } from './../defaultSeqBuilder.js';
-import Ajv from 'ajv/dist/2020.js';
+// @ts-ignore
 import schema from '@nasa-jpl/seq-json-schema/schema.json' assert { type: 'json' };
-import { ActivateStep, LoadStep, Sequence } from './../lib/codegen/CommandEDSLPreface.js';
-import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
+import { ActivateStep, LoadStep } from './../lib/codegen/CommandEDSLPreface.js';
 import { CommandStem } from './../lib/codegen/CommandEDSLPreface.js';
-import type { Command , Activate, Load} from '@nasa-jpl/seq-json-schema/types';
-import { FallibleStatus } from './../types.js';
+import type { Command, Activate, Load } from '@nasa-jpl/seq-json-schema/types';
+import { FallibleStatus } from '../types/types.js';
 import { assertDefined, assertOne } from './../utils/assertions.js';
 import { isResolved } from './../utils/typeguards.js';
-import type { executeEDSL } from './../worker.js';
 
 export const seqjsonRouter = express.Router();
-
-/**
- * Generate a sequence JSON from a sequence standalone file
- *
- * @deprecated Use `/bulk-get-seqjson-for-sequence-standalone` instead
- */
-seqjsonRouter.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
-  const commandDictionaryID = req.body.input.commandDictionaryID as number;
-  const edslBody = req.body.input.edslBody as string;
-
-  let commandTypes;
-  try {
-    const context: Context = res.locals['context'];
-    commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryID });
-  } catch (e) {
-    res.status(500).json({
-      message: 'Error loading command dictionary',
-      cause: (e as Error).message,
-    });
-    return next();
-  }
-
-  const result = Result.fromJSON(
-    await (piscina.run(
-      {
-        edslBody,
-        commandTypes,
-      },
-      { name: 'executeEDSL' },
-    ) as ReturnType<typeof executeEDSL>),
-  );
-
-  if (result.isErr()) {
-    res.json({
-      status: FallibleStatus.FAILURE,
-      seqJson: null,
-      errors: result.unwrapErr(),
-    });
-  }
-
-  res.json({
-    status: FallibleStatus.SUCCESS,
-    seqJson: result.unwrap(),
-    errors: [],
-  });
-
-  return next();
-});
-
-/** Generate multiple sequence JSONs from multiple sequence standalone files */
-seqjsonRouter.post('/bulk-get-seqjson-for-sequence-standalone', async (req, res, next) => {
-  const inputs = req.body.input.inputs as { commandDictionaryId: number; edslBody: string }[];
-
-  const context: Context = res.locals['context'];
-
-  const results = await Promise.all(
-    inputs.map(async ({ commandDictionaryId, edslBody }) => {
-      let commandTypes: string;
-      try {
-        commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
-      } catch (e) {
-        return {
-          status: FallibleStatus.FAILURE,
-          seqJson: null,
-          errors: new Error('Error loading command dictionary', { cause: e }),
-        };
-      }
-
-      const result = Result.fromJSON(
-        await (piscina.run(
-          {
-            edslBody,
-            commandTypes,
-          },
-          { name: 'executeEDSL' },
-        ) as ReturnType<typeof executeEDSL>),
-      );
-
-      if (result.isErr()) {
-        return {
-          status: FallibleStatus.FAILURE,
-          seqJson: null,
-          errors: result.unwrapErr(),
-        };
-      } else {
-        return {
-          status: FallibleStatus.SUCCESS,
-          seqJson: result.unwrap(),
-          errors: [],
-        };
-      }
-    }),
-  );
-
-  res.json(results);
-
-  return next();
-});
 
 /**
  * Get the sequence JSON for a sequence based on seqid and simulation dataset id
@@ -212,18 +111,19 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     }
     return {
       ...ai,
-      commands: row.commands?.map(c => {
-        switch (c.type) {
-          case 'command':
-            return CommandStem.fromSeqJson(c);
-          case 'load':
-            return LoadStep.fromSeqJson(c);
-          case 'activate':
-            return ActivateStep.fromSeqJson(c)
-          default:
-            throw new Error(`Unknown command type: ${c}`);
-        }
-      }) ?? null,
+      commands:
+        row.commands?.map(c => {
+          switch (c.type) {
+            case 'command':
+              return CommandStem.fromSeqJson(c);
+            case 'load':
+              return LoadStep.fromSeqJson(c);
+            case 'activate':
+              return ActivateStep.fromSeqJson(c);
+            default:
+              throw new Error(`Unknown command type: ${c}`);
+          }
+        }) ?? null,
       errors: row.errors,
     };
   });
@@ -375,18 +275,19 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
         }
         return {
           ...ai,
-          commands: row.commands?.map(c => {
-            switch (c.type) {
-              case 'command':
-                return CommandStem.fromSeqJson(c);
-              case 'load':
-                return LoadStep.fromSeqJson(c);
-              case 'activate':
-                return ActivateStep.fromSeqJson(c)
-              default:
-                throw new Error(`Unknown command type: ${c}`);
-            }
-          }) ?? null,
+          commands:
+            row.commands?.map(c => {
+              switch (c.type) {
+                case 'command':
+                  return CommandStem.fromSeqJson(c);
+                case 'load':
+                  return LoadStep.fromSeqJson(c);
+                case 'activate':
+                  return ActivateStep.fromSeqJson(c);
+                default:
+                  throw new Error(`Unknown command type: ${c}`);
+              }
+            }) ?? null,
           errors: row.errors,
         };
       });
@@ -427,45 +328,6 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
           errors: [promise.reason],
         };
       }
-    }),
-  );
-
-  return next();
-});
-
-/** Generate Sequence EDSL from sequence JSON
- *
- * @deprecated Use `/bulk-get-edsl-for-seqjson` instead
- */
-seqjsonRouter.post('/get-edsl-for-seqjson', async (req, res, next) => {
-  const seqJson = req.body.input.seqJson as SeqJson;
-  const validate = new Ajv({ strict: false }).compile(schema);
-
-  if (!validate(seqJson)) {
-    throw new Error(
-      `POST /seqjson/bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
-    );
-  }
-
-  res.json(Sequence.fromSeqJson(seqJson).toEDSLString());
-
-  return next();
-});
-
-// Generate Sequence EDSL from many sequence JSONs
-seqjsonRouter.post('/bulk-get-edsl-for-seqjson', async (req, res, next) => {
-  const seqJsons = req.body.input.seqJsons as SeqJson[];
-  const validate = new Ajv({ strict: false }).compile(schema);
-
-  res.json(
-    seqJsons.map(seqJson => {
-      if (!validate(seqJson)) {
-        throw new Error(
-          `POST /seqjson/bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
-        );
-      }
-
-      return Sequence.fromSeqJson(seqJson).toEDSLString();
     }),
   );
 

@@ -6,18 +6,28 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-public class TimeExpressionRelativeFixed extends TimeExpression {
+import java.util.Optional;
 
+public class TimeExpressionRelativeSimple extends TimeExpressionRelative {
   protected final TimeAnchor anchor;
   protected boolean fixed = true;
 
-  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed) {
-    this.fixed = fixed;
+  public TimeExpressionRelativeSimple(final TimeAnchor anchor, final boolean fixed) {
     this.anchor = anchor;
+    this.fixed = fixed;
   }
 
   @Override
   public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+    return computeTimeRelativeAbsolute(interval);
+  }
+
+  @Override
+  public Optional<TimeAnchor> getAnchor() {
+    return Optional.ofNullable(anchor);
+  }
+
+  public Interval computeTimeRelativeAbsolute(final Interval interval) {
     Duration from = null;
     if (anchor == TimeAnchor.START) {
       from = interval.start;

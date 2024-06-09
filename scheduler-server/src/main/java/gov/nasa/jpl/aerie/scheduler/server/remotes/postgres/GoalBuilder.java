@@ -15,8 +15,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionBetween;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeBinary;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeSimple;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -24,6 +24,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
@@ -61,6 +62,7 @@ public class GoalBuilder {
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
+          .createPersistentAnchor(g.persistentAnchor().isPresent()? g.persistentAnchor().get() : PersistentTimeAnchor.DISABLED)
           .forEach(spansOfConstraintExpression(
               g.forEach()))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
@@ -71,9 +73,9 @@ public class GoalBuilder {
       if (g.startConstraint().isPresent()) {
         final var startConstraint = g.startConstraint().get();
         if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
-          builder.startsAt(makeTimeExpressionRelativeFixed(s));
+          builder.startsAt(makeTimeExpressionRelativeSimple(s));
         } else if (startConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange s) {
-          builder.startsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(s.lowerBound()), makeTimeExpressionRelativeFixed(s.upperBound())));
+          builder.startsAt(new TimeExpressionRelativeBinary(makeTimeExpressionRelativeSimple(s.lowerBound()), makeTimeExpressionRelativeSimple(s.upperBound())));
         } else {
           throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, startConstraint);
         }
@@ -81,9 +83,9 @@ public class GoalBuilder {
       if (g.endConstraint().isPresent()) {
         final var endConstraint = g.endConstraint().get();
         if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraint e) {
-          builder.endsAt(makeTimeExpressionRelativeFixed(e));
+          builder.endsAt(makeTimeExpressionRelativeSimple(e));
         } else if (endConstraint instanceof SchedulingDSL.TimingConstraint.ActivityTimingConstraintFlexibleRange e) {
-          builder.endsAt(new TimeExpressionBetween(makeTimeExpressionRelativeFixed(e.lowerBound()), makeTimeExpressionRelativeFixed(e.upperBound())));
+          builder.endsAt(new TimeExpressionRelativeBinary(makeTimeExpressionRelativeSimple(e.lowerBound()), makeTimeExpressionRelativeSimple(e.upperBound())));
         } else {
           throw new UnexpectedSubtypeError(SchedulingDSL.TimingConstraint.class, endConstraint);
         }
@@ -154,8 +156,8 @@ public class GoalBuilder {
   }
 
   @NotNull
-  private static TimeExpressionRelativeFixed makeTimeExpressionRelativeFixed(final SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
-    final var timeExpression = new TimeExpressionRelativeFixed(
+  private static TimeExpressionRelativeSimple makeTimeExpressionRelativeSimple(final SchedulingDSL.TimingConstraint.ActivityTimingConstraint s) {
+    final var timeExpression = new TimeExpressionRelativeSimple(
         s.windowProperty(),
         s.singleton()
     );

@@ -1143,6 +1143,7 @@ export class Interval {
   /** @internal */
   public readonly __astNode: AST.IntervalExpression;
 
+  /** @suppress */
   public constructor(node: AST.IntervalExpression) {
     this.__astNode = node;
   }

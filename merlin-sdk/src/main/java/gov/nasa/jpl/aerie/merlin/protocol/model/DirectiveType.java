@@ -13,7 +13,7 @@ import java.util.Map;
  * request to store and forward a given payload to another node in the system. </p>
  *
  * <p> A directive can be instantiated using its associated {@link InputType}, and its associated behavior can be
- * extracted using the {@link #createTask(Model, Arguments)} method. When the directive's behavior is finished, its
+ * extracted using the {@link #getTaskFactory(Model, Arguments)} method. When the directive's behavior is finished, its
  * result value can be manipulated using its associated {@link OutputType}. </p>
  *
  * <p> As a reflective interface, {@code DirectiveType} is analogous to {@link java.lang.reflect.Method}. It represents
@@ -63,10 +63,9 @@ public interface DirectiveType<Model, Arguments, Result> {
    *   Arguments uniquely determining the directive to perform.
    * @return
    *   An executable task operating on the model's state, terminating with a {@code Result} value.
-   * @throws InvalidArgumentsException
+   * @throws InstantiationException
    *   When the given arguments do not uniquely determine a directive instance.
    * @see InputType#instantiate(Map)
-   * @see #createTask(Model, Arguments)
    */
   default TaskFactory<Result> getTaskFactory(final Model model, final Map<String, SerializedValue> arguments)
   throws InstantiationException

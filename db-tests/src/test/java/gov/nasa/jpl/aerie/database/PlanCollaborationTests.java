@@ -2236,6 +2236,220 @@ public class PlanCollaborationTests {
   }
 
   @Nested
+  class SiblingMergeTests{
+    /*
+     * If the both sibling modify the same activity, this will produce a conflict.
+     * The resulting activity will be whichever version was chosen.
+     */
+    @Test
+    void modifyModifyConflict() throws SQLException {
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int helloActivityId = merlinHelper.insertActivity(basePlan);
+      final int worldActivityId = merlinHelper.insertActivity(basePlan);
+      final int helloTestChild = duplicatePlan(basePlan, "Renames Act. 1 \"Hello\", Renames Act. 2 \"Test\"");
+      final int testWorldChild = duplicatePlan(basePlan, "Renames Act. 1 \"Test\", Renames Act. 2 \"World\"");
+
+      merlinHelper.updateActivityName("Hello", helloActivityId, helloTestChild);
+      merlinHelper.updateActivityName("Test", worldActivityId, helloTestChild);
+
+      merlinHelper.updateActivityName("Test", helloActivityId, testWorldChild);
+      merlinHelper.updateActivityName("World", worldActivityId, testWorldChild);
+
+      // Merge Hello-Test Child
+      final int mergeRQ1 = createMergeRequest(basePlan, helloTestChild);
+      beginMerge(mergeRQ1);
+      final var stagedActs1 = getStagingAreaActivities(mergeRQ1);
+      final var conflicts1 = getConflictingActivities(mergeRQ1);
+
+      assertTrue(conflicts1.isEmpty());
+      assertEquals(2, stagedActs1.size());
+      assertTrue(stagedActs1.containsAll(List.of(
+          new StagingAreaActivity(helloActivityId, "modify"),
+          new StagingAreaActivity(worldActivityId, "modify"))));
+
+      commitMerge(mergeRQ1);
+
+      // Merge Test-World Child
+      final int mergeRQ2 = createMergeRequest(basePlan, testWorldChild);
+      beginMerge(mergeRQ2);
+      final var stagedActs2 = getStagingAreaActivities(mergeRQ2);
+      final var conflicts2 = getConflictingActivities(mergeRQ2);
+
+      assertTrue(stagedActs2.isEmpty());
+      assertEquals(2, conflicts2.size());
+      assertTrue(conflicts2.containsAll(List.of(
+          new ConflictingActivity(helloActivityId, "modify", "modify"),
+          new ConflictingActivity(worldActivityId, "modify", "modify"))));
+
+      setResolution(mergeRQ2, helloActivityId, "receiving");
+      setResolution(mergeRQ2, worldActivityId, "supplying");
+
+      commitMerge(mergeRQ2);
+
+      // Validate the final state of the plan
+      final var activities = getActivities(basePlan);
+      assertEquals(2, activities.size());
+
+      assertEquals(helloActivityId, activities.get(0).activityId);
+      assertEquals("Hello", activities.get(0).name);
+
+      assertEquals(worldActivityId, activities.get(1).activityId);
+      assertEquals("World", activities.get(1).name);
+    }
+
+    /*
+     * If one sibling modifies the same activity the other deletes, this will produce a conflict.
+     * The resulting activity will be whichever version was chosen.
+     */
+    @Test
+    void deleteModifyConflict() throws SQLException {
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int activityId1 = merlinHelper.insertActivity(basePlan);
+      final int activityId2 = merlinHelper.insertActivity(basePlan);
+      final int deleteModifyChild = duplicatePlan(basePlan, "Deletes Act. 1, Modifies Act. 2");
+      final int modifyDeleteChild = duplicatePlan(basePlan, "Modifies Act. 1, Deletes Act. 2");
+
+      final String newName = "Test";
+
+      merlinHelper.deleteActivityDirective(deleteModifyChild, activityId1);
+      merlinHelper.updateActivityName(newName, activityId2, deleteModifyChild);
+
+      merlinHelper.updateActivityName(newName, activityId1, modifyDeleteChild);
+      merlinHelper.deleteActivityDirective(modifyDeleteChild, activityId2);
+
+      // Merge Delete-Modify Child
+      final int mergeRQ1 = createMergeRequest(basePlan, deleteModifyChild);
+      beginMerge(mergeRQ1);
+      final var stagedActs1 = getStagingAreaActivities(mergeRQ1);
+      final var conflicts1 = getConflictingActivities(mergeRQ1);
+
+      assertTrue(conflicts1.isEmpty());
+      assertEquals(2, stagedActs1.size());
+      assertTrue(stagedActs1.containsAll(List.of(
+          new StagingAreaActivity(activityId1, "delete"),
+          new StagingAreaActivity(activityId2, "modify"))));
+
+      commitMerge(mergeRQ1);
+
+      // Merge Modify-Delete Child
+      final int mergeRQ2 = createMergeRequest(basePlan, modifyDeleteChild);
+      beginMerge(mergeRQ2);
+      final var stagedActs2 = getStagingAreaActivities(mergeRQ2);
+      final var conflicts2 = getConflictingActivities(mergeRQ2);
+
+      assertTrue(stagedActs2.isEmpty());
+      assertEquals(2, conflicts2.size());
+      assertTrue(conflicts2.containsAll(List.of(
+          new ConflictingActivity(activityId1, "modify", "delete"),
+          new ConflictingActivity(activityId2, "delete", "modify"))));
+
+      setResolution(mergeRQ2, activityId1, "receiving");
+      setResolution(mergeRQ2, activityId2, "supplying");
+
+      commitMerge(mergeRQ2);
+
+      // Validate the final state of the plan
+      assertTrue(getActivities(basePlan).isEmpty());
+    }
+
+    /*
+     * If the first sibling deletes an activity and the second one doesn't touch it, the activity will remain deleted.
+     */
+    @Test
+    void deleteUntouchedPersists() throws SQLException {
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int deletedActivityId = merlinHelper.insertActivity(basePlan);
+      final int deleteChild = duplicatePlan(basePlan, "Deletes Act. 1");
+      final int addChild = duplicatePlan(basePlan, "Adds Act. 2");
+
+      merlinHelper.deleteActivityDirective(deleteChild, deletedActivityId);
+
+      final var addedActivityId = merlinHelper.insertActivity(addChild);
+
+      // Merge Delete Child
+      final int mergeRQ1 = createMergeRequest(basePlan, deleteChild);
+      beginMerge(mergeRQ1);
+      final var stagedActs1 = getStagingAreaActivities(mergeRQ1);
+      final var conflicts1 = getConflictingActivities(mergeRQ1);
+
+      assertTrue(conflicts1.isEmpty());
+      assertEquals(1, stagedActs1.size());
+      assertEquals(new StagingAreaActivity(deletedActivityId, "delete"), stagedActs1.get(0));
+
+      commitMerge(mergeRQ1);
+
+      // Merge Add Child
+      final int mergeRQ2 = createMergeRequest(basePlan, addChild);
+      beginMerge(mergeRQ2);
+      final var stagedActs2 = getStagingAreaActivities(mergeRQ2);
+      final var conflicts2 = getConflictingActivities(mergeRQ2);
+
+      assertTrue(conflicts2.isEmpty());
+      assertEquals(1, stagedActs2.size());
+      assertEquals(new StagingAreaActivity(addedActivityId, "add"), stagedActs2.get(0));
+
+      commitMerge(mergeRQ2);
+
+      // Validate the final state of the plan
+      final var activities = getActivities(basePlan);
+      assertEquals(1, activities.size());
+      assertEquals(addedActivityId, activities.get(0).activityId);
+    }
+
+    /*
+     * If the first sibling modifies an activity and the second one doesn't touch it, the modification will persist.
+     */
+    @Test
+    void ModifyUntouchedPersists() throws SQLException {
+      final int basePlan = merlinHelper.insertPlan(missionModelId);
+      final int modifyActivityId = merlinHelper.insertActivity(basePlan);
+      final int modifyChild = duplicatePlan(basePlan, "Modifies Act. 1");
+      final int addChild = duplicatePlan(basePlan, "Adds Act. 2");
+
+      final String newName = "Test";
+
+      merlinHelper.updateActivityName(newName, modifyActivityId, modifyChild);
+
+      final var addedActivityId = merlinHelper.insertActivity(addChild);
+
+      // Merge Modify Child
+      final int mergeRQ1 = createMergeRequest(basePlan, modifyChild);
+      beginMerge(mergeRQ1);
+      final var stagedActs1 = getStagingAreaActivities(mergeRQ1);
+      final var conflicts1 = getConflictingActivities(mergeRQ1);
+
+      assertTrue(conflicts1.isEmpty());
+      assertEquals(1, stagedActs1.size());
+      assertEquals(new StagingAreaActivity(modifyActivityId, "modify"), stagedActs1.get(0));
+
+      commitMerge(mergeRQ1);
+
+      // Merge Add Child
+      final int mergeRQ2 = createMergeRequest(basePlan, addChild);
+      beginMerge(mergeRQ2);
+      final var stagedActs2 = getStagingAreaActivities(mergeRQ2);
+      final var conflicts2 = getConflictingActivities(mergeRQ2);
+
+      assertTrue(conflicts2.isEmpty());
+      assertEquals(2, stagedActs2.size());
+      assertTrue(stagedActs2.containsAll(List.of(
+          new StagingAreaActivity(modifyActivityId, "none"),
+          new StagingAreaActivity(addedActivityId, "add"))));
+
+      commitMerge(mergeRQ2);
+
+      // Validate the final state of the plan
+      final var activities = getActivities(basePlan);
+      assertEquals(2, activities.size());
+
+      assertEquals(modifyActivityId, activities.get(0).activityId);
+      assertEquals(newName, activities.get(0).name);
+
+      assertEquals(addedActivityId, activities.get(1).activityId);
+    }
+  }
+
+  @Nested
   class MergeStateMachineTests{
     @Test
     void cancelFailsForInvalidId() throws SQLException{

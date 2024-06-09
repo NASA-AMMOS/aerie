@@ -45,6 +45,9 @@ public final class Uncurry {
     Result apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8);
   }
 
+  public interface Function9<Result, T1, T2, T3, T4, T5, T6, T7, T8, T9> {
+    Result apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9);
+  }
 
   public static <Result, T1>
   Function<T1, Result>
@@ -129,6 +132,20 @@ public final class Uncurry {
         p.getRight());
   }
 
+  public static <Result, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+  Function<Pair<Pair<Pair<Pair<Pair<Pair<Pair<Pair<T1, T2>, T3>, T4>, T5>, T6>, T7>, T8>, T9>, Result>
+  untuple(Function9<Result, T1, T2, T3, T4, T5, T6, T7, T8, T9> f) {
+    return p -> f.apply(
+        p.getLeft().getLeft().getLeft().getLeft().getLeft().getLeft().getLeft().getLeft(),
+        p.getLeft().getLeft().getLeft().getLeft().getLeft().getLeft().getLeft().getRight(),
+        p.getLeft().getLeft().getLeft().getLeft().getLeft().getLeft().getRight(),
+        p.getLeft().getLeft().getLeft().getLeft().getLeft().getRight(),
+        p.getLeft().getLeft().getLeft().getLeft().getRight(),
+        p.getLeft().getLeft().getLeft().getRight(),
+        p.getLeft().getLeft().getRight(),
+        p.getLeft().getRight(),
+        p.getRight());
+  }
 
   public static <T1>
   T1
@@ -176,5 +193,11 @@ public final class Uncurry {
   Pair<Pair<Pair<Pair<Pair<Pair<Pair<T1, T2>, T3>, T4>, T5>, T6>, T7>, T8>
   tuple(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8) {
     return tuple(tuple(tuple(tuple(tuple(tuple(tuple(t1, t2), t3), t4), t5), t6), t7), t8);
+  }
+
+  public static <T1, T2, T3, T4, T5, T6, T7, T8, T9>
+  Pair<Pair<Pair<Pair<Pair<Pair<Pair<Pair<T1, T2>, T3>, T4>, T5>, T6>, T7>, T8>, T9>
+  tuple(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9) {
+    return tuple(tuple(tuple(tuple(tuple(tuple(tuple(tuple(t1, t2), t3), t4), t5), t6), t7), t8), t9);
   }
 }

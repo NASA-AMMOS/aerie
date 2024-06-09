@@ -74,7 +74,8 @@ services:
   aerie_sequencing:
     build:
       context: ./sequencing-server
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      #dockerfile: Dockerfile.dev #-- Uncomment for development
     container_name: aerie_sequencing
     depends_on: ["postgres"]
     environment:
@@ -90,9 +91,10 @@ services:
       SEQUENCING_LOCAL_STORE: /usr/src/app/sequencing_file_store
       SEQUENCING_WORKER_NUM: 8
       SEQUENCING_MAX_WORKER_HEAP_MB: 1000
-      TRANSPILER_ENABLED : "true"
+      TRANSPILER_ENABLED: "true"
     image: aerie_sequencing
     ports: ["27184:27184"]
+    #ports: [ "27184:27184",'9229:9229'] #-- Uncomment for development
     restart: always
     volumes:
       - ./sequencing-server:/app:cached
@@ -250,7 +252,7 @@ services:
       SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SEQUENCING_DB_USER: "${SEQUENCING_USERNAME}"
       SEQUENCING_DB_PASSWORD: "${SEQUENCING_PASSWORD}"
-    image: postgres:14.8
+    image: postgres:16.2
     ports: ["5432:5432"]
     restart: always
     volumes:

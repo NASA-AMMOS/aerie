@@ -16,7 +16,9 @@ import org.junit.jupiter.api.TestInstance;
 import javax.json.Json;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,6 +90,51 @@ public class SimulationTests {
     final var activityArgs = Json.createObjectBuilder().add("duration", 1).build();
     hasura.insertActivity(planId, "ControllableDurationActivity", "1h", activityArgs);
     assertDoesNotThrow(() -> hasura.awaitSimulation(planId));
+  }
+
+  /**
+   * ParentIds of child spans should be posted regardless of if the span is finished.
+   */
+  @Test
+  void incompleteParentIdsPosted() throws IOException {
+    hasura.insertActivity(planId, "parent", "0h", JsonValue.EMPTY_JSON_OBJECT);
+    hasura.insertActivity(planId, "DecomposingSpawnParent", "0h", JsonValue.EMPTY_JSON_OBJECT);
+    final var simulatedActivities = hasura.getSimulationDataset(hasura.awaitSimulation(planId).simDatasetId())
+                                          .activities();
+
+    assertEquals(6, simulatedActivities.size());
+
+    final var typeMap = new HashMap<String, ArrayList<SimulatedActivity>>();
+    simulatedActivities.forEach(act -> typeMap.computeIfAbsent(act.type(), k -> new ArrayList<>()).add(act));
+
+    // Check parentIds are present on unfinished activities
+    assertEquals(1, typeMap.get("parent").size());
+    final var parent = typeMap.get("parent").get(0);
+    assertNull(parent.parentId());
+    assertNull(parent.duration());
+
+    assertEquals(1, typeMap.get("child").size());
+    final var child = typeMap.get("child").get(0);
+    assertEquals(parent.spanId(), child.parentId());
+    assertNull(child.duration());
+
+    assertEquals(1, typeMap.get("grandchild").size());
+    final var grandchild = typeMap.get("grandchild").get(0);
+    assertEquals(child.spanId(), grandchild.parentId());
+    assertNull(grandchild.duration());
+
+    // Check parentIds are present on finished activities
+    assertEquals(1, typeMap.get("DecomposingSpawnParent").size());
+    final var decompParent = typeMap.get("DecomposingSpawnParent").get(0);
+    assertNull(decompParent.parentId());
+    assertNotNull(decompParent.duration());
+
+    assertEquals(2, typeMap.get("DecomposingSpawnChild").size());
+    typeMap.get("DecomposingSpawnChild")
+           .forEach(dsc -> {
+             assertEquals(decompParent.spanId(), dsc.parentId());
+             assertNotNull(dsc.duration());
+           });
   }
 
   @Nested

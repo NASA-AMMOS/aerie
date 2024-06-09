@@ -53,7 +53,7 @@
  *   {@link gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType}s the model can react to. </li>
  *
  *   <li> For each scheduled directive to simulate, Driver calls {@link gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType#getInputType()}
- *   and then {@link gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType#createTask(java.lang.Object, java.util.Map)} to instantiate
+ *   and then {@link gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType#getTaskFactory(java.lang.Object, java.util.Map)} to instantiate
  *   a {@link gov.nasa.jpl.aerie.merlin.protocol.model.Task} modeling the model's reaction to the directive. </li>
  *
  *   <li>
@@ -83,7 +83,7 @@
  *         </ul>
  *       </li>
  *
- *       <li> Model calls {@link gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler#spawn(gov.nasa.jpl.aerie.merlin.protocol.model.Task)}
+ *       <li> Model calls {@link gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler#spawn(InSpan taskSpan, TaskFactory task)}
  *       any number of times to spawn additional concurrent {@link gov.nasa.jpl.aerie.merlin.protocol.model.Task}s. </li>
  *
  *       <li> Model returns a {@link gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus} describing the conditions
@@ -110,3 +110,6 @@
  * @see gov.nasa.jpl.aerie.merlin.protocol.model
  */
 package gov.nasa.jpl.aerie.merlin.protocol;
+
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;

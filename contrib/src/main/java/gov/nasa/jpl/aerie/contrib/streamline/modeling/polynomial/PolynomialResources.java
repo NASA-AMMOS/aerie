@@ -579,13 +579,6 @@ public final class PolynomialResources {
   }
 
   /**
-   * Add polynomial resources.
-   */
-  public static UnitAware<Resource<Polynomial>> sum$(Stream<UnitAware<? extends Resource<Polynomial>>> summands) {
-    return add(summands.<UnitAware<? extends Resource<Polynomial>>>toArray(UnitAware[]::new));
-  }
-
-  /**
    * Subtract polynomial resources.
    */
   public static UnitAware<Resource<Polynomial>> subtract(UnitAware<? extends Resource<Polynomial>> p, UnitAware<? extends Resource<Polynomial>> q) {
@@ -602,13 +595,6 @@ public final class PolynomialResources {
     return unitAware(
         product(stream(factors).map(UnitAware::value)),
         stream(factors).map(UnitAware::unit).reduce(Unit.SCALAR, Unit::multiply));
-  }
-
-  /**
-   * Multiply polynomial resources.
-   */
-  public static UnitAware<Resource<Polynomial>> product$(Stream<UnitAware<? extends Resource<Polynomial>>> factors) {
-    return multiply(factors.<UnitAware<? extends Resource<Polynomial>>>toArray(UnitAware[]::new));
   }
 
   /**

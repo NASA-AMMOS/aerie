@@ -24,6 +24,9 @@ begin;
   \ir tables/tags/tags.sql
   \ir functions/tags/get_tags.sql
 
+  -- UI
+  \ir init_ui.sql
+
   -- Merlin
   \ir init_merlin.sql
 
@@ -32,9 +35,6 @@ begin;
 
   -- Sequencing
   \ir init_sequencing.sql
-
-  -- UI
-  \ir init_ui.sql
 
   -- Tags
   \ir init_tags.sql

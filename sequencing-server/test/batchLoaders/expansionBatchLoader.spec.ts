@@ -2,12 +2,19 @@ import type { GraphQLClient } from 'graphql-request';
 import { insertExpansion, removeExpansion } from '../testUtils/Expansion';
 import { expansionBatchLoader } from '../../src/lib/batchLoaders/expansionBatchLoader';
 import { getGraphQLClient } from '../testUtils/testUtils';
+import { insertCommandDictionary, removeCommandDictionary } from '../testUtils/CommandDictionary';
+import { insertParcel, removeParcel } from '../testUtils/Parcel';
 
 let graphqlClient: GraphQLClient;
 let expansionId: number;
+let commandDictionaryId: number;
+let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
+  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'expansionBatchLoaderTestParcel')).parcelId;
+
   expansionId = await insertExpansion(
     graphqlClient,
     'PeelBanana',
@@ -18,11 +25,14 @@ beforeAll(async () => {
     BAKE_BREAD,
   ];
 }`,
+    parcelId,
   );
 });
 
 afterAll(async () => {
   await removeExpansion(graphqlClient, expansionId);
+  await removeParcel(graphqlClient, parcelId);
+  await removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
 it('should load expansion data', async () => {

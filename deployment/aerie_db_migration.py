@@ -89,7 +89,7 @@ def step_by_step_migration(db_migration, apply):
       return
   input("Press Enter to continue...")
 
-def bulk_migration(db_migration, apply):
+def bulk_migration(db_migration, apply, current_version):
   # Migrate the database
   exit_with = 0
   if apply:
@@ -98,10 +98,15 @@ def bulk_migration(db_migration, apply):
     if exit_code != 0:
       exit_with = 1
   else:
-    os.system(f'hasura migrate apply --goto 1 --database-name {db_migration.db_name} --dry-run --log-level WARN &&'
-              f'hasura migrate apply --down 1 --database-name {db_migration.db_name} --dry-run --log-level WARN')
-    exit_code = os.system(f'hasura migrate apply --goto 1 --database-name {db_migration.db_name} &&'
-                          f'hasura migrate apply --down 1 --database-name {db_migration.db_name}')
+    # Performing GOTO 1 when the database is at migration 1 will cause Hasura to attempt to reapply migration 1
+    if current_version == 1:
+      os.system(f'hasura migrate apply --down 1 --database-name {db_migration.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --down 1 --database-name {db_migration.db_name}')
+    else:
+      os.system(f'hasura migrate apply --goto 1 --database-name {db_migration.db_name} --dry-run --log-level WARN &&'
+                f'hasura migrate apply --down 1 --database-name {db_migration.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --goto 1 --database-name {db_migration.db_name} &&'
+                            f'hasura migrate apply --down 1 --database-name {db_migration.db_name}')
     if exit_code != 0:
       exit_with = 1
 
@@ -128,7 +133,9 @@ def mark_current_version(username, password, netloc):
 
   # Mark everything up to that as applied
   for i in range(0, current_schema+1):
-    os.system('hasura migrate apply --skip-execution --version '+str(i)+' --database-name aerie >/dev/null 2>&1')
+    os.system('hasura migrate apply --skip-execution --version '+str(i)+' --database-name Aerie >/dev/null 2>&1')
+
+  return current_schema
 
 def main():
   # Create a cli parser
@@ -227,7 +234,7 @@ def main():
   os.chdir(HASURA_PATH)
 
   # Mark all migrations previously applied to the databases to be updated as such
-  mark_current_version(username, password, args.network_location)
+  current_version = mark_current_version(username, password, args.network_location)
 
   clear_screen()
   print(f'\n###############################'
@@ -238,7 +245,7 @@ def main():
     # Go step-by-step through the migrations available for the selected database
     step_by_step_migration(migration, args.apply)
   else:
-    bulk_migration(migration, args.apply)
+    bulk_migration(migration, args.apply, current_version)
 
 if __name__ == "__main__":
   main()

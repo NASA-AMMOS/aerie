@@ -47,22 +47,6 @@ actions:
     permissions:
       - role: aerie_admin
       - role: user
-  - name: getEdslForSeqJson
-    definition:
-      kind: synchronous
-      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/get-edsl-for-seqjson"
-      timeout: 300
-    permissions:
-      - role: aerie_admin
-      - role: user
-  - name: getEdslForSeqJsonBulk
-    definition:
-      kind: synchronous
-      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/bulk-get-edsl-for-seqjson"
-      timeout: 300
-    permissions:
-      - role: aerie_admin
-      - role: user
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -119,24 +103,6 @@ actions:
     definition:
       kind: ""
       handler: "{{AERIE_SEQUENCING_URL}}/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset"
-      timeout: 300
-    permissions:
-      - role: aerie_admin
-      - role: user
-      - role: viewer
-  - name: getUserSequenceSeqJson
-    definition:
-      kind: ""
-      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/get-seqjson-for-sequence-standalone"
-      timeout: 300
-    permissions:
-      - role: aerie_admin
-      - role: user
-      - role: viewer
-  - name: getUserSequenceSeqJsonBulk
-    definition:
-      kind: ""
-      handler: "{{AERIE_SEQUENCING_URL}}/seqjson/bulk-get-seqjson-for-sequence-standalone"
       timeout: 300
     permissions:
       - role: aerie_admin
@@ -261,7 +227,7 @@ custom_types:
     - name: AddExternalDatasetResponse
     - name: SchedulingResponse
     - name: DslTypescriptResponse
-    - name: CommandDictionaryResponse
+    - name: DictionaryResponse
     - name: AddCommandExpansionResponse
     - name: ExpandAllActivitiesResponse
     - name: ExpandedActivityInstance

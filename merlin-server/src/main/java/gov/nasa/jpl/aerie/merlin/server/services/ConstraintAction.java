@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
-import gov.nasa.jpl.aerie.merlin.server.http.Failable;
+import gov.nasa.jpl.aerie.merlin.server.http.Fallible;
 import gov.nasa.jpl.aerie.merlin.server.models.*;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.ConstraintRunRecord;
 
@@ -34,7 +34,7 @@ public class ConstraintAction {
     this.simulationService = simulationService;
   }
 
-  public Map<Constraint, Failable<?>> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
+  public Map<Constraint, Fallible<?>> getViolations(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException, SimulationDatasetMismatchException
   {
     final var plan = this.planService.getPlanForValidation(planId);
@@ -58,13 +58,13 @@ public class ConstraintAction {
     }
 
     final var constraintCode = new HashMap<>(this.planService.getConstraintsForPlan(planId));
-    final var constraintResultMap = new HashMap<Constraint, Failable<?>>();
+    final var constraintResultMap = new HashMap<Constraint, Fallible<?>>();
 
     final var validConstraintRuns = this.constraintService.getValidConstraintRuns(constraintCode, simDatasetId);
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
-        constraintResultMap.put(constraintCode.remove(constraintRun.constraintId()), Failable.of(constraintRun.result()));
+        constraintResultMap.put(constraintCode.remove(constraintRun.constraintId()), Fallible.of(constraintRun.result()));
     }
 
     // If the lengths don't match we need check the left-over constraints.
@@ -146,7 +146,7 @@ public class ConstraintAction {
         } catch (MissionModelService.NoSuchMissionModelException | NoSuchPlanException ex) {
           constraintResultMap.put(
               constraint,
-              Failable.failure(new Error("Constraint " + constraint.name() + ": " + ex.getMessage())));
+              Fallible.failure(new Error("Constraint " + constraint.name() + ": " + ex.getMessage())));
           continue;
         }
 
@@ -156,12 +156,12 @@ public class ConstraintAction {
         } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
           constraintResultMap.put(
               constraint,
-              Failable.failure(error, "Constraint '" + constraint.name() + "' compilation failed:\n "));
+              Fallible.failure(error, "Constraint '" + constraint.name() + "' compilation failed:\n "));
           continue;
         } else {
           constraintResultMap.put(
               constraint,
-              Failable.failure(
+              Fallible.failure(
                   new ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error(
                       new ArrayList<>() {{
                         add(new ConstraintsCompilationError.UserCodeError(
@@ -207,7 +207,7 @@ public class ConstraintAction {
               }
             }
           } catch (InputMismatchException ex) {
-            constraintResultMap.put(constraint, Failable.failure(ex));
+            constraintResultMap.put(constraint, Fallible.failure(ex));
             continue;
           }
         }
@@ -227,7 +227,7 @@ public class ConstraintAction {
         constraintResult.constraintId = entry.getKey();
         constraintResult.resourceIds = List.copyOf(names);
 
-        constraintResultMap.put(constraint, Failable.of(constraintResult));
+        constraintResultMap.put(constraint, Fallible.of(constraintResult));
 
 
       }
@@ -235,11 +235,11 @@ public class ConstraintAction {
       // convert these successful failables to ConstraintResults
       final var compiledConstraintMap = constraintResultMap.entrySet().stream()
                                                            .filter(set -> {
-                                                             Failable<?> failable = set.getValue();
-                                                             return !failable.isFailure() && (failable
+                                                             Fallible<?> fallible = set.getValue();
+                                                             return !fallible.isFailure() && (fallible
                                                                                                   .getOptional()
                                                                                                   .isPresent()
-                                                                                              && failable
+                                                                                              && fallible
                                                                                                   .getOptional()
                                                                                                   .get() instanceof ConstraintResult);
                                                            })

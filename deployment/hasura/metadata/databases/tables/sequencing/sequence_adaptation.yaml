@@ -1,0 +1,40 @@
+table:
+  name: sequence_adaptation
+  schema: sequencing
+configuration:
+    custom_name: "sequence_adaptation"
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: "*"
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [adaptation]
+      check: {}
+      set:
+        owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: [adaptation, owner]
+      filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

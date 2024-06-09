@@ -7,7 +7,7 @@ import java.util.Optional;
  *
  * @param <T> The type of the value.
  */
-public class Failable<T> {
+public class Fallible<T> {
 
   private final T value;
 
@@ -21,7 +21,7 @@ public class Failable<T> {
    * @param message
    * @param isFailure Indicates whether the operation was a failure.
    */
-  public Failable(T value, final String message, boolean isFailure) {
+  public Fallible(T value, final String message, boolean isFailure) {
     this.value = value;
     this.message = message;
     this.isFailure = isFailure;
@@ -72,8 +72,8 @@ public class Failable<T> {
    * @param <T>   The type of the value.
    * @return A successful Fallible.
    */
-  public static <T> Failable<T> of(T value) {
-    return new Failable<>(value, "", false);
+  public static <T> Fallible<T> of(T value) {
+    return new Fallible<>(value, "", false);
   }
 
   /**
@@ -82,8 +82,8 @@ public class Failable<T> {
    * @param <T> The type of the value.
    * @return A failed Fallible.
    */
-  public static <T> Failable<T> failure() {
-    return new Failable<>(null, "", true);
+  public static <T> Fallible<T> failure() {
+    return new Fallible<>(null, "", true);
   }
 
   /**
@@ -93,8 +93,8 @@ public class Failable<T> {
    * @param <T>   The type of the value.
    * @return A failed Fallible with a value.
    */
-  public static <T> Failable<T> failure(T value) {
-    return new Failable<>(value, "", true);
+  public static <T> Fallible<T> failure(T value) {
+    return new Fallible<>(value, "", true);
   }
 
   /**
@@ -105,7 +105,7 @@ public class Failable<T> {
    * @param <T>     The type of the value.
    * @return A failed Fallible with a value and a message.
    */
-  public static <T> Failable<T> failure(T value, String message) {
-    return new Failable<>(value, message, true);
+  public static <T> Fallible<T> failure(T value, String message) {
+    return new Fallible<>(value, message, true);
   }
 }
