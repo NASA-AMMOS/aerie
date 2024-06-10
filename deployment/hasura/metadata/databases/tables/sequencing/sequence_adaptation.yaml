@@ -2,7 +2,7 @@ table:
   name: sequence_adaptation
   schema: sequencing
 configuration:
-    custom_name: "sequence_adaptation"
+  custom_name: "sequence_adaptation"
 select_permissions:
   - role: aerie_admin
     permission:
@@ -22,7 +22,7 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [adaptation]
+      columns: [adaptation, name]
       check: {}
       set:
         owner: "x-hasura-user-id"
@@ -30,7 +30,7 @@ insert_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [adaptation, owner]
+      columns: [adaptation, name, owner]
       filter: {}
       set:
         updated_by: "x-hasura-user-id"
