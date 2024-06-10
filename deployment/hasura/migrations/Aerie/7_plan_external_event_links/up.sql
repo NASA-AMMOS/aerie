@@ -40,4 +40,4 @@ ALTER TABLE ONLY merlin.plan_external_source
 ALTER TABLE ONLY merlin.plan_external_source
     ADD CONSTRAINT fk_plan_id FOREIGN KEY (plan_id) REFERENCES merlin.plan(id);
 
-call migrations.mark_migration_applied('5');
+call migrations.mark_migration_applied('7');

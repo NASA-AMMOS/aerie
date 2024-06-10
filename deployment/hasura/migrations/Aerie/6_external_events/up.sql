@@ -41,4 +41,4 @@ COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_event IS 'The tuple
 ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT "source_id -> external_source.id" FOREIGN KEY (source_id) REFERENCES merlin.external_source(id);
 
-call migrations.mark_migration_applied('4');
+call migrations.mark_migration_applied('6');
