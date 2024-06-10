@@ -3,7 +3,7 @@ CREATE TABLE merlin.external_source_type (
     id integer NOT NULL,
     name text NOT NULL,
     description text NOT NULL,
-    version integer NOT NULL,
+    version text NOT NULL,
     origin_info_schema jsonb
 );
 
@@ -25,19 +25,11 @@ ALTER TABLE ONLY merlin.external_source_type ALTER COLUMN id SET DEFAULT nextval
 ALTER TABLE ONLY merlin.external_source_type
     ADD CONSTRAINT external_source_type_pkey PRIMARY KEY (id);
 
--- Add sequence for version... TODO, I think this has to happen outside of SQL..
-
 -- Add uniqueness constraint for name & version
 ALTER TABLE ONLY merlin.external_source_type
     ADD CONSTRAINT logical_identifiers UNIQUE (name, version);
 
 COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_source_type IS 'The tuple (name, version) must be unique!';
- 
--- Create source_type_id field on external_source
-ALTER TABLE merlin.external_source ADD source_type_id integer;
--- Drop old 'source_type' field
-ALTER TABLE merlin.external_source DROP COLUMN source_type;
--- TODO: do we need to alter entries that already exist since this is a migration? i.e., if you have an old database and apply this migration, your EEs & ESs are going to be broken because source_type is being dropped and source_type_id is not being initialized...
 
 -- Update merlin.external_source.source_type_id to link it to merlin.external_source_type.id
 ALTER TABLE ONLY merlin.external_source

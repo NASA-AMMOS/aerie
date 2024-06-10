@@ -3,7 +3,7 @@ CREATE TABLE merlin.external_source (
     id integer NOT NULL,
     key text NOT NULL,
     file_id integer NOT NULL,
-    source_type text NOT NULL,
+    source_type_id integer NOT NULL,
     valid_at timestamp with time zone NOT NULL,
     start_time timestamp with time zone NOT NULL,
     end_time timestamp with time zone NOT NULL,
