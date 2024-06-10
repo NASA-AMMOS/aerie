@@ -35,4 +35,4 @@ COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_source_type IS 'The
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
 
-call migrations.mark_migration_applied('6');
+call migrations.mark_migration_applied('8');
