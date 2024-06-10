@@ -32,4 +32,4 @@ ALTER TABLE ONLY merlin.external_source
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "file_id -> uploaded_file" FOREIGN KEY (file_id) REFERENCES merlin.uploaded_file(id);
 
-call migrations.mark_migration_applied('3');
+call migrations.mark_migration_applied('5');
