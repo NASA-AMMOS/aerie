@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.procedural.scheduling.simulation
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
-import gov.nasa.ammos.aerie.timeline.plan.Plan
+import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 
 /** Behavior for when the simulation should pause. */
 sealed interface PauseBehavior {
