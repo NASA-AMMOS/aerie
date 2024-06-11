@@ -30,16 +30,16 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, description, version, origin_info_schema]
+      columns: [name]
       check: {}
   - role: user
     permission:
-      columns: [name, description, version, origin_info_schema]
+      columns: [name]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, description, version, origin_info_schema]
+      columns: [name]
       filter: {}
 #  - role: user # justified???
 #    permission:
