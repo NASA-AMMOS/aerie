@@ -15,7 +15,7 @@ data class CollectOptions @JvmOverloads constructor(
     @JvmField val truncateMarginal: Boolean = true
 ) {
   /** Creates a new options object with a [BoundsTransformer] applied. */
-  fun transformBounds(boundsTransformer: gov.nasa.ammos.aerie.timeline.BoundsTransformer) = CollectOptions(boundsTransformer(bounds), truncateMarginal)
+  fun transformBounds(boundsTransformer: BoundsTransformer) = CollectOptions(boundsTransformer(bounds), truncateMarginal)
 
   /**
    * Whether the results of collecting a timeline with [other] options are guaranteed to be contained in

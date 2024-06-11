@@ -11,13 +11,13 @@ fun interface BoundsTransformer {
    * if the operation shifts all intervals to the future by `Duration.SECOND`, this method should
    * shift the bounds to the past by `Duration.SECOND`.
    */
-  operator fun invoke(bounds: gov.nasa.ammos.aerie.timeline.Interval): gov.nasa.ammos.aerie.timeline.Interval
+  operator fun invoke(bounds: Interval): Interval
 
   /** Helper functions for constructing bounds transformers. */
   companion object {
     /** Does nothing. Used for operations that don't need to change the bounds. */
     @JvmField
-    val IDENTITY: gov.nasa.ammos.aerie.timeline.BoundsTransformer = BoundsTransformer { i -> i }
+    val IDENTITY: BoundsTransformer = BoundsTransformer { i -> i }
 
     /**
      * Creates a bounds transformer for the simple case of uniformly shifting the bounds.

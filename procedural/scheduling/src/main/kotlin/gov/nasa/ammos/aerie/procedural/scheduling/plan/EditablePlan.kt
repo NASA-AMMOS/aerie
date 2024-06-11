@@ -31,9 +31,7 @@ interface EditablePlan: Plan {
       "Unnamed Activity",
       type,
       start
-  )
-  )
-
+  ))
 
   /** Commit plan edits, making them final. */
   fun commit()
