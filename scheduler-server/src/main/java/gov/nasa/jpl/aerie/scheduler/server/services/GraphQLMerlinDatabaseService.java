@@ -461,17 +461,19 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
   public void updatePlanActivityDirectiveAnchors(final PlanId planId, final Plan plan, final Map<ActivityDirectiveId, ActivityDirectiveId> uploadIdMap)
   throws MerlinServiceException, IOException
   {
+    final var request = new StringBuilder();
+    request.append("mutation {");
     for (final SchedulingActivity act: plan.getActivities()) {
-      if (act.isNew() && act.anchorId() != null) {
-        final var request = """
-            mutation {
-              update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
-                id
-              }
-            }""".formatted(uploadIdMap.get(act.id()).id(), planId.id(), uploadIdMap.get(act.anchorId()).id());
-        final var response = postRequest(request);
-      }
+      final var id = uploadIdMap.get(act.id()).id();
+      request.append("""
+        update_%d: update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
+          id
+        }
+        """.formatted(id, id, planId.id(), uploadIdMap.get(act.anchorId()).id())
+      );
     }
+    request.append("}");
+    postRequest(request.toString());
   }
 
   /**
