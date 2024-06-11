@@ -460,7 +460,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return ids;
   }
 
-@Override
+  @Override
   public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
   throws MerlinServiceException, IOException
   {
@@ -573,7 +573,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
           .add("start_offset", act.startOffset().toString())
-          .add("anchored_to_start", act.anchoredToStart());
+          .add("anchored_to_start", act.anchorId() == null || act.anchoredToStart());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();
@@ -592,13 +592,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }
       insertionObject.add("arguments", insertionObjectArguments.build());
-
-      if (act.anchorId() != null) {
-        insertionObject.add("anchor_id", Math.abs(act.anchorId().id()));
-        insertionObject.add("anchored_to_start", act.anchoredToStart());
-      } else {
-        insertionObject.add("anchored_to_start", true);
-      }
 
       insertionObjects.add(insertionObject.build());
     }

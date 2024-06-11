@@ -36,7 +36,9 @@ data class InMemoryEditablePlan(
   val totalDiff: List<Edit>
     get() = commits.flatMap { it.diff }
 
-  override fun latestResults() = simulationFacade.latestDriverSimulationResults.getOrNull()?.let { MerlinToProcedureSimulationResultsAdapter(it, false, plan, simulationFacade.activityIdCorrespondence) }
+  override fun latestResults() =
+    simulationFacade.latestDriverSimulationResults.getOrNull()
+      ?.let { MerlinToProcedureSimulationResultsAdapter(it, false, plan, simulationFacade.bidiActivityIdCorrespondence.getOrNull()) }
 
   override fun create(directive: NewDirective): Long {
     class ParentSearchException(id: Long, size: Int): Exception("Expected one parent activity with id $id, found $size")
