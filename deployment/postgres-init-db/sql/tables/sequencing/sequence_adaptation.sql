@@ -1,7 +1,7 @@
 create table sequencing.sequence_adaptation (
   id integer generated always as identity,
   adaptation text not null,
-  name text not null,
+  name text not null default gen_random_uuid(),
   created_at timestamptz not null default now(),
   owner text,
   updated_at timestamptz not null default now(),
@@ -9,7 +9,7 @@ create table sequencing.sequence_adaptation (
 
   constraint sequence_adaptation_synthetic_key
     primary key (id),
-  constraint sequence_adaptation_natural_key
+  constraint sequence_adaptation_name_unique_key
     unique (name),
   foreign key (owner)
     references permissions.users
