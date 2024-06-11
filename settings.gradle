@@ -14,7 +14,6 @@ include 'permissions'
 
 // Procedural post-simulation libraries
 include 'procedural:processor'
-include 'procedural:protocol'
 include 'procedural:timeline'
 include 'procedural:constraints'
 include 'procedural:scheduling'
