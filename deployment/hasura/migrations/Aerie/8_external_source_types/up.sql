@@ -1,8 +1,7 @@
 -- Create table for external source types
 CREATE TABLE merlin.external_source_type (
     id integer NOT NULL,
-    name text NOT NULL,
-    version text NOT NULL
+    name text NOT NULL
 );
 
 COMMENT ON TABLE merlin.external_source_type IS 'A table for externally imported event source types.';
@@ -23,11 +22,11 @@ ALTER TABLE ONLY merlin.external_source_type ALTER COLUMN id SET DEFAULT nextval
 ALTER TABLE ONLY merlin.external_source_type
     ADD CONSTRAINT external_source_type_pkey PRIMARY KEY (id);
 
+-- TODO: Come back to this when we want to tackle versioning
 -- Add uniqueness constraint for name & version
-ALTER TABLE ONLY merlin.external_source_type
-    ADD CONSTRAINT logical_identifiers UNIQUE (name, version);
-
-COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_source_type IS 'The tuple (name, version) must be unique!';
+--ALTER TABLE ONLY merlin.external_source_type
+--    ADD CONSTRAINT logical_identifiers UNIQUE (name, version);
+-- COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_source_type IS 'The tuple (name, version) must be unique!';
 
 -- Update merlin.external_source.source_type_id to link it to merlin.external_source_type.id
 ALTER TABLE ONLY merlin.external_source
