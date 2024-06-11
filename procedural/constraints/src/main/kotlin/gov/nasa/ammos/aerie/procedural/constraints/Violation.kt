@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.procedural.constraints
 
-import gov.nasa.ammos.aerie.timeline.Interval
-import gov.nasa.ammos.aerie.timeline.payloads.IntervalLike
+import gov.nasa.ammos.aerie.procedural.timeline.Interval
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.IntervalLike
 
 /** A single violation of a constraint. */
 data class Violation(

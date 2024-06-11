@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.procedural.constraints
 
-import gov.nasa.ammos.aerie.timeline.CollectOptions
-import gov.nasa.ammos.aerie.timeline.plan.SimulatedPlan
+import gov.nasa.ammos.aerie.procedural.timeline.CollectOptions
+import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulatedPlan
 
 /** The interface that all constraints must satisfy. */
 interface Constraint {

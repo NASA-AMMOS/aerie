@@ -11,15 +11,15 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade
-import gov.nasa.ammos.aerie.timeline.collections.Directives
-import gov.nasa.ammos.aerie.timeline.payloads.activities.AnyDirective
-import gov.nasa.ammos.aerie.timeline.payloads.activities.Directive
-import gov.nasa.ammos.aerie.timeline.payloads.activities.DirectiveStart
-import gov.nasa.ammos.aerie.timeline.plan.Plan
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
+import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
-import gov.nasa.ammos.aerie.timeline.plan.SimulationResults as TimelineSimResults
+import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults as TimelineSimResults
 
 data class InMemoryEditablePlan(
     private val missionModel: MissionModel<*>,

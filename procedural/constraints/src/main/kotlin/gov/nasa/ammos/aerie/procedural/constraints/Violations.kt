@@ -1,17 +1,17 @@
 package gov.nasa.ammos.aerie.procedural.constraints
 
-import gov.nasa.ammos.aerie.timeline.BaseTimeline
-import gov.nasa.ammos.aerie.timeline.BoundsTransformer
-import gov.nasa.ammos.aerie.timeline.Timeline
-import gov.nasa.ammos.aerie.timeline.collections.Intervals
-import gov.nasa.ammos.aerie.timeline.collections.Windows
-import gov.nasa.ammos.aerie.timeline.collections.profiles.Real
-import gov.nasa.ammos.aerie.timeline.ops.*
-import gov.nasa.ammos.aerie.timeline.ops.coalesce.CoalesceNoOp
-import gov.nasa.ammos.aerie.timeline.payloads.IntervalLike
-import gov.nasa.ammos.aerie.timeline.payloads.activities.Directive
-import gov.nasa.ammos.aerie.timeline.payloads.activities.Instance
-import gov.nasa.ammos.aerie.timeline.util.preprocessList
+import gov.nasa.ammos.aerie.procedural.timeline.BaseTimeline
+import gov.nasa.ammos.aerie.procedural.timeline.BoundsTransformer
+import gov.nasa.ammos.aerie.procedural.timeline.Timeline
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Windows
+import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real
+import gov.nasa.ammos.aerie.procedural.timeline.ops.*
+import gov.nasa.ammos.aerie.procedural.timeline.ops.coalesce.CoalesceNoOp
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.IntervalLike
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Instance
+import gov.nasa.ammos.aerie.procedural.timeline.util.preprocessList
 
 /** A timeline of [Violations][Violation]. */
 data class Violations(private val timeline: Timeline<Violation, Violations>):
@@ -22,7 +22,7 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
 {
   constructor(vararg violation: Violation): this(violation.asList())
   constructor(violations: List<Violation>): this(
-    gov.nasa.ammos.aerie.timeline.BaseTimeline(
+    gov.nasa.ammos.aerie.procedural.timeline.BaseTimeline(
       ::Violations,
       preprocessList(violations, null)
     )
