@@ -2,9 +2,7 @@
 CREATE TABLE merlin.external_source_type (
     id integer NOT NULL,
     name text NOT NULL,
-    description text NOT NULL,
-    version text NOT NULL,
-    origin_info_schema jsonb
+    version text NOT NULL
 );
 
 COMMENT ON TABLE merlin.external_source_type IS 'A table for externally imported event source types.';
