@@ -4,7 +4,7 @@ import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.ammos.aerie.procedural.scheduling.Rule;
 import gov.nasa.ammos.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.ammos.aerie.timeline.payloads.activities.DirectiveStart;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart;
 
 import java.util.Map;
 

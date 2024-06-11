@@ -3,15 +3,15 @@ package gov.nasa.ammos.aerie.procedural.remote
 import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
-import gov.nasa.ammos.aerie.timeline.BaseTimeline
-import gov.nasa.ammos.aerie.timeline.BoundsTransformer
-import gov.nasa.ammos.aerie.timeline.Interval.Companion.between
-import gov.nasa.ammos.aerie.timeline.collections.Directives
-import gov.nasa.ammos.aerie.timeline.payloads.activities.Directive
-import gov.nasa.ammos.aerie.timeline.payloads.activities.DirectiveStart
-import gov.nasa.ammos.aerie.timeline.plan.Plan
-import gov.nasa.ammos.aerie.timeline.util.duration.plus
-import gov.nasa.ammos.aerie.timeline.util.duration.minus
+import gov.nasa.ammos.aerie.procedural.timeline.BaseTimeline
+import gov.nasa.ammos.aerie.procedural.timeline.BoundsTransformer
+import gov.nasa.ammos.aerie.procedural.timeline.Interval.Companion.between
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
+import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
+import gov.nasa.ammos.aerie.procedural.timeline.util.duration.plus
+import gov.nasa.ammos.aerie.procedural.timeline.util.duration.minus
 import java.io.StringReader
 import java.sql.Connection
 import java.time.Instant
@@ -67,12 +67,12 @@ data class AeriePostgresPlan(
               if (type == null) allDirectives
               else allDirectives.filter { it.type == type }
           )
-      ).unsafeMap(::Directives, gov.nasa.ammos.aerie.timeline.BoundsTransformer.IDENTITY, false) {
+      ).unsafeMap(::Directives, gov.nasa.ammos.aerie.procedural.timeline.BoundsTransformer.IDENTITY, false) {
         it.mapInner(deserializer)
       }
 
   private val allDirectives by lazy {
-    gov.nasa.ammos.aerie.timeline.BaseTimeline(::Directives) { opts ->
+    gov.nasa.ammos.aerie.procedural.timeline.BaseTimeline(::Directives) { opts ->
       allDirectivesStatement.clearParameters()
       allDirectivesStatement.setInt(1, planInfo.id)
       allDirectivesStatement.setString(2, opts.bounds.start.toISO8601())
