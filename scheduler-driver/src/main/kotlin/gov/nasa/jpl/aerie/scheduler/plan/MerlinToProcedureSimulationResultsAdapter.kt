@@ -13,6 +13,7 @@ import gov.nasa.ammos.aerie.timeline.payloads.Segment
 import gov.nasa.ammos.aerie.timeline.payloads.activities.Instance
 import gov.nasa.ammos.aerie.timeline.plan.Plan
 import gov.nasa.ammos.aerie.timeline.plan.SimulationResults
+import org.apache.commons.collections4.BidiMap
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 
@@ -20,10 +21,11 @@ class MerlinToProcedureSimulationResultsAdapter(
     private val results: gov.nasa.jpl.aerie.merlin.driver.SimulationResults,
     private val stale: Boolean,
     private val plan: Plan,
-    activityIdCorrespondence: Map<SchedulingActivityDirectiveId, ActivityDirectiveId>
+    activityIdCorrespondence: BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>?
 ): SimulationResults {
 
-  private val idMap: Map<Long, Long> = activityIdCorrespondence.entries.associateBy({ it.value.id }) { it.key.id }
+  private val idMap: Map<Long, Long> = activityIdCorrespondence?.entries?.associateBy({ it.value.id }) { it.key.id }
+    ?: mapOf()
 
   override fun isStale() = stale
 

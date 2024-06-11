@@ -457,7 +457,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
     return ids;
   }
 
-@Override
+  @Override
   public void updatePlanActivityDirectiveAnchors(final PlanId planId, final Plan plan, final Map<ActivityDirectiveId, ActivityDirectiveId> uploadIdMap)
   throws MerlinServiceException, IOException
   {
@@ -572,7 +572,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
           .add("start_offset", act.startOffset().toString())
-          .add("anchored_to_start", act.anchoredToStart());
+          .add("anchored_to_start", act.anchorId() == null || act.anchoredToStart());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();
@@ -591,13 +591,6 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }
       insertionObject.add("arguments", insertionObjectArguments.build());
-
-      if (act.anchorId() != null) {
-        insertionObject.add("anchor_id", Math.abs(act.anchorId().id()));
-        insertionObject.add("anchored_to_start", act.anchoredToStart());
-      } else {
-        insertionObject.add("anchored_to_start", true);
-      }
 
       insertionObjects.add(insertionObject.build());
     }
