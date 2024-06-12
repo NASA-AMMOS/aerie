@@ -49,6 +49,7 @@ export let graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL, {
 export const piscina = new Piscina({
   filename: new URL('worker.js', import.meta.url).pathname,
   minThreads: parseInt(getEnv().SEQUENCING_WORKER_NUM),
+  maxThreads: parseInt(getEnv().SEQUENCING_MAX_WORKER_NUM),
   resourceLimits: { maxOldGenerationSizeMb: parseInt(getEnv().SEQUENCING_MAX_WORKER_HEAP_MB) },
 });
 export const promiseThrottler = new PromiseThrottler(parseInt(getEnv().SEQUENCING_WORKER_NUM) - 2);
@@ -299,6 +300,7 @@ app.listen(PORT, () => {
   logger.info(`connected to port ${PORT}`);
   logger.info(`Worker pool initialized:
               Total workers started: ${piscina.threads.length},
+              Max Workers Allowed: ${getEnv().SEQUENCING_MAX_WORKER_NUM},
               Heap Size per Worker: ${getEnv().SEQUENCING_MAX_WORKER_HEAP_MB} MB`);
 
   if (getEnv().TRANSPILER_ENABLED === 'true') {
