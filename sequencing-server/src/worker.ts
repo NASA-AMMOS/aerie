@@ -2,6 +2,7 @@ import './polyfills.js';
 
 import vm from 'node:vm';
 import * as fs from 'node:fs';
+import { threadId } from 'worker_threads';
 
 import ts from 'typescript';
 import { CacheItem, UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
@@ -10,7 +11,11 @@ import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatc
 import type { CommandStem } from './lib/codegen/CommandEDSLPreface.js';
 import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
 import { deserializeWithTemporal } from './utils/temporalSerializers.js';
+import getLogger from './utils/logger.js';
 import { Result, SerializedResult } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
+
+const logger = getLogger(`[ Worker ${threadId} ]`);
+logger.info('Starting worker thread...');
 
 const temporalPolyfillTypes = fs.readFileSync(
   new URL('../src/types/TemporalPolyfillTypes.ts', import.meta.url).pathname,
@@ -40,9 +45,7 @@ export async function typecheckExpansion(opts: {
   activityTypeName?: string;
 }): Promise<SerializedResult<CacheItem, ReturnType<UserCodeError['toJSON']>[]>> {
   const startTime = Date.now();
-  console.log(
-    `[ Worker ] started transpiling authoring logic ${opts.activityTypeName ? `- ${opts.activityTypeName}` : ''}`,
-  );
+  logger.info(`started transpiling authoring logic - ${opts.activityTypeName || 'unknown'}`);
 
   const result = await codeRunner.preProcess(
     opts.expansionLogic,
@@ -60,8 +63,8 @@ export async function typecheckExpansion(opts: {
   );
 
   const endTime = Date.now();
-  console.log(
-    `[ Worker ] finished transpiling ${opts.activityTypeName ? `- ${opts.activityTypeName}` : ''}, (${
+  logger.info(
+    `finished transpiling ${opts.activityTypeName ? `- ${opts.activityTypeName}` : ''}, (${
       (endTime - startTime) / 1000
     } s)`,
   );
@@ -132,6 +135,9 @@ export async function executeExpansionFromBuildArtifacts(opts: {
     }),
   );
 
+  logger.info(`processing ${activityInstance.activityTypeName} at ${activityInstance.startTime.toLocaleString()}`);
+  logger.info(`Memory RSS: ${formatMemoryNumber(process.memoryUsage().rss)}`);
+
   if (result.isOk()) {
     let commands = result.unwrap();
     if (!Array.isArray(commands)) {
@@ -149,4 +155,8 @@ export async function executeExpansionFromBuildArtifacts(opts: {
   } else {
     return Result.Err(result.unwrapErr().map(err => err.toJSON())).toJSON();
   }
+}
+
+function formatMemoryNumber(mem: number) {
+  return `${Math.round((mem / 1024 / 1024) * 100) / 100} MB`;
 }
