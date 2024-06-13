@@ -36,6 +36,8 @@ const logger = getLogger('app');
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 27184;
 
+logger.info(`Starting sequencing-server app on Node v${process.versions.node}...`);
+
 const app: Application = express();
 // WARNING: bodyParser.json() is vulnerable to a string too long issue. Iff that occurs,
 // we should switch to a stream parser like https://www.npmjs.com/package/stream-json
