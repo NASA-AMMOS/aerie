@@ -2,7 +2,7 @@
 CREATE TABLE merlin.external_event (
     id integer NOT NULL,
     key text NOT NULL,
-    event_type text NOT NULL,
+    event_type_id integer NOT NULL,
     source_id integer NOT NULL,
     start_time timestamp with time zone NOT NULL,
     duration time without time zone NOT NULL,
