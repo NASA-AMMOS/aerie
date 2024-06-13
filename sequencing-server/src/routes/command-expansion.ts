@@ -340,6 +340,10 @@ commandExpansionRouter.post('/expand-all-activity-instances', async (req, res, n
   );
 
   const rejectedExpansionResults = settledExpansionResults.filter(isRejected).map(p => p.reason);
+  if (rejectedExpansionResults.length) {
+    logger.error(`${rejectedExpansionResults.length} rejected expansion results`);
+    console.log(rejectedExpansionResults);
+  }
 
   for (const expansionResult of rejectedExpansionResults) {
     logger.error(expansionResult.reason);

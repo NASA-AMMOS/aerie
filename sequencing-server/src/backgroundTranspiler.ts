@@ -10,6 +10,9 @@ import type { typecheckExpansion } from './worker';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 import { getLatestParcel, getLatestMissionModel, getExpansionRule } from './utils/hasura.js';
 import type { Parcel } from './lib/batchLoaders/parcelBatchLoader.js';
+import getLogger from './utils/logger.js';
+
+const logger = getLogger('[ Background Transpiler ]');
 
 export async function backgroundTranspiler(numberOfThreads: number = 2) {
   if (graphqlClient === null) {
@@ -25,9 +28,7 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
     },
   } = await getLatestMissionModel(graphqlClient);
   if (!missionModelId) {
-    console.log(
-      '[ Background Transpiler ] Unable to fetch the latest mission model. Aborting background transpiling...',
-    );
+    logger.warn('Unable to fetch the latest mission model. Aborting background transpiling...');
     return;
   }
 
@@ -40,16 +41,14 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
     },
   } = await getLatestParcel(graphqlClient);
   if (!parcelID) {
-    console.log(
-      '[ Background Transpiler ] Unable to fetch the latest command dictionary. Aborting background transpiling...',
-    );
+    logger.warn('Unable to fetch the latest command dictionary. Aborting background transpiling...');
     return;
   }
 
   const { expansion_rule } = await getExpansionRule(graphqlClient, missionModelId, parcelID);
 
   if (expansion_rule === null || expansion_rule.length === 0) {
-    console.log(`[ Background Transpiler ] No expansion rules to transpile.`);
+    logger.info(`No expansion rules to transpile.`);
     return;
   }
 
@@ -71,8 +70,7 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   });
 
   if (parcel === null) {
-    console.log(`[ Background Transpiler ] Unable to fetch parcel.
-    Aborting transpiling...`);
+    logger.error(`Unable to fetch parcel.\nAborting transpiling...`);
     return;
   }
 
@@ -81,8 +79,7 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   });
 
   if (commandTypes === null) {
-    console.log(`[ Background Transpiler ] Unable to fetch command ts lib.
-    Aborting transpiling...`);
+    logger.error(`Unable to fetch command ts lib.\nAborting transpiling...`);
     return;
   }
 
@@ -90,11 +87,11 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
   // This allows for expansion set and sequence expansion to utilize the remaining workers
   for (let i = 0; i < expansion_rule.length; i += numberOfThreads) {
     await Promise.all(
-      expansion_rule.slice(i, i + numberOfThreads).map(async expansion => {
+      expansion_rule.slice(i, i + numberOfThreads).map(async (expansion, j) => {
         await promiseThrottler.run(async () => {
           // Assuming expansion_rule elements have the same type
           if (expansion instanceof Error) {
-            console.log(`[ Background Transpiler ] Expansion: ${expansion.name} could not be loaded`, expansion);
+            logger.error(`Expansion: ${expansion.name} could not be loaded`, expansion);
             return Promise.reject(`Expansion: ${expansion.name} could not be loaded`);
           }
 
@@ -126,24 +123,22 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
 
           // log error
           if (!activitySchema) {
-            console.log(
-              `[ Background Transpiler ] Activity schema for ${expansion.activity_type} could not be loaded`,
-              activitySchema,
-            );
-            return Promise.reject('Activity schema for ${expansion.activity_type} could not be loaded');
+            const msg = `Activity schema for ${expansion.activity_type} could not be loaded`;
+            logger.error(msg, activitySchema);
+            return Promise.reject(msg);
           }
 
           const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
           // log error
           if (!activityTypescript) {
-            console.log(
-              `[ Background Transpiler ] Unable to generate typescript for activity ${expansion.activity_type}`,
-              activityTypescript,
-            );
-            return Promise.reject(`Unable to generate typescript for activity ${expansion.activity_type}`);
+            const msg = `Unable to generate typescript for activity ${expansion.activity_type}`;
+            logger.error(msg, activityTypescript);
+            return Promise.reject(msg);
           }
 
+          const progress = `(${i + j + 1} of ${expansion_rule.length})`;
+          logger.info(`Assigning worker to typecheck ${expansion.activity_type} ${progress}`);
           const typecheckingResult = (
             piscina.run(
               {
@@ -159,7 +154,7 @@ export async function backgroundTranspiler(numberOfThreads: number = 2) {
           //Display any errors
           typecheckingResult.then(result => {
             if (result.isErr()) {
-              console.log(`Error transpiling ${expansion.activity_type}:\n ${result.unwrapErr().map(e => e.message)}`);
+              logger.error(`Error transpiling ${expansion.activity_type}:\n ${result.unwrapErr().map(e => e.message)}`);
             }
           });
 
