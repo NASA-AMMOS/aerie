@@ -1,4 +1,10 @@
-create or replace function hasura.get_event_logs(_trigger_name text)
+drop view hasura.refresh_resource_type_logs;
+drop view hasura.refresh_model_parameter_logs;
+drop view hasura.refresh_activity_type_logs;
+drop function hasura.get_event_logs(_trigger_name text);
+
+-- Recreate with new function signature
+create function hasura.get_event_logs(_trigger_name text)
 returns table (
   model_id int,
   model_name text,
@@ -38,5 +44,22 @@ begin
       where trigger_name = _trigger_name);
 end;
 $$;
+comment on function hasura.get_event_logs(_trigger_name text) is e''
+ 'Get the logs for every run of a Hasura event with the specified trigger name.';
+
+create view hasura.refresh_activity_type_logs as
+  select * from hasura.get_event_logs('refreshActivityTypes');
+comment on view hasura.refresh_activity_type_logs is e''
+ 'View containing logs for every run of the Hasura event `refreshActivityTypes`.';
+
+create view hasura.refresh_model_parameter_logs as
+  select * from hasura.get_event_logs('refreshModelParameters');
+comment on view hasura.refresh_model_parameter_logs is e''
+ 'View containing logs for every run of the Hasura event `refreshModelParameters`.';
+
+create view hasura.refresh_resource_type_logs as
+  select * from hasura.get_event_logs('refreshResourceTypes');
+comment on view hasura.refresh_resource_type_logs is e''
+ 'View containing logs for every run of the Hasura event `refreshResourceTypes`.';
 
 call migrations.mark_migration_rolled_back('6');

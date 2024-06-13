@@ -10,7 +10,7 @@ returns table (
   created_at timestamp,
   next_retry_at timestamp,
   status int,
-  error jsonb,
+  error json,
   error_message text,
   error_type text
 )
