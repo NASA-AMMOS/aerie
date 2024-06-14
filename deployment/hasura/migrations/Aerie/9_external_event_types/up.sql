@@ -24,5 +24,5 @@ ALTER TABLE ONLY merlin.external_event_type
 
 -- TODO: consider implementing versioning in a future batch of work
 
-ALTER TABLE ONLY merlin.external_event_type
+ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT "event_type_id -> external_event_type" FOREIGN KEY (event_type_id) REFERENCES merlin.external_event_type(id);
