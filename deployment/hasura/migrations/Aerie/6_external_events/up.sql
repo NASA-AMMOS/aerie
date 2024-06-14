@@ -30,11 +30,11 @@ ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT external_event_pkey PRIMARY KEY (id);
 
 
--- Add uniqueness constraint for key/source_id/event_type tuple
+-- Add uniqueness constraint for key/source_id/event_type_id tuple
 ALTER TABLE ONLY merlin.external_event
-    ADD CONSTRAINT logical_identifiers UNIQUE (key, source_id, event_type);
+    ADD CONSTRAINT logical_identifiers UNIQUE (key, source_id, event_type_id);
 
-COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_event IS 'The tuple (key, event_type, and source_id) must be unique!';
+COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_event IS 'The tuple (key, event_type_id, and source_id) must be unique!';
 
 
 -- Add foreign key linking the source_id to the id of an external_source entry
