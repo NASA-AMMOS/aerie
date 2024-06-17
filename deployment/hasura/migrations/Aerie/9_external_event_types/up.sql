@@ -4,7 +4,7 @@ CREATE TABLE merlin.external_event_type (
     name text NOT NULL
 );
 
-COMMENT ON TABLE merlin.external_event_type IS 'A table for externall imported event types.';
+COMMENT ON TABLE merlin.external_event_type IS 'A table for externally imported event types.';
 
 -- Ensure the id is serial.
 CREATE SEQUENCE merlin.external_event_type_id_seq
@@ -26,3 +26,5 @@ ALTER TABLE ONLY merlin.external_event_type
 
 ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT "event_type_id -> external_event_type" FOREIGN KEY (event_type_id) REFERENCES merlin.external_event_type(id);
+
+call migrations.mark_migration_applied('9');

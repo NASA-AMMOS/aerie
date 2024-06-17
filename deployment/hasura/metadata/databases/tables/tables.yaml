@@ -103,6 +103,7 @@
 - "!include merlin/plan_external_source.yaml"
 - "!include merlin/external_source_type.yaml"
 - "!include merlin/external_event_type.yaml"
+- "!include merlin/external_source_event_type.yaml"
 
 # Constraints
 - "!include merlin/constraints/constraint_metadata.yaml"
