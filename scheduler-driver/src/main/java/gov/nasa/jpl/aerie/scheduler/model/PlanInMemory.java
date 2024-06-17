@@ -46,13 +46,6 @@ public class PlanInMemory implements Plan {
     this.actsByTime = new TreeMap<>();
   }
 
-  @Override
-  public void replace(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement) {
-    if(evaluation != null) evaluation.replace(toBeReplaced, replacement);
-    remove(toBeReplaced);
-    add(replacement);
-  }
-
   public PlanInMemory(final PlanInMemory other){
     if(other.evaluation != null) this.evaluation = other.evaluation.duplicate();
     this.actsByTime = new TreeMap<>();
@@ -137,7 +130,7 @@ public class PlanInMemory implements Plan {
   public void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct){
     this.remove(oldAct);
     this.add(newAct);
-    this.evaluation.updateGoalEvals(oldAct, newAct);
+    if(evaluation != null) this.evaluation.updateGoalEvals(oldAct, newAct);
   }
 
   /**

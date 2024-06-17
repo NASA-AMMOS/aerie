@@ -560,7 +560,7 @@ public class PrioritySolver implements Solver {
                     missingAssociationConflict.getAnchorToStart().get(),
                     startOffset
                 );
-                plan.replace(act,replacementAct);
+                plan.replaceActivity(act,replacementAct);
                 //decision-making here, we choose the first satisfying activity
                 plan.getEvaluation().forGoal(goal).associate(replacementAct, false);
                 itConflicts.remove();

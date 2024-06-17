@@ -167,19 +167,6 @@ public class Evaluation {
   }
 
   /**
-   * Replaces an activity in the Evaluation by another activity
-   * @param toBeReplaced the activity to be replaced
-   * @param replacement the replacement activity
-   */
-  public void replace(
-      final SchedulingActivityDirective toBeReplaced,
-      final SchedulingActivityDirective replacement){
-    for(final var goalEval: goalEvals.entrySet()){
-      goalEval.getValue().replace(toBeReplaced, replacement);
-    }
-  }
-
-  /**
    * Duplicates the Evaluation
    * @return the duplicate evaluation
    */

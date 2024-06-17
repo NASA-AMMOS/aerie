@@ -75,7 +75,7 @@ public class SimulationFacadeUtils {
         //if not, maybe the activity is not finished
       }
     }
-    toReplace.forEach(plan::replace);
+    toReplace.forEach(plan::replaceActivity);
   }
 
   private static Optional<SimulatedActivity> findSimulatedActivityById(

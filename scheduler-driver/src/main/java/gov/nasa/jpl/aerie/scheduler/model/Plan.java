@@ -20,13 +20,6 @@ import java.util.Set;
 public interface Plan {
 
   /**
-   * Replace a directive by another in the plan and its attached Evaluation
-   * @param toBeReplaced the activity to be replaced
-   * @param replacement the replacement activity
-   */
-  void replace(SchedulingActivityDirective toBeReplaced, SchedulingActivityDirective replacement);
-
-  /**
    * Duplicates a plan
    * @return the duplicate plan
    */
@@ -68,17 +61,17 @@ public interface Plan {
   void remove(SchedulingActivityDirective act);
 
   /**
-   * fetches activities in the plan ordered by start time
-   *
-   * @return set of all activities in the plan ordered by start time
-   */
-  /**
    * replace and old activity by a new one
    * @param oldAct Old Activity
    * @param newAct New Activity
    */
   void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct);
 
+  /**
+   * fetches activities in the plan ordered by start time
+   *
+   * @return set of all activities in the plan ordered by start time
+   */
   List<SchedulingActivityDirective> getActivitiesByTime();
 
   /**
