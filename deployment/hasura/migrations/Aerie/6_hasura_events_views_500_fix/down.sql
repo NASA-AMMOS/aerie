@@ -1,3 +1,9 @@
+drop view hasura.refresh_resource_type_logs;
+drop view hasura.refresh_model_parameter_logs;
+drop view hasura.refresh_activity_type_logs;
+drop function hasura.get_event_logs(_trigger_name text);
+
+-- Recreate with new function signature
 create function hasura.get_event_logs(_trigger_name text)
 returns table (
   model_id int,
@@ -10,7 +16,7 @@ returns table (
   created_at timestamp,
   next_retry_at timestamp,
   status int,
-  error json,
+  error jsonb,
   error_message text,
   error_type text
 )
@@ -30,9 +36,9 @@ begin
       el.created_at,
       el.next_retry_at,
       eil.status,
-      eil.response -> 'data'-> 'message' as error,
-      eil.response -> 'data'-> 'message'->>'message' as error_message,
-      eil.response -> 'data'-> 'message'->>'type' as error_type
+      (eil.response -> 'data'->> 'message')::jsonb as error,
+      (eil.response -> 'data'->> 'message')::jsonb->>'message' as error_message,
+      (eil.response -> 'data'->> 'message')::jsonb->>'type' as error_type
       from hdb_catalog.event_log el
       join hdb_catalog.event_invocation_logs eil on el.id = eil.event_id
       where trigger_name = _trigger_name);
@@ -56,5 +62,4 @@ create view hasura.refresh_resource_type_logs as
 comment on view hasura.refresh_resource_type_logs is e''
  'View containing logs for every run of the Hasura event `refreshResourceTypes`.';
 
-
-
+call migrations.mark_migration_rolled_back('6');

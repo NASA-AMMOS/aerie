@@ -1,3 +1,9 @@
+drop view hasura.refresh_resource_type_logs;
+drop view hasura.refresh_model_parameter_logs;
+drop view hasura.refresh_activity_type_logs;
+drop function hasura.get_event_logs(_trigger_name text);
+
+-- Recreate with updated signature
 create function hasura.get_event_logs(_trigger_name text)
 returns table (
   model_id int,
@@ -56,5 +62,4 @@ create view hasura.refresh_resource_type_logs as
 comment on view hasura.refresh_resource_type_logs is e''
  'View containing logs for every run of the Hasura event `refreshResourceTypes`.';
 
-
-
+call migrations.mark_migration_applied('6');
