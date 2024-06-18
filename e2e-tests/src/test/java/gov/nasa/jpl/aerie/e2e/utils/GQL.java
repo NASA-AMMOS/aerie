@@ -99,6 +99,7 @@ public enum GQL {
     mutation CreateSchedulingSpecGoal($spec_goal: scheduling_specification_goals_insert_input!) {
       insert_scheduling_specification_goals_one(object: $spec_goal) {
         goal_id
+        goal_invocation_id
         priority
         specification_id
       }
@@ -603,9 +604,9 @@ public enum GQL {
       }
     }"""),
   UPDATE_SCHEDULING_SPEC_GOALS_ENABLED("""
-		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $enabled: Boolean!) {
+		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $goal_invocation_id: Int!, $enabled: Boolean!) {
 			update_scheduling_specification_goals_by_pk(
-			  pk_columns: {specification_id: $spec_id, goal_id: $goal_id},
+			  pk_columns: {specification_id: $spec_id, goal_id: $goal_id, goal_invocation_id: $goal_invocation_id},
 			  _set: {enabled: $enabled})
 			{
 				goal_revision
@@ -613,9 +614,9 @@ public enum GQL {
 			}
 		}"""),
   UPDATE_SCHEDULING_SPEC_GOALS_VERSION("""
-		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $goal_revision: Int!) {
+		mutation updateSchedulingSpecGoalVersion($spec_id: Int!, $goal_id: Int!, $goal_invocation_id: Int!, $goal_revision: Int!) {
 			update_scheduling_specification_goals_by_pk(
-				pk_columns: {specification_id: $spec_id, goal_id: $goal_id},
+				pk_columns: {specification_id: $spec_id, goal_id: $goal_id, goal_invocation_id: $goal_invocation_id},
 				_set: {goal_revision: $goal_revision})
 			{
 				goal_revision
