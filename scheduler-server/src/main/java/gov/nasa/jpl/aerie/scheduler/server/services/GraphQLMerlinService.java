@@ -573,7 +573,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     for (final var act : orderedActivities) {
       var insertionObject = Json
           .createObjectBuilder()
-          .add("id", act.id().id())
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
           .add("start_offset", act.startOffset().toString())
