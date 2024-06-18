@@ -624,7 +624,9 @@ public class HasuraRequests implements AutoCloseable {
   }
 
   public void deleteSchedulingGoal(int goalId) throws IOException {
-    final var variables = Json.createObjectBuilder().add("goalId", goalId).build();
+    final var variables = Json.createObjectBuilder()
+                              .add("goalId", goalId)
+                              .build();
     makeRequest(GQL.DELETE_SCHEDULING_GOAL, variables);
   }
 
@@ -643,7 +645,7 @@ public class HasuraRequests implements AutoCloseable {
     makeRequest(GQL.UPDATE_SCHEDULING_SPECIFICATION_PLAN_REVISION, variables);
   }
 
-  public int createSchedulingSpecGoal(
+  public GoalInvocationId createSchedulingSpecGoal(
       String name,
       String definition,
       int specificationId,
@@ -652,7 +654,7 @@ public class HasuraRequests implements AutoCloseable {
     return createSchedulingSpecGoal(name, definition, "", specificationId, priority);
   }
 
-  public int createSchedulingSpecGoal(
+  public GoalInvocationId createSchedulingSpecGoal(
       String name,
       String definition,
       String description,
@@ -675,9 +677,10 @@ public class HasuraRequests implements AutoCloseable {
                                     .add("specification_id", specificationId)
                                     .add("priority", priority);
     final var variables = Json.createObjectBuilder().add("spec_goal", specGoalBuilder).build();
-    return makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
-            .getJsonObject("insert_scheduling_specification_goals_one")
-            .getInt("goal_id");
+    final var resp =  makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
+            .getJsonObject("insert_scheduling_specification_goals_one");
+
+    return new GoalInvocationId(resp.getInt("goal_id"), resp.getInt("goal_invocation_id"));
   }
 
   public int updateGoalDefinition(int goalId, String definition) throws IOException {
@@ -688,19 +691,21 @@ public class HasuraRequests implements AutoCloseable {
     return makeRequest(GQL.UPDATE_GOAL_DEFINITION, variables).getJsonObject("definition").getInt("revision");
   }
 
-  public void updateSchedulingSpecEnabled(int schedulingSpecId, int goalId, boolean enabled) throws IOException {
+  public void updateSchedulingSpecEnabled(int schedulingSpecId, int goalId, int invocationId, boolean enabled) throws IOException {
     final var variables = Json.createObjectBuilder()
                               .add("spec_id", schedulingSpecId)
                               .add("goal_id", goalId)
+                              .add("goal_invocation_id", invocationId)
                               .add("enabled", enabled)
                               .build();
     makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_ENABLED, variables);
   }
 
-  public void updateSchedulingSpecVersion(int schedulingSpecId, int goalId, int version) throws IOException {
+  public void updateSchedulingSpecVersion(int schedulingSpecId, int goalId, int invocationId, int version) throws IOException {
     final var variables = Json.createObjectBuilder()
                               .add("spec_id", schedulingSpecId)
                               .add("goal_id", goalId)
+                              .add("goal_invocation_id", invocationId)
                               .add("goal_revision", version)
                               .build();
     makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_VERSION, variables);
