@@ -374,7 +374,7 @@ public final class PolynomialResources {
     // Set up slack variables for under-/overflow
     rateSolver.declare(lx(overflowRate), GreaterThanOrEquals, lx(0));
     rateSolver.declare(lx(underflowRate), GreaterThanOrEquals, lx(0));
-    rateSolver.declare(lx(rate).add(lx(underflowRate)).subtract(lx(overflowRate)), Equals, lx(integrand));
+    rateSolver.declare(lx(rate).subtract(lx(underflowRate)).add(lx(overflowRate)), Equals, lx(integrand));
 
     // Set up rate clamping conditions
     var integrandUB = choose(
