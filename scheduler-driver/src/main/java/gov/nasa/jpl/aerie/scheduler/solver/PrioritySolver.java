@@ -311,7 +311,7 @@ public class PrioritySolver implements Solver {
       satisfyOptionGoal((OptionGoal) goal);
     } else if (goal instanceof Procedure procedure) {
       if (!analysisOnly) {
-        procedure.run(evaluation, plan, problem.getMissionModel(), this.problem::getActivityType, this.simulationFacade);
+        procedure.run(plan.getEvaluation(), plan, problem.getMissionModel(), this.problem::getActivityType, this.simulationFacade);
       }
     } else {
       satisfyGoalGeneral(goal);
@@ -319,7 +319,6 @@ public class PrioritySolver implements Solver {
     this.checkSimBeforeEvaluatingGoal = goal.simulateAfter;
     this.checkSimBeforeInsertingActivities = checkSimConfig;
   }
-
 
   private void satisfyOptionGoal(OptionGoal goal) throws SchedulingInterruptedException{
       if (goal.hasOptimizer()) {
@@ -833,7 +832,7 @@ public class PrioritySolver implements Solver {
               groundedPlan.get(),
               Map.of(),
               Map.of()),
-            Optional.of(new DualHashBidiMap()));
+            Optional.of(new DualHashBidiMap<>()));
       } else {
         logger.debug(
             "Tried mocking simulation results with a grounded plan but could not because of the activity cannot be grounded.");

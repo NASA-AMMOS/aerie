@@ -230,7 +230,6 @@ public record SynchronousSchedulerAgent(
               } catch (InvalidJsonException | InvalidEntityException e) {
                 throw new RuntimeException(e);
               }
-
             }
           }
         }
