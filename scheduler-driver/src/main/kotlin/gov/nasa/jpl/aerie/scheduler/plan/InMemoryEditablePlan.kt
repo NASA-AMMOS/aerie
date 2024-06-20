@@ -16,6 +16,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
@@ -24,10 +25,10 @@ import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults as Timeli
 data class InMemoryEditablePlan(
     private val missionModel: MissionModel<*>,
     private var nextUniqueDirectiveId: Long,
-    private val plan: Plan,
+    private val plan: SchedulerToProcedurePlanAdapter,
     private val simulationFacade: SimulationFacade,
     private val lookupActivityType: (String) -> ActivityType
-) : EditablePlan, Plan {
+) : EditablePlan, Plan by plan {
 
   private val commits = mutableListOf<Commit>()
   var uncommittedChanges = mutableListOf<Edit>()
@@ -37,8 +38,8 @@ data class InMemoryEditablePlan(
     get() = commits.flatMap { it.diff }
 
   override fun latestResults() =
-    simulationFacade.latestDriverSimulationResults.getOrNull()
-      ?.let { MerlinToProcedureSimulationResultsAdapter(it, false, plan, simulationFacade.bidiActivityIdCorrespondence.getOrNull()) }
+    simulationFacade.latestSimulationData.getOrNull()
+      ?.let { MerlinToProcedureSimulationResultsAdapter(it.driverResults, false, plan, it.mapSchedulingIdsToActivityIds.getOrNull()) }
 
   override fun create(directive: NewDirective): Long {
     class ParentSearchException(id: Long, size: Int): Exception("Expected one parent activity with id $id, found $size")
@@ -55,27 +56,31 @@ data class InMemoryEditablePlan(
     }
     val resolved = directive.resolve(id, parent)
     uncommittedChanges.add(Edit.Create(resolved))
+    plan.add(resolved.toSchedulingActivityDirective(lookupActivityType))
     return id
   }
 
   override fun commit() {
-    commits.add(Commit(rollback()))
+    val committedEdits = uncommittedChanges
+    uncommittedChanges = mutableListOf()
+    commits.add(Commit(committedEdits))
   }
 
   override fun rollback(): List<Edit> {
     val result = uncommittedChanges
     uncommittedChanges = mutableListOf()
+    for (edit in result) {
+      when (edit) {
+        is Edit.Create -> {
+          plan.remove(edit.directive.toSchedulingActivityDirective(lookupActivityType))
+        }
+      }
+    }
     return result
   }
 
   override fun simulate(options: SimulateOptions): TimelineSimResults {
-    val plan = totalDiff.map {
-      when (it) {
-        is Edit.Create -> it.directive.toSchedulingActivityDirective(lookupActivityType)
-      }
-    } + plan.directives().collect().map { it.toSchedulingActivityDirective(lookupActivityType) }
-    simulationFacade.removeAndInsertActivitiesFromSimulation(plan, plan)
-    simulationFacade.computeSimulationResultsUntil(options.pause.resolve(this))
+    simulationFacade.simulateWithResults(plan, options.pause.resolve(this));
     return latestResults()!!
   }
 
@@ -84,22 +89,6 @@ data class InMemoryEditablePlan(
   override fun totalBounds() = plan.totalBounds()
   override fun toRelative(abs: Instant) = plan.toRelative(abs)
   override fun toAbsolute(rel: Duration) = plan.toAbsolute(rel)
-
-  override fun <A : Any> directives(type: String?, deserializer: (SerializedValue) -> A): Directives<A> {
-    val basePlan = plan.directives(type, deserializer)
-
-    return basePlan.unsafeOperate { opts ->
-      val directives = collect(opts).toMutableList()
-      for (edit in totalDiff + uncommittedChanges) {
-        when (edit) {
-          is Edit.Create -> if (type == null || edit.directive.type == type && edit.directive.startTime in opts.bounds) directives.add(
-              edit.directive.mapInner { deserializer(it.serialize()) }
-          )
-        }
-      }
-      directives
-    }
-  }
 
   companion object {
     @JvmStatic fun Directive<AnyDirective>.toSchedulingActivityDirective(lookupActivityType: (String) -> ActivityType) = SchedulingActivityDirective(

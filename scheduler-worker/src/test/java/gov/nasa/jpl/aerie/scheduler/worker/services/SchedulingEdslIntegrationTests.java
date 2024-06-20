@@ -549,7 +549,7 @@ public class SchedulingEdslIntegrationTests {
                 true
             )
         ),
-        List.of(new SchedulingGoal(new GoalId(0L, 0L), """
+        List.of(new EdslGoal(new GoalId(0L, 0L), """
           export default () => Goal.CoexistenceGoal({
             persistentAnchor: PersistentTimeAnchor.START,
             forEach: ActivityExpression.ofType(ActivityTypes.BiteBanana),
@@ -2134,8 +2134,6 @@ public class SchedulingEdslIntegrationTests {
       final Iterable<EdslGoal> goals,
       final PlanningHorizon planningHorizon,
       final int cachedEngineStoreCapacity
-      final Iterable<EdslGoal> goals,
-      final PlanningHorizon planningHorizon
   )
   {
     final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
