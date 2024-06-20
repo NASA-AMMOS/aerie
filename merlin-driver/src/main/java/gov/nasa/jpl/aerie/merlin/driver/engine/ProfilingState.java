@@ -14,4 +14,8 @@ record ProfilingState<Dynamics> (Resource<Dynamics> resource, Profile<Dynamics> 
   public void append(final Duration currentTime, final Querier querier) {
     this.profile.append(currentTime, this.resource.getDynamics(querier));
   }
+
+  public ProfilingState<?> duplicate() {
+    return new ProfilingState<>(resource, profile.duplicate());
+  }
 }

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -45,7 +44,6 @@ public class TestRecurrenceGoal {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
-    assertEquals(5, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -54,7 +52,7 @@ public class TestRecurrenceGoal {
     final var problem = buildProblemFromFoo(planningHorizon);
     try {
       final var activityType = problem.getActivityType("ControllableDurationActivity");
-      final var goal = new RecurrenceGoal.Builder()
+      new RecurrenceGoal.Builder()
           .named("Test recurrence goal")
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS),
                                                  Duration.of(20, Duration.SECONDS)), true)))
@@ -65,6 +63,7 @@ public class TestRecurrenceGoal {
           .repeatingEvery(Duration.of(-1, Duration.SECONDS))
           .withinPlanHorizon(planningHorizon)
           .build();
+      fail();
     }
     catch (IllegalArgumentException e) {
       //minimum is checked first so that's the output, even though the value for repeatingEvery is set as both the min
@@ -75,7 +74,6 @@ public class TestRecurrenceGoal {
     catch (Exception e) {
       fail(e.getMessage());
     }
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
 }

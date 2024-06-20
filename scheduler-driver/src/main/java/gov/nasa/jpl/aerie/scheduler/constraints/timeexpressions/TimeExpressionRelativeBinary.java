@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
+import java.util.Set;
 import java.util.Optional;
 
 public class TimeExpressionRelativeBinary extends TimeExpressionRelative {
@@ -27,4 +28,10 @@ public class TimeExpressionRelativeBinary extends TimeExpressionRelative {
     return Optional.empty();
   }
 
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    lowerBound.extractResources(names);
+    upperBound.extractResources(names);
+  }
 }

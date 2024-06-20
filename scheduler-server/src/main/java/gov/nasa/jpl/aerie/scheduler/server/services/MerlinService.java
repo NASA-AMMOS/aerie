@@ -84,12 +84,13 @@ public interface MerlinService {
     throws IOException, NoSuchPlanException, MerlinServiceException;
 
     /**
-     * Gets existing simulation results for current plan if they exist and are suitable for scheduling purposes (current revision, covers the entire planning horizon)
+     * Gets existing simulation results for current plan if they exist and are suitable for scheduling purposes (current
+     * revision, covers the entire planning horizon)
      * These simulation results do not include events and topics.
      * @param planMetadata the plan metadata
-     * @return simulation results, optionally
+     * @return optionally: simulation results and its dataset id
      */
-    Optional<SimulationResults> getSimulationResults(PlanMetadata planMetadata) throws MerlinServiceException, IOException, InvalidJsonException;
+    Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(PlanMetadata planMetadata) throws MerlinServiceException, IOException, InvalidJsonException;
 
 
     /**

@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
 import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
+import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
@@ -141,13 +142,13 @@ public class InstantiateArgumentsTest {
 
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
+      return executor -> new OneStepTask<>($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
+        return TaskStatus.delayed(oneMinute, new OneStepTask<>($$ -> {
           $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
-        });
-      };
+        }));
+      });
     }
   };
 

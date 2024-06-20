@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.AfterEach;
@@ -81,7 +82,7 @@ public class SimulationFacadeTest {
   public void setUp() {
     missionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
-    facade = new SimulationFacade(horizon, missionModel, schedulerModel, ()-> false);
+    facade = new CheckpointSimulationFacade(horizon, missionModel, schedulerModel);
     problem = new Problem(missionModel, horizon, facade, schedulerModel);
   }
 
@@ -160,19 +161,17 @@ public class SimulationFacadeTest {
     final var actAssociatedInSecondRun = plan2.get().getEvaluation().forGoal(goal).getAssociatedActivities();
     assertEquals(1, actAssociatedInSecondRun.size());
     assertTrue(actAssociatedInFirstRun.iterator().next().equalsInProperties(actAssociatedInSecondRun.iterator().next()));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
   public void whenValueAboveDoubleOnSimplePlan()
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults().get());
+    final var results = facade.simulateWithResults(makeTestPlanP0B1(), tEnd);
+    var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive,5, Exclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive,5, Inclusive, SECONDS), false)
     );
     assertEquals(expected, actual);
   }
@@ -181,12 +180,11 @@ public class SimulationFacadeTest {
   public void whenValueBelowDoubleOnSimplePlan()
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults().get());
+    final var results = facade.simulateWithResults(makeTestPlanP0B1(), tEnd);
+    var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
     );
     assertEquals(expected, actual);
   }
@@ -195,13 +193,12 @@ public class SimulationFacadeTest {
   public void whenValueBetweenDoubleOnSimplePlan()
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults().get());
+    final var results = facade.simulateWithResults(makeTestPlanP0B1(), tEnd);
+    var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
     );
     assertEquals(expected, actual);
   }
@@ -210,13 +207,12 @@ public class SimulationFacadeTest {
   public void whenValueEqualDoubleOnSimplePlan()
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults().get());
+    final var results = facade.simulateWithResults(makeTestPlanP0B1(), tEnd);
+    var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), false)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
     );
     assertEquals(expected, actual);
   }
@@ -225,13 +221,12 @@ public class SimulationFacadeTest {
   public void whenValueNotEqualDoubleOnSimplePlan()
   throws SimulationFacade.SimulationException, SchedulingInterruptedException
   {
-    facade.insertActivitiesIntoSimulation(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
-    var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults().get());
+    final var results = facade.simulateWithResults(makeTestPlanP0B1(), tEnd);
+    var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(results.constraintsResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
-        Segment.of(interval(2, Inclusive, 5, Exclusive, SECONDS), true)
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
     );
     assertEquals(expected, actual);
   }
@@ -273,7 +268,6 @@ public class SimulationFacadeTest {
     final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -315,7 +309,6 @@ public class SimulationFacadeTest {
 
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -357,6 +350,5 @@ public class SimulationFacadeTest {
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));
-    assertEquals(2, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

@@ -69,6 +69,7 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `SCHEDULER_DB_PASSWORD`       | Password of the Scheduler DB User                                     | `string` |                                                    |
 | `SCHEDULER_OUTPUT_MODE`       | How scheduler output is sent back to Aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
 | `SCHEDULER_RULES_JAR`         | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
+| `MAX_NB_CACHED_SIMULATION_ENGINES` | The maximum number of simulation engines to cache in memory during a scheduling run. Must be at least 1 | `number` | 1                                                  |
 
 ## Aerie Sequencing
 

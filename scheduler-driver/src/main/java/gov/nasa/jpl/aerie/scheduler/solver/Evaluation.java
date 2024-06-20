@@ -84,6 +84,31 @@ public class Evaluation {
     public void associate(SchedulingActivityDirective act, boolean createdByThisGoal) { acts.put(act, createdByThisGoal);}
 
     /**
+     * Replaces an activity in the goal evaluation by another activity
+     * @param toBeReplaced the activity to be replaced
+     * @param replacement the replacement activity
+     */
+    public void replace(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement){
+      final var found = acts.get(toBeReplaced);
+      if(found != null){
+        acts.remove(toBeReplaced);
+        acts.put(replacement, found);
+      }
+    }
+
+    /**
+     * Duplicates the GoalEvaluation
+     * @return the duplicate
+     */
+    public GoalEvaluation duplicate(){
+      final var duplicate = new GoalEvaluation();
+      duplicate.acts.putAll(this.acts);
+      duplicate.nbConflictsDetected = this.nbConflictsDetected;
+      duplicate.score = this.score;
+      return duplicate;
+    }
+
+    /**
      * flags all given activities as contributing to the goal's (dis)satisfaction
      *
      * @param acts IN container of activities that contributed to the goal's
@@ -139,6 +164,18 @@ public class Evaluation {
    */
   public java.util.Collection<Goal> getGoals() {
     return goalEvals.keySet();
+  }
+
+  /**
+   * Duplicates the Evaluation
+   * @return the duplicate evaluation
+   */
+  public Evaluation duplicate(){
+    final var duplicate = new Evaluation();
+    for(final var goalEvaluation : goalEvals.entrySet()){
+      duplicate.goalEvals.put(goalEvaluation.getKey(), goalEvaluation.getValue().duplicate());
+    }
+    return duplicate;
   }
 
   /**

@@ -20,6 +20,12 @@ import java.util.Set;
 public interface Plan {
 
   /**
+   * Duplicates a plan
+   * @return the duplicate plan
+   */
+  Plan duplicate();
+
+  /**
    * adds the given activity instances to the scheduled plan solution
    *
    * the provided instances must have start times specified
@@ -55,17 +61,17 @@ public interface Plan {
   void remove(SchedulingActivityDirective act);
 
   /**
-   * fetches activities in the plan ordered by start time
-   *
-   * @return set of all activities in the plan ordered by start time
-   */
-  /**
    * replace and old activity by a new one
    * @param oldAct Old Activity
    * @param newAct New Activity
    */
   void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct);
 
+  /**
+   * fetches activities in the plan ordered by start time
+   *
+   * @return set of all activities in the plan ordered by start time
+   */
   List<SchedulingActivityDirective> getActivitiesByTime();
 
   /**

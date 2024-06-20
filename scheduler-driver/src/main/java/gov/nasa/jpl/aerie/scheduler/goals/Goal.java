@@ -18,6 +18,7 @@ import org.apache.commons.collections4.BidiMap;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 
 /**
@@ -253,6 +254,10 @@ public class Goal {
 
   }//Builder
 
+  public void extractResources(Set<String> names) {
+    temporalContext.extractResources(names);
+    if(resourceConstraints != null) resourceConstraints.extractResources(names);
+  }
 
   /**
    * fetches the human-legible identifier of the goal

@@ -10,6 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * class allowing to define dynamic expressions of timepoints, relative to time anchors
@@ -25,6 +26,7 @@ public abstract class TimeExpressionRelative {
    */
   public abstract Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval);
   public abstract Optional<TimeAnchor> getAnchor();
+  public abstract void extractResources(final Set<String> names);
 
   protected final List<Pair<TimeUtility.Operator, Duration>> operations = new ArrayList<>();
 

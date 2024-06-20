@@ -5,13 +5,17 @@ import gov.nasa.jpl.aerie.foomissionmodel.Mission;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Map;
 
 public final class SimulationUtility {
 
@@ -32,32 +36,46 @@ public final class SimulationUtility {
     return builder.build(model, registry);
   }
 
-  public static Problem buildProblemFromFoo(final PlanningHorizon planningHorizon){
+  public static Problem buildProblemFromFoo(final PlanningHorizon planningHorizon) {
+    return buildProblemFromFoo(planningHorizon, 1);
+  }
+
+  public static Problem buildProblemFromFoo(final PlanningHorizon planningHorizon, final int simulationCacheSize){
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var fooSchedulerModel = SimulationUtility.getFooSchedulerModel();
     return new Problem(
         fooMissionModel,
         planningHorizon,
-        new SimulationFacade(
-            planningHorizon,
+        new CheckpointSimulationFacade(
             fooMissionModel,
             fooSchedulerModel,
-            ()->false),
+            new InMemoryCachedEngineStore(simulationCacheSize),
+            planningHorizon,
+            new SimulationEngineConfiguration(
+                Map.of(),
+                Instant.EPOCH,
+                new MissionModelId(1)),
+            () -> false),
         fooSchedulerModel);
   }
 
   public static Problem buildProblemFromBanana(final PlanningHorizon planningHorizon){
-    final var fooMissionModel = SimulationUtility.getBananaMissionModel();
-    final var fooSchedulerModel = SimulationUtility.getBananaSchedulerModel();
+    final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
+    final var bananaSchedulerModel = SimulationUtility.getBananaSchedulerModel();
     return new Problem(
-        fooMissionModel,
+        bananaMissionModel,
         planningHorizon,
-        new SimulationFacade(
+        new CheckpointSimulationFacade(
+            bananaMissionModel,
+            bananaSchedulerModel,
+            new InMemoryCachedEngineStore(15),
             planningHorizon,
-            fooMissionModel,
-            fooSchedulerModel,
+            new SimulationEngineConfiguration(
+                Map.of(),
+                Instant.EPOCH,
+                new MissionModelId(1)),
             ()->false),
-        fooSchedulerModel);
+        bananaSchedulerModel);
   }
 
   public static SchedulerModel getFooSchedulerModel(){

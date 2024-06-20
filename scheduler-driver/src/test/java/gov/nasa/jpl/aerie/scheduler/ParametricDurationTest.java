@@ -4,7 +4,10 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
+import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -12,14 +15,15 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRe
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParametricDurationTest {
@@ -31,7 +35,13 @@ public class ParametricDurationTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochDays(3));
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
-    problem = new Problem(bananaMissionModel, planningHorizon, new SimulationFacade(planningHorizon, bananaMissionModel, SimulationUtility.getBananaSchedulerModel(), ()-> false), SimulationUtility.getBananaSchedulerModel());
+    problem = new Problem(bananaMissionModel, planningHorizon, new CheckpointSimulationFacade(
+        bananaMissionModel,
+        SimulationUtility.getBananaSchedulerModel(),
+        new InMemoryCachedEngineStore(15),
+        planningHorizon,
+        new SimulationEngineConfiguration(Map.of(), Instant.EPOCH, new MissionModelId(1)),
+        ()-> false), SimulationUtility.getBananaSchedulerModel());
   }
 
   @Test
@@ -61,7 +71,6 @@ public class ParametricDurationTest {
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("PT2M"), problem.getActivityType("DownloadBanana")));
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 
   @Test
@@ -91,6 +100,5 @@ public class ParametricDurationTest {
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT2M"), planningHorizon.fromStart("PT12M"), problem.getActivityType("DownloadBanana")));
-    assertEquals(1, problem.getSimulationFacade().countSimulationRestarts());
   }
 }

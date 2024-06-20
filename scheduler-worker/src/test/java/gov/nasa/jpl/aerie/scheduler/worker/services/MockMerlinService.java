@@ -151,7 +151,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Optional<SimulationResults> getSimulationResults(final PlanMetadata planMetadata)
+  public Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(final PlanMetadata planMetadata)
   {
     return Optional.empty();
   }

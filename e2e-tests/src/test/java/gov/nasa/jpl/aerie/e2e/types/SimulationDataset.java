@@ -10,7 +10,8 @@ public record SimulationDataset(
     boolean canceled,
     String simStartTime,
     String simEndTime,
-    List<SimulatedActivity> activities) {
+    List<SimulatedActivity> activities,
+    Integer datasetId) {
   public record SimulatedActivity(
       int spanId,
       Integer directiveId,
@@ -58,7 +59,8 @@ public record SimulationDataset(
         json.getBoolean("canceled"),
         json.getString("simulation_start_time"),
         json.getString("simulation_end_time"),
-        simActivities);
+        simActivities,
+        json.getInt("dataset_id"));
   }
 
   public enum SimulationStatus{ pending, incomplete, failed, success }
