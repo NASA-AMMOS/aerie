@@ -152,7 +152,7 @@ public final class Profiling {
     MutableResource<D> result = new MutableResource<>() {
       @Override
       public void emit(DynamicsEffect<D> effect) {
-        resource.emit(x -> accrue(effectsEmitted, getName(this, "..."), () -> effect.apply(x)));
+        resource.emit(x -> accrue(effectsEmitted, getName(this, null), () -> effect.apply(x)));
       }
 
       @Override
@@ -167,7 +167,7 @@ public final class Profiling {
   private static Supplier<String> computeName(String explicitName, Object profiledThing) {
     return explicitName != null
             ? () -> explicitName
-            : () -> getName(profiledThing, "...");
+            : () -> getName(profiledThing, null);
   }
 
   private static long ANONYMOUS_ID = 0;
