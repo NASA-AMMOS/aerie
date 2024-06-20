@@ -44,7 +44,7 @@ public class Procedure extends Goal {
 
     List<SchedulingActivityDirective> newActivities = new ArrayList<>();
 
-    final var inMemoryPlan = new SchedulerToProcedurePlanAdapter(
+    final var planAdapter = new SchedulerToProcedurePlanAdapter(
         plan,
         planHorizon
     );
@@ -54,7 +54,7 @@ public class Procedure extends Goal {
     final var editablePlan = new InMemoryEditablePlan(
         missionModel,
         nextUniqueDirectiveId,
-        inMemoryPlan,
+        planAdapter,
         simulationFacade,
         lookupActivityType::apply
     );
