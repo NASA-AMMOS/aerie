@@ -131,7 +131,7 @@ public class EquationSolvingAlgorithms {
       int i = 0;
       do {
         //we should not come back to previously visited values
-        if (!history.alreadyVisited(cur)) {
+        if (!history.alreadyVisited(cur) && cur.between(min, max)) {
           i++;
           try {
             final var value = function.valueAt(cur, history);
