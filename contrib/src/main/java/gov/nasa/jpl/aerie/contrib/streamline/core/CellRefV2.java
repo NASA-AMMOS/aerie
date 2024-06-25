@@ -40,7 +40,7 @@ public final class CellRefV2 {
         cell.initialDynamics = effect.apply(cell.dynamics).match(
             ErrorCatching::success,
                 error -> failure(new RuntimeException(
-                    "Applying effect '%s' failed.".formatted(getName(effect, "...")), error)));
+                    "Applying effect '%s' failed.".formatted(getName(effect, null)), error)));
         cell.dynamics = cell.initialDynamics;
         cell.elapsedTime = ZERO;
       }
