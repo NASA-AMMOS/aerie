@@ -363,7 +363,7 @@ public final class PolynomialResources {
    * </pre>
    * <p>
    *     NOTE: This method assumes that lowerBound <= upperBound at all times.
-   *     Failure to meet this precondition may incorrect outputs, crashing the simulation, stalling in an infinite loop,
+   *     Failure to meet this precondition may lead to incorrect outputs, crashing the simulation, stalling in an infinite loop,
    *     or other misbehavior.
    *     If this condition cannot be guaranteed a priori, consider using
    *     {@link gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources#assertThat(String, Resource)}
