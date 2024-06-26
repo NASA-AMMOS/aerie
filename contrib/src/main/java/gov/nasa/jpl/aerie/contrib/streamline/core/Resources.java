@@ -183,8 +183,7 @@ public final class Resources {
    */
   public static <D extends Dynamics<?, D>> void forward(Resource<D> source, MutableResource<D> destination) {
     wheneverDynamicsChange(source, s -> destination.emit(
-            "Forward %s dynamics: %s".formatted(getName(source).orElse("anonymous"), s),
-            $ -> s));
+            name($ -> s, "Forward %s dynamics to %s", source, destination)));
     addDependency(destination, source);
   }
 

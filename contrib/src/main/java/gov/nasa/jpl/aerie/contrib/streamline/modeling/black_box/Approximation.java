@@ -46,7 +46,7 @@ public final class Approximation {
   private static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> void updateApproximation(
       ErrorCatching<Expiring<D>> resourceDynamics, Function<Expiring<D>, Expiring<E>> approximation, MutableResource<E> result) {
     var newDynamics = resourceDynamics.map(approximation);
-    result.emit("Update approximation to " + newDynamics, $ -> newDynamics);
+    result.emit(name($ -> newDynamics, "Update approximation to %s", newDynamics));
   }
 
   /**

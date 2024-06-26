@@ -1,9 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
+import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
-import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
@@ -18,11 +16,14 @@ import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareOperations;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources;
 import gov.nasa.jpl.aerie.contrib.streamline.utils.DoubleUtils;
+import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -33,6 +34,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resourc
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bindEffect;
@@ -359,50 +361,123 @@ public final class PolynomialResources {
    *   0   /             \-----
    * time  0        10        20
    * </pre>
+   * <p>
+   *     NOTE: This method assumes that lowerBound <= upperBound at all times.
+   *     Failure to meet this precondition may lead to incorrect outputs, crashing the simulation, stalling in an infinite loop,
+   *     or other misbehavior.
+   *     If this condition cannot be guaranteed a priori, consider using
+   *     {@link gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources#assertThat(String, Resource)}
+   *     to guarantee this condition at runtime.
+   * </p>
    */
   public static ClampedIntegrateResult clampedIntegrate(
-      Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
-    LinearBoundaryConsistencySolver rateSolver = new LinearBoundaryConsistencySolver("clampedIntegrate rate solver");
-    var integral = resource(polynomial(startingValue));
-    var neverExpiringIntegral = eraseExpiry(integral);
+          Resource<Polynomial> integrand, Resource<Polynomial> lowerBound, Resource<Polynomial> upperBound, double startingValue) {
+    // There are more elegant ways to write this method, but profiling suggests this is often a bottleneck to models that use it.
+    // So, we're writing it very carefully to maximize performance.
 
-    // Solve for the rate as a function of value
-    var overflowRate = rateSolver.variable("overflowRate", Domain::lowerBound);
-    var underflowRate = rateSolver.variable("underflowRate", Domain::lowerBound);
-    var rate = rateSolver.variable("rate", Domain::upperBound);
+    MutableResource<Polynomial> integral = polynomialResource(startingValue);
+    MutableResource<Polynomial> overflow = polynomialResource(0);
+    MutableResource<Polynomial> underflow = polynomialResource(0);
 
-    // Set up slack variables for under-/overflow
-    rateSolver.declare(lx(overflowRate), GreaterThanOrEquals, lx(0));
-    rateSolver.declare(lx(underflowRate), GreaterThanOrEquals, lx(0));
-    rateSolver.declare(lx(rate).subtract(lx(underflowRate)).add(lx(overflowRate)), Equals, lx(integrand));
+    MutableObject<Condition> condition = new MutableObject<>(Condition.TRUE); // Run once immediately to get the loop started.
+    Reactions.whenever(condition::getValue, () -> {
+      // Note we need to call dynamicsChange on each iteration because it depends on the resource's current value,
+      // so *don't* factor these out of the loop.
+      Condition someInputChanges = dynamicsChange(integrand)
+              .or(dynamicsChange(lowerBound))
+              .or(dynamicsChange(upperBound));
 
-    // Set up rate clamping conditions
-    var integrandUB = choose(
-        greaterThanOrEquals(neverExpiringIntegral, upperBound),
-        differentiate(upperBound),
-        constant(Double.POSITIVE_INFINITY));
-    var integrandLB = choose(
-        lessThanOrEquals(neverExpiringIntegral, lowerBound),
-        differentiate(lowerBound),
-        constant(Double.NEGATIVE_INFINITY));
+      // Get all dynamics once per update loop to minimize sampling cost.
+      ErrorCatching<Expiring<ClampedIntegrateInternalResult>> result = DynamicsMonad.map(
+              integrand.getDynamics(),
+              lowerBound.getDynamics(),
+              upperBound.getDynamics(),
+              (integrandDynamics$, lowerBoundDynamics$, upperBoundDynamics$) -> {
+                // Clamp the integral value to take care of small overshoots due to the discretization of time
+                // and discrete changes in bounds that cut into the integral.
+                // Also, just get the current value, don't try to derive a value.
+                // This intentionally erases expiry info from the integral since this is a resource-graph back-edge,
+                // and will throw and blow up this resource if integral fails.
+                var integralValue = Double.max(
+                        Double.min(currentValue(integral), upperBoundDynamics$.extract()),
+                        lowerBoundDynamics$.extract());
+                var integralDynamics$ = integrandDynamics$.integral(integralValue);
 
-    rateSolver.declare(lx(rate), LessThanOrEquals, lx(integrandUB));
-    rateSolver.declare(lx(rate), GreaterThanOrEquals, lx(integrandLB));
+                if (lowerBoundDynamics$.dominates$(integralDynamics$)) {
+                  // Lower bound dominates "real" integral, so we clamp to the lower bound
+                  // We stop clamping to the lower bound when the integrand rate exceeds the lowerBound rate.
+                  // Since we already know that lowerBound dominates integral and integral value is at least lower value,
+                  // we know that lower rate dominates integrand. Hence, there's no need to check that value here.
+                  var lowerRate = lowerBoundDynamics$.derivative();
+                  var clampingStops = fixedTimeCondition(lowerRate.dominates(integrandDynamics$).expiry().value());
+                  // We change out of this condition when we stop clamping to the lower bound, or something changes.
+                  return new ClampedIntegrateInternalResult(
+                          lowerBoundDynamics$,
+                          polynomial(0),
+                          lowerRate.subtract(integrandDynamics$),
+                          clampingStops.or(someInputChanges));
+                }
 
-    // Use a simple feedback loop on volumes to do the integration and clamping.
-    // Clamping here takes care of discrete under-/overflows and overshooting bounds due to discrete time steps.
-    var clampedCell = clamp(neverExpiringIntegral, lowerBound, upperBound);
-    var correctedCell = map(clampedCell, rate.resource(), (v, r) -> r.integral(v.extract()));
-    // Use the corrected integral values to set volumes, but erase expiry information in the process to avoid loops
-    forward(correctedCell, integral);
+                if (!upperBoundDynamics$.dominates$(integralDynamics$)) {
+                  // Upper bound doesn't dominate integral, so we clamp to the upper bound
+                  // We stop clamping to the upper bound when the integrand rate falls below the upperBound rate.
+                  // Since we already know that lowerBound dominates integral and integral value is at least lower value,
+                  // we know that lower rate dominates integrand. Hence, there's no need to check that value here.
+                  var upperRate = upperBoundDynamics$.derivative();
+                  var clampingStops = fixedTimeCondition(upperRate.dominates(integrandDynamics$).expiry().value());
+                  // We change out of this condition when we stop clamping to the upper bound, or something changes.
+                  return new ClampedIntegrateInternalResult(
+                          upperBoundDynamics$,
+                          integrandDynamics$.subtract(upperRate),
+                          polynomial(0),
+                          clampingStops.or(someInputChanges));
+                }
 
-    name(integral, "Clamped Integral (%s)", integrand);
-    name(overflowRate.resource(), "Overflow of %s", integral);
-    name(underflowRate.resource(), "Underflow of %s", integral);
-    return new ClampedIntegrateResult(
-        integral,
-        overflowRate.resource(),
-        underflowRate.resource());
+                // Otherwise, the integral is between the bounds, so we just set it as-is.
+                // We start clamping when one or the other bound impacts this integral, i.e., when a dominates value changes.
+                // Although we re-compute the value of dominates$ here, that's cheap.
+                // We avoid computing the more expensive expiry when we're clamping, which is a win overall.
+                var startClampingToLowerBound = lowerBoundDynamics$.dominates(integralDynamics$).expiry();
+                var startClampingToUpperBound = upperBoundDynamics$.dominates(integralDynamics$).expiry();
+                var clampingStarts = fixedTimeCondition(startClampingToLowerBound.or(startClampingToUpperBound).value());
+                return new ClampedIntegrateInternalResult(
+                        integralDynamics$,
+                        polynomial(0),
+                        polynomial(0),
+                        clampingStarts.or(someInputChanges)
+                );
+              });
+
+      var newIntegralDynamics = DynamicsMonad.map(result, ClampedIntegrateInternalResult::integral);
+      var newOverflowDynamics = DynamicsMonad.map(result, ClampedIntegrateInternalResult::overflow);
+      var newUnderflowDynamics = DynamicsMonad.map(result, ClampedIntegrateInternalResult::underflow);
+      // If there was an error, that disturbs the integral value, and we can't recover. Don't bother retrying in that case.
+      var newRetryCondition = result.match($ -> $.data().retryCondition(), $ -> Condition.FALSE);
+
+      integral.emit("Update clamped integral", $ -> newIntegralDynamics);
+      overflow.emit("Update clamped integral overflow", $ -> newOverflowDynamics);
+      underflow.emit("Update clamped integral underflow", $ -> newUnderflowDynamics);
+      condition.setValue(newRetryCondition);
+    });
+
+    return new ClampedIntegrateResult(integral, overflow, underflow);
+  }
+
+  private static Condition fixedTimeCondition(Optional<Duration> time) {
+    return time.<Condition>map(time$ -> (positive, atEarliest, atLatest) -> {
+      if (positive) {
+        return time.filter(atLatest::noShorterThan).map(t -> Duration.max(atEarliest, t));
+      } else {
+        return Optional.of(atEarliest).filter(time$::longerThan);
+      }
+    }).orElse(Condition.FALSE);
+  }
+
+  private record ClampedIntegrateInternalResult(
+          Polynomial integral,
+          Polynomial overflow,
+          Polynomial underflow,
+          Condition retryCondition) {
   }
 
   /**

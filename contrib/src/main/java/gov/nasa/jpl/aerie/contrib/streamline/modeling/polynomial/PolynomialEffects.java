@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.replaying;
@@ -22,9 +23,8 @@ public final class PolynomialEffects {
    * Consume some amount of a resource instantaneously.
    */
   public static void consume(MutableResource<Polynomial> resource, double amount) {
-    resource.emit(
-        "Consume %.1e discretely".formatted(amount),
-        effect($ -> $.subtract(polynomial(amount))));
+    resource.emit(name(effect($ -> $.subtract(polynomial(amount))),
+            "Consume %s discretely", amount));
   }
 
   /**
@@ -66,9 +66,8 @@ public final class PolynomialEffects {
    * Consume some amount of a resource instantaneously.
    */
   public static void restore(MutableResource<Polynomial> resource, double amount) {
-    resource.emit(
-        "Restore %.1e discretely".formatted(amount),
-        effect($ -> $.add(polynomial(amount))));
+    resource.emit(name(effect($ -> $.add(polynomial(amount))),
+            "Restore %s discretely", amount));
   }
 
   /**
@@ -93,7 +92,8 @@ public final class PolynomialEffects {
   }
 
   private static void withConsumableEffects(String verb, MutableResource<Polynomial> resource, Polynomial profile, Runnable action) {
-    resource.emit("Start %s according to profile %s".formatted(verb, profile), effect($ -> $.subtract(profile)));
+    resource.emit(name(effect($ -> $.subtract(profile)),
+            "Start %s according to profile %s", verb, profile));
     final Duration start = Resources.currentTime();
     action.run();
     final Duration elapsedTime = Resources.currentTime().minus(start);
@@ -101,7 +101,8 @@ public final class PolynomialEffects {
     // but with an initial value of 0
     final Polynomial steppedProfile = profile.step(elapsedTime);
     final Polynomial counteractingProfile = steppedProfile.subtract(polynomial(steppedProfile.extract()));
-    resource.emit("End %s according to profile %s".formatted(verb, profile), effect($ -> $.add(counteractingProfile)));
+    resource.emit(name(effect($ -> $.add(counteractingProfile)),
+            "End %s according to profile %s", verb, profile));
   }
 
   // Non-consumable style operations
@@ -155,13 +156,15 @@ public final class PolynomialEffects {
   }
 
   private static void withNonConsumableEffect(String verb, MutableResource<Polynomial> resource, Polynomial profile, Runnable action) {
-    resource.emit("Start %s profile %s".formatted(verb, profile), effect($ -> $.subtract(profile)));
+    resource.emit(name(effect($ -> $.subtract(profile)),
+            "Start %s profile %s", verb, profile));
     final Duration start = Resources.currentTime();
     action.run();
     final Duration elapsedTime = Resources.currentTime().minus(start);
     // Reset by adding a counteracting profile
     final Polynomial counteractingProfile = profile.step(elapsedTime);
-    resource.emit("Finish %s profile %s".formatted(verb, profile), effect($ -> $.add(counteractingProfile)));
+    resource.emit(name(effect($ -> $.add(counteractingProfile)),
+            "Finish %s profile %s", verb, profile));
   }
 
   // Consumable style operations

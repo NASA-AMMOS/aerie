@@ -22,8 +22,7 @@ import static java.util.stream.Collectors.joining;
 public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
   void emit(DynamicsEffect<D> effect);
   default void emit(String effectName, DynamicsEffect<D> effect) {
-    name(effect, effectName);
-    emit(effect);
+    emit(name(effect, effectName));
   }
 
   static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial) {
@@ -47,20 +46,17 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
 
       @Override
       public void emit(final DynamicsEffect<D> effect) {
-        augmentEffectName(effect);
-        cell.emit(effect);
+        // NOTE: The strange pattern of naming effect::apply is to create a new object, identical in behavior to effect,
+        //   which we can assign a more informative name without actually getting the name of effect.
+        // Replacing effect::apply with effect would create a self-loop in the naming graph on effect, which isn't allowed.
+        // Using Naming.getName to get effect's current name and use that when elaborating is correct but potentially slow,
+        //   depending on how deep the naming graph is.
+        cell.emit(name(effect::apply, "%s on %s" + Context.get().stream().map(c -> " during " + c).collect(joining()), effect, this));
       }
 
       @Override
       public ErrorCatching<Expiring<D>> getDynamics() {
         return cell.get().dynamics;
-      }
-
-      private void augmentEffectName(DynamicsEffect<D> effect) {
-        String effectName = getName(effect).orElse("anonymous effect");
-        String resourceName = getName(this).orElse("anonymous resource");
-        String augmentedName = effectName + " on " + resourceName + Context.get().stream().map(c -> " during " + c).collect(joining());
-        name(effect, augmentedName);
       }
     };
     if (MutableResourceFlags.DETECT_BUSY_CELLS) {
@@ -73,11 +69,11 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
   }
 
   static <D extends Dynamics<?, D>> void set(MutableResource<D> resource, D newDynamics) {
-    resource.emit("Set " + newDynamics, DynamicsMonad.effect(x -> newDynamics));
+    resource.emit(name(DynamicsMonad.effect(x -> newDynamics), "Set %s", newDynamics));
   }
 
   static <D extends Dynamics<?, D>> void set(MutableResource<D> resource, Expiring<D> newDynamics) {
-    resource.emit("Set " + newDynamics, ErrorCatchingMonad.<Expiring<D>, Expiring<D>>map($ -> newDynamics)::apply);
+    resource.emit(name(ErrorCatchingMonad.<Expiring<D>, Expiring<D>>map($ -> newDynamics)::apply, "Set %s", newDynamics));
   }
 
   /**
