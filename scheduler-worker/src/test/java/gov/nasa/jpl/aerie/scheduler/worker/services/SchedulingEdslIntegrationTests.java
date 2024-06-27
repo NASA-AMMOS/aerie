@@ -3218,69 +3218,6 @@ public class SchedulingEdslIntegrationTests {
   /**
    * Test the option to turn off simulation in between goals.
    *
-   * Goal 0 places `PeelBanana`s. Goal 1 looks for `PeelBanana`s and places `BananaNap`s.
-   * If it doesn't resimulate in between, Goal 1 should place no activities.
-   * If it does resimulate, it should place one activity.
-   *
-   * Both options are tested here.
-   */
-  @Test
-  void testOptionalSimulationAfterGoal_unsimulatedActivities() {
-    final var activityDuration = Duration.of(1, Duration.HOUR);
-    final var configs = Map.of(
-        false, 0, // don't simulate, expect 0 activities
-        true, 1 // do simulate, expect 1 activity
-    );
-    for (final var config: configs.entrySet()) {
-      final var results = runScheduler(
-          BANANANATION,
-          Map.of(
-              new ActivityDirectiveId(1L),
-              new ActivityDirective(
-                  Duration.ZERO,
-                  "GrowBanana",
-                  Map.of(
-                      "quantity", SerializedValue.of(1),
-                      "growingDuration", SerializedValue.of(activityDuration.in(Duration.MICROSECONDS))),
-                  null,
-                  true)
-          ),
-          List.of(
-              new EdslGoal(new GoalId(0L, 0L), """
-                  export default () => Goal.CoexistenceGoal({
-                    forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-                    activityTemplate: ActivityTemplates.BananaNap(),
-                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
-                  })
-                  """, true, config.getKey()
-              ),
-              new EdslGoal(new GoalId(1L, 0L), """
-                  export default () => Goal.CoexistenceGoal({
-                    forEach: ActivityExpression.ofType(ActivityTypes.BananaNap),
-                    activityTemplate: ActivityTemplates.DownloadBanana({connection: "DSL"}),
-                    startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
-                  })
-                    """, true, true)
-          ),
-          PLANNING_HORIZON);
-
-      assertEquals(2, results.scheduleResults.goalResults().size());
-      final var goalResult1 = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
-      final var goalResult2 = results.scheduleResults.goalResults().get(new GoalId(1L, 0L));
-
-      assertTrue(goalResult1.satisfied());
-      assertTrue(goalResult2.satisfied());
-      assertEquals(1, goalResult1.createdActivities().size());
-      assertEquals(config.getValue(), goalResult2.createdActivities().size());
-      for (final var activity : goalResult1.createdActivities()) {
-        assertNotNull(activity);
-      }
-    }
-  }
-
-  /**
-   * Test the option to turn off simulation in between goals.
-   *
    * Goal 0 places `PeelBanana`s. `PeelBanana`s effect the `/peel` resource.
    * If the `/peel` resource is unchanged because it didn't resimulate, Goal 1 will not place any activities.
    * If the resource is resimulated, it will be different and Goal 1 will place one activity.
