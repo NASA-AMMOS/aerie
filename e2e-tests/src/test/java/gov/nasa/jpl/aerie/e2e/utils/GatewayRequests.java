@@ -16,12 +16,38 @@ import java.nio.file.Path;
 
 public class GatewayRequests implements AutoCloseable {
   private final APIRequestContext request;
+  private static String token;
 
-  public GatewayRequests(Playwright playwright) {
+  public GatewayRequests(Playwright playwright) throws IOException {
     request = playwright.request().newContext(
             new APIRequest.NewContextOptions()
                     .setBaseURL(BaseURL.GATEWAY.url));
+    login();
   }
+
+  private void login() throws IOException {
+    if(token != null) return;
+    final var response = request.post("/auth/login", RequestOptions.create()
+                                                                   .setHeader("Content-Type", "application/json")
+                                                                   .setData(Json.createObjectBuilder()
+                                                                                .add("username", "AerieE2eTests")
+                                                                                .add("password", "password")
+                                                                                .build()
+                                                                                .toString()));
+    // Process Response
+    if(!response.ok()){
+      throw new IOException(response.statusText());
+    }
+    try(final var reader = Json.createReader(new StringReader(response.text()))){
+      final JsonObject bodyJson = reader.readObject();
+      if(!bodyJson.getBoolean("success")){
+        System.err.println("Login failed");
+        throw new RuntimeException(bodyJson.toString());
+      }
+      token = bodyJson.getString("token");
+    }
+  }
+
   @Override
   public void close() {
     request.dispose();
@@ -54,7 +80,9 @@ public class GatewayRequests implements AutoCloseable {
         "application/java-archive",
         buffer);
 
-    final var response = request.post("/file", RequestOptions.create().setMultipart(FormData.create().set("file", payload)));
+    final var response = request.post("/file", RequestOptions.create()
+                                                             .setHeader("Authorization", "Bearer "+token)
+                                                             .setMultipart(FormData.create().set("file", payload)));
 
     // Process Response
     if(!response.ok()){
@@ -69,5 +97,4 @@ public class GatewayRequests implements AutoCloseable {
       return bodyJson.getInt("id");
     }
   }
-
 }
