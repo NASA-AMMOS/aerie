@@ -21,6 +21,7 @@ import java.util.Map;
 import static gov.nasa.jpl.aerie.e2e.types.ValueSchema.*;
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -377,14 +378,17 @@ public class MissionModelTests {
     // Check Activity Type Refresh Event Logs
     final var activityTypeRefreshLogs = modelLogs.refreshActivityTypesLogs();
     assertEquals(1, activityTypeRefreshLogs.size());
-    final var activityTypeLog = activityTypeRefreshLogs.get(0);
+    final var activityTypeLog = activityTypeRefreshLogs.getFirst();
 
     assertEquals("Aerie Legacy", activityTypeLog.triggeringUser());
 
+    assertFalse(activityTypeLog.pending());
     assertTrue(activityTypeLog.delivered());
     assertTrue(activityTypeLog.success());
     assertEquals(1, activityTypeLog.tries());
-    assertEquals(200, activityTypeLog.status());
+
+    assertTrue(activityTypeLog.status().isPresent());
+    assertEquals(200, activityTypeLog.status().get());
 
     assertTrue(activityTypeLog.error().isEmpty());
     assertTrue(activityTypeLog.errorMessage().isEmpty());
@@ -393,14 +397,17 @@ public class MissionModelTests {
     // Check Model Parameter Refresh Event Logs
     final var modelParamRefreshLogs = modelLogs.refreshModelParamsLogs();
     assertEquals(1, modelParamRefreshLogs.size());
-    final var modelParamLog = modelParamRefreshLogs.get(0);
+    final var modelParamLog = modelParamRefreshLogs.getFirst();
 
     assertEquals("Aerie Legacy", modelParamLog.triggeringUser());
 
+    assertFalse(modelParamLog.pending());
     assertTrue(modelParamLog.delivered());
     assertTrue(modelParamLog.success());
     assertEquals(1, modelParamLog.tries());
-    assertEquals(200, modelParamLog.status());
+
+    assertTrue(modelParamLog.status().isPresent());
+    assertEquals(200, modelParamLog.status().get());
 
     assertTrue(modelParamLog.error().isEmpty());
     assertTrue(modelParamLog.errorMessage().isEmpty());
@@ -409,14 +416,17 @@ public class MissionModelTests {
     // Check Resource Type Refresh Event Logs
     final var resourceTypeRefreshLogs = modelLogs.refreshResourceTypesLogs();
     assertEquals(1, resourceTypeRefreshLogs.size());
-    final var resourceTypeLog = resourceTypeRefreshLogs.get(0);
+    final var resourceTypeLog = resourceTypeRefreshLogs.getFirst();
 
     assertEquals("Aerie Legacy", resourceTypeLog.triggeringUser());
 
+    assertFalse(resourceTypeLog.pending());
     assertTrue(resourceTypeLog.delivered());
     assertTrue(resourceTypeLog.success());
     assertEquals(1, resourceTypeLog.tries());
-    assertEquals(200, resourceTypeLog.status());
+
+    assertTrue(resourceTypeLog.status().isPresent());
+    assertEquals(200, resourceTypeLog.status().get());
 
     assertTrue(resourceTypeLog.error().isEmpty());
     assertTrue(resourceTypeLog.errorMessage().isEmpty());

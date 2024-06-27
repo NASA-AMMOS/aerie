@@ -14,17 +14,20 @@ public record ModelEventLogs(
 ) {
   public record EventLog(
     String triggeringUser,
+    boolean pending,
     boolean delivered,
     boolean success,
     int tries,
     String createdAt,
-    int status,
+    Optional<Integer> status,
     Optional<JsonObject> error,
     Optional<String> errorMessage,
     Optional<String> errorType
   )
   {
     public static EventLog fromJSON(JsonObject json) {
+      final Optional<Integer> status = json.isNull("status") ?
+          Optional.empty() : Optional.of(json.getInt("status"));
       final Optional<JsonObject> error = json.isNull("error") ?
           Optional.empty() : Optional.of(json.getJsonObject("error"));
       final Optional<String> errorMsg = json.isNull("error_message") ?
@@ -34,11 +37,12 @@ public record ModelEventLogs(
 
       return new EventLog(
           json.getString("triggering_user"),
+          json.getBoolean("pending"),
           json.getBoolean("delivered"),
           json.getBoolean("success"),
           json.getInt("tries"),
           json.getString("created_at"),
-          json.getInt("status"),
+          status,
           error,
           errorMsg,
           errorType);

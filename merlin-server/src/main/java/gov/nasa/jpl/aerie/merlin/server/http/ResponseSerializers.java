@@ -538,6 +538,7 @@ public final class ResponseSerializers {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())
+               .add("type", "Mission Model Load Failure")
                .build();
   }
 

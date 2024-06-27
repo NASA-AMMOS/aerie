@@ -119,18 +119,12 @@ delete_permissions:
 
 event_triggers:
   - definition:
-      enable_manual: false
+      enable_manual: true
       insert:
         columns: "*"
       update:
         columns:
-          - id
-          - revision
           - jar_id
-          - mission
-          - name
-          - version
-          - owner
     name: refreshActivityTypes
     retry_conf:
       interval_sec: 10
@@ -138,18 +132,12 @@ event_triggers:
       timeout_sec: 300
     webhook: "{{AERIE_MERLIN_URL}}/refreshActivityTypes"
   - definition:
-      enable_manual: false
+      enable_manual: true
       insert:
         columns: "*"
       update:
         columns:
-          - id
-          - revision
-          - jar_id
-          - mission
-          - name
-          - version
-          - owner
+        - jar_id
     name: refreshModelParameters
     retry_conf:
       interval_sec: 10
@@ -157,7 +145,7 @@ event_triggers:
       timeout_sec: 300
     webhook: "{{AERIE_MERLIN_URL}}/refreshModelParameters"
   - definition:
-      enable_manual: false
+      enable_manual: true
       insert:
         columns: "*"
       update:
