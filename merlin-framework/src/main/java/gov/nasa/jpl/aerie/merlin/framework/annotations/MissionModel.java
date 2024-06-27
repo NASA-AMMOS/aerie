@@ -39,6 +39,12 @@ public @interface MissionModel {
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
+  @interface WithCompound {
+    Class<?> value();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
   @Repeatable(AllMappers.class)
   @interface WithMappers {
     Class<?> value();
