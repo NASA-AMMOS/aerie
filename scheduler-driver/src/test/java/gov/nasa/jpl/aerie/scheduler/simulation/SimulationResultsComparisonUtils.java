@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -156,7 +156,7 @@ public class SimulationResultsComparisonUtils {
   // Representation of simulated activities as trees of activities
   public record TreeSimulatedActivity(StrippedSimulatedActivity activity,
                                       Set<TreeSimulatedActivity> children){
-    public static TreeSimulatedActivity fromSimulatedActivity(SimulatedActivity simulatedActivity, SimulationResults simulationResults){
+    public static TreeSimulatedActivity fromSimulatedActivity(ActivityInstance simulatedActivity, SimulationResults simulationResults){
       final var stripped = StrippedSimulatedActivity.fromSimulatedActivity(simulatedActivity);
       final HashSet<TreeSimulatedActivity> children = new HashSet<>();
       for(final var childId: simulatedActivity.childIds()) {
@@ -167,7 +167,7 @@ public class SimulationResultsComparisonUtils {
     }
   }
 
-  //Representation of SimulatedActivity stripped of parent/child/directive id information
+  //Representation of ActivityInstance stripped of parent/child/directive id information
   //used for comparison purposes
   public record StrippedSimulatedActivity(
       String type,
@@ -176,7 +176,7 @@ public class SimulationResultsComparisonUtils {
       Duration duration,
       SerializedValue computedAttributes
   ){
-    public static StrippedSimulatedActivity fromSimulatedActivity(SimulatedActivity simulatedActivity){
+    public static StrippedSimulatedActivity fromSimulatedActivity(ActivityInstance simulatedActivity){
       return new StrippedSimulatedActivity(
           simulatedActivity.type(),
           simulatedActivity.arguments(),

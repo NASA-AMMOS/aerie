@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -36,7 +38,8 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by start time
    */
-  private final TreeMap<Duration, List<SchedulingActivityDirective>> actsByTime;
+  private final TreeMap<Duration, List<SchedulingActivity>> actsByTime;
+  private List<TaskNetTemplateData> decompositions;
 
   /**
    * ctor creates a new empty solution plan
@@ -44,6 +47,7 @@ public class PlanInMemory implements Plan {
    */
   public PlanInMemory() {
     this.actsByTime = new TreeMap<>();
+    this.decompositions = new ArrayList<>();
   }
 
   public PlanInMemory(final PlanInMemory other){
@@ -52,10 +56,12 @@ public class PlanInMemory implements Plan {
     for(final var entry: other.actsByTime.entrySet()){
       this.actsByTime.put(entry.getKey(), new ArrayList<>(entry.getValue()));
     }
+    this.decompositions = new ArrayList<>();
+    Collections.copy(this.decompositions,other.decompositions);
   }
 
   @Override
-  public Plan duplicate() {
+  public PlanInMemory duplicate() {
     return new PlanInMemory(this);
   }
 
@@ -63,7 +69,7 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public void add(Collection<SchedulingActivityDirective> acts) {
+  public void add(Collection<SchedulingActivity> acts) {
     for (final var act : acts) {
       add(act);
     }
@@ -81,7 +87,7 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public void add(final SchedulingActivityDirective act) {
+  public void add(final SchedulingActivity act) {
     if (act == null) {
       throw new IllegalArgumentException(
           "adding null activity to plan");
@@ -98,25 +104,43 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public void remove(Collection<SchedulingActivityDirective> acts) {
+  public void addTaskNetTemplateData(final TaskNetTemplateData tn){
+    if (tn == null) {
+      throw new IllegalArgumentException(
+          "adding null tasknet to plan");
+    }
+    if (tn.subtasks() == null) {
+      throw new IllegalArgumentException(
+          "adding template with null list of substasks");
+    }
+    this.decompositions.add(tn);
+    //TODO need to add code in scheduler to instantiate activities
+  }
+
+  @Override
+  public void remove(Collection<SchedulingActivity> acts) {
     for (var act : acts) {
       remove(act);
     }
   }
 
   @Override
-  public void remove(SchedulingActivityDirective act) {
+  public void remove(SchedulingActivity act) {
     var acts = actsByTime.get(act.startOffset());
     if (acts != null) acts.remove(act);
   }
 
+  @Override
+  public void removeTaskNetTemplate(final TaskNetTemplate tn){
+    this.decompositions.remove(tn);
+  }
   /**
    * {@inheritDoc}
    */
   @Override
-  public List<SchedulingActivityDirective> getActivitiesByTime() {
+  public List<SchedulingActivity> getActivitiesByTime() {
     //REVIEW: could probably do something tricky with streams to avoid new
-    final var orderedActs = new LinkedList<SchedulingActivityDirective>();
+    final var orderedActs = new LinkedList<SchedulingActivity>();
 
     //NB: tree map ensures that values are in key order, but still need to flatten
     for (final var actsAtT : actsByTime.values()) {
@@ -127,7 +151,7 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableList(orderedActs);
   }
 
-  public void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct){
+  public void replaceActivity(SchedulingActivity oldAct, SchedulingActivity newAct){
     this.remove(oldAct);
     this.add(newAct);
     if(evaluation != null) this.evaluation.updateGoalEvals(oldAct, newAct);
@@ -137,8 +161,8 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Map<ActivityType, List<SchedulingActivityDirective>> getActivitiesByType() {
-    final var map = new HashMap<ActivityType, List<SchedulingActivityDirective>>();
+  public Map<ActivityType, List<SchedulingActivity>> getActivitiesByType() {
+    final var map = new HashMap<ActivityType, List<SchedulingActivity>>();
     for(final var entry: this.actsByTime.entrySet()){
       for(final var activity : entry.getValue()){
         map.computeIfAbsent(activity.type(), t -> new ArrayList<>()).add(activity);
@@ -148,8 +172,8 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
-    final var map = new HashMap<SchedulingActivityDirectiveId, SchedulingActivityDirective>();
+  public Map<SchedulingActivityDirectiveId, SchedulingActivity> getActivitiesById() {
+    final var map = new HashMap<SchedulingActivityDirectiveId, SchedulingActivity>();
     for(final var entry: this.actsByTime.entrySet()){
       for(final var activity : entry.getValue()){
         map.put(activity.id(), activity);
@@ -161,7 +185,7 @@ public class PlanInMemory implements Plan {
 @Override
   public Set<SchedulingActivityDirectiveId> getAnchorIds() {
     return getActivities().stream()
-                  .map(SchedulingActivityDirective::anchorId)
+                  .map(SchedulingActivity::anchorId)
                   .collect(Collectors.toSet());
   }
 
@@ -169,25 +193,29 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Set<SchedulingActivityDirective> getActivities() {
-    final var set = new HashSet<SchedulingActivityDirective>();
+  public Set<SchedulingActivity> getActivities() {
+    final var set = new HashSet<SchedulingActivity>();
     for(final var entry: this.actsByTime.entrySet()){
       set.addAll(entry.getValue());
     }
     return Collections.unmodifiableSet(set);
   }
 
+  public List<TaskNetTemplateData> getDecompositions() {
+    return decompositions;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
-  public Collection<SchedulingActivityDirective> find(
+  public Collection<SchedulingActivity> find(
       ActivityExpression template, SimulationResults simulationResults,
       EvaluationEnvironment evaluationEnvironment)
   {
     //REVIEW: could do something clever with returning streams to prevent wasted work
     //REVIEW: something more clever for time-based queries using time index
-    LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
+    LinkedList<SchedulingActivity> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
         if (template.matches(act, simulationResults, evaluationEnvironment, true, this)) {
@@ -199,27 +227,33 @@ public class PlanInMemory implements Plan {
   }
 
   /**
-   * {@inheritDoc}
+   * adds a new evaluation to the plan
+   *
+   * note that different solvers or metrics will have different evaluations
+   * for the same plan
+   *
+   * @param eval IN the new evaluation to add to the plan
    */
-  @Override
+
   public void addEvaluation(Evaluation eval) {
     evaluation = eval;
   }
 
   /**
-   * {@inheritDoc}
+   * fetches evaluation posted to the plan
+   *
+   * @return evaluation posted to the plan
    */
-  @Override
   public Evaluation getEvaluation() {
     return evaluation;
   }
 
   @Override
-  public Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivityDirective act){
+  public Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivity act){
     if(act == null)
       return null;
     if(act.anchorId() != null){
-      SchedulingActivityDirective parent = this.getActivitiesById().get(act.anchorId());
+      SchedulingActivity parent = this.getActivitiesById().get(act.anchorId());
       if(!act.anchoredToStart() && parent.duration() == null)
         throw new IllegalArgumentException("Cannot calculate the absolute duration for an activity that is not anchored to the start while the parent doesn't have duration");
       return calculateAbsoluteStartOffsetAnchoredActivity(parent).plus(act.anchoredToStart() ? act.startOffset() : act.startOffset().plus(parent.duration()));

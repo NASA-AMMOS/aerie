@@ -15,7 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.scheduler.PrioritySolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

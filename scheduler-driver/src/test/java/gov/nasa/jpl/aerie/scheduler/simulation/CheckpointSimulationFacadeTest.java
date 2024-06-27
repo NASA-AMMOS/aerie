@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,9 +33,9 @@ public class CheckpointSimulationFacadeTest {
   private static PlanInMemory makePlanA012(Map<String, ActivityType> activityTypeMap) {
     final var plan = new PlanInMemory();
     final var actTypeA = activityTypeMap.get("BasicActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, null, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, null, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, null, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t0, null, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t1hr, null, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t2hr, null, null, true));
     return plan;
   }
   @BeforeEach
@@ -101,7 +101,7 @@ public class CheckpointSimulationFacadeTest {
   {
     final var plan = new PlanInMemory();
     final var actTypeA = activityTypes.get("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, HOUR.times(200), null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t0, HOUR.times(200), null, true));
     final var results = newSimulationFacade.simulateNoResultsAllActivities(plan).computeResults();
     assertEquals(H.getEndAerie(), newSimulationFacade.totalSimulationTime());
     assert(results.unfinishedActivities.size() == 1);

@@ -26,9 +26,9 @@ public record ValueAt<P extends Profile<P>>(
       final Interval bounds,
       final EvaluationEnvironment environment)
   {
-    final var res = this.profile.evaluate(results, bounds, environment);
-    final var time = timepoint.evaluate(results, bounds, environment);
+    final var time = timepoint.evaluate(results, Interval.FOREVER, environment);
     final var timepoint = time.iterator().next().interval().start;
+    final var res = this.profile.evaluate(results, Interval.at(timepoint), environment);
     //REVIEW: SHOULD ASSERT A BUNCH OF THINGS HERE SO IT IS NOT WRONGLY USED
     final var value = res.valueAt(timepoint);
     if(value.isEmpty()){

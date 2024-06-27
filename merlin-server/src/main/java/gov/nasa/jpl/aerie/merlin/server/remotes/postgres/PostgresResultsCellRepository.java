@@ -1,12 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.*;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -309,7 +304,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Pair<Map<SimulatedActivityId, SimulatedActivity>, Map<SimulatedActivityId, UnfinishedActivity>> getActivities(
+  private static Pair<Map<SimulatedActivityId, ActivityInstance>, Map<SimulatedActivityId, UnfinishedActivity>> getActivities(
       final Connection connection,
       final long datasetId,
       final Timestamp startTime
@@ -319,7 +314,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var activityRecords = getActivitiesAction.get(datasetId, startTime);
 
       // Remap all activity IDs to reflect lifted directive IDs
-      final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+      final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>();
       final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
       for (final var entry : activityRecords.entrySet()) {
         final var pgId = entry.getKey();
@@ -328,7 +323,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
         // Only records with duration and computed attributes represent simulated activities
         if (record.duration().isPresent() && record.attributes().computedAttributes().isPresent()) {
-          simulatedActivities.put(activityInstanceId, new SimulatedActivity(
+          simulatedActivities.put(activityInstanceId, new ActivityInstance(
               record.type(),
               record.attributes().arguments(),
               record.start(),
@@ -401,7 +396,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postActivities(
       final Connection connection,
       final long datasetId,
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
+      final Map<SimulatedActivityId, ActivityInstance> simulatedActivities,
       final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
@@ -432,7 +427,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static SpanRecord simulatedActivityToRecord(final SimulatedActivity activity) {
+  private static SpanRecord simulatedActivityToRecord(final ActivityInstance activity) {
     return new SpanRecord(
         activity.type(),
         activity.start(),
@@ -652,7 +647,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+    public Map<SimulatedActivityId, ActivityInstance> getSimulatedActivities() {
       try (final var connection = this.dataSource.getConnection()) {
         final var activities = getActivities(
             connection,

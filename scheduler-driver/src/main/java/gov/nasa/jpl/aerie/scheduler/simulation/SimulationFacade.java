@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
 
@@ -32,7 +32,7 @@ public interface SimulationFacade {
 
   SimulationResultsComputerInputs simulateNoResultsUntilEndAct(
       Plan plan,
-      SchedulingActivityDirective activity) throws SimulationException, SchedulingInterruptedException;
+      SchedulingActivity activity) throws SimulationException, SchedulingInterruptedException;
 
   AugmentedSimulationResultsComputerInputs simulateNoResults(
       Plan plan,

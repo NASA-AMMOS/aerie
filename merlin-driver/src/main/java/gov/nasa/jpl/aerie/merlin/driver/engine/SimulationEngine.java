@@ -1,12 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
@@ -528,7 +524,7 @@ public final class SimulationEngine implements AutoCloseable {
   public record SimulationActivityExtract(
       Instant startTime,
       Duration duration,
-      Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
+      Map<SimulatedActivityId, ActivityInstance> simulatedActivities,
       Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities){}
 
   private static SpanInfo computeTaskInfo(
@@ -612,7 +608,7 @@ public final class SimulationEngine implements AutoCloseable {
       spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
     }
 
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>();
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
     engine.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
@@ -624,7 +620,7 @@ public final class SimulationEngine implements AutoCloseable {
         final var inputAttributes = spanInfo.input().get(span);
         final var outputAttributes = spanInfo.output().get(span);
 
-        simulatedActivities.put(activityId, new SimulatedActivity(
+        simulatedActivities.put(activityId, new ActivityInstance(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),

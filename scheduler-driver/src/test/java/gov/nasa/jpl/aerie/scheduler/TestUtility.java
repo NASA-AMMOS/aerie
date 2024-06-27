@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
@@ -28,8 +28,8 @@ public class TestUtility {
     return plan.getActivities().isEmpty();
   }
   public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {
-    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
-    for (SchedulingActivityDirective act : acts) {
+    List<SchedulingActivity> acts = plan.getActivitiesByTime();
+    for (SchedulingActivity act : acts) {
       if (act.getType().equals(activityType) && act.startOffset().compareTo(time) == 0) {
         return true;
       }
@@ -38,8 +38,8 @@ public class TestUtility {
   }
 
   public static boolean containsActivity(Plan plan, Duration startTime, Duration endTime, ActivityType activityType) {
-    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
-    for (SchedulingActivityDirective act : acts) {
+    List<SchedulingActivity> acts = plan.getActivitiesByTime();
+    for (SchedulingActivity act : acts) {
       if (act.getType().equals(activityType) &&
           act.startOffset().compareTo(startTime) == 0 &&
           act.getEndTime().compareTo(endTime) == 0) {
@@ -65,8 +65,8 @@ public class TestUtility {
    */
   public static boolean atLeastOneActivityOfTypeInRange(Plan plan, Interval interval, ActivityType activityType) {
 
-    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
-    for (SchedulingActivityDirective act : acts) {
+    List<SchedulingActivity> acts = plan.getActivitiesByTime();
+    for (SchedulingActivity act : acts) {
       if (act.getType().equals(activityType)
           && act.startOffset().compareTo(interval.start) >= 0
           && act.getEndTime().compareTo(interval.end) <= 0) {
@@ -117,8 +117,8 @@ public class TestUtility {
   /**
    * Returns true if plan does not contain specific activity instance act
    */
-  public static boolean doesNotContainActivity(Plan plan, SchedulingActivityDirective act) {
-    for (SchedulingActivityDirective actI : plan.getActivitiesByTime()) {
+  public static boolean doesNotContainActivity(Plan plan, SchedulingActivity act) {
+    for (SchedulingActivity actI : plan.getActivitiesByTime()) {
       if (actI.equals(act)) {
         return false;
       }
@@ -129,8 +129,8 @@ public class TestUtility {
     /**
    * Returns true if plan contains specific activity instance act
    */
-  public static boolean containsExactlyActivity(Plan plan, SchedulingActivityDirective act) {
-    for (SchedulingActivityDirective actI : plan.getActivitiesByTime()) {
+  public static boolean containsExactlyActivity(Plan plan, SchedulingActivity act) {
+    for (SchedulingActivity actI : plan.getActivitiesByTime()) {
       if (actI.equalsInProperties(act)) {
         return true;
       }
@@ -152,17 +152,17 @@ public class TestUtility {
   }
 
   /** matches activities if they agree in everything except the (possibly auto-generated) names **/
-  public static void assertSetEquality(List<SchedulingActivityDirective> expected, List<SchedulingActivityDirective> actual) {
+  public static void assertSetEquality(List<SchedulingActivity> expected, List<SchedulingActivity> actual) {
     assertEquals(expected.size(), actual.size());
     final var backupExpected = new ArrayList<>(expected);
-    for (SchedulingActivityDirective directive : actual) {
+    for (SchedulingActivity directive : actual) {
       final int matchIndex = getIndexSADList(backupExpected, directive);
       assertNotEquals(-1, matchIndex);
       backupExpected.remove(matchIndex); // Remove to avoid similar elements matching twice
     }
   }
 
-  private static int getIndexSADList(List<SchedulingActivityDirective> list, SchedulingActivityDirective directive) {
+  private static int getIndexSADList(List<SchedulingActivity> list, SchedulingActivity directive) {
     for (int i = 0; i < list.size(); ++i) {
       if (list.get(i).equalsInProperties(directive)) {
         return i;

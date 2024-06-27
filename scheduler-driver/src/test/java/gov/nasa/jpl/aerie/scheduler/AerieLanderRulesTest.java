@@ -7,7 +7,7 @@
 //import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 //import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 //import gov.nasa.jpl.aerie.scheduler.model.Problem;
-//import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+//import gov.nasa.jpl.aerie.scheduler.solver.scheduler.PrioritySolver;
 //import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 //import org.junit.jupiter.api.BeforeEach;
 //import org.junit.jupiter.api.Test;

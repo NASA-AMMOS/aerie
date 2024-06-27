@@ -17,8 +17,8 @@ import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
 
@@ -180,7 +180,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public java.util.Collection<Conflict> getConflicts(
-      final Plan plan,
+      final PlanInMemory plan,
       final SimulationResults simulationResults,
       final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
@@ -233,7 +233,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           simulationResults,
           createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window));
 
-      var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
+      var missingActAssociations = new ArrayList<SchedulingActivity>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
@@ -252,8 +252,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           final ActivityDirectiveId actId = new ActivityDirectiveId(window.value().get().activityInstance().id);
           anchorIdTo = mapSchedulingIdsToActivityIds.get().inverseBidiMap().get(actId);
         }
-        final var missingActAssociationsWithAnchor = new ArrayList<SchedulingActivityDirective>();
-        final var missingActAssociationsWithoutAnchor = new ArrayList<SchedulingActivityDirective>();
+        final var missingActAssociationsWithAnchor = new ArrayList<SchedulingActivity>();
+        final var missingActAssociationsWithoutAnchor = new ArrayList<SchedulingActivity>();
         /*
         If activities that can satisfy the goal have been found, then create two arraylist to distinguish between:
          1) those activities that also satisfy the anchoring  (e.g. anchorId value equals the SchedulingActivityDirectiveId of the "for each" activity directive in the goal

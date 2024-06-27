@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,7 +165,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
   @Override
   public SimulationResultsComputerInputs simulateNoResultsUntilEndAct(
           final Plan plan,
-          final SchedulingActivityDirective activity) throws SimulationException, SchedulingInterruptedException
+          final SchedulingActivity activity) throws SimulationException, SchedulingInterruptedException
   {
     return simulateNoResults(plan, null, activity).simulationResultsComputerInputs();
   }
@@ -187,7 +187,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
   private AugmentedSimulationResultsComputerInputs simulateNoResults(
       final Plan plan,
       final Duration until,
-      final SchedulingActivityDirective activity) throws SimulationException, SchedulingInterruptedException
+      final SchedulingActivity activity) throws SimulationException, SchedulingInterruptedException
   {
     final var planSimCorrespondence = scheduleFromPlan(plan, this.schedulerModel);
 

@@ -19,7 +19,7 @@ public final class SimulationResults {
   public final Duration duration;
   public final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles;
   public final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles;
-  public final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
+  public final Map<SimulatedActivityId, ActivityInstance> simulatedActivities;
   public final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
   public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
@@ -27,7 +27,7 @@ public final class SimulationResults {
     public SimulationResults(
         final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,
         final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles,
-        final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
+        final Map<SimulatedActivityId, ActivityInstance> simulatedActivities,
         final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
         final Instant startTime,
         final Duration duration,

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class MissingAssociationConflict extends Conflict {
-  private final Collection<SchedulingActivityDirective> instances;
+  private final Collection<SchedulingActivity> instances;
 
   private final Optional<Boolean> anchorToStart;
   private final Optional<SchedulingActivityDirectiveId> anchorIdTo;
@@ -20,11 +20,11 @@ public class MissingAssociationConflict extends Conflict {
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    * @param instancesToChooseFrom IN STORED the list of instances to choose from to perform the association
    * @param anchorToStart IN STORED boolean indicating whether the anchor is associated to the START or the END
-   * The value is used to support a Solver implementation to calculate the absolute START time offset
+   * The value is used to support a SolverDecomposer implementation to calculate the absolute START time offset
    */
   public MissingAssociationConflict(
       final Goal goal,
-      final Collection<SchedulingActivityDirective> instancesToChooseFrom,
+      final Collection<SchedulingActivity> instancesToChooseFrom,
       final Optional<SchedulingActivityDirectiveId> anchorIdTo,
       final Optional<Boolean> anchorToStart) {
 
@@ -35,7 +35,7 @@ public class MissingAssociationConflict extends Conflict {
     this.anchorToStart = anchorToStart;
   }
 
-  public Collection<SchedulingActivityDirective> getActivityInstancesToChooseFrom(){
+  public Collection<SchedulingActivity> getActivityInstancesToChooseFrom(){
     return instances;
   }
 

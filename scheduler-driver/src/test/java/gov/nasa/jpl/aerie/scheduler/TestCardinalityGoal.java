@@ -8,8 +8,8 @@ import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.scheduler.solver.scheduler.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -44,7 +44,7 @@ public class TestCardinalityGoal {
     var plan = solver.getNextSolution();
     assertEquals(6, plan.get().getActivitiesByTime().size());
     assertEquals(plan.get().getActivitiesByTime().stream()
-                     .map(SchedulingActivityDirective::duration)
+                     .map(SchedulingActivity::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));
   }
 }

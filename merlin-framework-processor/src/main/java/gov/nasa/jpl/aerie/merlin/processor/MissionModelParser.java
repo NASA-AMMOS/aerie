@@ -6,17 +6,19 @@ import gov.nasa.jpl.aerie.merlin.framework.MetadataValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Compound;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -38,8 +40,10 @@ import java.lang.annotation.Repeatable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -69,6 +73,7 @@ import java.util.stream.Collectors;
     for (final var activityTypeElement : this.getMissionModelActivityTypes(missionModelElement)) {
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
+    final var methods = this.getMissionModelMethods(missionModelElement, TaskNetTemplate.class);
 
     return new MissionModelRecord(
         missionModelElement,
@@ -76,7 +81,8 @@ import java.util.stream.Collectors;
         topLevelModel.expectsPlanStart,
         topLevelModel.configurationType,
         typeRules,
-        activityTypes);
+        activityTypes,
+        methods);
   }
 
   private record MissionModelTypeRecord(
@@ -185,7 +191,7 @@ import java.util.stream.Collectors;
     final var validations = this.getExportValidations(declaration, parameters);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
-    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
+    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle, Optional.empty()));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -308,6 +314,98 @@ import java.util.stream.Collectors;
     return enumBoundedTypeParameters;
   }
 
+
+  private Map<TypeElement, List<TypeElement>> getMissionModelMethods(
+      PackageElement packageElement,
+      Class<?> interfaceClass)
+  throws InvalidMissionModelException
+  {
+    final var methodsByCompound = new HashMap<TypeElement, List<TypeElement>>();
+
+    List<TypeElement> METHODS= new ArrayList<>();
+    for (final var activityTypeAnnotation : getRepeatableAnnotation(
+        packageElement,
+        MissionModel.WithMethod.class)) {
+      final var attribute =
+          getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
+
+      if (!(attribute.getValue() instanceof DeclaredType)) {
+        throw new InvalidMissionModelException(
+            "Method type not yet defined",
+            packageElement,
+            activityTypeAnnotation,
+            attribute);
+      }
+      final var asTypeElement = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
+      if (!isAssignableFrom(asTypeElement, interfaceClass)) {
+        throw new InvalidMissionModelException(
+            "Method does not implement" + interfaceClass,
+            packageElement,
+            activityTypeAnnotation,
+            attribute);
+      }
+
+      //there might be several interfaces
+      for(final TypeMirror interfaceMirror: asTypeElement.getInterfaces()){
+        if (interfaceMirror.getKind() == TypeKind.DECLARED) {
+          DeclaredType declaredInterface = (DeclaredType) interfaceMirror;
+          TypeElement interfaceElement = (TypeElement) declaredInterface.asElement();
+          ClassName currentInterfaceClassName = ClassName.get(interfaceElement);
+          // Check if the current interface matches the target interface
+          if (currentInterfaceClassName.equals(ClassName.get(interfaceClass))) {
+            // Check if the interface has any type arguments
+            List<? extends TypeMirror> typeArguments = declaredInterface.getTypeArguments();
+            assert typeArguments.size() == 1;
+            final var genericParameter = typeArguments.get(0);
+            assert genericParameter.getKind() == TypeKind.DECLARED;
+            DeclaredType declaredGeneric = (DeclaredType) genericParameter;
+            TypeElement genericElement = (TypeElement) declaredGeneric.asElement();
+            methodsByCompound.computeIfAbsent(genericElement, s -> new ArrayList<>());
+            methodsByCompound.get(genericElement).add(asTypeElement);
+          }
+        }
+      }
+    }
+    return methodsByCompound;
+  }
+
+
+  private boolean isAssignableFrom(TypeElement typeElement, Class<?> interfaceClass) {
+    // Get the type mirrors for the interfaces implemented by the TypeElement
+    List<? extends TypeMirror> interfaces = typeElement.getInterfaces();
+
+    // Check if any of the implemented interfaces are assignable from the target interface
+    for (TypeMirror interfaceMirror : interfaces) {
+      TypeElement interfaceElement = (TypeElement) ((DeclaredType) interfaceMirror).asElement();
+      if (ClassName.get(interfaceElement).equals(ClassName.get(interfaceClass))) {
+        return true;
+      }
+    }
+
+    // Check if the TypeElement's superclass is assignable from the target interface
+    TypeMirror superclass = typeElement.getSuperclass();
+    if (superclass.getKind() == TypeKind.DECLARED) {
+      TypeElement superclassElement = (TypeElement) ((DeclaredType) superclass).asElement();
+        return ClassName.get(superclassElement).equals(ClassName.get(interfaceClass));
+    }
+
+    return false;
+  }
+
+  private Class<?> getClassFromTypeElement(TypeElement typeElement) {
+    try {
+      // Get the fully qualified name of the class
+      ClassName className = ClassName.get(typeElement);
+      String classNameString = className.reflectionName();
+
+      // Load the class using the current ClassLoader
+      return Class.forName(classNameString);
+    } catch (ClassNotFoundException e) {
+      // Handle the case where the class cannot be loaded
+      return null;
+    }
+  }
+
   private List<TypeElement> getMissionModelActivityTypes(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
@@ -385,12 +483,11 @@ import java.util.stream.Collectors;
     final var parameters = this.getExportParameters(activityTypeElement);
     final var validations = this.getExportValidations(activityTypeElement, parameters);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
-
     final var durationParameterName = effectModel.flatMap(EffectModelRecord::durationParameter);
     if (durationParameterName.isPresent()) {
       validateControllableDurationParameter(name, parameters, durationParameterName.get());
     }
-
+    final var compoundShouldBeDecomposed = this.getCompoundParametrization(activityTypeElement);
     /*
     The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
     In order to allow for optional/required parameters, the processor
@@ -405,8 +502,17 @@ import java.util.stream.Collectors;
     return new ActivityTypeRecord(
         fullyQualifiedClassName.toString(),
         name,
-        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
+        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, compoundShouldBeDecomposed),
         effectModel);
+  }
+
+  private Optional<Boolean> getCompoundParametrization(final TypeElement activityTypeElement){
+    Optional<Boolean> shouldBeDecomposed = Optional.empty();
+    final var compoundAnnotation = activityTypeElement.getAnnotation(Compound.class);
+    if(compoundAnnotation != null){
+      shouldBeDecomposed = Optional.of(compoundAnnotation.shouldBeDecomposed());
+    }
+    return shouldBeDecomposed;
   }
 
   private void validateControllableDurationParameter(
@@ -626,7 +732,14 @@ import java.util.stream.Collectors;
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration, maximumDuration));
+      return Optional.of(new EffectModelRecord(
+          element.getSimpleName().toString(),
+          executorAnnotation.value(),
+          nonVoidReturnType,
+          durationParameter,
+          fixedDuration,
+          parameterizedDuration,
+          maximumDuration));
     }
 
     return Optional.empty();

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
+import gov.nasa.jpl.aerie.scheduler.solver.scheduler.stn.TaskNetwork;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 

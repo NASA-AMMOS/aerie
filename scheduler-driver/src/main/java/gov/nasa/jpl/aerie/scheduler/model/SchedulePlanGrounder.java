@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class SchedulePlanGrounder {
   public static Optional<List<ActivityInstance>> groundSchedule(
-      final List<SchedulingActivityDirective> schedulingActivityDirectiveList,
+      final List<SchedulingActivity> schedulingActivityDirectiveList,
       final Duration planDuration
   ){
     final var grounded = new HashMap<ActivityDirectiveId, ActivityInstance>();

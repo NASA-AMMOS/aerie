@@ -15,10 +15,10 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -114,10 +114,10 @@ public class SimulationFacadeTest {
     final var actTypeBite = problem.getActivityType("BiteBanana");
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    var act1 = SchedulingActivityDirective.of(actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")), null, true);
+    var act1 = SchedulingActivity.of(actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")), null, true);
     plan.add(act1);
 
-    var act2 = SchedulingActivityDirective.of(actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)), null, true);
+    var act2 = SchedulingActivity.of(actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)), null, true);
     plan.add(act2);
 
     return plan;
@@ -129,7 +129,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     final var actTypeBite = problem.getActivityType("BiteBanana");
 
-    var act1 = SchedulingActivityDirective.of(actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")), null, true);
+    var act1 = SchedulingActivity.of(actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")), null, true);
     plan.add(act1);
 
     final var goal = new CoexistenceGoal.Builder()
@@ -146,7 +146,7 @@ public class SimulationFacadeTest {
 
     problem.setGoals(List.of(goal));
     problem.setInitialPlan(plan);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan1 = solver.getNextSolution();
     assertTrue(plan1.isPresent());
 
@@ -154,7 +154,7 @@ public class SimulationFacadeTest {
     assertEquals(1, actAssociatedInFirstRun.size());
 
     problem.setInitialPlan(plan1.get());
-    final var solver2 = new PrioritySolver(problem);
+    final var solver2 = new NexusMetaSolver(problem);
     final var plan2 = solver2.getNextSolution();
     assertTrue(plan2.isPresent());
 
@@ -265,7 +265,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(cg));
-    final var solver = new PrioritySolver(this.problem);
+    final var solver = new NexusMetaSolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
   }
@@ -281,10 +281,10 @@ public class SimulationFacadeTest {
 
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypePeel,
+    SchedulingActivity act1 = SchedulingActivity.of(actTypePeel,
                                                  t0, Duration.ZERO, null, true);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypePeel,
+    SchedulingActivity act2 = SchedulingActivity.of(actTypePeel,
                                                  t2, Duration.ZERO, null, true);
 
     //create an "external tool" that insists on a few fixed activities
@@ -292,7 +292,7 @@ public class SimulationFacadeTest {
         act1,
         act2
     );
-    final Function<Plan, Collection<SchedulingActivityDirective>> fixedGenerator
+    final Function<Plan, Collection<SchedulingActivity>> fixedGenerator
         = (p) -> externalActs;
 
     final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
@@ -304,7 +304,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
-    final var solver = new PrioritySolver(this.problem);
+    final var solver = new NexusMetaSolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
@@ -323,10 +323,10 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     actTypePeel.setResourceConstraint(constraint);
 
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypePeel,
+    SchedulingActivity act1 = SchedulingActivity.of(actTypePeel,
                                                  t0, Duration.ZERO, null, true);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypePeel,
+    SchedulingActivity act2 = SchedulingActivity.of(actTypePeel,
                                                  t2, Duration.ZERO, null, true);
 
     //create an "external tool" that insists on a few fixed activities
@@ -335,7 +335,7 @@ public class SimulationFacadeTest {
         act2
     );
 
-    final Function<Plan, Collection<SchedulingActivityDirective>> fixedGenerator
+    final Function<Plan, Collection<SchedulingActivity>> fixedGenerator
         = (p) -> externalActs;
 
     final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()
@@ -346,7 +346,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));

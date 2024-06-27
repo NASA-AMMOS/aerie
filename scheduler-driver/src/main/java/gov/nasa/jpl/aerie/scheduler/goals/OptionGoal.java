@@ -5,9 +5,9 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import gov.nasa.jpl.aerie.scheduler.solver.optimizers.Optimizer;
+import gov.nasa.jpl.aerie.scheduler.solver.scheduler.optimizers.Optimizer;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -36,7 +36,7 @@ public class OptionGoal extends Goal {
 
   @Override
   public java.util.Collection<Conflict> getConflicts(
-      final Plan plan,
+      final PlanInMemory plan,
       final SimulationResults simulationResults,
       final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,

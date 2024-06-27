@@ -4,11 +4,11 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LongDurationPlanTest {
 
-  private static PrioritySolver makeProblemSolver(Problem problem) {
-    return new PrioritySolver(problem);
+  private static NexusMetaSolver makeProblemSolver(Problem problem) {
+    return new NexusMetaSolver(problem);
   }
 
   //test mission with two primitive activity types
@@ -40,10 +40,10 @@ public class LongDurationPlanTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1year, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2year, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t3year, d1min, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t0, d1min, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t1year, d1min, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t2year, d1min, null, true));
+    plan.add(SchedulingActivity.of(actTypeA, t3year, d1min, null, true));
     return plan;
   }
 

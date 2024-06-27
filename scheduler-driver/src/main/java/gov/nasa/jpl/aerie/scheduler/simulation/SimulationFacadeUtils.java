@@ -1,11 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
+import gov.nasa.jpl.aerie.merlin.driver.*;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -13,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
@@ -59,14 +55,14 @@ public class SimulationFacadeUtils {
       final SimulationFacade.PlanSimCorrespondence correspondence,
       final SimulationEngine.SimulationActivityExtract activityExtract
   ) {
-    final var toReplace = new HashMap<SchedulingActivityDirective, SchedulingActivityDirective>();
+    final var toReplace = new HashMap<SchedulingActivity, SchedulingActivity>();
     for (final var activity : plan.getActivities()) {
       if (activity.duration() == null) {
         final var activityDirective = findSimulatedActivityById(
             activityExtract.simulatedActivities().values(),
             correspondence.planActDirectiveIdToSimulationActivityDirectiveId().get(activity.getId()));
         if (activityDirective.isPresent()) {
-          final var replacementAct = SchedulingActivityDirective.copyOf(
+          final var replacementAct = SchedulingActivity.copyOf(
               activity,
               activityDirective.get().duration()
           );
@@ -78,8 +74,8 @@ public class SimulationFacadeUtils {
     toReplace.forEach(plan::replaceActivity);
   }
 
-  private static Optional<SimulatedActivity> findSimulatedActivityById(
-      Collection<SimulatedActivity> simulatedActivities,
+  private static Optional<ActivityInstance> findSimulatedActivityById(
+      Collection<ActivityInstance> simulatedActivities,
       final ActivityDirectiveId activityDirectiveId
   ){
     return simulatedActivities.stream()
@@ -102,7 +98,7 @@ public class SimulationFacadeUtils {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(activityExtract, activityInstanceId);
       if(rootParent.isPresent()) {
-        final var activityInstance = SchedulingActivityDirective.of(
+        final var activityInstance = SchedulingActivity.of(
             activityTypes.get(activity.type()),
             planningHorizon.toDur(activity.start()),
             activity.duration(),
@@ -145,7 +141,7 @@ public class SimulationFacadeUtils {
   }
 
   public static ActivityDirective schedulingActToActivityDir(
-      final SchedulingActivityDirective activity,
+      final SchedulingActivity activity,
       final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
       final SchedulerModel schedulerModel) {
     if(activity.getParentActivity().isPresent()) {

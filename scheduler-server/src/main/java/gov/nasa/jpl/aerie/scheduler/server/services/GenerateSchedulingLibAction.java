@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 
 public record GenerateSchedulingLibAction(
-    MerlinService.ReaderRole merlinService
+    MerlinDatabaseService.ReaderRole merlinService
 ) {
   public GenerateSchedulingLibAction {
     Objects.requireNonNull(merlinService);
@@ -48,7 +48,7 @@ public record GenerateSchedulingLibAction(
       var missionModelTypes = merlinService.getMissionModelTypes(missionModelId);
       if(planId.isPresent()) {
         final var allResourceTypes = merlinService.getResourceTypes(planId.get());
-        missionModelTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
+        missionModelTypes = new MerlinDatabaseService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
       }
 
       final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);

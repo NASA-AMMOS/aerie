@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
@@ -238,7 +238,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  private static JsonValue serializeSimulatedActivity(final SimulatedActivity simulatedActivity) {
+  private static JsonValue serializeSimulatedActivity(final ActivityInstance simulatedActivity) {
     return Json
         .createObjectBuilder()
         .add("type", simulatedActivity.type())
@@ -251,7 +251,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  private static JsonValue serializeSimulatedActivities(final Map<ActivityDirectiveId, SimulatedActivity> simulatedActivities) {
+  private static JsonValue serializeSimulatedActivities(final Map<ActivityDirectiveId, ActivityInstance> simulatedActivities) {
     return serializeMap(
         ResponseSerializers::serializeSimulatedActivity,
         simulatedActivities

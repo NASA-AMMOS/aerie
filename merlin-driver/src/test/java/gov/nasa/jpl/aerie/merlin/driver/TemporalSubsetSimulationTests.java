@@ -69,7 +69,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate first half of plan")
   public void simulateFirstHalf(){
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(120);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
@@ -79,7 +79,7 @@ public class TemporalSubsetSimulationTests {
           new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               planStart.plus(i, ChronoUnit.HOURS),
@@ -133,7 +133,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate second half of plan")
   public void simulateSecondHalf(){
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(120);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
     for(int i = 0; i < 120; ++i){
@@ -145,7 +145,7 @@ public class TemporalSubsetSimulationTests {
     for(int i = 120; i < 240; ++i){
       simulatedActivities.put(
           new SimulatedActivityId(i),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               planStart.plus(i, ChronoUnit.HOURS),
@@ -185,7 +185,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate Day 3 to Day 8")
   void simulateMiddle() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(120);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
@@ -201,7 +201,7 @@ public class TemporalSubsetSimulationTests {
           new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               planStart.plus(i, ChronoUnit.HOURS),
@@ -255,7 +255,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate from Day -2 to Day 3")
   void simulateBeforePlanStart() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(120);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
@@ -265,7 +265,7 @@ public class TemporalSubsetSimulationTests {
           new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               planStart.plus(i, ChronoUnit.HOURS),
@@ -319,7 +319,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("Ten-day plan, no anchors: Simulate from Day 8 to Day 13")
   void simulateAfterPlanEnd() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(120);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(120);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(240);
 
@@ -335,7 +335,7 @@ public class TemporalSubsetSimulationTests {
           new ActivityDirective(Duration.of(i, Duration.HOURS), serializedDelayDirective, null, true));
       simulatedActivities.put(
           new SimulatedActivityId(i),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               planStart.plus(i, ChronoUnit.HOURS),
@@ -372,7 +372,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("One-day plan, anchors: Simulate around anchors")
   void simulateAroundAnchors() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(16);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(16);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(0);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(37);
 
@@ -383,7 +383,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(0),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(3, ChronoUnit.HOURS),
@@ -399,7 +399,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), true));
     simulatedActivities.put(
         new SimulatedActivityId(1),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(4, ChronoUnit.HOURS),
@@ -413,7 +413,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(1), true));
     simulatedActivities.put(
         new SimulatedActivityId(2),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS),
@@ -427,7 +427,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(2), true));
     simulatedActivities.put(
         new SimulatedActivityId(3),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS),
@@ -441,7 +441,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(3), true));
     simulatedActivities.put(
         new SimulatedActivityId(4),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(7, ChronoUnit.HOURS),
@@ -457,7 +457,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), false));
     simulatedActivities.put(
         new SimulatedActivityId(5),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(4, ChronoUnit.HOURS).plus(1, ChronoUnit.MINUTES),
@@ -471,7 +471,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(5), false));
     simulatedActivities.put(
         new SimulatedActivityId(6),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS).plus(2, ChronoUnit.MINUTES),
@@ -485,7 +485,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(6), false));
     simulatedActivities.put(
         new SimulatedActivityId(7),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS).plus(3, ChronoUnit.MINUTES),
@@ -499,7 +499,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(7), false));
     simulatedActivities.put(
         new SimulatedActivityId(8),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(7, ChronoUnit.HOURS).plus(4, ChronoUnit.MINUTES),
@@ -515,7 +515,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), true));
     simulatedActivities.put(
         new SimulatedActivityId(9),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(4, ChronoUnit.HOURS),
@@ -529,7 +529,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(9), false));
     simulatedActivities.put(
         new SimulatedActivityId(10),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS).plus(1, ChronoUnit.MINUTES),
@@ -543,7 +543,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(10), true));
     simulatedActivities.put(
         new SimulatedActivityId(11),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS).plus(1, ChronoUnit.MINUTES),
@@ -557,7 +557,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(11), false));
     simulatedActivities.put(
         new SimulatedActivityId(12),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(7, ChronoUnit.HOURS).plus(2, ChronoUnit.MINUTES),
@@ -576,7 +576,7 @@ public class TemporalSubsetSimulationTests {
     for(int i = 3; i < 8; i++){
       simulatedActivities.put(
           new SimulatedActivityId(i+13),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               planStart.plus(i, ChronoUnit.HOURS),
@@ -613,7 +613,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("One-day plan, anchors: Start simulation between two anchored activities")
   void simulateStartBetweenAnchors() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(8);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(8);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(0);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(37);
 
@@ -641,7 +641,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(4), true));
     simulatedActivities.put(
         new SimulatedActivityId(5),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(3, ChronoUnit.HOURS),
@@ -655,7 +655,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(5), true));
     simulatedActivities.put(
         new SimulatedActivityId(6),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(4, ChronoUnit.HOURS),
@@ -669,7 +669,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(6), true));
     simulatedActivities.put(
         new SimulatedActivityId(7),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS),
@@ -685,7 +685,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(8),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(3, ChronoUnit.HOURS),
@@ -699,7 +699,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(8), true));
     simulatedActivities.put(
         new SimulatedActivityId(9),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(4, ChronoUnit.HOURS),
@@ -713,7 +713,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(9), true));
     simulatedActivities.put(
         new SimulatedActivityId(10),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS),
@@ -727,7 +727,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(10), true));
     simulatedActivities.put(
         new SimulatedActivityId(11),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS),
@@ -774,7 +774,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("One-day plan, anchors: End simulation between two anchored activities")
   void simulateEndBetweenAnchors() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(8);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(8);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(0);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(37);
 
@@ -785,7 +785,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(5, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(0),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS),
@@ -799,7 +799,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(0), false));
     simulatedActivities.put(
         new SimulatedActivityId(1),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS).plus(1, ChronoUnit.MINUTES),
@@ -813,7 +813,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(1), false));
     simulatedActivities.put(
         new SimulatedActivityId(2),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(7, ChronoUnit.HOURS).plus(2, ChronoUnit.MINUTES),
@@ -832,7 +832,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(5, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(4),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS),
@@ -846,7 +846,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(4), true));
     simulatedActivities.put(
         new SimulatedActivityId(5),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS),
@@ -860,7 +860,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(5), true));
     simulatedActivities.put(
         new SimulatedActivityId(6),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(7, ChronoUnit.HOURS),
@@ -879,7 +879,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(3, Duration.HOURS), serializedDelayDirective, null, true));
     simulatedActivities.put(
         new SimulatedActivityId(8),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(3, ChronoUnit.HOURS),
@@ -893,7 +893,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(8), true));
     simulatedActivities.put(
         new SimulatedActivityId(9),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(4, ChronoUnit.HOURS),
@@ -907,7 +907,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(9), true));
     simulatedActivities.put(
         new SimulatedActivityId(10),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(5, ChronoUnit.HOURS),
@@ -921,7 +921,7 @@ public class TemporalSubsetSimulationTests {
         new ActivityDirective(Duration.of(1, Duration.HOURS), serializedDelayDirective, new ActivityDirectiveId(10), true));
     simulatedActivities.put(
         new SimulatedActivityId(11),
-        new SimulatedActivity(
+        new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             planStart.plus(6, ChronoUnit.HOURS),
@@ -969,7 +969,7 @@ public class TemporalSubsetSimulationTests {
   @Test
   @DisplayName("One-day plan, no anchors: Simulate no duration. Start at hour 5")
   void simulateNoDuration() {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(0);
+    final var simulatedActivities = new HashMap<SimulatedActivityId, ActivityInstance>(0);
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>(1);
     final var activitiesInPlan = new HashMap<ActivityDirectiveId, ActivityDirective>(24);
 

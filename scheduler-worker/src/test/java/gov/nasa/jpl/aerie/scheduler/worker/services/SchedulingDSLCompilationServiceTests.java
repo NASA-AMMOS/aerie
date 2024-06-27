@@ -40,7 +40,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
@@ -65,15 +65,15 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingDSLCompilationServiceTests {
   private static final PlanId PLAN_ID = new PlanId(1L);
-  private static final MerlinService.ReaderRole merlinService = new MerlinService.ReaderRole() {
+  private static final MerlinDatabaseService.ReaderRole merlinService = new MerlinDatabaseService.ReaderRole() {
     @Override
-    public MerlinService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+    public MerlinDatabaseService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
     {
       return MISSION_MODEL_TYPES;
     }
 
     @Override
-    public MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+    public MerlinDatabaseService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
     {
       return MISSION_MODEL_TYPES;
     }
