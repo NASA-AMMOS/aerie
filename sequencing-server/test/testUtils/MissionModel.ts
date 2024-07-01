@@ -30,10 +30,14 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   const file = await fileFrom(latestBuild.path);
   formData.set('file', file, 'banananation-latest.jar');
 
+  // Get an authorization token
+  const authHeader = `Bearer ${await login()}`;
+
+  // Upload File
   const uploadRes = await fetch(`${process.env['MERLIN_GATEWAY_URL']}/file`, {
     method: 'POST',
     body: formData,
-    headers: { 'x-auth-sso-token': process.env['SSO_TOKEN'] as string },
+    headers: { 'Authorization': authHeader },
   });
   if (!uploadRes.ok) {
     throw new Error(`Failed to upload mission model: ${uploadRes.statusText}`);
@@ -60,6 +64,18 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   );
   await waitMs(3000);
   return (res.insert_mission_model_one as { id: number } as { id: number }).id;
+}
+
+async function login() {
+  const response = await fetch(`${process.env['MERLIN_GATEWAY_URL']}/auth/login`, {
+    method: 'POST',
+    body: `{"username": "AerieE2ETests", "password": "password"}`,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to login: ${response.statusText}`);
+  }
+  return (await response.json() as {token: string}).token;
 }
 
 export async function removeMissionModel(graphqlClient: GraphQLClient, missionModelId: number): Promise<void> {
