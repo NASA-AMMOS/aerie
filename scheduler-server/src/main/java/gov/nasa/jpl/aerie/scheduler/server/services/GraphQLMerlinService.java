@@ -1489,7 +1489,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
   private void insertSimulationEvents(
       DatasetId datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints) throws MerlinServiceException, IOException
+      Map<Duration, List<EventGraph<EventRecord>>> eventPoints) throws MerlinServiceException, IOException
   {
     final var req = """
             mutation($events:[event_insert_input!]!){
@@ -1518,12 +1518,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final long datasetId,
       final Duration duration,
       final int transactionIndex,
-      final List<Pair<String, Pair<Integer, SerializedValue>>> flattenedEventGraph
+      final List<Pair<String, EventRecord>> flattenedEventGraph
   ) {
     final var events = Json.createArrayBuilder();
-    for (final Pair<String, Pair<Integer, SerializedValue>> entry : flattenedEventGraph) {
+    for (final Pair<String, EventRecord> entry : flattenedEventGraph) {
       final var causalTime = entry.getLeft();
-      final Pair<Integer, SerializedValue> event = entry.getRight();
+      final EventRecord event = entry.getRight();
       events.add(
           Json.createObjectBuilder()
               .add("dataset_id",datasetId)

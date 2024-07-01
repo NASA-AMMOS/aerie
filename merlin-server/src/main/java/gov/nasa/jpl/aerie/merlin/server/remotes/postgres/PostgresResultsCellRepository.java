@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -298,7 +299,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  private static SortedMap<Duration, List<EventGraph<EventRecord>>>
   getSimulationEvents(
       final Connection connection,
       final long datasetId
@@ -365,6 +366,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
     ProfileRepository.postResourceProfiles(connection, datasetId, profileSet);
     postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
+    // TODO associate spans with activities
     insertSimulationTopics(connection, datasetId, results.topics);
     insertSimulationEvents(connection, datasetId, results.events, simulationStart);
 
@@ -388,7 +390,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void insertSimulationEvents(
       Connection connection,
       long datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      Map<Duration, List<EventGraph<EventRecord>>> events,
       Timestamp simulationStart) throws SQLException
   {
     try (

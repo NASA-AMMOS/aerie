@@ -31,7 +31,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
   public void apply(
       final long datasetId,
-      final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints,
+      final Map<Duration, List<EventGraph<EventRecord>>> eventPoints,
       final Timestamp simulationStart
   ) throws SQLException {
     for (final var eventPoint : eventPoints.entrySet()) {
@@ -51,12 +51,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       final Duration duration,
       final int transactionIndex,
       final Timestamp simulationStart,
-      final List<Pair<String, Pair<Integer, SerializedValue>>> flattenedEventGraph,
+      final List<Pair<String, EventRecord>> flattenedEventGraph,
       final PreparedStatement statement
   ) throws SQLException {
-    for (final Pair<String, Pair<Integer, SerializedValue>> entry : flattenedEventGraph) {
+    for (final Pair<String, EventRecord> entry : flattenedEventGraph) {
       final var causalTime = entry.getLeft();
-      final Pair<Integer, SerializedValue> event = entry.getRight();
+      final EventRecord event = entry.getRight();
 
       statement.setLong(1, datasetId);
       setTimestamp(statement, 2, simulationStart.plusMicros(duration.in(MICROSECONDS)));

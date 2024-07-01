@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -41,14 +43,14 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(this.sql);
   }
 
-  public SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(final long datasetId) throws SQLException
+  public SortedMap<Duration, List<EventGraph<EventRecord>>> get(final long datasetId) throws SQLException
   {
     this.statement.setLong(1, datasetId);
     final var resultSet = this.statement.executeQuery();
 
     final var transactionsByTimePoint = readResultSet(resultSet);
 
-    final var eventPoints = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var eventPoints = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     transactionsByTimePoint.forEach((time, transactions) -> {
       transactions.forEach(($, value) -> {
         try {
@@ -63,10 +65,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return eventPoints;
   }
 
-  private static Map<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>
+  private static Map<Duration, SortedMap<Integer, List<Pair<String, EventRecord>>>>
   readResultSet(final ResultSet resultSet)
   throws SQLException {
-    final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>();
+    final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, EventRecord>>>>();
     while (resultSet.next()) {
       final var timePoint = parseOffset(resultSet, 1);
       final var transactionIndex = resultSet.getInt(2);
@@ -78,9 +80,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           .computeIfAbsent(timePoint, x -> new TreeMap<>())
           .computeIfAbsent(transactionIndex, x -> new ArrayList<>())
           .add(Pair.of(
-              causalTime,
-                   Pair.of(
+                   causalTime,
+                   new EventRecord(
                        topicIndex,
+                       SpanId.generate(), // TODO this is wrong
                        serializedValue
                    )
                )

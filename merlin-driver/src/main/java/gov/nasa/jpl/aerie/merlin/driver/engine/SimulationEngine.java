@@ -724,11 +724,14 @@ public final class SimulationEngine implements AutoCloseable {
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
     for (final var serializableTopic : serializableTopics) {
-      serializableTopicToId.put(serializableTopic, topics.size());
-      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
+      final var topicId = topics.size();
+      serializableTopicToId.put(serializableTopic, topicId);
+      topics.add(Triple.of(topicId, serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    // TODO build up spanIds map: Map<SpanId, Integer>
+
+    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -736,11 +739,13 @@ public final class SimulationEngine implements AutoCloseable {
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
         final var serializedEventGraph = commit.events().substitute(
             event -> {
-              EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
+              // TODO can we do this more efficiently?
+              EventGraph<EventRecord> output = EventGraph.empty();
               for (final var serializableTopic : serializableTopics) {
+                // TODO use event.provenance()
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
-                  output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
+                  output = EventGraph.concurrently(output, EventGraph.atom(new EventRecord(serializableTopicToId.get(serializableTopic), spanIds.get(event.provenance()), serializedEvent.get())));
                 }
               }
               return output;
