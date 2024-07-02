@@ -2,10 +2,11 @@ create table scheduler.scheduling_goal_analysis_created_activities (
   analysis_id integer not null,
   goal_id integer not null,
   goal_revision integer not null,
+  goal_invocation_id integer not null,
   activity_id integer not null,
 
   constraint created_activities_primary_key
-    primary key (analysis_id, goal_id, goal_revision, activity_id),
+    primary key (analysis_id, goal_id, goal_revision, goal_invocation_id, activity_id),
   constraint created_activities_references_scheduling_request
     foreign key (analysis_id)
       references scheduler.scheduling_request (analysis_id)
