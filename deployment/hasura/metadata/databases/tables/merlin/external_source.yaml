@@ -34,16 +34,16 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata]
+      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group]
       check: {}
   - role: user
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata]
+      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata]
+      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group]
       filter: {}
 #  - role: user # justified???
 #    permission:
