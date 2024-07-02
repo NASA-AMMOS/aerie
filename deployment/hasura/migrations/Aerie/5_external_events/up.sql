@@ -4,6 +4,7 @@ CREATE TABLE merlin.external_source (
     key text NOT NULL,
     file_id integer NOT NULL,
     source_type_id integer NOT NULL,
+    derivation_group integer NOT NULL,
     valid_at timestamp with time zone NOT NULL,
     start_time timestamp with time zone NOT NULL,
     end_time timestamp with time zone NOT NULL,
@@ -228,5 +229,29 @@ ALTER TABLE ONLY merlin.external_source_event_types
 -- Add key for external_source_id
 ALTER TABLE ONLY merlin.external_source_event_types
     ADD CONSTRAINT external_source_id FOREIGN KEY (external_source_id) REFERENCES merlin.external_source(id);
+
+-- Create a view for derivation of events
+CREATE OR REPLACE VIEW merlin.derived_events
+ AS
+ SELECT
+    sub.id AS source_id,
+	  sub.file_id,
+	  external_event.id AS event_id,
+    external_event.key,
+    external_event.event_type_id,
+    sub.derivation_group,
+    external_event.start_time,
+    sub.slot_start,
+    sub.slot_end
+   FROM merlin.external_event
+     JOIN ( SELECT external_source.id,
+	 		external_source.file_id,
+            external_source.derivation_group,
+            external_source.start_time AS slot_start,
+            lead(external_source.start_time, 1, external_source.end_time) OVER (PARTITION BY external_source.derivation_group ORDER BY external_source.valid_at) AS slot_end
+           FROM merlin.external_source
+          WHERE external_source.valid_at < now()) sub ON sub.id = external_event.source_id
+  WHERE external_event.start_time >= sub.slot_start AND external_event.start_time < sub.slot_end
+  ORDER BY sub.derivation_group, external_event.start_time;
 
 call migrations.mark_migration_applied('5');
