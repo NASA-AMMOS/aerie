@@ -1,12 +1,13 @@
 create table scheduler.scheduling_goal_analysis (
   analysis_id integer not null,
   goal_id integer not null,
+  goal_invocation_id integer not null,
   goal_revision integer not null,
   satisfied boolean not null,
   arguments jsonb not null default '{}'::jsonb, -- follows scheduling_spec_goals.parameter_schema
 
   constraint scheduling_goal_analysis_primary_key
-    primary key (analysis_id, goal_id, goal_revision),
+    primary key (analysis_id, goal_id, goal_invocation_id, goal_revision),
   constraint scheduling_goal_analysis_references_scheduling_request
     foreign key (analysis_id)
       references scheduler.scheduling_request (analysis_id)
