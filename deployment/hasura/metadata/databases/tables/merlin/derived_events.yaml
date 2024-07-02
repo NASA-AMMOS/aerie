@@ -12,7 +12,7 @@ object_relationships:
           schema: merlin
         column_mapping:
           source_id: id
-          derivation_group: derivation_group
+          derivation_group_id: derivation_group_id
           slot_start: start_time
   - name: external_event
     using:
