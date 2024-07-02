@@ -1,22 +1,15 @@
 table:
-  name: external_source
+  name: derivation_group
   schema: merlin
 configuration:
-  custom_name: "external_source"
-object_relationships:
-- name: uploaded_file
-  using:
-    foreign_key_constraint_on: file_id
-- name: derivation_group
-  using:
-    foreign_key_constraint_on: derivation_group_id
+  custom_name: "derivation_group"
 array_relationships:
-  - name: external_events
+  - name: external_source
     using:
       foreign_key_constraint_on:
-        column: source_id
+        column: derivation_group_id
         table:
-          name: external_event
+          name: external_source
           schema: merlin
 select_permissions:
   - role: aerie_admin
@@ -37,16 +30,16 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id]
+      columns: [name]
       check: {}
   - role: user
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id]
+      columns: [name]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id]
+      columns: [name]
       filter: {}
 #  - role: user # justified???
 #    permission:
@@ -56,4 +49,4 @@ delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
-  # yser deletions too???
+  # user deletions too???

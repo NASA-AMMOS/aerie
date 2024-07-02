@@ -1,10 +1,34 @@
+-- Create a table to represent derivation groups for external sources
+CREATE TABLE merlin.derivation_group (
+    id integer NOT NULL,
+    name text NOT NULL
+);
+
+COMMENT ON TABLE merlin.derivation_group IS 'A table to represent the names of groups of sources to run derivation operations over.';
+
+-- Ensure the id is serial.
+CREATE SEQUENCE merlin.derivation_group_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE merlin.derivation_group_id_seq OWNED BY merlin.derivation_group.id;
+ALTER TABLE ONLY merlin.derivation_group ALTER COLUMN id SET DEFAULT nextval('merlin.derivation_group_id_seq'::regclass);
+
+-- Set primary key
+ALTER TABLE ONLY merlin.derivation_group
+    ADD CONSTRAINT derivation_group_pkey PRIMARY KEY (id);
+
 -- Create a table to represent external event sources.
 CREATE TABLE merlin.external_source (
     id integer NOT NULL,
     key text NOT NULL,
     file_id integer NOT NULL,
     source_type_id integer NOT NULL,
-    derivation_group integer NOT NULL,
+    derivation_group_id integer NOT NULL,
     valid_at timestamp with time zone NOT NULL,
     start_time timestamp with time zone NOT NULL,
     end_time timestamp with time zone NOT NULL,
@@ -32,6 +56,10 @@ ALTER TABLE ONLY merlin.external_source
 -- Add foreign key definition for file_id field, linking to uploaded_file table
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "file_id -> uploaded_file" FOREIGN KEY (file_id) REFERENCES merlin.uploaded_file(id);
+
+-- Add foreign key definition for file_id field, linking to uploaded_file table
+ALTER TABLE ONLY merlin.external_source
+    ADD CONSTRAINT "derivation_group_id -> derivation_group" FOREIGN KEY (derivation_group_id) REFERENCES merlin.derivation_group(id);
 
 
 
@@ -235,23 +263,23 @@ CREATE OR REPLACE VIEW merlin.derived_events
  AS
  SELECT
     sub.id AS source_id,
-	  sub.file_id,
-	  external_event.id AS event_id,
+    sub.file_id,
+    external_event.id AS event_id,
     external_event.key,
     external_event.event_type_id,
-    sub.derivation_group,
+    sub.derivation_group_id,
     external_event.start_time,
     sub.slot_start,
     sub.slot_end
    FROM merlin.external_event
      JOIN ( SELECT external_source.id,
 	 		external_source.file_id,
-            external_source.derivation_group,
+            external_source.derivation_group_id,
             external_source.start_time AS slot_start,
-            lead(external_source.start_time, 1, external_source.end_time) OVER (PARTITION BY external_source.derivation_group ORDER BY external_source.valid_at) AS slot_end
+            lead(external_source.start_time, 1, external_source.end_time) OVER (PARTITION BY external_source.derivation_group_id ORDER BY external_source.valid_at) AS slot_end
            FROM merlin.external_source
           WHERE external_source.valid_at < now()) sub ON sub.id = external_event.source_id
   WHERE external_event.start_time >= sub.slot_start AND external_event.start_time < sub.slot_end
-  ORDER BY sub.derivation_group, external_event.start_time;
+  ORDER BY sub.derivation_group_id, external_event.start_time;
 
 call migrations.mark_migration_applied('5');
