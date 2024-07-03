@@ -3,6 +3,15 @@ table:
   schema: merlin
 configuration:
   custom_name: "derivation_group"
+object_relationships:
+  - name: external_source_type
+    using:
+      manual_configuration:
+        remote_table:
+          name: external_source_type
+          schema: merlin
+        column_mapping:
+          source_type_id: id
 array_relationships:
   - name: external_source
     using:
@@ -30,16 +39,16 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name]
+      columns: [name, source_type_id]
       check: {}
   - role: user
     permission:
-      columns: [name]
+      columns: [name, source_type_id]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [name]
+      columns: [name, source_type_id]
       filter: {}
 #  - role: user # justified???
 #    permission:
