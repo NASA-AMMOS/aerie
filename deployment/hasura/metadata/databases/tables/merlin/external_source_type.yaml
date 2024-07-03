@@ -11,6 +11,13 @@ array_relationships:
         table:
           name: external_source
           schema: merlin
+  - name: derivation_group
+    using:
+      foreign_key_constraint_on:
+        column: source_type_id
+        table:
+          name: derivation_group
+          schema: merlin
 select_permissions:
   - role: aerie_admin
     permission:
