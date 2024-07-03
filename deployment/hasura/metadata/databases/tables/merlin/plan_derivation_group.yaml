@@ -1,15 +1,15 @@
 table:
-  name: plan_external_source
+  name: plan_derivation_group
   schema: merlin
 configuration:
-  custom_name: "plan_external_source"
+  custom_name: "plan_derivation_group"
 object_relationships:
 - name: plan
   using:
     foreign_key_constraint_on: plan_id
-- name: external_source
+- name: derivation_group
   using:
-    foreign_key_constraint_on: external_source_id
+    foreign_key_constraint_on: derivation_group_id
 select_permissions:
   - role: aerie_admin
     permission:
@@ -29,16 +29,16 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, external_source_id, created_at, owner]
+      columns: [plan_id, derivation_group_id, created_at, owner]
       check: {}
   - role: user
     permission:
-      columns: [plan_id, external_source_id, created_at, owner]
+      columns: [plan_id, derivation_group_id, created_at, owner]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, external_source_id, created_at, owner]
+      columns: [plan_id, derivation_group_id, created_at, owner]
       filter: {}
 delete_permissions:
   - role: aerie_admin
