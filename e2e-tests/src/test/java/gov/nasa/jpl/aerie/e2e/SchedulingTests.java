@@ -374,7 +374,7 @@ public class SchedulingTests {
         "Coexistence Scheduling Test Goal",
         coexistenceGoalDefinition,
         schedulingSpecId,
-        0);
+        0).goalId();
 
     try {
       // Schedule and get Plan
@@ -470,7 +470,7 @@ public class SchedulingTests {
         "Coexistence Scheduling Test Goal",
         coexistenceGoalDefinition,
         schedulingSpecId,
-        0);
+        0).goalId();
     try{
       final var response = hasura.awaitSimulation(planId);
       final var simDataset = hasura.getSimulationDataset(response.simDatasetId());
