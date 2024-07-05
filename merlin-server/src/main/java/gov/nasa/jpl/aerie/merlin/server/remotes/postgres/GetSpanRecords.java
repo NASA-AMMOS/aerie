@@ -21,7 +21,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 /*package-local*/ final class GetSpanRecords implements AutoCloseable {
   private final @Language("SQL") String sql = """
       select
-        a.id,
+        a.span_id,
         a.type,
         a.parent_id,
         a.start_offset,
