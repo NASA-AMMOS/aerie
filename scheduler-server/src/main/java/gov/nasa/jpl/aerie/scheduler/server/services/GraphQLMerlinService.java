@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -895,7 +896,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
               parent_id
               type
               start_offset
-              id
+              span_id
             }
             }
         """.formatted(datasetId.id());
@@ -1489,7 +1490,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
   private void insertSimulationEvents(
       DatasetId datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints) throws MerlinServiceException, IOException
+      Map<Duration, List<EventGraph<EventRecord>>> eventPoints) throws MerlinServiceException, IOException
   {
     final var req = """
             mutation($events:[event_insert_input!]!){
@@ -1518,20 +1519,21 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final long datasetId,
       final Duration duration,
       final int transactionIndex,
-      final List<Pair<String, Pair<Integer, SerializedValue>>> flattenedEventGraph
+      final List<Pair<String, EventRecord>> flattenedEventGraph
   ) {
     final var events = Json.createArrayBuilder();
-    for (final Pair<String, Pair<Integer, SerializedValue>> entry : flattenedEventGraph) {
+    for (final Pair<String, EventRecord> entry : flattenedEventGraph) {
       final var causalTime = entry.getLeft();
-      final Pair<Integer, SerializedValue> event = entry.getRight();
+      final EventRecord event = entry.getRight();
       events.add(
           Json.createObjectBuilder()
               .add("dataset_id",datasetId)
               .add("real_time", graphQLIntervalFromDuration(duration).toString())
               .add("transaction_index", transactionIndex)
               .add("causal_time", causalTime)
-              .add("topic_index", event.getLeft())
-              .add("value", serializedValueP.unparse(event.getRight()))
+              .add("topic_index", event.topicId())
+              .add("value", serializedValueP.unparse(event.value()))
+              .add("span_id", event.spanId().get())
               .build()
       );
     }
@@ -1555,20 +1557,18 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
                                                              e -> e.getKey().id(),
                                                              e -> unfinishedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
       allActivityRecords.putAll(simulatedActivityRecords);
-      final var simIdToPgId = postSpans(
+      postSpans(
           datasetId,
           allActivityRecords,
           simulationStart);
       updateSimulatedActivityParentsAction(
           datasetId,
-          simulatedActivityRecords,
-          simIdToPgId);
+          simulatedActivityRecords);
   }
 
   public void updateSimulatedActivityParentsAction(
     final DatasetId datasetId,
-    final Map<Long, SpanRecord> simulatedActivities,
-    final Map<Long, Long> simIdToPgId
+    final Map<Long, SpanRecord> simulatedActivities
 ) throws MerlinServiceException, IOException
   {
   final var req = """
@@ -1587,8 +1587,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     updates.add(Json.createObjectBuilder()
                    .add("where", Json.createObjectBuilder()
                                      .add("dataset_id",Json.createObjectBuilder().add("_eq", datasetId.id()).build())
-                                     .add("id", Json.createObjectBuilder().add("_eq", simIdToPgId.get(id)).build()))
-                   .add("_set", Json.createObjectBuilder().add("parent_id", simIdToPgId.get(activity.parentId().get())))
+                                     .add("span_id", Json.createObjectBuilder().add("_eq", id).build()))
+                   .add("_set", Json.createObjectBuilder().add("parent_id", activity.parentId().get()))
                    .build());
     updateCounter++;
   }
@@ -1640,7 +1640,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
             Optional.empty()));
   }
 
-  public HashMap<Long, Long> postSpans(final DatasetId datasetId,
+  public void postSpans(final DatasetId datasetId,
                                        final Map<Long, SpanRecord> spans,
                                        final Instant simulationStart
   ) throws MerlinServiceException, IOException
@@ -1649,7 +1649,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
                         mutation($spans:[span_insert_input!]!) {
                         insert_span(objects: $spans) {
                           returning {
-                            id
+                            span_id
                           }
                          }
                         }
@@ -1658,8 +1658,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var ids = spans.keySet().stream().toList();
     for (final var id : ids) {
       final var act = spans.get(id);
+
       final var startTime = graphQLIntervalFromDuration(simulationStart, act.start);
       spansJson.add(Json.createObjectBuilder()
+                        .add("span_id",id)
                         .add("dataset_id", datasetId.id())
                         .add("start_offset", startTime.toString())
                         .add("duration", act.duration.isPresent() ? graphQLIntervalFromDuration(act.duration().get()).toString() : "null")
@@ -1670,14 +1672,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var arguments = Json.createObjectBuilder()
                               .add("spans", spansJson)
                               .build();
-    final JsonObject response;
-    response = postRequest(req, arguments).get();
-    final var returnedIds = response.getJsonObject("data").getJsonObject("insert_span").getJsonArray("returning");
-    final var simIdToPostgresId = new HashMap<Long, Long>(ids.size());
-    for (int i = 0; i< ids.size(); ++i) {
-      simIdToPostgresId.put(ids.get(i), (long) returnedIds.get(i).asJsonObject().getInt("id"));
-    }
-    return simIdToPostgresId;
+    postRequest(req, arguments).get();
   }
 
   private JsonValue buildAttributes(final Optional<Long> directiveId, final Map<String, SerializedValue> arguments, final Optional<SerializedValue> returnValue) {

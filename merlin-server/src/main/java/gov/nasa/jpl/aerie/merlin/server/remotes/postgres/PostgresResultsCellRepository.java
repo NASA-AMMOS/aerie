@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -31,6 +32,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -298,7 +300,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  private static SortedMap<Duration, List<EventGraph<EventRecord>>>
   getSimulationEvents(
       final Connection connection,
       final long datasetId
@@ -388,7 +390,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void insertSimulationEvents(
       Connection connection,
       long datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      Map<Duration, List<EventGraph<EventRecord>>> events,
       Timestamp simulationStart) throws SQLException
   {
     try (
@@ -407,7 +409,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException {
     try (
         final var postActivitiesAction = new PostSpansAction(connection);
-        final var updateSimulatedActivityParentsAction = new UpdateSimulatedActivityParentsAction(connection)
     ) {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
           .collect(Collectors.toMap(
@@ -420,15 +421,21 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
               e -> unfinishedActivityToRecord(e.getValue())));
       allActivityRecords.putAll(simulatedActivityRecords);
 
-      final var simIdToPgId = postActivitiesAction.apply(
-          datasetId,
-          allActivityRecords,
-          simulationStart);
+      // Sorts the map by SpanRecord parent ID to ensure foreign key constraints are met.
+      // Entries with null parent IDs are placed first to avoid foreign key violations
+      // for the "span_has_parent_span" constraint.
+      final var sortedAllActivityRecords = new LinkedHashMap<Long,SpanRecord>();
+      sortedAllActivityRecords.putAll(allActivityRecords.entrySet().stream()
+                                                        .filter(entry -> entry.getValue().parentId().isEmpty())
+                                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+      sortedAllActivityRecords.putAll(allActivityRecords.entrySet().stream()
+                                                        .filter(entry -> !entry.getValue().parentId().isEmpty())
+                                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
-      updateSimulatedActivityParentsAction.apply(
+      postActivitiesAction.apply(
           datasetId,
-          allActivityRecords,
-          simIdToPgId);
+          sortedAllActivityRecords,
+          simulationStart);
     }
   }
 
