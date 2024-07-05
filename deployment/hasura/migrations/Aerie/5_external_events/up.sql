@@ -188,7 +188,7 @@ ALTER TABLE ONLY merlin.plan_derivation_group
 ALTER TABLE ONLY merlin.plan_derivation_group
     ADD CONSTRAINT unique_plan_derivation_group UNIQUE (plan_id, derivation_group_id);
 
-COMMENT ON CONSTRAINT unique_plan_derivation_group ON merlin.plan_derivation_group IS 'The tuple (plan_id, external_source_id) must be unique!';
+COMMENT ON CONSTRAINT unique_plan_derivation_group ON merlin.plan_derivation_group IS 'The tuple (plan_id, plan_derivation_group) must be unique!';
 
 -- Add foreign keys
 ALTER TABLE ONLY merlin.plan_derivation_group
