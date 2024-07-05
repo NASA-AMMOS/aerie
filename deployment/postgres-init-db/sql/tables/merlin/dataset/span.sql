@@ -1,5 +1,5 @@
 create table merlin.span (
-  id integer generated always as identity,
+  span_id integer not null,
 
   dataset_id integer not null,
   parent_id integer null,
@@ -9,8 +9,9 @@ create table merlin.span (
   type text not null,
   attributes jsonb not null,
 
+
   constraint span_synthetic_key
-    primary key (dataset_id, id)
+    primary key (dataset_id, span_id)
 )
 partition by list (dataset_id);
 
@@ -18,8 +19,8 @@ comment on table merlin.span is e''
   'A temporal window of interest. A span may be refined by its children, providing additional information over '
   'more specific windows.';
 
-comment on column merlin.span.id is e''
-  'The synthetic identifier for this span.';
+comment on column merlin.span.span_id is e''
+  'The id for this span.';
 comment on column merlin.span.dataset_id is e''
   'The dataset this span is part of.';
 comment on column merlin.span.parent_id is e''
