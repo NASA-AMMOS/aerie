@@ -115,10 +115,10 @@ public final class DiscreteEffects {
     final var currentQueue = currentValue(resource);
     if (currentQueue.isEmpty()) return Optional.empty();
 
-    final T result = currentQueue.get(currentQueue.size() - 1);
+    final T result = currentQueue.get(0);
     resource.emit(name(effect(q -> {
       var q$ = new LinkedList<>(q);
-      T purportedResult = q$.removeLast();
+      T purportedResult = q$.removeFirst();
       if (!result.equals(purportedResult)) {
         throw new IllegalStateException("Detected effect conflicting with queue remove operation");
       }
