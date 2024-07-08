@@ -462,6 +462,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
   throws MerlinServiceException, IOException
   {
     final var request = new StringBuilder();
+    if (acts.isEmpty()) return;
     request.append("mutation {");
     for (final SchedulingActivity act: plan.getActivities()) {
       final var id = uploadIdMap.get(act.id()).id();
