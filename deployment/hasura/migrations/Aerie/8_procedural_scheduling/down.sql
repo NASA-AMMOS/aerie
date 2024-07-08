@@ -38,4 +38,6 @@ alter table scheduler.scheduling_goal_definition
 
 drop type scheduler.goal_type;
 
+call migrations.mark_migration_rolled_back('8')
+
 commit;

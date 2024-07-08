@@ -58,4 +58,6 @@ alter table scheduler.scheduling_goal_analysis_created_activities
   add constraint created_activities_primary_key
     primary key (analysis_id, goal_id, goal_revision, goal_invocation_id, activity_id);
 
+call migrations.mark_migration_applied('8')
+
 commit;
