@@ -27,5 +27,7 @@ comment on column scheduler.scheduling_goal_analysis_created_activities.goal_id 
   'The associated goal ID.';
 comment on column scheduler.scheduling_goal_analysis_created_activities.goal_revision is e''
   'The associated version of the goal definition used.';
+comment on column scheduler.scheduling_goal_analysis_created_activities.goal_invocation_id is e''
+  'The associated goal invocation ID.';
 comment on column scheduler.scheduling_goal_analysis_created_activities.activity_id is e''
   'The ID of an activity instance created to satisfy the associated goal.';

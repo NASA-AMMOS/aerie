@@ -35,9 +35,11 @@ create table scheduler.scheduling_specification_goals (
 comment on table scheduler.scheduling_specification_goals is e''
   'The scheduling goals to be executed against a given plan.';
 comment on column scheduler.scheduling_specification_goals.specification_id is e''
-  'The plan scheduling specification this goal is on. Half of the primary key.';
+  'The plan scheduling specification this goal is on. Third of the primary key.';
 comment on column scheduler.scheduling_specification_goals.goal_id is e''
-  'The id of a specific goal in the specification. Half of the primary key.';
+  'The id of a specific goal in the specification. Third of the primary key.';
+comment on column scheduler.scheduling_specification_goals.goal_invocation_id is e''
+  'The invocation id of a specific goal in the specification. Third of the primary key.';
 comment on column scheduler.scheduling_specification_goals.goal_revision is e''
   'The version of the goal definition to use. Leave NULL to use the latest version.';
 comment on column scheduler.scheduling_specification_goals.priority is e''
@@ -45,6 +47,10 @@ comment on column scheduler.scheduling_specification_goals.priority is e''
   'scheduling goals within the same specification.';
 comment on column scheduler.scheduling_specification_goals.enabled is e''
   'Whether to run a given goal. Defaults to TRUE.';
+comment on column scheduler.scheduling_specification_goals.arguments is e''
+  'The arguments that will be passed to this goal when invoked.'
+  'Follows scheduler.scheduling_goal_definition.parameter_schema.'
+  'Only valid for procedural goals.';
 comment on column scheduler.scheduling_specification_goals.simulate_after is e''
   'Whether to re-simulate after evaluating this goal and before the next goal.';
 
