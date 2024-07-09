@@ -1,8 +1,3 @@
-begin;
-
-drop trigger if exists "notify_hasura_refreshSchedulingProcedureParameterTypes_INSERT" on scheduler.scheduling_goal_definition;
-drop trigger if exists "notify_hasura_refreshSchedulingProcedureParameterTypes_UPDATE" on scheduler.scheduling_goal_definition;
-
 alter table scheduler.scheduling_goal_analysis_created_activities
   drop constraint created_activities_primary_key,
   add constraint created_activities_primary_key
@@ -42,5 +37,3 @@ alter table scheduler.scheduling_goal_definition
 drop type scheduler.goal_type;
 
 call migrations.mark_migration_rolled_back('8');
-
-commit;

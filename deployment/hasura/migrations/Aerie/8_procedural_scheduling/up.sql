@@ -1,5 +1,3 @@
-begin;
-
 create type scheduler.goal_type as enum ('EDSL', 'JAR');
 
 alter table scheduler.scheduling_goal_definition
@@ -59,5 +57,3 @@ alter table scheduler.scheduling_goal_analysis_created_activities
     primary key (analysis_id, goal_id, goal_revision, goal_invocation_id, activity_id);
 
 call migrations.mark_migration_applied('8');
-
-commit;
