@@ -1,88 +1,150 @@
 package gov.nasa.jpl.aerie.command_model.sequencing;
 
 import gov.nasa.jpl.aerie.command_model.events.EventDispatcher;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
+import gov.nasa.jpl.aerie.command_model.sequencing.command_dictionary.CommandDictionary;
+import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.IntStream;
+import java.util.function.Predicate;
 
+import static gov.nasa.jpl.aerie.command_model.sequencing.SequenceEngine.Effects.*;
+import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.$int;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.sumInt;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.increment;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.discreteResource;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
 
 public class Sequencing {
-    public final List<SequenceEngine> sequenceEngines;
-    // TODO - consider making EventDispatcher an interface, and building a version that indexes on command stem for efficiency
-    public final EventDispatcher<CommandEvent> commandEvents;
+    // This limit is just to prevent the system from completely running away if things go wrong.
+    private static final int MAX_ENGINES = 1_000;
 
-    public final Resource<Discrete<Integer>> availableSequenceEngines;
+    // TODO - There's something a little off in this model...
+    //   Each SequenceEngine in the structure below should be wrapped in its own dynamics, or maybe even be its own resource?
+    //   That way, we could represent an engine erroring out or expiring (whatever that means) independently of the other resources.
+    //   In fact, this is a more general pattern - Basically a way of "dynamically" creating MutableResource<T>'s
+    //   by factoring them into a single larger MutableResource<Map<K, ErrorCatching<Expiring<T>>>>>.
+    //   We lose efficiency because an effect on any individual dynamic resource becomes an effect on all dynamics resources,
+    //   (or at least all dynamic resources with the same root "real" resource), but that's the price of dynamic allocation, I guess...
+    //   For efficiency, we could pre-allocate a handful of static "real" copies, and operate independently on them.
+    //   Then only the "overflow" would need to be dynamic.
+    private final MutableResource<Discrete<Map<Integer, SequenceEngine>>> sequenceEngines;
+    private final MutableResource<Discrete<Integer>> spawnedSequenceEngineDaemons;
 
-    public Sequencing(int numberOfSequenceEngines, Registrar registrar) {
-        commandEvents = new EventDispatcher<>();
-        sequenceEngines = IntStream.range(0, numberOfSequenceEngines)
-                .mapToObj(i -> new SequenceEngine("SequenceEngine_" + i, commandEvents))
-                .toList();
-        availableSequenceEngines = sumInt(sequenceEngines.stream().map(engine ->
-                map(engine.isAvailable(), a -> a ? 1 : 0)));
+    private final CommandDictionary commandDictionary;
+    private final EventDispatcher<Pair<TimingDescriptor, Command>> commandEvents;
 
-        registrar.discrete("availableSequenceEngines", availableSequenceEngines, new IntegerValueMapper());
-        sequenceEngines.forEach(engine -> {
-            registrar.discrete(engine.state(), new EnumValueMapper<>(SequenceEngine.State.class));
-            registrar.discrete(engine.currentSequenceId(), new StringValueMapper());
-            registrar.discrete(engine.currentCommandIndex(), new IntegerValueMapper());
-            registrar.discrete(engine.currentCommandStem(), new StringValueMapper());
+    public Sequencing(CommandDictionary commandDictionary, Registrar registrar) {
+        this.commandDictionary = commandDictionary;
+        this.commandEvents = new EventDispatcher<>();
+
+        sequenceEngines = discreteResource(Map.of());
+        spawnedSequenceEngineDaemons = discreteResource(0);
+
+        // Spawn daemons as needed to cover all the engines that could be running
+        var missingDaemons = map(sequenceEngines, spawnedSequenceEngineDaemons,
+                (engines, spawnedDaemons) -> spawnedDaemons < engines.size());
+        whenever(missingDaemons, () -> {
+            spawnSequenceEngineDaemon(currentValue(spawnedSequenceEngineDaemons));
+            increment(spawnedSequenceEngineDaemons);
+        });
+
+        registrar.discrete("loadedSequenceEngines", countEngines(engine -> !engine.available()), $int());
+        registrar.discrete("activeSequenceEngines", countEngines(SequenceEngine::active), $int());
+    }
+
+    private void spawnSequenceEngineDaemon(int index) {
+        var engine = engine(index);
+        whenever(map(engine, SequenceEngine::active), () -> currentValue(engine).currentCommand().ifPresentOrElse(
+                cmd -> {
+                    // Run this command
+                    commandEvents.emit(Pair.of(TimingDescriptor.START, cmd.base()));
+                    var result = cmd.behavior().run();
+                    commandEvents.emit(Pair.of(TimingDescriptor.END, cmd.base()));
+                    // Update the engine, moving on to the next command to be run
+                    advance(engine, result.nextCommandIndex());
+                },
+                () -> {
+                    // Sequence complete, unload the engine.
+                    // This also deactivates the engine, so we'll pause until something else loads and activates engine.
+                    unload(engine);
+                })
+        );
+    }
+
+    private Resource<Discrete<Integer>> countEngines(Predicate<SequenceEngine> predicate) {
+        return map(sequenceEngines, m -> (int) m.values().stream().filter(predicate).count());
+    }
+
+    public MutableResource<Discrete<SequenceEngine>> engine(int index) {
+        // Define a value to return when the engine is unloaded
+        SequenceEngine unloadedSequenceEngine = SequenceEngine.available(index);
+        // Define an immutable view of the resource to read from.
+        // Do this outside the context of the resource itself, because the map operation has some (small) overhead.
+        Resource<Discrete<SequenceEngine>> immutableView =
+                map(sequenceEngines, m -> m.getOrDefault(index, unloadedSequenceEngine));
+        return name(new MutableResource<>() {
+            @Override
+            public void emit(DynamicsEffect<Discrete<SequenceEngine>> effect) {
+                // Factor an effect on a single engine through the map of all engines by the given index.
+                // In particular, if the effect would unload the engine, remove that engine instead.
+                sequenceEngines.emit(name(allEnginesDynamics -> {
+                    var engineDynamics = map(allEnginesDynamics, m -> m.getOrDefault(index, unloadedSequenceEngine));
+                    var newEngineDynamics = effect.apply(engineDynamics);
+                    return map(allEnginesDynamics, newEngineDynamics, (m, e) -> {
+                        var m$ = new HashMap<>(m);
+                        m$.put(index, e);
+                        return m$;
+                    });
+                }, "%s on engine %s", effect, index));
+            }
+
+            @Override
+            public ErrorCatching<Expiring<Discrete<SequenceEngine>>> getDynamics() {
+                return immutableView.getDynamics();
+            }
+        }, "Engine %s", index);
+    }
+
+    public MutableResource<Discrete<SequenceEngine>> loadSequence(Sequence sequence) {
+        // First, interpret the sequence according to the loaded command dictionary
+        var executableSequence = commandDictionary.interpret(sequence);
+        // Then, search for the first available sequence engine to load this into.
+        for (int i = 0; i < MAX_ENGINES; ++i) {
+            var engine = engine(i);
+            // If engine is unloaded and not in error
+            if (currentValue(map(engine, SequenceEngine::available), false)) {
+                // Load the sequence in an inactive state
+                load(engine, executableSequence);
+                // Finally, return this engine so the client can manipulate it.
+                return engine;
+            }
+        }
+        // Things have gone very wrong, and we've exhausted all possible engines.
+        throw new RuntimeException(("Sequencing has used all %d possible sequence engines." +
+                " Please look for an infinite loop loading sequences.").formatted(MAX_ENGINES));
+    }
+
+    public void listenForCommand(String commandStem, Consumer<Command> action) {
+        listenForCommand(TimingDescriptor.START, commandStem, action);
+    }
+
+    public void listenForCommand(TimingDescriptor timing, String commandStem, Consumer<Command> action) {
+        commandEvents.registerEventListener(timingAndStem -> {
+            if (timing.equals(timingAndStem.getLeft()) && commandStem.equals(timingAndStem.getRight().stem())) {
+                action.accept(timingAndStem.getRight());
+            }
         });
     }
 
-    public void loadSequence(Sequence sequence) {
-        // Find the next available engine, and load the sequence there.
-        // If the engine has errored out for any reason, treat it as unavailable.
-        for (var sequenceEngine : sequenceEngines) {
-            if (currentValue(sequenceEngine.isAvailable(), false)) {
-                sequenceEngine.loadSequence(sequence);
-                return;
-            }
-        }
-        // If no sequence engine is available, just return
-        // TODO: Log some kind of error when we get here, noting that we can't run this sequence?
-    }
-
-    public void addListener(String commandStem, Consumer<Command> action) {
-        addListener(CommandEventTime.START, commandStem, action);
-    }
-
-    public void addListener(CommandEventTime time, String commandStem, Consumer<Command> action) {
-        commandEvents.registerEventListener(commandEvent -> {
-            if (Objects.equals(time, commandEvent.time())
-                    && Objects.equals(commandStem, commandEvent.command().stem)) {
-                action.accept(commandEvent.command());
-            }
-            // Else, this didn't match, so ignore it.
-        });
-    }
-
-    record CommandEvent(Command command, CommandEventTime time) {
-        public static CommandEvent atStart(Command command) {
-            return new CommandEvent(command, CommandEventTime.START);
-        }
-
-        public static CommandEvent atEnd(Command command) {
-            return new CommandEvent(command, CommandEventTime.END);
-        }
-
-        @Override
-        public String toString() {
-            return "%s of %s".formatted(time, command);
-        }
-    }
-    enum CommandEventTime {
+    public enum TimingDescriptor {
         START,
         END
     }

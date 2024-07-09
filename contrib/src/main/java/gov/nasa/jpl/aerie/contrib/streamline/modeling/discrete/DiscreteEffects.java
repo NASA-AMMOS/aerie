@@ -3,9 +3,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
@@ -125,6 +123,23 @@ public final class DiscreteEffects {
       return q$;
     }), "Remove %s from queue", result));
     return Optional.of(result);
+  }
+
+  // Map style operations
+  public static <K, V> void put(MutableResource<Discrete<Map<K, V>>> resource, K key, V value) {
+    resource.emit(name(effect(m -> {
+      var m$ = new HashMap<>(m);
+      m$.put(key, value);
+      return m$;
+    }), "Put %s -> %s", key, value));
+  }
+
+  public static <K, V> void remove(MutableResource<Discrete<Map<K, V>>> resource, K key) {
+    resource.emit(name(effect(m -> {
+      var m$ = new HashMap<>(m);
+      m$.remove(key);
+      return m$;
+    }), "Remove %s", key));
   }
 
   // Consumable style operations
