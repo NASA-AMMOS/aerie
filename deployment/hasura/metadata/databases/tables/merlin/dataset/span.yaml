@@ -9,7 +9,7 @@ object_relationships:
     manual_configuration:
       column_mapping:
         dataset_id: dataset_id
-        parent_id: id
+        parent_id: span_id
       insertion_order: null
       remote_table:
         name: span
@@ -20,7 +20,7 @@ array_relationships:
     manual_configuration:
       column_mapping:
         dataset_id: dataset_id
-        id: parent_id
+        span_id: parent_id
       insertion_order: null
       remote_table:
         name: span
