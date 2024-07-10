@@ -24,7 +24,7 @@ public final class Mission {
 
     public Mission(gov.nasa.jpl.aerie.merlin.framework.Registrar registrar$, Instant planStart, Configuration configuration) {
         var registrar = new Registrar(registrar$, planStart, ErrorBehavior.Throw);
-        this.sequencing = new Sequencing(commandDictionary(), registrar);
+        this.sequencing = new Sequencing(commandDictionary(), this, registrar);
         this.power = new Power(sequencing, registrar);
     }
 

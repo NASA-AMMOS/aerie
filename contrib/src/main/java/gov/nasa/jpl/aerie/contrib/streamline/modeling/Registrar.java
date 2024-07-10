@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ThinResourceMonad;
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Logger;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Logging;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
@@ -20,17 +20,16 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.time.Instant;
 import java.util.Collection;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Logging.LOGGER;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Tracing.trace;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar.ErrorBehavior.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.increment;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.waitUntil;
 import static java.util.stream.Collectors.joining;
@@ -51,7 +50,7 @@ public class Registrar {
 
   public enum ErrorBehavior {
     /**
-     * Log errors to the error state,
+     * Log errors to {@link Logging#LOGGER}
      * and replace resource value with null.
      */
     Log,
@@ -61,16 +60,9 @@ public class Registrar {
     Throw
   }
 
-  /**
-   * The "main" logger. Unless you have a compelling reason to direct logging somewhere else,
-   * this logger should be used by virtually all model components.
-   * This logger will be initialized automatically when a registrar is constructed.
-   */
-  public static Logger LOGGER;
-
   public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final Instant planStart, final ErrorBehavior errorBehavior) {
     Resources.init();
-    LOGGER = new Logger(baseRegistrar, planStart);
+    Logging.init(baseRegistrar, planStart);
     this.baseRegistrar = baseRegistrar;
     this.errorBehavior = errorBehavior;
 

@@ -1,8 +1,12 @@
 package gov.nasa.jpl.aerie.command_model.sequencing;
 
+import gov.nasa.jpl.aerie.command_model.Mission;
+import gov.nasa.jpl.aerie.command_model.activities.CommandSpan;
 import gov.nasa.jpl.aerie.command_model.events.EventDispatcher;
+import gov.nasa.jpl.aerie.command_model.generated.ActivityActions;
 import gov.nasa.jpl.aerie.command_model.sequencing.command_dictionary.CommandDictionary;
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Logging;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.SimpleLogger;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
@@ -20,14 +24,14 @@ import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMapper
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Logging.LOGGER;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.getName;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.increment;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.discreteResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.call;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.replaying;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 
 public class Sequencing {
     // This limit is just to prevent the system from completely running away if things go wrong.
@@ -46,6 +50,7 @@ public class Sequencing {
     private final MutableResource<Discrete<Integer>> spawnedSequenceEngineDaemons;
 
     private final CommandDictionary commandDictionary;
+    private final Mission mission;
     private final EventDispatcher<CommandEvent> commandEvents;
     public record CommandEvent(
             TimingDescriptor timing,
@@ -58,8 +63,9 @@ public class Sequencing {
         }
     }
 
-    public Sequencing(CommandDictionary commandDictionary, Registrar registrar) {
+    public Sequencing(CommandDictionary commandDictionary, Mission mission, Registrar registrar) {
         this.commandDictionary = commandDictionary;
+        this.mission = mission;
         this.commandEvents = new EventDispatcher<>(new SimpleLogger("Commands", registrar.baseRegistrar));
 
         sequenceEngines = discreteResource(Map.of());
@@ -83,10 +89,11 @@ public class Sequencing {
                 cmd -> {
                     // Run this command
                     commandEvents.emit(new CommandEvent(TimingDescriptor.START, cmd.base(), engine));
-                    var result = cmd.behavior().run();
+                    // TODO - I don't love advancing the engine inside the command itself.
+                    //   I'd rather get the result, emit the "end of command" effect, and then advance the engine.
+                    //   However, when I use my usual MutableObject trick to pull the result out, I keep getting nulls.
+                    ActivityActions.call(mission, new CommandSpan(() -> advance(engine, cmd.behavior().run().nextCommandIndex())));
                     commandEvents.emit(new CommandEvent(TimingDescriptor.END, cmd.base(), engine));
-                    // Update the engine, moving on to the next command to be run
-                    advance(engine, result.nextCommandIndex());
                 },
                 () -> {
                     // Sequence complete, unload the engine.
