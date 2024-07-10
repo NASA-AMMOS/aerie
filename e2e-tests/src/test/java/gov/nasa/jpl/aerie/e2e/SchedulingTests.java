@@ -935,7 +935,7 @@ public class SchedulingTests {
 
       try {
         // Update the plan's constraint specification to use a specific version
-        hasura.updateSchedulingSpecVersion(schedulingSpecId, goalId, invocationId, 0);
+        hasura.updateSchedulingSpecVersion(invocationId, 0);
 
         // Update definition to have invalid syntax
         final int newRevision = hasura.updateGoalDefinition(
@@ -947,7 +947,7 @@ public class SchedulingTests {
         assertEquals("complete", initResults.status());
 
         // Update scheduling spec to use invalid definition
-        hasura.updateSchedulingSpecVersion(schedulingSpecId, goalId, invocationId, newRevision);
+        hasura.updateSchedulingSpecVersion(invocationId, newRevision);
 
         // Schedule -- should fail
         final var error = Assertions.assertThrows(
@@ -976,14 +976,14 @@ public class SchedulingTests {
       final var problemGoalId = problemGoalInvocationId.goalId();
       final var problemInvocationId = problemGoalInvocationId.invocationId();
       try {
-        hasura.updateSchedulingSpecEnabled(schedulingSpecId, problemGoalId, problemInvocationId, false);
+        hasura.updateSchedulingSpecEnabled(problemInvocationId, false);
 
         // Schedule -- Validate that the plan didn't change
         hasura.awaitScheduling(schedulingSpecId);
         assertEquals(0, hasura.getPlan(planId).activityDirectives().size());
 
         // Enable disabled constraint
-        hasura.updateSchedulingSpecEnabled(schedulingSpecId, problemGoalId, problemInvocationId, true);
+        hasura.updateSchedulingSpecEnabled(problemInvocationId, true);
 
         // Schedule -- Assert Fail
         final var error = Assertions.assertThrows(

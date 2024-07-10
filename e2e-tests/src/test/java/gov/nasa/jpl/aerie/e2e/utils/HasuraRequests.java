@@ -691,20 +691,16 @@ public class HasuraRequests implements AutoCloseable {
     return makeRequest(GQL.UPDATE_GOAL_DEFINITION, variables).getJsonObject("definition").getInt("revision");
   }
 
-  public void updateSchedulingSpecEnabled(int schedulingSpecId, int goalId, int invocationId, boolean enabled) throws IOException {
+  public void updateSchedulingSpecEnabled(int invocationId, boolean enabled) throws IOException {
     final var variables = Json.createObjectBuilder()
-                              .add("spec_id", schedulingSpecId)
-                              .add("goal_id", goalId)
                               .add("goal_invocation_id", invocationId)
                               .add("enabled", enabled)
                               .build();
     makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_ENABLED, variables);
   }
 
-  public void updateSchedulingSpecVersion(int schedulingSpecId, int goalId, int invocationId, int version) throws IOException {
+  public void updateSchedulingSpecVersion(int invocationId, int version) throws IOException {
     final var variables = Json.createObjectBuilder()
-                              .add("spec_id", schedulingSpecId)
-                              .add("goal_id", goalId)
                               .add("goal_invocation_id", invocationId)
                               .add("goal_revision", version)
                               .build();
