@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 
 import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.$boolean;
 import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.$double;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.turnOff;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.turnOn;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.*;
 
@@ -33,7 +34,7 @@ public class Power {
                 case "DEVICE_2" -> device2state;
                 default -> null;
             };
-            if (deviceState != null) turnOn(deviceState);
+            if (deviceState != null) turnOff(deviceState);
         });
 
         registrar.discrete("device1state", device1state, $boolean());
