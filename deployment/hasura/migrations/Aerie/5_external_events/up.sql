@@ -8,6 +8,7 @@ CREATE TABLE merlin.external_source (
     valid_at timestamp with time zone NOT NULL,
     start_time timestamp with time zone NOT NULL,
     end_time timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     metadata jsonb
 );
 
