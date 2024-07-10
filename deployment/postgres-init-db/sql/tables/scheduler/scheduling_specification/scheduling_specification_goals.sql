@@ -10,7 +10,7 @@ create table scheduler.scheduling_specification_goals (
   simulate_after boolean not null default true,
 
   constraint scheduling_specification_goals_primary_key
-    primary key (specification_id, goal_id, goal_invocation_id),
+    primary key (goal_invocation_id),
   constraint scheduling_specification_goals_specification_exists
     foreign key (specification_id)
       references scheduler.scheduling_specification
@@ -34,12 +34,12 @@ create table scheduler.scheduling_specification_goals (
 
 comment on table scheduler.scheduling_specification_goals is e''
   'The scheduling goals to be executed against a given plan.';
-comment on column scheduler.scheduling_specification_goals.specification_id is e''
-  'The plan scheduling specification this goal is on. Third of the primary key.';
-comment on column scheduler.scheduling_specification_goals.goal_id is e''
-  'The id of a specific goal in the specification. Third of the primary key.';
 comment on column scheduler.scheduling_specification_goals.goal_invocation_id is e''
-  'The invocation id of a specific goal in the specification. Third of the primary key.';
+  'The id of a specific goal invocation in the specification. Primary key.';
+comment on column scheduler.scheduling_specification_goals.specification_id is e''
+  'The plan scheduling specification this goal is on.';
+comment on column scheduler.scheduling_specification_goals.goal_id is e''
+  'The id of a specific goal in the specification.';
 comment on column scheduler.scheduling_specification_goals.goal_revision is e''
   'The version of the goal definition to use. Leave NULL to use the latest version.';
 comment on column scheduler.scheduling_specification_goals.priority is e''
