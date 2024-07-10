@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.worker;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import gov.nasa.jpl.aerie.merlin.driver.resources.StreamingSimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
@@ -13,8 +14,9 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRevisionDat
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
-import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.SimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresProfileStreamer;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
 import io.javalin.Javalin;
 
@@ -57,7 +59,7 @@ public final class MerlinWorkerAppDriver {
         configuration.untruePlanStart()
     );
     final var planController = new LocalPlanService(stores.plans());
-    final var simulationAgent = new SynchronousSimulationAgent(
+    final var simulationAgent = new SimulationAgent(
         planController,
         missionModelController,
         configuration.simulationProgressPollPeriodMillis());
@@ -91,8 +93,13 @@ public final class MerlinWorkerAppDriver {
             notification.simulationRevision(),
             notification.simulationTemplateRevision());
         final ResultsProtocol.WriterRole writer = owner.get();
-        try {
-          simulationAgent.simulate(planId, revisionData, writer, canceledListener);
+        try(final var streamer = new PostgresProfileStreamer(hikariDataSource, datasetId)) {
+          simulationAgent.simulate(
+              planId,
+              revisionData,
+              writer,
+              canceledListener,
+              new StreamingSimulationResourceManager(streamer));
         } catch (final Throwable ex) {
           ex.printStackTrace(System.err);
           writer.failWith(b -> b
