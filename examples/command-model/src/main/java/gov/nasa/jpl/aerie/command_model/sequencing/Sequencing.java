@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.command_model.sequencing.command_dictionary.CommandDic
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
@@ -16,11 +17,14 @@ import static gov.nasa.jpl.aerie.command_model.sequencing.SequenceEngine.Effects
 import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.$int;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.increment;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.discreteResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.call;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.replaying;
 
 public class Sequencing {
     // This limit is just to prevent the system from completely running away if things go wrong.
@@ -39,7 +43,12 @@ public class Sequencing {
     private final MutableResource<Discrete<Integer>> spawnedSequenceEngineDaemons;
 
     private final CommandDictionary commandDictionary;
-    private final EventDispatcher<Pair<TimingDescriptor, Command>> commandEvents;
+    private final EventDispatcher<CommandEvent> commandEvents;
+    public record CommandEvent(
+            TimingDescriptor timing,
+            Command command,
+            MutableResource<Discrete<SequenceEngine>> engine
+    ) {}
 
     public Sequencing(CommandDictionary commandDictionary, Registrar registrar) {
         this.commandDictionary = commandDictionary;
@@ -65,9 +74,9 @@ public class Sequencing {
         whenever(map(engine, SequenceEngine::active), () -> currentValue(engine).currentCommand().ifPresentOrElse(
                 cmd -> {
                     // Run this command
-                    commandEvents.emit(Pair.of(TimingDescriptor.START, cmd.base()));
+                    commandEvents.emit(new CommandEvent(TimingDescriptor.START, cmd.base(), engine));
                     var result = cmd.behavior().run();
-                    commandEvents.emit(Pair.of(TimingDescriptor.END, cmd.base()));
+                    commandEvents.emit(new CommandEvent(TimingDescriptor.END, cmd.base(), engine));
                     // Update the engine, moving on to the next command to be run
                     advance(engine, result.nextCommandIndex());
                 },
@@ -132,14 +141,14 @@ public class Sequencing {
                 " Please look for an infinite loop loading sequences.").formatted(MAX_ENGINES));
     }
 
-    public void listenForCommand(String commandStem, Consumer<Command> action) {
+    public void listenForCommand(String commandStem, Consumer<CommandEvent> action) {
         listenForCommand(TimingDescriptor.START, commandStem, action);
     }
 
-    public void listenForCommand(TimingDescriptor timing, String commandStem, Consumer<Command> action) {
-        commandEvents.registerEventListener(timingAndStem -> {
-            if (timing.equals(timingAndStem.getLeft()) && commandStem.equals(timingAndStem.getRight().stem())) {
-                action.accept(timingAndStem.getRight());
+    public void listenForCommand(TimingDescriptor timing, String commandStem, Consumer<CommandEvent> action) {
+        commandEvents.registerEventListener(event -> {
+            if (timing.equals(event.timing()) && commandStem.equals(event.command().stem())) {
+                action.accept(event);
             }
         });
     }

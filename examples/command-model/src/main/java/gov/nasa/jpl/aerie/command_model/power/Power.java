@@ -20,16 +20,16 @@ public class Power {
     public final Resource<Discrete<Double>> totalPowerDraw_W = add(device1powerDraw_W, device2powerDraw_W);
 
     public Power(Sequencing sequencing, Registrar registrar) {
-        sequencing.listenForCommand("POWER_ON", cmd -> {
-            var deviceState = switch (cmd.arguments().get(0)) {
+        sequencing.listenForCommand("POWER_ON", event -> {
+            var deviceState = switch (event.command().arguments().get(0)) {
                 case "DEVICE_1" -> device1state;
                 case "DEVICE_2" -> device2state;
                 default -> null;
             };
             if (deviceState != null) turnOn(deviceState);
         });
-        sequencing.listenForCommand("POWER_OFF", cmd -> {
-            var deviceState = switch (cmd.arguments().get(0)) {
+        sequencing.listenForCommand("POWER_OFF", event -> {
+            var deviceState = switch (event.command().arguments().get(0)) {
                 case "DEVICE_1" -> device1state;
                 case "DEVICE_2" -> device2state;
                 default -> null;
