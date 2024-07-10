@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.command_model.events;
 
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.SimpleLogger;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -8,11 +12,12 @@ import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.inContext;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.getName;
 
 public class EventDispatcher<E> {
-    // TODO - think about some way of logging the events themselves perhaps?
-    //   Maybe we'd create a new topic (CellRef) for each event type and emit to it?
-    //   Or, maybe we re-write the logging utilities themselves to use topics, and just log events?
-
     private final List<Consumer<E>> eventListeners = new ArrayList<>();
+    private final SimpleLogger logger;
+
+    public EventDispatcher(SimpleLogger logger) {
+        this.logger = logger;
+    }
 
     public void registerEventListener(Consumer<E> listener) {
         eventListeners.add(listener);
@@ -23,6 +28,8 @@ public class EventDispatcher<E> {
     }
 
     public void emit(E event) {
-        inContext(getName(event, null), () -> eventListeners.forEach(listener -> listener.accept(event)));
+        String eventName = getName(event, null);
+        logger.log(eventName);
+        inContext(eventName, () -> eventListeners.forEach(listener -> listener.accept(event)));
     }
 }

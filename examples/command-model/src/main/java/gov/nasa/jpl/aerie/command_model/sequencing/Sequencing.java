@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.command_model.sequencing;
 import gov.nasa.jpl.aerie.command_model.events.EventDispatcher;
 import gov.nasa.jpl.aerie.command_model.sequencing.command_dictionary.CommandDictionary;
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.SimpleLogger;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -18,6 +20,7 @@ import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMapper
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Context.contextualized;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.getName;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.increment;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.discreteResource;
@@ -48,11 +51,16 @@ public class Sequencing {
             TimingDescriptor timing,
             Command command,
             MutableResource<Discrete<SequenceEngine>> engine
-    ) {}
+    ) {
+        @Override
+        public String toString() {
+            return "%s.%s (%s)".formatted(command.stem(), timing, getName(engine, null));
+        }
+    }
 
     public Sequencing(CommandDictionary commandDictionary, Registrar registrar) {
         this.commandDictionary = commandDictionary;
-        this.commandEvents = new EventDispatcher<>();
+        this.commandEvents = new EventDispatcher<>(new SimpleLogger("Commands", registrar.baseRegistrar));
 
         sequenceEngines = discreteResource(Map.of());
         spawnedSequenceEngineDaemons = discreteResource(0);

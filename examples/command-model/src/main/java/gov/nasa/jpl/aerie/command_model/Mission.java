@@ -11,6 +11,8 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar.ErrorBehavior;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.time.Instant;
+
 import static gov.nasa.jpl.aerie.command_model.sequencing.command_dictionary.IntrinsicCommandDictionary.compose;
 import static gov.nasa.jpl.aerie.command_model.utils.StreamUtils.enumerate;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
@@ -20,8 +22,8 @@ public final class Mission {
     public final Sequencing sequencing;
     public final Power power;
 
-    public Mission(gov.nasa.jpl.aerie.merlin.framework.Registrar registrar$, Configuration configuration) {
-        var registrar = new Registrar(registrar$, ErrorBehavior.Throw);
+    public Mission(gov.nasa.jpl.aerie.merlin.framework.Registrar registrar$, Instant planStart, Configuration configuration) {
+        var registrar = new Registrar(registrar$, planStart, ErrorBehavior.Throw);
         this.sequencing = new Sequencing(commandDictionary(), registrar);
         this.power = new Power(sequencing, registrar);
     }

@@ -43,7 +43,7 @@ import static java.util.stream.Collectors.joining;
  * </p>
  */
 public class Registrar {
-  private final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar;
+  public final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar;
   private boolean trace = false;
   private boolean profile = false;
   private final ErrorBehavior errorBehavior;
