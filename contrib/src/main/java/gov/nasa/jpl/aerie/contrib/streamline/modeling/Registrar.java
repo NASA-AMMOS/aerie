@@ -2,12 +2,12 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.NullableValueMapper;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ThinResourceMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.debugging.Logger;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
@@ -17,11 +17,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.time.Instant;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
@@ -31,9 +28,8 @@ import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Tracing.trace;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar.ErrorBehavior.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.not;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.when;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEffects.increment;
+import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.waitUntil;
@@ -50,8 +46,8 @@ public class Registrar {
   private final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar;
   private boolean trace = false;
   private boolean profile = false;
-  private final MutableResource<Discrete<Map<Throwable, Set<String>>>> errors;
   private final ErrorBehavior errorBehavior;
+  private final MutableResource<Discrete<Integer>> numberOfErrors = discreteResource(0);
 
   public enum ErrorBehavior {
     /**
@@ -65,17 +61,20 @@ public class Registrar {
     Throw
   }
 
-  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final ErrorBehavior errorBehavior) {
+  /**
+   * The "main" logger. Unless you have a compelling reason to direct logging somewhere else,
+   * this logger should be used by virtually all model components.
+   * This logger will be initialized automatically when a registrar is constructed.
+   */
+  public static Logger LOGGER;
+
+  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final Instant planStart, final ErrorBehavior errorBehavior) {
     Resources.init();
+    LOGGER = new Logger(baseRegistrar, planStart);
     this.baseRegistrar = baseRegistrar;
     this.errorBehavior = errorBehavior;
-    errors = resource(Discrete.discrete(Map.of()));
-    var errorString = map(errors, errors$ -> errors$.entrySet().stream().map(entry -> formatError(entry.getKey(), entry.getValue())).collect(joining("\n\n")));
 
-    // Register the errors and number of errors resources for output
-    // TODO consider using serializable events, rather than resources, to log errors
-    discrete("errors", errorString, new StringValueMapper());
-    discrete("numberOfErrors", map(errors, Map::size), new IntegerValueMapper());
+    discrete("numberOfErrors", numberOfErrors, new IntegerValueMapper());
   }
 
   private static String formatError(Throwable e, Collection<String> affectedResources) {
@@ -157,21 +156,9 @@ public class Registrar {
     });
   }
 
-  // TODO: Consider using a MultiMap instead of doing this by hand below
   private Unit logError(String resourceName, Throwable e) {
-    errors.emit(effect(s -> {
-      var s$ = new HashMap<>(s);
-      s$.compute(e, (e$, affectedResources) -> {
-        if (affectedResources == null) {
-          return Set.of(resourceName);
-        } else {
-          var affectedResources$ = new HashSet<>(affectedResources);
-          affectedResources$.add(resourceName);
-          return affectedResources$;
-        }
-      });
-      return s$;
-    }));
+    LOGGER.error("Error affecting %s: %s", resourceName, e);
+    increment(numberOfErrors);
     return Unit.UNIT;
   }
 
