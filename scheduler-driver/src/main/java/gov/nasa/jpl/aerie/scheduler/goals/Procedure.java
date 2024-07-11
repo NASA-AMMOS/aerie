@@ -27,8 +27,8 @@ public class Procedure extends Goal {
   private final Path jarPath;
   private final SerializedValue args;
 
-  public Procedure(final PlanningHorizon planningHorizon, Path jarPath, SerializedValue args) {
-    this.simulateAfter = true;
+  public Procedure(final PlanningHorizon planningHorizon, Path jarPath, SerializedValue args, boolean simulateAfter) {
+    this.simulateAfter = simulateAfter;
     this.planHorizon = planningHorizon;
     this.jarPath = jarPath;
     this.args = args;

@@ -25,8 +25,7 @@ interface EditablePlan: Plan {
       type: String,
       start: DirectiveStart,
       arguments: Map<String, SerializedValue>
-  ) = create(
-      NewDirective(
+  ) = create(NewDirective(
       AnyDirective(arguments),
       "Unnamed Activity",
       type,
