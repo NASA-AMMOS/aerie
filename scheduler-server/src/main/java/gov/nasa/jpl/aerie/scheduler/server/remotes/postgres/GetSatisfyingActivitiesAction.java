@@ -16,6 +16,7 @@ import java.util.Map;
   private static final @Language("SQL") String sql = """
     select
       s.goal_id,
+      s.goal_invocation_id,
       s.goal_revision,
       s.activity_id
     from scheduler.scheduling_goal_analysis_satisfying_activities as s
@@ -34,7 +35,11 @@ import java.util.Map;
 
     final var satisfyingActivities = new HashMap<GoalId, List<ActivityDirectiveId>>();
     while (resultSet.next()) {
-      final var goalId = new GoalId(resultSet.getLong("goal_id"), resultSet.getLong("goal_revision"));
+      final var goalId = new GoalId(
+          resultSet.getLong("goal_id"),
+          resultSet.getLong("goal_revision"),
+          resultSet.getLong("goal_invocation_id")
+      );
       final var activityId = new ActivityDirectiveId(resultSet.getLong("activity_id"));
 
       satisfyingActivities
