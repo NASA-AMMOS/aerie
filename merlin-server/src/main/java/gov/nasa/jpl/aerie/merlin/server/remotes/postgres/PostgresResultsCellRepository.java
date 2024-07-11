@@ -366,8 +366,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     final var simulationStart = new Timestamp(results.startTime);
-    final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
-    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet);
     postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
     insertSimulationTopics(connection, datasetId, results.topics);
     insertSimulationEvents(connection, datasetId, results.events, simulationStart);
