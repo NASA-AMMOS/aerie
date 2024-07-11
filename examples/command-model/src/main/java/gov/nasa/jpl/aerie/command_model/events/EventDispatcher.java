@@ -1,8 +1,6 @@
 package gov.nasa.jpl.aerie.command_model.events;
 
-import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.SimpleLogger;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,8 +1,13 @@
 package gov.nasa.jpl.aerie.command_model.sequencing.command_dictionary;
 
+import gov.nasa.jpl.aerie.command_model.Mission;
+import gov.nasa.jpl.aerie.command_model.sequencing.CommandBehavior;
 import gov.nasa.jpl.aerie.command_model.sequencing.ExecutableCommand;
 import gov.nasa.jpl.aerie.command_model.sequencing.ExecutableSequence;
 import gov.nasa.jpl.aerie.command_model.sequencing.Sequence;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface CommandDictionary {
     /**
@@ -11,29 +16,23 @@ public interface CommandDictionary {
      */
     ExecutableSequence interpret(Sequence sequence);
 
-    /**
-     * Compose the behaviors provided with this dictionary with those provided by supplement.
-     * Behaviors provided by supplement will run first.
-     */
-    default CommandDictionary compose(IntrinsicCommandDictionary supplement) {
+    static CommandDictionary combine(
+            Mission mission,
+            ControlFlowDictionary controlFlowDictionary,
+            CompilingDictionary compilingDictionary) {
         return sequence -> {
-            var execSequence = interpret(sequence);
-            return new ExecutableSequence(execSequence.id(), execSequence.commands().stream()
-                    .map(cmd -> new ExecutableCommand(cmd.base(), cmd.behavior().compose(supplement.interpret(cmd.base()))))
-                    .toList());
-        };
-    }
-
-    /**
-     * Compose the behaviors provided with this dictionary with those provided by supplement.
-     * Behaviors provided by supplement will run in parallel.
-     */
-    default CommandDictionary composeParallel(IntrinsicCommandDictionary supplement) {
-        return sequence -> {
-            var execSequence = interpret(sequence);
-            return new ExecutableSequence(execSequence.id(), execSequence.commands().stream()
-                    .map(cmd -> new ExecutableCommand(cmd.base(), cmd.behavior().composeParallel(supplement.interpret(cmd.base()))))
-                    .toList());
+            List<CommandBehavior> controlFlowBehaviors = controlFlowDictionary.interpret(sequence);
+            List<ExecutableCommand> executableCommands = new ArrayList<>(sequence.commands().size());
+            for (int i = 0; i < sequence.commands().size(); ++i) {
+                var cmd = sequence.commands().get(i);
+                var activity = compilingDictionary.interpret(cmd);
+                var controlFlow = controlFlowBehaviors.get(i);
+                executableCommands.add(new ExecutableCommand(
+                        cmd,
+                        activity,
+                        controlFlow.compose(() -> activity.call(mission))));
+            }
+            return new ExecutableSequence(sequence.id(), executableCommands);
         };
     }
 }

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.command_model.power;
 
+import gov.nasa.jpl.aerie.command_model.activities.commands.CMD_POWER_OFF;
+import gov.nasa.jpl.aerie.command_model.activities.commands.CMD_POWER_ON;
 import gov.nasa.jpl.aerie.command_model.sequencing.Sequencing;
 import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
@@ -20,7 +22,7 @@ public class Power {
     public final Resource<Discrete<Double>> totalPowerDraw_W = add(device1powerDraw_W, device2powerDraw_W);
 
     public Power(Sequencing sequencing, Registrar registrar) {
-        sequencing.listenForCommand("POWER_ON", event -> {
+        sequencing.listenForCommand(CMD_POWER_ON.class, event -> {
             var deviceState = switch (event.command().arguments().get(0)) {
                 case "DEVICE_1" -> device1state;
                 case "DEVICE_2" -> device2state;
@@ -28,7 +30,7 @@ public class Power {
             };
             if (deviceState != null) turnOn(deviceState);
         });
-        sequencing.listenForCommand("POWER_OFF", event -> {
+        sequencing.listenForCommand(CMD_POWER_OFF.class, event -> {
             var deviceState = switch (event.command().arguments().get(0)) {
                 case "DEVICE_1" -> device1state;
                 case "DEVICE_2" -> device2state;

@@ -1,13 +1,11 @@
 package gov.nasa.jpl.aerie.contrib.streamline.debugging;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static java.util.stream.Collectors.toMap;
 
 public class Logger {
@@ -15,24 +13,21 @@ public class Logger {
             .map(v -> v.toString().length())
             .max(Integer::compareTo)
             .orElseThrow();
-    private static final String LOG_MESSAGE_FORMAT = "%s [%-" + LEVEL_INDICATOR_SIZE + "s] %s";
+    private static final String LOG_MESSAGE_FORMAT = "%-" + LEVEL_INDICATOR_SIZE + "s - %s";
 
-    private final Map<LogLevel, SimpleLogger> subLoggers;
-    private final Instant planStart;
+    private final Map<LogLevel, TimeTaggingLogger> subLoggers;
 
     public Logger(Registrar registrar, Instant planStart) {
         // TODO - refactor the plan start out, by instead building a global sim clock to do the same job.
         //  To do that "right", the global clock should be a resource with custom dynamics for continuous Instant clocks.
         subLoggers = Arrays.stream(LogLevel.values()).collect(toMap(
                 level -> level,
-                level -> new SimpleLogger(level.name(), registrar)));
-        this.planStart = planStart;
+                level -> new TimeTaggingLogger(planStart, new TopicLogger(level.name(), registrar))));
     }
 
     public void log(LogLevel level, String messageFormat, Object... args) {
-        Instant time = planStart.plusNanos(Resources.currentTime().in(MICROSECONDS) * 1_000);
         String message = messageFormat.formatted(args);
-        subLoggers.get(level).log(LOG_MESSAGE_FORMAT.formatted(time, level, message));
+        subLoggers.get(level).log(LOG_MESSAGE_FORMAT.formatted(level, message));
     }
 
     public void debug(String messageFormat, Object... args) {

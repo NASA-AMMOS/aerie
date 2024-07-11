@@ -3,16 +3,19 @@
 @WithConfiguration(Configuration.class)
 
 @WithMappers(BasicValueMappers.class)
-@WithMappers(FakeValueMappers.class)
 
 @WithActivityType(AuthoredSequence.class)
-@WithActivityType(CommandSpan.class)
+
+@WithActivityType(CMD_ECHO.class)
+@WithActivityType(CMD_NO_OP.class)
+@WithActivityType(CMD_POWER_OFF.class)
+@WithActivityType(CMD_POWER_ON.class)
+@WithActivityType(CMD_WAIT.class)
 
 package gov.nasa.jpl.aerie.command_model;
 
 import gov.nasa.jpl.aerie.command_model.activities.AuthoredSequence;
-import gov.nasa.jpl.aerie.command_model.activities.CommandSpan;
-import gov.nasa.jpl.aerie.command_model.value_mappers.FakeValueMappers;
+import gov.nasa.jpl.aerie.command_model.activities.commands.*;
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;

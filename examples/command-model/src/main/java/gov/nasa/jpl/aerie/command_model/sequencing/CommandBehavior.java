@@ -32,6 +32,9 @@ public interface CommandBehavior {
         return () -> {
             // Spawn each branch, so that they stay synchronized and parallel in their branch structure.
             // Then wrap both spawns in a call, so that the resulting object returns exactly when both branches return.
+            // TODO - Either fix this or remove it altogether.
+            //   When this task replays (if it's replaying), we'll re-initialize the MutableObject,
+            //   resetting the stored value to null. If the call is then skipped on the replay, we return null instead of the value.
             MutableObject<CommandResult> result = new MutableObject<>();
             call(replaying(contextualized(() -> {
                 spawn(replaying(contextualized(backgroundTask)));

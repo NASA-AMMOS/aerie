@@ -22,7 +22,7 @@ public class AuthoredSequence {
         // Activate the engine to start the sequence
         activate(engine);
         // Wait until that sequence is unloaded (engine available or loaded with a different sequence)
-        // to consider this activity finished.
+        // to consider this implementation finished.
         // This would include other sequences potentially pausing and resuming this sequence.
         waitUntil(when(map(engine, $ -> $.available() || !sequence.id().equals($.sequence().id()))));
     }
