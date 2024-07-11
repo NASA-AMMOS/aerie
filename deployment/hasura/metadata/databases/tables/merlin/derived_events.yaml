@@ -13,7 +13,6 @@ object_relationships:
         column_mapping:
           source_id: id
           derivation_group_id: derivation_group_id
-          slot_start: start_time
   - name: external_event
     using:
       manual_configuration:
