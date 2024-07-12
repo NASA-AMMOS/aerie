@@ -189,7 +189,6 @@ public class CheckpointSimulationDriver {
 
     try {
       // Get all activities as close as possible to absolute time
-      // Schedule all activities.
       // Using HashMap explicitly because it allows `null` as a key.
       // `null` key means that an activity is not waiting on another activity to finish to know its start time
       HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
@@ -207,15 +206,14 @@ public class CheckpointSimulationDriver {
       // Filter out activities that are before simulationStartTime
       resolved = StartOffsetReducer.filterOutStartOffsetBefore(
           resolved,
-          Duration.max(
-              ZERO,
-              cachedEngine.endsAt().plus(MICROSECONDS)));
+          Duration.max(ZERO, cachedEngine.endsAt().plus(MICROSECONDS)));
+
+      // Schedule all activities.
       final var toSchedule = new LinkedHashSet<ActivityDirectiveId>();
       toSchedule.add(null);
-      final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> finalResolved = resolved;
       final var activitiesToBeScheduledNow = new HashMap<ActivityDirectiveId, ActivityDirective>();
-      if (finalResolved.get(null) != null) {
-        for (final var r : finalResolved.get(null)) {
+      if (resolved.get(null) != null) {
+        for (final var r : resolved.get(null)) {
           activitiesToBeScheduledNow.put(r.getKey(), schedule.get(r.getKey()));
         }
       }
@@ -231,37 +229,51 @@ public class CheckpointSimulationDriver {
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (elapsedTime.noLongerThan(simulationDuration) && !simulationCanceled.get()) {
+      engineLoop:
+      while (!simulationCanceled.get()) {
         final var nextTime = engine.peekNextTime().orElse(Duration.MAX_VALUE);
-        if (duplicationIsOk && shouldTakeCheckpoint.apply(new SimulationState(elapsedTime, nextTime, engine, schedule, activityToSpan))) {
-          cells.freeze();
-          LOGGER.info("Saving a simulation engine in memory at time " + elapsedTime + " (next time: " + nextTime + ")");
-          final var newCachedEngine = new CachedSimulationEngine(
-              elapsedTime,
-              schedule,
-              engine,
-              cells,
-              makeCombinedTimeline(timelines, timeline).points(),
-              activityTopic,
-              missionModel);
-          newCachedEngine.freeze();
-          cachedEngineStore.save(
-              newCachedEngine,
-              configuration);
-          timelines.add(timeline);
-          engine = engine.duplicate();
-          timeline = new TemporalEventSource();
-          cells = new LiveCells(timeline, cells);
-        }
-        //break before changing the state of the engine
-        if (simulationCanceled.get() || stopConditionOnPlan.apply(new SimulationState(elapsedTime, nextTime, engine, schedule, activityToSpan))) {
-          if(!duplicationIsOk){
+        if (duplicationIsOk && shouldTakeCheckpoint.apply(new SimulationState(
+            elapsedTime,
+            nextTime,
+            engine,
+            schedule,
+            activityToSpan))
+        ) {
+            LOGGER.info("Saving a simulation engine in memory at time "
+                        + elapsedTime
+                        + " (next time: "
+                        + nextTime
+                        + ")");
+
             final var newCachedEngine = new CachedSimulationEngine(
                 elapsedTime,
                 schedule,
                 engine,
                 activityTopic,
-                missionModel);
+                missionModel,
+                new InMemorySimulationResourceManager(resourceManager)
+            );
+
+            newCachedEngine.freeze();
+            cachedEngineStore.save(
+                newCachedEngine,
+                configuration);
+
+            engine = engine.duplicate();
+        }
+
+        //break before changing the state of the engine
+        if (simulationCanceled.get()) break;
+
+        if (stopConditionOnPlan.apply(new SimulationState(elapsedTime, nextTime, engine, schedule, activityToSpan))) {
+          if (!duplicationIsOk) {
+            final var newCachedEngine = new CachedSimulationEngine(
+                elapsedTime,
+                schedule,
+                engine,
+                activityTopic,
+                missionModel,
+                resourceManager);
             cachedEngineStore.save(
                 newCachedEngine,
                 configuration);
@@ -269,42 +281,30 @@ public class CheckpointSimulationDriver {
           break;
         }
 
-        final var batch = engine.extractNextJobs(simulationDuration);
-        // Increment real time, if necessary.
-        final var delta = batch.offsetFromStart().minus(elapsedTime);
-        elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-        //   even if they occur at the same real time.
-
+        final var status = engine.step(simulationDuration);
+        switch (status) {
+          case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
+          case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
+          case SimulationEngine.Status.Nominal nominal:
+            elapsedTime = nominal.elapsedTime();
+            resourceManager.acceptUpdates(elapsedTime, nominal.realResourceUpdates(), nominal.dynamicResourceUpdates());
+            toCheckForDependencyScheduling.putAll(scheduleActivities(
+                getSuccessorsToSchedule(engine, toCheckForDependencyScheduling),
+                schedule,
+                resolved,
+                missionModel,
+                engine,
+                elapsedTime,
+                activityToSpan,
+                activityTopic));
+            break;
+        }
         simulationExtentConsumer.accept(elapsedTime);
-
-        //this break depends on the state of the batch: this is the soonest we can exit for that reason
-        if (batch.jobs().isEmpty() && (batch.offsetFromStart().isEqualTo(simulationDuration))) {
-          break;
-        }
-
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-        timeline.add(commit.getLeft());
-        if (commit.getRight().isPresent()) {
-          throw commit.getRight().get();
-        }
-
-        toCheckForDependencyScheduling.putAll(scheduleActivities(
-            getSuccessorsToSchedule(engine, toCheckForDependencyScheduling),
-            schedule,
-            resolved,
-            missionModel,
-            engine,
-            elapsedTime,
-            activityToSpan,
-            activityTopic));
       }
     } catch (SpanException ex) {
       // Swallowing the spanException as the internal `spanId` is not user meaningful info.
       final var topics = missionModel.getTopics();
-      final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, timeline, topics, ex.spanId);
+      final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
       if (directiveId.isPresent()) {
         throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
       }
