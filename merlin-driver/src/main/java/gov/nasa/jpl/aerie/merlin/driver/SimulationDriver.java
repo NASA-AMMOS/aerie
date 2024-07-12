@@ -121,7 +121,7 @@ public final class SimulationDriver {
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, topics, resourceManager);
+      return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
     }
   }
 

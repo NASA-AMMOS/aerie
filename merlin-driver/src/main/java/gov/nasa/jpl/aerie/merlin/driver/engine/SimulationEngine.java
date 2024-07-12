@@ -720,8 +720,7 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
-      final SimulationEngine engine,
+  public SimulationResults computeResults (
       final Instant startTime,
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
@@ -733,34 +732,9 @@ public final class SimulationEngine implements AutoCloseable {
     final var spanInfo = computeSpanInfo(timeline, activityTopic, serializableTopics);
 
     // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
-
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
-      final var name = id.id();
-      final var resource = state.resource();
-      if(!resourceNames.contains(name)) continue;
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
-      }
-    }
+    final var resourceProfiles = resourceManager.computeProfiles(elapsedTime);
+    final var realProfiles = resourceProfiles.realProfiles();
+    final var discreteProfiles = resourceProfiles.discreteProfiles();
 
     final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, spanInfo);
 
@@ -774,7 +748,91 @@ public final class SimulationEngine implements AutoCloseable {
     final var spanToActivities = spanToSimulatedActivities(engine,spanInfo);
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
-    for (var point : timeline.points()) {
+    for (var point : this.timeline.points()) {
+      if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
+        time = time.plus(delta.delta());
+      } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
+        final var serializedEventGraph = commit.events().substitute(
+            event -> {
+              // TODO can we do this more efficiently?
+              EventGraph<EventRecord> output = EventGraph.empty();
+              for (final var serializableTopic : serializableTopics) {
+                Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
+                if (serializedEvent.isPresent()) {
+                  // If the event's `provenance` has no simulated activity id, search its ancestors to find the nearest
+                  // simulated activity id, if one exists
+                  if (!spanToActivities.containsKey(event.provenance())) {
+                    var spanId = Optional.of(event.provenance());
+
+                    while (true) {
+                      if (spanToActivities.containsKey(spanId.get())) {
+                        spanToActivities.put(event.provenance(), spanToActivities.get(spanId.get()));
+                        break;
+                      }
+                      spanId = engine.getSpan(spanId.get()).parent();
+                      if (spanId.isEmpty()) {
+                        break;
+                      }
+                    }
+                  }
+                  var activitySpanID = Optional.ofNullable(spanToActivities.get(event.provenance()).id());
+                  output = EventGraph.concurrently(
+                      output,
+                      EventGraph.atom(
+                          new EventRecord(serializableTopicToId.get(serializableTopic),
+                                          activitySpanID,
+                                          serializedEvent.get())));
+                }
+              }
+              return output;
+            }
+        ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
+        if (!(serializedEventGraph instanceof EventGraph.Empty)) {
+          serializedTimeline
+              .computeIfAbsent(time, x -> new ArrayList<>())
+              .add(serializedEventGraph);
+        }
+      }
+    }
+
+    return new SimulationResults(realProfiles,
+                                 discreteProfiles,
+                                 activityResults.simulatedActivities,
+                                 activityResults.unfinishedActivities,
+                                 startTime,
+                                 elapsedTime,
+                                 topics,
+                                 serializedTimeline);
+  }
+
+  public SimulationResults computeResults(
+      final Instant startTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final SimulationResourceManager resourceManager,
+      final Set<String> resourceNames
+  ) {
+    // Collect per-task information from the event graph.
+    final var spanInfo = computeSpanInfo(timeline, activityTopic, serializableTopics);
+
+    // Extract profiles for every resource.
+    final var resourceProfiles = resourceManager.computeProfiles(elapsedTime);
+    final var realProfiles = resourceProfiles.realProfiles();
+    final var discreteProfiles = resourceProfiles.discreteProfiles();
+
+    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, spanInfo);
+
+    final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+    final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
+    for (final var serializableTopic : serializableTopics) {
+      serializableTopicToId.put(serializableTopic, topics.size());
+      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
+    }
+
+    final var spanToActivities = spanToSimulatedActivities(engine,spanInfo);
+    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
+    var time = Duration.ZERO;
+    for (var point : this.timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
         time = time.plus(delta.delta());
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
