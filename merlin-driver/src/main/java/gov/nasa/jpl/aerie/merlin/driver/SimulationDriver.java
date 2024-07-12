@@ -128,52 +128,23 @@ public final class SimulationDriver {
   // This method is used as a helper method for executing unit tests
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-    try (final var engine = new SimulationEngine()) {
-      /* The top-level simulation timeline. */
-      var timeline = new TemporalEventSource();
-      var cells = new LiveCells(timeline, missionModel.getInitialCells());
-      /* The current real time. */
-      var elapsedTime = Duration.ZERO;
-
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-
-        engine.trackResource(name, resource, elapsedTime);
+    try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
+      // Track resources and kick off daemon tasks
+      try {
+        engine.init(missionModel.getResources(), missionModel.getDaemon());
+      } catch (Throwable t) {
+        throw new RuntimeException("Exception thrown while starting daemon tasks", t);
       }
 
-      // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-      {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-          timeline.add(commit.getLeft());
-          if(commit.getRight().isPresent()) {
-             throw new RuntimeException("Exception thrown while starting daemon tasks", commit.getRight().get());
-          }
-      }
+      // Schedule the task.
+      final var spanId = engine.scheduleTask(Duration.ZERO, task);
 
-      // Schedule all activities.
-      final var spanId = engine.scheduleTask(elapsedTime, task);
-
-      // Drive the engine until we're out of time.
-      // TERMINATION: Actually, we might never break if real time never progresses forward.
+      // Drive the engine until the scheduled task completes.
       while (!engine.getSpan(spanId).isComplete()) {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-
-        // Increment real time, if necessary.
-        final var delta = batch.offsetFromStart().minus(elapsedTime);
-        elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-        //   even if they occur at the same real time.
-
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit.getLeft());
-        if(commit.getRight().isPresent()) {
-          throw new RuntimeException("Exception thrown while simulating tasks", commit.getRight().get());
+        try {
+          engine.step(Duration.MAX_VALUE);
+        } catch (Throwable t) {
+          throw new RuntimeException("Exception thrown while simulating tasks", t);
         }
       }
     }

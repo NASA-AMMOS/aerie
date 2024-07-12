@@ -1,11 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,21 +37,15 @@ public class CheckpointSimulationDriver {
       Duration endsAt,
       Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
       SimulationEngine simulationEngine,
-      LiveCells cells,
-      SlabList<TemporalEventSource.TimePoint> timePoints,
       Topic<ActivityDirectiveId> activityTopic,
       MissionModel<?> missionModel
   ) {
     public void freeze() {
-      cells.freeze();
-      timePoints.freeze();
       simulationEngine.close();
     }
 
     public static CachedSimulationEngine empty(final MissionModel<?> missionModel) {
       final SimulationEngine engine = new SimulationEngine();
-      final TemporalEventSource timeline = new TemporalEventSource();
-      final LiveCells cells = new LiveCells(timeline, missionModel.getInitialCells());
 
       // Begin tracking all resources.
       for (final var entry : missionModel.getResources().entrySet()) {
@@ -140,27 +131,7 @@ public class CheckpointSimulationDriver {
     return bestCandidate.map(cachedSimulationEngine -> Pair.of(cachedSimulationEngine, correspondenceMap));
   }
 
-  private static TemporalEventSource makeCombinedTimeline(List<TemporalEventSource> timelines, TemporalEventSource timeline) {
-    final TemporalEventSource combinedTimeline = new TemporalEventSource();
-    for (final var entry : timelines) {
-      for (final var timePoint : entry.points()) {
-        if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
-          combinedTimeline.add(t.delta());
-        } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
-          combinedTimeline.add(t.events());
-        }
-      }
-    }
 
-    for (final var timePoint : timeline) {
-      if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
-        combinedTimeline.add(t.delta());
-      } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
-        combinedTimeline.add(t.events());
-      }
-    }
-    return combinedTimeline;
-  }
 
   public static Function<SimulationState, Boolean> desiredCheckpoints(final List<Duration> desiredCheckpoints) {
     return simulationState -> {
@@ -244,13 +215,10 @@ public class CheckpointSimulationDriver {
     final boolean duplicationIsOk = cachedEngineStore.capacity() > 1;
     final var activityToSpan = new HashMap<ActivityDirectiveId, SpanId>();
     final var activityTopic = cachedEngine.activityTopic();
-    final var timelines = new ArrayList<TemporalEventSource>();
-    timelines.add(new TemporalEventSource(cachedEngine.timePoints));
-    var engine = !duplicationIsOk ? cachedEngine.simulationEngine : cachedEngine.simulationEngine.duplicate();
+    var engine = duplicationIsOk ? cachedEngine.simulationEngine.duplicate() : cachedEngine.simulationEngine;
+    final var resourceManager = duplicationIsOk ? new InMemorySimulationResourceManager(cachedEngine.resourceManager) : cachedEngine.resourceManager;
     engine.unscheduleAfter(cachedEngine.endsAt);
 
-    var timeline = new TemporalEventSource();
-    var cells = new LiveCells(timeline, cachedEngine.cells());
     /* The current real time. */
     var elapsedTime = Duration.max(ZERO, cachedEngine.endsAt());
 
@@ -323,14 +291,11 @@ public class CheckpointSimulationDriver {
                 elapsedTime,
                 schedule,
                 engine,
-                cells,
-                makeCombinedTimeline(timelines, timeline).points(),
                 activityTopic,
                 missionModel);
             cachedEngineStore.save(
                 newCachedEngine,
                 configuration);
-            timelines.add(timeline);
           }
           break;
         }
@@ -379,13 +344,12 @@ public class CheckpointSimulationDriver {
       throw new SimulationException(elapsedTime, simulationStartTime, ex);
     }
     return new SimulationResultsComputerInputs(
-            engine,
-            simulationStartTime,
-            elapsedTime,
-            activityTopic,
-            makeCombinedTimeline(timelines, timeline),
-            missionModel.getTopics(),
-            activityToSpan);
+        engine,
+        simulationStartTime,
+        activityTopic,
+        missionModel.getTopics(),
+        activityToSpan,
+        resourceManager);
   }
 
 

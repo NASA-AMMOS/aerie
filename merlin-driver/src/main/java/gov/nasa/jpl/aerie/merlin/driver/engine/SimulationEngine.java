@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
@@ -25,6 +26,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -93,8 +95,17 @@ public final class SimulationEngine implements AutoCloseable {
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor;
 
-  public SimulationEngine() {
+  /* The top-level simulation timeline. */
+  private final TemporalEventSource timeline;
+  private final LiveCells cells;
+  private Duration elapsedTime;
+
+  public SimulationEngine(LiveCells initialCells) {
     numActiveSimulationEngines++;
+    timeline = new TemporalEventSource();
+    cells = new LiveCells(timeline, initialCells);
+    elapsedTime = Duration.ZERO;
+
     scheduledJobs = new JobSchedule<>();
     waitingTasks = new LinkedHashMap<>();
     blockedTasks = new LinkedHashMap<>();
@@ -111,6 +122,13 @@ public final class SimulationEngine implements AutoCloseable {
 
   private SimulationEngine(SimulationEngine other) {
     numActiveSimulationEngines++;
+    other.timeline.freeze();
+    other.cells.freeze();
+
+    elapsedTime = other.elapsedTime;
+    timeline = other.combineTimeline(new TemporalEventSource());
+    cells = new LiveCells(timeline, other.cells);
+
     // New Executor allows other SimulationEngine to be closed
     executor = Executors.newVirtualThreadPerTaskExecutor();
     scheduledJobs = other.scheduledJobs.duplicate();
@@ -126,10 +144,7 @@ public final class SimulationEngine implements AutoCloseable {
       tasks.put(entry.getKey(), entry.getValue().duplicate(executor));
     }
     conditions = new LinkedHashMap<>(other.conditions);
-    resources = new LinkedHashMap<>();
-    for (final var entry : other.resources.entrySet()) {
-      resources.put(entry.getKey(), entry.getValue().duplicate());
-    }
+    resources = new LinkedHashMap<>(other.resources);
     unstartedTasks = new LinkedHashMap<>(other.unstartedTasks);
     spans = new LinkedHashMap<>(other.spans);
     spanContributorCount = new LinkedHashMap<>();
@@ -137,6 +152,96 @@ public final class SimulationEngine implements AutoCloseable {
       spanContributorCount.put(entry.getKey(), new MutableInt(entry.getValue().getValue()));
     }
   }
+
+  /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
+  public void init(Map<String, Resource<?>> resources, TaskFactory<Unit> daemons) throws Throwable {
+    // Begin tracking all resources.
+    for (final var entry : resources.entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+
+      this.trackResource(name, resource, elapsedTime);
+    }
+
+    // Start daemon task(s) immediately, before anything else happens.
+    this.scheduleTask(Duration.ZERO, daemons);
+    {
+      final var batch = this.extractNextJobs(Duration.MAX_VALUE);
+      final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+      for (final var commit : results.commits()) {
+        timeline.add(commit);
+      }
+      if(results.error.isPresent()) {
+        throw results.error.get();
+      }
+    }
+  }
+
+  public sealed interface Status {
+    record NoJobs() implements Status {}
+    record AtDuration() implements Status{}
+    record Nominal(Duration elapsedTime, Map<String, ProfileSegment<?>> resourceUpdates) implements Status{}
+  }
+
+  /** Step the engine forward one batch. **/
+  public Status step(Duration simulationDuration) throws Throwable {
+    final var nextTime = this.peekNextTime().orElse(Duration.MAX_VALUE);
+    if (nextTime.longerThan(simulationDuration)) {
+      elapsedTime = Duration.max(elapsedTime, simulationDuration); // avoid lowering elapsed time
+      return new Status.AtDuration();
+    }
+
+    final var batch = this.extractNextJobs(simulationDuration);
+
+    // Increment real time, if necessary.
+    final var delta = batch.offsetFromStart().minus(elapsedTime);
+    elapsedTime = batch.offsetFromStart();
+    timeline.add(delta);
+
+    // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
+    //   even if they occur at the same real time.
+    if (batch.jobs().isEmpty()) return new Status.NoJobs();
+
+    // Run the jobs in this batch.
+    final var results = this.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
+    for (final var commit : results.commits()) {
+      timeline.add(commit);
+      }
+    if(results.error.isPresent()) {
+      throw results.error.get();
+    }
+
+    /*
+    for (final var entry : engine.resources.entrySet()) {
+      final var id = entry.getKey();
+      final var state = entry.getValue();
+
+      final var name = id.id();
+      final var resource = state.resource();
+
+      switch (resource.getType()) {
+        case "real" -> realProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
+
+        case "discrete" -> discreteProfiles.put(
+            name,
+            Pair.of(
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
+
+        default ->
+            throw new IllegalArgumentException(
+                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
+      }
+    }
+     */
+
+    return new Status.Nominal(elapsedTime, Map.of());
+  }
+
 
   /** Schedule a new task to be performed at the given time. */
   public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state) {
@@ -419,6 +524,9 @@ public final class SimulationEngine implements AutoCloseable {
   @Override
   public void close() {
     numActiveSimulationEngines--;
+    cells.freeze();
+    timeline.freeze();
+
     for (final var task : this.tasks.values()) {
       task.state().release();
     }
