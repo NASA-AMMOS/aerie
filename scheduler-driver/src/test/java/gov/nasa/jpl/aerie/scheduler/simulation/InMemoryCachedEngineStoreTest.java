@@ -5,10 +5,8 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.AfterEach;
@@ -44,11 +42,10 @@ public class InMemoryCachedEngineStoreTest {
             new ActivityDirectiveId(1), new ActivityDirective(Duration.HOUR, "ActivityType1", Map.of(), null, true),
             new ActivityDirectiveId(2), new ActivityDirective(Duration.HOUR, "ActivityType2", Map.of(), null, true)
         ),
-        new SimulationEngine(),
-        new LiveCells(new CausalEventSource()),
-        new SlabList<>(),
+        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
         null,
-        SimulationUtility.getFooMissionModel()
+        SimulationUtility.getFooMissionModel(),
+        new InMemorySimulationResourceManager()
     );
   }
 
@@ -59,11 +56,10 @@ public class InMemoryCachedEngineStoreTest {
             new ActivityDirectiveId(3), new ActivityDirective(Duration.HOUR, "ActivityType3", Map.of(), null, true),
             new ActivityDirectiveId(4), new ActivityDirective(Duration.HOUR, "ActivityType4", Map.of(), null, true)
         ),
-        new SimulationEngine(),
-        new LiveCells(new CausalEventSource()),
-        new SlabList<>(),
+        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
         null,
-        SimulationUtility.getFooMissionModel()
+        SimulationUtility.getFooMissionModel(),
+        new InMemorySimulationResourceManager()
     );
   }
 
@@ -74,11 +70,10 @@ public class InMemoryCachedEngineStoreTest {
             new ActivityDirectiveId(5), new ActivityDirective(Duration.HOUR, "ActivityType5", Map.of(), null, true),
             new ActivityDirectiveId(6), new ActivityDirective(Duration.HOUR, "ActivityType6", Map.of(), null, true)
         ),
-        new SimulationEngine(),
-        new LiveCells(new CausalEventSource()),
-        new SlabList<>(),
+        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
         null,
-        SimulationUtility.getFooMissionModel()
+        SimulationUtility.getFooMissionModel(),
+        new InMemorySimulationResourceManager()
     );
   }
 

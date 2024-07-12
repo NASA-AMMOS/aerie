@@ -100,8 +100,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false,
-        $ -> {});
+        () -> false);
     assertResultsEqual(expected, results);
   }
 
@@ -129,8 +128,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false,
-        $ -> {});
+        () -> false);
     assertResultsEqual(expected, results);
 
     assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
@@ -171,8 +169,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false,
-        $ -> {});
+        () -> false);
     assertResultsEqual(expected, results);
 
     assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
@@ -224,8 +221,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false,
-        $ -> {});
+        () -> false);
     assertResultsEqual(expected, results);
 
     assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
@@ -286,8 +282,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false,
-        $ -> {});
+        () -> false);
 
     final SimulationResults expected2 = SimulationDriver.simulate(
         missionModel,
@@ -296,8 +291,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         Instant.EPOCH,
         Duration.HOUR,
-        () -> false,
-        $ -> {});
+        () -> false);
 
     assertResultsEqual(expected1, results);
 

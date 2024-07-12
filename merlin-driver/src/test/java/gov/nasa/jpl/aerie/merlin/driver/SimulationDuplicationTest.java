@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,7 +64,8 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         () -> false,
-        $ -> {});
+        $ -> {},
+        new InMemorySimulationResourceManager());
     assertEquals(expected, results);
     final var newResults = simulateWithCheckpoints(store.getCachedEngines(mockConfiguration()).get(0), List.of(), store);
     assertEquals(expected, newResults);
