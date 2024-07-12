@@ -85,7 +85,8 @@ public class CheckpointSimulationDriver {
   public static Optional<Pair<CachedSimulationEngine, Map<ActivityDirectiveId, ActivityDirectiveId>>> bestCachedEngine(
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final List<CachedSimulationEngine> cachedEngines,
-      final Duration planDuration) {
+      final Duration planDuration
+  ) {
     Optional<CachedSimulationEngine> bestCandidate = Optional.empty();
     final Map<ActivityDirectiveId, ActivityDirectiveId> correspondenceMap = new HashMap<>();
     final var minimumStartTimes = getMinimumStartTimes(schedule, planDuration);
@@ -102,7 +103,7 @@ public class CheckpointSimulationDriver {
                                                            .stream()
                                                            .filter(e -> e.getValue().equals(activity.getValue()))
                                                            .findFirst();
-        if(entryToRemove.isPresent()) {
+        if (entryToRemove.isPresent()) {
           final var entry = entryToRemove.get();
           activityDirectivesInCache.remove(entry.getKey());
           correspondenceMap.put(activity.getKey(), entry.getKey());
@@ -127,7 +128,7 @@ public class CheckpointSimulationDriver {
     }
 
     bestCandidate.ifPresent(cachedSimulationEngine -> LOGGER.info("Re-using simulation engine at "
-                                                                         + cachedSimulationEngine.endsAt()));
+                                                                  + cachedSimulationEngine.endsAt()));
     return bestCandidate.map(cachedSimulationEngine -> Pair.of(cachedSimulationEngine, correspondenceMap));
   }
 
@@ -136,7 +137,8 @@ public class CheckpointSimulationDriver {
   public static Function<SimulationState, Boolean> desiredCheckpoints(final List<Duration> desiredCheckpoints) {
     return simulationState -> {
       for (final var desiredCheckpoint : desiredCheckpoints) {
-        if (simulationState.currentTime().noLongerThan(desiredCheckpoint) && simulationState.nextTime().longerThan(desiredCheckpoint)) {
+        if (simulationState.currentTime().noLongerThan(desiredCheckpoint) && simulationState.nextTime().longerThan(
+            desiredCheckpoint)) {
           return true;
         }
       }
@@ -148,22 +150,25 @@ public class CheckpointSimulationDriver {
     return simulationState -> stoppingCondition.apply(simulationState) || simulationState.nextTime.isEqualTo(MAX_VALUE);
   }
 
-  private static Map<ActivityDirectiveId, Duration> getMinimumStartTimes(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration planDuration){
+  private static Map<ActivityDirectiveId, Duration> getMinimumStartTimes(
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Duration planDuration)
+  {
     //For an anchored activity, it's minimum invalidationTime would be the sum of all startOffsets in its anchor chain
     // (plus or minus the plan duration depending on whether the root is anchored to plan start or plan end).
     // If it's a start anchor chain (as in, all anchors have anchoredToStart set to true),
     // this will give you its exact start time, but if there are any end-time anchors, this will give you the minimum time the activity could start at.
     final var minimumStartTimes = new HashMap<ActivityDirectiveId, Duration>();
-    for(final var activity : schedule.entrySet()){
+    for (final var activity : schedule.entrySet()) {
       var curInChain = activity;
       var curSum = ZERO;
-      while(true){
-        if(curInChain.getValue().anchorId() == null){
+      while (true) {
+        if (curInChain.getValue().anchorId() == null) {
           curSum = curSum.plus(curInChain.getValue().startOffset());
           curSum = !curInChain.getValue().anchoredToStart() ? curSum.plus(planDuration) : curSum;
           minimumStartTimes.put(activity.getKey(), curSum);
           break;
-        } else{
+        } else {
           curSum = curSum.plus(curInChain.getValue().startOffset());
           curInChain = Map.entry(curInChain.getValue().anchorId(), schedule.get(curInChain.getValue().anchorId()));
         }
@@ -176,9 +181,9 @@ public class CheckpointSimulationDriver {
       Duration currentTime,
       Duration nextTime,
       SimulationEngine simulationEngine,
-      Map<ActivityDirectiveId,  ActivityDirective> schedule,
+      Map<ActivityDirectiveId, ActivityDirective> schedule,
       Map<ActivityDirectiveId, SpanId> activityDirectiveIdSpanIdMap
-  ){}
+  ) {}
 
   /**
    * Simulates a plan/schedule while using and creating simulation checkpoints.
@@ -193,7 +198,8 @@ public class CheckpointSimulationDriver {
    * @param cachedEngine the simulation engine that is going to be used
    * @param shouldTakeCheckpoint a function from state of the simulation to boolean deciding when to take checkpoints
    * @param stopConditionOnPlan a function from state of the simulation to boolean deciding when to stop simulation
-   * @param cachedEngineStore a store for simulation engine checkpoints taken. If capacity is 1, the simulation will behave like a resumable simulation.
+   * @param cachedEngineStore a store for simulation engine checkpoints taken. If capacity is 1, the simulation will
+   *     behave like a resumable simulation.
    * @param configuration the simulation configuration
    * @return all the information to compute simulation results if needed
    */
@@ -210,8 +216,8 @@ public class CheckpointSimulationDriver {
       final Function<SimulationState, Boolean> shouldTakeCheckpoint,
       final Function<SimulationState, Boolean> stopConditionOnPlan,
       final CachedEngineStore cachedEngineStore,
-      final SimulationEngineConfiguration configuration)
-  {
+      final SimulationEngineConfiguration configuration
+  ) {
     final boolean duplicationIsOk = cachedEngineStore.capacity() > 1;
     final var activityToSpan = new HashMap<ActivityDirectiveId, SpanId>();
     final var activityTopic = cachedEngine.activityTopic();
@@ -229,8 +235,10 @@ public class CheckpointSimulationDriver {
       // Schedule all activities.
       // Using HashMap explicitly because it allows `null` as a key.
       // `null` key means that an activity is not waiting on another activity to finish to know its start time
-      HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-      if(!resolved.isEmpty()) {
+      HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+          planDuration,
+          schedule).compute();
+      if (!resolved.isEmpty()) {
         resolved.put(
             null,
             StartOffsetReducer.adjustStartOffset(
@@ -240,12 +248,16 @@ public class CheckpointSimulationDriver {
                     Duration.MICROSECONDS)));
       }
       // Filter out activities that are before simulationStartTime
-      resolved = StartOffsetReducer.filterOutStartOffsetBefore(resolved, Duration.max(ZERO, cachedEngine.endsAt().plus(MICROSECONDS)));
+      resolved = StartOffsetReducer.filterOutStartOffsetBefore(
+          resolved,
+          Duration.max(
+              ZERO,
+              cachedEngine.endsAt().plus(MICROSECONDS)));
       final var toSchedule = new LinkedHashSet<ActivityDirectiveId>();
       toSchedule.add(null);
       final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> finalResolved = resolved;
       final var activitiesToBeScheduledNow = new HashMap<ActivityDirectiveId, ActivityDirective>();
-      if(finalResolved.get(null) != null) {
+      if (finalResolved.get(null) != null) {
         for (final var r : finalResolved.get(null)) {
           activitiesToBeScheduledNow.put(r.getKey(), schedule.get(r.getKey()));
         }
@@ -336,7 +348,7 @@ public class CheckpointSimulationDriver {
       // Swallowing the spanException as the internal `spanId` is not user meaningful info.
       final var topics = missionModel.getTopics();
       final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, timeline, topics, ex.spanId);
-      if(directiveId.isPresent()) {
+      if (directiveId.isPresent()) {
         throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
       }
       throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
@@ -355,12 +367,13 @@ public class CheckpointSimulationDriver {
 
   private static Set<ActivityDirectiveId> getSuccessorsToSchedule(
       final SimulationEngine engine,
-      final Map<ActivityDirectiveId, SpanId> toCheckForDependencyScheduling) {
+      final Map<ActivityDirectiveId, SpanId> toCheckForDependencyScheduling
+  ) {
     final var toSchedule = new LinkedHashSet<ActivityDirectiveId>();
     final var iterator = toCheckForDependencyScheduling.entrySet().iterator();
-    while(iterator.hasNext()){
+    while (iterator.hasNext()) {
       final var taskToCheck = iterator.next();
-      if(engine.spanIsComplete(taskToCheck.getValue())){
+      if (engine.spanIsComplete(taskToCheck.getValue())) {
         toSchedule.add(taskToCheck.getKey());
         iterator.remove();
       }
@@ -376,10 +389,11 @@ public class CheckpointSimulationDriver {
       final SimulationEngine engine,
       final Duration curTime,
       final Map<ActivityDirectiveId, SpanId> activityToTask,
-      final Topic<ActivityDirectiveId> activityTopic){
+      final Topic<ActivityDirectiveId> activityTopic
+  ) {
     final var toCheckForDependencyScheduling = new HashMap<ActivityDirectiveId, SpanId>();
-    for(final var predecessor: toScheduleNow) {
-      if(!resolved.containsKey(predecessor)) continue;
+    for (final var predecessor : toScheduleNow) {
+      if (!resolved.containsKey(predecessor)) continue;
       for (final var directivePair : resolved.get(predecessor)) {
         final var offset = directivePair.getRight();
         final var directiveIdToSchedule = directivePair.getLeft();
@@ -410,19 +424,21 @@ public class CheckpointSimulationDriver {
     return toCheckForDependencyScheduling;
   }
 
-  public static Function<SimulationState, Boolean> onceAllActivitiesAreFinished(){
+  public static Function<SimulationState, Boolean> onceAllActivitiesAreFinished() {
     return simulationState -> simulationState.activityDirectiveIdSpanIdMap()
-        .values()
-        .stream()
-        .allMatch(simulationState.simulationEngine()::spanIsComplete);
+                                             .values()
+                                             .stream()
+                                             .allMatch(simulationState.simulationEngine()::spanIsComplete);
   }
 
-  public static Function<SimulationState, Boolean> noCondition(){
+  public static Function<SimulationState, Boolean> noCondition() {
     return simulationState -> false;
   }
 
-  public static Function<SimulationState, Boolean> stopOnceActivityHasFinished(final ActivityDirectiveId activityDirectiveId){
+  public static Function<SimulationState, Boolean> stopOnceActivityHasFinished(final ActivityDirectiveId activityDirectiveId) {
     return simulationState -> (simulationState.activityDirectiveIdSpanIdMap().containsKey(activityDirectiveId)
-                                                 && simulationState.simulationEngine.spanIsComplete(simulationState.activityDirectiveIdSpanIdMap().get(activityDirectiveId)));
+                               && simulationState.simulationEngine.spanIsComplete(simulationState
+                                                                                      .activityDirectiveIdSpanIdMap()
+                                                                                      .get(activityDirectiveId)));
   }
 }

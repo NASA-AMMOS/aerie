@@ -168,7 +168,7 @@ public final class SimulationEngine implements AutoCloseable {
       for (final var commit : results.commits()) {
         timeline.add(commit);
       }
-      if(results.error.isPresent()) {
+      if (results.error.isPresent()) {
         throw results.error.get();
       }
     }
@@ -207,8 +207,8 @@ public final class SimulationEngine implements AutoCloseable {
     final var results = this.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
     for (final var commit : results.commits()) {
       timeline.add(commit);
-      }
-    if(results.error.isPresent()) {
+    }
+    if (results.error.isPresent()) {
       throw results.error.get();
     }
 
@@ -216,13 +216,17 @@ public final class SimulationEngine implements AutoCloseable {
     final var realResourceUpdates = new HashMap<String, Pair<ValueSchema, RealDynamics>>();
     final var dynamicResourceUpdates = new HashMap<String, Pair<ValueSchema, SerializedValue>>();
 
-    for (final var update : results.resourceUpdates.updates()){
+    for (final var update : results.resourceUpdates.updates()) {
       final var name = update.resourceId().id();
       final var schema = update.resource().getOutputType().getSchema();
 
       switch (update.resource.getType()) {
         case "real" -> realResourceUpdates.put(name, Pair.of(schema, SimulationEngine.extractRealDynamics(update)));
-        case "discrete" -> dynamicResourceUpdates.put(name, Pair.of(schema, SimulationEngine.extractDiscreteDynamics(update)));
+        case "discrete" -> dynamicResourceUpdates.put(
+            name,
+            Pair.of(
+                schema,
+                SimulationEngine.extractDiscreteDynamics(update)));
       }
     }
 
@@ -247,7 +251,8 @@ public final class SimulationEngine implements AutoCloseable {
   /** Schedule a new task to be performed at the given time. */
   public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state) {
     if (this.closed) throw new IllegalStateException("Cannot schedule task on closed simulation engine");
-    if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
+    if (startTime.isNegative()) throw new IllegalArgumentException(
+        "Cannot schedule a task before the start time of the simulation");
 
     final var span = SpanId.generate();
     this.spans.put(span, new Span(Optional.empty(), startTime, Optional.empty()));
@@ -332,10 +337,11 @@ public final class SimulationEngine implements AutoCloseable {
     ) {
       public record Update<Dynamics>(Duration startOffset, Dynamics dynamics) {}
 
-      public ResourceUpdate (final Querier querier,
-                             final Duration currentTime,
-                             final ResourceId resourceId,
-                             final Resource<Dynamics> resource
+      public ResourceUpdate(
+          final Querier querier,
+          final Duration currentTime,
+          final ResourceId resourceId,
+          final Resource<Dynamics> resource
       ) {
         this(resourceId, resource, new Update<>(currentTime, resource.getDynamics(querier)));
       }
@@ -396,7 +402,8 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Perform the next step of a modeled task. */
-  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime)  throws SpanException {
+  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime)
+  throws SpanException {
     if (this.closed) throw new IllegalStateException("Cannot step task on closed simulation engine");
     this.unstartedTasks.remove(task);
     // The handler for the next status of the task is responsible
@@ -425,73 +432,79 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-      switch (status) {
-        case TaskStatus.Completed<Output> s -> {
-          // Propagate completion up the span hierarchy.
-          // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
-          var span = scheduler.span;
-          while (true) {
-            if (this.spanContributorCount.get(span).decrementAndGet() > 0) break;
-            this.spanContributorCount.remove(span);
+    switch (status) {
+      case TaskStatus.Completed<Output> s -> {
+        // Propagate completion up the span hierarchy.
+        // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
+        var span = scheduler.span;
+        while (true) {
+          if (this.spanContributorCount.get(span).decrementAndGet() > 0) break;
+          this.spanContributorCount.remove(span);
 
-            this.spans.compute(span, (_id, $) -> $.close(currentTime));
+          this.spans.compute(span, (_id, $) -> $.close(currentTime));
 
-            final var span$ = this.spans.get(span).parent;
-            if (span$.isEmpty()) break;
+          final var span$ = this.spans.get(span).parent;
+          if (span$.isEmpty()) break;
 
-            span = span$.get();
+          span = span$.get();
+        }
+
+        // Notify any blocked caller of our completion.
+        progress.caller().ifPresent($ -> {
+          if (this.blockedTasks.get($).decrementAndGet() == 0) {
+            this.blockedTasks.remove($);
+            this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
           }
-
-          // Notify any blocked caller of our completion.
-          progress.caller().ifPresent($ -> {
-            if (this.blockedTasks.get($).decrementAndGet() == 0) {
-              this.blockedTasks.remove($);
-              this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime));
-            }
-          });
-        }
-
-        case TaskStatus.Delayed<Output> s -> {
-          if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
-
-          this.tasks.put(task, progress.continueWith(s.continuation()));
-          this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-        }
-
-        case TaskStatus.CallingTask<Output> s -> {
-          // Prepare a span for the child task.
-          final var childSpan = switch (s.childSpan()) {
-            case Parent ->
-              scheduler.span;
-
-            case Fresh -> {
-              final var freshSpan = SpanId.generate();
-              SimulationEngine.this.spans.put(freshSpan, new Span(Optional.of(scheduler.span), currentTime, Optional.empty()));
-              SimulationEngine.this.spanContributorCount.put(freshSpan, new MutableInt(1));
-              yield freshSpan;
-            }
-          };
-
-          // Spawn the child task.
-          final var childTask = TaskId.generate();
-          SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
-          SimulationEngine.this.tasks.put(childTask, new ExecutionState<>(childSpan, Optional.of(task), s.child().create(this.executor)));
-          frame.signal(JobId.forTask(childTask));
-
-          // Arrange for the parent task to resume.... later.
-          SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
-          this.tasks.put(task, progress.continueWith(s.continuation()));
-        }
-
-        case TaskStatus.AwaitingCondition<Output> s -> {
-          final var condition = ConditionId.generate();
-          this.conditions.put(condition, s.condition());
-          this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
-
-          this.tasks.put(task, progress.continueWith(s.continuation()));
-          this.waitingTasks.put(condition, task);
-        }
+        });
       }
+
+      case TaskStatus.Delayed<Output> s -> {
+        if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
+
+        this.tasks.put(task, progress.continueWith(s.continuation()));
+        this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
+      }
+
+      case TaskStatus.CallingTask<Output> s -> {
+        // Prepare a span for the child task.
+        final var childSpan = switch (s.childSpan()) {
+          case Parent -> scheduler.span;
+
+          case Fresh -> {
+            final var freshSpan = SpanId.generate();
+            SimulationEngine.this.spans.put(
+                freshSpan,
+                new Span(Optional.of(scheduler.span), currentTime, Optional.empty()));
+            SimulationEngine.this.spanContributorCount.put(freshSpan, new MutableInt(1));
+            yield freshSpan;
+          }
+        };
+
+        // Spawn the child task.
+        final var childTask = TaskId.generate();
+        SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
+        SimulationEngine.this.tasks.put(
+            childTask,
+            new ExecutionState<>(
+                childSpan,
+                Optional.of(task),
+                s.child().create(this.executor)));
+        frame.signal(JobId.forTask(childTask));
+
+        // Arrange for the parent task to resume.... later.
+        SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
+        this.tasks.put(task, progress.continueWith(s.continuation()));
+      }
+
+      case TaskStatus.AwaitingCondition<Output> s -> {
+        final var condition = ConditionId.generate();
+        this.conditions.put(condition, s.condition());
+        this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
+
+        this.tasks.put(task, progress.continueWith(s.continuation()));
+        this.waitingTasks.put(condition, task);
+      }
+    }
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */
@@ -587,7 +600,9 @@ public final class SimulationEngine implements AutoCloseable {
       return this.spanToPlannedDirective.get(id);
     }
 
-    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<SpanInfo>> {
+    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic)
+        implements EffectTrait<Consumer<SpanInfo>>
+    {
       @Override
       public Consumer<SpanInfo> empty() {
         return spanInfo -> {};
@@ -595,7 +610,10 @@ public final class SimulationEngine implements AutoCloseable {
 
       @Override
       public Consumer<SpanInfo> sequentially(final Consumer<SpanInfo> prefix, final Consumer<SpanInfo> suffix) {
-        return spanInfo -> { prefix.accept(spanInfo); suffix.accept(spanInfo); };
+        return spanInfo -> {
+          prefix.accept(spanInfo);
+          suffix.accept(spanInfo);
+        };
       }
 
       @Override
@@ -606,7 +624,10 @@ public final class SimulationEngine implements AutoCloseable {
         //   Arguably, this is a model-specific analysis anyway, since we're looking for specific events
         //   and inferring model structure from them, and at this time we're only working with models
         //   for which every activity has a span to itself.
-        return spanInfo -> { left.accept(spanInfo); right.accept(spanInfo); };
+        return spanInfo -> {
+          left.accept(spanInfo);
+          right.accept(spanInfo);
+        };
       }
 
       public Consumer<SpanInfo> atom(final Event ev) {
@@ -680,7 +701,8 @@ public final class SimulationEngine implements AutoCloseable {
       Instant startTime,
       Duration duration,
       Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-      Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities){}
+      Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities
+  ) {}
 
   private SpanInfo computeSpanInfo(
       final Topic<ActivityDirectiveId> activityTopic,
@@ -703,7 +725,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Instant startTime,
       final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics
-  ){
+  ) {
     return computeActivitySimulationResults(
         startTime,
         computeSpanInfo(activityTopic, serializableTopics, combineTimeline())
@@ -712,7 +734,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   private HashMap<SpanId, ActivityDirectiveId> spanToActivityDirectiveId(
       final SpanInfo spanInfo
-  ){
+  )
+  {
     final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
@@ -723,7 +746,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   private HashMap<SpanId, SimulatedActivityId> spanToSimulatedActivities(
       final SpanInfo spanInfo
-  ){
+  ) {
     final var activityDirectiveIds = spanToActivityDirectiveId(spanInfo);
     final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
     final var usedSimulatedActivityIds = new HashSet<>();
@@ -748,7 +771,7 @@ public final class SimulationEngine implements AutoCloseable {
   public SimulationActivityExtract computeActivitySimulationResults(
       final Instant startTime,
       final SpanInfo spanInfo
-  ){
+  ) {
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<SpanId, SpanId>();
     final var activityDirectiveIds = spanToActivityDirectiveId(spanInfo);
@@ -788,7 +811,11 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             state.endOffset().get().minus(state.startOffset()),
             spanToSimulatedActivityId.get(activityParents.get(span)),
-            activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
+            activityChildren
+                .getOrDefault(span, Collections.emptyList())
+                .stream()
+                .map(spanToSimulatedActivityId::get)
+                .toList(),
             (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
             outputAttributes
         ));
@@ -799,7 +826,11 @@ public final class SimulationEngine implements AutoCloseable {
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             spanToSimulatedActivityId.get(activityParents.get(span)),
-            activityChildren.getOrDefault(span, Collections.emptyList()).stream().map(spanToSimulatedActivityId::get).toList(),
+            activityChildren
+                .getOrDefault(span, Collections.emptyList())
+                .stream()
+                .map(spanToSimulatedActivityId::get)
+                .toList(),
             (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
         ));
       }
@@ -975,14 +1006,15 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    return new SimulationResults(realProfiles,
-                                 discreteProfiles,
-                                 activityResults.simulatedActivities,
-                                 activityResults.unfinishedActivities,
-                                 startTime,
-                                 elapsedTime,
-                                 topics,
-                                 serializedTimeline);
+    return new SimulationResults(
+        realProfiles,
+        discreteProfiles,
+        activityResults.simulatedActivities,
+        activityResults.unfinishedActivities,
+        startTime,
+        elapsedTime,
+        topics,
+        serializedTimeline);
   }
 
   public Span getSpan(SpanId spanId) {
@@ -990,7 +1022,10 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
 
-  private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
+  private static <EventType> Optional<SerializedValue> trySerializeEvent(
+      Event event,
+      SerializableTopic<EventType> serializableTopic
+  ) {
     return event.extract(serializableTopic.topic(), serializableTopic.outputType()::serialize);
   }
 
@@ -1070,8 +1105,7 @@ public final class SimulationEngine implements AutoCloseable {
     public void spawn(final InSpan inSpan, final TaskFactory<?> state) {
       // Prepare a span for the child task
       final var childSpan = switch (inSpan) {
-        case Parent ->
-          this.span;
+        case Parent -> this.span;
 
         case Fresh -> {
           final var freshSpan = SpanId.generate();
@@ -1083,7 +1117,12 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var childTask = TaskId.generate();
       SimulationEngine.this.spanContributorCount.get(this.span).increment();
-      SimulationEngine.this.tasks.put(childTask, new ExecutionState<>(childSpan, this.caller, state.create(SimulationEngine.this.executor)));
+      SimulationEngine.this.tasks.put(
+          childTask,
+          new ExecutionState<>(
+              childSpan,
+              this.caller,
+              state.create(SimulationEngine.this.executor)));
       this.frame.signal(JobId.forTask(childTask));
 
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
