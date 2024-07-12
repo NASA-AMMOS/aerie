@@ -42,7 +42,7 @@ public final class MerlinWorkerAppDriver {
     hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
     hikariConfig.setUsername(postgresStore.user());
     hikariConfig.setPassword(postgresStore.password());
-    hikariConfig.setMaximumPoolSize(2);
+    hikariConfig.setMaximumPoolSize(3);
 
     hikariConfig.setConnectionInitSql("set time zone 'UTC'");
 
