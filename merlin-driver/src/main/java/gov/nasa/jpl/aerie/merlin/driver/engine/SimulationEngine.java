@@ -53,7 +53,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -82,7 +81,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions;
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources;
+  private final Map<ResourceId, Resource<?>> resources;
 
   /** Tasks that have been scheduled, but not started */
   private final Map<TaskId, Duration> unstartedTasks;
@@ -180,7 +179,11 @@ public final class SimulationEngine implements AutoCloseable {
   public sealed interface Status {
     record NoJobs() implements Status {}
     record AtDuration() implements Status{}
-    record Nominal(Duration elapsedTime, Map<String, ProfileSegment<?>> resourceUpdates) implements Status{}
+    record Nominal(
+        Duration elapsedTime,
+        Map<String, Pair<ValueSchema, RealDynamics>> realResourceUpdates,
+        Map<String, Pair<ValueSchema, SerializedValue>> dynamicResourceUpdates
+    ) implements Status {}
   }
 
   /** Step the engine forward one batch. **/
@@ -211,37 +214,37 @@ public final class SimulationEngine implements AutoCloseable {
       throw results.error.get();
     }
 
-    /*
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
+    // Serialize the resources updated in this batch
+    final var realResourceUpdates = new HashMap<String, Pair<ValueSchema, RealDynamics>>();
+    final var dynamicResourceUpdates = new HashMap<String, Pair<ValueSchema, SerializedValue>>();
 
-      final var name = id.id();
-      final var resource = state.resource();
+    for (final var update : results.resourceUpdates.updates()){
+      final var name = update.resourceId().id();
+      final var schema = update.resource().getOutputType().getSchema();
 
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
+      switch (update.resource.getType()) {
+        case "real" -> realResourceUpdates.put(name, Pair.of(schema, SimulationEngine.extractRealDynamics(update)));
+        case "discrete" -> dynamicResourceUpdates.put(name, Pair.of(schema, SimulationEngine.extractDiscreteDynamics(update)));
       }
     }
-     */
 
-    return new Status.Nominal(elapsedTime, Map.of());
+    return new Status.Nominal(elapsedTime, realResourceUpdates, dynamicResourceUpdates);
   }
 
+  private static <Dynamics> RealDynamics extractRealDynamics(final ResourceUpdates.ResourceUpdate<Dynamics> update) {
+    final var resource = update.resource;
+    final var dynamics = update.update.dynamics();
+
+    final var serializedSegment = resource.getOutputType().serialize(dynamics).asMap().orElseThrow();
+    final var initial = serializedSegment.get("initial").asReal().orElseThrow();
+    final var rate = serializedSegment.get("rate").asReal().orElseThrow();
+
+    return RealDynamics.linear(initial, rate);
+  }
+
+  private static <Dynamics> SerializedValue extractDiscreteDynamics(final ResourceUpdates.ResourceUpdate<Dynamics> update) {
+    return update.resource.getOutputType().serialize(update.update.dynamics());
+  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state) {
@@ -267,7 +270,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (this.closed) throw new IllegalStateException("Cannot track resource on closed simulation engine");
     final var id = new ResourceId(name);
 
-    this.resources.put(id, ProfilingState.create(resource));
+    this.resources.put(id, resource);
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
   }
 
@@ -307,24 +310,43 @@ public final class SimulationEngine implements AutoCloseable {
     return batch;
   }
 
-  public record ResourceUpdate(Duration currentTime, Map<String, Object> updates) {
-    static ResourceUpdate init(Duration currentTime) {
-      return new ResourceUpdate(currentTime, new LinkedHashMap<>());
-    }
-    public <Dynamics> void log(String id, Dynamics dynamics) {
-      this.updates.put(id, dynamics);
-    }
+  public record ResourceUpdates(List<ResourceUpdate<?>> updates){
     public boolean isEmpty() {
       return updates.isEmpty();
     }
+
     public int size() {
       return updates.size();
+    }
+
+    ResourceUpdates() {
+      this(new ArrayList<>());
+    }
+
+    public <Dynamics> void add(ResourceUpdate<Dynamics> update) {
+      this.updates.add(update);
+    }
+
+    public record ResourceUpdate<Dynamics>(
+        ResourceId resourceId,
+        Resource<Dynamics> resource,
+        Update<Dynamics> update
+    ) {
+      public record Update<Dynamics>(Duration startOffset, Dynamics dynamics) {}
+
+      public ResourceUpdate (final Querier querier,
+                             final Duration currentTime,
+                             final ResourceId resourceId,
+                             final Resource<Dynamics> resource
+      ) {
+        this(resourceId, resource, new Update<>(currentTime, resource.getDynamics(querier)));
+      }
     }
   }
 
   public record StepResult(
       List<EventGraph<Event>> commits,
-      ResourceUpdate resourceUpdate,
+      ResourceUpdates resourceUpdates,
       Optional<Throwable> error
   ) {}
 
@@ -338,21 +360,21 @@ public final class SimulationEngine implements AutoCloseable {
     if (this.closed) throw new IllegalStateException("Cannot perform jobs on closed simulation engine");
     var tip = EventGraph.<Event>empty();
     Mutable<Optional<Throwable>> exception = new MutableObject<>(Optional.empty());
-    final var resourceUpdate = ResourceUpdate.init(currentTime);
+    final var resourceUpdates = new ResourceUpdates();
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
         try {
-          this.performJob(job, frame, currentTime, maximumTime, resourceUpdate);
+          this.performJob(job, frame, currentTime, maximumTime, resourceUpdates);
         } catch (Throwable ex) {
           exception.setValue(Optional.of(ex));
         }
       }));
 
       if (exception.getValue().isPresent()) {
-        return new StepResult(List.of(tip), resourceUpdate, exception.getValue());
+        return new StepResult(List.of(tip), resourceUpdates, exception.getValue());
       }
     }
-    return new StepResult(List.of(tip), resourceUpdate, Optional.empty());
+    return new StepResult(List.of(tip), resourceUpdates, Optional.empty());
   }
 
   /** Performs a single job. */
@@ -361,18 +383,17 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime,
       final Duration maximumTime,
-      final ResourceUpdate resourceUpdate
+      final ResourceUpdates resourceUpdates
   ) throws SpanException {
-    if (job instanceof JobId.TaskJobId j) {
-      this.stepTask(j.id(), frame, currentTime);
-    } else if (job instanceof JobId.SignalJobId j) {
-      this.stepTask(this.waitingTasks.remove(j.id()), frame, currentTime);
-    } else if (job instanceof JobId.ConditionJobId j) {
-      this.updateCondition(j.id(), frame, currentTime, maximumTime);
-    } else if (job instanceof JobId.ResourceJobId j) {
-      this.updateResource(j.id(), frame, currentTime, resourceUpdate);
-    } else {
-      throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
+    switch (job) {
+      case JobId.TaskJobId j -> this.stepTask(j.id(), frame, currentTime);
+      case JobId.SignalJobId j -> this.stepTask(this.waitingTasks.remove(j.id()), frame, currentTime);
+      case JobId.ConditionJobId j -> this.updateCondition(j.id(), frame, currentTime, maximumTime);
+      case JobId.ResourceJobId j -> this.updateResource(j.id(), frame, currentTime, resourceUpdates);
+      case null -> throw new IllegalArgumentException("Unexpected null value for JobId");
+      default -> throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(
+          JobId.class,
+          job.getClass()));
     }
   }
 
@@ -503,20 +524,23 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
   public void updateResource(
-      final ResourceId resource,
+      final ResourceId resourceId,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final ResourceUpdate resourceUpdate) {
+      final ResourceUpdates resourceUpdates) {
     if (this.closed) throw new IllegalStateException("Cannot update resource on closed simulation engine");
     final var querier = new EngineQuerier(frame);
-    final var dynamics = this.resources.get(resource).getDynamics(querier);
-    resourceUpdate.log(resource.id(), dynamics);
+    resourceUpdates.add(new ResourceUpdates.ResourceUpdate<>(
+        querier,
+        currentTime,
+        resourceId,
+        this.resources.get(resourceId)));
 
-    this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
+    this.waitingResources.subscribeQuery(resourceId, querier.referencedTopics);
 
     final var expiry = querier.expiry.map(currentTime::plus);
     if (expiry.isPresent()) {
-      this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(expiry.get()));
+      this.scheduledJobs.schedule(JobId.forResource(resourceId), SubInstant.Resources.at(expiry.get()));
     }
   }
 
@@ -633,16 +657,14 @@ public final class SimulationEngine implements AutoCloseable {
   /**
    * Get an Activity Directive Id from a SpanId, if the span is a descendent of a directive.
    */
-  public static Optional<ActivityDirectiveId> getDirectiveIdFromSpan(
-      final SimulationEngine engine,
+  public Optional<ActivityDirectiveId> getDirectiveIdFromSpan(
       final Topic<ActivityDirectiveId> activityTopic,
-      final TemporalEventSource timeline,
       final Iterable<SerializableTopic<?>> serializableTopics,
       final SpanId spanId
   ) {
     // Collect per-span information from the event graph.
     final var spanInfo = new SpanInfo();
-    for (final var point : timeline) {
+    for (final var point : this.timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
 
       final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
@@ -652,7 +674,7 @@ public final class SimulationEngine implements AutoCloseable {
     // Identify the nearest ancestor directive
     Optional<SpanId> directiveSpanId = Optional.of(spanId);
     while (directiveSpanId.isPresent() && !spanInfo.isDirective(directiveSpanId.get())) {
-      directiveSpanId = engine.getSpan(directiveSpanId.get()).parent();
+      directiveSpanId = this.getSpan(directiveSpanId.get()).parent();
     }
     return directiveSpanId.map(spanInfo::getDirective);
   }
@@ -663,15 +685,14 @@ public final class SimulationEngine implements AutoCloseable {
       Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
       Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities){}
 
-  private static SpanInfo computeSpanInfo(
-      final TemporalEventSource timeline,
+  private SpanInfo computeSpanInfo(
       final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics
   ) {
     // Collect per-span information from the event graph.
     final var spanInfo = new SpanInfo();
 
-    for (final var point : timeline) {
+    for (final var point : this.timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
 
       final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
@@ -680,39 +701,32 @@ public final class SimulationEngine implements AutoCloseable {
     return spanInfo;
   }
 
-  public static SimulationActivityExtract computeActivitySimulationResults(
-      final SimulationEngine engine,
+  public SimulationActivityExtract computeActivitySimulationResults(
       final Instant startTime,
-      final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
-      final TemporalEventSource timeline,
       final Iterable<SerializableTopic<?>> serializableTopics
   ){
     return computeActivitySimulationResults(
-        engine,
         startTime,
-        elapsedTime,
-        computeSpanInfo(timeline, activityTopic, serializableTopics)
+        computeSpanInfo(activityTopic, serializableTopics)
     );
   }
 
-  private static HashMap<SpanId, ActivityDirectiveId> spanToActivityDirectiveId(
-      final SimulationEngine engine,
+  private HashMap<SpanId, ActivityDirectiveId> spanToActivityDirectiveId(
       final SpanInfo spanInfo
   ){
     final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
-    engine.spans.forEach((span, state) -> {
+    this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
       if (spanInfo.isDirective(span)) activityDirectiveIds.put(span, spanInfo.getDirective(span));
     });
     return activityDirectiveIds;
   }
 
-  private static HashMap<SpanId, SimulatedActivityId> spanToSimulatedActivities(
-      final SimulationEngine engine,
+  private HashMap<SpanId, SimulatedActivityId> spanToSimulatedActivities(
       final SpanInfo spanInfo
   ){
-    final var activityDirectiveIds = spanToActivityDirectiveId(engine, spanInfo);
+    final var activityDirectiveIds = spanToActivityDirectiveId(spanInfo);
     final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
     final var usedSimulatedActivityIds = new HashSet<>();
     for (final var entry : activityDirectiveIds.entrySet()) {
@@ -720,7 +734,7 @@ public final class SimulationEngine implements AutoCloseable {
       usedSimulatedActivityIds.add(entry.getValue().id());
     }
     long counter = 1L;
-    for (final var span : engine.spans.keySet()) {
+    for (final var span : this.spans.keySet()) {
       if (!spanInfo.isActivity(span)) continue;
       if (spanToSimulatedActivityId.containsKey(span)) continue;
 
@@ -733,26 +747,21 @@ public final class SimulationEngine implements AutoCloseable {
   /**
    * Computes only activity-related results when resources are not needed
    */
-  public static SimulationActivityExtract computeActivitySimulationResults(
-      final SimulationEngine engine,
+  public SimulationActivityExtract computeActivitySimulationResults(
       final Instant startTime,
-      final Duration elapsedTime,
       final SpanInfo spanInfo
   ){
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<SpanId, SpanId>();
-    final var activityDirectiveIds = spanToActivityDirectiveId(engine, spanInfo);
-    engine.spans.forEach((span, state) -> {
+    final var activityDirectiveIds = spanToActivityDirectiveId(spanInfo);
+    this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
       var parent = state.parent();
       while (parent.isPresent() && !spanInfo.isActivity(parent.get())) {
-        parent = engine.spans.get(parent.get()).parent();
+        parent = this.spans.get(parent.get()).parent();
       }
-
-      if (parent.isPresent()) {
-        activityParents.put(span, parent.get());
-      }
+      parent.ifPresent(spanId -> activityParents.put(span, spanId));
     });
 
     final var activityChildren = new HashMap<SpanId, List<SpanId>>();
@@ -761,11 +770,11 @@ public final class SimulationEngine implements AutoCloseable {
     });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var spanToSimulatedActivityId = spanToSimulatedActivities(engine, spanInfo);
+    final var spanToSimulatedActivityId = spanToSimulatedActivities(spanInfo);
 
     final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
-    engine.spans.forEach((span, state) -> {
+    this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
       final var activityId = spanToSimulatedActivityId.get(span);
@@ -800,26 +809,6 @@ public final class SimulationEngine implements AutoCloseable {
     return new SimulationActivityExtract(startTime, elapsedTime, simulatedActivities, unfinishedActivities);
   }
 
-  public static SimulationResults computeResults(
-      final SimulationEngine engine,
-      final Instant startTime,
-      final Duration elapsedTime,
-      final Topic<ActivityDirectiveId> activityTopic,
-      final TemporalEventSource timeline,
-      final Iterable<SerializableTopic<?>> serializableTopics
-  ) {
-    return computeResults(
-        engine,
-        startTime,
-        elapsedTime,
-        activityTopic,
-        timeline,
-        serializableTopics,
-        engine.resources.keySet()
-                        .stream()
-                        .map(ResourceId::id)
-                        .collect(Collectors.toSet()));
-  }
 
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
@@ -830,21 +819,19 @@ public final class SimulationEngine implements AutoCloseable {
   //   Planners need to be aware of failed or unfinished tasks.
   public SimulationResults computeResults (
       final Instant startTime,
-      final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
-      final TemporalEventSource timeline,
       final Iterable<SerializableTopic<?>> serializableTopics,
-      final Set<String> resourceNames
+      final SimulationResourceManager resourceManager
   ) {
     // Collect per-task information from the event graph.
-    final var spanInfo = computeSpanInfo(timeline, activityTopic, serializableTopics);
+    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics);
 
     // Extract profiles for every resource.
     final var resourceProfiles = resourceManager.computeProfiles(elapsedTime);
     final var realProfiles = resourceProfiles.realProfiles();
     final var discreteProfiles = resourceProfiles.discreteProfiles();
 
-    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, spanInfo);
+    final var activityResults = computeActivitySimulationResults(startTime, spanInfo);
 
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
@@ -853,7 +840,7 @@ public final class SimulationEngine implements AutoCloseable {
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    final var spanToActivities = spanToSimulatedActivities(engine,spanInfo);
+    final var spanToActivities = spanToSimulatedActivities(spanInfo);
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
     for (var point : this.timeline.points()) {
@@ -877,7 +864,7 @@ public final class SimulationEngine implements AutoCloseable {
                         spanToActivities.put(event.provenance(), spanToActivities.get(spanId.get()));
                         break;
                       }
-                      spanId = engine.getSpan(spanId.get()).parent();
+                      spanId = this.getSpan(spanId.get()).parent();
                       if (spanId.isEmpty()) {
                         break;
                       }
@@ -903,14 +890,15 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    return new SimulationResults(realProfiles,
-                                 discreteProfiles,
-                                 activityResults.simulatedActivities,
-                                 activityResults.unfinishedActivities,
-                                 startTime,
-                                 elapsedTime,
-                                 topics,
-                                 serializedTimeline);
+    return new SimulationResults(
+        realProfiles,
+        discreteProfiles,
+        activityResults.simulatedActivities,
+        activityResults.unfinishedActivities,
+        startTime,
+        elapsedTime,
+        topics,
+        serializedTimeline);
   }
 
   public SimulationResults computeResults(
@@ -921,14 +909,14 @@ public final class SimulationEngine implements AutoCloseable {
       final Set<String> resourceNames
   ) {
     // Collect per-task information from the event graph.
-    final var spanInfo = computeSpanInfo(timeline, activityTopic, serializableTopics);
+    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics);
 
     // Extract profiles for every resource.
-    final var resourceProfiles = resourceManager.computeProfiles(elapsedTime);
+    final var resourceProfiles = resourceManager.computeProfiles(elapsedTime, resourceNames);
     final var realProfiles = resourceProfiles.realProfiles();
     final var discreteProfiles = resourceProfiles.discreteProfiles();
 
-    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, spanInfo);
+    final var activityResults = computeActivitySimulationResults(startTime, spanInfo);
 
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
@@ -937,7 +925,7 @@ public final class SimulationEngine implements AutoCloseable {
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    final var spanToActivities = spanToSimulatedActivities(engine,spanInfo);
+    final var spanToActivities = spanToSimulatedActivities(spanInfo);
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
     for (var point : this.timeline.points()) {
@@ -961,7 +949,7 @@ public final class SimulationEngine implements AutoCloseable {
                         spanToActivities.put(event.provenance(), spanToActivities.get(spanId.get()));
                         break;
                       }
-                      spanId = engine.getSpan(spanId.get()).parent();
+                      spanId = this.getSpan(spanId.get()).parent();
                       if (spanId.isEmpty()) {
                         break;
                       }
@@ -1008,48 +996,6 @@ public final class SimulationEngine implements AutoCloseable {
 
   private interface Translator<Target> {
     <Dynamics> Target apply(Resource<Dynamics> resource, Dynamics dynamics);
-  }
-
-  private static <Target, Dynamics>
-  List<ProfileSegment<Target>> serializeProfile(
-      final Duration elapsedTime,
-      final ProfilingState<Dynamics> state,
-      final Translator<Target> translator
-  ) {
-    final var profile = new ArrayList<ProfileSegment<Target>>(state.profile().segments().size());
-
-    final var iter = state.profile().segments().iterator();
-    if (iter.hasNext()) {
-      var segment = iter.next();
-      while (iter.hasNext()) {
-        final var nextSegment = iter.next();
-
-        profile.add(new ProfileSegment<>(
-            nextSegment.startOffset().minus(segment.startOffset()),
-            translator.apply(state.resource(), segment.dynamics())));
-        segment = nextSegment;
-      }
-
-      profile.add(new ProfileSegment<>(
-          elapsedTime.minus(segment.startOffset()),
-          translator.apply(state.resource(), segment.dynamics())));
-    }
-
-    return profile;
-  }
-
-  private static <Dynamics>
-  RealDynamics extractRealDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {
-    final var serializedSegment = resource.getOutputType().serialize(dynamics).asMap().orElseThrow();
-    final var initial = serializedSegment.get("initial").asReal().orElseThrow();
-    final var rate = serializedSegment.get("rate").asReal().orElseThrow();
-
-    return RealDynamics.linear(initial, rate);
-  }
-
-  private static <Dynamics>
-  SerializedValue extractDiscreteDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {
-    return resource.getOutputType().serialize(dynamics);
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
