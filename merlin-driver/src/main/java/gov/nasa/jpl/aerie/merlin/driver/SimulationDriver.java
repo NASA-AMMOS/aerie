@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
+import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -11,10 +11,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
+import java.util.ArrayList;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class SimulationDriver {
-  public static <Model>
-  SimulationResults simulate(
+  public static <Model> SimulationResults simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
@@ -31,8 +30,7 @@ public final class SimulationDriver {
       final Instant planStartTime,
       final Duration planDuration,
       final Supplier<Boolean> simulationCanceled
-  )
-  {
+  ) {
     return simulate(
         missionModel,
         schedule,
@@ -41,11 +39,11 @@ public final class SimulationDriver {
         planStartTime,
         planDuration,
         simulationCanceled,
-        $ -> {});
+        $ -> {},
+        new InMemorySimulationResourceManager());
   }
 
-  public static <Model>
-  SimulationResults simulate(
+  public static <Model> SimulationResults simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
@@ -53,39 +51,20 @@ public final class SimulationDriver {
       final Instant planStartTime,
       final Duration planDuration,
       final Supplier<Boolean> simulationCanceled,
-      final Consumer<Duration> simulationExtentConsumer
+      final Consumer<Duration> simulationExtentConsumer,
+      final SimulationResourceManager resourceManager
   ) {
-    try (final var engine = new SimulationEngine()) {
-      /* The top-level simulation timeline. */
-      var timeline = new TemporalEventSource();
-      var cells = new LiveCells(timeline, missionModel.getInitialCells());
+    try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
+
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
-
       simulationExtentConsumer.accept(elapsedTime);
-
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-
-        engine.trackResource(name, resource, elapsedTime);
-      }
 
       // Specify a topic on which tasks can log the activity they're associated with.
       final var activityTopic = new Topic<ActivityDirectiveId>();
 
       try {
-        // Start daemon task(s) immediately, before anything else happens.
-        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-        {
-          final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-          timeline.add(commit.getLeft());
-          if(commit.getRight().isPresent()) {
-            throw commit.getRight().get();
-          }
-        }
+        engine.init(missionModel.getResources(), missionModel.getDaemon());
 
         // Get all activities as close as possible to absolute time
         // Schedule all activities.
@@ -114,34 +93,25 @@ public final class SimulationDriver {
 
         // Drive the engine until we're out of time or until simulation is canceled.
         // TERMINATION: Actually, we might never break if real time never progresses forward.
+        engineLoop:
         while (!simulationCanceled.get()) {
-          final var batch = engine.extractNextJobs(simulationDuration);
-
-          // Increment real time, if necessary.
-          final var delta = batch.offsetFromStart().minus(elapsedTime);
-          elapsedTime = batch.offsetFromStart();
-          timeline.add(delta);
-          // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-          //   even if they occur at the same real time.
-
+          if(simulationCanceled.get()) break;
+          final var status = engine.step(simulationDuration);
+          switch (status) {
+            case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
+            case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
+            case SimulationEngine.Status.Nominal nominal:
+              elapsedTime = nominal.elapsedTime();
+              resourceManager.acceptUpdates(elapsedTime, nominal.realResourceUpdates(), nominal.dynamicResourceUpdates());
+              break;
+          }
           simulationExtentConsumer.accept(elapsedTime);
-
-          if (simulationCanceled.get() ||
-              (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration))) {
-            break;
-          }
-
-          // Run the jobs in this batch.
-          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-          timeline.add(commit.getLeft());
-          if (commit.getRight().isPresent()) {
-            throw commit.getRight().get();
-          }
         }
+
       } catch (SpanException ex) {
         // Swallowing the spanException as the internal `spanId` is not user meaningful info.
         final var topics = missionModel.getTopics();
-        final var directiveId = SimulationEngine.getDirectiveIdFromSpan(engine, activityTopic, timeline, topics, ex.spanId);
+        final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
         if(directiveId.isPresent()) {
           throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
         }
@@ -151,7 +121,7 @@ public final class SimulationDriver {
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
+      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, topics, resourceManager);
     }
   }
 
