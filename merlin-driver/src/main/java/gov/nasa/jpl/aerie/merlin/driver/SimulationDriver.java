@@ -57,8 +57,7 @@ public final class SimulationDriver {
     try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
 
       /* The current real time. */
-      var elapsedTime = Duration.ZERO;
-      simulationExtentConsumer.accept(elapsedTime);
+      simulationExtentConsumer.accept(Duration.ZERO);
 
       // Specify a topic on which tasks can log the activity they're associated with.
       final var activityTopic = new Topic<ActivityDirectiveId>();
@@ -101,11 +100,10 @@ public final class SimulationDriver {
             case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
             case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
             case SimulationEngine.Status.Nominal nominal:
-              elapsedTime = nominal.elapsedTime();
-              resourceManager.acceptUpdates(elapsedTime, nominal.realResourceUpdates(), nominal.dynamicResourceUpdates());
+              resourceManager.acceptUpdates(nominal.elapsedTime(), nominal.realResourceUpdates(), nominal.dynamicResourceUpdates());
               break;
           }
-          simulationExtentConsumer.accept(elapsedTime);
+          simulationExtentConsumer.accept(engine.getElapsedTime());
         }
 
       } catch (SpanException ex) {
@@ -113,11 +111,11 @@ public final class SimulationDriver {
         final var topics = missionModel.getTopics();
         final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
         if(directiveId.isPresent()) {
-          throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
+          throw new SimulationException(engine.getElapsedTime(), simulationStartTime, directiveId.get(), ex.cause);
         }
-        throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
+        throw new SimulationException(engine.getElapsedTime(), simulationStartTime, ex.cause);
       } catch (Throwable ex) {
-        throw new SimulationException(elapsedTime, simulationStartTime, ex);
+        throw new SimulationException(engine.getElapsedTime(), simulationStartTime, ex);
       }
 
       final var topics = missionModel.getTopics();

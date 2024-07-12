@@ -302,6 +302,7 @@ public class CheckpointSimulationDriver {
         simulationExtentConsumer.accept(elapsedTime);
       }
     } catch (SpanException ex) {
+      elapsedTime = engine.getElapsedTime();
       // Swallowing the spanException as the internal `spanId` is not user meaningful info.
       final var topics = missionModel.getTopics();
       final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
@@ -310,6 +311,7 @@ public class CheckpointSimulationDriver {
       }
       throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
     } catch (Throwable ex) {
+      elapsedTime = engine.getElapsedTime();
       throw new SimulationException(elapsedTime, simulationStartTime, ex);
     }
     return new SimulationResultsComputerInputs(

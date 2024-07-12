@@ -184,6 +184,10 @@ public final class SimulationEngine implements AutoCloseable {
     ) implements Status {}
   }
 
+  public Duration getElapsedTime() {
+    return elapsedTime;
+  }
+
   /** Step the engine forward one batch. **/
   public Status step(Duration simulationDuration) throws Throwable {
     final var nextTime = this.peekNextTime().orElse(Duration.MAX_VALUE);
@@ -313,7 +317,7 @@ public final class SimulationEngine implements AutoCloseable {
     return batch;
   }
 
-  public record ResourceUpdates(List<ResourceUpdate<?>> updates){
+  public record ResourceUpdates(List<ResourceUpdate<?>> updates) {
     public boolean isEmpty() {
       return updates.isEmpty();
     }
