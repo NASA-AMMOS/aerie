@@ -9,6 +9,7 @@ public final class Mission {
   public final DataModel dataModel;
   public final ErrorTestingModel errorTestingModel;
   public final ApproximationModel approximationModel;
+  public final PrimenessModel primenessModel;
 
   public Mission(final gov.nasa.jpl.aerie.merlin.framework.Registrar registrar$, final Configuration config) {
     var registrar = new Registrar(registrar$, Registrar.ErrorBehavior.Log);
@@ -17,6 +18,7 @@ public final class Mission {
     dataModel = new DataModel(registrar, config);
     errorTestingModel = new ErrorTestingModel(registrar, config);
     approximationModel = new ApproximationModel(registrar, config);
+    primenessModel = new PrimenessModel(registrar);
     if (config.profilingDumpTime.isPositive()) {
       ModelActions.defer(config.profilingDumpTime, Profiling::dump);
     }

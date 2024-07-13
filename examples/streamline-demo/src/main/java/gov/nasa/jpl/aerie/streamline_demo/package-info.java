@@ -7,6 +7,8 @@
 @WithActivityType(ChangeDesiredRate.class)
 @WithActivityType(CauseError.class)
 @WithActivityType(ChangeApproximationInput.class)
+@WithActivityType(ChangePrimenessDeviceState.class)
+@WithActivityType(SwapPrimeness.class)
 
 package gov.nasa.jpl.aerie.streamline_demo;
 
