@@ -15,12 +15,13 @@ import java.util.Map;
 /*package-local*/ final class GetSatisfyingActivitiesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select
-      s.goal_id,
+      a.goal_id,
+      a.goal_revision,
       s.goal_invocation_id,
-      s.goal_revision,
       s.activity_id
     from scheduler.scheduling_goal_analysis_satisfying_activities as s
-    where s.analysis_id = ?
+    join scheduler.scheduling_goal_analysis as a using (goal_invocation_id)
+    where s.analysis_id = ? and a.analysis_id = ?
     """;
 
   private final PreparedStatement statement;
@@ -31,6 +32,7 @@ import java.util.Map;
 
   public Map<GoalId, List<ActivityDirectiveId>> get(final long analysisId) throws SQLException {
     this.statement.setLong(1, analysisId);
+    this.statement.setLong(2, analysisId);
     final var resultSet = this.statement.executeQuery();
 
     final var satisfyingActivities = new HashMap<GoalId, List<ActivityDirectiveId>>();
