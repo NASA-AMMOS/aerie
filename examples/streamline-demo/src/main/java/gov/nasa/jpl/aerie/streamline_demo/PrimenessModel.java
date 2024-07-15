@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.streamline_demo;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.Multiplexing;
+import gov.nasa.jpl.aerie.contrib.streamline.modeling.MutableResourceViews;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources;
@@ -26,7 +26,7 @@ public class PrimenessModel {
         deviceB = discreteResource(DeviceState.OFF);
         primeSide = discreteResource(Side.A);
 
-        var muxResult = Multiplexing.multiplex(
+        var muxResult = MutableResourceViews.multiplex(
                 DiscreteResources.equals(primeSide, constant(Side.A)),
                 deviceA,
                 deviceB);
