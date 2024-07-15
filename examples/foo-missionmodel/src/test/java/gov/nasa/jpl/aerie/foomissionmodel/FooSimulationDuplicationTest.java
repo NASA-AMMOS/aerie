@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedEngineStore;
+import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -34,17 +35,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FooSimulationDuplicationTest {
   CachedEngineStore store;
   final private class InfiniteCapacityEngineStore implements CachedEngineStore{
-    private final Map<SimulationEngineConfiguration, List<CheckpointSimulationDriver.CachedSimulationEngine>> store = new HashMap<>();
+    private final Map<SimulationEngineConfiguration, List<CachedSimulationEngine>> store = new HashMap<>();
     @Override
     public void save(
-        final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine,
+        final CachedSimulationEngine cachedSimulationEngine,
         final SimulationEngineConfiguration configuration) {
       store.computeIfAbsent(configuration, conf -> new ArrayList<>());
       store.get(configuration).add(cachedSimulationEngine);
     }
 
     @Override
-    public List<CheckpointSimulationDriver.CachedSimulationEngine> getCachedEngines(final SimulationEngineConfiguration configuration) {
+    public List<CachedSimulationEngine> getCachedEngines(final SimulationEngineConfiguration configuration) {
       return store.get(configuration);
     }
 
@@ -374,7 +375,7 @@ public class FooSimulationDuplicationTest {
 
   static SimulationResults simulateWithCheckpoints(
       final MissionModel<?> missionModel,
-      final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine,
+      final CachedSimulationEngine cachedSimulationEngine,
       final List<Duration> desiredCheckpoints,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final CachedEngineStore cachedEngineStore,
@@ -413,7 +414,7 @@ public class FooSimulationDuplicationTest {
         Duration.HOUR,
         $ -> {},
         () -> false,
-        CheckpointSimulationDriver.CachedSimulationEngine.empty(missionModel),
+        CachedSimulationEngine.empty(missionModel, Instant.EPOCH),
         CheckpointSimulationDriver.desiredCheckpoints(desiredCheckpoints),
         CheckpointSimulationDriver.noCondition(),
         cachedEngineStore,

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
@@ -201,7 +202,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
         planSimCorrespondence.directiveIdActivityDirectiveMap(),
         cachedEngines.getCachedEngines(configuration),
         planningHorizon.getEndAerie());
-    CheckpointSimulationDriver.CachedSimulationEngine engine = null;
+    CachedSimulationEngine engine = null;
     Duration from = Duration.ZERO;
     if (best.isPresent()) {
       engine = best.get().getKey();
@@ -236,7 +237,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
       throw new SimulationException("Bad configuration", null);
     }
 
-    if (engine == null) engine = CheckpointSimulationDriver.CachedSimulationEngine.empty(missionModel, planningHorizon.getStartInstant());
+    if (engine == null) engine = CachedSimulationEngine.empty(missionModel, planningHorizon.getStartInstant());
 
     Function<CheckpointSimulationDriver.SimulationState, Boolean> checkpointPolicy =
         new ResourceAwareSpreadCheckpointPolicy(
@@ -269,7 +270,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
           cachedEngines,
           configuration
       );
-      this.totalSimulationTime = this.totalSimulationTime.plus(simulation.elapsedTime().minus(from));
+      this.totalSimulationTime = this.totalSimulationTime.plus(simulation.engine().getElapsedTime().minus(from));
       if (canceledListener.get()) throw new SchedulingInterruptedException("simulating");
       final var activityResults = simulation.computeActivitySimulationResults();
 

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
@@ -37,8 +37,8 @@ public class InMemoryCachedEngineStoreTest {
     this.store.close();
   }
 
-  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine1(){
-    return new CheckpointSimulationDriver.CachedSimulationEngine(
+  public static CachedSimulationEngine getCachedEngine1(){
+    return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(1), new ActivityDirective(Duration.HOUR, "ActivityType1", Map.of(), null, true),
@@ -52,8 +52,8 @@ public class InMemoryCachedEngineStoreTest {
     );
   }
 
-  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine2(){
-    return new CheckpointSimulationDriver.CachedSimulationEngine(
+  public static CachedSimulationEngine getCachedEngine2(){
+    return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(3), new ActivityDirective(Duration.HOUR, "ActivityType3", Map.of(), null, true),
@@ -67,8 +67,8 @@ public class InMemoryCachedEngineStoreTest {
     );
   }
 
-  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine3(){
-    return new CheckpointSimulationDriver.CachedSimulationEngine(
+  public static CachedSimulationEngine getCachedEngine3(){
+    return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(5), new ActivityDirective(Duration.HOUR, "ActivityType5", Map.of(), null, true),
@@ -85,9 +85,9 @@ public class InMemoryCachedEngineStoreTest {
   @Test
   public void duplicateTest(){
     final var store = new InMemoryCachedEngineStore(2);
-    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
-    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
-    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
     assertEquals(1, store.getCachedEngines(this.simulationEngineConfiguration).size());
   }
 

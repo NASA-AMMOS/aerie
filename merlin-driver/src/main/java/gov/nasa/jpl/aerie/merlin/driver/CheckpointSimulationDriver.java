@@ -33,49 +33,6 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 public class CheckpointSimulationDriver {
   private static final Logger LOGGER = LoggerFactory.getLogger(CheckpointSimulationDriver.class);
 
-  public record CachedSimulationEngine(
-      Duration endsAt,
-      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
-      SimulationEngine simulationEngine,
-      Topic<ActivityDirectiveId> activityTopic,
-      MissionModel<?> missionModel
-  ) {
-    public void freeze() {
-      simulationEngine.close();
-    }
-
-    public static CachedSimulationEngine empty(final MissionModel<?> missionModel) {
-      final SimulationEngine engine = new SimulationEngine();
-
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-
-        engine.trackResource(name, resource, Duration.ZERO);
-      }
-
-      {
-        // Start daemon task(s) immediately, before anything else happens.
-        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-        {
-          final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-          final var commit = engine.performJobs(batch.jobs(), cells, Duration.ZERO, Duration.MAX_VALUE);
-          timeline.add(commit.getKey());
-        }
-      }
-      return new CachedSimulationEngine(
-          Duration.MIN_VALUE,
-          Map.of(),
-          engine,
-          cells,
-          timeline.points(),
-          new Topic<>(),
-          missionModel
-      );
-    }
-  }
-
   /**
    * Selects the best cached engine for simulating a given plan.
    * @param schedule the schedule/plan
@@ -221,9 +178,9 @@ public class CheckpointSimulationDriver {
     final boolean duplicationIsOk = cachedEngineStore.capacity() > 1;
     final var activityToSpan = new HashMap<ActivityDirectiveId, SpanId>();
     final var activityTopic = cachedEngine.activityTopic();
-    var engine = duplicationIsOk ? cachedEngine.simulationEngine.duplicate() : cachedEngine.simulationEngine;
-    final var resourceManager = duplicationIsOk ? new InMemorySimulationResourceManager(cachedEngine.resourceManager) : cachedEngine.resourceManager;
-    engine.unscheduleAfter(cachedEngine.endsAt);
+    var engine = duplicationIsOk ? cachedEngine.simulationEngine().duplicate() : cachedEngine.simulationEngine();
+    final var resourceManager = duplicationIsOk ? new InMemorySimulationResourceManager(cachedEngine.resourceManager()) : cachedEngine.resourceManager();
+    engine.unscheduleAfter(cachedEngine.endsAt());
 
     /* The current real time. */
     var elapsedTime = Duration.max(ZERO, cachedEngine.endsAt());
