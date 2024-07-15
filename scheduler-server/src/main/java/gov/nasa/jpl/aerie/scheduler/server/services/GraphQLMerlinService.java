@@ -1621,7 +1621,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
         activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
-            activity.directiveId().map(id -> simulationActivityDirectiveIdToMerlinActivityDirectiveId.get(id).id()),
+            activity.directiveId().map(ActivityDirectiveId::id),
             activity.arguments(),
             Optional.of(activity.computedAttributes())));
   }
