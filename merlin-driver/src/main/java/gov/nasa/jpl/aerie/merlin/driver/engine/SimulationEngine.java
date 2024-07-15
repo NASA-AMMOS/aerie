@@ -91,11 +91,13 @@ public final class SimulationEngine implements AutoCloseable {
 
   /* The top-level simulation timeline. */
   private final TemporalEventSource timeline;
+  private final TemporalEventSource referenceTimeline;
   private final LiveCells cells;
   private Duration elapsedTime;
 
   public SimulationEngine(LiveCells initialCells) {
     timeline = new TemporalEventSource();
+    referenceTimeline = new TemporalEventSource();
     cells = new LiveCells(timeline, initialCells);
     elapsedTime = Duration.ZERO;
 
@@ -115,11 +117,14 @@ public final class SimulationEngine implements AutoCloseable {
 
   private SimulationEngine(SimulationEngine other) {
     other.timeline.freeze();
+    other.referenceTimeline.freeze();
     other.cells.freeze();
 
     elapsedTime = other.elapsedTime;
-    timeline = other.combineTimeline(new TemporalEventSource());
+
+    timeline = new TemporalEventSource();
     cells = new LiveCells(timeline, other.cells);
+    referenceTimeline = other.combineTimeline();
 
     // New Executor allows other SimulationEngine to be closed
     executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -679,12 +684,13 @@ public final class SimulationEngine implements AutoCloseable {
 
   private SpanInfo computeSpanInfo(
       final Topic<ActivityDirectiveId> activityTopic,
-      final Iterable<SerializableTopic<?>> serializableTopics
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final TemporalEventSource timeline
   ) {
     // Collect per-span information from the event graph.
     final var spanInfo = new SpanInfo();
 
-    for (final var point : this.timeline) {
+    for (final var point : timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
 
       final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
@@ -700,7 +706,7 @@ public final class SimulationEngine implements AutoCloseable {
   ){
     return computeActivitySimulationResults(
         startTime,
-        computeSpanInfo(activityTopic, serializableTopics)
+        computeSpanInfo(activityTopic, serializableTopics, combineTimeline())
     );
   }
 
@@ -815,8 +821,9 @@ public final class SimulationEngine implements AutoCloseable {
       final Iterable<SerializableTopic<?>> serializableTopics,
       final SimulationResourceManager resourceManager
   ) {
+    final var combinedTimeline = this.combineTimeline();
     // Collect per-task information from the event graph.
-    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics);
+    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics, combinedTimeline);
 
     // Extract profiles for every resource.
     final var resourceProfiles = resourceManager.computeProfiles(elapsedTime);
@@ -835,7 +842,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var spanToActivities = spanToSimulatedActivities(spanInfo);
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
-    for (var point : this.timeline.points()) {
+    for (var point : combinedTimeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
         time = time.plus(delta.delta());
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
@@ -900,8 +907,9 @@ public final class SimulationEngine implements AutoCloseable {
       final SimulationResourceManager resourceManager,
       final Set<String> resourceNames
   ) {
+    final var combinedTimeline = this.combineTimeline();
     // Collect per-task information from the event graph.
-    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics);
+    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics, combinedTimeline);
 
     // Extract profiles for every resource.
     final var resourceProfiles = resourceManager.computeProfiles(elapsedTime, resourceNames);
@@ -920,7 +928,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var spanToActivities = spanToSimulatedActivities(spanInfo);
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
-    for (var point : this.timeline.points()) {
+    for (var point : combinedTimeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
         time = time.plus(delta.delta());
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
@@ -1151,5 +1159,28 @@ public final class SimulationEngine implements AutoCloseable {
 
   public Optional<Duration> peekNextTime() {
     return this.scheduledJobs.peekNextTime();
+  }
+
+  /**
+   * Create a timeline that in the output of the engine's reference timeline combined with its expanded timeline.
+   */
+  public TemporalEventSource combineTimeline() {
+    final TemporalEventSource combinedTimeline = new TemporalEventSource();
+    for (final var timePoint : referenceTimeline.points()) {
+      if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
+        combinedTimeline.add(t.delta());
+      } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
+        combinedTimeline.add(t.events());
+      }
+    }
+
+    for (final var timePoint : timeline) {
+      if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
+        combinedTimeline.add(t.delta());
+      } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
+        combinedTimeline.add(t.events());
+      }
+    }
+    return combinedTimeline;
   }
 }
