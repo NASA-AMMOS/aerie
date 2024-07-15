@@ -42,7 +42,7 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
             simulation_start_time
             dataset {
               spans {
-                id
+                span_id
                 attributes
                 start_offset
                 duration
@@ -70,7 +70,7 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
 
       const simulatedActivities: GraphQLSimulatedActivityInstance[] = spans.map(span => {
         return {
-          id: span.id,
+          id: span.span_id,
           simulation_dataset_id: simulation_dataset.id,
           plan_id: simulation_dataset.simulation.plan.id,
           model_id: simulation_dataset.simulation.plan.model_id,
@@ -131,8 +131,8 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
               }
             }
             dataset {
-              spans: spans(where: { id: { _eq: $simulatedActivityId } }) {
-                id
+              spans: spans(where: { span_id: { _eq: $simulatedActivityId } }) {
+                span_id
                 attributes
                 start_offset
                 duration
@@ -152,7 +152,7 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
   return Promise.all(
     keys.map(async ({ simulationDatasetId, simulatedActivityId }) => {
       const simulation_dataset = result.find(res =>
-        res.data?.simulation_dataset?.dataset?.spans?.some(span => span.id === simulatedActivityId),
+        res.data?.simulation_dataset?.dataset?.spans?.some(span => span.span_id === simulatedActivityId),
       )?.data.simulation_dataset;
       if (simulation_dataset === undefined) {
         return new ErrorWithStatusCode(`No simulation_dataset with id: ${simulationDatasetId}`, 404);
@@ -175,7 +175,7 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
 
       const span = spans[0];
       const simulatedActivity: GraphQLSimulatedActivityInstance = {
-        id: span.id,
+        id: span.span_id,
         simulation_dataset_id: simulation_dataset.id,
         plan_id: simulation_dataset.simulation.plan.id,
         model_id: simulation_dataset.simulation.plan.model_id,
@@ -236,7 +236,7 @@ export interface GQLSpan<
   ActivityArguments extends Record<string, unknown> = Record<string, unknown>,
   ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
 > {
-  id: number;
+  span_id: number;
   attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   start_offset: string;
   duration: string;
