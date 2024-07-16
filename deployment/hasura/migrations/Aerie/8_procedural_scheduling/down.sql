@@ -4,6 +4,7 @@
 -- and add old columns back so we can populate and re-PK
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
   drop constraint satisfying_activities_primary_key,
+  drop constraint satisfying_activities_references_scheduling_goal_analysis,
 
   -- temp set as nullable so we can insert, made not null by PK constraint below
   add column goal_id integer null,
@@ -11,6 +12,7 @@ alter table scheduler.scheduling_goal_analysis_satisfying_activities
 
 alter table scheduler.scheduling_goal_analysis_created_activities
   drop constraint created_activities_primary_key,
+  drop constraint created_activities_references_scheduling_goal_analysis,
 
   add column goal_id integer null,
   add column goal_revision integer null;

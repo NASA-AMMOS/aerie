@@ -66,7 +66,12 @@ alter table scheduler.scheduling_goal_analysis_created_activities
   drop column goal_revision,
 
   add constraint created_activities_primary_key
-    primary key (analysis_id, goal_invocation_id, activity_id);
+    primary key (analysis_id, goal_invocation_id, activity_id),
+  add constraint created_activities_references_scheduling_goal_analysis
+    foreign key (analysis_id, goal_invocation_id)
+      references scheduler.scheduling_goal_analysis
+      on update cascade
+      on delete cascade;
 
 -- update satisfing_activities PK
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
@@ -87,6 +92,11 @@ alter table scheduler.scheduling_goal_analysis_satisfying_activities
   drop column goal_revision,
 
   add constraint satisfying_activities_primary_key
-    primary key (analysis_id, goal_invocation_id, activity_id);
+    primary key (analysis_id, goal_invocation_id, activity_id),
+  add constraint satisfying_activities_references_scheduling_goal_analysis
+    foreign key (analysis_id, goal_invocation_id)
+      references scheduler.scheduling_goal_analysis
+      on update cascade
+      on delete cascade;
 
 call migrations.mark_migration_applied('8');
