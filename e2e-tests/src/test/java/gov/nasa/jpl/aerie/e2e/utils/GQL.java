@@ -420,6 +420,12 @@ public enum GQL {
         id
       }
     }"""),
+  GET_SCHEDULING_SPECIFICATION_GOALS("""
+    query GetSchedulingSpecGoals($specId: Int!) {
+      goals: scheduling_specification_goals(where: {specification_id: {_eq: $specId}}) {
+        goal_id
+      }
+    }"""),
   GET_SIMULATION_CONFIGURATION("""
     query GetSimConfig($planId: Int!) {
       sim_config: simulation(where: {plan_id: {_eq:$planId}}) {
@@ -608,6 +614,16 @@ public enum GQL {
         action_permissions
       }
     }"""),
+  UPDATE_SCHEDULING_SPEC_GOALS_ARGUMENTS("""
+		mutation updateSchedulingSpecGoalArguments($goal_invocation_id: Int!, $arguments: jsonb!) {
+			update_scheduling_specification_goals_by_pk(
+			  pk_columns: {goal_invocation_id: $goal_invocation_id},
+			  _set: {arguments: $arguments})
+			{
+				goal_revision
+				arguments
+			}
+		}"""),
   UPDATE_SCHEDULING_SPEC_GOALS_ENABLED("""
 		mutation updateSchedulingSpecGoalVersion($goal_invocation_id: Int!, $enabled: Boolean!) {
 			update_scheduling_specification_goals_by_pk(

@@ -17,6 +17,8 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -637,12 +639,50 @@ public class HasuraRequests implements AutoCloseable {
     return spec.getJsonObject(0).getInt("id");
   }
 
+  public List<Integer> getSchedulingSpecGoalIds(int specId) throws IOException {
+    final var vars = Json.createObjectBuilder().add("specId", specId).build();
+    final var goals = makeRequest(GQL.GET_SCHEDULING_SPECIFICATION_GOALS, vars).getJsonArray("goals");
+
+    return goals.stream().map(e -> e.asJsonObject().getInt("goal_id")).toList();
+  }
+
   public void updatePlanRevisionSchedulingSpec(int planId) throws IOException {
     final var variables = Json.createObjectBuilder()
                               .add("planId", planId)
                               .add("planRev", getPlanRevision(planId))
                               .build();
     makeRequest(GQL.UPDATE_SCHEDULING_SPECIFICATION_PLAN_REVISION, variables);
+  }
+
+
+  public GoalInvocationId createSchedulingSpecProcedure(
+      String name,
+      int jarId,
+      int specificationId,
+      int priority
+  ) throws IOException {
+    final var specGoalBuilder = Json.createObjectBuilder()
+                                    .add("goal_metadata",
+                                         Json.createObjectBuilder()
+                                             .add("data",
+                                                  Json.createObjectBuilder()
+                                                      .add("name", name)
+                                                      .add("description", "")
+                                                      .add("versions",
+                                                           Json.createObjectBuilder()
+                                                               .add("data",
+                                                                    Json.createArrayBuilder()
+                                                                        .add(Json.createObjectBuilder()
+                                                                                 .add("type", "JAR")
+                                                                                 .add("uploaded_jar_id", jarId)
+                                                                        )))))
+                                    .add("specification_id", specificationId)
+                                    .add("priority", priority);
+    final var variables = Json.createObjectBuilder().add("spec_goal", specGoalBuilder).build();
+    final var resp =  makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
+        .getJsonObject("insert_scheduling_specification_goals_one");
+
+    return new GoalInvocationId(resp.getInt("goal_id"), resp.getInt("goal_invocation_id"));
   }
 
   public GoalInvocationId createSchedulingSpecGoal(
@@ -689,6 +729,14 @@ public class HasuraRequests implements AutoCloseable {
                               .add("definition", definition)
                               .build();
     return makeRequest(GQL.UPDATE_GOAL_DEFINITION, variables).getJsonObject("definition").getInt("revision");
+  }
+
+  public void updateSchedulingSpecGoalArguments(int invocationId, JsonObject arguments) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                              .add("goal_invocation_id", invocationId)
+                              .add("arguments", arguments)
+                              .build();
+    makeRequest(GQL.UPDATE_SCHEDULING_SPEC_GOALS_ARGUMENTS, variables);
   }
 
   public void updateSchedulingSpecEnabled(int invocationId, boolean enabled) throws IOException {

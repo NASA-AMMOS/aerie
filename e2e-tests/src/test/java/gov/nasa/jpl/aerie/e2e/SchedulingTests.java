@@ -32,6 +32,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -998,6 +999,93 @@ public class SchedulingTests {
       } finally {
         hasura.deleteSchedulingGoal(problemGoalId);
       }
+    }
+  }
+
+  @Nested
+  class ProceduralSchedulingTests {
+    private int modelId;
+    private int planId;
+    private int specId;
+    private int procedureJarId;
+    private GoalInvocationId procedureId;
+
+    @BeforeEach
+    void beforeEach() throws IOException, InterruptedException {
+      try (final var gateway = new GatewayRequests(playwright)) {
+        modelId = hasura.createMissionModel(
+            gateway.uploadJarFile(),
+            "Banananation (e2e tests)",
+            "aerie_e2e_tests",
+            "Proc Scheduling Tests");
+
+        procedureJarId = gateway.uploadJarFile("../procedural/examples/foo-procedures/build/libs/SampleProcedure.jar");
+      }
+      // Insert the Plan
+      planId = hasura.createPlan(
+          modelId,
+          "Proc Sched Plan - Proc Scheduling Tests",
+          "48:00:00",
+          planStartTimestamp);
+      specId = hasura.getSchedulingSpecId(planId);
+
+      // Add Scheduling Procedure
+      procedureId = hasura.createSchedulingSpecProcedure(
+          "Test Scheduling Procedure",
+          procedureJarId,
+          specId,
+          0);
+    }
+
+    @AfterEach
+    void afterEach() throws IOException {
+      hasura.deleteSchedulingGoal(procedureId.goalId());
+      hasura.deletePlan(planId);
+      hasura.deleteMissionModel(modelId);
+    }
+
+    /**
+     * Upload a procedure jar and add to spec
+     */
+    @Test
+    void proceduralUploadWorks() throws IOException {
+      final var ids = hasura.getSchedulingSpecGoalIds(specId);
+
+      assertEquals(1, ids.size());
+      assertEquals(procedureId, ids.getFirst());
+    }
+
+    /**
+     * Run a spec with one procedure in it with required params but no args set
+     * Should fail scheduling run
+     */
+    @Test
+    void executeSchedulingRunWithoutArguments() throws IOException {
+      assertThrows(AssertionFailedError.class, () -> hasura.awaitScheduling(specId));
+    }
+
+    /**
+     * Run a spec with one procedure in it
+     */
+    @Test
+    void executeSchedulingRunWithArguments() throws IOException {
+      final var args = Json.createObjectBuilder().add("quantity", 2).build();
+
+      hasura.updateSchedulingSpecGoalArguments(procedureId.invocationId(), args);
+
+      final var resp = hasura.awaitScheduling(specId);
+
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(2, activities.size());
+      final var first = activities.getFirst();
+      assertEquals(first.type(), "BiteBanana");
+      assertEquals(first.startOffset(), "24:00:00");
+
+      final var second = activities.getLast();
+      assertEquals(second.type(), "BiteBanana");
+      assertEquals(second.startOffset(), "30:00:00");
     }
   }
 }
