@@ -218,7 +218,6 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
-      - ./procedural/examples/foo-procedures/build/libs:/usr/src/app/procedures:ro
   hasura:
     container_name: aerie_hasura
     depends_on: ["postgres"]
