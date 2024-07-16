@@ -1052,7 +1052,7 @@ public class SchedulingTests {
       final var ids = hasura.getSchedulingSpecGoalIds(specId);
 
       assertEquals(1, ids.size());
-      assertEquals(procedureId, ids.getFirst());
+      assertEquals(procedureId.goalId(), ids.getFirst());
     }
 
     /**
