@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -78,8 +78,8 @@ public class SimulationFacadeUtils {
     toReplace.forEach(plan::replaceActivity);
   }
 
-  private static Optional<SimulatedActivity> findSimulatedActivityById(
-      Collection<SimulatedActivity> simulatedActivities,
+  private static Optional<ActivityInstance> findSimulatedActivityById(
+      Collection<ActivityInstance> simulatedActivities,
       final ActivityDirectiveId activityDirectiveId
   ){
     return simulatedActivities.stream()
@@ -118,7 +118,7 @@ public class SimulationFacadeUtils {
 
   private static Optional<ActivityDirectiveId> getIdOfRootParent(
       final SimulationEngine.SimulationActivityExtract results,
-      final SimulatedActivityId instanceId){
+      final ActivityInstanceId instanceId){
     if(!results.simulatedActivities().containsKey(instanceId)){
       if(!results.unfinishedActivities().containsKey(instanceId)){
         LOGGER.debug("The simulation of the parent of activity with id "+ instanceId.id() + " has been finished");

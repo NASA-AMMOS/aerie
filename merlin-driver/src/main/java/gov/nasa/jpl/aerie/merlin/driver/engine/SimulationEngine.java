@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.merlin.driver.engine;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
@@ -712,8 +712,8 @@ public final class SimulationEngine implements AutoCloseable {
   public record SimulationActivityExtract(
       Instant startTime,
       Duration duration,
-      Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-      Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities
+      Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+      Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities
   ) {}
 
   private SpanInfo computeSpanInfo(
@@ -817,7 +817,7 @@ public final class SimulationEngine implements AutoCloseable {
         final var inputAttributes = spanInfo.input().get(span);
         final var outputAttributes = spanInfo.output().get(span);
 
-        simulatedActivities.put(activityId, new SimulatedActivity(
+        simulatedActivities.put(activityId, new ActivityInstance(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),

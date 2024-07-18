@@ -6,8 +6,8 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
@@ -823,7 +823,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return datasetIds.datasetId();
   }
 
-  private Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities(SimulationDatasetId datasetId, Instant startSimulation)
+  private Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities(SimulationDatasetId datasetId, Instant startSimulation)
   throws MerlinServiceException, IOException, InvalidJsonException
   {
     final var request = """
@@ -887,7 +887,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return parseProfiles(data);
   }
 
-  private Map<SimulatedActivityId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws
+  private Map<ActivityInstanceId, UnfinishedActivity> getSpans(DatasetId datasetId, Instant startTime) throws
                                                                                                         MerlinServiceException, IOException {
     final var request = """
        query{
@@ -913,10 +913,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var simulationDatasetId = getSuitableSimulationResults(planMetadata);
     if(simulationDatasetId.isEmpty()) return Optional.empty();
     try(var executorService = Executors.newFixedThreadPool(3)) {
-      Future<Map<SimulatedActivityId, SimulatedActivity>> futureSimulatedActivities = executorService.submit(() -> getSimulatedActivities(
+      Future<Map<ActivityInstanceId, ActivityInstance>> futureSimulatedActivities = executorService.submit(() -> getSimulatedActivities(
           simulationDatasetId.get().simulationDatasetId(),
           planMetadata.horizon().getStartInstant()));
-      Future<Map<SimulatedActivityId, UnfinishedActivity>> futureSpans = executorService.submit(() -> getSpans(
+      Future<Map<ActivityInstanceId, UnfinishedActivity>> futureSpans = executorService.submit(() -> getSpans(
           simulationDatasetId.get().datasetId(),
           planMetadata.horizon().getStartInstant()));
       Future<ProfileSet> futureProfiles = executorService.submit(() -> getProfilesWithSegments(simulationDatasetId.get().datasetId()));
@@ -1013,18 +1013,18 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return resourceTypes;
   }
 
-  private Map<SimulatedActivityId, UnfinishedActivity> parseUnfinishedActivities(JsonArray unfinishedActivitiesJson, Instant simulationStart){
-    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
+  private Map<ActivityInstanceId, UnfinishedActivity> parseUnfinishedActivities(JsonArray unfinishedActivitiesJson, Instant simulationStart){
+    final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
     for(final var unfinishedActivityJson: unfinishedActivitiesJson){
       final var activityAttributes = activityAttributesP.parse(unfinishedActivityJson.asJsonObject().getJsonObject("attributes")).getSuccessOrThrow();
-      SimulatedActivityId parentId = null;
+      ActivityInstanceId parentId = null;
       if(!unfinishedActivityJson.asJsonObject().isNull("parent_id")){
-        parentId = new SimulatedActivityId(unfinishedActivityJson.asJsonObject().getJsonNumber("parent_id").longValue());
+        parentId = new ActivityInstanceId(unfinishedActivityJson.asJsonObject().getJsonNumber("parent_id").longValue());
       }
       final var activityType = unfinishedActivityJson.asJsonObject().getJsonString("type").getString();
       final var start = instantFromStart(simulationStart,
           durationFromPGInterval(unfinishedActivityJson.asJsonObject().getJsonString("start_offset").getString()));
-      final var id = new SimulatedActivityId(unfinishedActivityJson.asJsonObject().getJsonNumber("id").longValue());
+      final var id = new ActivityInstanceId(unfinishedActivityJson.asJsonObject().getJsonNumber("id").longValue());
       Optional<ActivityDirectiveId> actDirectiveId = Optional.empty();
       if(activityAttributes.directiveId().isPresent()){
         actDirectiveId = Optional.of(new ActivityDirectiveId(activityAttributes.directiveId().get()));
@@ -1126,18 +1126,18 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return ResourceProfile.of(type, segments);
   }
 
-  private Map<SimulatedActivityId, SimulatedActivity> parseSimulatedActivities(JsonArray simulatedActivitiesArray, Instant simulationStart)
+  private Map<ActivityInstanceId, ActivityInstance> parseSimulatedActivities(JsonArray simulatedActivitiesArray, Instant simulationStart)
   throws InvalidJsonException
   {
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+    final var simulatedActivities = new HashMap<ActivityInstanceId, ActivityInstance>();
     for(final var simulatedActivityJson: simulatedActivitiesArray) {
       //if no duration, this is an unfinished activity
       if(simulatedActivityJson.asJsonObject().isNull("duration")) continue;
       final var activityDuration = GraphQLParsers.durationP.parse(simulatedActivityJson.asJsonObject().get("duration")).getSuccessOrThrow();
       final var activityId = simulatedActivityJson.asJsonObject().getJsonNumber("id").longValue();
-      SimulatedActivityId parentId = null;
+      ActivityInstanceId parentId = null;
       if(!simulatedActivityJson.asJsonObject().isNull("parent_id")){
-        parentId = new SimulatedActivityId(simulatedActivityJson.asJsonObject().getJsonNumber("parent_id").longValue());
+        parentId = new ActivityInstanceId(simulatedActivityJson.asJsonObject().getJsonNumber("parent_id").longValue());
       }
       final var startOffset = instantFromStart(simulationStart,durationFromPGInterval(simulatedActivityJson.asJsonObject().getString("start_offset")));
       final var computedAttributes = serializedValueP.parse(simulatedActivityJson.asJsonObject().get("attributes")).getSuccessOrThrow();
@@ -1149,7 +1149,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           .parse(activityDirectiveArguments)
           .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       final var activityType = activityDirective.getString("type");
-      final var simulatedActivity = new SimulatedActivity(
+      final var simulatedActivity = new ActivityInstance(
           activityType,
           deserializedArguments,
           startOffset,
@@ -1159,7 +1159,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
           Optional.of(activityDirectiveId),
           computedAttributes
       );
-      simulatedActivities.put(new SimulatedActivityId(activityId), simulatedActivity);
+      simulatedActivities.put(new ActivityInstanceId(activityId), simulatedActivity);
     }
     return simulatedActivities;
   }

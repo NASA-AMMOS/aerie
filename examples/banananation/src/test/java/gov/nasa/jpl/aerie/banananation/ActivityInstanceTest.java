@@ -22,7 +22,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public final class SimulatedActivityTest {
+public final class ActivityInstanceTest {
   @Test
   public void testUnspecifiedArgInSimulatedActivity() {
     final var schedule = SimulationUtility.buildSchedule(

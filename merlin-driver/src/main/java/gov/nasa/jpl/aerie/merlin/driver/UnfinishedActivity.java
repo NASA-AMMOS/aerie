@@ -11,7 +11,7 @@ public record UnfinishedActivity(
   String type,
   Map<String, SerializedValue> arguments,
   Instant start,
-  SimulatedActivityId parentId,
-  List<SimulatedActivityId> childIds,
+  ActivityInstanceId parentId,
+  List<ActivityInstanceId> childIds,
   Optional<ActivityDirectiveId> directiveId
 ) { }

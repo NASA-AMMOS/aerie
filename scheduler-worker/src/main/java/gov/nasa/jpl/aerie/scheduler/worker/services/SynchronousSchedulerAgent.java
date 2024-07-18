@@ -21,6 +21,7 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -238,23 +239,24 @@ public record SynchronousSchedulerAgent(
       final var solutionPlan = scheduler.getNextSolution().orElseThrow(
           () -> new ResultsProtocolFailure("scheduler returned no solution"));
 
-        final var activityToGoalId = new HashMap<SchedulingActivityDirective, GoalId>();
-        for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
-          for (final var activity : entry.getValue().getInsertedActivities()) {
-            activityToGoalId.put(activity, goals.get(entry.getKey()));
-          }
+      final var activityToGoalId = new HashMap<SchedulingActivityDirective, GoalId>();
+      for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
+        for (final var activity : entry.getValue().getInsertedActivities()) {
+          activityToGoalId.put(activity, goals.get(entry.getKey()));
         }
-        //store the solution plan back into merlin (and reconfirm no intervening mods!)
-        //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
-        ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
-        final var instancesToIds = storeFinalPlan(
-            planMetadata,
-            loadedPlanComponents.idMap(),
-            loadedPlanComponents.merlinPlan(),
-            solutionPlan,
-            activityToGoalId,
-            schedulerMissionModel.schedulerModel()
-        );
+      }
+      //store the solution plan back into merlin (and reconfirm no intervening mods!)
+      //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
+      ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
+      final var instancesToIds = storeFinalPlan(
+          planMetadata,
+          loadedPlanComponents.merlinPlan(),
+          solutionPlan,
+          activityToGoalId,
+          schedulerMissionModel.schedulerModel()
+      );
+
+      final var plannedIds = instancesToIds.values();
       List<SchedulingActivityDirective> updatedActs = updateEverythingWithNewAnchorIds(solutionPlan, instancesToIds);
       merlinService.updatePlanActivityDirectiveAnchors(specification.planId(), updatedActs, instancesToIds);
 

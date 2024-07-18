@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
@@ -198,7 +198,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+    public Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities() {
       return this.simulationResults.simulatedActivities;
     }
 
