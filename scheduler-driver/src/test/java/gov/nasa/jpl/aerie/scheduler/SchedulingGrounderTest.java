@@ -2,16 +2,17 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulePlanGrounder;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,12 +28,12 @@ public class SchedulingGrounderTest {
   @Test
   public void testChainAnchors(){
     final var at = new ActivityType("at");
-    final var id1 = new SchedulingActivityDirectiveId(1);
-    final var id2 = new SchedulingActivityDirectiveId(2);
-    final var id3 = new SchedulingActivityDirectiveId(3);
-    final var act1 = SchedulingActivityDirective.of(id1, at, t0, d1min, null, true);
-    final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, act1.id(), false);
-    final var act3 = SchedulingActivityDirective.of(id3, at, t2hr, d1min, act2.id(), false);
+    final var id1 = new ActivityDirectiveId(1);
+    final var id2 = new ActivityDirectiveId(2);
+    final var id3 = new ActivityDirectiveId(3);
+    final var act1 = SchedulingActivityDirective.of(id1, at, t0, d1min, null, true, false);
+    final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, act1.id(), false, false);
+    final var act3 = SchedulingActivityDirective.of(id3, at, t2hr, d1min, act2.id(), false, false);
     final var acts = List.of(act1, act3, act2);
     final var result = SchedulePlanGrounder.groundSchedule(acts, h.getEndAerie());
     //act 1 should start at 0 min into the plan
@@ -49,8 +50,8 @@ public class SchedulingGrounderTest {
   @Test
   public void testEmptyDueToEmptyDuration(){
     final var at = new ActivityType("at");
-    final var id1 = new SchedulingActivityDirectiveId(1);
-    final var act1 = SchedulingActivityDirective.of(id1, at, t0, null, null, true);
+    final var id1 = new ActivityDirectiveId(1);
+    final var act1 = SchedulingActivityDirective.of(id1, at, t0, null, null, true, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1), h.getEndAerie());
     assertTrue(result.isEmpty());
   }
@@ -58,8 +59,8 @@ public class SchedulingGrounderTest {
   @Test
   public void testAnchoredToPlanEnd(){
     final var at = new ActivityType("at");
-    final var id1 = new SchedulingActivityDirectiveId(1);
-    final var act1 = SchedulingActivityDirective.of(id1, at, Duration.negate(d1hr), d1min, null, false);
+    final var id1 = new ActivityDirectiveId(1);
+    final var act1 = SchedulingActivityDirective.of(id1, at, Duration.negate(d1hr), d1min, null, false, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1), h.getEndAerie());
     final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(h.getEndAerie().minus(d1hr), h.getEndAerie().minus(d1hr).plus(d1min)));
     assertEquals(act1expt, result.get().get(0));
@@ -69,10 +70,10 @@ public class SchedulingGrounderTest {
   @Test
   public void noAnchor(){
     final var at = new ActivityType("at");
-    final var id1 = new SchedulingActivityDirectiveId(1);
-    final var id2 = new SchedulingActivityDirectiveId(2);
-    final var act1 = SchedulingActivityDirective.of(id1, at, t0, d1min, null, true);
-    final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, null, true);
+    final var id1 = new ActivityDirectiveId(1);
+    final var id2 = new ActivityDirectiveId(2);
+    final var act1 = SchedulingActivityDirective.of(id1, at, t0, d1min, null, true, false);
+    final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, null, true, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1, act2), h.getEndAerie());
     final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t0, t0.plus(d1min)));
     final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t1hr, t1hr.plus(d1min)));
@@ -83,10 +84,10 @@ public class SchedulingGrounderTest {
   @Test
   public void startTimeAnchor(){
     final var at = new ActivityType("at");
-    final var id1 = new SchedulingActivityDirectiveId(1);
-    final var id2 = new SchedulingActivityDirectiveId(2);
-    final var act1 = SchedulingActivityDirective.of(id1, at, t1hr, d1min, null, true);
-    final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, act1.id(), true);
+    final var id1 = new ActivityDirectiveId(1);
+    final var id2 = new ActivityDirectiveId(2);
+    final var act1 = SchedulingActivityDirective.of(id1, at, t1hr, d1min, null, true, false);
+    final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, act1.id(), true, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1, act2), h.getEndAerie());
     final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t1hr, t1hr.plus(d1min)));
     final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t2hr, t2hr.plus(d1min)));

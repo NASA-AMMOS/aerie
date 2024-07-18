@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * Activities inserted so far to satisfy this goal
    */
-  private final Set<SchedulingActivityDirectiveId> insertedSoFar = new HashSet<>();
+  private final Set<ActivityDirectiveId> insertedSoFar = new HashSet<>();
   /**
    * Current number of steps without inserting an activity with non-zero duration
    */
@@ -218,7 +217,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   private boolean stuckInsertingZeroDurationActivities(final Plan plan, final boolean occurrencePartIsSatisfied){
     if(this.durationRange != null && occurrencePartIsSatisfied){
       final var inserted = plan.getEvaluation().forGoal(this).getInsertedActivities();
-      final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();
+      final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.id())).toList();
       final var durationNewlyInserted = newlyInsertedActivities.stream().reduce(Duration.ZERO, (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.duration()), Duration::plus);
       if(durationNewlyInserted.isZero()) {
         this.stepsWithoutProgress++;
@@ -229,7 +228,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       if(stepsWithoutProgress > maxNoProgressSteps){
         return true;
       }
-      newlyInsertedActivities.forEach(a -> insertedSoFar.add(a.getId()));
+      newlyInsertedActivities.forEach(a -> insertedSoFar.add(a.id()));
     }
     return false;
   }

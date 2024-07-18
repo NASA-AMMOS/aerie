@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -13,7 +13,7 @@ public class MissingAssociationConflict extends Conflict {
   private final Collection<SchedulingActivityDirective> instances;
 
   private final Optional<Boolean> anchorToStart;
-  private final Optional<SchedulingActivityDirectiveId> anchorIdTo;
+  private final Optional<ActivityDirectiveId> anchorIdTo;
   /**
    * ctor creates a new conflict
    *
@@ -25,7 +25,7 @@ public class MissingAssociationConflict extends Conflict {
   public MissingAssociationConflict(
       final Goal goal,
       final Collection<SchedulingActivityDirective> instancesToChooseFrom,
-      final Optional<SchedulingActivityDirectiveId> anchorIdTo,
+      final Optional<ActivityDirectiveId> anchorIdTo,
       final Optional<Boolean> anchorToStart) {
 
 
@@ -39,7 +39,7 @@ public class MissingAssociationConflict extends Conflict {
     return instances;
   }
 
-  public Optional<SchedulingActivityDirectiveId> getAnchorIdTo() {
+  public Optional<ActivityDirectiveId> getAnchorIdTo() {
     return anchorIdTo;
   }
 

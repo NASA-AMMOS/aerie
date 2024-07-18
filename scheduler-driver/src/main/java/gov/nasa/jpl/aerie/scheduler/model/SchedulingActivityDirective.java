@@ -254,17 +254,6 @@ public record SchedulingActivityDirective(
     return null;
   }
 
-
-
-  /**
-   * fetches the human-legible identifier of the activity instance
-   *
-   * @return a human-legible identifier for this activity instance
-   */
-  public SchedulingActivityDirectiveId getId() {
-    return this.id;
-  }
-
   /**
    * fetches the activity type specification that this instance is based on
    *

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -148,8 +149,8 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
-    final var map = new HashMap<SchedulingActivityDirectiveId, SchedulingActivityDirective>();
+  public Map<ActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
+    final var map = new HashMap<ActivityDirectiveId, SchedulingActivityDirective>();
     for(final var entry: this.actsByTime.entrySet()){
       for(final var activity : entry.getValue()){
         map.put(activity.id(), activity);
@@ -159,7 +160,7 @@ public class PlanInMemory implements Plan {
   }
 
 @Override
-  public Set<SchedulingActivityDirectiveId> getAnchorIds() {
+  public Set<ActivityDirectiveId> getAnchorIds() {
     return getActivities().stream()
                   .map(SchedulingActivityDirective::anchorId)
                   .collect(Collectors.toSet());

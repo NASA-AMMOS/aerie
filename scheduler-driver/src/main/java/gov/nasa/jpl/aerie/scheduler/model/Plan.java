@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -86,7 +87,7 @@ public interface Plan {
    *
    * @return map of all activities in the plan by id
    */
-  Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById();
+  Map<ActivityDirectiveId, SchedulingActivityDirective> getActivitiesById();
 
   /**
    * fetches activities in the plan
@@ -98,7 +99,7 @@ public interface Plan {
   /**
   * @return the set of anchors from all activities in the plan
    */
-  Set<SchedulingActivityDirectiveId> getAnchorIds();
+  Set<ActivityDirectiveId> getAnchorIds();
 
   /**
    * finds activity instances in the plan that meet the given criteria

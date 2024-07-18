@@ -22,13 +22,13 @@ public class SchedulePlanGrounder {
 
     final var idMap = schedulingActivityDirectiveList
         .stream()
-        .map(a -> Pair.of(new ActivityDirectiveId(a.getId().id()), a))
+        .map(a -> Pair.of(a.id(), a))
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 
     final var converted = schedulingActivityDirectiveList
         .stream()
         .map(a -> Pair.of(
-            new ActivityDirectiveId(a.id().id()),
+            a.id(),
             new ActivityDirective(
                 a.startOffset(),
                 a.type().getName(),

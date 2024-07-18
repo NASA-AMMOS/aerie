@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -94,7 +95,7 @@ public class TestPersistentAnchor {
     if(testData.plan.isEmpty())
       return false;
 
-    Set<SchedulingActivityDirectiveId> planActivityAnchors = testData.plan.get().getAnchorIds();
+    Set<ActivityDirectiveId> planActivityAnchors = testData.plan.get().getAnchorIds();
     for(final var act : testData.actsToBeAnchored){
       if(!planActivityAnchors.contains(act.anchorId()))
         return false;
@@ -114,9 +115,9 @@ public class TestPersistentAnchor {
     if(testData.plan.isEmpty())
       return false;
 
-    Set<SchedulingActivityDirectiveId> anchorIds = testData.actsToBeAnchored.stream()
-                                                                            .map(SchedulingActivityDirective::id)
-                                                                            .collect(Collectors.toSet());
+    Set<ActivityDirectiveId> anchorIds = testData.actsToBeAnchored.stream()
+                                                                  .map(SchedulingActivityDirective::id)
+                                                                  .collect(Collectors.toSet());
 
     final var mapIdToActivity = testData.plan.get().getActivitiesById();
 

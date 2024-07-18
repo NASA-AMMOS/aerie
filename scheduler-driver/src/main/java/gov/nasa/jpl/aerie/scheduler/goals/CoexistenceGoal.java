@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
@@ -19,7 +20,6 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRe
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
@@ -288,7 +288,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         1	                      1	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
  */
         // If anchors are disabled or there are some activity directives that satisfy the goal and already have the anchor or the anchorID is null, then we pass an empty anchor. Otherwise, we pass the anchorID of the directive that can satisfy the goal
-        final Optional<SchedulingActivityDirectiveId> anchorValue =
+        final Optional<ActivityDirectiveId> anchorValue =
             (this.persistentAnchor.equals(PersistentTimeAnchor.DISABLED) || !missingActAssociationsWithAnchor.isEmpty()
              || anchorIdTo == null) ? Optional.empty() : Optional.of(anchorIdTo);
         //  Create MissingActivityTemplateConflict if no matching target activity found
