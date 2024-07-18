@@ -31,6 +31,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.FakeBidiMap;
+import gov.nasa.jpl.aerie.scheduler.FakeMap;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -72,8 +74,6 @@ import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,7 +315,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  public List<SchedulingActivityDirective> updateEverythingWithNewAnchorIds(Plan solutionPlan, Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds){
+  public List<SchedulingActivityDirective> updateEverythingWithNewAnchorIds(Plan solutionPlan, FakeMap<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds){
     final var updatedActs = new ArrayList<SchedulingActivityDirective>();
     final var planActs = new HashSet<>(solutionPlan.getActivities());
     for (final var act : planActs) {
@@ -352,7 +352,7 @@ public record SynchronousSchedulerAgent(
       PlanningHorizon planningHorizon,
       SimulationFacade simulationFacade,
       PlanMetadata planMetadata,
-      final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
+      final FakeMap<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
   throws MerlinServiceException, IOException, SchedulingInterruptedException
   {
     //finish simulation until end of horizon before posting results
@@ -365,9 +365,9 @@ public record SynchronousSchedulerAgent(
       final var schedID_to_simID =
           simulationData.mapSchedulingIdsToActivityIds().get();
       final var simID_to_MerlinID =
-          schedID_to_simID.entrySet().stream().collect(Collectors.toMap(
+          schedID_to_simID.entrySet().stream().collect(FakeMap.collector(
               Map.Entry::getValue,
-              (a) -> schedID_to_MerlinID.get(a.getKey())));
+              (a) -> schedID_to_MerlinID.get(a.getKey()), ActivityDirectiveId::id, ActivityDirectiveId::id));
       if(simID_to_MerlinID.values().containsAll(schedDirectiveToMerlinId.values()) && schedDirectiveToMerlinId.values().containsAll(simID_to_MerlinID.values())){
         return Optional.of(merlinService.storeSimulationResults(planMetadata,
                                                                 simulationData.driverResults(),
@@ -446,9 +446,9 @@ public record SynchronousSchedulerAgent(
       final Optional<SimulationResults> initialSimulationResults) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
-      final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds =  new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
+      final FakeBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds =  new FakeBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>(SchedulingActivityDirectiveId::id, ActivityDirectiveId::id);
       final var merlinPlan =  merlinService.getPlanActivityDirectives(planMetadata, problem);
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToDirectiveId = new HashMap<>();
+      final FakeMap<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToDirectiveId = new FakeMap<>(SchedulingActivityDirectiveId::id, ActivityDirectiveId::id);
       final var plan = new PlanInMemory();
       final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
       for(final var elem : merlinPlan.getActivitiesById().entrySet()){
@@ -500,7 +500,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  record PlanComponents(Plan schedulerPlan, BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds, MerlinPlan merlinPlan, Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idMap) {}
+  record PlanComponents(Plan schedulerPlan, FakeBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds, MerlinPlan merlinPlan, FakeMap<SchedulingActivityDirectiveId, ActivityDirectiveId> idMap) {}
   record SchedulerMissionModel(MissionModel<?> missionModel, SchedulerModel schedulerModel) {}
 
   /**
@@ -610,9 +610,9 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Map<SchedulingActivityDirective, ActivityDirectiveId> storeFinalPlan(
+  private FakeMap<SchedulingActivityDirective, ActivityDirectiveId> storeFinalPlan(
     final PlanMetadata planMetadata,
-    final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
+    final FakeMap<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
     final MerlinPlan initialPlan,
     final Plan newPlan,
     final Map<SchedulingActivityDirective, GoalId> goalToActivity,
@@ -663,7 +663,7 @@ public record SynchronousSchedulerAgent(
    * @param plan the target plan after the scheduling run has completed
    * @return summary of the state of the plan after scheduling ran; eg goal success metrics, associated instances, etc
    */
-  private ScheduleResults collectResults(final Plan plan, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
+  private ScheduleResults collectResults(final Plan plan, final FakeMap<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
     Map<GoalId, ScheduleResults.GoalResult> goalResults = new HashMap<>();
       for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) {
         var goalId = goalsToIds.get(goalEval.getKey());

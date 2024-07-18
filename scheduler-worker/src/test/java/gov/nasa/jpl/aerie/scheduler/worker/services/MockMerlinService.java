@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.FakeMap;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -106,7 +107,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, FakeMap<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoal,
@@ -123,9 +124,9 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
+  public FakeMap<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
+      final FakeMap<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoal,
@@ -134,7 +135,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   {
     this.updatedPlan = extractActivityDirectives(plan, schedulerModel);
     this.plan = plan;
-    final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
+    final var res = new FakeMap<SchedulingActivityDirective, ActivityDirectiveId>($ -> $.id().id(), ActivityDirectiveId::id);
     for (final var activity : plan.getActivities()) {
       res.put(activity, new ActivityDirectiveId(activity.id().id()));
     }
@@ -142,7 +143,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final FakeMap<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
   throws MerlinServiceException, IOException {}
 
   @Override
@@ -174,7 +175,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
+  public FakeMap<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -188,7 +189,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   public DatasetId storeSimulationResults(
           final PlanMetadata planMetadata,
           final SimulationResults results,
-          final Map<ActivityDirectiveId, ActivityDirectiveId> activityIdCorrespondance)
+          final FakeMap<ActivityDirectiveId, ActivityDirectiveId> activityIdCorrespondance)
   {
     return new DatasetId(0);
   }

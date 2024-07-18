@@ -10,12 +10,12 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.scheduler.FakeBidiMap;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +30,8 @@ public class SimulationFacadeUtils {
 
   public static SimulationFacade.PlanSimCorrespondence scheduleFromPlan(final Plan plan, final SchedulerModel schedulerModel){
     final var activities = plan.getActivities();
-    final var planActDirectiveIdToSimulationActivityDirectiveId = new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
-    if(activities.isEmpty()) return new SimulationFacade.PlanSimCorrespondence(new DualHashBidiMap<>(), Map.of());
+    final var planActDirectiveIdToSimulationActivityDirectiveId = new FakeBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>(SchedulingActivityDirectiveId::id, ActivityDirectiveId::id);
+    if(activities.isEmpty()) return new SimulationFacade.PlanSimCorrespondence(new FakeBidiMap<>(SchedulingActivityDirectiveId::id, ActivityDirectiveId::id), Map.of());
     //filter out child activities
     final var activitiesWithoutParent = activities.stream().filter(a -> a.topParent() == null).toList();
     final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
@@ -146,7 +146,7 @@ public class SimulationFacadeUtils {
 
   public static ActivityDirective schedulingActToActivityDir(
       final SchedulingActivityDirective activity,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
+      final FakeBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
       final SchedulerModel schedulerModel) {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");

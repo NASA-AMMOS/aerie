@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.FakeBidiMap;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -107,7 +108,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
   }
 
-  private <K,V> void replaceValue(final Map<K,V> map, final V value, final V replacement){
+  private <K,V> void replaceValue(final FakeBidiMap<K,V> map, final V value, final V replacement){
     for (final Map.Entry<K, V> entry : map.entrySet()) {
       if (entry.getValue().equals(value)) {
         entry.setValue(replacement);

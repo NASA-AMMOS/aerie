@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.FakeMap;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -358,7 +359,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @return
    */
   @Override
-  public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, FakeMap<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -370,7 +371,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var planId = createEmptyPlan(
         planName, planMetadata.modelId(),
         planMetadata.horizon().getStartInstant(), planMetadata.horizon().getEndAerie());
-    final Map<SchedulingActivityDirective, ActivityDirectiveId> activityToId = createAllPlanActivityDirectives(planId, plan, activityToGoalId, schedulerModel);
+    final FakeMap<SchedulingActivityDirective, ActivityDirectiveId> activityToId = createAllPlanActivityDirectives(planId, plan, activityToGoalId, schedulerModel);
 
     return Pair.of(planId, activityToId);
   }
@@ -410,9 +411,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @return
    */
   @Override
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
+  public FakeMap<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
+      final FakeMap<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -420,7 +421,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       )
   throws IOException, NoSuchPlanException, MerlinServiceException
   {
-    final var ids = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
+    final var ids = new FakeMap<SchedulingActivityDirective, ActivityDirectiveId>($ -> $.id().id(), ActivityDirectiveId::id);
     //creation are done in batch as that's what the scheduler does the most
     final var toAdd = new ArrayList<SchedulingActivityDirective>();
     for (final var activity : plan.getActivities()) {
@@ -467,7 +468,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
 @Override
-  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final FakeMap<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
   throws MerlinServiceException, IOException
   {
     for (SchedulingActivityDirective act: acts) {
@@ -536,7 +537,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * @return
    */
   @Override
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
+  public FakeMap<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -547,7 +548,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     return createActivityDirectives(planId, plan.getActivitiesByTime(), activityToGoalId, schedulerModel);
   }
 
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> createActivityDirectives(
+  public FakeMap<SchedulingActivityDirective, ActivityDirectiveId> createActivityDirectives(
       final PlanId planId,
       final List<SchedulingActivityDirective> orderedActivities,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -607,7 +608,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
     final var response = postRequest(query, arguments).orElseThrow(() -> new NoSuchPlanException(planId));
 
-    final Map<SchedulingActivityDirective, ActivityDirectiveId> instanceToInstanceId = new HashMap<>();
+    final FakeMap<SchedulingActivityDirective, ActivityDirectiveId> instanceToInstanceId = new FakeMap<SchedulingActivityDirective, ActivityDirectiveId>($ -> $.id().id(), ActivityDirectiveId::id);
     try {
       final var numCreated = response
           .getJsonObject("data").getJsonObject("insert_activity_directive").getJsonNumber("affected_rows").longValueExact();
@@ -804,7 +805,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   @Override
   public DatasetId storeSimulationResults(final PlanMetadata planMetadata,
                                           final SimulationResults results,
-                                          final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws
+                                          final FakeMap<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws
                                                                                                                                                         MerlinServiceException, IOException
   {
     final var simulationId = getSimulationId(planMetadata.planId());
@@ -1543,7 +1544,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
       final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
       final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
       final Instant simulationStart,
-      final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId
+      final FakeMap<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId
   ) throws MerlinServiceException, IOException
   {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
@@ -1613,7 +1614,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 }
 
   private static SpanRecord simulatedActivityToRecord(final SimulatedActivity activity,
-                                                      final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) {
+                                                      final FakeMap<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) {
     return new SpanRecord(
         activity.type(),
         activity.start(),
@@ -1627,7 +1628,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   private static SpanRecord unfinishedActivityToRecord(final UnfinishedActivity activity,
-                                                       final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) {
+                                                       final FakeMap<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) {
     return new SpanRecord(
         activity.type(),
         activity.start(),
