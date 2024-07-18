@@ -26,18 +26,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public interface MerlinService {
+public interface MerlinDatabaseService {
   record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
 
   interface ReaderRole {
 
-    MerlinService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+    MerlinDatabaseService.MissionModelTypes getMissionModelTypes(final PlanId planId)
     throws IOException, MerlinServiceException;
-    MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+    MerlinDatabaseService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
     throws IOException, MerlinServiceException,
            NoSuchMissionModelException;
 

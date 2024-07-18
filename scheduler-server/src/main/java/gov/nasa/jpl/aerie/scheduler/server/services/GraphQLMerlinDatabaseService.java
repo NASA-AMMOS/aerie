@@ -95,7 +95,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.graphql.ProfileParsers.realVal
  *
  * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to access all plan data
  */
-public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdminSecret) implements MerlinService.OwnerRole {
+public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGraphQlAdminSecret) implements MerlinDatabaseService.OwnerRole {
 
   /**
    * timeout for http graphql requests issued to aerie
@@ -624,7 +624,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   @Override
-  public MerlinService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+  public MerlinDatabaseService.MissionModelTypes getMissionModelTypes(final PlanId planId)
   throws IOException, MerlinServiceException
   {
     final var request = """
@@ -659,7 +659,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
                                        .getJsonObject("mission_model")
                                        .getInt("id"));
 
-    return new MerlinService.MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
+    return new MerlinDatabaseService.MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
   private static List<ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
@@ -700,7 +700,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   }
 
   @Override
-  public MerlinService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  public MerlinDatabaseService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
   throws IOException, NoSuchMissionModelException, MerlinServiceException
   {
     final var request = """
@@ -726,7 +726,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
 
-    return new MerlinService.MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
+    return new MerlinDatabaseService.MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
   public Collection<ResourceType> getResourceTypes(final MissionModelId missionModelId)

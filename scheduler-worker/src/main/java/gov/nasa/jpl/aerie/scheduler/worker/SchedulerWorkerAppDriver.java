@@ -17,7 +17,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
@@ -34,7 +34,7 @@ public final class SchedulerWorkerAppDriver {
   public static void main(String[] args) throws Exception {
     final var config = loadConfiguration();
 
-    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
+    final var merlinDatabaseService = new GraphQLMerlinDatabaseService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
 
     final SchedulingDSLCompilationService schedulingDSLCompilationService;
     try {
@@ -69,7 +69,7 @@ public final class SchedulerWorkerAppDriver {
 
     final var specificationService = new SpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService,
-        merlinService,
+        merlinDatabaseService,
         config.merlinFileStore(),
         config.missionRuleJarPath(),
         config.outputMode(),

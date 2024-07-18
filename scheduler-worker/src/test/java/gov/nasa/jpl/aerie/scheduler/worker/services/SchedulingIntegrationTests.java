@@ -53,7 +53,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -2085,10 +2085,10 @@ public class SchedulingIntegrationTests {
     return result;
   }
 
-  private static MockMerlinService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
+  private static MockMerlinDatabaseService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
     final var jarFile = getLatestJarFile(desc.libPath());
     try {
-      return new MockMerlinService.MissionModelInfo(
+      return new MockMerlinDatabaseService.MissionModelInfo(
           desc.libPath(),
           Path.of(jarFile.getName()),
           desc.name(),
@@ -2188,7 +2188,7 @@ public class SchedulingIntegrationTests {
       final Optional<ExternalProfiles> externalProfiles,
       final int cachedEngineStoreCapacity
   ) {
-    final var mockMerlinService = new MockMerlinService();
+    final var mockMerlinService = new MockMerlinDatabaseService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
     mockMerlinService.setPlanningHorizon(planningHorizon);
@@ -2240,7 +2240,7 @@ public class SchedulingIntegrationTests {
       Plan plan,
       Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
 
-  static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
+  static MerlinDatabaseService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
       final Map<String, SerializedValue> configuration)
   throws MissionModelLoader.MissionModelLoadException
@@ -2274,7 +2274,7 @@ public class SchedulingIntegrationTests {
       resourceTypes.add(new ResourceType(name, resource.getOutputType().getSchema()));
     }
 
-    return new MerlinService.MissionModelTypes(activityTypes, resourceTypes);
+    return new MerlinDatabaseService.MissionModelTypes(activityTypes, resourceTypes);
   }
 
   @Test
