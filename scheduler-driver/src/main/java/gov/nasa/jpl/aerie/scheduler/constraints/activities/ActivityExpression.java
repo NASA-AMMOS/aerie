@@ -311,20 +311,20 @@ public record ActivityExpression(
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly) {
-    boolean match = (type == null || type.getName().equals(act.type));
+    boolean match = (type == null || type.getName().equals(act.type()));
 
     if (match && startRange != null) {
-      final var startT = act.interval.start;
+      final var startT = act.interval().start;
       match = (startT != null) && startRange.contains(startT);
     }
 
     if (match && endRange != null) {
-      final var endT = act.interval.end;
+      final var endT = act.interval().end;
       match = (endT != null) && endRange.contains(endT);
     }
 
     if (match && durationRange != null) {
-      final var dur = act.interval.duration();
+      final var dur = act.interval().duration();
       final Optional<Duration> durRequirementLower = this.durationRange.getLeft()
           .evaluate(simulationResults, evaluationEnvironment)
           .valueAt(ZERO)
@@ -346,9 +346,9 @@ public record ActivityExpression(
 
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
-      Map<String, SerializedValue> actInstanceArguments = act.parameters;
+      Map<String, SerializedValue> actInstanceArguments = act.parameters();
       final var instantiatedArguments = SchedulingActivityDirective
-          .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
+          .instantiateArguments(arguments, act.interval().start, simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {
           if (actInstanceArguments.containsKey(param.getKey())) {
@@ -432,7 +432,7 @@ public record ActivityExpression(
       final EvaluationEnvironment environment)
   {
     final var spans = new Spans();
-    results.activities.stream().filter(x -> matches(x, results, environment, false)).forEach(x -> spans.add(x.interval));
+    results.activities.stream().filter(x -> matches(x, results, environment, false)).forEach(x -> spans.add(x.interval()));
     return spans;
   }
 
@@ -458,8 +458,8 @@ public record ActivityExpression(
       final EvaluationEnvironment evaluationEnvironment
       ){
     if(durationRange == null) return null;
-    Optional<Duration> durRequirementLower = Optional.empty();
-    Optional<Duration> durRequirementUpper = Optional.empty();
+    Optional<Duration> durRequirementLower;
+    Optional<Duration> durRequirementUpper;
     try {
       durRequirementLower = durationRange().getLeft()
                                                      .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)

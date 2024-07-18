@@ -58,8 +58,8 @@ public class TestPersistentAnchor {
               final SimulationResults simResults,
               final EvaluationEnvironment environment)
           {
-            final var startTime = activityInstance.interval.start;
-            if (!activityInstance.type.equals(ae.type().getName())) return false;
+            final var startTime = activityInstance.interval().start;
+            if (!activityInstance.type().equals(ae.type().getName())) return false;
             for (final var arg : ae
                 .arguments()
                 .entrySet()
@@ -73,7 +73,7 @@ public class TestPersistentAnchor {
                     .valueAt(startTime)
                     .orElseThrow()))
                 .entrySet()) {
-              if (!arg.getValue().equals(activityInstance.parameters.get(arg.getKey()))) return false;
+              if (!arg.getValue().equals(activityInstance.parameters().get(arg.getKey()))) return false;
             }
             return true;
           }

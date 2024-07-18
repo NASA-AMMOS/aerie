@@ -215,7 +215,7 @@ public class PrioritySolver implements Solver {
       allGood = false;
       logger.error("Tried to simulate the plan {} but a simulation exception happened", planWithAddedActivities, e);
     }
-    return new InsertActivityResult(allGood, acts.stream().map(act -> plan.getActivitiesById().get(act.getId())).toList());
+    return new InsertActivityResult(allGood, acts.stream().map(act -> plan.getActivitiesById().get(act.id())).toList());
   }
 
 

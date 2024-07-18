@@ -1,42 +1,41 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
-public final class ActivityInstance {
-  public final long id;
-  public final String type;
-  public final Map<String, SerializedValue> parameters;
-  public final Interval interval;
+public record ActivityInstance(
+    ActivityInstanceId instanceId,
+    String type,
+    Map<String, SerializedValue> parameters,
+    Interval interval,
+    Optional<ActivityDirectiveId> directiveId
+) {
+  public ActivityInstance(
+      long id,
+      String type,
+      Map<String, SerializedValue> parameters,
+      Interval interval
+  ) {
+    this(id, type, parameters, interval, Optional.empty());
+  }
 
   public ActivityInstance(
-      final long id,
-      final String type,
-      final Map<String, SerializedValue> parameters,
-      final Interval interval
+      long id,
+      String type,
+      Map<String, SerializedValue> parameters,
+      Interval interval,
+      Optional<ActivityDirectiveId> directiveId
   ) {
-    this.type = type;
-    this.id = id;
-    this.parameters = parameters;
-    this.interval = interval;
+    this(new ActivityInstanceId(id), type, parameters, interval, directiveId);
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof ActivityInstance)) return false;
-    final var o = (ActivityInstance)obj;
-
-    return Objects.equals(this.id, o.id) &&
-           Objects.equals(this.type, o.type) &&
-           Objects.equals(this.parameters, o.parameters) &&
-           Objects.equals(this.interval, o.interval);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.id, this.type, this.parameters, this.interval);
+  public long id() {
+    return this.instanceId().id();
   }
 }

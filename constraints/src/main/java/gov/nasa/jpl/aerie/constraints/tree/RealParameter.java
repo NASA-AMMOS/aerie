@@ -24,12 +24,12 @@ public final class RealParameter implements Expression<LinearProfile> {
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
-    final var parameter = activity.parameters.get(this.parameterName);
+    final var parameter = activity.parameters().get(this.parameterName);
     final var value = parameter.asReal().orElseThrow(
         () -> new InputMismatchException(
             String.format("Activity parameter \"%s\" with value %s cannot be interpreted as real",
                           this.parameterName,
-                          activity.parameters.get(parameterName).toString())));
+                          activity.parameters().get(parameterName).toString())));
 
     return new LinearProfile(
         Segment.of(Interval.FOREVER, new LinearEquation(Duration.ZERO, value, 0.0))

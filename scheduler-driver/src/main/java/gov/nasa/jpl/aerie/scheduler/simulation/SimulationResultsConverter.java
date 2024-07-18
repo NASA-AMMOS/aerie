@@ -50,6 +50,6 @@ public class SimulationResultsConverter {
     final var activityInterval = Interval.between(startT, endT);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
-        activityInterval);
+        activityInterval, driverActivity.directiveId());
   }
 }

@@ -84,7 +84,7 @@ public record RollingThreshold(Expression<Spans> spans, Expression<Duration> wid
       for (final var span : reportedSpans) {
         if (!Interval.intersect(span.interval(), expandedInterval).isEmpty()) {
           violationIntervals.add(span.interval());
-          span.value().ifPresent(m -> violationActivityIds.add(m.activityInstance().id));
+          span.value().ifPresent(m -> violationActivityIds.add(m.activityInstance().id()));
         }
       }
       if (this.algorithm == RollingThresholdAlgorithm.ExcessHull || this.algorithm == RollingThresholdAlgorithm.DeficitHull) {
