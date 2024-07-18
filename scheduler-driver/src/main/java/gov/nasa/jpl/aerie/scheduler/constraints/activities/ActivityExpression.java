@@ -18,12 +18,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
-import kotlin.DeepRecursiveFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigDecimal;
@@ -203,7 +202,7 @@ public record ActivityExpression(
      *     prototype for the new search criteria. must not be null.
      * @return the same builder object updated with new criteria
      */
-    public @NotNull Builder basedOn(@NotNull SchedulingActivityDirective existingAct) {
+    public @NotNull Builder basedOn(@NotNull SchedulingActivity existingAct) {
       type = existingAct.getType();
 
       if (existingAct.startOffset() != null) {
@@ -298,7 +297,7 @@ public record ActivityExpression(
    *     the template criteria
    */
   public boolean matches(
-      final @NotNull SchedulingActivityDirective act,
+      final @NotNull SchedulingActivity act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly) {
@@ -347,7 +346,7 @@ public record ActivityExpression(
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.parameters();
-      final var instantiatedArguments = SchedulingActivityDirective
+      final var instantiatedArguments = SchedulingActivity
           .instantiateArguments(arguments, act.interval().start, simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {
@@ -366,7 +365,7 @@ public record ActivityExpression(
   }
 
   public boolean matches(
-      final @NotNull SchedulingActivityDirective act,
+      final @NotNull SchedulingActivity act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly,
@@ -407,7 +406,7 @@ public record ActivityExpression(
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.arguments();
-      final var instantiatedArguments = SchedulingActivityDirective
+      final var instantiatedArguments = SchedulingActivity
           .instantiateArguments(arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {

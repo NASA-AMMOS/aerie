@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -123,10 +123,10 @@ public interface MerlinService {
      * @return the database id of the newly created aerie plan container
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
-    Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+    Pair<PlanId, Map<SchedulingActivity, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
         final PlanMetadata planMetadata,
         final Plan plan,
-        final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+        final Map<SchedulingActivity, GoalId> activityToGoalId,
         final SchedulerModel schedulerModel
     )
     throws IOException, NoSuchPlanException, MerlinServiceException;
@@ -156,11 +156,11 @@ public interface MerlinService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
+    Map<SchedulingActivity, ActivityDirectiveId> updatePlanActivityDirectives(
         PlanId planId,
         MerlinPlan initialPlan,
         Plan plan,
-        Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+        Map<SchedulingActivity, GoalId> activityToGoalId,
         SchedulerModel schedulerModel
     )
     throws IOException, NoSuchPlanException, MerlinServiceException, NoSuchActivityInstanceException;
@@ -172,7 +172,7 @@ public interface MerlinService {
      * @throws MerlinServiceException
      * @throws IOException
      */
-    void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
+    void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivity> acts, final Map<SchedulingActivity, ActivityDirectiveId> instancesToIds)
     throws MerlinServiceException, IOException;
 
     /**
@@ -198,10 +198,10 @@ public interface MerlinService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
+    Map<SchedulingActivity, ActivityDirectiveId> createAllPlanActivityDirectives(
         final PlanId planId,
         final Plan plan,
-        final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+        final Map<SchedulingActivity, GoalId> activityToGoalId,
         final SchedulerModel schedulerModel
     )
     throws IOException, NoSuchPlanException, MerlinServiceException;

@@ -13,8 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,7 @@ public class SimulationFacadeUtils {
       final SimulationFacade.PlanSimCorrespondence correspondence,
       final SimulationEngine.SimulationActivityExtract activityExtract
   ) {
-    final var toReplace = new HashMap<SchedulingActivityDirective, SchedulingActivityDirective>();
+    final var toReplace = new HashMap<SchedulingActivity, SchedulingActivity>();
     for (final var activity : plan.getActivities()) {
       if (activity.duration() == null) {
         final var activityDirective = findSimulatedActivityById(
@@ -91,7 +90,7 @@ public class SimulationFacadeUtils {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(activityExtract, activityInstanceId);
       if(rootParent.isPresent()) {
-        final var activityInstance = SchedulingActivityDirective.of(
+        final var activityInstance = SchedulingActivity.of(
             null,
             activityTypes.get(activity.type()),
             planningHorizon.toDur(activity.start()),
@@ -137,7 +136,7 @@ public class SimulationFacadeUtils {
   }
 
   public static ActivityDirective schedulingActToActivityDir(
-      final SchedulingActivityDirective activity,
+      final SchedulingActivity activity,
       final SchedulerModel schedulerModel) {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");

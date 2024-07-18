@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -107,26 +107,26 @@ public class PrioritySolverTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeA, t0, d1min, null, true, false));
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
     return plan;
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
     return plan;
   }
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeB, t0, d1min, null, true, false));
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeB, t1hr, d1min, null, true, false));
-    plan.add(SchedulingActivityDirective.of(idGenerator.next(), actTypeB, t2hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeB, t0, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeB, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeB, t2hr, d1min, null, true, false));
     return plan;
   }
 

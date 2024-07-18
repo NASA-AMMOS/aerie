@@ -16,12 +16,12 @@ import java.util.stream.Collectors;
 
 public class SchedulePlanGrounder {
   public static Optional<List<ActivityInstance>> groundSchedule(
-      final List<SchedulingActivityDirective> schedulingActivityDirectiveList,
+      final List<SchedulingActivity> schedulingActivityList,
       final Duration planDuration
   ){
     final var groundedDirectives = new HashMap<ActivityDirectiveId, ActivityInstance>();
 
-    final var idMap = schedulingActivityDirectiveList
+    final var idMap = schedulingActivityList
         .stream()
         .map(a -> Pair.of(a.id(), a))
         .filter($ -> $.getKey() != null)
@@ -31,7 +31,7 @@ public class SchedulePlanGrounder {
         .stream().map(ActivityDirectiveId::id)
         .max(Long::compare);
 
-    final var converted = schedulingActivityDirectiveList
+    final var converted = schedulingActivityList
         .stream()
         .map(a -> Pair.of(
             a.id(),
@@ -80,7 +80,7 @@ public class SchedulePlanGrounder {
 
     final var instanceIdCounter = new AtomicLong(maxDirectiveId.orElse(0L) + 1L);
     result.addAll(
-        schedulingActivityDirectiveList
+        schedulingActivityList
             .stream()
             .filter($ -> $.id() == null)
             .map($ -> new ActivityInstance(

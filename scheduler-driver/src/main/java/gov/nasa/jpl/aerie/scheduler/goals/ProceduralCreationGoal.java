@@ -4,14 +4,12 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,12 +57,12 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
      *     function. may be called out of order from different contexts.
      * @return this builder, ready for additional specification
      */
-    public Builder generateWith(Function<Plan, Collection<SchedulingActivityDirective>> generator) {
+    public Builder generateWith(Function<Plan, Collection<SchedulingActivity>> generator) {
       this.generateWith = generator;
       return this;
     }
 
-    protected Function<Plan, Collection<SchedulingActivityDirective>> generateWith;
+    protected Function<Plan, Collection<SchedulingActivity>> generateWith;
 
     /**
      * {@inheritDoc}
@@ -135,7 +133,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
           .build();
       final var matchingActs = plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
 
-      var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
+      var missingActAssociations = new ArrayList<SchedulingActivity>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
@@ -200,7 +198,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * internal state that could produce variant results on re-invocation
    * with different hypothetical inputs
    */
-  protected Function<Plan, Collection<SchedulingActivityDirective>> generator;
+  protected Function<Plan, Collection<SchedulingActivity>> generator;
 
   /**
    * use the generator to determine the set of relevant activity requests
@@ -215,7 +213,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *     are deemed relevant to this goal (eg within the temporal context
    *     of this goal)
    */
-  private Collection<SchedulingActivityDirective> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  private Collection<SchedulingActivity> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
 
     //run the generator in the plan context
     final var allActs = generator.apply(plan);

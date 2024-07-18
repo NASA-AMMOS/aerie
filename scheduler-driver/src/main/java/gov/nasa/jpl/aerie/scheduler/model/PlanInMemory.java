@@ -37,7 +37,7 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by start time
    */
-  private final TreeMap<Duration, List<SchedulingActivityDirective>> actsByTime;
+  private final TreeMap<Duration, List<SchedulingActivity>> actsByTime;
 
   /**
    * ctor creates a new empty solution plan
@@ -64,7 +64,7 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public void add(Collection<SchedulingActivityDirective> acts) {
+  public void add(Collection<SchedulingActivity> acts) {
     for (final var act : acts) {
       add(act);
     }
@@ -82,7 +82,7 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public void add(final SchedulingActivityDirective act) {
+  public void add(final SchedulingActivity act) {
     if (act == null) {
       throw new IllegalArgumentException(
           "adding null activity to plan");
@@ -97,14 +97,14 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public void remove(Collection<SchedulingActivityDirective> acts) {
+  public void remove(Collection<SchedulingActivity> acts) {
     for (var act : acts) {
       remove(act);
     }
   }
 
   @Override
-  public void remove(SchedulingActivityDirective act) {
+  public void remove(SchedulingActivity act) {
     var acts = actsByTime.get(act.startOffset());
     if (acts != null) acts.remove(act);
   }
@@ -113,9 +113,9 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public List<SchedulingActivityDirective> getActivitiesByTime() {
+  public List<SchedulingActivity> getActivitiesByTime() {
     //REVIEW: could probably do something tricky with streams to avoid new
-    final var orderedActs = new LinkedList<SchedulingActivityDirective>();
+    final var orderedActs = new LinkedList<SchedulingActivity>();
 
     //NB: tree map ensures that values are in key order, but still need to flatten
     for (final var actsAtT : actsByTime.values()) {
@@ -126,7 +126,7 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableList(orderedActs);
   }
 
-  public void replaceActivity(SchedulingActivityDirective oldAct, SchedulingActivityDirective newAct){
+  public void replaceActivity(SchedulingActivity oldAct, SchedulingActivity newAct){
     this.remove(oldAct);
     this.add(newAct);
     if(evaluation != null) this.evaluation.updateGoalEvals(oldAct, newAct);
@@ -136,8 +136,8 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Map<ActivityType, List<SchedulingActivityDirective>> getActivitiesByType() {
-    final var map = new HashMap<ActivityType, List<SchedulingActivityDirective>>();
+  public Map<ActivityType, List<SchedulingActivity>> getActivitiesByType() {
+    final var map = new HashMap<ActivityType, List<SchedulingActivity>>();
     for(final var entry: this.actsByTime.entrySet()){
       for(final var activity : entry.getValue()){
         map.computeIfAbsent(activity.type(), t -> new ArrayList<>()).add(activity);
@@ -147,8 +147,8 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public Map<ActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
-    final var map = new HashMap<ActivityDirectiveId, SchedulingActivityDirective>();
+  public Map<ActivityDirectiveId, SchedulingActivity> getActivitiesById() {
+    final var map = new HashMap<ActivityDirectiveId, SchedulingActivity>();
     for(final var entry: this.actsByTime.entrySet()){
       for(final var activity : entry.getValue()){
         map.put(activity.id(), activity);
@@ -160,7 +160,7 @@ public class PlanInMemory implements Plan {
 @Override
   public Set<ActivityDirectiveId> getAnchorIds() {
     return getActivities().stream()
-                  .map(SchedulingActivityDirective::anchorId)
+                  .map(SchedulingActivity::anchorId)
                   .collect(Collectors.toSet());
   }
 
@@ -168,8 +168,8 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Set<SchedulingActivityDirective> getActivities() {
-    final var set = new HashSet<SchedulingActivityDirective>();
+  public Set<SchedulingActivity> getActivities() {
+    final var set = new HashSet<SchedulingActivity>();
     for(final var entry: this.actsByTime.entrySet()){
       set.addAll(entry.getValue());
     }
@@ -180,13 +180,13 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Collection<SchedulingActivityDirective> find(
+  public Collection<SchedulingActivity> find(
       ActivityExpression template, SimulationResults simulationResults,
       EvaluationEnvironment evaluationEnvironment)
   {
     //REVIEW: could do something clever with returning streams to prevent wasted work
     //REVIEW: something more clever for time-based queries using time index
-    LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
+    LinkedList<SchedulingActivity> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
         if (template.matches(act, simulationResults, evaluationEnvironment, true, this)) {
@@ -214,11 +214,11 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivityDirective act){
+  public Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivity act){
     if(act == null)
       return null;
     if(act.anchorId() != null){
-      SchedulingActivityDirective parent = this.getActivitiesById().get(act.anchorId());
+      SchedulingActivity parent = this.getActivitiesById().get(act.anchorId());
       if(!act.anchoredToStart() && parent.duration() == null)
         throw new IllegalArgumentException("Cannot calculate the absolute duration for an activity that is not anchored to the start while the parent doesn't have duration");
       return calculateAbsoluteStartOffsetAnchoredActivity(parent).plus(act.anchoredToStart() ? act.startOffset() : act.startOffset().plus(parent.duration()));

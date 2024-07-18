@@ -15,7 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
@@ -116,10 +116,10 @@ public class SimulationFacadeTest {
     final var actTypeBite = problem.getActivityType("BiteBanana");
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    var act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")), null, null, true, false);
+    var act1 = SchedulingActivity.of(idGenerator.next(), actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")), null, null, true, false);
     plan.add(act1);
 
-    var act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)), null, null, true, false);
+    var act2 = SchedulingActivity.of(idGenerator.next(), actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)), null, null, true, false);
     plan.add(act2);
 
     return plan;
@@ -131,7 +131,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     final var actTypeBite = problem.getActivityType("BiteBanana");
 
-    var act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")), null, null, true, false);
+    var act1 = SchedulingActivity.of(idGenerator.next(), actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")), null, null, true, false);
     plan.add(act1);
 
     final var goal = new CoexistenceGoal.Builder()
@@ -283,18 +283,18 @@ public class SimulationFacadeTest {
 
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
-                                                 t0, Duration.ZERO, Map.of(), null, null, true, false);
+    SchedulingActivity act1 = SchedulingActivity.of(idGenerator.next(), actTypePeel,
+                                                    t0, Duration.ZERO, Map.of(), null, null, true, false);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
-                                                 t2, Duration.ZERO, Map.of(), null, null, true, false);
+    SchedulingActivity act2 = SchedulingActivity.of(idGenerator.next(), actTypePeel,
+                                                    t2, Duration.ZERO, Map.of(), null, null, true, false);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
         act1,
         act2
     );
-    final Function<Plan, Collection<SchedulingActivityDirective>> fixedGenerator
+    final Function<Plan, Collection<SchedulingActivity>> fixedGenerator
         = (p) -> externalActs;
 
     final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
@@ -325,11 +325,11 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     actTypePeel.setResourceConstraint(constraint);
 
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
-                                                 t0, Duration.ZERO, Map.of(), null, null, true, false);
+    SchedulingActivity act1 = SchedulingActivity.of(idGenerator.next(), actTypePeel,
+                                                    t0, Duration.ZERO, Map.of(), null, null, true, false);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
-                                                 t2, Duration.ZERO, Map.of(), null, null, true, false);
+    SchedulingActivity act2 = SchedulingActivity.of(idGenerator.next(), actTypePeel,
+                                                    t2, Duration.ZERO, Map.of(), null, null, true, false);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -337,7 +337,7 @@ public class SimulationFacadeTest {
         act2
     );
 
-    final Function<Plan, Collection<SchedulingActivityDirective>> fixedGenerator
+    final Function<Plan, Collection<SchedulingActivity>> fixedGenerator
         = (p) -> externalActs;
 
     final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()

@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
@@ -105,10 +105,10 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, Map<SchedulingActivity, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoal,
+      final Map<SchedulingActivity, GoalId> activityToGoal,
       final SchedulerModel schedulerModel
   )
   {
@@ -122,17 +122,17 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
+  public Map<SchedulingActivity, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
       final MerlinPlan initialPlan,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoal,
+      final Map<SchedulingActivity, GoalId> activityToGoal,
       final SchedulerModel schedulerModel
   )
   {
     this.updatedPlan = extractActivityDirectives(plan, schedulerModel);
     this.plan = plan;
-    final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
+    final var res = new HashMap<SchedulingActivity, ActivityDirectiveId>();
     for (final var activity : plan.getActivities()) {
       res.put(activity, activity.id());
     }
@@ -140,7 +140,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivityDirective> acts, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds)
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivity> acts, final Map<SchedulingActivity, ActivityDirectiveId> instancesToIds)
   throws MerlinServiceException, IOException {}
 
   @Override
@@ -172,10 +172,10 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
+  public Map<SchedulingActivity, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
-      final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
+      final Map<SchedulingActivity, GoalId> activityToGoalId,
       final SchedulerModel schedulerModel
       )
   {

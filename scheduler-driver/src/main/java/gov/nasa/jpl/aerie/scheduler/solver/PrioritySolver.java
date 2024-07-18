@@ -29,7 +29,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulePlanGrounder;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
@@ -91,7 +91,7 @@ public class PrioritySolver implements Solver {
 
   private final DirectiveIdGenerator idGenerator;
 
-  public record ActivityMetadata(SchedulingActivityDirective activityDirective){}
+  public record ActivityMetadata(SchedulingActivity activityDirective){}
 
   public static class HistoryWithActivity implements EquationSolvingAlgorithms.History<Duration, ActivityMetadata> {
     List<Pair<EquationSolvingAlgorithms.FunctionCoordinate<Duration>, Optional<ActivityMetadata>>> events;
@@ -200,7 +200,7 @@ public class PrioritySolver implements Solver {
     }
   }
 
-  public record InsertActivityResult(boolean success, List<SchedulingActivityDirective> activitiesInserted){}
+  public record InsertActivityResult(boolean success, List<SchedulingActivity> activitiesInserted){}
 
   /**
    * Tries to insert a collection of activity instances in plan. Simulates each of the activity and checks whether the expected
@@ -208,7 +208,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivityDirective> acts) throws SchedulingInterruptedException{
+  private InsertActivityResult checkAndInsertActs(Collection<SchedulingActivity> acts) throws SchedulingInterruptedException{
     // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
     logger.info("Inserting new activities in the plan to check plan validity");
@@ -335,14 +335,14 @@ public class PrioritySolver implements Solver {
       if (goal.hasOptimizer()) {
         //try to satisfy all and see what is best
         Goal currentSatisfiedGoal = null;
-        Collection<SchedulingActivityDirective> actsToInsert = null;
-        Collection<SchedulingActivityDirective> actsToAssociateWith = null;
+        Collection<SchedulingActivity> actsToInsert = null;
+        Collection<SchedulingActivity> actsToAssociateWith = null;
         for (var subgoal : goal.getSubgoals()) {
           satisfyGoal(subgoal);
           if(plan.getEvaluation().forGoal(subgoal).getScore() == 0 || !subgoal.shouldRollbackIfUnsatisfied()) {
             var associatedActivities = plan.getEvaluation().forGoal(subgoal).getAssociatedActivities();
             var insertedActivities = plan.getEvaluation().forGoal(subgoal).getInsertedActivities();
-            var aggregatedActivities = new ArrayList<SchedulingActivityDirective>();
+            var aggregatedActivities = new ArrayList<SchedulingActivity>();
             aggregatedActivities.addAll(associatedActivities);
             aggregatedActivities.addAll(insertedActivities);
             if (!aggregatedActivities.isEmpty() &&
@@ -537,7 +537,7 @@ public class PrioritySolver implements Solver {
               durationLeft = durationLeft.minus(insertionResult
                                                     .activitiesInserted()
                                                     .stream()
-                                                    .map(SchedulingActivityDirective::duration)
+                                                    .map(SchedulingActivity::duration)
                                                     .reduce(Duration.ZERO, Duration::plus));
             }
           } else{
@@ -565,7 +565,7 @@ public class PrioritySolver implements Solver {
             // If existing activity is a match but is missing the anchor, then the appropriate anchorId has been included in MissingAssociationConflict.
             // In that case, a new activity must be created as a copy of act but including the anchorId. This activity is then added to all appropriate data structures and the association is created
             if (missingAssociationConflict.getAnchorIdTo().isPresent()){
-              SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingAssociationConflict.getAnchorIdTo().get());
+              SchedulingActivity predecessor = plan.getActivitiesById().get(missingAssociationConflict.getAnchorIdTo().get());
               Duration startOffset = act.startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor));
               // In case the goal requires generation of anchors, then check that the anchor is to the Start. Otherwise (anchor to End), make sure that there is a positive offset
               if(missingAssociationConflict.getAnchorToStart().isEmpty() || missingAssociationConflict.getAnchorToStart().get() || startOffset.longerThan(Duration.ZERO)){
@@ -678,10 +678,10 @@ public class PrioritySolver implements Solver {
    *     added to the plan to best satisfy the conflict without disrupting
    *     the rest of the plan, or null if there are no such suggestions
    */
-  private Collection<SchedulingActivityDirective> getBestNewActivities(MissingActivityConflict missing)
+  private Collection<SchedulingActivity> getBestNewActivities(MissingActivityConflict missing)
   throws SchedulingInterruptedException {
     assert missing != null;
-    var newActs = new LinkedList<SchedulingActivityDirective>();
+    var newActs = new LinkedList<SchedulingActivity>();
 
     //REVIEW: maybe push into polymorphic method of conflict/goal? (picking best act
     //may depend on the source goal)
@@ -750,7 +750,7 @@ public class PrioritySolver implements Solver {
             missing.getEvaluationEnvironment());
         if(act.isPresent()){
           if (missingTemplate.getAnchorId().isPresent()) {
-            final SchedulingActivityDirective predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
+            final SchedulingActivity predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
             int includePredDuration = 0;
             if (missingTemplate.getAnchorToStart().isPresent()) {
               includePredDuration = missingTemplate.getAnchorToStart().get() ? 0 : 1;
@@ -903,7 +903,7 @@ public class PrioritySolver implements Solver {
    * @param windows the windows in which the activity can be instantiated
    * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
-  public @NotNull Optional<SchedulingActivityDirective> createOneActivity(
+  public @NotNull Optional<SchedulingActivity> createOneActivity(
       final MissingActivityTemplateConflict missingConflict,
       final String name,
       final Windows windows,
@@ -921,7 +921,7 @@ public class PrioritySolver implements Solver {
     return Optional.empty();
   }
 
-  private Optional<SchedulingActivityDirective> instantiateActivity(
+  private Optional<SchedulingActivity> instantiateActivity(
       final ActivityExpression activityExpression,
       final String name,
       final Interval interval,
@@ -954,12 +954,12 @@ public class PrioritySolver implements Solver {
         throws EquationSolvingAlgorithms.DiscontinuityException, SchedulingInterruptedException
         {
           final var latestConstraintsSimulationResults = getLatestSimResultsUpTo(start, resourceNames);
-          final var actToSim = new SchedulingActivityDirective(
+          final var actToSim = new SchedulingActivity(
               idGenerator.next(),
               activityExpression.type(),
               start,
               null,
-              SchedulingActivityDirective.instantiateArguments(
+              SchedulingActivity.instantiateArguments(
                   activityExpression.arguments(),
                   start,
                   latestConstraintsSimulationResults.constraintsResults(),
@@ -996,7 +996,7 @@ public class PrioritySolver implements Solver {
     } else if (activityExpression.type().getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
       final var earliestStart = solved.start().start;
-      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(
+      final var instantiatedArguments = SchedulingActivity.instantiateArguments(
           activityExpression.arguments(),
           earliestStart,
           getLatestSimResultsUpTo(earliestStart, resourceNames).constraintsResults(),
@@ -1020,7 +1020,7 @@ public class PrioritySolver implements Solver {
         setActivityDuration = solved.end().start.minus(solved.start().start);
       }
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivityDirective.of(
+      return Optional.of(SchedulingActivity.of(
           idGenerator.next(),
           activityExpression.type(),
           earliestStart,
@@ -1039,12 +1039,12 @@ public class PrioritySolver implements Solver {
 
       final var earliestStart = solved.start().start;
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivityDirective.of(
+      return Optional.of(SchedulingActivity.of(
           idGenerator.next(),
           activityExpression.type(),
           earliestStart,
           dt.duration(),
-          SchedulingActivityDirective.instantiateArguments(
+          SchedulingActivity.instantiateArguments(
               activityExpression.arguments(),
               earliestStart,
               getLatestSimResultsUpTo(earliestStart, resourceNames).constraintsResults(),
@@ -1061,7 +1061,7 @@ public class PrioritySolver implements Solver {
         @Override
         public Duration valueAt(final Duration start, final EquationSolvingAlgorithms.History<Duration, ActivityMetadata> history)
         throws SchedulingInterruptedException {
-          final var instantiatedArgs = SchedulingActivityDirective.instantiateArguments(
+          final var instantiatedArgs = SchedulingActivity.instantiateArguments(
               activityExpression.arguments(),
               start,
               getLatestSimResultsUpTo(start, resourceNames).constraintsResults(),
@@ -1071,7 +1071,7 @@ public class PrioritySolver implements Solver {
 
           try {
             final var duration = dt.durationFunction().apply(instantiatedArgs);
-            final var activity = SchedulingActivityDirective.of(
+            final var activity = SchedulingActivity.of(
                 idGenerator.next(),
                 activityExpression.type(),start,
                 duration,
@@ -1096,7 +1096,7 @@ public class PrioritySolver implements Solver {
     }
   }
 
-  private  Optional<SchedulingActivityDirective> rootFindingHelper(
+  private  Optional<SchedulingActivity> rootFindingHelper(
       final EquationSolvingAlgorithms.Function<Duration, ActivityMetadata> f,
       final HistoryWithActivity history,
       final TaskNetworkAdapter.TNActData solved
@@ -1146,9 +1146,11 @@ public class PrioritySolver implements Solver {
     logger.warn("Remaining conflicts for goals ");
     for (var goalEval : evaluation.getGoals()) {
       logger.warn(goalEval.getName() + " -> " + evaluation.forGoal(goalEval).score);
-      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(SchedulingActivityDirective::toString).collect(
+      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(
+          SchedulingActivity::toString).collect(
           Collectors.joining(" ")));
-      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(SchedulingActivityDirective::toString).collect(
+      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(
+          SchedulingActivity::toString).collect(
           Collectors.joining(" ")));
     }
   }

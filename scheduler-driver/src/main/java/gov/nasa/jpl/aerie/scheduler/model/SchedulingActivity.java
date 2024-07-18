@@ -18,6 +18,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
+ * Contains all known information about an activity, representing BOTH directive-only information
+ * and instance-only information.
+ * If an activity only has a directive and hasn't been simulated, instance-specific data like duration
+ * will be null. If an activity is generated during simulation and thus doesn't have a directive, directive
+ * ID will be null. Only generated activities can have a non-null parent.
+ *
  * @param id unique id
  * @param type the descriptor for the behavior invoked by this activity instance
  * @param startOffset the time at which this activity instance is scheduled to start
@@ -26,7 +32,7 @@ import java.util.Optional;
  * @param topParent the parent activity if any
  * @param isNew whether this activity was created in this scheduling run, or already existed in the plan
  */
-public record SchedulingActivityDirective(
+public record SchedulingActivity(
     ActivityDirectiveId id,
     ActivityType type,
     Duration startOffset,
@@ -38,7 +44,7 @@ public record SchedulingActivityDirective(
     boolean isNew
 ) {
 
-  public static SchedulingActivityDirective of(
+  public static SchedulingActivity of(
       ActivityDirectiveId id,
       ActivityType type,
       Duration startOffset,
@@ -47,7 +53,7 @@ public record SchedulingActivityDirective(
       boolean anchoredToStart,
       boolean isNew
   ) {
-    return new SchedulingActivityDirective(
+    return new SchedulingActivity(
         id,
         type,
         startOffset,
@@ -60,7 +66,7 @@ public record SchedulingActivityDirective(
     );
   }
 
-  public static SchedulingActivityDirective of(
+  public static SchedulingActivity of(
       ActivityDirectiveId id,
       ActivityType type,
       Duration startOffset,
@@ -71,7 +77,7 @@ public record SchedulingActivityDirective(
       boolean anchoredToStart,
       boolean isNew
   ) {
-    return new SchedulingActivityDirective(
+    return new SchedulingActivity(
         id,
         type,
         startOffset,
@@ -84,8 +90,8 @@ public record SchedulingActivityDirective(
     );
   }
 
-  public SchedulingActivityDirective withNewDuration(Duration duration){
-    return SchedulingActivityDirective.of(
+  public SchedulingActivity withNewDuration(Duration duration){
+    return SchedulingActivity.of(
         this.id,
         this.type,
         this.startOffset,
@@ -98,8 +104,8 @@ public record SchedulingActivityDirective(
     );
   }
 
-  public SchedulingActivityDirective withNewAnchor(ActivityDirectiveId anchorId, boolean anchoredToStart, Duration startOffset) {
-    return SchedulingActivityDirective.of(
+  public SchedulingActivity withNewAnchor(ActivityDirectiveId anchorId, boolean anchoredToStart, Duration startOffset) {
+    return SchedulingActivity.of(
         this.id,
         this.type,
         startOffset,
@@ -112,8 +118,8 @@ public record SchedulingActivityDirective(
     );
   }
 
-  public static SchedulingActivityDirective fromExistingActivityDirective(ActivityDirectiveId id, ActivityDirective activity, ActivityType type, Duration duration){
-    return SchedulingActivityDirective.of(
+  public static SchedulingActivity fromExistingActivityDirective(ActivityDirectiveId id, ActivityDirective activity, ActivityType type, Duration duration){
+    return SchedulingActivity.of(
         id,
         type,
         activity.startOffset(),
@@ -142,9 +148,9 @@ public record SchedulingActivityDirective(
    *
    * @return the activity
    */
-  public static SchedulingActivityDirective getActWithEarliestEndTime(List<SchedulingActivityDirective> acts) {
+  public static SchedulingActivity getActWithEarliestEndTime(List<SchedulingActivity> acts) {
     if (!acts.isEmpty()) {
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::getEndTime));
+      acts.sort(Comparator.comparing(SchedulingActivity::getEndTime));
 
       return acts.getFirst();
     }
@@ -156,9 +162,9 @@ public record SchedulingActivityDirective(
    *
    * @return the activity
    */
-  public static SchedulingActivityDirective getActWithLatestEndTime(List<SchedulingActivityDirective> acts) {
+  public static SchedulingActivity getActWithLatestEndTime(List<SchedulingActivity> acts) {
     if (!acts.isEmpty()) {
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::getEndTime));
+      acts.sort(Comparator.comparing(SchedulingActivity::getEndTime));
 
       return acts.getLast();
     }
@@ -170,9 +176,9 @@ public record SchedulingActivityDirective(
    *
    * @return the activity
    */
-  public static SchedulingActivityDirective getActWithEarliestStartTime(List<SchedulingActivityDirective> acts) {
+  public static SchedulingActivity getActWithEarliestStartTime(List<SchedulingActivity> acts) {
     if (!acts.isEmpty()) {
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
+      acts.sort(Comparator.comparing(SchedulingActivity::startOffset));
 
       return acts.getFirst();
     }
@@ -184,9 +190,9 @@ public record SchedulingActivityDirective(
    *
    * @return the activity
    */
-  public static SchedulingActivityDirective getActWithLatestStartTime(List<SchedulingActivityDirective> acts) {
+  public static SchedulingActivity getActWithLatestStartTime(List<SchedulingActivity> acts) {
     if (!acts.isEmpty()) {
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
+      acts.sort(Comparator.comparing(SchedulingActivity::startOffset));
 
       return acts.getLast();
     }
@@ -211,7 +217,7 @@ public record SchedulingActivityDirective(
    * @param that the other activity instance to compare to
    * @return true if they are equal in properties, false otherwise
    */
-  public boolean equalsInProperties(final SchedulingActivityDirective that){
+  public boolean equalsInProperties(final SchedulingActivity that){
     return type.equals(that.type)
            && duration.isEqualTo(that.duration)
            && startOffset.isEqualTo(that.startOffset)
