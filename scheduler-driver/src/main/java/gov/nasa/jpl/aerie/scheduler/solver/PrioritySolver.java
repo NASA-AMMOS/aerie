@@ -609,7 +609,8 @@ public class PrioritySolver implements Solver {
       logger.warn("Rolling back changes for "+goal.getName());
       rollback(goal);
     }
-    logger.info("Finishing goal satisfaction for goal " + goal.getName() +":"+ (missingConflicts.size() == 0 ? "SUCCESS" : "FAILURE. Number of conflicts that could not be addressed: " + missingConflicts.size()));
+    logger.info("Finishing goal satisfaction for goal " + goal.getName() +":"+ (missingConflicts.isEmpty()
+                                                                                    ? "SUCCESS" : "FAILURE. Number of conflicts that could not be addressed: " + missingConflicts.size()));
     plan.getEvaluation().forGoal(goal).setScore(-missingConflicts.size());
   }
 
@@ -726,7 +727,7 @@ public class PrioritySolver implements Solver {
 
     //create new act if there is any valid time (otherwise conflict is
     //unsatisfiable in current plan)
-    if (!startWindows.stream().noneMatch(Segment::value)) {
+    if (startWindows.stream().anyMatch(Segment::value)) {
       //TODO: move this into a polymorphic method? definitely don't want to be
       //demuxing on all the conflict types here
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {

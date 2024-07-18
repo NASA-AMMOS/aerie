@@ -374,9 +374,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   }
 
   /**
-   * ctor creates an empty goal without details
-   *
-   * client code should use builders to instance goals
+   * Ctor creates an empty goal without details.
+   * Client code should use builders to instance goals.
    */
   protected CoexistenceGoal() { }
 }

@@ -148,12 +148,10 @@ public class SimulationFacadeUtils {
       if (durationType instanceof DurationType.Controllable dt) {
         arguments.put(dt.parameterName(), schedulerModel.serializeDuration(activity.duration()));
       } else if (
-          durationType instanceof DurationType.Uncontrollable
+          !(durationType instanceof DurationType.Uncontrollable
           || durationType instanceof DurationType.Fixed
-          || durationType instanceof DurationType.Parametric
+          || durationType instanceof DurationType.Parametric)
       ) {
-        // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
-      } else {
         throw new Error("Unhandled variant of DurationType: " + durationType);
       }
     }
