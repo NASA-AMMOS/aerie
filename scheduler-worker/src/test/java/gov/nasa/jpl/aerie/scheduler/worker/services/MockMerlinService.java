@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
@@ -125,7 +124,6 @@ class MockMerlinService implements MerlinService.OwnerRole {
   @Override
   public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoal,
@@ -136,7 +134,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
     this.plan = plan;
     final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
     for (final var activity : plan.getActivities()) {
-      res.put(activity, new ActivityDirectiveId(activity.id().id()));
+      res.put(activity, activity.id());
     }
     return res;
   }
@@ -187,9 +185,8 @@ class MockMerlinService implements MerlinService.OwnerRole {
   @Override
   public DatasetId storeSimulationResults(
           final PlanMetadata planMetadata,
-          final SimulationResults results,
-          final Map<ActivityDirectiveId, ActivityDirectiveId> activityIdCorrespondance)
-  {
+          final SimulationResults results
+  ) {
     return new DatasetId(0);
   }
 
@@ -225,7 +222,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
           activity.startOffset(),
           activity.getType().getName(),
           arguments,
-          (activity.anchorId() != null ? new ActivityDirectiveId(-activity.anchorId().id()) : null),
+          activity.anchorId(),
           activity.anchoredToStart()));
     }
     return activityDirectives;

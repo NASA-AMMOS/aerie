@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
 import org.jetbrains.annotations.NotNull;
 
@@ -116,7 +115,6 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
   public java.util.Collection<Conflict> getConflicts(
       @NotNull final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) {
     final var conflicts = new java.util.LinkedList<Conflict>();

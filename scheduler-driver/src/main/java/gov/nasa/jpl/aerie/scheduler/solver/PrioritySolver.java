@@ -6,9 +6,11 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
@@ -31,7 +33,6 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +89,8 @@ public class PrioritySolver implements Solver {
 
   private final SimulationFacade simulationFacade;
 
+  private final DirectiveIdGenerator idGenerator;
+
   public record ActivityMetadata(SchedulingActivityDirective activityDirective){}
 
   public static class HistoryWithActivity implements EquationSolvingAlgorithms.History<Duration, ActivityMetadata> {
@@ -143,6 +146,18 @@ public class PrioritySolver implements Solver {
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
     this.analysisOnly = analysisOnly;
+
+    this.idGenerator = new DirectiveIdGenerator(
+        problem
+            .getInitialPlan()
+            .getActivitiesById()
+            .keySet()
+            .stream()
+            .map(ActivityDirectiveId::id)
+            .max(Long::compareTo)
+            .orElse(-1L)
+        + 1
+        );
   }
 
   public PrioritySolver(final Problem problem) {
@@ -554,8 +569,7 @@ public class PrioritySolver implements Solver {
               Duration startOffset = act.startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor));
               // In case the goal requires generation of anchors, then check that the anchor is to the Start. Otherwise (anchor to End), make sure that there is a positive offset
               if(missingAssociationConflict.getAnchorToStart().isEmpty() || missingAssociationConflict.getAnchorToStart().get() || startOffset.longerThan(Duration.ZERO)){
-                var replacementAct = SchedulingActivityDirective.copyOf(
-                    act,
+                var replacementAct = act.withNewAnchor(
                     missingAssociationConflict.getAnchorIdTo().get(),
                     missingAssociationConflict.getAnchorToStart().get(),
                     startOffset
@@ -621,7 +635,6 @@ public class PrioritySolver implements Solver {
     final var rawConflicts = goal.getConflicts(
         plan,
         simulationResults.constraintsResults(),
-        simulationResults.mapSchedulingIdsToActivityIds(),
         evaluationEnvironment,
         this.problem.getSchedulerModel());
     assert rawConflicts != null;
@@ -719,7 +732,7 @@ public class PrioritySolver implements Solver {
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
         //FINISH: clean this up code dupl re windows etc
         final var act = missingInstance.getInstance();
-        newActs.add(SchedulingActivityDirective.of(act));
+        newActs.add(act);
 
       } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
         //select the "best" time among the possibilities, and latest among ties
@@ -745,7 +758,7 @@ public class PrioritySolver implements Solver {
             final Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
             // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
             if(((MissingActivityTemplateConflict) missing).getAnchorToStart().isEmpty() || ((MissingActivityTemplateConflict) missing).getAnchorToStart().get() || startOffset.noShorterThan(Duration.ZERO)){
-              final var actWithAnchor = Optional.of(SchedulingActivityDirective.copyOf(act.get(), missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
+              final var actWithAnchor = Optional.of(act.get().withNewAnchor(missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
               newActs.add(actWithAnchor.get());
             }
             else{
@@ -827,8 +840,8 @@ public class PrioritySolver implements Solver {
               problem.getPlanningHorizon().getHor(),
               groundedPlan.get(),
               Map.of(),
-              Map.of()),
-            Optional.of(new DualHashBidiMap()));
+              Map.of())
+        );
       } else {
         logger.debug(
             "Tried mocking simulation results with a grounded plan but could not because of the activity cannot be grounded.");
@@ -940,7 +953,8 @@ public class PrioritySolver implements Solver {
         throws EquationSolvingAlgorithms.DiscontinuityException, SchedulingInterruptedException
         {
           final var latestConstraintsSimulationResults = getLatestSimResultsUpTo(start, resourceNames);
-          final var actToSim = SchedulingActivityDirective.of(
+          final var actToSim = new SchedulingActivityDirective(
+              idGenerator.next(),
               activityExpression.type(),
               start,
               null,
@@ -952,15 +966,17 @@ public class PrioritySolver implements Solver {
                   activityExpression.type()),
               null,
               null,
-              true);
+              true,
+              true
+          );
           Duration computedDuration = null;
           try {
             final var duplicatePlan = plan.duplicate();
             duplicatePlan.add(actToSim);
             simulationFacade.simulateNoResultsUntilEndAct(duplicatePlan, actToSim);
-            computedDuration = duplicatePlan.getActivitiesById().get(actToSim.getId()).duration();
+            computedDuration = duplicatePlan.getActivitiesById().get(actToSim.id()).duration();
             if(computedDuration != null) {
-              history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(computedDuration)), new ActivityMetadata(SchedulingActivityDirective.copyOf(actToSim, computedDuration)));
+              history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(computedDuration)), new ActivityMetadata(actToSim.withNewDuration(computedDuration)));
             } else{
               logger.debug("No simulation error but activity duration could not be found in simulation, likely caused by unfinished activity or activity outside plan bounds.");
               history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start,  null), new ActivityMetadata(actToSim));
@@ -1004,13 +1020,16 @@ public class PrioritySolver implements Solver {
       }
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
       return Optional.of(SchedulingActivityDirective.of(
+          idGenerator.next(),
           activityExpression.type(),
           earliestStart,
           setActivityDuration,
           instantiatedArguments,
           null,
           null,
-          true));
+          true,
+          true
+      ));
     } else if (activityExpression.type().getDurationType() instanceof DurationType.Fixed dt) {
       if (!solved.duration().contains(dt.duration())) {
         logger.debug("Interval is too small");
@@ -1020,6 +1039,7 @@ public class PrioritySolver implements Solver {
       final var earliestStart = solved.start().start;
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
       return Optional.of(SchedulingActivityDirective.of(
+          idGenerator.next(),
           activityExpression.type(),
           earliestStart,
           dt.duration(),
@@ -1031,7 +1051,9 @@ public class PrioritySolver implements Solver {
               activityExpression.type()),
           null,
           null,
-          true));
+          true,
+          true
+      ));
     } else if (activityExpression.type().getDurationType() instanceof DurationType.Parametric dt) {
       final var history = new HistoryWithActivity();
       final var f = new EquationSolvingAlgorithms.Function<Duration, ActivityMetadata>() {
@@ -1048,12 +1070,16 @@ public class PrioritySolver implements Solver {
 
           try {
             final var duration = dt.durationFunction().apply(instantiatedArgs);
-            final var activity = SchedulingActivityDirective.of(activityExpression.type(),start,
-                                                                duration,
-                                                                instantiatedArgs,
-                                                                null,
-                                                                null,
-                                                                true);
+            final var activity = SchedulingActivityDirective.of(
+                idGenerator.next(),
+                activityExpression.type(),start,
+                duration,
+                instantiatedArgs,
+                null,
+                null,
+                true,
+                true
+            );
             history.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(start, start.plus(duration)), new ActivityMetadata(activity));
             return duration.plus(start);
           } catch (InstantiationException e) {

@@ -27,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UncontrollableDurationTest {
 
+  private final DirectiveIdGenerator idGenerator = new DirectiveIdGenerator(0);
+
   PlanningHorizon planningHorizon;
   Problem problem;
   Plan plan;
@@ -148,9 +150,9 @@ public class UncontrollableDurationTest {
 
   @Test
   public void testBug() throws SchedulingInterruptedException {
-    final var controllableDurationActivity = SchedulingActivityDirective.of(problem.getActivityType("ControllableDurationActivity"),
+    final var controllableDurationActivity = SchedulingActivityDirective.of(idGenerator.next(), problem.getActivityType("ControllableDurationActivity"),
                                                                    Duration.of(1, Duration.MICROSECONDS),
-                                                                   Duration.of(3, Duration.MICROSECONDS), null, true);
+                                                                   Duration.of(3, Duration.MICROSECONDS), null, true, false);
 
     final var zeroDurationUncontrollableActivity = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("ZeroDurationUncontrollableActivity"))

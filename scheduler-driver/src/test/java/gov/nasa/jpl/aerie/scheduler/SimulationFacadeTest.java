@@ -38,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SimulationFacadeTest {
 
+  private final DirectiveIdGenerator idGenerator = new DirectiveIdGenerator(0);
+
   MissionModel<?> missionModel;
   Problem problem;
   SimulationFacade facade;
@@ -114,10 +116,10 @@ public class SimulationFacadeTest {
     final var actTypeBite = problem.getActivityType("BiteBanana");
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    var act1 = SchedulingActivityDirective.of(actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")), null, true);
+    var act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")), null, null, true, false);
     plan.add(act1);
 
-    var act2 = SchedulingActivityDirective.of(actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)), null, true);
+    var act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)), null, null, true, false);
     plan.add(act2);
 
     return plan;
@@ -129,7 +131,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     final var actTypeBite = problem.getActivityType("BiteBanana");
 
-    var act1 = SchedulingActivityDirective.of(actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")), null, true);
+    var act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")), null, null, true, false);
     plan.add(act1);
 
     final var goal = new CoexistenceGoal.Builder()
@@ -281,11 +283,11 @@ public class SimulationFacadeTest {
 
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypePeel,
-                                                 t0, Duration.ZERO, null, true);
+    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
+                                                 t0, Duration.ZERO, Map.of(), null, null, true, false);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypePeel,
-                                                 t2, Duration.ZERO, null, true);
+    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
+                                                 t2, Duration.ZERO, Map.of(), null, null, true, false);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -323,11 +325,11 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     actTypePeel.setResourceConstraint(constraint);
 
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypePeel,
-                                                 t0, Duration.ZERO, null, true);
+    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
+                                                 t0, Duration.ZERO, Map.of(), null, null, true, false);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypePeel,
-                                                 t2, Duration.ZERO, null, true);
+    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypePeel,
+                                                 t2, Duration.ZERO, Map.of(), null, null, true, false);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(

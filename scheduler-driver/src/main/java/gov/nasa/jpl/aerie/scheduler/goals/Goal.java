@@ -297,7 +297,6 @@ public class Goal {
   public java.util.Collection<Conflict> getConflicts(
       Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel
       ) {

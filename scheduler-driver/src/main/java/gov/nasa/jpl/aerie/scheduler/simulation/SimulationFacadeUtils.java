@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,28 +25,21 @@ import java.util.Optional;
 
 public class SimulationFacadeUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(SimulationFacadeUtils.class);
-  private static int itSimActivityId = 0;
 
   public static SimulationFacade.PlanSimCorrespondence scheduleFromPlan(final Plan plan, final SchedulerModel schedulerModel){
     final var activities = plan.getActivities();
-    final var planActDirectiveIdToSimulationActivityDirectiveId = new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
-    if(activities.isEmpty()) return new SimulationFacade.PlanSimCorrespondence(new DualHashBidiMap<>(), Map.of());
+    if(activities.isEmpty()) return new SimulationFacade.PlanSimCorrespondence(Map.of());
     //filter out child activities
     final var activitiesWithoutParent = activities.stream().filter(a -> a.topParent() == null).toList();
     final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
 
-    for(final var activity : activitiesWithoutParent){
-      final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
-      planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
-    }
-
     for(final var activity : activitiesWithoutParent) {
-      final var activityDirective = schedulingActToActivityDir(activity, planActDirectiveIdToSimulationActivityDirectiveId, schedulerModel);
+      final var activityDirective = schedulingActToActivityDir(activity, schedulerModel);
       directivesToSimulate.put(
-          planActDirectiveIdToSimulationActivityDirectiveId.get(activity.getId()),
+          activity.id(),
           activityDirective);
     }
-    return new SimulationFacade.PlanSimCorrespondence(planActDirectiveIdToSimulationActivityDirectiveId, directivesToSimulate);
+    return new SimulationFacade.PlanSimCorrespondence(directivesToSimulate);
   }
 
   /**
@@ -64,12 +56,10 @@ public class SimulationFacadeUtils {
       if (activity.duration() == null) {
         final var activityDirective = findSimulatedActivityById(
             activityExtract.simulatedActivities().values(),
-            correspondence.planActDirectiveIdToSimulationActivityDirectiveId().get(activity.getId()));
+            activity.id()
+        );
         if (activityDirective.isPresent()) {
-          final var replacementAct = SchedulingActivityDirective.copyOf(
-              activity,
-              activityDirective.get().duration()
-          );
+          final var replacementAct = activity.withNewDuration(activityDirective.get().duration());
           toReplace.put(activity, replacementAct);
         }
         //if not, maybe the activity is not finished
@@ -91,7 +81,6 @@ public class SimulationFacadeUtils {
       final SimulationEngine.SimulationActivityExtract activityExtract,
       final Map<String, ActivityType> activityTypes,
       final Plan plan,
-      final SimulationFacade.PlanSimCorrespondence planSimCorrespondence,
       final PlanningHorizon planningHorizon)
   {
     //remove all activities with parents
@@ -103,13 +92,16 @@ public class SimulationFacadeUtils {
       final var rootParent = getIdOfRootParent(activityExtract, activityInstanceId);
       if(rootParent.isPresent()) {
         final var activityInstance = SchedulingActivityDirective.of(
+            null,
             activityTypes.get(activity.type()),
             planningHorizon.toDur(activity.start()),
             activity.duration(),
             activity.arguments(),
-            planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId().getKey(rootParent.get()),
+            rootParent.get(),
             null,
-            true);
+            true,
+            false
+        );
         plan.add(activityInstance);
       }
     });
@@ -146,7 +138,6 @@ public class SimulationFacadeUtils {
 
   public static ActivityDirective schedulingActToActivityDir(
       final SchedulingActivityDirective activity,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
       final SchedulerModel schedulerModel) {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
@@ -170,7 +161,7 @@ public class SimulationFacadeUtils {
     return new ActivityDirective(
         activity.startOffset(),
         serializedActivity,
-        planActDirectiveIdToSimulationActivityDirectiveId.get(activity.anchorId()),
+        activity.anchorId(),
         activity.anchoredToStart());
   }
 }

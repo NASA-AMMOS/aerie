@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -159,7 +158,6 @@ public interface MerlinService {
      */
     Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
         PlanId planId,
-        Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
         MerlinPlan initialPlan,
         Plan plan,
         Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -213,14 +211,8 @@ public interface MerlinService {
      *
      * @param planMetadata the plan metadata
      * @param results the simulation results
-     * @param simulationActivityDirectiveIdToMerlinActivityDirectiveId the translation between activity ids in the
-     *     local simulation and the merlin activity ids
-     * @return
-     * @throws MerlinServiceException
-     * @throws IOException
      */
-   DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResults results,
-                                    final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws
+   DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResults results) throws
                                                                                                                                                   MerlinServiceException, IOException;
   }
 

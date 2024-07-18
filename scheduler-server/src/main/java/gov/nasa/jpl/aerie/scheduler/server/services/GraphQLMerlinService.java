@@ -412,7 +412,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
   @Override
   public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId,
@@ -425,37 +424,35 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     final var toAdd = new ArrayList<SchedulingActivityDirective>();
     for (final var activity : plan.getActivities()) {
       if(activity.getParentActivity().isPresent()) continue; // Skip generated activities
-      final var idActFromInitialPlan = idsFromInitialPlan.get(activity.getId());
-      if (idActFromInitialPlan != null) {
+      if (!activity.isNew()) {
         //add duration to parameters if controllable
         if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
           if (!activity.arguments().containsKey(durationType.parameterName())){
             activity.addArgument(durationType.parameterName(), schedulerModel.serializeDuration(activity.duration()));
           }
         }
-        final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
+        final var actFromInitialPlan = initialPlan.getActivityById(activity.id());
         //if act was present in initial plan
         final var activityDirectiveFromSchedulingDirective = new ActivityDirective(
             activity.startOffset(),
             activity.type().getName(),
             activity.arguments(),
-            (activity.anchorId() != null ? new ActivityDirectiveId(-activity.anchorId().id()) : null),
+            activity.anchorId(),
             activity.anchoredToStart()
         );
-        final var activityDirectiveId = idsFromInitialPlan.get(activity.getId());
         if (!activityDirectiveFromSchedulingDirective.equals(actFromInitialPlan.get())) {
           throw new MerlinServiceException("The scheduler should not be updating activity instances");
           //updateActivityDirective(planId, schedulerActIntoMerlinAct, activityDirectiveId, activityToGoalId.get(activity));
         }
-        ids.put(activity, activityDirectiveId);
+        ids.put(activity, activity.id());
       } else {
         //act was not present in initial plan, create new activity
         toAdd.add(activity);
       }
     }
     final var actsFromNewPlan = plan.getActivitiesById();
-    for (final var idActInInitialPlan : idsFromInitialPlan.entrySet()) {
-      if (!actsFromNewPlan.containsKey(idActInInitialPlan.getKey())) {
+    for (final var idInInitialPlan : initialPlan.getActivitiesById().keySet()) {
+      if (!actsFromNewPlan.containsKey(idInInitialPlan)) {
         throw new MerlinServiceException("The scheduler should not be deleting activity instances");
         //deleteActivityDirective(idActInInitialPlan.getValue());
       }
@@ -802,11 +799,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 }
 
   @Override
-  public DatasetId storeSimulationResults(final PlanMetadata planMetadata,
-                                          final SimulationResults results,
-                                          final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws
-                                                                                                                                                        MerlinServiceException, IOException
-  {
+  public DatasetId storeSimulationResults(
+      final PlanMetadata planMetadata,
+      final SimulationResults results
+  ) throws MerlinServiceException, IOException {
     final var simulationId = getSimulationId(planMetadata.planId());
     final var datasetIds = createSimulationDataset(simulationId, planMetadata);
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
@@ -815,7 +811,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
         profileSet.realProfiles(),
         profileSet.discreteProfiles());
     postProfileSegments(datasetIds.datasetId(), profileRecords, profileSet);
-    postActivities(datasetIds.datasetId(), results.simulatedActivities, results.unfinishedActivities, results.startTime, simulationActivityDirectiveIdToMerlinActivityDirectiveId);
+    postActivities(datasetIds.datasetId(), results.simulatedActivities, results.unfinishedActivities, results.startTime);
     insertSimulationTopics(datasetIds.datasetId(), results.topics);
     insertSimulationEvents(datasetIds.datasetId(), results.events);
     setSimulationDatasetStatus(datasetIds.simulationDatasetId(), SimulationStateRecord.success());
@@ -1542,20 +1538,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
 
   private void postActivities(
       final DatasetId datasetId,
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-      final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
-      final Instant simulationStart,
-      final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId
+      final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+      final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
+      final Instant simulationStart
   ) throws MerlinServiceException, IOException
   {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
                                                               .collect(Collectors.toMap(
                                                                   e -> e.getKey().id(),
-                                                                  e -> simulatedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
+                                                                  e -> simulatedActivityToRecord(e.getValue())));
       final var allActivityRecords = unfinishedActivities.entrySet().stream()
                                                          .collect(Collectors.toMap(
                                                              e -> e.getKey().id(),
-                                                             e -> unfinishedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
+                                                             e -> unfinishedActivityToRecord(e.getValue())));
       allActivityRecords.putAll(simulatedActivityRecords);
       postSpans(
           datasetId,
@@ -1612,30 +1607,28 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
     }
 }
 
-  private static SpanRecord simulatedActivityToRecord(final SimulatedActivity activity,
-                                                      final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) {
+  private static SpanRecord simulatedActivityToRecord(final ActivityInstance activity) {
     return new SpanRecord(
         activity.type(),
         activity.start(),
         Optional.of(activity.duration()),
-        Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
-        activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
+        Optional.ofNullable(activity.parentId()).map(ActivityInstanceId::id),
+        activity.childIds().stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
-            activity.directiveId().map(id -> simulationActivityDirectiveIdToMerlinActivityDirectiveId.get(id).id()),
+            activity.directiveId().map(ActivityDirectiveId::id),
             activity.arguments(),
             Optional.of(activity.computedAttributes())));
   }
 
-  private static SpanRecord unfinishedActivityToRecord(final UnfinishedActivity activity,
-                                                       final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) {
+  private static SpanRecord unfinishedActivityToRecord(final UnfinishedActivity activity) {
     return new SpanRecord(
         activity.type(),
         activity.start(),
         Optional.empty(),
-        Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
-        activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
+        Optional.ofNullable(activity.parentId()).map(ActivityInstanceId::id),
+        activity.childIds().stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
-            activity.directiveId().map(id -> simulationActivityDirectiveIdToMerlinActivityDirectiveId.get(id).id()),
+            activity.directiveId().map(ActivityDirectiveId::id),
             activity.arguments(),
             Optional.empty()));
   }

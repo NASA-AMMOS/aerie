@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
@@ -117,7 +116,6 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
   public Collection<Conflict> getConflicts(
       final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) {
     final var conflicts = new java.util.LinkedList<Conflict>();

@@ -182,7 +182,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   public java.util.Collection<Conflict> getConflicts(
       final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) { //TODO: check if interval gets split and if so, notify user?
 
@@ -247,16 +246,15 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         }
       }
       if (!alreadyOneActivityAssociated) {
-        SchedulingActivityDirectiveId anchorIdTo = null;
-        if (window.value().isPresent() && mapSchedulingIdsToActivityIds.isPresent()){
-          final ActivityDirectiveId actId = new ActivityDirectiveId(window.value().get().activityInstance().id);
-          anchorIdTo = mapSchedulingIdsToActivityIds.get().inverseBidiMap().get(actId);
+        ActivityDirectiveId anchorIdTo = null;
+        if (window.value().isPresent()) {
+          anchorIdTo = window.value().get().activityInstance().directiveId().orElse(null);
         }
         final var missingActAssociationsWithAnchor = new ArrayList<SchedulingActivityDirective>();
         final var missingActAssociationsWithoutAnchor = new ArrayList<SchedulingActivityDirective>();
         /*
         If activities that can satisfy the goal have been found, then create two arraylist to distinguish between:
-         1) those activities that also satisfy the anchoring  (e.g. anchorId value equals the SchedulingActivityDirectiveId of the "for each" activity directive in the goal
+         1) those activities that also satisfy the anchoring  (e.g. anchorId value equals the ActivityDirectiveId of the "for each" activity directive in the goal
          2) activities without the anchorId set
          */
         for (var act : activitiesFound) {

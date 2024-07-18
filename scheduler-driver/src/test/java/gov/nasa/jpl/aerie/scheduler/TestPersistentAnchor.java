@@ -449,28 +449,30 @@ public class TestPersistentAnchor {
         SimulationUtility.getBananaSchedulerModel()
     );
 
+    final var idGenerator = new DirectiveIdGenerator(0);
+
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(idGenerator.next(), actTypeA, planningHorizon.getStartAerie(), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
         "quantity", SerializedValue.of(1),
         "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
+    ), null, null, true, false);
     partialPlan.add(act1);
     actsToBeAnchored.add(act1);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(idGenerator.next(), actTypeA, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
         "quantity", SerializedValue.of(1),
         "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
+    ), null, null, true, false);
     partialPlan.add(act2);
     actsToBeAnchored.add(act2);
 
-    SchedulingActivityDirective act3 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+    SchedulingActivityDirective act3 = SchedulingActivityDirective.of(idGenerator.next(), actTypeA, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
         "quantity", SerializedValue.of(1),
         "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
+    ), null, null, true, false);
     partialPlan.add(act3);
     actsToBeAnchored.add(act3);
 
@@ -496,34 +498,34 @@ public class TestPersistentAnchor {
 
     if(missingActAssociationsWithAnchor){
       // Activities with anchors
-      SchedulingActivityDirective act4 = SchedulingActivityDirective.of(actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act1.id(), anchoredToStart);
+      SchedulingActivityDirective act4 = SchedulingActivityDirective.of(idGenerator.next(), actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)),null, act1.id(), anchoredToStart, false);
       partialPlan.add(act4);
       templateActsAlreadyAnchor.add(act4);
 
-      SchedulingActivityDirective act5 = SchedulingActivityDirective.of(actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act2.id(), anchoredToStart);
+      SchedulingActivityDirective act5 = SchedulingActivityDirective.of(idGenerator.next(), actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)),null, act2.id(), anchoredToStart, false);
       partialPlan.add(act5);
       templateActsAlreadyAnchor.add(act5);
 
-      SchedulingActivityDirective act6 = SchedulingActivityDirective.of(actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act3.id(), anchoredToStart);
+      SchedulingActivityDirective act6 = SchedulingActivityDirective.of(idGenerator.next(), actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)),null, act3.id(), anchoredToStart, false);
       partialPlan.add(act6);
       templateActsAlreadyAnchor.add(act6);
     }
 
     if(missingActAssociationsWithoutAnchor){
       // Activities without anchors
-      SchedulingActivityDirective act7 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, anchoredToStart);
+      SchedulingActivityDirective act7 = SchedulingActivityDirective.of(idGenerator.next(), actTypeB, planningHorizon.getStartAerie().plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)),null, null, anchoredToStart, false);
       partialPlan.add(act7);
 
-      SchedulingActivityDirective act8 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, anchoredToStart);
+      SchedulingActivityDirective act8 = SchedulingActivityDirective.of(idGenerator.next(), actTypeB, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)),null, null, anchoredToStart, false);
       partialPlan.add(act8);
 
-      SchedulingActivityDirective act9 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, anchoredToStart);
+      SchedulingActivityDirective act9 = SchedulingActivityDirective.of(idGenerator.next(), actTypeB, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)),null, null, anchoredToStart, false);
       partialPlan.add(act9);
 
       if (!persistentAnchor.equals(PersistentTimeAnchor.DISABLED) && !missingActAssociationsWithAnchor) {

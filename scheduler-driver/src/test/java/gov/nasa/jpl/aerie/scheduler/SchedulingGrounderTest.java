@@ -39,9 +39,9 @@ public class SchedulingGrounderTest {
     //act 1 should start at 0 min into the plan
     //act 2 should start 61 min into the plan
     //act 3 should be [62 min, 63 min]
-    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t0, t0.plus(d1min)));
-    final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t1hr.plus(t0).plus(d1min), t1hr.plus(t0).plus(d1min).plus(d1min)));
-    final var act3expt = new ActivityInstance(id3.id(), at.getName(), Map.of(), Interval.between(t0.plus(Duration.of(182, Duration.MINUTES)), t0.plus(Duration.of(183, Duration.MINUTES))));
+    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t0, t0.plus(d1min)), Optional.of(id1));
+    final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t1hr.plus(t0).plus(d1min), t1hr.plus(t0).plus(d1min).plus(d1min)), Optional.of(id2));
+    final var act3expt = new ActivityInstance(id3.id(), at.getName(), Map.of(), Interval.between(t0.plus(Duration.of(182, Duration.MINUTES)), t0.plus(Duration.of(183, Duration.MINUTES))), Optional.of(id3));
     assertTrue(result.get().contains(act1expt));
     assertTrue(result.get().contains(act2expt));
     assertTrue(result.get().contains(act3expt));
@@ -62,7 +62,7 @@ public class SchedulingGrounderTest {
     final var id1 = new ActivityDirectiveId(1);
     final var act1 = SchedulingActivityDirective.of(id1, at, Duration.negate(d1hr), d1min, null, false, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1), h.getEndAerie());
-    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(h.getEndAerie().minus(d1hr), h.getEndAerie().minus(d1hr).plus(d1min)));
+    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(h.getEndAerie().minus(d1hr), h.getEndAerie().minus(d1hr).plus(d1min)), Optional.of(id1));
     assertEquals(act1expt, result.get().get(0));
   }
 
@@ -75,8 +75,8 @@ public class SchedulingGrounderTest {
     final var act1 = SchedulingActivityDirective.of(id1, at, t0, d1min, null, true, false);
     final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, null, true, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1, act2), h.getEndAerie());
-    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t0, t0.plus(d1min)));
-    final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t1hr, t1hr.plus(d1min)));
+    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t0, t0.plus(d1min)), Optional.of(id1));
+    final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t1hr, t1hr.plus(d1min)), Optional.of(id2));
     assertTrue(result.get().contains(act1expt));
     assertTrue(result.get().contains(act2expt));
   }
@@ -89,8 +89,8 @@ public class SchedulingGrounderTest {
     final var act1 = SchedulingActivityDirective.of(id1, at, t1hr, d1min, null, true, false);
     final var act2 = SchedulingActivityDirective.of(id2, at, t1hr, d1min, act1.id(), true, false);
     final var result = SchedulePlanGrounder.groundSchedule(List.of(act1, act2), h.getEndAerie());
-    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t1hr, t1hr.plus(d1min)));
-    final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t2hr, t2hr.plus(d1min)));
+    final var act1expt = new ActivityInstance(id1.id(), at.getName(), Map.of(), Interval.between(t1hr, t1hr.plus(d1min)), Optional.of(id1));
+    final var act2expt = new ActivityInstance(id2.id(), at.getName(), Map.of(), Interval.between(t2hr, t2hr.plus(d1min)), Optional.of(id2));
     assertTrue(result.get().contains(act1expt));
     assertTrue(result.get().contains(act2expt));
   }

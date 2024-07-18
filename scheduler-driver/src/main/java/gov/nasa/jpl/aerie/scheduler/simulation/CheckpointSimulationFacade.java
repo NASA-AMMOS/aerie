@@ -109,25 +109,11 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
   }
 
-  private <K, V> void replaceValue(final Map<K, V> map, final V value, final V replacement) {
-    for (final Map.Entry<K, V> entry : map.entrySet()) {
-      if (entry.getValue().equals(value)) {
-        entry.setValue(replacement);
-        break;
-      }
-    }
-  }
-
   private void replaceIds(
       final PlanSimCorrespondence planSimCorrespondence,
-      final Map<ActivityDirectiveId, ActivityDirectiveId> updates)
-  {
-    for (final var replacements : updates.entrySet()) {
-      replaceValue(
-          planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId(),
-          replacements.getKey(),
-          replacements.getValue());
-      if (planSimCorrespondence.directiveIdActivityDirectiveMap().containsKey(replacements.getKey())) {
+      final Map<ActivityDirectiveId, ActivityDirectiveId> updates){
+    for(final var replacements : updates.entrySet()){
+      if(planSimCorrespondence.directiveIdActivityDirectiveMap().containsKey(replacements.getKey())){
         final var value = planSimCorrespondence.directiveIdActivityDirectiveMap().remove(replacements.getKey());
         planSimCorrespondence.directiveIdActivityDirectiveMap().put(replacements.getValue(), value);
       }
@@ -225,7 +211,7 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     else if (activity != null && until == null) {
       simulationDuration = planningHorizon.getEndAerie();
       stoppingCondition = CheckpointSimulationDriver.stopOnceActivityHasFinished(
-          planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId().get(activity.id()));
+          activity.id());
       LOGGER.info("Simulation mode: until activity ends " + activity);
     }
     //(3)
@@ -278,8 +264,8 @@ public class CheckpointSimulationFacade implements SimulationFacade {
           activityResults,
           activityTypes,
           plan,
-          planSimCorrespondence,
-          planningHorizon);
+          planningHorizon
+      );
 
       SimulationFacadeUtils.pullActivityDurationsIfNecessary(
           plan,
@@ -336,8 +322,8 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     this.latestSimulationData = new SimulationData(
         plan,
         driverResults,
-        SimulationResultsConverter.convertToConstraintModelResults(driverResults),
-        Optional.ofNullable(resultsInput.planSimCorrespondence().planActDirectiveIdToSimulationActivityDirectiveId()));
+        SimulationResultsConverter.convertToConstraintModelResults(driverResults)
+    );
     return this.latestSimulationData;
   }
 

@@ -128,7 +128,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   public Collection<Conflict> getConflicts(
       final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) {
 

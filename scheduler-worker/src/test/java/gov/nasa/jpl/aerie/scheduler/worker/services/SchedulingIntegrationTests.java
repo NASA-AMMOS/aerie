@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -641,7 +642,7 @@ public class SchedulingIntegrationTests {
     var foundSatisfactionAct = false;
     for (final var activity : goalResult.satisfyingActivities()) {
       assertNotNull(activity);
-      final var element = results.idToAct.get(new ActivityDirectiveId(-activity.id()));
+      final var element = results.idToAct.get(new ActivityDirectiveId(activity.id()));
       if(element != null && element.equals(expectedSatisfactionAct)){
         foundSatisfactionAct = true;
       }
@@ -712,7 +713,7 @@ public class SchedulingIntegrationTests {
     var foundFirst = false;
     var foundSecond = false;
     for(final var satisfyingActivity: goalResult.satisfyingActivities()){
-      final var element = results.idToAct.get(new ActivityDirectiveId(-satisfyingActivity.id()));
+      final var element = results.idToAct.get(new ActivityDirectiveId(satisfyingActivity.id()));
       if(element != null && element.equals(expectedMatch1)){
         foundFirst = true;
       }
@@ -2504,7 +2505,7 @@ public class SchedulingIntegrationTests {
                                      planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var parentActs = planByActivityType.get("parent");
-    final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startOffset()).toList();
+    final var childActs = planByActivityType.get("child").stream().map(ActivityDirective::startOffset).toList();
     //goal should be satisfied
     assertTrue(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
     //ensure no new child activity has been inserted
@@ -3196,18 +3197,22 @@ public class SchedulingIntegrationTests {
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var growBananas = planByActivityType.get("GrowBanana");
-    final var gbIterator = growBananas.iterator();
 
     assertNull(planByActivityType.get("PeelBanana"));
     assertEquals(2, growBananas.size());
 
-    final var growBanana1 = gbIterator.next();
-    assertEquals(Duration.of(-10, MINUTES), growBanana1.startOffset());
-    assertEquals(SerializedValue.of(1), growBanana1.serializedActivity().getArguments().get("quantity"));
-
-    final var growBanana2 = gbIterator.next();
-    assertEquals(Duration.of(10, MINUTES), growBanana2.startOffset());
-    assertEquals(SerializedValue.of(2), growBanana2.serializedActivity().getArguments().get("quantity"));
+    assertTrue(
+        growBananas.stream().anyMatch(
+            $ -> Objects.equals($.startOffset(), Duration.of(-10, MINUTES))
+                 && SerializedValue.of(1).equals($.serializedActivity().getArguments().get("quantity"))
+        )
+    );
+    assertTrue(
+        growBananas.stream().anyMatch(
+            $ -> Objects.equals($.startOffset(), Duration.of(10, MINUTES))
+                 && SerializedValue.of(2).equals($.serializedActivity().getArguments().get("quantity"))
+        )
+    );
   }
 
   /**
