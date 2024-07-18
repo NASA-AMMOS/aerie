@@ -92,8 +92,6 @@ public class PlanInMemory implements Plan {
       throw new IllegalArgumentException(
           "adding activity with null start time to plan");
     }
-    final var id = act.getId();
-    assert id != null;
     actsByTime.computeIfAbsent(startT, k -> new LinkedList<>())
               .add(act);
   }
