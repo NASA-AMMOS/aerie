@@ -31,12 +31,14 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
@@ -424,19 +426,43 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       // Sorts the map by SpanRecord parent ID to ensure foreign key constraints are met.
       // Entries with null parent IDs are placed first to avoid foreign key violations
       // for the "span_has_parent_span" constraint.
-      final var sortedAllActivityRecords = new LinkedHashMap<Long,SpanRecord>();
-      sortedAllActivityRecords.putAll(allActivityRecords.entrySet().stream()
-                                                        .filter(entry -> entry.getValue().parentId().isEmpty())
-                                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-      sortedAllActivityRecords.putAll(allActivityRecords.entrySet().stream()
-                                                        .filter(entry -> !entry.getValue().parentId().isEmpty())
-                                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+      final var sortedAllActivityRecords = topoSort(allActivityRecords, $ -> $.parentId().stream().toList());
 
       postActivitiesAction.apply(
           datasetId,
           sortedAllActivityRecords,
           simulationStart);
     }
+  }
+
+  /**
+   * Take an unsorted map and produce a sorted LinkedHashMap where nodes always
+   * come after their dependencies.
+   * @param nodes a map from keys to values - the keys are used to define dependencies
+   * @param dependencies - for a given value, what are the keys of its dependencies?
+   * @return a sorted LinkedHashMap where nodes always come after their dependencies
+   * @throws IllegalArgumentException if a cycle is found
+   */
+  private static <K, V> LinkedHashMap<K, V> topoSort(Map<K, V> nodes, Function<V, List<K>> dependencies) {
+    final var worklist = new ArrayList<>(nodes.entrySet());
+    final var sortedMap = new LinkedHashMap<K, V>();
+    while (!worklist.isEmpty()) {
+      var madeProgress = false;
+      for (int i = worklist.size() - 1; i >= 0; i--) {
+        final var entry = worklist.get(i);
+        // A node is ready to be added to the output if all of its dependencies are already in the output
+        if (dependencies.apply(entry.getValue()).stream().allMatch(sortedMap::containsKey)) {
+          sortedMap.put(entry.getKey(), entry.getValue());
+          worklist.remove(i);
+          madeProgress = true;
+        }
+      }
+      // If no nodes were added to the output in this round, there must be a cycle in the remaining nodes
+      if (!madeProgress) {
+        throw new IllegalArgumentException("Cycle detected in input to topoSort:" + worklist);
+      }
+    }
+    return sortedMap;
   }
 
   private static SpanRecord simulatedActivityToRecord(final SimulatedActivity activity) {
