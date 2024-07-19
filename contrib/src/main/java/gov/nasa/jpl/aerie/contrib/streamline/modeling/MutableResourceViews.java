@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
-import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,6 +17,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.map;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.pure;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.bind;
@@ -37,6 +38,32 @@ import static java.util.stream.Collectors.toMap;
  * but rather transform their effects and pass them on to one or more other {@link MutableResource}s.
  */
 public class MutableResourceViews {
+    /**
+     * Construct a lossless view of a {@link MutableResource} using a bijective dynamics function.
+     * <p>
+     *     Important! <code>inverseMap</code> must be the inverse of <code>map</code>.
+     *     This condition cannot be checked automatically.
+     *     If this condition does not hold, this view will produce incorrect results.
+     * </p>
+     */
+    public static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> MutableResource<E> view(
+            MutableResource<D> source,
+            Function<D, E> map,
+            Function<E, D> inverseMap) {
+        var readView = ResourceMonad.map(source, map);
+        return name(new MutableResource<>() {
+            @Override
+            public void emit(DynamicsEffect<E> effect) {
+                source.emit(name($ -> map(effect.apply(map($, map)), inverseMap), "%s", effect));
+            }
+
+            @Override
+            public ErrorCatching<Expiring<E>> getDynamics() {
+                return readView.getDynamics();
+            }
+        }, "%s", source);
+    }
+
     /**
      * Select one of several {@link MutableResource}s based on a selector resource.
      * Effects emitted on the resulting resoure will be directed to the selected underlying
