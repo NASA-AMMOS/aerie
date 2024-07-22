@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,8 +65,8 @@ public class Registrar {
     Throw
   }
 
-  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final ErrorBehavior errorBehavior) {
-    Resources.init();
+  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final Instant planStart, final ErrorBehavior errorBehavior) {
+    Resources.init(planStart);
     this.baseRegistrar = baseRegistrar;
     this.errorBehavior = errorBehavior;
     errors = resource(Discrete.discrete(Map.of()));

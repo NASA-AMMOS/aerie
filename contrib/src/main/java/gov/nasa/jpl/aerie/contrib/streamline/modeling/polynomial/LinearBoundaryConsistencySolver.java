@@ -123,7 +123,7 @@ public final class LinearBoundaryConsistencySolver {
             if (D.isEmpty()) {
               throw new IllegalStateException(
                   "LinearBoundaryConsistencySolver %s failed. Domain for %s is empty: [%s, %s]".formatted(
-                      getName(this).orElseThrow(), D.variable, D.lowerBound, D.upperBound));
+                      getName(this), D.variable, D.lowerBound, D.upperBound));
             }
             for (DirectionalConstraint constraintToAdd : neighboringConstraints.get(D.variable)) {
               if (!remainingConstraints.contains(constraintToAdd)) {
@@ -187,7 +187,7 @@ public final class LinearBoundaryConsistencySolver {
 
     @Override
     public String toString() {
-      return getName(this).orElseThrow();
+      return getName(this);
     }
 
     // Expose resource as Resource, not CellResource,

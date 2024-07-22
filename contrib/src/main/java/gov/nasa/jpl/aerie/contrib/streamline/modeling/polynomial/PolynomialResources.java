@@ -149,7 +149,7 @@ public final class PolynomialResources {
       } else {
         throw new IllegalStateException(
                 "%s was assumed to be linear, but was actually degree %d".formatted(
-                        getName(polynomial).orElse("Anonymous resource"),
+                        getName(polynomial),
                         p.degree()));
       }
     });
@@ -568,7 +568,7 @@ public final class PolynomialResources {
       if (entry == null) {
         throw new IllegalStateException(
                 "%s did not contain an entry for value %f".formatted(
-                        Naming.getName(bins).orElse("Bins"), p$.extract()));
+                        Naming.getName(bins), p$.extract()));
       }
       Double cutoff = bins$.extract().higherKey(p$.extract());
       var upperExpiry = cutoff == null ? NEVER : p$.greaterThanOrEquals(polynomial(cutoff)).expiry();

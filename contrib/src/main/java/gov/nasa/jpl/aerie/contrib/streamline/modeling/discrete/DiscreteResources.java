@@ -43,7 +43,7 @@ public final class DiscreteResources {
 
   public static <T> Resource<Discrete<T>> constant(T value) {
     var result = DiscreteResourceMonad.pure(value);
-    name(result, value.toString());
+    name(result, "%s", value);
     return result;
   }
 

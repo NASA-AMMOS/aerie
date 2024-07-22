@@ -23,7 +23,7 @@ public final class Tracing {
   private final static Stack<String> activeTracePoints = new Stack<>();
 
   public static <D> Resource<D> trace(Resource<D> resource) {
-    return trace(() -> Naming.getName(resource).orElse("anonymous resource"), resource);
+    return trace(() -> Naming.getName(resource), resource);
   }
 
   public static <D> Resource<D> trace(String name, Resource<D> resource) {
@@ -35,7 +35,7 @@ public final class Tracing {
   }
 
   public static <D extends Dynamics<?, D>> MutableResource<D> trace(MutableResource<D> resource) {
-    return trace(() -> Naming.getName(resource).orElse("anonymous resource"), resource);
+    return trace(() -> Naming.getName(resource), resource);
   }
 
   public static <D extends Dynamics<?, D>> MutableResource<D> trace(String name, MutableResource<D> resource) {
@@ -50,7 +50,7 @@ public final class Tracing {
       public void emit(final DynamicsEffect<D> effect) {
         traceAction(
                 () -> String.format("Emit '%s' on %s",
-                        Naming.getName(effect).orElse("anonymous effect"),
+                        Naming.getName(effect),
                         name.get()),
                 () -> { resource.emit(effect); return Unit.UNIT; });
       }
@@ -63,7 +63,7 @@ public final class Tracing {
   }
 
   public static Condition trace(Condition condition) {
-    return trace(() -> Naming.getName(condition).orElse("anonymous condition"), condition);
+    return trace(() -> Naming.getName(condition), condition);
   }
 
   public static Condition trace(String name, Condition condition) {
@@ -76,7 +76,7 @@ public final class Tracing {
   }
 
   public static Supplier<Condition> trace(Supplier<Condition> condition) {
-    return trace(() -> Naming.getName(condition).orElse("anonymous condition"), condition);
+    return trace(() -> Naming.getName(condition), condition);
   }
 
   public static Supplier<Condition> trace(String name, Supplier<Condition> condition) {

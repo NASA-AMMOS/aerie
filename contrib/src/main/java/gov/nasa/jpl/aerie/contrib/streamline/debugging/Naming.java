@@ -67,22 +67,25 @@ public final class Naming {
   }
 
   /**
-   * Get the name for thing.
-   * If thing has no registered name and no synonyms,
-   * returns empty.
+   * Returns true if thing has a registered name.
    */
-  public static Optional<String> getName(Object thing) {
-    return getName(thing, new NamingContext());
+  public static boolean isNamed(Object thing) {
+    return NAMES.containsKey(thing);
   }
-
-  // TODO - build a version of getName, or make this the default behavior, (maybe if anonymousName is null?)
-  //   which calls Object.toString on things that don't otherwise have a name.
-  //   This supports the use of literals and dynamics objects in effect names,
-  //   without needing to eagerly compute their names, which involves costly string ops.
 
   /**
    * Get the name for thing.
-   * Use anonymousName for anything without a name instead of returning empty.
+   * {@link Object#toString()} will be used if thing has no name,
+   * or for part's of thing's name which themselves are not named.
+   */
+  public static String getName(Object thing) {
+    return getName(thing, (String) null);
+  }
+
+  /**
+   * Get the name for thing.
+   * Use anonymousName for anything without a name.
+   * If anonymousName is null, use {@link Object#toString()} instead.
    */
   public static String getName(Object thing, String anonymousName) {
     // This expression never throws, because context always has a name available.

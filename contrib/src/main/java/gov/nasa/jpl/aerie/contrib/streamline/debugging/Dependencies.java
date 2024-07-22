@@ -12,7 +12,6 @@ public final class Dependencies {
   // doesn't prevent it from being garbage-collected.
   private static final WeakHashMap<Object, Set<Object>> DEPENDENCIES = new WeakHashMap<>();
   private static final WeakHashMap<Object, Set<Object>> DEPENDENTS = new WeakHashMap<>();
-  private static final String ANONYMOUS_NAME = "...";
 
   /**
    * Register that dependent depends on dependency.
@@ -79,7 +78,7 @@ public final class Dependencies {
     if (elideAnonymousNodes) {
       // Collapse anonymous nodes out of the graph
       for (Object node : new ArrayList<>(dependencyGraph.keySet())) {
-        if (nodeName(node).equals(ANONYMOUS_NAME)) {
+        if (!Naming.isNamed(node)) {
           var dependencies = dependencyGraph.remove(node);
           var dependents = dependentGraph.remove(node);
           for (Object dependent : dependents) {
@@ -178,7 +177,7 @@ public final class Dependencies {
   }
 
   private static String nodeName(Object node) {
-    return Naming.getName(node, ANONYMOUS_NAME);
+    return Naming.getName(node);
   }
 
   private static String nodeId(Object node, Map<Object, String> nodeIds) {
