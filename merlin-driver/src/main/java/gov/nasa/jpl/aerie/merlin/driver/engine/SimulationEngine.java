@@ -37,6 +37,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -531,7 +532,7 @@ public final class SimulationEngine implements AutoCloseable {
       Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
       Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities){}
 
-  private static SpanInfo computeTaskInfo(
+  private static SpanInfo computeSpanInfo(
       final TemporalEventSource timeline,
       final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics
@@ -560,8 +561,42 @@ public final class SimulationEngine implements AutoCloseable {
         engine,
         startTime,
         elapsedTime,
-        computeTaskInfo(timeline, activityTopic, serializableTopics)
+        computeSpanInfo(timeline, activityTopic, serializableTopics)
     );
+  }
+
+  private static HashMap<SpanId, ActivityDirectiveId> spanToActivityDirectiveId(
+      final SimulationEngine engine,
+      final SpanInfo spanInfo
+  ){
+    final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
+    engine.spans.forEach((span, state) -> {
+      if (!spanInfo.isActivity(span)) return;
+      if (spanInfo.isDirective(span)) activityDirectiveIds.put(span, spanInfo.getDirective(span));
+    });
+    return activityDirectiveIds;
+  }
+
+  private static HashMap<SpanId, SimulatedActivityId> spanToSimulatedActivities(
+      final SimulationEngine engine,
+      final SpanInfo spanInfo
+  ){
+    final var activityDirectiveIds = spanToActivityDirectiveId(engine, spanInfo);
+    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
+    final var usedSimulatedActivityIds = new HashSet<>();
+    for (final var entry : activityDirectiveIds.entrySet()) {
+      spanToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
+      usedSimulatedActivityIds.add(entry.getValue().id());
+    }
+    long counter = 1L;
+    for (final var span : engine.spans.keySet()) {
+      if (!spanInfo.isActivity(span)) continue;
+      if (spanToSimulatedActivityId.containsKey(span)) continue;
+
+      while (usedSimulatedActivityIds.contains(counter)) counter++;
+      spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
+    }
+    return spanToSimulatedActivityId;
   }
 
   /**
@@ -575,11 +610,9 @@ public final class SimulationEngine implements AutoCloseable {
   ){
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<SpanId, SpanId>();
-    final var activityDirectiveIds = new HashMap<SpanId, ActivityDirectiveId>();
+    final var activityDirectiveIds = spanToActivityDirectiveId(engine, spanInfo);
     engine.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
-
-      if (spanInfo.isDirective(span)) activityDirectiveIds.put(span, spanInfo.getDirective(span));
 
       var parent = state.parent();
       while (parent.isPresent() && !spanInfo.isActivity(parent.get())) {
@@ -597,20 +630,7 @@ public final class SimulationEngine implements AutoCloseable {
     });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
-    final var usedSimulatedActivityIds = new HashSet<>();
-    for (final var entry : activityDirectiveIds.entrySet()) {
-      spanToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
-      usedSimulatedActivityIds.add(entry.getValue().id());
-    }
-    long counter = 1L;
-    for (final var span : engine.spans.keySet()) {
-      if (!spanInfo.isActivity(span)) continue;
-      if (spanToSimulatedActivityId.containsKey(span)) continue;
-
-      while (usedSimulatedActivityIds.contains(counter)) counter++;
-      spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
-    }
+    final var spanToSimulatedActivityId = spanToSimulatedActivities(engine, spanInfo);
 
     final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
@@ -687,7 +707,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Set<String> resourceNames
   ) {
     // Collect per-task information from the event graph.
-    final var taskInfo = computeTaskInfo(timeline, activityTopic, serializableTopics);
+    final var spanInfo = computeSpanInfo(timeline, activityTopic, serializableTopics);
 
     // Extract profiles for every resource.
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
@@ -719,7 +739,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, taskInfo);
+    final var activityResults = computeActivitySimulationResults(engine, startTime, elapsedTime, spanInfo);
 
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
@@ -728,7 +748,8 @@ public final class SimulationEngine implements AutoCloseable {
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var spanToActivities = spanToSimulatedActivities(engine,spanInfo);
+    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -736,11 +757,34 @@ public final class SimulationEngine implements AutoCloseable {
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
         final var serializedEventGraph = commit.events().substitute(
             event -> {
-              EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
+              // TODO can we do this more efficiently?
+              EventGraph<EventRecord> output = EventGraph.empty();
               for (final var serializableTopic : serializableTopics) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
-                  output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
+                  // If the event's `provenance` has no simulated activity id, search its ancestors to find the nearest
+                  // simulated activity id, if one exists
+                  if (!spanToActivities.containsKey(event.provenance())) {
+                    var spanId = Optional.of(event.provenance());
+
+                    while (true) {
+                      if (spanToActivities.containsKey(spanId.get())) {
+                        spanToActivities.put(event.provenance(), spanToActivities.get(spanId.get()));
+                        break;
+                      }
+                      spanId = engine.getSpan(spanId.get()).parent();
+                      if (spanId.isEmpty()) {
+                        break;
+                      }
+                    }
+                  }
+                  var activitySpanID = Optional.ofNullable(spanToActivities.get(event.provenance()).id());
+                  output = EventGraph.concurrently(
+                      output,
+                      EventGraph.atom(
+                          new EventRecord(serializableTopicToId.get(serializableTopic),
+                                          activitySpanID,
+                                          serializedEvent.get())));
                 }
               }
               return output;
