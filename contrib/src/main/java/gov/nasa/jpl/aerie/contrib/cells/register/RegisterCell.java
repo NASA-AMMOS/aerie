@@ -1,36 +1,31 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class RegisterCell<T> {
-  private final UnaryOperator<T> duplicator;
-
-  private T value;
+  public T value;
   private boolean conflicted;
 
-  public RegisterCell(final UnaryOperator<T> duplicator, final T initialValue, final boolean conflicted) {
-    this.duplicator = Objects.requireNonNull(duplicator);
+  public RegisterCell(final T initialValue, final boolean conflicted) {
     this.value = Objects.requireNonNull(initialValue);
     this.conflicted = conflicted;
   }
 
   public static <Event, T> CellRef<Event, RegisterCell<T>>
-  allocate(final UnaryOperator<T> duplicator, final T initialValue, final Function<Event, RegisterEffect<T>> interpreter) {
+  allocate(final UnaryOperator<T> duplicator, final T initialValue, final Function<Event, RegisterEffect<T>> interpreter, final ValueMapper<T> valueMapper) {
     return CellRef.allocate(
-        new RegisterCell<>(duplicator, initialValue, false),
-        new RegisterCellType<>(),
+        new RegisterCell<>(initialValue, false),
+        new RegisterCellType<>(duplicator, valueMapper),
         interpreter);
-  }
-
-  public T getValue() {
-    // Perform a defensive copy to prevent callers from accidentally mutating this Register.
-    return this.duplicator.apply(this.value);
   }
 
   public boolean isConflicted() {
@@ -39,10 +34,10 @@ public final class RegisterCell<T> {
 
   @Override
   public String toString() {
-    return "{value=%s, conflicted=%s}".formatted(this.getValue(), this.isConflicted());
+    return "{value=%s, conflicted=%s}".formatted(this.value, this.conflicted);
   }
 
-  public static final class RegisterCellType<T> implements CellType<RegisterEffect<T>, RegisterCell<T>> {
+  public record RegisterCellType<T>(UnaryOperator<T> duplicator, ValueMapper<T> valueMapper) implements CellType<RegisterEffect<T>, RegisterCell<T>> {
     @Override
     public EffectTrait<RegisterEffect<T>> getEffectType() {
       return new RegisterEffect.Trait<>();
@@ -50,7 +45,7 @@ public final class RegisterCell<T> {
 
     @Override
     public RegisterCell<T> duplicate(final RegisterCell<T> cell) {
-      return new RegisterCell<>(cell.duplicator, cell.value, cell.conflicted);
+      return new RegisterCell<>(duplicator.apply(cell.value), cell.conflicted);
     }
 
     @Override
@@ -61,6 +56,21 @@ public final class RegisterCell<T> {
       } else if (effect.conflicted) {
         cell.conflicted = true;
       }
+    }
+
+    @Override
+    public SerializedValue serialize(final RegisterCell<T> cell) {
+      return SerializedValue.of(Map.of(
+          "value", this.valueMapper.serializeValue(cell.value),
+          "conflicted", SerializedValue.of(cell.conflicted)));
+    }
+
+    @Override
+    public RegisterCell<T> deserialize(final SerializedValue serializedValue) {
+      final var map = serializedValue.asMap().get();
+      return new RegisterCell<>(
+          this.valueMapper.deserializeValue(Objects.requireNonNull(map.get("value"))).getSuccessOrThrow(),
+          Objects.requireNonNull(map.get("conflicted")).asBoolean().get());
     }
   }
 }

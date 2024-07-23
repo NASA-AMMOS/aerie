@@ -2,22 +2,19 @@ package gov.nasa.jpl.aerie.contrib.cells.counters;
 
 import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Objects;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 public final class CounterCell<T> {
-  private final UnaryOperator<T> duplicator;
-  private final BinaryOperator<T> adder;
-  private T value;
+  public T value;
 
-  public CounterCell(final T initialValue, final BinaryOperator<T> adder, final UnaryOperator<T> duplicator) {
-    this.duplicator = Objects.requireNonNull(duplicator);
-    this.adder = Objects.requireNonNull(adder);
+  public CounterCell(final T initialValue) {
     this.value = Objects.requireNonNull(initialValue);
   }
 
@@ -26,24 +23,22 @@ public final class CounterCell<T> {
       final T initialValue,
       final T zero,
       final BinaryOperator<T> adder,
-      final UnaryOperator<T> duplicator,
-      final Function<Event, T> interpreter) {
+      final Function<Event, T> interpreter,
+      final ValueMapper<T> mapper
+  ) {
     return CellRef.allocate(
-        new CounterCell<>(initialValue, adder, duplicator),
-        new CounterCellType<>(zero, adder),
+        new CounterCell<>(initialValue),
+        new CounterCellType<>(zero, adder, mapper),
         interpreter);
-  }
-
-  public T getValue() {
-    // Perform a defensive copy to prevent callers from accidentally mutating this Counter.
-    return this.duplicator.apply(this.value);
   }
 
   public static final class CounterCellType<T> implements CellType<T, CounterCell<T>> {
     private final EffectTrait<T> monoid;
+    private final ValueMapper<T> mapper;
 
-    public CounterCellType(final T zero, final BinaryOperator<T> adder) {
+    public CounterCellType(final T zero, final BinaryOperator<T> adder, final ValueMapper<T> mapper) {
       this.monoid = new CommutativeMonoid<>(zero, adder);
+      this.mapper = mapper;
     }
 
     @Override
@@ -53,12 +48,24 @@ public final class CounterCell<T> {
 
     @Override
     public CounterCell<T> duplicate(final CounterCell<T> cell) {
-      return new CounterCell<>(cell.value, cell.adder, cell.duplicator);
+      return new CounterCell<>(cell.value);
     }
 
     @Override
     public void apply(final CounterCell<T> cell, final T effect) {
-      cell.value = cell.adder.apply(cell.value, effect);
+      cell.value = this.monoid.sequentially(cell.value, effect);
+    }
+
+    @Override
+    public SerializedValue serialize(final CounterCell<T> cell) {
+      return this.mapper.serializeValue(cell.value);
+    }
+
+    @Override
+    public CounterCell<T> deserialize(final SerializedValue serializedValue) {
+      return new CounterCell<>(
+          this.mapper.deserializeValue(serializedValue).getSuccessOrThrow()
+      );
     }
   }
 }

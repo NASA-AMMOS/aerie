@@ -10,7 +10,7 @@ public final class Mission {
     THRUSTERS,
     REACTION_WHEELS
   }
-  public final Register<GncControlMode> gncControlMode = Register.forImmutable(GncControlMode.THRUSTERS);
+  public final Register<GncControlMode> gncControlMode = Register.forImmutable(GncControlMode.THRUSTERS, new EnumValueMapper<>(GncControlMode.class));
   public Mission(final Registrar registrar, final Configuration config) {
     registrar.discrete("/gncControlMode", this.gncControlMode, new EnumValueMapper<>(GncControlMode.class));
   }

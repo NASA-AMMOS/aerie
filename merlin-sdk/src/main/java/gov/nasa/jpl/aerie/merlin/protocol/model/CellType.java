@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Optional;
 
@@ -18,4 +19,8 @@ public interface CellType<Effect, State> {
   default Optional<Duration> getExpiry(final State state) {
     return Optional.empty();
   }
+
+  SerializedValue serialize(State state);
+
+  State deserialize(SerializedValue serializedValue);
 }

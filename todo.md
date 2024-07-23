@@ -1,9 +1,12 @@
 # TODO: Persistent checkpoint
 // MD: TODO for persistent checkpoint
 
-- [ ] Save serialized cells to file
-- [ ] Restore cells from file
+- [x] Proof of concept: Save serialized cells to file
+- [x] Proof of concept: Restore cells from file
+- [ ] Properly manage files
+- [ ] Design test case for save-and-restore without any tasks or activities
 - [ ] Formulate plan for deserializing tasks
+- [ ] Design test case for save-and-restore with tasks or activities
 
 ## Problem statement
 The purpose of this feature is to enable smooth extension of a plan into the following plan.
@@ -20,6 +23,15 @@ The resumption process specifies the following:
 
 ## Architecture
 Resuming from a checkpoint must restore the following information:
+- All of the cells at the latest time
+  - Restore both their values and their expiries
+- All active tasks, in their current state
+- The job queue
+  - I think it may be sufficient to restore all tasks, and use their latest status to populate the job queue.
+    This will produce all of the necessary conditions, delayed tasks, calling tasks
+- The spans and span contributor counts
+
+// MD: Should conditions be re-sampled upon resume, or should we cache their previous result/expiry? Should we cache what cells they referenced on their last sampling?
 
 
 ### Reasonable requirements, and flexible soundness guarantees // MD:
@@ -33,3 +45,5 @@ serializability/resumability of tasks, there may be some room for opting in to u
 There are also compromises to be made around when checkpoints can be taken:
 - Maybe there's a notion of a safepoint, where no unserializable tasks are running
 
+Warnings:
+- We can attempt to serialize the initial values of all cells, and issue a warning if any did not override serialize or deserialize, or if deserialize(serialize(x)).equals(x) is not true. 

@@ -4,11 +4,16 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
+import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.types.ActivityDirective;
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
@@ -16,6 +21,12 @@ import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 
+import javax.json.Json;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -58,6 +69,34 @@ public final class SimulationDriver {
       final SimulationResourceManager resourceManager
   ) {
     try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
+      /* The top-level simulation timeline. */
+      var timeline = new TemporalEventSource();
+
+      final LiveCells cells;
+
+      final String inconsFile = "/Users/dailis/projects/aerie/worktrees/develop/fincons.json";
+      if (new File(inconsFile).exists()) {
+        try {
+          cells = new LiveCells(timeline);
+          final var incons = new SerializedValueJsonParser().parse(
+              Json
+                  .createReader(new StringReader(Files.readString(Path.of(inconsFile))))
+                  .readValue()).getSuccessOrThrow();
+          final var serializedCells = incons.asList().get();
+          final var queries = missionModel.getInitialCells().queries();
+
+          for (int i = 0; i < serializedCells.size(); i++) {
+            final var serializedCell = serializedCells.get(i);
+            final var query = queries.get(i);
+
+            putCell(cells, query, serializedCell, missionModel.getInitialCells());
+          }
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      } else {
+        cells = new LiveCells(timeline, missionModel.getInitialCells());
+      }
 
       /* The current real time. */
       simulationExtentConsumer.accept(Duration.ZERO);
@@ -126,9 +165,26 @@ public final class SimulationDriver {
         throw new SimulationException(engine.getElapsedTime(), simulationStartTime, ex);
       }
 
+      System.out.println("-----------------------------------------");
+      final var list = new ArrayList<SerializedValue>();
+      for (final var query : missionModel.getInitialCells().queries()) {
+        final var cell = cells.getCell(query);
+        list.add(cell.get().serialize());
+      }
+      System.out.println(new SerializedValueJsonParser().unparse(SerializedValue.of(list)));
+
       final var topics = missionModel.getTopics();
       return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
     }
+  }
+
+  private static <State> void putCell(
+      LiveCells liveCells,
+      Query<State> query,
+      SerializedValue serializedCell,
+      LiveCells cell)
+  {
+    liveCells.put(query, cell.getCell(query).get().deserialize(serializedCell));
   }
 
   // This method is used as a helper method for executing unit tests

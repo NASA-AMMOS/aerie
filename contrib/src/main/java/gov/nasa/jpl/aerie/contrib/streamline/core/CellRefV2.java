@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
@@ -52,6 +53,16 @@ public final class CellRefV2 {
         cell.elapsedTime = cell.elapsedTime.plus(duration);
         cell.dynamics = ErrorCatchingMonad.map(cell.initialDynamics, d ->
             expiring(d.data().step(cell.elapsedTime), d.expiry().minus(cell.elapsedTime)));
+      }
+
+      @Override
+      public SerializedValue serialize(final Cell<D> dCell) {
+        return null;
+      }
+
+      @Override
+      public Cell<D> deserialize(final SerializedValue serializedValue) {
+        return null;
       }
     });
   }

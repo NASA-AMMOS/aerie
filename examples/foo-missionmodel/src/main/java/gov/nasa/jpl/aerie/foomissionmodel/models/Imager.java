@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.foomissionmodel.models;
 
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.aerie.contrib.models.Register;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,7 +19,7 @@ public final class Imager {
   public Imager(final double bitsPerPixel, final ImagerMode mode, final double frameRate) {
     this.bitsPerPixel = bitsPerPixel;
 
-    this.mode = Register.forImmutable(mode);
+    this.mode = Register.forImmutable(mode, new EnumValueMapper<>(ImagerMode.class));
     this.frameRate = Register.forImmutable(frameRate);
     this.imagedBits = new Accumulator();
 

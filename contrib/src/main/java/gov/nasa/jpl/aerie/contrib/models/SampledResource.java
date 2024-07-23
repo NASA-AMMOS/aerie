@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -22,15 +23,15 @@ public class SampledResource<T> implements DiscreteResource<T> {
    * Constructor that does not require caller to specify a period and therefore assumes a sample
    * period of 1 sample per second.
    */
-  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator) {
-    this(sampler, duplicator, 1.0);
+  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator, final ValueMapper<T> mapper) {
+    this(sampler, duplicator, 1.0, mapper);
   }
 
   /**
    * Constructor that requires caller to specify an initial sample period
    */
-  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator, final double period) {
-    this.result = Register.create(sampler.get(), duplicator);
+  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator, final double period, final ValueMapper<T> mapper) {
+    this.result = Register.create(sampler.get(), duplicator, mapper);
     this.sampler = Objects.requireNonNull(sampler);
     this.period =  Register.forImmutable(period);
     spawn(this::takeSamples);

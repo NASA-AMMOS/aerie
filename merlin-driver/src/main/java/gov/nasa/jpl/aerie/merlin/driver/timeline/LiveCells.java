@@ -3,12 +3,14 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public final class LiveCells {
   // INVARIANT: Every Query<T> maps to a LiveCell<T>; that is, the type parameters are correlated.
-  private final Map<Query<?>, LiveCell<?>> cells = new HashMap<>();
+  private final Map<Query<?>, LiveCell<?>> cells = new LinkedHashMap<>(); // Use a LinkedHashMap for consistent ordering
   private final EventSource source;
   private final LiveCells parent;
 
@@ -35,7 +37,7 @@ public final class LiveCells {
     this.cells.put(query, new LiveCell<>(cell, this.source.cursor()));
   }
 
-  private <State> Optional<Cell<State>> getCell(final Query<State> query) {
+  public <State> Optional<Cell<State>> getCell(final Query<State> query) {
     // First, check if we have this cell already.
     {
       // SAFETY: By the invariant, if there is an entry for this query, it is of type Cell<State>.
@@ -61,5 +63,9 @@ public final class LiveCells {
   public void freeze() {
     if (this.parent != null) this.parent.freeze();
     this.source.freeze();
+  }
+
+  public List<Query<?>> queries() {
+    return this.cells.keySet().stream().toList();
   }
 }

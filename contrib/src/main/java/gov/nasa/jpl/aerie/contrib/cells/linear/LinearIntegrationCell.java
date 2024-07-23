@@ -5,7 +5,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
+import java.util.Map;
 import java.util.function.Function;
 
 public final class LinearIntegrationCell {
@@ -69,6 +71,25 @@ public final class LinearIntegrationCell {
     public void step(final LinearIntegrationCell cell, final Duration elapsedTime) {
       // Law: The passage of time shall not alter a valid dynamics.
       cell.accumulatedVolume += cell.rate * elapsedTime.ratioOver(Duration.SECOND);
+    }
+
+    @Override
+    public SerializedValue serialize(final LinearIntegrationCell linearIntegrationCell) {
+      return SerializedValue.of(Map.of(
+          "initialVolume", SerializedValue.of(linearIntegrationCell.initialVolume),
+          "accumulatedVolume", SerializedValue.of(linearIntegrationCell.accumulatedVolume),
+          "rate", SerializedValue.of(linearIntegrationCell.rate)
+      ));
+    }
+
+    @Override
+    public LinearIntegrationCell deserialize(final SerializedValue serializedValue) {
+      final var map = serializedValue.asMap().get();
+      return new LinearIntegrationCell(
+          map.get("initialVolume").asReal().get(),
+          map.get("accumulatedVolume").asReal().get(),
+          map.get("rate").asReal().get()
+      );
     }
   }
 }

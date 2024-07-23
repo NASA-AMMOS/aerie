@@ -32,7 +32,7 @@ public final class Mission {
   public Mission(final Registrar registrar, final Configuration config) {
     this.fruit = new Accumulator(config.initialConditions().fruit(), 0.0);
     this.peel = AdditiveRegister.create(config.initialConditions().peel());
-    this.flag = Register.forImmutable(config.initialConditions().flag());
+    this.flag = Register.forImmutable(config.initialConditions().flag(), new EnumValueMapper<>(Flag.class));
     this.plant = Counter.ofInteger(config.initialPlantCount());
     this.producer = Register.forImmutable(config.initialProducer());
     this.dataLineCount = Register.forImmutable(countLines(config.initialDataPath()));

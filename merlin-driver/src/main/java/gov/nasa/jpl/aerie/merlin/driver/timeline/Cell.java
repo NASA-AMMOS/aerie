@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Optional;
 import java.util.Set;
@@ -83,5 +84,13 @@ public final class Cell<State> {
     public void apply(final State state, final Event[] events, int from, final int to) {
       while (from < to) apply(state, events[from++]);
     }
+  }
+
+  public SerializedValue serialize() {
+    return this.inner.cellType.serialize(this.state);
+  }
+
+  public Cell<State> deserialize(SerializedValue serializedValue) {
+    return new Cell<>(this.inner, this.inner.cellType.deserialize(serializedValue));
   }
 }
