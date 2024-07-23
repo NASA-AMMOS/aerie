@@ -142,7 +142,7 @@ public final class SchedulerAppDriver {
     return new AppConfiguration(
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27185")),
         logger.isDebugEnabled(),
-        new PostgresStore(getEnv("AERIE_DB_SERVER", "postgres"),
+        new PostgresStore(getEnv("AERIE_DB_HOST", "postgres"),
                           getEnv("SCHEDULER_DB_USER", ""),
                           Integer.parseInt(getEnv("AERIE_DB_PORT", "5432")),
                           getEnv("SCHEDULER_DB_PASSWORD", ""),
