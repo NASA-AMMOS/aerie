@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.core;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ErrorCatchingMonad;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -12,6 +13,7 @@ import java.util.function.Predicate;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching.failure;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ErrorCatchingMonad.pure;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
@@ -24,7 +26,7 @@ public final class CellRefV2 {
   /**
    * Allocate a new resource with an explicitly given effect type and effect trait.
    */
-  public static <D extends Dynamics<?, D>, E extends DynamicsEffect<D>> CellRef<E, Cell<D>> allocate(ErrorCatching<Expiring<D>> initialDynamics, EffectTrait<E> effectTrait) {
+  public static <D extends Dynamics<?, D>, E extends DynamicsEffect<D>> CellRef<E, Cell<D>> allocate(ErrorCatching<Expiring<D>> initialDynamics, EffectTrait<E> effectTrait, ValueMapper<D> mapper) {
     return CellRef.allocate(new Cell<>(initialDynamics), new CellType<>() {
       @Override
       public EffectTrait<E> getEffectType() {
@@ -56,13 +58,13 @@ public final class CellRefV2 {
       }
 
       @Override
-      public SerializedValue serialize(final Cell<D> dCell) {
-        return null;
+      public SerializedValue serialize(final Cell<D> cell) {
+        return mapper.serializeValue(cell.dynamics.getOrThrow().data());
       }
 
       @Override
       public Cell<D> deserialize(final SerializedValue serializedValue) {
-        return null;
+        return new Cell<>(pure(Expiring.expiring(mapper.deserializeValue(serializedValue).getSuccessOrThrow(), Expiry.NEVER)));
       }
     });
   }

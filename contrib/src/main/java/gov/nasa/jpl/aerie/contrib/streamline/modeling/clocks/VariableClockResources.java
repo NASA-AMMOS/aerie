@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
@@ -40,7 +41,7 @@ public final class VariableClockResources {
         expiry = Expiry.at(T.minus(c.extract()).dividedBy(c.multiplier()).plus(EPSILON));
       }
       return ResourceMonad.pure(expiring(discrete(result), expiry));
-    }));
+    }), Discrete.valueMapper(new BooleanValueMapper()));
   }
 
   public static Resource<Discrete<Boolean>> greaterThan(Resource<VariableClock> clock, Resource<Discrete<Duration>> threshold) {

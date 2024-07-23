@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.core;
 
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 
 /**
  * A function returning a fully-wrapped dynamics,

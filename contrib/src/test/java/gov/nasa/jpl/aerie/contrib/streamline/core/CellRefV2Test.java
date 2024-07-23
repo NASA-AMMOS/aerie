@@ -30,7 +30,7 @@ class MutableResourceTest {
       Resources.init();
     }
 
-    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), noncommutingEffects());
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), noncommutingEffects(), mapper);
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {
@@ -69,7 +69,7 @@ class MutableResourceTest {
       Resources.init();
     }
 
-    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), commutingEffects());
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), commutingEffects(), mapper);
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {
@@ -112,7 +112,7 @@ class MutableResourceTest {
       Resources.init();
     }
 
-    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), autoEffects());
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), autoEffects(), mapper);
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {

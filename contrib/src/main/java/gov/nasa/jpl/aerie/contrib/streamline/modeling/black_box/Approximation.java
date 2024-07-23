@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.function.BiFunction;
@@ -30,9 +31,8 @@ public final class Approximation {
    * Approximate a resource.
    * Result updates whenever resource updates or approximation expires.
    */
-  public static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> Resource<E> approximate(
-      Resource<D> resource, Function<Expiring<D>, Expiring<E>> approximation) {
-    var result = resource(resource.getDynamics().map(approximation));
+  public static <D extends Dynamics<?, D>, E extends Dynamics<?, E>> Resource<E> approximate(Resource<D> resource, Function<Expiring<D>, Expiring<E>> approximation, ValueMapper<E> mapper) {
+    var result = resource(resource.getDynamics().map(approximation), mapper);
     // Register the "updates" and "expires" conditions separately
     // so that the "updates" condition isn't triggered spuriously.
     wheneverUpdates(resource, newResourceDynamics -> updateApproximation(newResourceDynamics, approximation, result));

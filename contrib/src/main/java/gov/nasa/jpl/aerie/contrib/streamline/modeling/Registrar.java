@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DummyValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.NullableValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;

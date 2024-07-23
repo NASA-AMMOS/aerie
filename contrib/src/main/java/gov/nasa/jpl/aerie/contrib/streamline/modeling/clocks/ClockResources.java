@@ -1,11 +1,15 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks;
 
-import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
+import java.util.List;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.*;
@@ -24,7 +28,9 @@ public final class ClockResources {
    * Create a clock starting at zero time.
    */
   public static Resource<Clock> clock() {
-    return resource(Clock.clock(ZERO));
+    return resource(Clock.clock(ZERO), new RecordValueMapper<>(Clock.class, List.of(
+        new RecordValueMapper.Component<>("extract", Clock::extract, new DurationValueMapper())
+    )));
   }
 
   public static Resource<Discrete<Boolean>> lessThan(Resource<Clock> clock, Resource<Discrete<Duration>> threshold) {
@@ -34,7 +40,7 @@ public final class ClockResources {
               crossoverTime.isPositive()
                       ? expiring(discrete(true), crossoverTime)
                       : neverExpiring(discrete(false)));
-    }));
+    }), Discrete.valueMapper(new BooleanValueMapper()));
   }
 
   public static Resource<Discrete<Boolean>> lessThanOrEquals(Resource<Clock> clock, Resource<Discrete<Duration>> threshold) {

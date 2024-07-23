@@ -1,5 +1,11 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DummyValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.OptionalValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.PairValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.Vector3DValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.monads.UnstructuredResourceApplicative;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
@@ -42,7 +48,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomi
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.integrate;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThan;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.lessThan$;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.polynomialResource;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.PolynomialResources.unitAware;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Quantities.quantity;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits.*;
@@ -128,9 +133,10 @@ public final class Demo {
   Resource<Polynomial> q = PolynomialResources.polynomialResource(6, 5, 4);
   Resource<Unstructured<Double>> quotient = UnstructuredResourceApplicative.map(asUnstructured(p), asUnstructured(q), (p$, q$) -> p$ / q$);
   Resource<Linear> approxQuotient = approximate(quotient, secantApproximation(IntervalFunctions.<Unstructured<Double>>byBoundingError(
-      1e-6, Duration.SECOND, Duration.HOUR.times(24), errorByOptimization())));
+      1e-6, Duration.SECOND, Duration.HOUR.times(24), errorByOptimization())), Linear.VALUE_MAPPER);
 
-  Resource<Unstructured<Pair<Vector3D, Vector3D>>> positionAndVelocity = resource(Unstructured.timeBased(t -> /* some spice call */ null));
+  Resource<Unstructured<Pair<Vector3D, Vector3D>>> positionAndVelocity = resource(Unstructured.timeBased(t -> /* some spice call */ null),
+                                                                                  new DummyValueMapper<>(Unstructured.timeBased(t -> /* some spice call */ null)));
   Resource<Discrete<Pair<Vector3D, Vector3D>>> approxPosVel = approximate(
       positionAndVelocity,
       DiscreteApproximation.<Pair<Vector3D, Vector3D>, Unstructured<Pair<Vector3D, Vector3D>>>discreteApproximation(
@@ -140,7 +146,7 @@ public final class Demo {
               Duration.HOUR.times(24),
               (u, v) -> Math.max(
                   u.getLeft().distance(v.getLeft()) / v.getLeft().getNorm(),
-                  u.getRight().distance(v.getRight()) / v.getRight().getNorm()))));
+                  u.getRight().distance(v.getRight()) / v.getRight().getNorm()))), Discrete.valueMapper(new PairValueMapper<>(new Vector3DValueMapper(new DoubleValueMapper()), new Vector3DValueMapper(new DoubleValueMapper()))));
 
   // Example of the semi-structured "differentiable" resources, and using the additional information to approximate:
   Resource<Differentiable> pDiff = asDifferentiable(p);
@@ -152,17 +158,17 @@ public final class Demo {
           1e-6,
           Duration.SECOND,
           Duration.HOUR.times(24),
-          errorByQuadraticApproximation())));
+          errorByQuadraticApproximation())), Linear.VALUE_MAPPER);
 
   // Another example, pushing a polynomial down to a linear for registering:
   Resource<Polynomial> r;
-  Resource<Linear> approxR = approximate(r, SecantApproximation.<Polynomial>secantApproximation(byUniformSampling(Duration.HOUR)));
+  Resource<Linear> approxR = approximate(r, SecantApproximation.<Polynomial>secantApproximation(byUniformSampling(Duration.HOUR)), Linear.VALUE_MAPPER);
 
 
   // Example of a locking state:
 
   MutableResource<Discrete<Integer>> importantHardware = DiscreteResources.discreteResource(42);
-  MutableResource<Discrete<Optional<Integer>>> importantHardwareLock = DiscreteResources.discreteResource(Optional.empty());
+  MutableResource<Discrete<Optional<Integer>>> importantHardwareLock = DiscreteResources.discreteResource(Optional.empty(), new OptionalValueMapper<>(new IntegerValueMapper()));
   Resource<Discrete<Boolean>> importantHardwareLockAssertion = assertThat(
       "Important hardware does not change state while locked",
       map(importantHardwareLock, importantHardware, (lock, state) -> lock.map(state::equals).orElse(true)));

@@ -25,7 +25,7 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class SingleVariableSingleConstraint {
-    MutableResource<Polynomial> driver = resource(polynomial(10));
+    MutableResource<Polynomial> driver = resource(polynomial(10), mapper);
     Resource<Polynomial> result;
 
     public SingleVariableSingleConstraint() {
@@ -65,9 +65,9 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class SingleVariableMultipleConstraint {
-    MutableResource<Polynomial> lowerBound1 = resource(polynomial(10));
-    MutableResource<Polynomial> lowerBound2 = resource(polynomial(20));
-    MutableResource<Polynomial> upperBound = resource(polynomial(30));
+    MutableResource<Polynomial> lowerBound1 = resource(polynomial(10), mapper);
+    MutableResource<Polynomial> lowerBound2 = resource(polynomial(20), mapper);
+    MutableResource<Polynomial> upperBound = resource(polynomial(30), mapper);
     Resource<Polynomial> result;
 
     public SingleVariableMultipleConstraint() {
@@ -141,7 +141,7 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class ScalingConstraint {
-    MutableResource<Polynomial> driver = resource(polynomial(10));
+    MutableResource<Polynomial> driver = resource(polynomial(10), mapper);
     Resource<Polynomial> result;
 
     public ScalingConstraint() {
@@ -171,8 +171,8 @@ class LinearBoundaryConsistencySolverTest {
   @ExtendWith(MerlinExtension.class)
   @TestInstance(Lifecycle.PER_CLASS)
   class MultipleVariables {
-    MutableResource<Polynomial> upperBound = resource(polynomial(10));
-    MutableResource<Polynomial> upperBoundOnC = resource(polynomial(5));
+    MutableResource<Polynomial> upperBound = resource(polynomial(10), mapper);
+    MutableResource<Polynomial> upperBoundOnC = resource(polynomial(5), mapper);
     Resource<Polynomial> a, b, c;
 
     public MultipleVariables() {

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.debugging.Context;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.Cell;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.allocate;
@@ -25,24 +26,24 @@ public interface MutableResource<D extends Dynamics<?, D>> extends Resource<D> {
     emit(name(effect, effectName));
   }
 
-  static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial) {
-    return resource(pure(initial));
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial, final ValueMapper<D> mapper) {
+    return resource(pure(initial), mapper);
   }
 
-  static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial, EffectTrait<DynamicsEffect<D>> effectTrait) {
-    return resource(pure(initial), effectTrait);
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(D initial, EffectTrait<DynamicsEffect<D>> effectTrait, final ValueMapper<D> mapper) {
+    return resource(pure(initial), effectTrait, mapper);
   }
 
-  static <D extends Dynamics<?, D>> MutableResource<D> resource(ErrorCatching<Expiring<D>> initial) {
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(ErrorCatching<Expiring<D>> initial, final ValueMapper<D> mapper) {
     // Use autoEffects for a generic CellResource, on the theory that most resources
     // have relatively few effects, and even fewer concurrent effects, so this is performant enough.
     // If that doesn't hold, a more specialized solution can be constructed directly.
-    return resource(initial, autoEffects());
+    return resource(initial, autoEffects(), mapper);
   }
 
-  static <D extends Dynamics<?, D>> MutableResource<D> resource(ErrorCatching<Expiring<D>> initial, EffectTrait<DynamicsEffect<D>> effectTrait) {
+  static <D extends Dynamics<?, D>> MutableResource<D> resource(ErrorCatching<Expiring<D>> initial, EffectTrait<DynamicsEffect<D>> effectTrait, ValueMapper<D> mapper) {
     MutableResource<D> result = new MutableResource<>() {
-      private final CellRef<DynamicsEffect<D>, Cell<D>> cell = allocate(initial, effectTrait);
+      private final CellRef<DynamicsEffect<D>, Cell<D>> cell = allocate(initial, effectTrait, mapper);
 
       @Override
       public void emit(final DynamicsEffect<D> effect) {

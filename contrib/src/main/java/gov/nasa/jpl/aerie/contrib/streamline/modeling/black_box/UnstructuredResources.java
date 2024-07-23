@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DummyValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resource;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApproximation.ErrorEstimates;
@@ -30,7 +31,7 @@ public final class UnstructuredResources {
 
   public static <A> Resource<Unstructured<A>> timeBased(Function<Duration, A> f) {
     // Put this in a cell so it'll be stepped up appropriately
-    return resource(Unstructured.timeBased(f));
+    return resource(Unstructured.timeBased(f), new DummyValueMapper<>(Unstructured.timeBased(f)));
   }
 
   public static <A, D extends Dynamics<A, D>> Resource<Unstructured<A>> asUnstructured(Resource<D> resource) {
@@ -74,6 +75,6 @@ public final class UnstructuredResources {
                     relativeError,
                     MINUTE,
                     duration(24 * 30, HOUR),
-                    relative(ErrorEstimates.<Unstructured<Double>>errorByOptimization(), epsilon))));
+                    relative(ErrorEstimates.<Unstructured<Double>>errorByOptimization(), epsilon))), Linear.VALUE_MAPPER);
   }
 }

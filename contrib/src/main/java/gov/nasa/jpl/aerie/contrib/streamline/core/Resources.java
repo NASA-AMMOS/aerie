@@ -1,10 +1,16 @@
 package gov.nasa.jpl.aerie.contrib.streamline.core;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DummyValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -42,8 +48,24 @@ public final class Resources {
     currentTime();
   }
 
+  public static final ValueMapper<Clock> CLOCK_VALUE_MAPPER = new ValueMapper<>() {
+    @Override
+    public ValueSchema getValueSchema() {
+      return new DurationValueMapper().getValueSchema();
+    }
+
+    @Override
+    public Result<Clock, String> deserializeValue(final SerializedValue serializedValue) {
+      return Result.success(new Clock(new DurationValueMapper().deserializeValue(serializedValue).getSuccessOrThrow()));
+    }
+
+    @Override
+    public SerializedValue serializeValue(final Clock value) {
+      return new DurationValueMapper().serializeValue(value.extract());
+    }
+  };
   // TODO if Aerie provides either a `getElapsedTime` method or dynamic allocation of Cells, we can avoid this mutable static variable
-  private static Resource<Clock> CLOCK = resource(clock(ZERO));
+  private static Resource<Clock> CLOCK = resource(clock(ZERO), CLOCK_VALUE_MAPPER);
   public static Duration currentTime() {
     try {
       return currentValue(CLOCK);
@@ -51,7 +73,7 @@ public final class Resources {
       // If we're running unit tests, several simulations can happen without reloading the Resources class.
       // In that case, we'll have discarded the clock resource we were using, and get the above exception.
       // REVIEW: Is there a cleaner way to make sure this resource gets (re-)initialized?
-      CLOCK = resource(clock(ZERO));
+      CLOCK = resource(clock(ZERO), CLOCK_VALUE_MAPPER);
       return currentValue(CLOCK);
     }
   }
@@ -214,8 +236,8 @@ public final class Resources {
    *   with its sources during simulation.
    * </p>
    */
-  public static <D extends Dynamics<?, D>> Resource<D> cache(Resource<D> resource) {
-    final var cell = resource(resource.getDynamics());
+  public static <D extends Dynamics<?, D>> Resource<D> cache(Resource<D> resource, final ValueMapper<D> mapper) {
+    final var cell = resource(resource.getDynamics(), mapper);
     forward(resource, cell);
     name(cell, "Cache (%s)", resource);
     return cell;
@@ -250,8 +272,8 @@ public final class Resources {
   // REVIEW: Suggestion from Jonathan Castello to remove this method
   // in favor of allowing resources to report expiry information directly.
   // This would be cleaner and potentially more performant.
-  public static <D extends Dynamics<?, D>> Resource<D> signalling(Resource<D> resource) {
-    var cell = resource(discrete(Unit.UNIT));
+  public static <D extends Dynamics<?, D>> Resource<D> signalling(Resource<D> resource, ValueMapper<D> mapper) {
+    var cell = resource(discrete(Unit.UNIT), new DummyValueMapper<>(discrete(Unit.UNIT)));
     name(cell, "Signal for (%s)", resource);
     wheneverDynamicsChange(resource, ignored -> cell.emit($ -> $));
     Resource<D> result = () -> {
@@ -264,14 +286,14 @@ public final class Resources {
     return result;
   }
 
-  public static <D extends Dynamics<?, D>> Resource<D> shift(Resource<D> resource, Duration interval, D initialDynamics) {
+  public static <D extends Dynamics<?, D>> Resource<D> shift(Resource<D> resource, Duration interval, D initialDynamics, final ValueMapper<D> mapper) {
     if (interval.shorterThan(ZERO)) {
       throw new IllegalArgumentException("Cannot shift resource by negative interval: " + interval);
     }
     if (interval.isEqualTo(ZERO)) {
       return resource;
     }
-    var cell = resource(initialDynamics);
+    var cell = resource(initialDynamics, mapper);
     delayedSet(cell, resource.getDynamics(), interval);
     wheneverDynamicsChange(resource, newDynamics ->
         delayedSet(cell, newDynamics, interval));

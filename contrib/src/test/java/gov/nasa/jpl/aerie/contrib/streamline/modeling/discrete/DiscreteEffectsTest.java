@@ -44,7 +44,7 @@ class DiscreteEffectsTest {
     Resources.init();
   }
 
-  private final MutableResource<Discrete<Integer>> settable = resource(discrete(42));
+  private final MutableResource<Discrete<Integer>> settable = resource(discrete(42), mapper);
 
   @Test
   void set_effect_changes_to_new_value() {
@@ -68,7 +68,7 @@ class DiscreteEffectsTest {
     assertEquals(789, currentValue(settable));
   }
 
-  private final MutableResource<Discrete<Boolean>> flag = resource(discrete(false));
+  private final MutableResource<Discrete<Boolean>> flag = resource(discrete(false), mapper);
 
   @Test
   void flag_set_makes_value_true() {
@@ -92,7 +92,7 @@ class DiscreteEffectsTest {
     assertTrue(currentValue(flag));
   }
 
-  private final MutableResource<Discrete<Integer>> counter = resource(discrete(0));
+  private final MutableResource<Discrete<Integer>> counter = resource(discrete(0), mapper);
 
   @Test
   void increment_increases_value_by_1() {
@@ -122,7 +122,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue - 3, currentValue(counter));
   }
 
-  private final MutableResource<Discrete<Double>> consumable = resource(discrete(10.0));
+  private final MutableResource<Discrete<Double>> consumable = resource(discrete(10.0), mapper);
 
   @Test
   void consume_decreases_value_by_amount() {
@@ -147,7 +147,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue - 2.7 + 5.6, currentValue(consumable));
   }
 
-  private final MutableResource<Discrete<Double>> nonconsumable = resource(discrete(10.0));
+  private final MutableResource<Discrete<Double>> nonconsumable = resource(discrete(10.0), mapper);
 
   @Test
   void using_decreases_value_while_action_is_running() {
@@ -158,7 +158,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue, currentValue(nonconsumable));
   }
 
-  MutableResource<Clock> DEBUG_clock = resource(new Clock(ZERO));
+  MutableResource<Clock> DEBUG_clock = resource(new Clock(ZERO), mapper);
 
   @Test
   void using_runs_synchronously() {
@@ -187,7 +187,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue, currentValue(nonconsumable));
   }
 
-  UnitAware<MutableResource<Discrete<Double>>> settableDataVolume = unitAware(resource(discrete(10.0)), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> settableDataVolume = unitAware(resource(discrete(10.0), mapper), BIT);
 
   @Test
   void unit_aware_set_converts_to_resource_unit() {
@@ -200,7 +200,7 @@ class DiscreteEffectsTest {
     assertThrows(IllegalArgumentException.class, () -> set(settableDataVolume, quantity(2, METER)));
   }
 
-  UnitAware<MutableResource<Discrete<Double>>> consumableDataVolume = unitAware(resource(discrete(10.0)), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> consumableDataVolume = unitAware(resource(discrete(10.0), mapper), BIT);
 
   @Test
   void unit_aware_consume_converts_to_resource_unit() {
@@ -228,7 +228,7 @@ class DiscreteEffectsTest {
     assertThrows(IllegalArgumentException.class, () -> restore(consumableDataVolume, quantity(1, METER)));
   }
 
-  UnitAware<MutableResource<Discrete<Double>>> nonconsumableDataVolume = unitAware(resource(discrete(10.0)), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> nonconsumableDataVolume = unitAware(resource(discrete(10.0), mapper), BIT);
 
   @Test
   void unit_aware_using_converts_to_resource_unit() {

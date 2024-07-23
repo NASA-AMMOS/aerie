@@ -54,34 +54,34 @@ public class ApproximationModel {
     defaultApproximation = approximateAsLinear(polynomial, tolerance);
     uniformApproximation = approximate(
         polynomial,
-            SecantApproximation.<Polynomial>secantApproximation(byUniformSampling(MINUTE)));
+            SecantApproximation.<Polynomial>secantApproximation(byUniformSampling(MINUTE)), Linear.VALUE_MAPPER);
     differentiableApproximation = approximate(
         asDifferentiable(polynomial),
         secantApproximation(byBoundingError(
             tolerance,
             SECOND,
             HOUR.times(24),
-            relative(errorByQuadraticApproximation(), EPSILON))));
+            relative(errorByQuadraticApproximation(), EPSILON))), Linear.VALUE_MAPPER);
     directApproximation = approximate(
         polynomial,
         secantApproximation(byBoundingError(
             tolerance,
             SECOND,
             HOUR.times(24),
-            Approximation.<Polynomial>relative(errorByOptimization(), EPSILON))));
+            Approximation.<Polynomial>relative(errorByOptimization(), EPSILON))), Linear.VALUE_MAPPER);
 
     rationalFunction = map(
             asUnstructured(polynomial), asUnstructured(divisor), (p, q) -> p / q);
 
     defaultApproximation2 = approximateAsLinear(rationalFunction, tolerance);
     uniformApproximation2 = approximate(rationalFunction,
-            SecantApproximation.<Unstructured<Double>>secantApproximation(byUniformSampling(MINUTE)));
+            SecantApproximation.<Unstructured<Double>>secantApproximation(byUniformSampling(MINUTE)), Linear.VALUE_MAPPER);
     directApproximation2 = approximate(rationalFunction,
             secantApproximation(byBoundingError(
                     tolerance,
                     SECOND,
                     HOUR.times(24),
-                    Approximation.<Unstructured<Double>>relative(errorByOptimization(), EPSILON))));
+                    Approximation.<Unstructured<Double>>relative(errorByOptimization(), EPSILON))), Linear.VALUE_MAPPER);
 
     trigFunction = map(asUnstructured(polynomial), asUnstructured(divisor),
             (p, q) -> Math.sin(p * Math.exp(-q / Math.PI)));

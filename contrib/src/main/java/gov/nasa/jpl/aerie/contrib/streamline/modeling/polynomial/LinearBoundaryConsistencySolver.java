@@ -72,7 +72,7 @@ public final class LinearBoundaryConsistencySolver {
   }
 
   public Variable variable(String name, Function<Domain, Expiring<Polynomial>> selectionPolicy) {
-    var variable = new Variable(name, resource(polynomial(0)), selectionPolicy);
+    var variable = new Variable(name, resource(polynomial(0), Polynomial.VALUE_MAPPER), selectionPolicy);
     variables.add(variable);
     // All variables depend on the solver, because all of them change together when the solver runs.
     addDependency(variable.resource(), this);

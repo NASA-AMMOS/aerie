@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -59,7 +60,7 @@ public final class UnitAwareResources {
     return quantity(Resources.currentValue(resource.value()), resource.unit());
   }
 
-  public static <D extends Dynamics<?, D>> UnitAware<Resource<D>> cache(UnitAware<Resource<D>> resource) {
-    return resource.map(Resources::cache);
+  public static <D extends Dynamics<?, D>> UnitAware<Resource<D>> cache(UnitAware<Resource<D>> resource, ValueMapper<D> mapper) {
+    return resource.map(resource1 -> Resources.cache(resource1, mapper));
   }
 }

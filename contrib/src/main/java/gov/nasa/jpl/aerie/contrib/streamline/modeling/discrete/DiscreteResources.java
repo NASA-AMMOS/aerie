@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
@@ -11,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
@@ -47,14 +52,14 @@ public final class DiscreteResources {
   }
 
   // General discrete cell resource constructor
-  public static <T> MutableResource<Discrete<T>> discreteResource(T initialValue) {
-    return resource(discrete(initialValue));
+  public static <T> MutableResource<Discrete<T>> discreteResource(T initialValue, ValueMapper<T> mapper) {
+    return resource(discrete(initialValue), Discrete.valueMapper(mapper));
   }
 
   // Annoyingly, we need to repeat the specialization for integer resources, so that
   // discreteMutableResource(42) doesn't become a double resource, due to the next overload
   public static MutableResource<Discrete<Integer>> discreteResource(int initialValue) {
-    return resource(discrete(initialValue));
+    return resource(discrete(initialValue), Discrete.valueMapper(new IntegerValueMapper()));
   }
 
   // specialized constructor for doubles, because they require a toleranced equality comparison
@@ -63,7 +68,18 @@ public final class DiscreteResources {
         (CommutativityTestInput<Discrete<Double>> input) -> DoubleUtils.areEqualResults(
             input.original().extract(),
             input.leftResult().extract(),
-            input.rightResult().extract()))));
+            input.rightResult().extract()))), Discrete.valueMapper(new DoubleValueMapper()));
+  }
+
+  // Annoyingly, we need to repeat the specialization for integer resources, so that
+  // discreteMutableResource(42) doesn't become a double resource, due to the next overload
+  public static MutableResource<Discrete<Boolean>> discreteResource(boolean initialValue) {
+    return resource(discrete(initialValue), Discrete.valueMapper(new BooleanValueMapper()));
+  }
+
+  // General discrete cell resource constructor
+  public static <T extends Enum<T>> MutableResource<Discrete<T>> discreteResource(T initialValue) {
+    return resource(discrete(initialValue), Discrete.valueMapper(new EnumValueMapper<>((Class<T>) initialValue.getClass())));
   }
 
   /**
@@ -81,8 +97,8 @@ public final class DiscreteResources {
   /**
    * Cache resource, updating the cache when updatePredicate(cached value, resource value) is true.
    */
-  public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate) {
-    final var cell = resource(resource.getDynamics());
+  public static <V> Resource<Discrete<V>> cache(Resource<Discrete<V>> resource, BiPredicate<V, V> updatePredicate, ValueMapper<V> mapper) {
+    final var cell = resource(resource.getDynamics(), Discrete.valueMapper(mapper));
     // TODO: Does the update predicate need to propagate expiry information?
     BiPredicate<ErrorCatching<Expiring<Discrete<V>>>, ErrorCatching<Expiring<Discrete<V>>>> liftedUpdatePredicate = (eCurrent, eNew) ->
         eCurrent.match(
@@ -109,8 +125,8 @@ public final class DiscreteResources {
   /**
    * Sample valueSupplier once every samplePeriod.
    */
-  public static <V, T extends Dynamics<Duration, T>> Resource<Discrete<V>> sampled(Supplier<V> valueSupplier, Resource<T> samplePeriod) {
-    var result = discreteResource(valueSupplier.get());
+  public static <V, T extends Dynamics<Duration, T>> Resource<Discrete<V>> sampled(Supplier<V> valueSupplier, Resource<T> samplePeriod, ValueMapper<V> mapper) {
+    var result = discreteResource(valueSupplier.get(), mapper);
     every(() -> currentValue(samplePeriod, Duration.MAX_VALUE),
           () -> set(result, valueSupplier.get()));
     return result;
@@ -122,7 +138,7 @@ public final class DiscreteResources {
    * the current simulation time, or valueBeforeFirstEntry if every key exceeds current simulation time.
    */
   public static <V> Resource<Discrete<V>> precomputed(
-      final V valueBeforeFirstEntry, final NavigableMap<Duration, V> segments) {
+      final V valueBeforeFirstEntry, final NavigableMap<Duration, V> segments, final ValueMapper<V> mapper) {
     var clock = clock();
     return signalling(bind(clock, (Clock clock$) -> {
       var t = clock$.extract();
@@ -130,7 +146,7 @@ public final class DiscreteResources {
       var value = entry == null ? valueBeforeFirstEntry : entry.getValue();
       var nextTime = expiry(Optional.ofNullable(segments.higherKey(t)));
       return pure(expiring(discrete(value), nextTime.minus(t)));
-    }));
+    }), Discrete.valueMapper(mapper));
   }
 
   /**
@@ -139,14 +155,14 @@ public final class DiscreteResources {
    * the current simulation time, or valueBeforeFirstEntry if every key exceeds current simulation time.
    */
   public static <V> Resource<Discrete<V>> precomputed(
-      final V valueBeforeFirstEntry, final NavigableMap<Instant, V> segments, final Instant simulationStartTime) {
+      final V valueBeforeFirstEntry, final NavigableMap<Instant, V> segments, final Instant simulationStartTime, final ValueMapper<V> mapper) {
     var segmentsUsingDurationKeys = new TreeMap<Duration, V>();
     for (var entry : segments.entrySet()) {
       segmentsUsingDurationKeys.put(
           Duration.of(ChronoUnit.MICROS.between(simulationStartTime, entry.getKey()), Duration.MICROSECONDS),
           entry.getValue());
     }
-    return precomputed(valueBeforeFirstEntry, segmentsUsingDurationKeys);
+    return precomputed(valueBeforeFirstEntry, segmentsUsingDurationKeys, mapper);
   }
 
   /**

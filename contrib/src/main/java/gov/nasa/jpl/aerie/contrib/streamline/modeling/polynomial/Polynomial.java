@@ -1,15 +1,23 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Dynamics;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiring;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Expiry;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.math3.analysis.solvers.LaguerreSolver;
 import org.apache.commons.math3.complex.Complex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.DoublePredicate;
@@ -32,6 +40,37 @@ import static org.apache.commons.math3.analysis.polynomials.PolynomialsUtils.shi
  * @apiNote The units of `t` are seconds
  */
 public record Polynomial(double[] coefficients) implements Dynamics<Double, Polynomial> {
+  public static ValueMapper<Polynomial> VALUE_MAPPER = new ValueMapper<Polynomial>() {
+    @Override
+    public ValueSchema getValueSchema() {
+      return ValueSchema.ofSeries(ValueSchema.REAL);
+    }
+
+    @Override
+    public Result<Polynomial, String> deserializeValue(SerializedValue serializedValue) {
+      final var map = serializedValue.asMap().get();
+      final var coefficientsList = map.get("coefficients").asList().get();
+      final var coefficients = new double[coefficientsList.size()];
+      for (int i = 0; i < coefficientsList.size(); i++) {
+        final var coefficient = coefficientsList.get(i).asReal().get();
+        coefficients[i] = coefficient;
+      }
+      return Result.success(new Polynomial(coefficients));
+    }
+
+    @Override
+    public SerializedValue serializeValue(Polynomial dynamics) {
+      final List<SerializedValue> coefficientsList = new ArrayList<>();
+
+      for (final var coefficient : dynamics.coefficients) {
+        coefficientsList.add(SerializedValue.of(coefficient));
+      }
+
+      return SerializedValue.of(Map.of(
+          "coefficients", SerializedValue.of(coefficientsList)
+      ));
+    }
+  };
 
   // TODO: Add Duration parameter for unit of formal parameter?
   /**
