@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
@@ -19,8 +19,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
 /*package-local*/ final class InsertSimulationEventsAction implements AutoCloseable {
   @Language("SQL") private static final String sql = """
-      insert into merlin.event (dataset_id, real_time, transaction_index, causal_time, topic_index, value, span_id)
-      values (?, ?::timestamptz - ?::timestamptz, ?, ?, ?, ?::jsonb,?)
+      insert into merlin.event (dataset_id, real_time, transaction_index, causal_time, topic_index, value)
+      values (?, ?::timestamptz - ?::timestamptz, ?, ?, ?, ?::jsonb)
     """;
 
   private final PreparedStatement statement;
@@ -31,7 +31,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
   public void apply(
       final long datasetId,
-      final Map<Duration, List<EventGraph<EventRecord>>> eventPoints,
+      final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> eventPoints,
       final Timestamp simulationStart
   ) throws SQLException {
     for (final var eventPoint : eventPoints.entrySet()) {
@@ -51,21 +51,21 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       final Duration duration,
       final int transactionIndex,
       final Timestamp simulationStart,
-      final List<Pair<String, EventRecord>> flattenedEventGraph,
+      final List<Pair<String, Pair<Integer, SerializedValue>>> flattenedEventGraph,
       final PreparedStatement statement
   ) throws SQLException {
-    for (final Pair<String, EventRecord> entry : flattenedEventGraph) {
+    for (final Pair<String, Pair<Integer, SerializedValue>> entry : flattenedEventGraph) {
       final var causalTime = entry.getLeft();
-      final EventRecord event = entry.getRight();
+      final Pair<Integer, SerializedValue> event = entry.getRight();
 
       statement.setLong(1, datasetId);
       setTimestamp(statement, 2, simulationStart.plusMicros(duration.in(MICROSECONDS)));
       setTimestamp(statement, 3, simulationStart);
       statement.setInt(4, transactionIndex);
       statement.setString(5, causalTime);
-      statement.setInt(6, event.topicId());
-      statement.setString(7, serializedValueP.unparse(event.value()).toString());
-      statement.setLong(8, event.spanId().isPresent() ? event.spanId().get() : null);
+      statement.setInt(6, event.getLeft());
+      statement.setString(7, serializedValueP.unparse(event.getRight()).toString());
+
       statement.addBatch();
     }
   }

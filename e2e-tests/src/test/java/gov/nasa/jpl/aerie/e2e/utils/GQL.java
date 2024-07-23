@@ -524,7 +524,7 @@ public enum GQL {
   INSERT_SPAN("""
     mutation InsertSpan($span: span_insert_input!){
       span: insert_span_one(object: $span) {
-        span_id
+        id
       }
     }"""),
   SCHEDULE("""

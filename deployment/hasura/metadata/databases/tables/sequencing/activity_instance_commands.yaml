@@ -11,7 +11,7 @@ object_relationships:
   using:
     manual_configuration:
       column_mapping:
-        activity_instance_id: span_id
+        activity_instance_id: id
       remote_table:
         name: span
         schema: merlin

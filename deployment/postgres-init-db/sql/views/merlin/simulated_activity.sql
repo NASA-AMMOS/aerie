@@ -1,6 +1,6 @@
 create view merlin.simulated_activity as
 (
-  select span.span_id as id,
+  select span.id as id,
          sd.id as simulation_dataset_id,
          span.parent_id as parent_id,
          span.start_offset as start_offset,

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -17,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -31,8 +29,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           e.transaction_index,
           e.causal_time,
           e.topic_index,
-          e.value,
-          e.span_id
+          e.value
         from merlin.event as e
         where
           e.dataset_id = ?
@@ -44,14 +41,14 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(this.sql);
   }
 
-  public SortedMap<Duration, List<EventGraph<EventRecord>>> get(final long datasetId) throws SQLException
+  public SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(final long datasetId) throws SQLException
   {
     this.statement.setLong(1, datasetId);
     final var resultSet = this.statement.executeQuery();
 
     final var transactionsByTimePoint = readResultSet(resultSet);
 
-    final var eventPoints = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
+    final var eventPoints = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     transactionsByTimePoint.forEach((time, transactions) -> {
       transactions.forEach(($, value) -> {
         try {
@@ -66,27 +63,24 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return eventPoints;
   }
 
-  private static Map<Duration, SortedMap<Integer, List<Pair<String, EventRecord>>>>
+  private static Map<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>
   readResultSet(final ResultSet resultSet)
   throws SQLException {
-    final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, EventRecord>>>>();
+    final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>();
     while (resultSet.next()) {
       final var timePoint = parseOffset(resultSet, 1);
       final var transactionIndex = resultSet.getInt(2);
       final var causalTime = resultSet.getString(3);
       final var topicIndex = resultSet.getInt(4);
       final var serializedValue = parseSerializedValue(resultSet.getString(5));
-      final Optional<Long> spanId  = resultSet.getObject(6) == null ? Optional.empty() : Optional.of(
-            Long.valueOf(resultSet.getLong(6)));
 
       nodesByTimePoint
           .computeIfAbsent(timePoint, x -> new TreeMap<>())
           .computeIfAbsent(transactionIndex, x -> new ArrayList<>())
           .add(Pair.of(
-                   causalTime,
-                   new EventRecord(
+              causalTime,
+                   Pair.of(
                        topicIndex,
-                       spanId,
                        serializedValue
                    )
                )

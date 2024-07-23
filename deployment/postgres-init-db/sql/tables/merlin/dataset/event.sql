@@ -6,7 +6,6 @@ create table merlin.event (
 
   value jsonb,
   topic_index integer not null,
-  span_id integer,
 
   constraint event_natural_key
     primary key (dataset_id, real_time, transaction_index, causal_time)
@@ -27,8 +26,6 @@ comment on column merlin.event.value is e''
   'The value of this event as a json blob';
 comment on column merlin.event.topic_index is e''
   'The topic of this event';
-comment on column merlin.event.span_id is e''
-  'The span of this event';
 
 create function merlin.event_integrity_function()
   returns trigger
