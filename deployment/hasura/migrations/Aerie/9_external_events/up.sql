@@ -267,4 +267,4 @@ ALTER TABLE ONLY merlin.external_source_event_types
 ALTER TABLE ONLY merlin.external_source_event_types
     ADD CONSTRAINT external_source_id FOREIGN KEY (external_source_id) REFERENCES merlin.external_source(id);
 
-call migrations.mark_migration_applied('5');
+call migrations.mark_migration_applied('9');

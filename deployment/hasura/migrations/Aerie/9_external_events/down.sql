@@ -6,4 +6,4 @@ DROP TABLE merlin.external_source_type CASCADE;
 DROP TABLE merlin.external_event_type CASCADE;
 DROP TABLE merlin.external_source_event_types CASCADE;
 
-call migrations.mark_migration_rolled_back('5');
+call migrations.mark_migration_rolled_back('9');

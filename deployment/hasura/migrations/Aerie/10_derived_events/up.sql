@@ -110,4 +110,4 @@ ALTER VIEW IF EXISTS merlin.derivation_group_comp OWNER TO aerie;
 COMMENT ON VIEW merlin.derivation_group_comp
     IS 'A view detailing all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. As such, a new view was created to lighten the load.';
 
-call migrations.mark_migration_applied('6');
+call migrations.mark_migration_applied('10');
