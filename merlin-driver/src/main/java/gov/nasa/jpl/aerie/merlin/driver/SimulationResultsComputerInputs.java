@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
+import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -13,42 +14,34 @@ import java.util.Set;
 public record SimulationResultsComputerInputs(
     SimulationEngine engine,
     Instant simulationStartTime,
-    Duration elapsedTime,
     Topic<ActivityDirectiveId> activityTopic,
-    TemporalEventSource timeline,
     Iterable<MissionModel.SerializableTopic<?>> serializableTopics,
-    Map<ActivityDirectiveId, SpanId> activityDirectiveIdTaskIdMap){
+    Map<ActivityDirectiveId, SpanId> activityDirectiveIdTaskIdMap,
+    SimulationResourceManager resourceManager){
 
   public SimulationResults computeResults(final Set<String> resourceNames){
-    return SimulationEngine.computeResults(
-        this.engine(),
+    return engine.computeResults(
         this.simulationStartTime(),
-        this.elapsedTime(),
         this.activityTopic(),
-        this.timeline(),
         this.serializableTopics(),
+        this.resourceManager,
         resourceNames
     );
   }
 
   public SimulationResults computeResults(){
-    return SimulationEngine.computeResults(
-        this.engine(),
+    return engine.computeResults(
         this.simulationStartTime(),
-        this.elapsedTime(),
         this.activityTopic(),
-        this.timeline(),
-        this.serializableTopics()
+        this.serializableTopics(),
+        this.resourceManager
     );
   }
 
   public SimulationEngine.SimulationActivityExtract computeActivitySimulationResults(){
-    return SimulationEngine.computeActivitySimulationResults(
-        this.engine(),
+    return engine.computeActivitySimulationResults(
         this.simulationStartTime(),
-        this.elapsedTime(),
         this.activityTopic(),
-        this.timeline(),
         this.serializableTopics());
   }
 }

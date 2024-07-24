@@ -30,15 +30,15 @@ public class SimulationResultsComparisonUtils {
     assertEqualsTSA(convertSimulatedActivitiesToTree(expected), convertSimulatedActivitiesToTree(simulationResults));
     final var differencesDiscrete = new HashMap<String, Map<Integer, DiscreteProfileDifference>>();
     for(final var discreteProfile: simulationResults.discreteProfiles.entrySet()){
-      final var differences = equalsDiscreteProfile(expected.discreteProfiles.get(discreteProfile.getKey()).getRight(), discreteProfile.getValue().getRight());
+      final var differences = equalsDiscreteProfile(expected.discreteProfiles.get(discreteProfile.getKey()).segments(), discreteProfile.getValue().segments());
       if(!differences.isEmpty()){
         differencesDiscrete.put(discreteProfile.getKey(), differences);
       }
     }
     final var differencesReal = new HashMap<String, Map<Integer, RealProfileDifference>>();
     for(final var realProfile: simulationResults.realProfiles.entrySet()){
-      final var profileElements = realProfile.getValue().getRight();
-      final var expectedProfileElements = expected.realProfiles.get(realProfile.getKey()).getRight();
+      final var profileElements = realProfile.getValue().segments();
+      final var expectedProfileElements = expected.realProfiles.get(realProfile.getKey()).segments();
       final var differences = equalsRealProfile(expectedProfileElements, profileElements);
       if(!differences.isEmpty()) {
         differencesReal.put(realProfile.getKey(), differences);

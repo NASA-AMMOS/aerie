@@ -41,17 +41,13 @@ public final class GetSimulationResultsAction {
 
     final var response = this.simulationService.getSimulationResults(planId, forceResim, revisionData, session.hasuraUserId());
 
-    if (response instanceof ResultsProtocol.State.Pending r) {
-      return new Response.Pending(r.simulationDatasetId());
-    } else if (response instanceof ResultsProtocol.State.Incomplete r) {
-      return new Response.Incomplete(r.simulationDatasetId());
-    } else if (response instanceof ResultsProtocol.State.Failed r) {
-      return new Response.Failed(r.simulationDatasetId(), r.reason());
-    } else if (response instanceof ResultsProtocol.State.Success r) {
-      return new Response.Complete(r.simulationDatasetId());
-    } else {
-      throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
-    }
+    return switch (response) {
+      case ResultsProtocol.State.Pending r -> new Response.Pending(r.simulationDatasetId());
+      case ResultsProtocol.State.Incomplete r -> new Response.Incomplete(r.simulationDatasetId());
+      case ResultsProtocol.State.Failed r -> new Response.Failed(r.simulationDatasetId(), r.reason());
+      case ResultsProtocol.State.Success r -> new Response.Complete(r.simulationDatasetId());
+      default -> throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
+    };
   }
 
   public Map<String, List<Pair<Duration, SerializedValue>>> getResourceSamples(final PlanId planId)
@@ -66,7 +62,7 @@ public final class GetSimulationResultsAction {
 
     simulationResults.realProfiles.forEach((name, p) -> {
       var elapsed = Duration.ZERO;
-      var profile = p.getRight();
+      var profile = p.segments();
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
       for (final var piece : profile) {
@@ -84,7 +80,7 @@ public final class GetSimulationResultsAction {
     });
     simulationResults.discreteProfiles.forEach((name, p) -> {
       var elapsed = Duration.ZERO;
-      var profile = p.getRight();
+      var profile = p.segments();
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
       for (final var piece : profile) {

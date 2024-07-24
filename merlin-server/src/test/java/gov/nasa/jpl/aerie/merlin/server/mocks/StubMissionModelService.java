@@ -3,15 +3,13 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
@@ -197,9 +195,10 @@ public final class StubMissionModelService implements MissionModelService {
   @Override
   public SimulationResults runSimulation(
       final CreateSimulationMessage message,
-      Consumer<Duration> simulationExtentConsumer,
-      Supplier<Boolean> canceledListener)
-  throws NoSuchMissionModelException {
+      final Consumer<Duration> simulationExtentConsumer,
+      final Supplier<Boolean> canceledListener,
+      final SimulationResourceManager resourceManager
+  ) throws NoSuchMissionModelException {
     if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(message.missionModelId());
     }

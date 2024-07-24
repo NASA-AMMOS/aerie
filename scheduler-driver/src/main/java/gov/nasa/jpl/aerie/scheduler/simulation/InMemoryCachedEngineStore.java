@@ -1,11 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.CachedEngineStore;
-import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.collections4.map.ListOrderedMap;
@@ -23,7 +18,7 @@ public class InMemoryCachedEngineStore implements AutoCloseable, CachedEngineSto
       Instant creationDate){}
 
   private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryCachedEngineStore.class);
-  private final ListOrderedMap<CheckpointSimulationDriver.CachedSimulationEngine, CachedEngineMetadata> cachedEngines;
+  private final ListOrderedMap<CachedSimulationEngine, CachedEngineMetadata> cachedEngines;
   private final int capacity;
   private Duration savedSimulationTime;
 
@@ -52,7 +47,7 @@ public class InMemoryCachedEngineStore implements AutoCloseable, CachedEngineSto
    * Register a re-use for a saved cached simulation engine. Will decrease likelihood of this engine being deleted.
    * @param cachedSimulationEngine the simulation engine
    */
-  public void registerUsed(final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine){
+  public void registerUsed(final CachedSimulationEngine cachedSimulationEngine){
     final var engineMetadata = this.cachedEngines.remove(cachedSimulationEngine);
     if(engineMetadata != null){
       this.cachedEngines.put(0, cachedSimulationEngine, engineMetadata);
@@ -61,7 +56,7 @@ public class InMemoryCachedEngineStore implements AutoCloseable, CachedEngineSto
   }
 
   public void save(
-      final CheckpointSimulationDriver.CachedSimulationEngine engine,
+      final CachedSimulationEngine engine,
       final SimulationEngineConfiguration configuration) {
     if (shouldWeSave(engine, configuration)) {
       if (cachedEngines.size() + 1 > capacity) {
@@ -78,7 +73,7 @@ public class InMemoryCachedEngineStore implements AutoCloseable, CachedEngineSto
     return capacity;
   }
 
-  public List<CheckpointSimulationDriver.CachedSimulationEngine> getCachedEngines(
+  public List<CachedSimulationEngine> getCachedEngines(
       final SimulationEngineConfiguration configuration){
     return cachedEngines
         .entrySet()
@@ -100,7 +95,7 @@ public class InMemoryCachedEngineStore implements AutoCloseable, CachedEngineSto
     return Optional.empty();
   }
 
-  private boolean shouldWeSave(final CheckpointSimulationDriver.CachedSimulationEngine engine,
+  private boolean shouldWeSave(final CachedSimulationEngine engine,
                                final SimulationEngineConfiguration configuration){
     //avoid duplicates
     for(final var cached: cachedEngines.entrySet()){

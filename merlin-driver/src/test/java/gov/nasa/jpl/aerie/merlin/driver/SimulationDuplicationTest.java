@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,10 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SimulationDuplicationTest {
   CachedEngineStore store;
   final private class InfiniteCapacityEngineStore implements CachedEngineStore{
-    private Map<SimulationEngineConfiguration, List<CheckpointSimulationDriver.CachedSimulationEngine>> store = new HashMap<>();
+    private Map<SimulationEngineConfiguration, List<CachedSimulationEngine>> store = new HashMap<>();
     @Override
     public void save(
-        final CheckpointSimulationDriver.CachedSimulationEngine cachedSimulationEngine,
+        final CachedSimulationEngine cachedSimulationEngine,
         final SimulationEngineConfiguration configuration)
     {
       store.computeIfAbsent(configuration, conf -> new ArrayList<>());
@@ -27,7 +28,7 @@ public class SimulationDuplicationTest {
     }
 
     @Override
-    public List<CheckpointSimulationDriver.CachedSimulationEngine> getCachedEngines(final SimulationEngineConfiguration configuration) {
+    public List<CachedSimulationEngine> getCachedEngines(final SimulationEngineConfiguration configuration) {
       return store.get(configuration);
     }
 
@@ -52,7 +53,7 @@ public class SimulationDuplicationTest {
   @Test
   void testDuplicate() {
     final var results = simulateWithCheckpoints(
-        CheckpointSimulationDriver.CachedSimulationEngine.empty(TestMissionModel.missionModel()),
+        CachedSimulationEngine.empty(TestMissionModel.missionModel(), Instant.EPOCH),
         List.of(Duration.of(5, MINUTES)),
         store);
     final SimulationResults expected = SimulationDriver.simulate(
@@ -63,14 +64,15 @@ public class SimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         () -> false,
-        $ -> {});
+        $ -> {},
+        new InMemorySimulationResourceManager());
     assertEquals(expected, results);
     final var newResults = simulateWithCheckpoints(store.getCachedEngines(mockConfiguration()).get(0), List.of(), store);
     assertEquals(expected, newResults);
   }
 
   static SimulationResults simulateWithCheckpoints(
-      final CheckpointSimulationDriver.CachedSimulationEngine cachedEngine,
+      final CachedSimulationEngine cachedEngine,
       final List<Duration> desiredCheckpoints,
       final CachedEngineStore engineStore
   ) {

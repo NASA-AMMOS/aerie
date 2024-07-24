@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -70,7 +71,7 @@ public class AnchorSchedulerTest {
           tenDays,
           $ -> {},
           () -> false,
-          CheckpointSimulationDriver.CachedSimulationEngine.empty(AnchorTestModel),
+          CachedSimulationEngine.empty(AnchorTestModel, planStart),
           (a) -> false,
           CheckpointSimulationDriver.onceAllActivitiesAreFinished(),
           new InMemoryCachedEngineStore(1),

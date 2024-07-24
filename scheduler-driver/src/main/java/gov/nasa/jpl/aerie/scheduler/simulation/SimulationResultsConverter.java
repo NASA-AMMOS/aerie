@@ -30,8 +30,8 @@ public class SimulationResultsConverter {
         driverResults.startTime,
         Interval.between(Duration.ZERO, driverResults.duration),
         activities,
-        Maps.transformValues(driverResults.realProfiles, $ -> LinearProfile.fromSimulatedProfile($.getRight())),
-        Maps.transformValues(driverResults.discreteProfiles, $ -> DiscreteProfile.fromSimulatedProfile($.getRight()))
+        Maps.transformValues(driverResults.realProfiles, $ -> LinearProfile.fromSimulatedProfile($.segments())),
+        Maps.transformValues(driverResults.discreteProfiles, $ -> DiscreteProfile.fromSimulatedProfile($.segments()))
     );
   }
 
