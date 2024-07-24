@@ -35,6 +35,12 @@ ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "file_id -> uploaded_file" FOREIGN KEY (file_id) REFERENCES merlin.uploaded_file(id);
 
 
+-- Add uniqueness constraint for key/derivation_group_id tuple (we exclude source_type_id as derivation_group inherently addresses that, being a subclass of source types)
+ALTER TABLE ONLY merlin.external_source
+    ADD CONSTRAINT logical_source_identifiers UNIQUE (key, derivation_group_id);
+
+COMMENT ON CONSTRAINT logical_source_identifiers ON merlin.external_source IS 'The tuple (key, derivation_group_id) must be unique!';
+
 
 
 -- Create table for external events
@@ -71,9 +77,9 @@ ALTER TABLE ONLY merlin.external_event
 
 -- Add uniqueness constraint for key/source_id/event_type_id tuple
 ALTER TABLE ONLY merlin.external_event
-    ADD CONSTRAINT logical_identifiers UNIQUE (key, source_id, event_type_id);
+    ADD CONSTRAINT logical_event_identifiers UNIQUE (key, source_id, event_type_id);
 
-COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_event IS 'The tuple (key, event_type_id, and source_id) must be unique!';
+COMMENT ON CONSTRAINT logical_event_identifiers ON merlin.external_event IS 'The tuple (key, event_type_id, and source_id) must be unique!';
 
 
 -- Add foreign key linking the source_id to the id of an external_source entry
@@ -153,6 +159,26 @@ ALTER TABLE ONLY merlin.external_source
 ALTER TABLE ONLY merlin.derivation_group
     ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
 
+-- Ensure that added external source's source type match this derivation group's source type; requires a trigger and a function!
+CREATE OR REPLACE FUNCTION ensure_source_type_match()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- verify external_source.source_type_id = derivation_group.source_type_id
+  PERFORM 1
+  FROM merlin.derivation_group
+  WHERE derivation_group.id = NEW.derivation_group_id AND derivation_group.source_type_id = NEW.source_type_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'The source type from the newly added source and the source type of the derivation group do not match.';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_source_type_match
+BEFORE INSERT OR UPDATE ON merlin.external_source
+FOR EACH ROW
+EXECUTE FUNCTION ensure_source_type_match();
 
 
 
