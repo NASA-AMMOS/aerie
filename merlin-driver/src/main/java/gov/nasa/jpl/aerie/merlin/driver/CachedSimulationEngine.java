@@ -40,9 +40,14 @@ public record CachedSimulationEngine(
     } catch (SpanException ex) {
       // Swallowing the spanException as the internal `spanId` is not user meaningful info.
       final var topics = missionModel.getTopics();
-      final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
-      if (directiveId.isPresent()) {
-        throw new SimulationException(Duration.ZERO, simulationStartTime, directiveId.get(), ex.cause);
+      final var directiveDetail = engine.getDirectiveDetailsFromSpan(activityTopic, topics, ex.spanId);
+      if (directiveDetail.directiveId().isPresent()) {
+        throw new SimulationException(
+            Duration.ZERO,
+            simulationStartTime,
+            directiveDetail.directiveId().get(),
+            directiveDetail.activityStackTrace(),
+            ex.cause);
       }
       throw new SimulationException(Duration.ZERO, simulationStartTime, ex.cause);
     } catch (Throwable ex) {
