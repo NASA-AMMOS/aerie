@@ -16,6 +16,7 @@
 @WithActivityType(ZeroDurationUncontrollableActivity.class)
 @WithActivityType(DaemonCheckerActivity.class)
 @WithActivityType(DaemonCheckerSpawner.class)
+@WithActivityType(DaemonTaskActivity.class)
 
 @WithActivityType(DecompositionTestActivities.ParentActivity.class)
 @WithActivityType(DecompositionTestActivities.ChildActivity.class)
@@ -30,6 +31,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.activities.BasicFooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.ControllableDurationActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonCheckerActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonCheckerSpawner;
+import gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonTaskActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.DecompositionTestActivities;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.LateRiserActivity;
