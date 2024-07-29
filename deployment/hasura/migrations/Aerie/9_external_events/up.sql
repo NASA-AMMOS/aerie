@@ -50,7 +50,7 @@ CREATE TABLE merlin.external_event (
     event_type_id integer NOT NULL,
     source_id integer NOT NULL,
     start_time timestamp with time zone NOT NULL,
-    duration time without time zone NOT NULL,
+    duration interval NOT NULL,
     properties jsonb
 );
 
