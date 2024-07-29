@@ -469,8 +469,13 @@ public class SimulationTests {
       final var exception = reason.data();
 
       // The error includes the directive id that was executing
+      // and the executing activity type and stack trace
       assertTrue(exception.containsKey("executingDirectiveId"));
+      assertTrue(exception.containsKey("executingActivityType"));
       assertEquals(dirId, exception.getInt("executingDirectiveId"));
+      assertEquals("DaemonCheckerActivity", exception.getString("executingActivityType"));
+      assertTrue(exception.containsKey("activityStackTrace"));
+      assertEquals("DaemonCheckerActivity", exception.getString("activityStackTrace"));
 
       // The error message is correct
       assertEquals("Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.\n\tExpected: 1 Actual: 59",
@@ -496,7 +501,7 @@ public class SimulationTests {
       // Setup: Insert a directive that will throw
       int dirId = hasura.insertActivity(
           fooPlan,
-          "DaemonCheckerSpawner",
+          "DaemonTaskActivity",
           "01:00:00",
           Json.createObjectBuilder().add("minutesElapsed", 1).add("spawnDelay", 1).build());
 
@@ -512,21 +517,29 @@ public class SimulationTests {
       final var exception = reason.data();
 
       // The error includes the directive id that was executing
+      // and the executing activity type and stack trace
       assertTrue(exception.containsKey("executingDirectiveId"));
       assertEquals(dirId, exception.getInt("executingDirectiveId"));
+      assertTrue(exception.containsKey("executingActivityType"));
+      assertEquals(dirId, exception.getInt("executingDirectiveId"));
+      assertEquals("DaemonTaskActivity", exception.getString("executingActivityType"));
+      assertTrue(exception.containsKey("activityStackTrace"));
+      assertEquals("DaemonTaskActivity\n"
+                   + "|-DaemonCheckerSpawner\n"
+                   + "|--DaemonCheckerActivity", exception.getString("activityStackTrace"));
 
       // The error message is correct
-      assertEquals("Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.\n\tExpected: 1 Actual: 60",
+      assertEquals("Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.\n\tExpected: 1 Actual: 61",
                    reason.message());
 
       // The error was thrown at the correct time
       assertTrue(exception.containsKey("utcTimeDoy"));
-      assertEquals("2023-001T01:01:00", exception.getString("utcTimeDoy"));
+      assertEquals("2023-001T01:02:00", exception.getString("utcTimeDoy"));
 
       // The trace starts at the original exception and doesn't include the intermediary SpanException and SimulationException
       final var expectedStart = """
           java.lang.RuntimeException: Minutes elapsed is incorrect. TimeTrackerDaemon may have stopped.
-          \tExpected: 1 Actual: 60
+          \tExpected: 1 Actual: 61
           \tat gov.nasa.jpl.aerie.foomissionmodel.activities.DaemonCheckerActivity.run(DaemonCheckerActivity.java""";
       assertTrue(reason.trace().startsWith(expectedStart));
     }
@@ -551,8 +564,11 @@ public class SimulationTests {
 
       final var exception = reason.data();
 
-      // The error does not include any directive ids
+      // The error does not include any directive ids,
+      // executingActivityType, and activityStackTrace
       assertFalse(exception.containsKey("executingDirectiveId"));
+      assertFalse(exception.containsKey("executingActivityType"));
+      assertFalse(exception.containsKey("activityStackTrace"));
 
       // The error message is correct
       assertEquals("Daemon task exception raised.", reason.message());
@@ -594,8 +610,11 @@ public class SimulationTests {
 
       final var exception = reason.data();
 
-      // The error does not include any directive ids
+      // The error does not include any directive ids,
+      // executingActivityType, and activityStackTrace
       assertFalse(exception.containsKey("executingDirectiveId"));
+      assertFalse(exception.containsKey("executingActivityType"));
+      assertFalse(exception.containsKey("activityStackTrace"));
 
       // The error message is correct
       assertEquals("Daemon task exception raised.", reason.message());

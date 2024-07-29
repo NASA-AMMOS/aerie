@@ -53,6 +53,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -676,29 +677,36 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+
   /**
    * Get an Activity Directive Id from a SpanId, if the span is a descendent of a directive.
    */
-  public Optional<ActivityDirectiveId> getDirectiveIdFromSpan(
+  public DirectiveDetail getDirectiveDetailsFromSpan(
       final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics,
       final SpanId spanId
   ) {
     // Collect per-span information from the event graph.
-    final var spanInfo = new SpanInfo();
-    for (final var point : this.timeline) {
-      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics, this.timeline);
 
-      final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
-      p.events().evaluate(trait, trait::atom).accept(spanInfo);
-    }
-
-    // Identify the nearest ancestor directive
+    // Identify the nearest ancestor directive by walking up the parent
+    // span tree. Save the activity trace along the way
     Optional<SpanId> directiveSpanId = Optional.of(spanId);
+    final var activityStackTrace = new LinkedList<SerializedActivity>();
     while (directiveSpanId.isPresent() && !spanInfo.isDirective(directiveSpanId.get())) {
+      activityStackTrace.add(spanInfo.input().get(directiveSpanId.get()));
       directiveSpanId = this.getSpan(directiveSpanId.get()).parent();
     }
-    return directiveSpanId.map(spanInfo::getDirective);
+
+    // Add final top level parent activity to the stack trace if present
+    if (directiveSpanId.isPresent()) {
+      activityStackTrace.add(spanInfo.input().get(directiveSpanId.get()));
+    }
+
+    return new DirectiveDetail(
+        directiveSpanId.map(spanInfo::getDirective),
+        // remove null activities from the stack trace and reverse order
+        activityStackTrace.stream().filter(a -> a != null).collect(Collectors.toList()).reversed());
   }
 
   public record SimulationActivityExtract(

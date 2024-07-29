@@ -97,6 +97,8 @@ public record SimulationAgent (
                                       .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
                                       .add("utcTimeDoy", SimulationException.formatInstant(ex.instant));
       ex.directiveId.ifPresent(directiveId -> errorMsgBuilder.add("executingDirectiveId", directiveId.id()));
+      ex.activityType.ifPresent(activityType -> errorMsgBuilder.add("executingActivityType", activityType));
+      ex.activityStackTrace.ifPresent(activityStackTrace -> errorMsgBuilder.add("activityStackTrace", activityStackTrace));
       writer.failWith(b -> b
           .type("SIMULATION_EXCEPTION")
           .message(ex.cause.getMessage())
