@@ -699,7 +699,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Add final top level parent activity to the stack trace if present
-    if( directiveSpanId.isPresent()){
+    if (directiveSpanId.isPresent()) {
       activityStackTrace.add(spanInfo.input().get(directiveSpanId.get()));
     }
 
