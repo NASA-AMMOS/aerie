@@ -1,15 +1,17 @@
 table:
-  name: external_source_event_types
+  name: external_source_event_type
   schema: merlin
 configuration:
   custom_name: "external_source_event_type"
 object_relationships:
   - name: external_source
     using:
-      foreign_key_constraint_on: external_source_id
-  - name: external_event_type
-    using:
-      foreign_key_constraint_on: external_event_type_id
+      manual_configuration:
+        remote_table:
+          name: external_source
+          schema: merlin
+        column_mapping:
+          external_source_id: id
 select_permissions:
   - role: aerie_admin
     permission:
@@ -26,26 +28,3 @@ select_permissions:
       columns: '*'
       filter: {}
       allow_aggregations: true
-insert_permissions:
-  - role: aerie_admin
-    permission:
-      columns: [external_source_id, external_event_type_id]
-      check: {}
-  - role: user
-    permission:
-      columns: [external_source_id, external_event_type_id]
-      check: {}
-update_permissions:
-  - role: aerie_admin
-    permission:
-      columns: [external_source_id, external_event_type_id]
-      filter: {}
-#  - role: user # justified???
-#    permission:
-#      columns: [valid_at, metadata]
-#      filter: {}
-delete_permissions:
-  - role: aerie_admin
-    permission:
-      filter: {}
-  # user deletions too???

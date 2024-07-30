@@ -43,6 +43,7 @@ COMMENT ON CONSTRAINT logical_source_identifiers ON merlin.external_source IS 'T
 
 
 
+
 -- Create table for external events
 CREATE TABLE merlin.external_event (
     id integer NOT NULL,
@@ -182,6 +183,7 @@ EXECUTE FUNCTION ensure_source_type_match();
 
 
 
+
 -- Create table for plan/external event links
 CREATE TABLE merlin.plan_derivation_group (
     id integer NOT NULL,
@@ -260,26 +262,22 @@ ALTER TABLE ONLY merlin.external_event
 
 
 -- Create table mapping external sources to their contained event types
-CREATE TABLE merlin.external_source_event_types (
-    id integer NOT NULL,
-    external_source_id integer NOT NULL,
-    external_event_type_id integer NOT NULL
-);
+CREATE OR REPLACE VIEW merlin.external_source_event_type
+ AS
+ SELECT external_source.id AS external_source_id,
+    array_agg(DISTINCT external_event.event_type_id) AS event_type_ids,
+    array_agg(DISTINCT external_event_type.name) AS event_types
+   FROM merlin.external_source
+     JOIN merlin.external_event ON external_event.source_id = external_source.id
+     JOIN merlin.external_event_type ON external_event_type.id = external_event.event_type_id
+  GROUP BY external_source.id;
 
-COMMENT ON TABLE merlin.external_source_event_types IS 'A table detailing the event types that a given external_source has.';
-
--- Ensure the id is serial.
-CREATE SEQUENCE merlin.external_source_event_types_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+ALTER VIEW IF EXISTS merlin.external_source_event_type OWNER TO aerie;
+COMMENT ON VIEW merlin.external_source_event_type
+    IS 'Should be deprecated with the introduction of strict external source schemas, dictating allowable event types for given source types. But for now, this will do.';
 
 
-ALTER SEQUENCE merlin.external_source_event_types_id_seq OWNED BY merlin.external_source_event_types.id;
-ALTER TABLE ONLY merlin.external_source_event_types ALTER COLUMN id SET DEFAULT nextval('merlin.external_source_event_types_id_seq'::regclass);
+
 
 -- Set primary key
 ALTER TABLE ONLY merlin.external_source_event_types
