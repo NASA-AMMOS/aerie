@@ -73,12 +73,12 @@ begin;
   \ir tables/merlin/merging/conflicting_activities.sql
 
   -- External Events
-  \ir tables/merlin/external_source.sql
-  \ir tables/merlin/external_event.sql
-  \ir tables/merlin/external_source_type.sql
-  \ir tables/merlin/derivation_group.sql
-  \ir tables/merlin/plan_derivation_group.sql
-  \ir tables/merlin/external_event_type.sql
+  \ir tables/merlin/external_events/external_source.sql
+  \ir tables/merlin/external_events/external_event.sql
+  \ir tables/merlin/external_events/external_source_type.sql
+  \ir tables/merlin/external_events/derivation_group.sql
+  \ir tables/merlin/external_events/plan_derivation_group.sql
+  \ir tables/merlin/external_events/external_event_type.sql
 
   ------------
   -- Functions
@@ -104,7 +104,7 @@ begin;
   \ir views/merlin/activity_directive_extended.sql
   \ir views/merlin/simulated_activity.sql
   \ir views/merlin/resource_profile.sql
-  \ir views/merlin/external_source_event_type.sql
+  \ir views/merlin/external_source_event_type.sql -- consider putting this in ui part of schema
   \ir views/merlin/derived_events.sql
-  \ir views/merlin/derivation_group_comp.sql
+  \ir views/merlin/derivation_group_comp.sql -- consider putting this in ui part of schema
 end;
