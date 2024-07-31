@@ -118,6 +118,34 @@ public record SchedulingActivity(
     );
   }
 
+  public SchedulingActivity withNewDirectiveId(ActivityDirectiveId id) {
+    return SchedulingActivity.of(
+        id,
+        this.type,
+        startOffset,
+        this.duration,
+        new HashMap<>(this.arguments),
+        this.topParent,
+        this.anchorId,
+        this.anchoredToStart,
+        this.isNew
+    );
+  }
+
+  public SchedulingActivity withNewTopParent(ActivityDirectiveId topParent) {
+    return SchedulingActivity.of(
+        this.id,
+        this.type,
+        startOffset,
+        this.duration,
+        new HashMap<>(this.arguments),
+        topParent,
+        this.anchorId,
+        this.anchoredToStart,
+        this.isNew
+    );
+  }
+
   public static SchedulingActivity fromExistingActivityDirective(ActivityDirectiveId id, ActivityDirective activity, ActivityType type, Duration duration){
     return SchedulingActivity.of(
         id,

@@ -23,7 +23,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -104,7 +103,7 @@ class MockMerlinDatabaseService implements MerlinDatabaseService.OwnerRole {
   }
 
   @Override
-  public Pair<PlanId, Map<SchedulingActivity, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, Map<ActivityDirectiveId, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<SchedulingActivity, GoalId> activityToGoal,
@@ -121,7 +120,7 @@ class MockMerlinDatabaseService implements MerlinDatabaseService.OwnerRole {
   }
 
   @Override
-  public Map<SchedulingActivity, ActivityDirectiveId> updatePlanActivityDirectives(
+  public Map<ActivityDirectiveId, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
       final MerlinPlan initialPlan,
       final Plan plan,
@@ -131,16 +130,16 @@ class MockMerlinDatabaseService implements MerlinDatabaseService.OwnerRole {
   {
     this.updatedPlan = extractActivityDirectives(plan, schedulerModel);
     this.plan = plan;
-    final var res = new HashMap<SchedulingActivity, ActivityDirectiveId>();
+    final var res = new HashMap<ActivityDirectiveId, ActivityDirectiveId>();
     for (final var activity : plan.getActivities()) {
-      res.put(activity, activity.id());
+      res.put(activity.id(), activity.id());
     }
     return res;
   }
 
   @Override
-  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final List<SchedulingActivity> acts, final Map<SchedulingActivity, ActivityDirectiveId> instancesToIds)
-  throws MerlinServiceException, IOException {}
+  public void updatePlanActivityDirectiveAnchors(final PlanId planId, final Plan plan, final Map<ActivityDirectiveId, ActivityDirectiveId> uploadIdMap)
+  {}
 
   @Override
   public void ensurePlanExists(final PlanId planId) {
@@ -171,7 +170,7 @@ class MockMerlinDatabaseService implements MerlinDatabaseService.OwnerRole {
   }
 
   @Override
-  public Map<SchedulingActivity, ActivityDirectiveId> createAllPlanActivityDirectives(
+  public Map<ActivityDirectiveId, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
       final Map<SchedulingActivity, GoalId> activityToGoalId,
@@ -184,7 +183,8 @@ class MockMerlinDatabaseService implements MerlinDatabaseService.OwnerRole {
   @Override
   public DatasetId storeSimulationResults(
           final PlanMetadata planMetadata,
-          final SimulationResults results
+          final SimulationResults results,
+          final Map<ActivityDirectiveId, ActivityDirectiveId> uploadIdMap
   ) {
     return new DatasetId(0);
   }

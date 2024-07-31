@@ -75,7 +75,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
@@ -243,7 +242,7 @@ public record SynchronousSchedulerAgent(
       //store the solution plan back into merlin (and reconfirm no intervening mods!)
       //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
       ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
-      final var instancesToIds = storeFinalPlan(
+      final var uploadIdMap = storeFinalPlan(
           planMetadata,
           loadedPlanComponents.merlinPlan(),
           solutionPlan,
@@ -258,21 +257,21 @@ public record SynchronousSchedulerAgent(
         datasetId = storeSimulationResults(
             simulationFacade.simulateWithResults(solutionPlan, planningHorizon.getEndAerie()),
             planMetadataAfterChanges,
-            plannedIds
+            uploadIdMap
         );
       } else if (simulationFacade.getLatestSimulationData().isPresent() && simulationFacade.getLatestSimulationData() != problem.getInitialSimulationResults()) {
         final var latest = simulationFacade.getLatestSimulationData().get();
         datasetId = storeSimulationResults(
             latest,
             planMetadataAfterChanges,
-            plannedIds
+            uploadIdMap
         );
       }
 
       merlinDatabaseService.updatePlanActivityDirectiveAnchors(specification.planId(), solutionPlan, uploadIdMap);
 
       //collect results and notify subscribers of success
-      final var results = collectResults(solutionPlan, instancesToIds, goals);
+      final var results = collectResults(solutionPlan, uploadIdMap, goals);
       LOGGER.info("Simulation cache saved " + cachedEngineStore.getTotalSavedSimulationTime() + " in simulation time");
       writer.succeedWith(results, datasetId);
     } catch (final SpecificationLoadException e) {
@@ -318,24 +317,6 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  public List<SchedulingActivity> updateEverythingWithNewAnchorIds(Plan solutionPlan, Map<SchedulingActivity, ActivityDirectiveId> instancesToIds){
-    final var updatedActs = new ArrayList<SchedulingActivity>();
-    final var planActs = new HashSet<>(solutionPlan.getActivities());
-    for (final var act : planActs) {
-      if (act.anchorId() != null) {
-        final var actAnchored = solutionPlan.getActivitiesById().get(act.anchorId());
-        final var updatedAct = act.withNewAnchor(new ActivityDirectiveId(instancesToIds.get(actAnchored).id()), act.anchoredToStart(), act.startOffset());
-        updatedActs.add(updatedAct);
-        solutionPlan.replaceActivity(act, updatedAct);
-        final var value = instancesToIds.get(act);
-        instancesToIds.remove(act);
-        instancesToIds.put(updatedAct, value);
-      }
-    }
-    return updatedActs;
-  }
-
-
   private Optional<Pair<SimulationResults, DatasetId>> loadSimulationResults(final PlanMetadata planMetadata){
     try {
       return merlinDatabaseService.getSimulationResults(planMetadata);
@@ -353,7 +334,7 @@ public record SynchronousSchedulerAgent(
   private Optional<DatasetId> storeSimulationResults(
       SimulationData simulationData,
       PlanMetadata planMetadata,
-      Collection<ActivityDirectiveId> plannedIds
+      Map<ActivityDirectiveId, ActivityDirectiveId> uploadIdMap
   )
   throws MerlinServiceException, IOException, SchedulingInterruptedException {
     return Optional.of(merlinDatabaseService.storeSimulationResults(planMetadata, simulationData.driverResults(), uploadIdMap));
@@ -582,7 +563,7 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Map<SchedulingActivity, ActivityDirectiveId> storeFinalPlan(
+  private Map<ActivityDirectiveId, ActivityDirectiveId> storeFinalPlan(
     final PlanMetadata planMetadata,
     final MerlinPlan initialPlan,
     final Plan newPlan,
@@ -634,30 +615,27 @@ public record SynchronousSchedulerAgent(
    * @param plan the target plan after the scheduling run has completed
    * @return summary of the state of the plan after scheduling ran; eg goal success metrics, associated instances, etc
    */
-  private ScheduleResults collectResults(final Plan plan, final Map<SchedulingActivity, ActivityDirectiveId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
+  private ScheduleResults collectResults(final Plan plan, Map<ActivityDirectiveId, ActivityDirectiveId> uploadIdMap, Map<Goal, GoalId> goalsToIds) {
     Map<GoalId, ScheduleResults.GoalResult> goalResults = new HashMap<>();
       for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) {
         var goalId = goalsToIds.get(goalEval.getKey());
         //goal could be anonymous, a subgoal of a composite goal for example, and thus have no meaning for results sent back
-        final var activitiesById = plan.getActivitiesById();
         if(goalId != null) {
           final var goalResult = new ScheduleResults.GoalResult(
               goalEval
                   .getValue()
                   .getInsertedActivities().stream()
-                      .map(activityInstance -> instancesToIds.get(
-                          activityInstance.getParentActivity()
-                              .map(activitiesById::get)
-                              .orElse(activityInstance))
-                  ).toList(),
+                  .map(SchedulingActivity::id)
+                  .filter(Objects::nonNull)
+                  .map(uploadIdMap::get)
+                  .toList(),
               goalEval
                   .getValue()
                   .getAssociatedActivities().stream()
-                      .map(activityInstance -> instancesToIds.get(
-                        activityInstance.getParentActivity()
-                            .map(activitiesById::get)
-                            .orElse(activityInstance))
-                    ).toList(),
+                  .map(SchedulingActivity::id)
+                  .filter(Objects::nonNull)
+                  .map(uploadIdMap::get)
+                  .toList(),
               goalEval.getValue().getScore() >= 0);
           goalResults.put(goalId, goalResult);
         }
