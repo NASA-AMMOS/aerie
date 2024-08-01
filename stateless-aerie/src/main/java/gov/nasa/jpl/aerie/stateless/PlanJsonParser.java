@@ -21,9 +21,6 @@ import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Class to parse a plan.json file.
@@ -42,7 +39,7 @@ public class PlanJsonParser {
       final var planObject = parser.getObject();
 
       final var name = planObject.getString("name");
-      final var duration = parseDuration(planObject.getString("duration"));
+      final var duration = Duration.fromString(planObject.getString("duration"));
       final Timestamp startTime = pgTimestampP.parse(planObject.get("start_time")).getSuccessOrThrow();
       final Timestamp endTime = startTime.plusMicros(duration.in(Duration.MICROSECOND));
 
@@ -69,7 +66,7 @@ public class PlanJsonParser {
       final var a = v.asJsonObject();
 
       final var id = new ActivityDirectiveId(a.getInt("id"));
-      final var startOffset = parseDuration(a.getString("start_offset"));
+      final var startOffset = Duration.fromString(a.getString("start_offset"));
       final var type = a.getString("type");
       final var anchoredToStart = a.getBoolean("anchored_to_start");
       final var anchorId = a.isNull("anchor_id") ? null : new ActivityDirectiveId(a.getInt("anchor_id"));
@@ -134,32 +131,5 @@ public class PlanJsonParser {
     } catch (final Exception e) {
       throw new RuntimeException("Error while reading simulation configuration JSON file: " + filePath, e);
     }
-  }
-
-  private static Duration parseDuration(final String duration) {
-    final var regexp = "(\\d{2,}):(\\d{2}):(\\d{2})(\\.\\d{1,6})?";
-
-    final Pattern pattern = Pattern.compile(regexp, Pattern.MULTILINE);
-    final Matcher matcher = pattern.matcher(duration);
-
-    if (!matcher.matches()) { ///  Unit test for this matcher.results().count() != 1
-      throw new IllegalArgumentException("Duration has incorrect format. Expected format HH:MM:SS. Provided duration: "
-                                         + duration);
-    }
-    final var hours = Duration.of(Integer.parseInt(matcher.group(1)),Duration.HOURS);
-    final var minutes = Duration.of(Integer.parseInt(matcher.group(2)),Duration.MINUTES);
-    final var seconds = Duration.of(Integer.parseInt(matcher.group(3)),Duration.SECONDS);
-    final var microsecondString = Optional.ofNullable(matcher.group(4));
-    var micros = Duration.ZERO;
-
-    if (microsecondString.isPresent()){
-      var subSecond = microsecondString.get().substring(1);
-      if (subSecond.length() < 6){
-        // append the missing zeros.
-        subSecond=subSecond+"0".repeat(6-subSecond.length());
-      }
-      micros = Duration.of(Integer.parseInt(subSecond), Duration.MICROSECONDS);
-    }
-    return micros.plus(seconds).plus(minutes).plus(hours);
   }
 }

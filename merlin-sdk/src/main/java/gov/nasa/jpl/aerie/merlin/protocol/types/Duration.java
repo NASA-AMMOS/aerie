@@ -2,6 +2,9 @@ package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A signed measure of the temporal distance between two instants.
@@ -163,6 +166,34 @@ public final class Duration implements Comparable<Duration> {
   /** Construct a duration in terms of a multiple of some unit. */
   public static Duration of(final long quantity, final Duration unit) {
     return unit.times(quantity);
+  }
+
+  /** Construct a duration from a string representation. Only accepts input in the format HH:MM:SS.ssssss */
+  public static Duration fromString(final String duration) {
+    final var regexp = "(\\d{2,}):(\\d{2}):(\\d{2})(\\.\\d{1,6})?";
+
+    final Pattern pattern = Pattern.compile(regexp, Pattern.MULTILINE);
+    final Matcher matcher = pattern.matcher(duration);
+
+    if (!matcher.matches()) { ///  Unit test for this matcher.results().count() != 1
+      throw new IllegalArgumentException("Duration has incorrect format. Expected format HH:MM:SS. Provided duration: "
+                                         + duration);
+    }
+    final var hours = Duration.of(Integer.parseInt(matcher.group(1)),Duration.HOURS);
+    final var minutes = Duration.of(Integer.parseInt(matcher.group(2)),Duration.MINUTES);
+    final var seconds = Duration.of(Integer.parseInt(matcher.group(3)),Duration.SECONDS);
+    final var microsecondString = Optional.ofNullable(matcher.group(4));
+    var micros = Duration.ZERO;
+
+    if (microsecondString.isPresent()){
+      var subSecond = microsecondString.get().substring(1);
+      if (subSecond.length() < 6){
+        // append the missing zeros.
+        subSecond=subSecond+"0".repeat(6-subSecond.length());
+      }
+      micros = Duration.of(Integer.parseInt(subSecond), Duration.MICROSECONDS);
+    }
+    return micros.plus(seconds).plus(minutes).plus(hours);
   }
 
   /**
@@ -496,6 +527,7 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public boolean isEqualTo(final Duration other) {
+    if(other == null) return false;
     return this.durationInMicroseconds == other.durationInMicroseconds;
   }
 
@@ -503,9 +535,7 @@ public final class Duration implements Comparable<Duration> {
   @Override
   @Deprecated
   public boolean equals(final Object o) {
-    if (!(o instanceof Duration)) return false;
-    final var other = (Duration)o;
-
+    if (!(o instanceof final Duration other)) return false;
     return this.isEqualTo(other);
   }
 
