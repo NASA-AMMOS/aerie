@@ -35,10 +35,10 @@ data class SchedulerToProcedurePlanAdapter(
           Directive(
               deserializer(SerializedValue.of(activity.arguments)),
               "Name unavailable",
-              activity.id.id,
+              activity.id,
               activity.type.name,
               if (activity.anchorId == null) DirectiveStart.Absolute(activity.startOffset)
-              else DirectiveStart.Anchor(activity.anchorId.id, activity.startOffset, anchorToStart(activity.anchoredToStart))
+              else DirectiveStart.Anchor(activity.anchorId, activity.startOffset, anchorToStart(activity.anchoredToStart))
           )
       )
     }

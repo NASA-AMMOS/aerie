@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Instances
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
@@ -13,19 +12,15 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Instance
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
-import org.apache.commons.collections4.BidiMap
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 
 class MerlinToProcedureSimulationResultsAdapter(
     private val results: gov.nasa.jpl.aerie.merlin.driver.SimulationResults,
     private val stale: Boolean,
-    private val plan: Plan,
-    activityIdCorrespondence: BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>?
+    private val plan: Plan
 ): SimulationResults {
-
-  private val idMap: Map<Long, Long> = activityIdCorrespondence?.entries?.associateBy({ it.value.id }) { it.key.id }
-    ?: mapOf()
 
   override fun isStale() = stale
 
@@ -52,8 +47,8 @@ class MerlinToProcedureSimulationResultsAdapter(
 
   override fun <V: Any, TL: CoalesceSegmentsOp<V, TL>> resource(name: String, deserializer: (List<Segment<SerializedValue>>) -> TL): TL {
     val profile =
-        if (results.discreteProfiles.containsKey(name)) convertProfileWithoutGaps(results.discreteProfiles[name]!!.right) { it }
-        else if (results.realProfiles.containsKey(name)) convertProfileWithoutGaps(results.realProfiles[name]!!.right) {
+        if (results.discreteProfiles.containsKey(name)) convertProfileWithoutGaps(results.discreteProfiles[name]!!.segments) { it }
+        else if (results.realProfiles.containsKey(name)) convertProfileWithoutGaps(results.realProfiles[name]!!.segments) {
           SerializedValue.of(mapOf(
               "initial" to SerializedValue.of(it.initial),
               "rate" to SerializedValue.of(it.rate)
@@ -110,12 +105,11 @@ class MerlinToProcedureSimulationResultsAdapter(
           "arguments" to SerializedValue.of(a.arguments),
           "computedAttributes" to computedAttributes
       ))
-      val mappedId = if (idMap.containsKey(a.directiveId)) idMap[a.directiveId] else a.directiveId
       instances.add(Instance(
           deserializer(serializedActivity),
           a.type,
-          a.spanId,
-          mappedId,
+          ActivityInstanceId(a.spanId),
+          a.directiveId?.let { ActivityDirectiveId(it) },
           Interval(startTime, endTime)
       ))
     }

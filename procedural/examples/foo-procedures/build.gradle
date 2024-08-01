@@ -21,6 +21,7 @@ dependencies {
   implementation project(':procedural:scheduling')
   implementation project(':procedural:timeline')
   implementation project(':merlin-framework')
+  implementation project(':merlin-driver')
   implementation project(':contrib')
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'

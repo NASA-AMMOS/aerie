@@ -12,6 +12,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveSta
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.plus
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.minus
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 import java.io.StringReader
 import java.sql.Connection
 import java.time.Instant
@@ -86,7 +87,7 @@ data class AeriePostgresPlan(
         val start = if (anchorId != 0L) { // this means SQL null. Terrible interface imo
           val anchoredToStart = response.getBoolean(7)
           DirectiveStart.Anchor(
-            anchorId,
+            ActivityDirectiveId(anchorId),
             offset,
             if (anchoredToStart) DirectiveStart.Anchor.AnchorPoint.Start else DirectiveStart.Anchor.AnchorPoint.End,
             Duration.ZERO
@@ -96,7 +97,7 @@ data class AeriePostgresPlan(
           Directive(
             parseJson(response.getString(4)),
             response.getString(1),
-            response.getLong(5),
+            ActivityDirectiveId(response.getLong(5)),
             response.getString(3),
             start
           )
@@ -112,7 +113,7 @@ data class AeriePostgresPlan(
             }
 
             is DirectiveStart.Anchor -> {
-              val index = result.binarySearch { a -> a.id.compareTo(s.parentId) }
+              val index = result.binarySearch { a -> a.id.id.compareTo(s.parentId.id) }
               if (index >= 0) {
                 val parent = result[index]
                 s.estimatedStart = parent.startTime + s.offset
@@ -122,7 +123,7 @@ data class AeriePostgresPlan(
           }
         }.toMutableList()
         if (sizeAtStartOfStep == unresolved.size) throw Error("Cannot resolve anchors: $unresolved")
-        result.sortBy { it.id }
+        result.sortBy { it.id.id }
       }
       result
     }.specialize()

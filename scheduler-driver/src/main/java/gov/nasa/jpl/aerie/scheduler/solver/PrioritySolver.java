@@ -326,7 +326,7 @@ public class PrioritySolver implements Solver {
       satisfyOptionGoal((OptionGoal) goal);
     } else if (goal instanceof Procedure procedure) {
       if (!analysisOnly) {
-        procedure.run(plan.getEvaluation(), plan, problem.getMissionModel(), this.problem::getActivityType, this.simulationFacade);
+        procedure.run(plan.getEvaluation(), plan, problem.getMissionModel(), this.problem::getActivityType, this.simulationFacade, this.idGenerator);
       }
     } else {
       satisfyGoalGeneral(goal);

@@ -2,6 +2,8 @@ package gov.nasa.ammos.aerie.procedural.timeline.payloads.activities
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId
 
 /** A wrapper of any type of activity instance containing common data. */
 data class Instance<A: Any>(
@@ -10,14 +12,14 @@ data class Instance<A: Any>(
     override val type: String,
 
     /** The instance id. */
-    @JvmField val id: Long,
+    @JvmField val id: ActivityInstanceId,
 
     /**
      * The maybe-null id of the directive associated with this instance.
      *
      * Will be `null` if this is a child activity.
      */
-    @JvmField val directiveId: Long?,
+    @JvmField val directiveId: ActivityDirectiveId?,
     override val interval: Interval,
 ): Activity<Instance<A>> {
   override val startTime: Duration

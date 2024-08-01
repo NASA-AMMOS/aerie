@@ -462,19 +462,25 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
   throws MerlinServiceException, IOException
   {
     final var request = new StringBuilder();
-    if (acts.isEmpty()) return;
+    final var acts = plan.getActivities();
     request.append("mutation {");
-    for (final SchedulingActivity act: plan.getActivities()) {
-      final var id = uploadIdMap.get(act.id()).id();
-      request.append("""
-        update_%d: update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
-          id
-        }
-        """.formatted(id, id, planId.id(), uploadIdMap.get(act.anchorId()).id())
-      );
+    var hasUpdate = false;
+    for (final SchedulingActivity act: acts) {
+      if (act.isNew() && act.anchorId() != null) {
+        hasUpdate = true;
+        final var id = uploadIdMap.get(act.id()).id();
+        request.append("""
+                           update_%d: update_activity_directive_by_pk(pk_columns: {id: %d, plan_id: %d}, _set: {anchor_id: %d}) {
+                             id
+                           }
+                           """.formatted(id, id, planId.id(), uploadIdMap.get(act.anchorId()).id())
+        );
+      }
     }
-    request.append("}");
-    postRequest(request.toString());
+    if (hasUpdate) {
+      request.append("}");
+      postRequest(request.toString());
+    }
   }
 
   /**

@@ -476,7 +476,7 @@ public class SchedulingTests {
       final var response = hasura.awaitSimulation(planId);
       final var simDataset = hasura.getSimulationDataset(response.simDatasetId());
       final var schedulingResults = hasura.awaitScheduling(schedulingSpecId);
-      assertEquals(schedulingResults.datasetId(), simDataset.datasetId());
+      assertEquals(simDataset.datasetId(), schedulingResults.datasetId());
     } finally {
       // Teardown: Delete Goal
       hasura.deleteSchedulingGoal(coexistenceGoalId);

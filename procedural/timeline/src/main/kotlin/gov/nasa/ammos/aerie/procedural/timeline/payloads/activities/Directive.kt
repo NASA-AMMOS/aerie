@@ -2,6 +2,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.payloads.activities
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 
 /** A wrapper of any type of activity directive containing common data. */
 data class Directive<A: Any>(
@@ -12,7 +13,7 @@ data class Directive<A: Any>(
     @JvmField val name: String,
 
     /** The directive id. */
-    @JvmField val id: Long,
+    @JvmField val id: ActivityDirectiveId,
 
     override val type: String,
 

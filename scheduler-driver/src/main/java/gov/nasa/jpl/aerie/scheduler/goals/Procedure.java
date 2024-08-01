@@ -4,11 +4,12 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.ammos.aerie.procedural.scheduling.ProcedureMapper;
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.Edit;
+import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator;
 import gov.nasa.jpl.aerie.scheduler.ProcedureLoader;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan;
 import gov.nasa.jpl.aerie.scheduler.plan.SchedulerToProcedurePlanAdapter;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -34,7 +35,7 @@ public class Procedure extends Goal {
     this.args = args;
   }
 
-  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType, SimulationFacade simulationFacade) {
+  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType, SimulationFacade simulationFacade, DirectiveIdGenerator idGenerator) {
     final ProcedureMapper<?> procedureMapper;
     try {
       procedureMapper = ProcedureLoader.loadProcedure(jarPath);
@@ -42,18 +43,16 @@ public class Procedure extends Goal {
       throw new RuntimeException(e);
     }
 
-    List<SchedulingActivityDirective> newActivities = new ArrayList<>();
+    List<SchedulingActivity> newActivities = new ArrayList<>();
 
     final var planAdapter = new SchedulerToProcedurePlanAdapter(
         plan,
         planHorizon
     );
 
-    final var nextUniqueDirectiveId = plan.getActivities().stream().map($ -> Math.abs($.id().id())).max(Long::compare).orElse(0L) + 1;
-
     final var editablePlan = new InMemoryEditablePlan(
         missionModel,
-        nextUniqueDirectiveId,
+        idGenerator,
         planAdapter,
         simulationFacade,
         lookupActivityType::apply
@@ -76,7 +75,7 @@ public class Procedure extends Goal {
     }
     for (final var edit : editablePlan.getTotalDiff()) {
       if (edit instanceof Edit.Create c) {
-        newActivities.add(toSchedulingActivityDirective(c.getDirective(), lookupActivityType::apply));
+        newActivities.add(toSchedulingActivityDirective(c.getDirective(), lookupActivityType::apply, true));
       } else {
         throw new IllegalStateException("Unexpected value: " + edit);
       }

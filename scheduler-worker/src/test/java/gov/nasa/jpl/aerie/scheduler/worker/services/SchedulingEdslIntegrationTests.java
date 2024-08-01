@@ -468,7 +468,7 @@ public class SchedulingEdslIntegrationTests {
                         "producer", SerializedValue.of("Company")),
                     null,
                     true)),
-        List.of(new SchedulingGoal(new GoalId(0L, 0L), """
+        List.of(new EdslGoal(new GoalId(0L, 0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: Real.Resource("/fruit").greaterThan(4.0),
             activityTemplate: interval => ActivityTemplates.ChangeProducer({producer: Discrete.Resource("/producer").valueAt(Spans.FromInterval(interval).starts())}),
