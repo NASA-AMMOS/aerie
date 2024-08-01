@@ -756,25 +756,25 @@ public final class SimulationEngine implements AutoCloseable {
     return activityDirectiveIds;
   }
 
-  private HashMap<SpanId, SimulatedActivityId> spanToSimulatedActivities(
+  private HashMap<SpanId, ActivityInstanceId> spanToSimulatedActivities(
       final SpanInfo spanInfo
   ) {
     final var activityDirectiveIds = spanToActivityDirectiveId(spanInfo);
-    final var spanToSimulatedActivityId = new HashMap<SpanId, SimulatedActivityId>(activityDirectiveIds.size());
-    final var usedSimulatedActivityIds = new HashSet<>();
+    final var spanToActivityInstanceId = new HashMap<SpanId, ActivityInstanceId>(activityDirectiveIds.size());
+    final var usedActivityInstanceIds = new HashSet<>();
     for (final var entry : activityDirectiveIds.entrySet()) {
-      spanToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
-      usedSimulatedActivityIds.add(entry.getValue().id());
+      spanToActivityInstanceId.put(entry.getKey(), new ActivityInstanceId(entry.getValue().id()));
+      usedActivityInstanceIds.add(entry.getValue().id());
     }
     long counter = 1L;
     for (final var span : this.spans.keySet()) {
       if (!spanInfo.isActivity(span)) continue;
-      if (spanToSimulatedActivityId.containsKey(span)) continue;
+      if (spanToActivityInstanceId.containsKey(span)) continue;
 
-      while (usedSimulatedActivityIds.contains(counter)) counter++;
-      spanToSimulatedActivityId.put(span, new SimulatedActivityId(counter++));
+      while (usedActivityInstanceIds.contains(counter)) counter++;
+      spanToActivityInstanceId.put(span, new ActivityInstanceId(counter++));
     }
-    return spanToSimulatedActivityId;
+    return spanToActivityInstanceId;
   }
 
   /**
@@ -803,14 +803,14 @@ public final class SimulationEngine implements AutoCloseable {
     });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var spanToSimulatedActivityId = spanToSimulatedActivities(spanInfo);
+    final var spanToActivityInstanceId = spanToSimulatedActivities(spanInfo);
 
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
-    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
+    final var simulatedActivities = new HashMap<ActivityInstanceId, ActivityInstance>();
+    final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
-      final var activityId = spanToSimulatedActivityId.get(span);
+      final var activityId = spanToActivityInstanceId.get(span);
       final var directiveId = activityDirectiveIds.get(span);
 
       if (state.endOffset().isPresent()) {
@@ -822,11 +822,11 @@ public final class SimulationEngine implements AutoCloseable {
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             state.endOffset().get().minus(state.startOffset()),
-            spanToSimulatedActivityId.get(activityParents.get(span)),
+            spanToActivityInstanceId.get(activityParents.get(span)),
             activityChildren
                 .getOrDefault(span, Collections.emptyList())
                 .stream()
-                .map(spanToSimulatedActivityId::get)
+                .map(spanToActivityInstanceId::get)
                 .toList(),
             (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
             outputAttributes
@@ -837,11 +837,11 @@ public final class SimulationEngine implements AutoCloseable {
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
-            spanToSimulatedActivityId.get(activityParents.get(span)),
+            spanToActivityInstanceId.get(activityParents.get(span)),
             activityChildren
                 .getOrDefault(span, Collections.emptyList())
                 .stream()
-                .map(spanToSimulatedActivityId::get)
+                .map(spanToActivityInstanceId::get)
                 .toList(),
             (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
         ));
@@ -853,7 +853,7 @@ public final class SimulationEngine implements AutoCloseable {
   private TreeMap<Duration, List<EventGraph<EventRecord>>> createSerializedTimeline(
       final TemporalEventSource combinedTimeline,
       final Iterable<SerializableTopic<?>> serializableTopics,
-      final HashMap<SpanId, SimulatedActivityId> spanToActivities,
+      final HashMap<SpanId, ActivityInstanceId> spanToActivities,
       final HashMap<SerializableTopic<?>, Integer> serializableTopicToId) {
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
