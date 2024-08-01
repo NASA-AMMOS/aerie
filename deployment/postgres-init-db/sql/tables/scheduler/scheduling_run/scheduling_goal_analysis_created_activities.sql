@@ -22,6 +22,6 @@ comment on table scheduler.scheduling_goal_analysis_created_activities is e''
 comment on column scheduler.scheduling_goal_analysis_created_activities.analysis_id is e''
   'The associated analysis ID.';
 comment on column scheduler.scheduling_goal_analysis_created_activities.goal_invocation_id is e''
-  'The associated goal invocation ID.';
+  'The associated goal invocation ID from the scheduling specification.';
 comment on column scheduler.scheduling_goal_analysis_created_activities.activity_id is e''
   'The ID of an activity instance created to satisfy the associated goal.';
