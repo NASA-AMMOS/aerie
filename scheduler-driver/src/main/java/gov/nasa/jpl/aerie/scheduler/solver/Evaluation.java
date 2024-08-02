@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
+import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -20,7 +22,6 @@ import java.util.stream.Collectors;
  * as well as useful metadata, eg which goals were satisfied by which activity instances
  */
 public class Evaluation {
-
   /**
    * the set of all per-goal evaluations
    */
@@ -34,44 +35,21 @@ public class Evaluation {
      * a map associating each activity that contributed to the goal to a boolean stating whether the goal created it or not
      */
     protected final java.util.Map<SchedulingActivity, Boolean> acts = new java.util.HashMap<>();
-
-    /**
-     * the numeric evaluation score for the goal
-     */
-    protected double score = 0.0;
-
-    /**
-     * the number of conflicts originally detected
-     */
-    protected Integer nbConflictsDetected = null;
-
-    /**
-     * sets the numeric score for the evaluation of the goal
-     *
-     * more positive scores are more satisfied
-     *
-     * scores are only comparable if generaged by the same scheduler
-     *
-     * @param score the score to assign
-     */
-    public void setScore(double score) { this.score = score; }
+    protected final java.util.Map<Conflict, ConflictSolverResult> conflicts = new java.util.HashMap<>();
 
     /**
      * fetches the numeric evaluation score for the goal
      *
      * @return the numeric evaluation score for the goal
      */
-    public double getScore() { return score; }
+    public double getScore() { return -conflicts.values().stream().filter(result -> result.satisfaction() != ConflictSatisfaction.SAT).count(); }
 
-    public void setNbConflictsDetected(final int nbConflictsDetected) {
-      this.nbConflictsDetected = nbConflictsDetected;
-    }
-
-    public Optional<Integer> getNbConflictsDetected() {
-      if(nbConflictsDetected == null){
-        return Optional.empty();
-      }
-      return Optional.of(nbConflictsDetected);
+    public ConflictSatisfaction getSatisfaction(){
+      final var partiallySatCount = conflicts.values().stream().filter(result -> result.satisfaction() == ConflictSatisfaction.PARTIALLY_SAT).count();
+      if(partiallySatCount > 0) return ConflictSatisfaction.PARTIALLY_SAT;
+      final var notSatCount = conflicts.values().stream().filter(result -> result.satisfaction() == ConflictSatisfaction.NOT_SAT).count();
+      if(notSatCount > 0) return ConflictSatisfaction.NOT_SAT;
+      return ConflictSatisfaction.SAT;
     }
 
     /**
@@ -81,7 +59,18 @@ public class Evaluation {
      *     evaluation
      * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
      */
-    public void associate(SchedulingActivity act, boolean createdByThisGoal) { acts.put(act, createdByThisGoal);}
+    public void associate(
+        final SchedulingActivity act,
+        final boolean createdByThisGoal,
+        final Conflict conflict) {
+      acts.put(act, createdByThisGoal);
+      final var conflictStatus = this.conflicts.computeIfAbsent(conflict, c -> new ConflictSolverResult());
+      conflictStatus.activitiesCreated().add(act);
+    }
+
+    public void setConflictSatisfaction(final Conflict conflict, final ConflictSatisfaction conflictSatisfaction){
+      this.conflicts.computeIfAbsent(conflict, c -> new ConflictSolverResult()).setSatisfaction(conflictSatisfaction);
+    }
 
     /**
      * Replaces an activity in the goal evaluation by another activity
@@ -93,6 +82,10 @@ public class Evaluation {
       if(found != null){
         acts.remove(toBeReplaced);
         acts.put(replacement, found);
+        for(final var activities: conflicts.entrySet()){
+          final var wasThere = activities.getValue().activitiesCreated().remove(toBeReplaced);
+          if(wasThere) activities.getValue().activitiesCreated().add(replacement);
+        }
       }
     }
 
@@ -103,9 +96,12 @@ public class Evaluation {
     public GoalEvaluation duplicate(){
       final var duplicate = new GoalEvaluation();
       duplicate.acts.putAll(this.acts);
-      duplicate.nbConflictsDetected = this.nbConflictsDetected;
-      duplicate.score = this.score;
+      duplicate.conflicts.putAll(this.conflicts);
       return duplicate;
+    }
+
+    public void addConflicts(final Collection<Conflict> conflict) {
+      conflict.forEach(c -> this.conflicts.put(c, new ConflictSolverResult()));
     }
 
     /**
@@ -114,13 +110,18 @@ public class Evaluation {
      * @param acts IN container of activities that contributed to the goal's
      *     evaluation
      * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
+     * @param conflict IN a conflict if the activity has been associated to satisfy a specific conflict, can be null
      */
-    public void associate(java.util.Collection<SchedulingActivity> acts, boolean createdByThisGoal) {
-      acts.forEach(a ->this.acts.put(a, createdByThisGoal));
+    public void associate(
+        final java.util.Collection<SchedulingActivity> acts,
+        final boolean createdByThisGoal,
+        final Conflict conflict) {
+      acts.forEach(act -> this.associate(act, createdByThisGoal, conflict));
     }
 
     public void removeAssociation(java.util.Collection<SchedulingActivity> acts){
       this.acts.entrySet().removeIf(act -> acts.contains(act.getKey()));
+      this.conflicts.forEach((c, conflictSolverReturn) -> conflictSolverReturn.activitiesCreated().removeAll(acts));
     }
 
     /**
@@ -141,7 +142,6 @@ public class Evaluation {
           Map.Entry::getKey).collect(
           Collectors.toSet()));
     }
-
   }
 
   /**
@@ -211,7 +211,7 @@ public class Evaluation {
   /**
    * If an activity instance was already in the plan prior to this run of the scheduler, this method will return Optional.empty()
    */
-  Optional<Goal> getGoalCreator(final SchedulingActivity instance){
+  private Optional<Goal> getGoalCreator(final SchedulingActivity instance){
     for(final var goalEval : goalEvals.entrySet()){
       if(goalEval.getValue().getInsertedActivities().contains(instance)){
         return Optional.of(goalEval.getKey());
@@ -231,6 +231,10 @@ public class Evaluation {
         Boolean value = goalEval.acts.get(oldAct);
         goalEval.acts.remove(oldAct);
         goalEval.acts.put(newAct, value);
+        for(final var conflictStatuses: goalEval.conflicts.entrySet()){
+          final var wasThere = conflictStatuses.getValue().activitiesCreated().remove(oldAct);
+          if(wasThere) conflictStatuses.getValue().activitiesCreated().add(newAct);
+        }
       }
     }
   }
