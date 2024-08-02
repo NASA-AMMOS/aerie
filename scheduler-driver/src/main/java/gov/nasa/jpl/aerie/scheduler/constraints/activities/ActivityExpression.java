@@ -106,6 +106,11 @@ public record ActivityExpression(
       return getThis();
     }
 
+    public Builder withArguments(Map<String, ProfileExpression<?>> arguments){
+      arguments.forEach((name, value) -> withArgument(name, value));
+      return getThis();
+    }
+
     public Builder withTimingPrecision(Duration acceptableAbsoluteTimingError){
       this.acceptableAbsoluteTimingError = acceptableAbsoluteTimingError;
       return getThis();
@@ -452,13 +457,13 @@ public record ActivityExpression(
     this.arguments.forEach((name, pe)-> pe.extractResources(names));
   }
 
-  public Interval instantiateDurationInterval(
+  public Optional<Interval> instantiateDurationInterval(
       final PlanningHorizon planningHorizon,
       final EvaluationEnvironment evaluationEnvironment
       ){
-    if(durationRange == null) return null;
-    Optional<Duration> durRequirementLower;
-    Optional<Duration> durRequirementUpper;
+    if(durationRange == null) return Optional.empty();
+    Optional<Duration> durRequirementLower = Optional.empty();
+    Optional<Duration> durRequirementUpper = Optional.empty();
     try {
       durRequirementLower = durationRange().getLeft()
                                                      .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
@@ -472,9 +477,9 @@ public record ActivityExpression(
       throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
     }
     if(durRequirementLower.isPresent() && durRequirementUpper.isPresent()) {
-      return Interval.between(durRequirementLower.get(), durRequirementUpper.get());
+      return Optional.of(Interval.between(durRequirementLower.get(), durRequirementUpper.get()));
     }
-    return null;
+    return Optional.empty();
   }
 
   public Optional<TaskNetworkAdapter.TNActData> reduceTemporalConstraints(
@@ -496,9 +501,9 @@ public record ActivityExpression(
 
     var instantiateDurationInterval = this.instantiateDurationInterval(planningHorizon, evaluationEnvironment);
     var minimumDuration = ZERO;
-    if(instantiateDurationInterval != null){
-      minimumDuration = Duration.max(minimumDuration, instantiateDurationInterval.start);
-      maximumDuration = Duration.min(maximumDuration, instantiateDurationInterval.end);
+    if(instantiateDurationInterval.isPresent()){
+      minimumDuration = Duration.max(minimumDuration, instantiateDurationInterval.get().start);
+      maximumDuration = Duration.min(maximumDuration, instantiateDurationInterval.get().end);
     }
 
     final var durationInterval = Interval.between(minimumDuration, maximumDuration);
