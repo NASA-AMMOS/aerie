@@ -115,6 +115,39 @@ public class TestUtility {
   }
 
   /**
+   * Creates a list of SchedulingCondition that are equivalent to a mutex constraint between 2 activity types
+   */
+  public static List<SchedulingCondition> createMutex(final ActivityType activityType1, final ActivityType activityType2) {
+    return List.of(
+        new SchedulingCondition(
+            new Not(
+                new Or(
+                    new WindowsFromSpans(
+                        new ForEachActivitySpans(
+                            activityType1.getName(),
+                            "span activity alias 0",
+                            new ActivitySpan("span activity alias 0"))
+                    )
+                )
+            ),
+            List.of(activityType2)),
+        new SchedulingCondition(
+            new Not(
+                new Or(
+                    new WindowsFromSpans(
+                        new ForEachActivitySpans(
+                            activityType2.getName(),
+                            "span activity alias 1",
+                            new ActivitySpan("span activity alias 1"))
+                    )
+                )
+            ),
+            List.of(activityType1)
+        )
+    );
+  }
+
+  /**
    * Returns true if plan does not contain specific activity instance act
    */
   public static boolean doesNotContainActivity(Plan plan, SchedulingActivity act) {
