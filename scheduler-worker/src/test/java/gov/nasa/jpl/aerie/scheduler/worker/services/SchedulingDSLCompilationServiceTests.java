@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
@@ -242,6 +243,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition, r.value());
@@ -277,6 +280,8 @@ class SchedulingDSLCompilationServiceTests {
             new StructExpressionAt(Map.of("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))))
         ))),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition, r.value());
@@ -309,6 +314,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         true);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition, r.value());
@@ -344,6 +351,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.value());
@@ -405,6 +414,8 @@ class SchedulingDSLCompilationServiceTests {
             ),
             Optional.empty(),
             HOUR,
+            HOUR,
+            Optional.empty(),
             false
         ),
         new GreaterThan(
@@ -459,6 +470,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         Duration.HOURS.times(24),
+        Duration.HOURS.times(24),
+        Optional.empty(),
         false
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
@@ -493,6 +506,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
@@ -807,6 +822,73 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
+        false
+    );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testSchedulingDSL_recurrenceGoalParameters()
+  {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        merlinDatabaseService,
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                    separatedByAtMost: Temporal.Duration.from({ hours : 1 }), // 1 hour in microseconds
+                    separatedByAtLeast: Temporal.Duration.from({ minutes : 30 })
+                  })
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivityEmpty",
+            new StructExpressionAt(Map.of())
+        ),
+        Optional.empty(),
+        HOUR,
+        MINUTE.times(30),
+        Optional.empty(),
+        false
+    );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testSchedulingDSL_recurrenceGoalParametersPreviousAct()
+  {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        merlinDatabaseService,
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                    separatedByAtMost: Temporal.Duration.from({ hours : 1 }), // 1 hour in microseconds
+                    separatedByAtLeast: Temporal.Duration.from({ minutes : 30 }),
+                    previousActivityStartedAt: Temporal.Duration.from({ minutes: -40 })
+                  })
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivityEmpty",
+            new StructExpressionAt(Map.of())
+        ),
+        Optional.empty(),
+        HOUR,
+        MINUTE.times(30),
+        Optional.of(Duration.negate(MINUTE.times(40))),
         false
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
@@ -972,6 +1054,8 @@ class SchedulingDSLCompilationServiceTests {
           ),
           Optional.empty(),
           HOUR,
+          HOUR,
+          Optional.empty(),
           false
     ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
             new SchedulingDSL.ActivityTemplate(
@@ -980,6 +1064,8 @@ class SchedulingDSLCompilationServiceTests {
             ),
             Optional.empty(),
             HOUR.times(2),
+            HOUR.times(2),
+            Optional.empty(),
             false
         )),false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
@@ -1017,6 +1103,8 @@ class SchedulingDSLCompilationServiceTests {
             ),
             Optional.empty(),
             HOUR,
+            HOUR,
+            Optional.empty(),
             false
         ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
             new SchedulingDSL.ActivityTemplate(
@@ -1025,6 +1113,8 @@ class SchedulingDSLCompilationServiceTests {
             ),
             Optional.empty(),
             HOUR.times(2),
+            HOUR.times(2),
+            Optional.empty(),
             false
         )),false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
@@ -1056,6 +1146,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition, r.value());
@@ -1086,6 +1178,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result1 instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition1, r.value());
@@ -1116,6 +1210,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result2 instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition2, r.value());
@@ -1143,6 +1239,8 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Optional.empty(),
         HOUR,
+        HOUR,
+        Optional.empty(),
         false);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition1, r.value());

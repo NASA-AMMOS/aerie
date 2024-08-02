@@ -63,14 +63,18 @@ public class SchedulingDSL {
     return productP
         .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
         .optionalField("activityFinder", activityExpressionP)
-        .field("interval", durationP)
+        .field("separatedByAtMost", durationP)
+        .field("separatedByAtLeast", durationP)
+        .optionalField("previousActivityStartedAt", durationP)
         .field("shouldRollbackIfUnsatisfied", boolP)
         .map(
             untuple(GoalSpecifier.RecurrenceGoalDefinition::new),
             goalDefinition -> tuple(
                 goalDefinition.activityTemplate(),
                 goalDefinition.activityFinder(),
-                goalDefinition.interval(),
+                goalDefinition.separatedByAtMost(),
+                goalDefinition.separatedByAtLeast(),
+                goalDefinition.lastActivityStartedAt(),
                 goalDefinition.shouldRollbackIfUnsatisfied()));
   }
   private static final JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
@@ -264,7 +268,9 @@ public class SchedulingDSL {
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
         Optional<ConstraintExpression.ActivityExpression> activityFinder,
-        Duration interval,
+        Duration separatedByAtMost,
+        Duration separatedByAtLeast,
+        Optional<Duration> lastActivityStartedAt,
         boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(

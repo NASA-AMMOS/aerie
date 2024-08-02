@@ -244,31 +244,65 @@ export class Goal {
    *
    * #### Inputs
    * - activityTemplate: the description of the activity whose recurrence we're interested in.
-   * - activityFinder: an optional activity expression. If present, it will be used as replacement of activityTemplate to match against existing activities in the plan.
-   * - interval: a Duration of time specifying how often this activity must occur
+   * - activityFinder: an [optional] activity expression. If present, it will be used as replacement of activityTemplate to match against existing activities in the plan.
+   * - separatedByAtLeast: newly created activities will be separated by at least this amount
+   * - separatedByAtMost: maximum separation between two consecutive activities. New activities will be inserted to satisfy this constraint.
+   * - previousActivityStartedAt: [optional] start time of a fictional activity from which the recurrence starts. Can be positive or negative. Default is -separatedByAtMost.
+   * - interval: [deprecated] maximum and minimum separation duration between 2 activities. A deprecated shorthand to set separatedByAtLeast equal to separatedAtMost.
    *
    * #### Behavior
-   * This interval is treated as an upper bound - so if the activity occurs more frequently, that is not considered a failure.
+   * The separatedByAtMost constraint is treated as an upper bound - so if the activity occurs more frequently, that is not considered a failure.
    *
    * The scheduler will find places in the plan where the given activity has not occurred within the given interval, and it will place an instance of that activity there.
    *
    * > Note: The interval is measured between the _start times_ of two activity instances. Neither the duration, nor the end time of the activity are examined by this goal.
    *
-   * #### Example
+   * #### Examples
+   *
    * ```typescript
    * export default function myGoal() {
    *     return Goal.ActivityRecurrenceGoal({
-   *             activityTemplate: ActivityTemplates.GrowBanana({
-   *             quantity: 1,
-   *             growingDuration: Temporal.Duration.from({ hours: 1 })
-   *           }),
-   *           interval: Temporal.Duration.from({ hours: 2 })
-   *         })
+   *      activityTemplate: ActivityTemplates.GrowBanana({
+   *        quantity: 1,
+   *        growingDuration: Temporal.Duration.from({ hours: 1 })
+   *      }),
+   *      separatedByAtMost: Temporal.Duration.from({ hours: 2 })
+   *      separatedByAtLeast: Temporal.Duration.from({ hours: 1 })
+   *      previousActivityStartedAt: Temporal.Duration.from({ hours: -1 })
+   *    })
    * }
    *
-   * The goal above will place a `GrowBanana` activity in every 2-hour period of time that does not already contain one with the exact same parameters.
+   * If the plan contains intervals of more than 2 hours during which there is no activity of the desired type, this goal will insert an activity.
+   * It will ensure that the activities are separated by at least 1 hour. The solver will consider that there is a fictional activity at time -1.
+   * It follows that the first activity can be inserted in interval [-1, -1] + [1, 2] = [0, 1].
    *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.ActivityRecurrenceGoal({
+   *      activityTemplate: ActivityTemplates.GrowBanana({
+   *        quantity: 1,
+   *        growingDuration: Temporal.Duration.from({ hours: 1 })
+   *      }),
+   *      interval: Temporal.Duration.from({ hours: 2 })
+   *    })
+   * }
+   *```
+   * The goal above will place a `GrowBanana` activity every 2 hours exactly (without flexibility) if there is not already one with the exact same parameters. It is
+   * equivalent to
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.ActivityRecurrenceGoal({
+   *      activityTemplate: ActivityTemplates.GrowBanana({
+   *        quantity: 1,
+   *        growingDuration: Temporal.Duration.from({ hours: 1 })
+   *      }),
+   *      separatedByAtMost: Temporal.Duration.from({ hours: 2 })
+   *      separatedByAtLeast: Temporal.Duration.from({ hours: 2 })
+   *      previousActivityStartedAt: Temporal.Duration.from({ hours: -2 })
+   *    })
+   * }
    * ```
+   *
    * #### With an activityFinder
    * ```typescript
    * export default function myGoal() {
@@ -288,17 +322,40 @@ export class Goal {
    *
    * @param opts an object containing the activity template and the interval at which the activities must be placed
    */
-  public static ActivityRecurrenceGoal <A extends WindowsEDSL.Gen.ActivityType, B extends WindowsEDSL.Gen.ActivityType>(opts: {
-    activityTemplate: ActivityTemplate<A>,
-    interval: Temporal.Duration,
-    activityFinder?: ActivityExpression<B>}): Goal {
-    return Goal.new({
-      kind: AST.NodeKind.ActivityRecurrenceGoal,
-      activityTemplate: opts.activityTemplate,
-      activityFinder: opts.activityFinder?.__astNode,
-      interval: opts.interval,
-      shouldRollbackIfUnsatisfied: false
-    });
+  public static ActivityRecurrenceGoal <A extends WindowsEDSL.Gen.ActivityType, B extends WindowsEDSL.Gen.ActivityType>(
+      opts: {
+        activityTemplate: ActivityTemplate<A>,
+        separatedByAtLeast: Temporal.Duration,
+        separatedByAtMost: Temporal.Duration,
+        previousActivityStartedAt?: Temporal.Duration,
+        activityFinder?: ActivityExpression<B>} | {
+        activityTemplate: ActivityTemplate<A>,
+        interval: Temporal.Duration,
+        activityFinder?: ActivityExpression<B>}
+  ): Goal {
+    if ((opts as {interval: Temporal.Duration}).interval !== undefined){
+      return Goal.new({
+        kind: AST.NodeKind.ActivityRecurrenceGoal,
+        activityTemplate: opts.activityTemplate,
+        activityFinder: opts.activityFinder?.__astNode,
+        separatedByAtLeast: (opts as {interval: Temporal.Duration}).interval,
+        separatedByAtMost: (opts as {interval: Temporal.Duration}).interval,
+        previousActivityStartedAt: undefined,
+        shouldRollbackIfUnsatisfied: false
+      });
+    } else {
+      return Goal.new({
+        kind: AST.NodeKind.ActivityRecurrenceGoal,
+        activityTemplate: opts.activityTemplate,
+        activityFinder: opts.activityFinder?.__astNode,
+        separatedByAtLeast: (opts as {separatedByAtLeast: Temporal.Duration}).separatedByAtLeast,
+        separatedByAtMost: (opts as {separatedByAtMost: Temporal.Duration}).separatedByAtMost,
+        previousActivityStartedAt: (opts as {previousActivityStartedAt?: Temporal.Duration}).previousActivityStartedAt,
+        shouldRollbackIfUnsatisfied: false
+      });
+    }
+
+
   }
 
   /**
@@ -821,8 +878,17 @@ declare global {
      * Creates an ActivityRecurrenceGoal
      * @param opts an object containing the activity template and the interval at which the activities must be placed
      */
-    public static ActivityRecurrenceGoal <A extends WindowsEDSL.Gen.ActivityType, B extends WindowsEDSL.Gen.ActivityType>(opts: { activityTemplate: ActivityTemplate<A>, interval: Temporal.Duration,
-      activityFinder?: ActivityExpression<B>}): Goal
+    public static ActivityRecurrenceGoal <A extends WindowsEDSL.Gen.ActivityType, B extends WindowsEDSL.Gen.ActivityType>(
+        opts: {
+          activityTemplate: ActivityTemplate<A>,
+          separatedByAtLeast: Temporal.Duration,
+          separatedByAtMost: Temporal.Duration,
+          previousActivityStartedAt?: Temporal.Duration,
+          activityFinder?: ActivityExpression<B>} | {
+          activityTemplate: ActivityTemplate<A>,
+          interval: Temporal.Duration,
+          activityFinder?: ActivityExpression<B>}
+    ): Goal
 
     /**
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).

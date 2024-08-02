@@ -50,11 +50,15 @@ public class GoalBuilder {
     if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition g) {
       final var builder = new RecurrenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
-          .repeatingEvery(g.interval())
+          .separatedByAtLeast(g.separatedByAtLeast())
+          .separatedByAtMost(g.separatedByAtMost())
           .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .withinPlanHorizon(planningHorizon)
           .simulateAfter(simulateAfter);
+      if(g.lastActivityStartedAt().isPresent()){
+        builder.lastActivityHappenedAt(g.lastActivityStartedAt().get());
+      }
       if(g.activityFinder().isPresent()){
         builder.match(buildActivityExpression(g.activityFinder().get(), lookupActivityType));
       }
