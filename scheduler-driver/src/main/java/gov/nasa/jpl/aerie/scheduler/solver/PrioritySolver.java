@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityNetworkConflict;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingRecurrenceConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
@@ -49,6 +50,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 
 /**
  * prototype scheduling algorithm that schedules activities for a plan
@@ -498,6 +502,10 @@ public class PrioritySolver implements Solver {
         conflictSolverReturn = solveActivityTemplateConflict(missingActivityTemplateConflict, goal, false);
       } else if (missing instanceof MissingAssociationConflict missingAssociationConflict) {
         conflictSolverReturn = solveMissingAssociationConflict(missingAssociationConflict, goal);
+      } else if(!analysisOnly && missing instanceof MissingActivityNetworkConflict missingActivityNetworkConflict){
+        conflictSolverReturn = solveActivityNetworkConflict(missingActivityNetworkConflict, goal);
+      } else if(!analysisOnly && missing instanceof MissingRecurrenceConflict missingRecurrenceConflict){
+        conflictSolverReturn = solveMissingRecurrenceConflict(missingRecurrenceConflict, goal);
       }
       if(conflictSolverReturn.satisfaction() == ConflictSatisfaction.SAT) itConflicts.remove();
       //missing association is the only one associating directly
@@ -511,6 +519,199 @@ public class PrioritySolver implements Solver {
       rollback(goal);
     }
     logger.info("Finishing goal satisfaction for goal " + goal.getName() +":"+ (missingConflicts.size() == 0 ? "SUCCESS" : "FAILURE. Number of conflicts that could not be addressed: " + missingConflicts.size()));
+  }
+
+  private ConflictSolverResult solveMissingRecurrenceConflict(
+      final MissingRecurrenceConflict missingRecurrenceConflict,
+      final Goal goal
+      ) throws SchedulingInterruptedException
+  {
+    Optional<Long> maxIterations = Optional.empty();
+    final var spaceToFill = (missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.lastStart));
+    final var remainderMin = spaceToFill.remainderOf(missingRecurrenceConflict.minMaxConstraints.end);
+    final var remainderMax = spaceToFill.remainderOf(Duration.max(missingRecurrenceConflict.minMaxConstraints.start, MICROSECOND));
+    final var minNbActivities = spaceToFill.dividedBy(missingRecurrenceConflict.minMaxConstraints.end) - 1 + (remainderMin.isZero() ? 0 : 1);
+    final var maxNbActivities = spaceToFill.dividedBy(Duration.max(missingRecurrenceConflict.minMaxConstraints.start, MICROSECOND)) - 1+ (remainderMax.isZero() ? 0 : 1);
+    final var step = maxIterations.isPresent() ? (int) Math.floor((maxNbActivities - minNbActivities)/maxIterations.get()) : 1;
+    var nbActivities = minNbActivities;
+    List<SchedulingActivity> lastPartiallySat = new ArrayList<>();
+    var satisfaction = ConflictSatisfaction.NOT_SAT;
+    //conflict production should be easy as it involves static constraints only.
+    //we limit how many times it can fail before bailing
+    var conflictProductionHasNotProgressedSince = 0;
+    var maxNoProgress = 10;
+    while(true){
+      //create network with nbActivities
+      final var conflict = makeActivityNetworkConflict(missingRecurrenceConflict, nbActivities, lastPartiallySat);
+      if(conflict.isPresent()) {
+        conflictProductionHasNotProgressedSince = 0;
+        final var conflictResult = solveActivityNetworkConflict(conflict.get(), goal, ScheduleAt.LATEST);
+        switch (conflictResult.satisfaction()) {
+          case ConflictSatisfaction.SAT:
+            return conflictResult;
+          case ConflictSatisfaction.PARTIALLY_SAT:
+            lastPartiallySat = conflictResult.activitiesCreated().stream().sorted(Comparator.comparing(
+                SchedulingActivity::startOffset)).toList();
+            satisfaction = ConflictSatisfaction.PARTIALLY_SAT;
+            break;
+          default:
+        }
+        if(hasDuplicates(conflictResult.activitiesCreated().stream().toList())){
+          //duplicates means it is unsolvable and it is no use increasing the number of activities
+          break;
+        }
+      } else {
+        conflictProductionHasNotProgressedSince++;
+      }
+      if(nbActivities < maxNbActivities && conflictProductionHasNotProgressedSince < maxNoProgress){
+        nbActivities = Math.min(nbActivities + step, maxNbActivities);
+      } else {
+        break;
+      }
+    }
+    return new ConflictSolverResult(satisfaction, lastPartiallySat);
+  }
+
+  private boolean hasDuplicates(List<SchedulingActivity> activities){
+    for(int i = 0; i < activities.size(); i++){
+      for(int j = i+1; j < activities.size(); j++){
+        if(activities.get(i).equalsInProperties(activities.get(j))){
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private Optional<MissingActivityNetworkConflict> makeActivityNetworkConflict(
+      final MissingRecurrenceConflict missingRecurrenceConflict,
+      final long nbActivities,
+      final List<SchedulingActivity> successfullyInserted)
+  {
+    var iterator = successfullyInserted.iterator();
+    final var taskNetwork = new TaskNetworkAdapter(this.problem.getPlanningHorizon().getEndAerie());
+    final var activitiesToSchedule = new ArrayList<String>();
+    final var allActivitiesInNetwork = new ArrayList<String>();
+    final var durationRange = missingRecurrenceConflict.desiredActivityTemplate.instantiateDurationInterval(
+        this.problem.getPlanningHorizon(),
+        missingRecurrenceConflict.getEvaluationEnvironment());
+    //add fake activity to the network without adding it to the task to schedule
+    final var fakeFirstAct = "fakeFirst";
+    taskNetwork.addAct(fakeFirstAct);
+    taskNetwork.addStartInterval(fakeFirstAct, missingRecurrenceConflict.lastStart, missingRecurrenceConflict.lastStart);
+    allActivitiesInNetwork.add(fakeFirstAct);
+    SchedulingActivity curPreviouslyInstantiated = null;
+    for (var i = 0L; i < nbActivities; i++) {
+      final var activityName = "act" + i;
+      taskNetwork.addAct(activityName);
+      if(iterator.hasNext()) {
+        curPreviouslyInstantiated = iterator.next();
+        taskNetwork.addStartInterval(activityName, curPreviouslyInstantiated.startOffset(), curPreviouslyInstantiated.startOffset());
+        taskNetwork.addDurationInterval(activityName, curPreviouslyInstantiated.duration(), curPreviouslyInstantiated.duration());
+      } else {
+        curPreviouslyInstantiated = null;
+      }
+      taskNetwork.startsAfterStart(
+          allActivitiesInNetwork.getLast(),
+          activityName,
+          missingRecurrenceConflict.minMaxConstraints.start,
+          missingRecurrenceConflict.minMaxConstraints.end);
+      durationRange.ifPresent(range -> taskNetwork.addDurationInterval(activityName, range.start, range.end));
+      final var propagationWentOkay = taskNetwork.solveConstraints();
+      if (!propagationWentOkay) return Optional.empty();
+      //if there is not already an activity in the plan for this occurrence, we add it to the to-schedule list
+      if(curPreviouslyInstantiated == null) {
+        activitiesToSchedule.add(activityName);
+      }
+      allActivitiesInNetwork.add(activityName);
+    }
+    if (!allActivitiesInNetwork.isEmpty()) {
+      //add constraints between last task and end boundary
+      if (missingRecurrenceConflict.afterBoundIsActivity) {
+        taskNetwork.addStartInterval(
+            allActivitiesInNetwork.getLast(),
+            missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.end),
+            missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.start));
+      } else {
+        taskNetwork.addStartInterval(
+            allActivitiesInNetwork.getLast(),
+            missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.end) ,
+            missingRecurrenceConflict.nextStart);
+      }
+      var propagationWentOkay = taskNetwork.solveConstraints();
+      if (!propagationWentOkay) {
+        return Optional.empty();
+      }
+    }
+    if (activitiesToSchedule.isEmpty()) {
+      return Optional.empty();
+    }
+    final var map = new HashMap<String, MissingActivityNetworkConflict.ActivityDef>();
+    for (final var name : activitiesToSchedule) {
+      map.put(name, new MissingActivityNetworkConflict.ActivityDef(missingRecurrenceConflict.desiredActivityTemplate));
+    }
+    return Optional.of(new MissingActivityNetworkConflict(
+        missingRecurrenceConflict.getGoal(),
+        missingRecurrenceConflict.getEvaluationEnvironment(),
+        taskNetwork,
+        map,
+        activitiesToSchedule,
+        new Windows(false).set(Interval.betweenClosedOpen(missingRecurrenceConflict.validWindow.start, missingRecurrenceConflict.validWindow.end), true)));
+  }
+
+  private ConflictSolverResult solveActivityNetworkConflict(
+      final MissingActivityNetworkConflict missingActivityNetworkConflict,
+      final Goal goal
+  ) throws SchedulingInterruptedException
+  {
+    var satisfaction = ConflictSatisfaction.NOT_SAT;
+    final var activitiesCreated = new ArrayList<SchedulingActivity>();
+    logger.info("Trying to satisfy a network conflict made of " + missingActivityNetworkConflict.schedulingOrder.size() + " activities.");
+    for(final var name: missingActivityNetworkConflict.schedulingOrder){
+      logger.info("Processing activity " + name + " of network conflict");
+      final var constraintsSolved = missingActivityNetworkConflict.temporalConstraints.solveConstraints();
+      if(!constraintsSolved) {
+        missingActivityNetworkConflict.temporalConstraints.removeTask(name);
+        logger.info("Solving network conflict failed for task " + name + ". Removing task and trying to continue.");
+        //if sat, goes to partially sat, otherwise stays either partially or not sat
+        if(satisfaction == ConflictSatisfaction.SAT) satisfaction = ConflictSatisfaction.PARTIALLY_SAT;
+        continue;
+      }
+      final var temporalConstraints = missingActivityNetworkConflict.temporalConstraints.getAllData(name);
+      final var activityTemplateBuilder = new ActivityExpression.Builder()
+          .ofType(missingActivityNetworkConflict.arguments.get(name).activityExpression().type())
+          .startsIn(temporalConstraints.start())
+          .endsIn(temporalConstraints.end())
+          .withArguments(missingActivityNetworkConflict.arguments.get(name).activityExpression().arguments());
+      final var durationRange = missingActivityNetworkConflict.arguments.get(name).activityExpression().instantiateDurationInterval(this.problem.getPlanningHorizon(), missingActivityNetworkConflict.getEvaluationEnvironment());
+      if(durationRange.isPresent())
+        activityTemplateBuilder.durationIn(durationRange.get().start);
+      final var activityTemplate = activityTemplateBuilder.build();
+      final var derivedActivityTemplateConflict = new MissingActivityTemplateConflict(goal,
+                                                                                      missingActivityNetworkConflict.getTemporalContext(),
+                                                                                      activityTemplate,
+                                                                                      new EvaluationEnvironment(),
+                                                                                      1,
+                                                                                      Optional.empty(),
+                                                                                      Optional.of(true),
+                                                                                      Optional.empty());
+      final var satisfactionOfThisSubConflict = solveActivityTemplateConflict(derivedActivityTemplateConflict, goal, true);
+      if(satisfactionOfThisSubConflict.satisfaction() == ConflictSatisfaction.SAT){
+        //apply constraints to network
+        //there is only one activity for sure
+        final var activityInserted = satisfactionOfThisSubConflict.activitiesCreated().iterator().next();
+        activitiesCreated.add(activityInserted);
+        missingActivityNetworkConflict.temporalConstraints.changeEndInterval(name, activityInserted.getEndTime(), activityInserted.getEndTime());
+        missingActivityNetworkConflict.temporalConstraints.changeStartInterval(name, activityInserted.startOffset(), activityInserted.startOffset());
+        //sub conflict is satisfied, if we are not already Partially sat (we would stay partially sat), we go to sat until (see below) we possibly go back to partially sat
+        if(satisfaction != ConflictSatisfaction.PARTIALLY_SAT) satisfaction = ConflictSatisfaction.SAT;
+      } else{
+        //if it has already been satisfied partially, it becomes PARTIALLY_SAT, otherwise it stays NOT_SAT
+        if(satisfaction == ConflictSatisfaction.SAT) satisfaction = ConflictSatisfaction.PARTIALLY_SAT;
+        //even if an activity fails, constraint propagation should make sure we get the transitive dependencies we need even if a middle act is not satisfied
+      }
+    }
+    return new ConflictSolverResult(satisfaction, activitiesCreated);
   }
 
   private ConflictSolverResult solveActivityInstanceConflict(
@@ -546,19 +747,19 @@ public class PrioritySolver implements Solver {
     final var activitiesCreated = new ArrayList<SchedulingActivity>();
     var cardinalityLeft = missingActivityTemplateConflict.getCardinality();
     var durationToAccomplish = missingActivityTemplateConflict.getTotalDuration();
-    var durationLeft = Duration.ZERO;
+    var durationLeft = ZERO;
     if (durationToAccomplish.isPresent()) {
       durationLeft = durationToAccomplish.get();
     }
     var nbIterations = 0;
-    while (cardinalityLeft > 0 || durationLeft.longerThan(Duration.ZERO)) {
+    while (cardinalityLeft > 0 || durationLeft.longerThan(ZERO)) {
       logger.info("Trying to satisfy "+ (isSubconflict ? "sub-" : "") + "template conflict "
                   + " (iteration: "
                   + (++nbIterations)
                   + "). Missing cardinality: "
                   + cardinalityLeft
                   + ", duration: "
-                  + (durationLeft.isEqualTo(Duration.ZERO) ? "N/A" : durationLeft));
+                  + (durationLeft.isEqualTo(ZERO) ? "N/A" : durationLeft));
       final var newActivity = getBestNewActivity(missingActivityTemplateConflict);
       assert newActivity != null;
       //add the activities to the output plan
@@ -572,7 +773,7 @@ public class PrioritySolver implements Solver {
                                                 .activitiesInserted()
                                                 .stream()
                                                 .map(SchedulingActivity::duration)
-                                                .reduce(Duration.ZERO, Duration::plus));
+                                                .reduce(ZERO, Duration::plus));
           sat = ConflictSatisfaction.PARTIALLY_SAT;
           activitiesCreated.add(newActivity.get());
         }
@@ -581,7 +782,7 @@ public class PrioritySolver implements Solver {
         break;
       }
     }
-    if (cardinalityLeft <= 0 && durationLeft.noLongerThan(Duration.ZERO)) {
+    if (cardinalityLeft <= 0 && durationLeft.noLongerThan(ZERO)) {
       //logger.info("Conflict " + i + " has been addressed");
       sat = ConflictSatisfaction.SAT;
     }
@@ -617,9 +818,8 @@ public class PrioritySolver implements Solver {
           // In case the goal requires generation of anchors, then check that the anchor is to the Start. Otherwise (anchor to End), make sure that there is a positive offset
           if (missingAssociationConflict.getAnchorToStart().isEmpty() || missingAssociationConflict
               .getAnchorToStart()
-              .get() || startOffset.longerThan(Duration.ZERO)) {
-            var replacementAct = SchedulingActivity.withNewAnchor(
-                act,
+              .get() || startOffset.longerThan(ZERO)) {
+            var replacementAct = act.withNewAnchor(
                 missingAssociationConflict.getAnchorIdTo().get(),
                 missingAssociationConflict.getAnchorToStart().get(),
                 startOffset
@@ -782,7 +982,7 @@ public class PrioritySolver implements Solver {
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
         //FINISH: clean this up code dupl re windows etc
         final var act = missingInstance.getInstance();
-        newActivity = SchedulingActivity.of(act);
+        newActivity = act;
 
       } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
         //select the "best" time among the possibilities, and latest among ties
@@ -807,7 +1007,9 @@ public class PrioritySolver implements Solver {
             final Duration dur = predecessor.duration().times(includePredDuration);
             final Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
             // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
-            if(((MissingActivityTemplateConflict) missing).getAnchorToStart().isEmpty() || ((MissingActivityTemplateConflict) missing).getAnchorToStart().get() || startOffset.noShorterThan(Duration.ZERO)){
+            if(((MissingActivityTemplateConflict) missing).getAnchorToStart().isEmpty() ||
+               ((MissingActivityTemplateConflict) missing).getAnchorToStart().get() || startOffset.noShorterThan(
+                ZERO)){
               final var actWithAnchor = Optional.of(act.get().withNewAnchor(missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
               newActivity = actWithAnchor.get();
             }
