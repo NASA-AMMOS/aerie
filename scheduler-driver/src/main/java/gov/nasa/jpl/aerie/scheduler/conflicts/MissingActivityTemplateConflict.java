@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 
 import java.util.Optional;
 
@@ -28,7 +29,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    * @param totalDuration the desired total duration
    */
   public MissingActivityTemplateConflict(
-      ActivityTemplateGoal goal,
+      Goal goal,
       Windows temporalContext,
       ActivityExpression template,
       EvaluationEnvironment evaluationEnvironment,
