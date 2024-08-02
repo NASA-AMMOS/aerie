@@ -88,17 +88,16 @@ SELECT derivation_group.id,
     JOIN ( SELECT external_source.id AS source_id,
            external_source.key,
            count(a.event_key) AS contained_events,
-           unnest(b.types) AS type,
+		   external_event_type.name AS type,
            external_source.derivation_group_id,
            external_source.valid_at
           FROM merlin.external_source
             JOIN ( SELECT external_event.source_id,
+					external_event.event_type_id,
                    external_event.key AS event_key
                   FROM merlin.external_event) a ON a.source_id = external_source.id
-            JOIN ( SELECT external_source_id AS source_id,
-                   event_types as types
-                  FROM merlin.external_source_event_type) b ON b.source_id = external_source.id
-         GROUP BY external_source.id, external_source.key, external_source.derivation_group_id, external_source.valid_at, b.types) sources ON sources.derivation_group_id = derivation_group.id
+			JOIN merlin.external_event_type ON external_event_type.id = a.event_type_id
+         GROUP BY external_source.id, external_source.key, external_source.derivation_group_id, external_source.valid_at, type) sources ON sources.derivation_group_id = derivation_group.id
     JOIN ( SELECT derived_events.event_key,
            derived_events.derivation_group_id
           FROM merlin.derived_events) c ON c.derivation_group_id = derivation_group.id
