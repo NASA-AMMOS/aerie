@@ -2,7 +2,6 @@
 CREATE TABLE merlin.external_source (
     id integer NOT NULL,
     key text NOT NULL,
-    file_id integer NOT NULL,
     source_type_id integer NOT NULL,
     derivation_group_id integer NOT NULL,
     valid_at timestamp with time zone NOT NULL,
@@ -29,11 +28,6 @@ ALTER TABLE ONLY merlin.external_source ALTER COLUMN id SET DEFAULT nextval('mer
 -- Set primary key
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT external_source_pkey PRIMARY KEY (id);
-
--- Add foreign key definition for file_id field, linking to uploaded_file table
-ALTER TABLE ONLY merlin.external_source
-    ADD CONSTRAINT "file_id -> uploaded_file" FOREIGN KEY (file_id) REFERENCES merlin.uploaded_file(id);
-
 
 -- Add uniqueness constraint for key/derivation_group_id tuple (we exclude source_type_id as derivation_group inherently addresses that, being a subclass of source types)
 ALTER TABLE ONLY merlin.external_source
@@ -272,21 +266,6 @@ CREATE OR REPLACE FUNCTION merlin.cleanup_on_external_source_delete()
 	as
 	$$
 	begin
-	  -- STEP 0: DELETE ASSOCIATED UPLOADED_FILE
-	  --          Note: as users are now permitted to delete external_sources, deleting uploaded_files from the
-	  --                existing delete query requires that we give users delete permissions on uploaded_file,
-	  --                which currently doesn't exist and is therefore something we aim to avoid. As such, deletion
-	  --                is handled here.
-	  WITH to_delete AS (
-    	SELECT uploaded_file.id, uploaded_file.name FROM merlin.uploaded_file
-    		LEFT JOIN merlin.external_source ON external_source.file_id = uploaded_file.id
-    		LEFT JOIN merlin.mission_model ON mission_model.jar_id = uploaded_file.id
-    		WHERE key IS NULL AND jar_id IS NULL
-    		ORDER BY uploaded_file.id
-    )
-    DELETE FROM merlin.uploaded_file
-    	WHERE id IN (SELECT id FROM to_delete);
-
 		-- STEP 1: DELETE LINGERING plan->dg links:
 		WITH to_delete AS (
 			SELECT plan_derivation_group.id FROM merlin.plan_derivation_group
