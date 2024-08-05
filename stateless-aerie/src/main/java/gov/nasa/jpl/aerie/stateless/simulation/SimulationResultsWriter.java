@@ -14,11 +14,14 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -49,9 +52,57 @@ public class SimulationResultsWriter {
   private final RecursiveTask<JsonObject> simConfigTask;
 
   private final Plan plan;
+  private final Duration extent;
 
+  /**
+   * Creates a SimulationResultsWriter that will write SimulationResults generated
+   * using a StreamingResourceManager using the provided ResourceFileStreamer.
+   * @param results The SimulationResults to be written
+   * @param plan The Plan simulated
+   * @param rfs The ResourceFileStreamer used during the simulation
+   */
+  public SimulationResultsWriter(SimulationResults results, Plan plan, ResourceFileStreamer rfs) {
+    this.plan = plan;
+    this.extent = results.duration;
+    this.profilesTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        try {
+          return buildProfiles(results.realProfiles, results.discreteProfiles, rfs);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+    this.eventsTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildEvents(results.events,results.topics);
+      }
+    };
+    this.spansTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildSpans(results.simulatedActivities,results.unfinishedActivities, plan.simulationStartTimestamp);
+      }
+    };
+    this.simConfigTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildSimConfig(plan);
+      }
+    };
+  }
+
+  /**
+   * Create a SimulationResultsWriter that will write SimulationResults generated
+   * using an InMemorySimulationResourceManager.
+   * @param results The SimulationResults to be written
+   * @param plan The plan simulated
+   */
   public SimulationResultsWriter(SimulationResults results, Plan plan) {
     this.plan = plan;
+    this.extent = results.duration;
     this.profilesTask = new RecursiveTask<>() {
       @Override
       protected JsonObject compute() {
@@ -78,21 +129,26 @@ public class SimulationResultsWriter {
     };
   }
 
+  /** Fork tasks to build subjsons in parallel **/
   private void forkSubTasks() {
-    // Fork tasks to build subjsons in parallel
     profilesTask.fork();
     eventsTask.fork();
     spansTask.fork();
     simConfigTask.fork();
   }
 
-  public void writeResults(CanceledListener canceledListener, SimulationExtentConsumer consumer) {
+  /**
+   * Write the formatted SimulationResult JSON to System.out
+   * @param canceledListener The CanceledListener used during simulation.
+   *    Used to determine if the results represent a canceled simulation.
+   */
+  public void writeResults(CanceledListener canceledListener) {
     final var stringWriter = new StringWriter();
     try(final var resultsJsonGenerator = Json.createGeneratorFactory(config).createGenerator(stringWriter)) {
       forkSubTasks();
 
       // Output the starting information
-      writeOpening(resultsJsonGenerator, canceledListener.get(), consumer);
+      writeOpening(resultsJsonGenerator, canceledListener.get());
       print(resultsJsonGenerator, stringWriter);
 
       // Join the forked tasks
@@ -111,7 +167,13 @@ public class SimulationResultsWriter {
     }
   }
 
-  public void writeResults(CanceledListener canceledListener, Path outputFilePath, SimulationExtentConsumer consumer) {
+  /**
+   * Write the formatted SimulationResult JSON to the specified file.
+   * @param canceledListener The CanceledListener used during simulation.
+   *    Used to determine if the results represent a canceled simulation.
+   * @param outputFilePath The file path to write results to.
+   */
+  public void writeResults(CanceledListener canceledListener, Path outputFilePath) {
     final var stringWriter = new StringWriter();
     try(final var resultsJsonGenerator = Json.createGeneratorFactory(config).createGenerator(stringWriter);
         final var fileWriter = new FileWriter(outputFilePath.toFile()))
@@ -119,7 +181,7 @@ public class SimulationResultsWriter {
       forkSubTasks();
 
       // Output the starting information
-      writeOpening(resultsJsonGenerator, canceledListener.get(), consumer);
+      writeOpening(resultsJsonGenerator, canceledListener.get());
       printFile(resultsJsonGenerator, stringWriter, fileWriter);
 
       // Join the forked tasks
@@ -143,6 +205,7 @@ public class SimulationResultsWriter {
     }
   }
 
+  /** Helper method that handles buffer management for printing to System.out */
   private void print(JsonGenerator resultsGenerator, StringWriter stringWriter) {
     resultsGenerator.flush();
     System.out.print(stringWriter.toString().trim());
@@ -151,6 +214,7 @@ public class SimulationResultsWriter {
     stringWriter.getBuffer().trimToSize(); // deallocates used buffer memory
   }
 
+  /** Helper method that handles buffer management for writing to a file */
   private void printFile(JsonGenerator resultsGenerator, StringWriter stringWriter, FileWriter fileWriter)
   throws IOException {
     resultsGenerator.flush();
@@ -160,9 +224,9 @@ public class SimulationResultsWriter {
     stringWriter.getBuffer().trimToSize(); // deallocates used buffer memory
   }
 
-  private void writeOpening(JsonGenerator resultsGenerator, boolean canceled, SimulationExtentConsumer consumer) {
-    final Timestamp simEndTime = plan.simulationStartTimestamp
-        .plusMicros(consumer.getLastAcceptedDuration().in(Duration.MICROSECOND));
+  /** Write the beginning and top-level fields of the results JSON */
+  private void writeOpening(JsonGenerator resultsGenerator, boolean canceled) {
+    final Timestamp simEndTime = plan.simulationStartTimestamp.plusMicros(extent.in(Duration.MICROSECOND));
 
     resultsGenerator.writeStartObject();
     resultsGenerator.write("version", SCHEMA_VERSION);
@@ -173,6 +237,7 @@ public class SimulationResultsWriter {
     else { resultsGenerator.write("canceled", JsonValue.FALSE); }
   }
 
+  /** Build up a JSON Object containing the resource profiles. */
   private JsonObject buildProfiles(
       final Map<String, ResourceProfile<RealDynamics>> realProfiles,
       final Map<String, ResourceProfile<SerializedValue>> discreteProfiles
@@ -180,7 +245,7 @@ public class SimulationResultsWriter {
     final var realProfileBuilder = Json.createArrayBuilder();
     final var discreteProfileBuilder = Json.createArrayBuilder();
 
-    for(final var e : realProfiles.entrySet()) {
+    for (final var e : realProfiles.entrySet()) {
       final var name = e.getKey();
       final var profile = e.getValue();
 
@@ -199,15 +264,102 @@ public class SimulationResultsWriter {
       realProfileBuilder.add(profileBuilder);
     }
 
-    for(final var e : discreteProfiles.entrySet()) {
+    for (final var e : discreteProfiles.entrySet()) {
       final var name = e.getKey();
       final var profile = e.getValue();
 
-       // Precompute segments
+      // Precompute segments
       final var segmentsBuilder = Json.createArrayBuilder();
       profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
                                                               .add("extent", s.extent().toString())
                                                               .add("dynamics", serializedValueP.unparse(s.dynamics()))));
+
+      final var profileBuilder = Json.createObjectBuilder()
+                                     .add("name", name)
+                                     .add("schema", valueSchemaP.unparse(profile.schema()))
+                                     .add("segments", segmentsBuilder);
+
+      // Append to the array builder
+      discreteProfileBuilder.add(profileBuilder);
+    }
+
+    return Json.createObjectBuilder()
+               .add("realProfiles", realProfileBuilder)
+               .add("discreteProfiles", discreteProfileBuilder)
+               .build();
+  }
+
+  /**
+   * Build up a JSON Object containing the resource profiles.
+   * Prioritizes getting profile segments from ResourceFileStreamer,
+   * using the Maps as fallbacks should a resource file be missing.
+   */
+  private JsonObject buildProfiles(
+      final Map<String, ResourceProfile<RealDynamics>> realProfiles,
+      final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
+      final ResourceFileStreamer rfs
+  ) throws IOException
+  {
+    final var realProfileBuilder = Json.createArrayBuilder();
+    final var discreteProfileBuilder = Json.createArrayBuilder();
+
+    for(final var e : realProfiles.entrySet()) {
+      final var name = e.getKey();
+      final var profile = e.getValue();
+      final var filepath = Path.of(rfs.getFileName(name));
+
+      // Precompute segments
+      final var segmentsBuilder = Json.createArrayBuilder();
+
+      try (final var stream = Files.lines(filepath)) {
+        stream.forEach(s -> {
+          if (!s.isBlank()) {
+            try (final JsonReader jr = Json.createReader(new StringReader(s))) {
+              segmentsBuilder.add(jr.readObject());
+            }
+          }
+        });
+      }
+
+      // If somehow the file didn't exist and didn't except above, use the resources in the rmgr
+      if(!Files.deleteIfExists(filepath)){
+        profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
+                                                                .add("extent", s.extent().toString())
+                                                                .add("dynamics", realDynamicsP.unparse(s.dynamics()))));
+      }
+
+      final var profileBuilder = Json.createObjectBuilder()
+                                     .add("name", name)
+                                     .add("schema", valueSchemaP.unparse(profile.schema()))
+                                     .add("segments", segmentsBuilder);
+
+      // Append to the array builder
+      realProfileBuilder.add(profileBuilder);
+    }
+
+    for(final var e : discreteProfiles.entrySet()) {
+      final var name = e.getKey();
+      final var profile = e.getValue();
+      final var filepath = Path.of(rfs.getFileName(name));
+
+       // Precompute segments
+      final var segmentsBuilder = Json.createArrayBuilder();
+      try (final var stream = Files.lines(filepath)) {
+        stream.forEach(s -> {
+          if (!s.isBlank()) {
+            try (final JsonReader jr = Json.createReader(new StringReader(s))) {
+              segmentsBuilder.add(jr.readObject());
+            }
+          }
+        });
+      }
+
+      // If somehow the file didn't exist and didn't except above, use the resources in the rmgr
+      if(!Files.deleteIfExists(filepath)){
+        profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
+                                                                .add("extent", s.extent().toString())
+                                                                .add("dynamics", serializedValueP.unparse(s.dynamics()))));
+      }
 
       final var profileBuilder = Json.createObjectBuilder()
                                      .add("name",name)
@@ -224,6 +376,7 @@ public class SimulationResultsWriter {
                .build();
   }
 
+  /** Build up a JSON Object containing the activity spans. */
   private JsonObject buildSpans(
       final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
       final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
@@ -298,6 +451,7 @@ public class SimulationResultsWriter {
                .build();
   }
 
+  /** Build up a JSON Object containing the simulation events. */
   private JsonObject buildEvents(final Map<Duration, List<EventGraph<EventRecord>>> events, final List<Triple<Integer, String, ValueSchema>> topics ) {
     final var eventArrayBuilder = Json.createArrayBuilder();
 
@@ -338,6 +492,7 @@ public class SimulationResultsWriter {
                .build();
   }
 
+  /** Build up a JSON Object containing the simulation configuration. */
   private JsonObject buildSimConfig(final Plan plan) {
     return Json.createObjectBuilder()
                .add("startTime", plan.simulationStartTimestamp.toString())
