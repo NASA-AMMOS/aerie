@@ -1,0 +1,35 @@
+table:
+  name: seen_sources
+  schema: ui
+configuration:
+  custom_name: "seen_sources"
+select_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+insert_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      check: {}
+update_permissions:
+  - role: aerie_admin
+    permission:
+      columns: '*'
+      filter: {}
+delete_permissions:
+  - role: aerie_admin
+    permission:
+      filter: {}

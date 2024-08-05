@@ -177,3 +177,4 @@
 - "!include ui/extension_roles.yaml"
 - "!include ui/extensions.yaml"
 - "!include ui/view.yaml"
+- "!include ui/seen_sources.yaml"
