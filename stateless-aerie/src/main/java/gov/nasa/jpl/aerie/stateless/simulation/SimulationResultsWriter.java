@@ -14,11 +14,14 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -50,12 +53,16 @@ public class SimulationResultsWriter {
 
   private final Plan plan;
 
-  public SimulationResultsWriter(SimulationResults results, Plan plan) {
+  public SimulationResultsWriter(SimulationResults results, Plan plan, ResourceFileStreamer rfs) {
     this.plan = plan;
     this.profilesTask = new RecursiveTask<>() {
       @Override
       protected JsonObject compute() {
-        return buildProfiles(results.realProfiles, results.discreteProfiles);
+        try {
+          return buildProfiles(results.realProfiles, results.discreteProfiles, rfs);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
       }
     };
     this.eventsTask = new RecursiveTask<>() {
@@ -176,20 +183,37 @@ public class SimulationResultsWriter {
   // TODO: compute from temp files
   private JsonObject buildProfiles(
       final Map<String, ResourceProfile<RealDynamics>> realProfiles,
-      final Map<String, ResourceProfile<SerializedValue>> discreteProfiles
-  ) {
+      final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
+      final ResourceFileStreamer rfs
+  ) throws IOException
+  {
     final var realProfileBuilder = Json.createArrayBuilder();
     final var discreteProfileBuilder = Json.createArrayBuilder();
 
     for(final var e : realProfiles.entrySet()) {
       final var name = e.getKey();
       final var profile = e.getValue();
+      final var filepath = Path.of(rfs.getFileName(name));
 
       // Precompute segments
       final var segmentsBuilder = Json.createArrayBuilder();
-      profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
-                                                              .add("extent", s.extent().toString())
-                                                              .add("dynamics", realDynamicsP.unparse(s.dynamics()))));
+
+      try (final var stream = Files.lines(filepath)) {
+        stream.forEach(s -> {
+          if (!s.isBlank()) {
+            try (final JsonReader jr = Json.createReader(new StringReader(s))) {
+              segmentsBuilder.add(jr.readObject());
+            }
+          }
+        });
+      }
+
+      // If somehow the file didn't exist and didn't except above, use the resources in the rmgr
+      if(!Files.deleteIfExists(filepath)){
+        profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
+                                                                .add("extent", s.extent().toString())
+                                                                .add("dynamics", realDynamicsP.unparse(s.dynamics()))));
+      }
 
       final var profileBuilder = Json.createObjectBuilder()
                                      .add("name", name)
@@ -203,12 +227,26 @@ public class SimulationResultsWriter {
     for(final var e : discreteProfiles.entrySet()) {
       final var name = e.getKey();
       final var profile = e.getValue();
+      final var filepath = Path.of(rfs.getFileName(name));
 
        // Precompute segments
       final var segmentsBuilder = Json.createArrayBuilder();
-      profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
-                                                              .add("extent", s.extent().toString())
-                                                              .add("dynamics", serializedValueP.unparse(s.dynamics()))));
+      try (final var stream = Files.lines(filepath)) {
+        stream.forEach(s -> {
+          if (!s.isBlank()) {
+            try (final JsonReader jr = Json.createReader(new StringReader(s))) {
+              segmentsBuilder.add(jr.readObject());
+            }
+          }
+        });
+      }
+
+      // If somehow the file didn't exist and didn't except above, use the resources in the rmgr
+      if(!Files.deleteIfExists(filepath)){
+        profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
+                                                                .add("extent", s.extent().toString())
+                                                                .add("dynamics", serializedValueP.unparse(s.dynamics()))));
+      }
 
       final var profileBuilder = Json.createObjectBuilder()
                                      .add("name",name)

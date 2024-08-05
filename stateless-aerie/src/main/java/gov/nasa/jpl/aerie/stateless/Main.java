@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.stateless;
 
+import gov.nasa.jpl.aerie.merlin.driver.resources.StreamingSimulationResourceManager;
 import gov.nasa.jpl.aerie.stateless.simulation.CanceledListener;
+import gov.nasa.jpl.aerie.stateless.simulation.ResourceFileStreamer;
 import gov.nasa.jpl.aerie.stateless.simulation.SimulationExtentConsumer;
 import gov.nasa.jpl.aerie.stateless.simulation.SimulationResultsWriter;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -8,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
@@ -123,9 +124,8 @@ public class Main {
   private static void simulate(Arguments.SimulationArguments<?> simArgs) {
     if (simArgs.verbose()) { System.out.println("Simulating Plan..."); }
 
-    // TODO: Update this to a streaming manager streaming to temp files
-    //       this will impact how results are written
-    final InMemorySimulationResourceManager rmgr = new InMemorySimulationResourceManager();
+    final var rfs = new ResourceFileStreamer();
+    final var rmgr = new StreamingSimulationResourceManager(rfs);
     final var canceledListener = new CanceledListener();
     final var extentConsumer = simArgs.verbose? new SimulationExtentConsumer(simArgs.extentUpdatePeriod) : new SimulationExtentConsumer();
 
@@ -161,7 +161,7 @@ public class Main {
           final var results = f.get();
 
           if (simArgs.verbose()) { System.out.println("Writing Results..."); }
-          final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan);
+          final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan, rfs);
 
           simArgs.outputFilePath().ifPresentOrElse(
               p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
@@ -181,7 +181,7 @@ public class Main {
         Runtime.getRuntime().removeShutdownHook(shutdownHook);
 
         if (simArgs.verbose()) { System.out.println("Writing Results..."); }
-        final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan);
+        final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan, rfs);
         simArgs.outputFilePath().ifPresentOrElse(
             p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
             () -> resultsWriter.writeResults(canceledListener, extentConsumer)
