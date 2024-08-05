@@ -4,9 +4,6 @@ table:
 configuration:
   custom_name: "external_source"
 object_relationships:
-- name: uploaded_file
-  using:
-    foreign_key_constraint_on: file_id
 - name: derivation_group
   using:
     foreign_key_constraint_on: derivation_group_id
@@ -37,16 +34,16 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
       check: {}
   - role: user
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, file_id, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
       filter: {}
 #  - role: user # justified???
 #    permission:
