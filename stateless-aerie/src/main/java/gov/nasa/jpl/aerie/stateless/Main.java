@@ -44,6 +44,11 @@ public class Main {
   }
 
   public static void main(String[] args) {
+    if(args.length == 0) {
+      displayTopLevelHelp();
+      return;
+    }
+
     final var command = args[0];
 
     switch (command.toLowerCase()) {
