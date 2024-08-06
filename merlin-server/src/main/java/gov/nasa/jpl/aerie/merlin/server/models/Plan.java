@@ -74,6 +74,21 @@ public final class Plan {
     this.simulationEndTimestamp = simulationEndTimestamp;
   }
 
+  public Plan(
+      String name,
+      Timestamp startTimestamp,
+      Timestamp endTimestamp,
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
+      Map<String, SerializedValue> simulationConfig) {
+    this.name = name;
+    this.startTimestamp = startTimestamp;
+    this.endTimestamp = endTimestamp;
+    this.activityDirectives = activityDirectives;
+    this.configuration = simulationConfig;
+    this.simulationStartTimestamp = startTimestamp;
+    this.simulationEndTimestamp = endTimestamp;
+  }
+
   @Override
   public boolean equals(final Object object) {
     if (!(object instanceof final Plan other)) {
