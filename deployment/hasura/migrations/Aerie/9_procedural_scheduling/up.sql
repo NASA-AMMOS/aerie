@@ -130,4 +130,4 @@ alter table scheduler.scheduling_goal_analysis_satisfying_activities
       on update cascade
       on delete cascade;
 
-call migrations.mark_migration_applied('8');
+call migrations.mark_migration_applied('9');

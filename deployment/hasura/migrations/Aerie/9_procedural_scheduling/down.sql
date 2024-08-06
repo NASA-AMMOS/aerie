@@ -117,4 +117,4 @@ comment on column scheduler.scheduling_goal_definition.definition is e''
 
 drop type scheduler.goal_type;
 
-call migrations.mark_migration_rolled_back('8');
+call migrations.mark_migration_rolled_back('9');
