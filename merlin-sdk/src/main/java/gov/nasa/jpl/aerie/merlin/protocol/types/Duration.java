@@ -170,7 +170,7 @@ public final class Duration implements Comparable<Duration> {
 
   /** Construct a duration from a string representation. Only accepts input in the format HH:MM:SS.ssssss */
   public static Duration fromString(final String duration) {
-    final var regexp = "(\\d{2,}):(\\d{2}):(\\d{2})(\\.\\d{1,6})?";
+    final var regexp = "([+-]?)(\\d{2,}):(\\d{2}):(\\d{2})(\\.\\d{1,6})?";
 
     final Pattern pattern = Pattern.compile(regexp, Pattern.MULTILINE);
     final Matcher matcher = pattern.matcher(duration);
@@ -179,10 +179,11 @@ public final class Duration implements Comparable<Duration> {
       throw new IllegalArgumentException("Duration has incorrect format. Expected format HH:MM:SS. Provided duration: "
                                          + duration);
     }
-    final var hours = Duration.of(Integer.parseInt(matcher.group(1)),Duration.HOURS);
-    final var minutes = Duration.of(Integer.parseInt(matcher.group(2)),Duration.MINUTES);
-    final var seconds = Duration.of(Integer.parseInt(matcher.group(3)),Duration.SECONDS);
-    final var microsecondString = Optional.ofNullable(matcher.group(4));
+    final var sign = Optional.ofNullable(matcher.group(1));
+    final var hours = Duration.of(Integer.parseInt(matcher.group(2)),Duration.HOURS);
+    final var minutes = Duration.of(Integer.parseInt(matcher.group(3)),Duration.MINUTES);
+    final var seconds = Duration.of(Integer.parseInt(matcher.group(4)),Duration.SECONDS);
+    final var microsecondString = Optional.ofNullable(matcher.group(5));
     var micros = Duration.ZERO;
 
     if (microsecondString.isPresent()){
@@ -193,7 +194,8 @@ public final class Duration implements Comparable<Duration> {
       }
       micros = Duration.of(Integer.parseInt(subSecond), Duration.MICROSECONDS);
     }
-    return micros.plus(seconds).plus(minutes).plus(hours);
+
+    return micros.plus(seconds).plus(minutes).plus(hours).times(sign.isPresent() && sign.get().equals("-") ? -1 : 1);
   }
 
   /**
