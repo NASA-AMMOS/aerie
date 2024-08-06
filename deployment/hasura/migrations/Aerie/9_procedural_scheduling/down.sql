@@ -113,7 +113,7 @@ alter table scheduler.scheduling_goal_definition
   alter column definition set not null;
 
 comment on column scheduler.scheduling_goal_definition.definition is e''
-  'An executable expression in the Merlin scheduling language.'
+  'An executable expression in the Merlin scheduling language.';
 
 drop type scheduler.goal_type;
 
