@@ -1,14 +1,26 @@
 package gov.nasa.jpl.aerie.stateless;
 
+import gov.nasa.jpl.aerie.stateless.simulation.CanceledListener;
+import gov.nasa.jpl.aerie.stateless.simulation.SimulationExtentConsumer;
+import gov.nasa.jpl.aerie.stateless.simulation.SimulationResultsWriter;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.cli.*;
+
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
 
 public class Main {
   private static final String VERSION = "v2.16.0";
@@ -105,7 +117,60 @@ public class Main {
   }
 
   private static void simulate(Arguments.SimulationArguments<?> simArgs) {
-    System.out.println("Simulating Plan...");
+    if (simArgs.verbose()) { System.out.println("Simulating Plan..."); }
+
+    // TODO: Update this to a streaming manager streaming to temp files
+    //       this will impact how results are written
+    final InMemorySimulationResourceManager rmgr = new InMemorySimulationResourceManager();
+    final var canceledListener = new CanceledListener();
+    final var extentConsumer = simArgs.verbose? new SimulationExtentConsumer(simArgs.extentUpdatePeriod) : new SimulationExtentConsumer();
+
+    final var planDuration = Duration.of(simArgs.plan.startTimestamp.microsUntil(simArgs.plan.endTimestamp),
+                                     Duration.MICROSECOND);
+    final var simulationDuration = Duration.of(simArgs.plan.simulationStartTimestamp.microsUntil(simArgs.plan.simulationEndTimestamp),
+                                     Duration.MICROSECOND);
+
+    try {
+      final SimulationResults results = SimulationDriver.simulate(
+          simArgs.missionModel,
+          simArgs.plan.activityDirectives,
+          simArgs.plan.simulationStartTimestamp.toInstant(),
+          simulationDuration,
+          simArgs.plan.startTimestamp.toInstant(),
+          planDuration,
+          canceledListener,
+          extentConsumer,
+          rmgr);
+
+      final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan);
+
+      simArgs.outputFilePath().ifPresentOrElse(
+          p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
+          () -> resultsWriter.writeResults(canceledListener, extentConsumer)
+      );
+    } catch (SimulationException ex) {
+      final var dataBuilder = Json.createObjectBuilder()
+                                  .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
+                                  .add("utcTimeDoy", SimulationException.formatInstant(ex.instant));
+      ex.directiveId.ifPresent(directiveId -> dataBuilder.add("executingDirectiveId", directiveId.id()));
+      ex.activityType.ifPresent(activityType -> dataBuilder.add("executingActivityType", activityType));
+      ex.activityStackTrace.ifPresent(activityStackTrace -> dataBuilder.add("activityStackTrace", activityStackTrace));
+
+      final var exception = Json.createObjectBuilder()
+                                .add("type", "SIMULATION_EXCEPTION")
+                                .add("message", ex.cause.getMessage())
+                                .add("data", dataBuilder)
+                                .add("trace", ex.cause.toString())
+                                .build();
+
+      final Map<String,String> config = Map.of(JsonGenerator.PRETTY_PRINTING, "");
+      try(final var jsonWriter = Json.createWriterFactory(config).createWriter(System.err)) {
+        jsonWriter.writeObject(exception);
+      }
+      System.exit(1);
+    } finally {
+      extentConsumer.close();
+    }
   }
 
   /**
