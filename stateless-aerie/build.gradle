@@ -1,0 +1,89 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'jacoco'
+  id 'application'
+}
+
+group = "gov.nasa.jpl.aerie.stateless"
+version = "v2.17"
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+
+  withJavadocJar()
+  withSourcesJar()
+}
+
+jar {
+  dependsOn(':parsing-utilities:jar')
+  dependsOn(':merlin-sdk:jar')
+  dependsOn(':merlin-driver:jar')
+  dependsOn(':constraints:jar')
+
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+  manifest {
+    attributes('Main-Class': 'gov.nasa.jpl.aerie.stateless.Main')
+  }
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
+test {
+  useJUnitPlatform {
+    includeEngines 'jqwik', 'junit-jupiter'
+  }
+  testLogging {
+    exceptionFormat = 'full'
+  }
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
+
+// Link references to standard Java classes to the official Java 11 documentation.
+javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+dependencies {
+  implementation project(':merlin-server')
+  implementation project(':merlin-driver')
+  implementation project(':parsing-utilities')
+  implementation 'commons-cli:commons-cli:1.8.0'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation "net.jqwik:jqwik:1.6.5"
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty('publishing.version')
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
+      }
+    }
+  }
+}
