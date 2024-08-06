@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -38,11 +39,11 @@ public class TestPersistentAnchor {
 
   public record TestData(
       Optional<Plan> plan,
-      ArrayList<SchedulingActivityDirective> actsToBeAnchored,
-      ArrayList<SchedulingActivityDirective> actsWithAnchor,
-      ArrayList<SchedulingActivityDirective> actsWithoutAnchorAnchored,
-      ArrayList<SchedulingActivityDirective> actsWithoutAnchorNotAnchored,
-      ArrayList<SchedulingActivityDirective> actsNewAnchored
+      ArrayList<SchedulingActivity> actsToBeAnchored,
+      ArrayList<SchedulingActivity> actsWithAnchor,
+      ArrayList<SchedulingActivity> actsWithoutAnchorAnchored,
+      ArrayList<SchedulingActivity> actsWithoutAnchorNotAnchored,
+      ArrayList<SchedulingActivity> actsNewAnchored
   ) {}
 
   private static final Logger logger = LoggerFactory.getLogger(TestPersistentAnchor.class);
@@ -58,8 +59,8 @@ public class TestPersistentAnchor {
               final SimulationResults simResults,
               final EvaluationEnvironment environment)
           {
-            final var startTime = activityInstance.interval.start;
-            if (!activityInstance.type.equals(ae.type().getName())) return false;
+            final var startTime = activityInstance.interval().start;
+            if (!activityInstance.type().equals(ae.type().getName())) return false;
             for (final var arg : ae
                 .arguments()
                 .entrySet()
@@ -73,7 +74,7 @@ public class TestPersistentAnchor {
                     .valueAt(startTime)
                     .orElseThrow()))
                 .entrySet()) {
-              if (!arg.getValue().equals(activityInstance.parameters.get(arg.getKey()))) return false;
+              if (!arg.getValue().equals(activityInstance.parameters().get(arg.getKey()))) return false;
             }
             return true;
           }
@@ -94,7 +95,7 @@ public class TestPersistentAnchor {
     if(testData.plan.isEmpty())
       return false;
 
-    Set<SchedulingActivityDirectiveId> planActivityAnchors = testData.plan.get().getAnchorIds();
+    Set<ActivityDirectiveId> planActivityAnchors = testData.plan.get().getAnchorIds();
     for(final var act : testData.actsToBeAnchored){
       if(!planActivityAnchors.contains(act.anchorId()))
         return false;
@@ -114,9 +115,9 @@ public class TestPersistentAnchor {
     if(testData.plan.isEmpty())
       return false;
 
-    Set<SchedulingActivityDirectiveId> anchorIds = testData.actsToBeAnchored.stream()
-                                                                            .map(SchedulingActivityDirective::id)
-                                                                            .collect(Collectors.toSet());
+    Set<ActivityDirectiveId> anchorIds = testData.actsToBeAnchored.stream()
+                                                                  .map(SchedulingActivity::id)
+                                                                  .collect(Collectors.toSet());
 
     final var mapIdToActivity = testData.plan.get().getActivitiesById();
 
@@ -426,10 +427,10 @@ public class TestPersistentAnchor {
   public TestData createTestCaseStartsAt(final PersistentTimeAnchor persistentAnchor,  final boolean missingActAssociationsWithAnchor, final boolean missingActAssociationsWithoutAnchor, final int activityDurationHours, final int goalStartPeriodHours, final int goalEndPeriodHours, final TimeAnchor timeAnchor, final TimeExpressionRelative timeExpression, final long relativeOffsetHours)
   throws SchedulingInterruptedException
   {
-    var actsToBeAnchored = new ArrayList<SchedulingActivityDirective>();
-    var templateActsAlreadyAnchor = new ArrayList<SchedulingActivityDirective>();
-    var templateActsWithoutAnchorAnchored = new ArrayList<SchedulingActivityDirective>();
-    var templateActsWithoutAnchorNotAnchored = new ArrayList<SchedulingActivityDirective>();
+    var actsToBeAnchored = new ArrayList<SchedulingActivity>();
+    var templateActsAlreadyAnchor = new ArrayList<SchedulingActivity>();
+    var templateActsWithoutAnchorAnchored = new ArrayList<SchedulingActivity>();
+    var templateActsWithoutAnchorNotAnchored = new ArrayList<SchedulingActivity>();
 
     final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
@@ -448,28 +449,30 @@ public class TestPersistentAnchor {
         SimulationUtility.getBananaSchedulerModel()
     );
 
+    final var idGenerator = new DirectiveIdGenerator(0);
+
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    SchedulingActivityDirective act1 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+    SchedulingActivity act1 = SchedulingActivity.of(idGenerator.next(), actTypeA, planningHorizon.getStartAerie(), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
         "quantity", SerializedValue.of(1),
         "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
+    ), null, null, true, false);
     partialPlan.add(act1);
     actsToBeAnchored.add(act1);
 
-    SchedulingActivityDirective act2 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+    SchedulingActivity act2 = SchedulingActivity.of(idGenerator.next(), actTypeA, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
         "quantity", SerializedValue.of(1),
         "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
+    ), null, null, true, false);
     partialPlan.add(act2);
     actsToBeAnchored.add(act2);
 
-    SchedulingActivityDirective act3 = SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+    SchedulingActivity act3 = SchedulingActivity.of(idGenerator.next(), actTypeA, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
         "quantity", SerializedValue.of(1),
         "growingDuration", SerializedValue.of(Duration.HOUR.times(activityDurationHours).in(Duration.HOURS))
-    ), null, null, true);
+    ), null, null, true, false);
     partialPlan.add(act3);
     actsToBeAnchored.add(act3);
 
@@ -495,34 +498,34 @@ public class TestPersistentAnchor {
 
     if(missingActAssociationsWithAnchor){
       // Activities with anchors
-      SchedulingActivityDirective act4 = SchedulingActivityDirective.of(actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act1.id(), anchoredToStart);
+      SchedulingActivity act4 = SchedulingActivity.of(idGenerator.next(), actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)), null, act1.id(), anchoredToStart, false);
       partialPlan.add(act4);
       templateActsAlreadyAnchor.add(act4);
 
-      SchedulingActivityDirective act5 = SchedulingActivityDirective.of(actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act2.id(), anchoredToStart);
+      SchedulingActivity act5 = SchedulingActivity.of(idGenerator.next(), actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)), null, act2.id(), anchoredToStart, false);
       partialPlan.add(act5);
       templateActsAlreadyAnchor.add(act5);
 
-      SchedulingActivityDirective act6 = SchedulingActivityDirective.of(actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, act3.id(), anchoredToStart);
+      SchedulingActivity act6 = SchedulingActivity.of(idGenerator.next(), actTypeB, relativeOffset, Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)), null, act3.id(), anchoredToStart, false);
       partialPlan.add(act6);
       templateActsAlreadyAnchor.add(act6);
     }
 
     if(missingActAssociationsWithoutAnchor){
       // Activities without anchors
-      SchedulingActivityDirective act7 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, anchoredToStart);
+      SchedulingActivity act7 = SchedulingActivity.of(idGenerator.next(), actTypeB, planningHorizon.getStartAerie().plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)), null, null, anchoredToStart, false);
       partialPlan.add(act7);
 
-      SchedulingActivityDirective act8 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, anchoredToStart);
+      SchedulingActivity act8 = SchedulingActivity.of(idGenerator.next(), actTypeB, planningHorizon.getStartAerie().plus(Duration.of(5, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)), null, null, anchoredToStart, false);
       partialPlan.add(act8);
 
-      SchedulingActivityDirective act9 = SchedulingActivityDirective.of(actTypeB, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
-          "quantity", SerializedValue.of(1)),null, anchoredToStart);
+      SchedulingActivity act9 = SchedulingActivity.of(idGenerator.next(), actTypeB, planningHorizon.getStartAerie().plus(Duration.of(10, Duration.HOURS)).plus(offsetWithDuration), Duration.of(activityDurationHours, Duration.HOURS), Map.of(
+          "quantity", SerializedValue.of(1)), null, null, anchoredToStart, false);
       partialPlan.add(act9);
 
       if (!persistentAnchor.equals(PersistentTimeAnchor.DISABLED) && !missingActAssociationsWithAnchor) {
@@ -583,7 +586,7 @@ public class TestPersistentAnchor {
     templateNewActsAnchored.removeAll(partialPlan.getActivities());
 
 
-    for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
+    for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     return new TestData(plan, actsToBeAnchored, templateActsAlreadyAnchor, templateActsWithoutAnchorAnchored, templateActsWithoutAnchorNotAnchored, templateNewActsAnchored);

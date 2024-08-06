@@ -28,15 +28,19 @@ public final class Naming {
   // Use a WeakHashMap so that naming a thing doesn't prevent it from being garbage-collected.
   private static final WeakHashMap<Object, Function<NamingContext, Optional<String>>> NAMES = new WeakHashMap<>();
 
-  private record NamingContext(Set<Object> visited, Optional<String> anonymousName) {
+  private record NamingContext(Set<Object> visited, Function<Object, Optional<String>> anonymousName) {
     NamingContext visit(Object thing) {
       var newVisited = new HashSet<>(visited);
       newVisited.add(thing);
       return new NamingContext(newVisited, anonymousName);
     }
 
+    public NamingContext() {
+      this(Set.of(), $ -> Optional.empty());
+    }
+
     public NamingContext(String anonymousName) {
-      this(Set.of(), Optional.ofNullable(anonymousName));
+      this(Set.of(), anonymousName == null ? $ -> Optional.of(Objects.toString($)) : $ -> Optional.of(anonymousName));
     }
   }
 
@@ -52,7 +56,9 @@ public final class Naming {
       for (int i = 0; i < args$.length; ++i) {
         var argName$ = Optional.ofNullable(args$[i].get())
                 .flatMap(argRef -> getName(argRef, context));
-        if (argName$.isEmpty()) return context.anonymousName();
+        if (argName$.isEmpty()) {
+          return context.anonymousName.apply(args$[i].get());
+        }
         argNames[i] = argName$.get();
       }
       return Optional.of(nameFormat.formatted(argNames));
@@ -66,8 +72,13 @@ public final class Naming {
    * returns empty.
    */
   public static Optional<String> getName(Object thing) {
-    return getName(thing, new NamingContext(null));
+    return getName(thing, new NamingContext());
   }
+
+  // TODO - build a version of getName, or make this the default behavior, (maybe if anonymousName is null?)
+  //   which calls Object.toString on things that don't otherwise have a name.
+  //   This supports the use of literals and dynamics objects in effect names,
+  //   without needing to eagerly compute their names, which involves costly string ops.
 
   /**
    * Get the name for thing.
@@ -80,8 +91,8 @@ public final class Naming {
 
   private static Optional<String> getName(Object thing, NamingContext context) {
     return context.visited.contains(thing)
-            ? context.anonymousName
-            : NAMES.getOrDefault(thing, NamingContext::anonymousName).apply(context.visit(thing));
+            ? context.anonymousName.apply(thing)
+            : NAMES.getOrDefault(thing, ctx -> ctx.anonymousName.apply(thing)).apply(context.visit(thing));
   }
 
   public static String argsFormat(Collection<?> collection) {

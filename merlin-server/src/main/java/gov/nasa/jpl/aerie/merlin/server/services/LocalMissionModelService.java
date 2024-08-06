@@ -7,6 +7,8 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
@@ -94,12 +96,10 @@ public final class LocalMissionModelService implements MissionModelService {
    * @param missionModelId The ID of the mission model to load.
    * @return The set of all activity types in the named mission model, indexed by name.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
-   * @throws MissionModelLoadException If the mission model cannot be loaded -- the JAR may be invalid, or the mission model
-   * it contains may not abide by the expected contract at load time.
    */
   @Override
   public Map<String, ActivityType> getActivityTypes(final String missionModelId)
-  throws NoSuchMissionModelException, MissionModelLoadException
+  throws NoSuchMissionModelException
   {
     try {
       return missionModelRepository.getActivityTypes(missionModelId);
@@ -288,7 +288,8 @@ public final class LocalMissionModelService implements MissionModelService {
   public SimulationResults runSimulation(
       final CreateSimulationMessage message,
       final Consumer<Duration> simulationExtentConsumer,
-      final Supplier<Boolean> canceledListener)
+      final Supplier<Boolean> canceledListener,
+      final SimulationResourceManager resourceManager)
   throws NoSuchMissionModelException
   {
     final var config = message.configuration();
@@ -309,7 +310,8 @@ public final class LocalMissionModelService implements MissionModelService {
         message.planStartTime(),
         message.planDuration(),
         canceledListener,
-        simulationExtentConsumer);
+        simulationExtentConsumer,
+        resourceManager);
   }
 
   @Override
@@ -348,7 +350,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
   @Override
   public void refreshResourceTypes(final String missionModelId)
-  throws NoSuchMissionModelException {
+  throws NoSuchMissionModelException, MissionModelLoadException {
     try {
       final var model = this.loadAndInstantiateMissionModel(missionModelId);
       this.missionModelRepository.updateResourceTypes(missionModelId, model.getResources());

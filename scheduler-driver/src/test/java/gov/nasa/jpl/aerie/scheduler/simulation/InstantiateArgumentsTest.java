@@ -24,7 +24,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -85,7 +85,7 @@ public class InstantiateArgumentsTest {
             Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
     );
 
-    final var arguments = SchedulingActivityDirective.instantiateArguments(sea.fields(), Duration.of(1, HOUR), simulationResults, environment, fauxType);
+    final var arguments = SchedulingActivity.instantiateArguments(sea.fields(), Duration.of(1, HOUR), simulationResults, environment, fauxType);
 
     assertEquals(4, arguments.size());
 

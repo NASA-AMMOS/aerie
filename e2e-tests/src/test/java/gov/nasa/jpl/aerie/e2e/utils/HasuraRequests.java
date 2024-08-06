@@ -163,17 +163,19 @@ public class HasuraRequests implements AutoCloseable {
     final var variables = Json.createObjectBuilder().add("modelId", modelId).build();
 
     for(int i = 0; i < timeout; ++i){
-      final var logs = makeRequest(GQL.GET_MODEL_EVENT_LOGS, variables).getJsonObject("mission_model");
-      if(logs.getJsonArray("refresh_activity_type_logs").isEmpty()
-         || logs.getJsonArray("refresh_model_parameter_logs").isEmpty()
-         || logs.getJsonArray("refresh_resource_type_logs").isEmpty()) {
+      final var logs = ModelEventLogs.fromJSON(makeRequest(GQL.GET_MODEL_EVENT_LOGS, variables)
+                                                   .getJsonObject("mission_model"));
+
+      if(logs.refreshActivityTypesLogs().getLast().pending() ||
+         logs.refreshModelParamsLogs().getLast().pending() ||
+         logs.refreshResourceTypesLogs().getLast().pending()) {
         try {
           Thread.sleep(1000); // 1s
         } catch (InterruptedException e) {
           throw new RuntimeException(e);
         }
       } else {
-        return ModelEventLogs.fromJSON(logs);
+        return logs;
       }
     }
     throw new TimeoutError("One or more mission model Hausra events did not return after " + timeout + " seconds");

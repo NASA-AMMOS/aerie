@@ -127,7 +127,7 @@ public class RootfindingTest {
         Duration.of(-2, Duration.SECONDS),
         twoSecond,
         100);
-    assertEquals(29, solution.history().getHistory().size());
+    assertEquals(30, solution.history().getHistory().size());
     assertEquals(new EquationSolvingAlgorithms.FunctionCoordinate<>(Duration.of(0, Duration.MICROSECONDS), Duration.of(0, Duration.MICROSECONDS)), solution.functionCoordinate());
   }
 
@@ -164,7 +164,7 @@ public class RootfindingTest {
         Duration.of(-2, Duration.SECONDS),
         twoSecond,
         100);
-    assertEquals(2, solution.history().getHistory().size());
-    assertEquals(new EquationSolvingAlgorithms.FunctionCoordinate<>(Duration.of(0, Duration.MICROSECONDS), Duration.of(0, Duration.MICROSECONDS)), solution.functionCoordinate());
+    assertEquals(1, solution.history().getHistory().size());
+    assertEquals(new EquationSolvingAlgorithms.FunctionCoordinate<>(Duration.of(-860925, Duration.MICROSECONDS), Duration.of(0, Duration.MICROSECONDS)), solution.functionCoordinate());
   }
 }

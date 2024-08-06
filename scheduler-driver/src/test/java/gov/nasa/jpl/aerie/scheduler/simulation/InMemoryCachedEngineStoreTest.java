@@ -2,13 +2,11 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.AfterEach;
@@ -37,57 +35,54 @@ public class InMemoryCachedEngineStoreTest {
     this.store.close();
   }
 
-  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine1(){
-    return new CheckpointSimulationDriver.CachedSimulationEngine(
+  public static CachedSimulationEngine getCachedEngine1(){
+    return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(1), new ActivityDirective(Duration.HOUR, "ActivityType1", Map.of(), null, true),
             new ActivityDirectiveId(2), new ActivityDirective(Duration.HOUR, "ActivityType2", Map.of(), null, true)
         ),
-        new SimulationEngine(),
-        new LiveCells(new CausalEventSource()),
-        new SlabList<>(),
+        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
         null,
-        SimulationUtility.getFooMissionModel()
+        SimulationUtility.getFooMissionModel(),
+        new InMemorySimulationResourceManager()
     );
   }
 
-  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine2(){
-    return new CheckpointSimulationDriver.CachedSimulationEngine(
+  public static CachedSimulationEngine getCachedEngine2(){
+    return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(3), new ActivityDirective(Duration.HOUR, "ActivityType3", Map.of(), null, true),
             new ActivityDirectiveId(4), new ActivityDirective(Duration.HOUR, "ActivityType4", Map.of(), null, true)
         ),
-        new SimulationEngine(),
-        new LiveCells(new CausalEventSource()),
-        new SlabList<>(),
+        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
         null,
-        SimulationUtility.getFooMissionModel()
+        SimulationUtility.getFooMissionModel(),
+        new InMemorySimulationResourceManager()
     );
   }
 
-  public static CheckpointSimulationDriver.CachedSimulationEngine getCachedEngine3(){
-    return new CheckpointSimulationDriver.CachedSimulationEngine(
+  public static CachedSimulationEngine getCachedEngine3(){
+    return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(5), new ActivityDirective(Duration.HOUR, "ActivityType5", Map.of(), null, true),
             new ActivityDirectiveId(6), new ActivityDirective(Duration.HOUR, "ActivityType6", Map.of(), null, true)
         ),
-        new SimulationEngine(),
-        new LiveCells(new CausalEventSource()),
-        new SlabList<>(),
+        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
         null,
-        SimulationUtility.getFooMissionModel()
+        SimulationUtility.getFooMissionModel(),
+        new InMemorySimulationResourceManager()
     );
   }
 
   @Test
   public void duplicateTest(){
     final var store = new InMemoryCachedEngineStore(2);
-    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
-    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
-    store.save(CheckpointSimulationDriver.CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
     assertEquals(1, store.getCachedEngines(this.simulationEngineConfiguration).size());
   }
 

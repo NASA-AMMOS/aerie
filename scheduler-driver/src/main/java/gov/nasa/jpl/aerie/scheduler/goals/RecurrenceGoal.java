@@ -4,19 +4,16 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.apache.commons.collections4.BidiMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -116,7 +113,6 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
   public java.util.Collection<Conflict> getConflicts(
       @NotNull final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) {
     final var conflicts = new java.util.LinkedList<Conflict>();
@@ -142,7 +138,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
           .startsIn(subInterval)
           .build();
       final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
-      acts.sort(java.util.Comparator.comparing(SchedulingActivityDirective::startOffset));
+      acts.sort(java.util.Comparator.comparing(SchedulingActivity::startOffset));
 
       //walk through existing matching activities to find too-large gaps,
       //starting from the goal's own start time

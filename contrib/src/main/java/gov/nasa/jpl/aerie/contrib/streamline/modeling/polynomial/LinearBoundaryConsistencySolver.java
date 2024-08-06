@@ -9,14 +9,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ExpiringMonad;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -132,8 +125,11 @@ public final class LinearBoundaryConsistencySolver {
                   "LinearBoundaryConsistencySolver %s failed. Domain for %s is empty: [%s, %s]".formatted(
                       getName(this).orElseThrow(), D.variable, D.lowerBound, D.upperBound));
             }
-            // TODO: Make this more efficient by not adding constraints that are already in the queue.
-            remainingConstraints.addAll(neighboringConstraints.get(D.variable));
+            for (DirectionalConstraint constraintToAdd : neighboringConstraints.get(D.variable)) {
+              if (!remainingConstraints.contains(constraintToAdd)) {
+                remainingConstraints.add(constraintToAdd);
+              }
+            }
           }
         }
         // If that didn't fully solve all variables, choose the first unsolved variable
@@ -327,9 +323,50 @@ public final class LinearBoundaryConsistencySolver {
       }, drivingVariables));
     }
   }
+
   // Directional constraints are useful for arc consistency, since they have input (driving) and output (constrained) variables.
   // However, many directional constraints are required in general to express one General constraint.
-  private record DirectionalConstraint(Variable constrainedVariable, InequalityComparison comparison, Function<Map<Variable, ? extends Domain>, Expiring<Polynomial>> bound, Set<Variable> drivingVariables) {}
+  private static final class DirectionalConstraint {
+    private final Variable constrainedVariable;
+    private final InequalityComparison comparison;
+    private final Function<Map<Variable, ? extends Domain>, Expiring<Polynomial>> bound;
+    private final Set<Variable> drivingVariables;
+
+    private DirectionalConstraint(Variable constrainedVariable, InequalityComparison comparison, Function<Map<Variable, ? extends Domain>, Expiring<Polynomial>> bound, Set<Variable> drivingVariables) {
+      this.constrainedVariable = constrainedVariable;
+      this.comparison = comparison;
+      this.bound = bound;
+      this.drivingVariables = drivingVariables;
+    }
+
+    public Variable constrainedVariable() {
+      return constrainedVariable;
+    }
+
+    public InequalityComparison comparison() {
+      return comparison;
+    }
+
+    public Function<Map<Variable, ? extends Domain>, Expiring<Polynomial>> bound() {
+      return bound;
+    }
+
+    public Set<Variable> drivingVariables() {
+      return drivingVariables;
+    }
+
+    // *Don't* override hashCode and equals - we want to use object identity here instead of value equality.
+    // This makes it more performant during solving to check whether a constraint is already in the queue to be propagated.
+
+    @Override
+    public String toString() {
+      return "DirectionalConstraint[" +
+              "constrainedVariable=" + constrainedVariable + ", " +
+              "comparison=" + comparison + ", " +
+              "bound=" + bound + ", " +
+              "drivingVariables=" + drivingVariables + ']';
+    }
+  }
 
   public static final class Domain {
     public final Variable variable;

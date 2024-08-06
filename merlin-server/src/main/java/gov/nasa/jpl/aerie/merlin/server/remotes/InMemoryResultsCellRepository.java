@@ -1,21 +1,19 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -187,8 +185,8 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public ProfileSet getProfiles(final List<String> profileNames) {
-      final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-      final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+      final var realProfiles = new HashMap<String, ResourceProfile<RealDynamics>>();
+      final var discreteProfiles = new HashMap<String, ResourceProfile<SerializedValue>>();
       for (final var profileName : profileNames) {
         if (this.simulationResults.realProfiles.containsKey(profileName)) {
           realProfiles.put(profileName, this.simulationResults.realProfiles.get(profileName));
@@ -200,7 +198,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+    public Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities() {
       return this.simulationResults.simulatedActivities;
     }
 

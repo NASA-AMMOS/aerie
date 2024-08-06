@@ -4,6 +4,7 @@ returns table (
   model_name text,
   model_version text,
   triggering_user text,
+  pending boolean,
   delivered boolean,
   success boolean,
   tries int,
@@ -24,6 +25,7 @@ begin
       el.payload->'data'->'new'->>'name' as model_name,
       el.payload->'data'->'new'->>'version' as model_version,
       el.payload->'session_variables'->>'x-hasura-user-id' as triggering_user,
+      eil.id is null as pending,
       el.delivered,
       eil.status is not distinct from 200 as success, -- is not distinct from to catch `null`
       el.tries,
@@ -31,10 +33,12 @@ begin
       el.next_retry_at,
       eil.status,
       eil.response -> 'data'-> 'message' as error,
-      eil.response -> 'data'-> 'message'->>'message' as error_message,
+      -- Javalin uses "title" as it's "message" field
+      coalesce(eil.response -> 'data'-> 'message'->> 'message',
+               eil.response -> 'data'-> 'message'->> 'title') as error_message,
       eil.response -> 'data'-> 'message'->>'type' as error_type
       from hdb_catalog.event_log el
-      join hdb_catalog.event_invocation_logs eil on el.id = eil.event_id
+      left join hdb_catalog.event_invocation_logs eil on el.id = eil.event_id
       where trigger_name = _trigger_name);
 end;
 $$;
@@ -55,6 +59,3 @@ create view hasura.refresh_resource_type_logs as
   select * from hasura.get_event_logs('refreshResourceTypes');
 comment on view hasura.refresh_resource_type_logs is e''
  'View containing logs for every run of the Hasura event `refreshResourceTypes`.';
-
-
-

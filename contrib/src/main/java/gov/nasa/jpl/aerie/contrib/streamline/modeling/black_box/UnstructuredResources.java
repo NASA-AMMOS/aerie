@@ -23,7 +23,8 @@ public final class UnstructuredResources {
 
   public static <A> Resource<Unstructured<A>> constant(A value) {
     var result = UnstructuredResourceApplicative.pure(value);
-    name(result, value.toString());
+    // Use an edge in the naming graph directly to the value to lazily compute the name
+    name(result, "%s", value);
     return result;
   }
 

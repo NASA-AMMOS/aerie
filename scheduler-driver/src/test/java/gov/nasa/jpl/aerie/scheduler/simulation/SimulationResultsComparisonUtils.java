@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -30,15 +30,15 @@ public class SimulationResultsComparisonUtils {
     assertEqualsTSA(convertSimulatedActivitiesToTree(expected), convertSimulatedActivitiesToTree(simulationResults));
     final var differencesDiscrete = new HashMap<String, Map<Integer, DiscreteProfileDifference>>();
     for(final var discreteProfile: simulationResults.discreteProfiles.entrySet()){
-      final var differences = equalsDiscreteProfile(expected.discreteProfiles.get(discreteProfile.getKey()).getRight(), discreteProfile.getValue().getRight());
+      final var differences = equalsDiscreteProfile(expected.discreteProfiles.get(discreteProfile.getKey()).segments(), discreteProfile.getValue().segments());
       if(!differences.isEmpty()){
         differencesDiscrete.put(discreteProfile.getKey(), differences);
       }
     }
     final var differencesReal = new HashMap<String, Map<Integer, RealProfileDifference>>();
     for(final var realProfile: simulationResults.realProfiles.entrySet()){
-      final var profileElements = realProfile.getValue().getRight();
-      final var expectedProfileElements = expected.realProfiles.get(realProfile.getKey()).getRight();
+      final var profileElements = realProfile.getValue().segments();
+      final var expectedProfileElements = expected.realProfiles.get(realProfile.getKey()).segments();
       final var differences = equalsRealProfile(expectedProfileElements, profileElements);
       if(!differences.isEmpty()) {
         differencesReal.put(realProfile.getKey(), differences);
@@ -156,10 +156,10 @@ public class SimulationResultsComparisonUtils {
   // Representation of simulated activities as trees of activities
   public record TreeSimulatedActivity(StrippedSimulatedActivity activity,
                                       Set<TreeSimulatedActivity> children){
-    public static TreeSimulatedActivity fromSimulatedActivity(SimulatedActivity simulatedActivity, SimulationResults simulationResults){
-      final var stripped = StrippedSimulatedActivity.fromSimulatedActivity(simulatedActivity);
+    public static TreeSimulatedActivity fromSimulatedActivity(ActivityInstance activityInstance, SimulationResults simulationResults){
+      final var stripped = StrippedSimulatedActivity.fromSimulatedActivity(activityInstance);
       final HashSet<TreeSimulatedActivity> children = new HashSet<>();
-      for(final var childId: simulatedActivity.childIds()) {
+      for(final var childId: activityInstance.childIds()) {
         final var child = fromSimulatedActivity(simulationResults.simulatedActivities.get(childId), simulationResults);
         children.add(child);
       }
@@ -176,13 +176,13 @@ public class SimulationResultsComparisonUtils {
       Duration duration,
       SerializedValue computedAttributes
   ){
-    public static StrippedSimulatedActivity fromSimulatedActivity(SimulatedActivity simulatedActivity){
+    public static StrippedSimulatedActivity fromSimulatedActivity(ActivityInstance activityInstance){
       return new StrippedSimulatedActivity(
-          simulatedActivity.type(),
-          simulatedActivity.arguments(),
-          simulatedActivity.start(),
-          simulatedActivity.duration(),
-          simulatedActivity.computedAttributes()
+          activityInstance.type(),
+          activityInstance.arguments(),
+          activityInstance.start(),
+          activityInstance.duration(),
+          activityInstance.computedAttributes()
       );
     }
   }

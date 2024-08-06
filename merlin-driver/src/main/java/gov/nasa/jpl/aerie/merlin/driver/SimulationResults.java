@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -17,22 +18,22 @@ import java.util.SortedMap;
 public final class SimulationResults {
   public final Instant startTime;
   public final Duration duration;
-  public final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles;
-  public final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles;
-  public final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
-  public final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities;
+  public final Map<String, ResourceProfile<RealDynamics>> realProfiles;
+  public final Map<String, ResourceProfile<SerializedValue>> discreteProfiles;
+  public final Map<ActivityInstanceId, ActivityInstance> simulatedActivities;
+  public final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
-  public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
+  public final Map<Duration, List<EventGraph<EventRecord>>> events;
 
     public SimulationResults(
-        final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,
-        final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles,
-        final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-        final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
+        final Map<String, ResourceProfile<RealDynamics>> realProfiles,
+        final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
+        final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+        final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
         final Instant startTime,
         final Duration duration,
         final List<Triple<Integer, String, ValueSchema>> topics,
-        final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
+        final SortedMap<Duration, List<EventGraph<EventRecord>>> events)
   {
     this.startTime = startTime;
     this.duration = duration;

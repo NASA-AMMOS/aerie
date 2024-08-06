@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRe
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeSimple;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -26,6 +26,8 @@ import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UncontrollableDurationTest {
+
+  private final DirectiveIdGenerator idGenerator = new DirectiveIdGenerator(0);
 
   PlanningHorizon planningHorizon;
   Problem problem;
@@ -148,9 +150,9 @@ public class UncontrollableDurationTest {
 
   @Test
   public void testBug() throws SchedulingInterruptedException {
-    final var controllableDurationActivity = SchedulingActivityDirective.of(problem.getActivityType("ControllableDurationActivity"),
+    final var controllableDurationActivity = SchedulingActivity.of(idGenerator.next(), problem.getActivityType("ControllableDurationActivity"),
                                                                    Duration.of(1, Duration.MICROSECONDS),
-                                                                   Duration.of(3, Duration.MICROSECONDS), null, true);
+                                                                   Duration.of(3, Duration.MICROSECONDS), null, true, false);
 
     final var zeroDurationUncontrollableActivity = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("ZeroDurationUncontrollableActivity"))

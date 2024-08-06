@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -52,7 +53,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -356,12 +357,12 @@ public class SchedulingIntegrationTests {
         BANANANATION,
         List.of(new ActivityDirective(
             Duration.ZERO,
-            "GrowBanana",
-            Map.of(
-                "quantity", SerializedValue.of(3),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            null,
-            true)),
+                    "GrowBanana",
+                    Map.of(
+                        "quantity", SerializedValue.of(3),
+                        "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    null,
+                    true)),
         List.of(new SchedulingGoal(new GoalId(0L, 0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
@@ -440,6 +441,54 @@ public class SchedulingIntegrationTests {
     }
   }
 
+  /**
+   * Here the anchor window is [01:00:00, plan end]. The coexisting activity starts at 00:55:00 and the `valueAt` interval for
+   * the parametric parameter is then outside of the anchor window causing the intervals not to intersect as the valueAt
+   * was evaluated only in the start ([00:55:00, 00:55:00]) interval. Now, it is evaluated in Interval.FOREVER. Determining
+   * the right bounds for simulation is the scheduler's responsability (upstream of the goal conflict evaluation).
+   */
+  @Test
+  void testBugValueAt() {
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new ActivityDirective(
+                    Duration.HOUR,
+                    "GrowBanana",
+                    Map.of(
+                        "quantity", SerializedValue.of(3),
+                        "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    null,
+                    true),
+                new ActivityDirective(
+                    Duration.MINUTE.times(50),
+                    "ChangeProducer",
+                    Map.of(
+                        "producer", SerializedValue.of("Company")),
+                    null,
+                    true)),
+        List.of(new SchedulingGoal(new GoalId(0L, 0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: Real.Resource("/fruit").greaterThan(4.0),
+            activityTemplate: interval => ActivityTemplates.ChangeProducer({producer: Discrete.Resource("/producer").valueAt(Spans.FromInterval(interval).starts())}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START).minus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    assertEquals(1, goalResult.satisfyingActivities().size());
+    final var activityCreated = results.updatedPlan
+        .stream()
+        .filter(a -> a.startOffset().isEqualTo(Duration.MINUTES.times(55)))
+        .collect(Collectors.toSet());
+    assertEquals(1, activityCreated.size());
+    assertEquals(new SerializedValue.StringValue("Company"), activityCreated.iterator().next().serializedActivity().getArguments().get("producer"));
+  }
 
   @Test
   void testCoexistenceGoalWithAnchors() {
@@ -593,7 +642,7 @@ public class SchedulingIntegrationTests {
     var foundSatisfactionAct = false;
     for (final var activity : goalResult.satisfyingActivities()) {
       assertNotNull(activity);
-      final var element = results.idToAct.get(new ActivityDirectiveId(-activity.id()));
+      final var element = results.idToAct.get(new ActivityDirectiveId(activity.id()));
       if(element != null && element.equals(expectedSatisfactionAct)){
         foundSatisfactionAct = true;
       }
@@ -664,7 +713,7 @@ public class SchedulingIntegrationTests {
     var foundFirst = false;
     var foundSecond = false;
     for(final var satisfyingActivity: goalResult.satisfyingActivities()){
-      final var element = results.idToAct.get(new ActivityDirectiveId(-satisfyingActivity.id()));
+      final var element = results.idToAct.get(new ActivityDirectiveId(satisfyingActivity.id()));
       if(element != null && element.equals(expectedMatch1)){
         foundFirst = true;
       }
@@ -2036,10 +2085,10 @@ public class SchedulingIntegrationTests {
     return result;
   }
 
-  private static MockMerlinService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
+  private static MockMerlinDatabaseService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
     final var jarFile = getLatestJarFile(desc.libPath());
     try {
-      return new MockMerlinService.MissionModelInfo(
+      return new MockMerlinDatabaseService.MissionModelInfo(
           desc.libPath(),
           Path.of(jarFile.getName()),
           desc.name(),
@@ -2139,7 +2188,7 @@ public class SchedulingIntegrationTests {
       final Optional<ExternalProfiles> externalProfiles,
       final int cachedEngineStoreCapacity
   ) {
-    final var mockMerlinService = new MockMerlinService();
+    final var mockMerlinService = new MockMerlinDatabaseService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
     mockMerlinService.setPlanningHorizon(planningHorizon);
@@ -2191,7 +2240,7 @@ public class SchedulingIntegrationTests {
       Plan plan,
       Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
 
-  static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
+  static MerlinDatabaseService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
       final Map<String, SerializedValue> configuration)
   throws MissionModelLoader.MissionModelLoadException
@@ -2225,7 +2274,7 @@ public class SchedulingIntegrationTests {
       resourceTypes.add(new ResourceType(name, resource.getOutputType().getSchema()));
     }
 
-    return new MerlinService.MissionModelTypes(activityTypes, resourceTypes);
+    return new MerlinDatabaseService.MissionModelTypes(activityTypes, resourceTypes);
   }
 
   @Test
@@ -2456,7 +2505,7 @@ public class SchedulingIntegrationTests {
                                      planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var parentActs = planByActivityType.get("parent");
-    final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startOffset()).toList();
+    final var childActs = planByActivityType.get("child").stream().map(ActivityDirective::startOffset).toList();
     //goal should be satisfied
     assertTrue(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
     //ensure no new child activity has been inserted
@@ -3148,18 +3197,22 @@ public class SchedulingIntegrationTests {
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var growBananas = planByActivityType.get("GrowBanana");
-    final var gbIterator = growBananas.iterator();
 
     assertNull(planByActivityType.get("PeelBanana"));
     assertEquals(2, growBananas.size());
 
-    final var growBanana1 = gbIterator.next();
-    assertEquals(Duration.of(-10, MINUTES), growBanana1.startOffset());
-    assertEquals(SerializedValue.of(1), growBanana1.serializedActivity().getArguments().get("quantity"));
-
-    final var growBanana2 = gbIterator.next();
-    assertEquals(Duration.of(10, MINUTES), growBanana2.startOffset());
-    assertEquals(SerializedValue.of(2), growBanana2.serializedActivity().getArguments().get("quantity"));
+    assertTrue(
+        growBananas.stream().anyMatch(
+            $ -> Objects.equals($.startOffset(), Duration.of(-10, MINUTES))
+                 && SerializedValue.of(1).equals($.serializedActivity().getArguments().get("quantity"))
+        )
+    );
+    assertTrue(
+        growBananas.stream().anyMatch(
+            $ -> Objects.equals($.startOffset(), Duration.of(10, MINUTES))
+                 && SerializedValue.of(2).equals($.serializedActivity().getArguments().get("quantity"))
+        )
+    );
   }
 
   /**

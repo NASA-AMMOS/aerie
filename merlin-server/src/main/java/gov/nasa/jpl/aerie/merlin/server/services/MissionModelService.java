@@ -4,6 +4,8 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -14,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -62,8 +65,12 @@ public interface MissionModelService {
          LocalMissionModelService.MissionModelLoadException,
          InstantiationException;
 
-  SimulationResults runSimulation(CreateSimulationMessage message, Consumer<Duration> writer, Supplier<Boolean> canceledListener)
-          throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
+  SimulationResults runSimulation(
+      final CreateSimulationMessage message,
+      final Consumer<Duration> writer,
+      final Supplier<Boolean> canceledListener,
+      final SimulationResourceManager resourceManager
+  ) throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;

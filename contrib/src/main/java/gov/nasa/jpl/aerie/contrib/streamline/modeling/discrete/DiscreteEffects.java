@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
 
 public final class DiscreteEffects {
@@ -19,7 +20,7 @@ public final class DiscreteEffects {
    * Set the resource to the given value.
    */
   public static <A> void set(MutableResource<Discrete<A>> resource, A newValue) {
-    resource.emit("Set " + newValue, effect(x -> newValue));
+    resource.emit(name(effect(x -> newValue), "Set %s", newValue));
   }
 
   // Flag/Switch style operations
@@ -58,7 +59,7 @@ public final class DiscreteEffects {
    * Add the given amount to the resource's value.
    */
   public static void increment(MutableResource<Discrete<Integer>> resource, int amount) {
-    resource.emit("Increment by " + amount, effect(x -> x + amount));
+    resource.emit(name(effect(x -> x + amount), "Increment by %s", amount));
   }
 
   /**
@@ -72,7 +73,7 @@ public final class DiscreteEffects {
    * Subtract the given amount from the resource's value.
    */
   public static void decrement(MutableResource<Discrete<Integer>> resource, int amount) {
-    resource.emit("Decrement by " + amount, effect(x -> x - amount));
+    resource.emit(name(effect(x -> x - amount), "Decrement by %s", amount));
   }
 
   // General numeric resources
@@ -81,14 +82,14 @@ public final class DiscreteEffects {
    * Add amount to resource's value
    */
   public static void increase(MutableResource<Discrete<Double>> resource, double amount) {
-    resource.emit("Increase by " + amount, effect(x -> x + amount));
+    resource.emit(name(effect(x -> x + amount), "Increase by %s", amount));
   }
 
   /**
    * Subtract amount from resource's value
    */
   public static void decrease(MutableResource<Discrete<Double>> resource, double amount) {
-    resource.emit("Decrease by " + amount, effect(x -> x - amount));
+    resource.emit(name(effect(x -> x - amount), "Decrease by %s", amount));
   }
 
   // Queue style operations, mirroring the Queue interface
@@ -97,11 +98,11 @@ public final class DiscreteEffects {
    * Add element to the end of the queue resource
    */
   public static <T> void add(MutableResource<Discrete<List<T>>> resource, T element) {
-    resource.emit("Add %s to queue".formatted(element), effect(q -> {
+    resource.emit(name(effect(q -> {
       var q$ = new LinkedList<>(q);
       q$.add(element);
       return q$;
-    }));
+    }), "Add %s to queue", element));
   }
 
   /**
@@ -114,15 +115,15 @@ public final class DiscreteEffects {
     final var currentQueue = currentValue(resource);
     if (currentQueue.isEmpty()) return Optional.empty();
 
-    final T result = currentQueue.get(currentQueue.size() - 1);
-    resource.emit("Remove %s from queue".formatted(result), effect(q -> {
+    final T result = currentQueue.get(0);
+    resource.emit(name(effect(q -> {
       var q$ = new LinkedList<>(q);
-      T purportedResult = q$.removeLast();
+      T purportedResult = q$.removeFirst();
       if (!result.equals(purportedResult)) {
         throw new IllegalStateException("Detected effect conflicting with queue remove operation");
       }
       return q$;
-    }));
+    }), "Remove %s from queue", result));
     return Optional.of(result);
   }
 
@@ -132,14 +133,14 @@ public final class DiscreteEffects {
    * Subtract the given amount from resource.
    */
   public static void consume(MutableResource<Discrete<Double>> resource, double amount) {
-    resource.emit("Consume " + amount, effect(x -> x - amount));
+    resource.emit(name(effect(x -> x - amount), "Consume %s", amount));
   }
 
   /**
    * Add the given amount to resource.
    */
   public static void restore(MutableResource<Discrete<Double>> resource, double amount) {
-    resource.emit("Restore " + amount, effect(x -> x + amount));
+    resource.emit(name(effect(x -> x + amount), "Restore %s", amount));
   }
 
   // Non-consumable style operations

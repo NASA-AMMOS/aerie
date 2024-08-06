@@ -21,7 +21,7 @@ public final class EndOf implements Expression<Windows> {
     final var activity = environment.activityInstances().get(this.activityAlias);
     return new Windows(
         Segment.of(bounds, false),
-        Segment.of(Interval.at(activity.interval.end), true)
+        Segment.of(Interval.at(activity.interval().end), true)
     );
   }
 

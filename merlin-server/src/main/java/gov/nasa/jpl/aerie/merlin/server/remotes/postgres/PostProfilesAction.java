@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
+
 /*package-local*/ final class PostProfilesAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       insert into merlin.profile (dataset_id, name, type, duration)
@@ -33,17 +35,17 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public Map<String, ProfileRecord> apply(
       final long datasetId,
-      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles
+      final Map<String, ResourceProfile<Optional<RealDynamics>>> realProfiles,
+      final Map<String, ResourceProfile<Optional<SerializedValue>>> discreteProfiles
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
     final var durations = new ArrayList<Duration>();
     for (final var entry : realProfiles.entrySet()) {
       final var resource = entry.getKey();
-      final var schema = entry.getValue().getLeft();
+      final var schema = entry.getValue().schema();
       final var realResourceType = Pair.of("real", schema);
-      final var segments = entry.getValue().getRight();
+      final var segments = entry.getValue().segments();
       final var duration = sumDurations(segments);
       resourceNames.add(resource);
       resourceTypes.add(realResourceType);
@@ -57,9 +59,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
     for (final var entry : discreteProfiles.entrySet()) {
       final var resource = entry.getKey();
-      final var schema = entry.getValue().getLeft();
+      final var schema = entry.getValue().schema();
       final var resourceType = Pair.of("discrete", schema);
-      final var segments = entry.getValue().getRight();
+      final var segments = entry.getValue().segments();
       final var duration = sumDurations(segments);
       resourceNames.add(resource);
       resourceTypes.add(resourceType);

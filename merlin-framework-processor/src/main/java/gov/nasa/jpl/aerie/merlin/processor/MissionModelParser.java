@@ -386,6 +386,10 @@ import java.util.stream.Collectors;
     final var validations = this.getExportValidations(activityTypeElement, parameters);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
+    if (!parameters.isEmpty()) {
+      checkForStaticParameters(name, parameters);
+    }
+
     final var durationParameterName = effectModel.flatMap(EffectModelRecord::durationParameter);
     if (durationParameterName.isPresent()) {
       validateControllableDurationParameter(name, parameters, durationParameterName.get());
@@ -407,6 +411,17 @@ import java.util.stream.Collectors;
         name,
         new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
         effectModel);
+  }
+
+  private void checkForStaticParameters(String activityName, List<ParameterRecord> parameters) throws InvalidMissionModelException {
+    for (final var parameter: parameters) {
+      if (parameter.element.getModifiers().contains(Modifier.STATIC)) {
+        throw new InvalidMissionModelException(
+            "In activity " + activityName +
+            ", parameter \"" + parameter.name +"\"" +
+            " is declared as static, but this is not valid for activity parameters");
+      }
+    }
   }
 
   private void validateControllableDurationParameter(

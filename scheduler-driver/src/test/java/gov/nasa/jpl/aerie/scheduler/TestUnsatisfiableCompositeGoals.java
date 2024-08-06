@@ -16,7 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,6 +31,8 @@ import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUnsatisfiableCompositeGoals {
+
+  private final static DirectiveIdGenerator idGenerator = new DirectiveIdGenerator(0);
 
   private final static PlanningHorizon h = new PlanningHorizon(
       TimeUtility.fromDOY("2025-001T00:00:00.000"),
@@ -55,8 +57,8 @@ public class TestUnsatisfiableCompositeGoals {
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
     return plan;
   }
 

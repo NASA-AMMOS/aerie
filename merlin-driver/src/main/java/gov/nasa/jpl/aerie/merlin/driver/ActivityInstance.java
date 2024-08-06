@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record SimulatedActivity(
+public record ActivityInstance(
   String type,
   Map<String, SerializedValue> arguments,
   Instant start,
   Duration duration,
-  SimulatedActivityId parentId,
-  List<SimulatedActivityId> childIds,
+  ActivityInstanceId parentId,
+  List<ActivityInstanceId> childIds,
   Optional<ActivityDirectiveId> directiveId,
   SerializedValue computedAttributes
 ) { }

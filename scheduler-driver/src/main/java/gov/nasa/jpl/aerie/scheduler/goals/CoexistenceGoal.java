@@ -18,9 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.apache.commons.collections4.BidiMap;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -182,7 +180,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   public java.util.Collection<Conflict> getConflicts(
       final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) { //TODO: check if interval gets split and if so, notify user?
 
@@ -233,7 +230,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
           simulationResults,
           createEvaluationEnvironmentFromAnchor(evaluationEnvironment, window));
 
-      var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
+      var missingActAssociations = new ArrayList<SchedulingActivity>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
@@ -247,16 +244,15 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         }
       }
       if (!alreadyOneActivityAssociated) {
-        SchedulingActivityDirectiveId anchorIdTo = null;
-        if (window.value().isPresent() && mapSchedulingIdsToActivityIds.isPresent()){
-          final ActivityDirectiveId actId = new ActivityDirectiveId(window.value().get().activityInstance().id);
-          anchorIdTo = mapSchedulingIdsToActivityIds.get().inverseBidiMap().get(actId);
+        ActivityDirectiveId anchorIdTo = null;
+        if (window.value().isPresent()) {
+          anchorIdTo = window.value().get().activityInstance().directiveId().orElse(null);
         }
-        final var missingActAssociationsWithAnchor = new ArrayList<SchedulingActivityDirective>();
-        final var missingActAssociationsWithoutAnchor = new ArrayList<SchedulingActivityDirective>();
+        final var missingActAssociationsWithAnchor = new ArrayList<SchedulingActivity>();
+        final var missingActAssociationsWithoutAnchor = new ArrayList<SchedulingActivity>();
         /*
         If activities that can satisfy the goal have been found, then create two arraylist to distinguish between:
-         1) those activities that also satisfy the anchoring  (e.g. anchorId value equals the SchedulingActivityDirectiveId of the "for each" activity directive in the goal
+         1) those activities that also satisfy the anchoring  (e.g. anchorId value equals the ActivityDirectiveId of the "for each" activity directive in the goal
          2) activities without the anchorId set
          */
         for (var act : activitiesFound) {
@@ -288,7 +284,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         1	                      1	                                1	                                    MissingAssociationConflict(this, missingActAssociationsWithAnchor,  Optional.empty(), false)
  */
         // If anchors are disabled or there are some activity directives that satisfy the goal and already have the anchor or the anchorID is null, then we pass an empty anchor. Otherwise, we pass the anchorID of the directive that can satisfy the goal
-        final Optional<SchedulingActivityDirectiveId> anchorValue =
+        final Optional<ActivityDirectiveId> anchorValue =
             (this.persistentAnchor.equals(PersistentTimeAnchor.DISABLED) || !missingActAssociationsWithAnchor.isEmpty()
              || anchorIdTo == null) ? Optional.empty() : Optional.of(anchorIdTo);
         //  Create MissingActivityTemplateConflict if no matching target activity found
@@ -376,9 +372,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   }
 
   /**
-   * ctor creates an empty goal without details
-   *
-   * client code should use builders to instance goals
+   * Ctor creates an empty goal without details.
+   * Client code should use builders to instance goals.
    */
   protected CoexistenceGoal() { }
 }

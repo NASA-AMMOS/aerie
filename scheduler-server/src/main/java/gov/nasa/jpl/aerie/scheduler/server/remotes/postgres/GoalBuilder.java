@@ -185,14 +185,14 @@ public class GoalBuilder {
                 final SimulationResults simResults,
                 final EvaluationEnvironment environment)
             {
-              final var startTime = activityInstance.interval.start;
-              if (!activityInstance.type.equals(c.type())) return false;
+              final var startTime = activityInstance.interval().start;
+              if (!activityInstance.type().equals(c.type())) return false;
               for (final var arg : c
                   .arguments()
                   .map(expr -> expr.evaluateMap(simResults, startTime, environment))
                   .orElse(Map.of())
                   .entrySet()) {
-                if (!arg.getValue().equals(activityInstance.parameters.get(arg.getKey()))) return false;
+                if (!arg.getValue().equals(activityInstance.parameters().get(arg.getKey()))) return false;
               }
               return true;
             }

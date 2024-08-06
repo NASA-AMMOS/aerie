@@ -146,14 +146,14 @@ public class Problem {
    */
   public void setInitialPlan(
       final Plan plan,
-      final Optional<SimulationResults> initialSimulationResults,
-      final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds) {
+      final Optional<SimulationResults> initialSimulationResults
+  ) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
         plan,
         simulationResults,
-        SimulationResultsConverter.convertToConstraintModelResults(simulationResults),
-        Optional.ofNullable(mapSchedulingIdsToActivityIds)));
+        SimulationResultsConverter.convertToConstraintModelResults(simulationResults)
+    ));
   }
 
   /**
@@ -162,7 +162,7 @@ public class Problem {
    * @param plan the initial seed plan that schedulers may start from
    */
   public void setInitialPlan(final Plan plan) {
-    setInitialPlan(plan, Optional.empty(), null);
+    setInitialPlan(plan, Optional.empty());
   }
 
   public Optional<SimulationData> getInitialSimulationResults(){ return initialSimulationResults; }

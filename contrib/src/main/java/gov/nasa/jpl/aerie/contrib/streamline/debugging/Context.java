@@ -2,8 +2,7 @@ package gov.nasa.jpl.aerie.contrib.streamline.debugging;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -15,7 +14,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Unit.UNIT;
 public final class Context {
   private Context() {}
 
-  private static final ThreadLocal<Deque<String>> contexts = ThreadLocal.withInitial(ArrayDeque::new);
+  private static final ThreadLocal<List<String>> contexts = ThreadLocal.withInitial(List::of);
 
   /**
    * @see Context#inContext(String, Supplier)
@@ -30,13 +29,19 @@ public final class Context {
    */
   public static <R> R inContext(String contextName, Supplier<R> action) {
     // Using a thread-local context stack maintains isolation for threaded tasks.
+    var outerContext = contexts.get();
     try {
-      contexts.get().push(contextName);
+      // Since copying the context into spawned children actually dominates performance,
+      // use an effectively-immutable list for the stack, and copy it to push/pop a layer.
+      var innerContext = new ArrayList<String>(outerContext.size() + 1);
+      innerContext.addAll(outerContext);
+      innerContext.add(contextName);
+      contexts.set(innerContext);
       return action.get();
       // TODO: Should we add a catch clause here that would add context to the error?
     } finally {
       // Doing the tear-down in a finally block maintains isolation for replaying tasks.
-      contexts.get().pop();
+      contexts.set(outerContext);
     }
   }
 
@@ -61,12 +66,12 @@ public final class Context {
    * @see Context#contextualized
    */
   public static <R> R inContext(List<String> contextStack, Supplier<R> action) {
-    if (contextStack.isEmpty()) {
+    var outerContext = contexts.get();
+    try {
+      contexts.set(contextStack);
       return action.get();
-    } else {
-      int n = contextStack.size() - 1;
-      return inContext(contextStack.get(n), () ->
-          inContext(contextStack.subList(0, n), action));
+    } finally {
+      contexts.set(outerContext);
     }
   }
 
@@ -133,9 +138,15 @@ public final class Context {
 
   /**
    * Returns the list of contexts, from innermost context out.
+   *
+   * <p>
+   *     Note: For efficiency, this returns the actual context stack, not a copy.
+   *     Do not modify the result of this method!
+   *     Doing so may corrupt the context-tracking system.
+   * </p>
    */
   public static List<String> get() {
-    return contexts.get().stream().toList();
+    return contexts.get();
   }
 
   private static Supplier<Unit> asSupplier(Runnable action) {

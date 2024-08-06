@@ -229,7 +229,18 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
     return other.greaterThanOrEquals(this);
   }
 
-  private boolean dominates$(Polynomial other) {
+  /**
+   * Computes if this polynomial "dominates" another right now.
+   * <p>
+   *     A polynomial P dominates Q in this context if it is greater than Q in the first coefficient that differs,
+   *     or equal to Q exactly.
+   * </p>
+   * <p>
+   *     Intuitively, P dominates Q when max(P, Q) = P, potentially with a shorter expiry if Q crosses P sometime in the future.
+   *     Consider using {@link Polynomial#dominates(Polynomial)} instead to get this expiry / crossover time as well.
+   * </p>
+   */
+  public boolean dominates$(Polynomial other) {
     for (int i = 0; i <= Math.max(this.degree(), other.degree()); ++i) {
       if (this.getCoefficient(i) > other.getCoefficient(i)) return true;
       if (this.getCoefficient(i) < other.getCoefficient(i)) return false;
@@ -238,7 +249,10 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
     return true;
   }
 
-  private Expiring<Discrete<Boolean>> dominates(Polynomial other) {
+  /**
+   * Returns a boolean dynamics, describing the value of {@link Polynomial#dominates$(Polynomial)} and when it will change.
+   */
+  public Expiring<Discrete<Boolean>> dominates(Polynomial other) {
     boolean result = this.dominates$(other);
     var expiry = this.subtract(other).findExpiryNearRoot(t -> this.step(t).dominates$(other.step(t)) != result);
     return expiring(discrete(result), expiry);

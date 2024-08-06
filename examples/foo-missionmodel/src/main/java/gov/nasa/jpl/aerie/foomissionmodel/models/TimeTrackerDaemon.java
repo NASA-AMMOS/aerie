@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
  * A daemon task that tracks the number of minutes since plan start
  */
 public class TimeTrackerDaemon {
-  private Counter<Integer> minutesElapsed;
+  private final Counter<Integer> minutesElapsed;
 
   public int getMinutesElapsed() {
     return minutesElapsed.get();

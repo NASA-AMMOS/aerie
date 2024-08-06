@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -35,6 +35,7 @@ import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PrioritySolverTest {
+  private static final DirectiveIdGenerator idGenerator = new DirectiveIdGenerator(0);
   private static PrioritySolver makeEmptyProblemSolver() {
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
@@ -106,26 +107,26 @@ public class PrioritySolverTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
     return plan;
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, d1min, null, true, false));
     return plan;
   }
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeB, t0, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeB, t1hr, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeB, t2hr, d1min, null, true));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeB, t0, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeB, t1hr, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeB, t2hr, d1min, null, true, false));
     return plan;
   }
 
@@ -256,7 +257,7 @@ public class PrioritySolverTest {
         new SimulationEngineConfiguration(Map.of(),Instant.EPOCH, new MissionModelId(1)),
         () -> false);
     final var simResults = adHocFacade.simulateWithResults(makePlanA012(problem), h.getEndAerie());
-    problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults.driverResults()), simResults.mapSchedulingIdsToActivityIds().get());
+    problem.setInitialPlan(makePlanA012(problem), Optional.of(simResults.driverResults()));
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
     final var goal = new CoexistenceGoal.Builder()
