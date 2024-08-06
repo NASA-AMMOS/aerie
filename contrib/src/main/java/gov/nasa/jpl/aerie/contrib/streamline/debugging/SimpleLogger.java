@@ -12,21 +12,21 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Unit.UNIT;
 public class SimpleLogger {
     private final CellRef<String, Unit> cellRef = CellRef.allocate(UNIT, new CellType<>() {
         @Override
-        public EffectTrait<String> getEffectType() {
+        public EffectTrait<Unit> getEffectType() {
             return new EffectTrait<>() {
                 @Override
-                public String empty() {
-                    return null;
+                public Unit empty() {
+                    return UNIT;
                 }
 
                 @Override
-                public String sequentially(String prefix, String suffix) {
-                    return null;
+                public Unit sequentially(Unit prefix, Unit suffix) {
+                    return UNIT;
                 }
 
                 @Override
-                public String concurrently(String left, String right) {
-                    return null;
+                public Unit concurrently(Unit left, Unit right) {
+                    return UNIT;
                 }
             };
         }
@@ -37,9 +37,9 @@ public class SimpleLogger {
         }
 
         @Override
-        public void apply(Unit unit, String s) {
+        public void apply(Unit unit, Unit s) {
         }
-    });
+    }, $ -> UNIT);
 
     public SimpleLogger(String name, Registrar registrar) {
         registrar.topic(name, cellRef, string());
