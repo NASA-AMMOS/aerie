@@ -35,7 +35,7 @@ jar {
 
 test {
   useJUnitPlatform {
-    includeEngines 'jqwik', 'junit-jupiter'
+    includeEngines 'junit-jupiter'
   }
   testLogging {
     exceptionFormat = 'full'
@@ -61,7 +61,6 @@ dependencies {
   implementation 'commons-cli:commons-cli:1.8.0'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-  testImplementation "net.jqwik:jqwik:1.6.5"
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
