@@ -16,6 +16,10 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.cli.*;
 
@@ -130,8 +134,12 @@ public class Main {
     final var simulationDuration = Duration.of(simArgs.plan.simulationStartTimestamp.microsUntil(simArgs.plan.simulationEndTimestamp),
                                      Duration.MICROSECOND);
 
-    try {
-      final SimulationResults results = SimulationDriver.simulate(
+    // Cancel support
+    Thread shutdownHook = null;
+    final var resultsThread = new Callable<SimulationResults>() {
+        @Override
+        public SimulationResults call() {
+          return SimulationDriver.simulate(
           simArgs.missionModel,
           simArgs.plan.activityDirectives,
           simArgs.plan.simulationStartTimestamp.toInstant(),
@@ -141,15 +149,66 @@ public class Main {
           canceledListener,
           extentConsumer,
           rmgr);
+        }
+      };
 
-      final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan);
+    try(final var exec = Executors.newSingleThreadExecutor()) {
+      final Future<SimulationResults> f = exec.submit(resultsThread);
 
-      simArgs.outputFilePath().ifPresentOrElse(
-          p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
-          () -> resultsWriter.writeResults(canceledListener, extentConsumer)
-      );
-    } catch (SimulationException ex) {
-      final var dataBuilder = Json.createObjectBuilder()
+      shutdownHook = new Thread(() -> {
+        canceledListener.cancel();
+        try {
+          final var results = f.get();
+
+          if (simArgs.verbose()) { System.out.println("Writing Results..."); }
+          final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan);
+
+          simArgs.outputFilePath().ifPresentOrElse(
+              p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
+              () -> resultsWriter.writeResults(canceledListener, extentConsumer)
+          );
+
+        } catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+      });
+
+      // Surround awaiting sim results in a thread to output partial results during SIGINT
+      Runtime.getRuntime().addShutdownHook(shutdownHook);
+      final var results = f.get();
+      if(!canceledListener.get()) {
+        // Avoid two threads writing to the output file at the same time
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+
+        if (simArgs.verbose()) { System.out.println("Writing Results..."); }
+        final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan);
+        simArgs.outputFilePath().ifPresentOrElse(
+            p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
+            () -> resultsWriter.writeResults(canceledListener, extentConsumer)
+        );
+      }
+    } catch (ExecutionException e) {
+      if(e.getCause() instanceof SimulationException se) {
+        writeSimulationException(se);
+        System.exit(1);
+      }
+      throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (IllegalStateException ise) {
+      // If this is the message, it must've come from Runtime.getRuntime().removeShutdownHook and can be safely ignored
+      if(!ise.getMessage().contains("Shutdown in progress")) throw ise;
+    } finally {
+      extentConsumer.close();
+      // Try-catch wrapping in case this is executed while the shutdown hook is running.
+      try {
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+      } catch (IllegalStateException ise) {}
+    }
+  }
+
+  private static void writeSimulationException(SimulationException ex) {
+    final var dataBuilder = Json.createObjectBuilder()
                                   .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
                                   .add("utcTimeDoy", SimulationException.formatInstant(ex.instant));
       ex.directiveId.ifPresent(directiveId -> dataBuilder.add("executingDirectiveId", directiveId.id()));
@@ -167,10 +226,6 @@ public class Main {
       try(final var jsonWriter = Json.createWriterFactory(config).createWriter(System.err)) {
         jsonWriter.writeObject(exception);
       }
-      System.exit(1);
-    } finally {
-      extentConsumer.close();
-    }
   }
 
   /**
