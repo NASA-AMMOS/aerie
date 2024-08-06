@@ -16,7 +16,7 @@ public record ForEachActivityViolations(
   public ConstraintResult evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     var violations = new ConstraintResult();
     for (final var activity : results.activities) {
-      if (activity.type.equals(this.activityType)) {
+      if (activity.type().equals(this.activityType)) {
         final var newEnvironment = new EvaluationEnvironment(
             new HashMap<>(environment.activityInstances()),
             environment.spansInstances(),
@@ -28,7 +28,7 @@ public record ForEachActivityViolations(
 
         final var newViolations = this.expression.evaluate(results, bounds, newEnvironment);
         for (final var violation: newViolations.violations) {
-          violation.addActivityId(activity.id);
+          violation.addActivityId(activity.id());
         }
         violations = ConstraintResult.merge(violations, newViolations);
       }

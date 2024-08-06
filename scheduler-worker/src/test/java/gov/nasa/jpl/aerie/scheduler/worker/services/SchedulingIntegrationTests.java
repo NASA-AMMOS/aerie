@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -52,7 +53,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -641,7 +642,7 @@ public class SchedulingIntegrationTests {
     var foundSatisfactionAct = false;
     for (final var activity : goalResult.satisfyingActivities()) {
       assertNotNull(activity);
-      final var element = results.idToAct.get(new ActivityDirectiveId(-activity.id()));
+      final var element = results.idToAct.get(new ActivityDirectiveId(activity.id()));
       if(element != null && element.equals(expectedSatisfactionAct)){
         foundSatisfactionAct = true;
       }
@@ -712,7 +713,7 @@ public class SchedulingIntegrationTests {
     var foundFirst = false;
     var foundSecond = false;
     for(final var satisfyingActivity: goalResult.satisfyingActivities()){
-      final var element = results.idToAct.get(new ActivityDirectiveId(-satisfyingActivity.id()));
+      final var element = results.idToAct.get(new ActivityDirectiveId(satisfyingActivity.id()));
       if(element != null && element.equals(expectedMatch1)){
         foundFirst = true;
       }
@@ -2084,10 +2085,10 @@ public class SchedulingIntegrationTests {
     return result;
   }
 
-  private static MockMerlinService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
+  private static MockMerlinDatabaseService.MissionModelInfo getMissionModelInfo(final MissionModelDescription desc) {
     final var jarFile = getLatestJarFile(desc.libPath());
     try {
-      return new MockMerlinService.MissionModelInfo(
+      return new MockMerlinDatabaseService.MissionModelInfo(
           desc.libPath(),
           Path.of(jarFile.getName()),
           desc.name(),
@@ -2187,7 +2188,7 @@ public class SchedulingIntegrationTests {
       final Optional<ExternalProfiles> externalProfiles,
       final int cachedEngineStoreCapacity
   ) {
-    final var mockMerlinService = new MockMerlinService();
+    final var mockMerlinService = new MockMerlinDatabaseService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
     mockMerlinService.setPlanningHorizon(planningHorizon);
@@ -2239,7 +2240,7 @@ public class SchedulingIntegrationTests {
       Plan plan,
       Map<ActivityDirectiveId, ActivityDirective> idToAct) {}
 
-  static MerlinService.MissionModelTypes loadMissionModelTypesFromJar(
+  static MerlinDatabaseService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
       final Map<String, SerializedValue> configuration)
   throws MissionModelLoader.MissionModelLoadException
@@ -2273,7 +2274,7 @@ public class SchedulingIntegrationTests {
       resourceTypes.add(new ResourceType(name, resource.getOutputType().getSchema()));
     }
 
-    return new MerlinService.MissionModelTypes(activityTypes, resourceTypes);
+    return new MerlinDatabaseService.MissionModelTypes(activityTypes, resourceTypes);
   }
 
   @Test
@@ -2504,7 +2505,7 @@ public class SchedulingIntegrationTests {
                                      planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var parentActs = planByActivityType.get("parent");
-    final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startOffset()).toList();
+    final var childActs = planByActivityType.get("child").stream().map(ActivityDirective::startOffset).toList();
     //goal should be satisfied
     assertTrue(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
     //ensure no new child activity has been inserted
@@ -3196,18 +3197,22 @@ public class SchedulingIntegrationTests {
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var growBananas = planByActivityType.get("GrowBanana");
-    final var gbIterator = growBananas.iterator();
 
     assertNull(planByActivityType.get("PeelBanana"));
     assertEquals(2, growBananas.size());
 
-    final var growBanana1 = gbIterator.next();
-    assertEquals(Duration.of(-10, MINUTES), growBanana1.startOffset());
-    assertEquals(SerializedValue.of(1), growBanana1.serializedActivity().getArguments().get("quantity"));
-
-    final var growBanana2 = gbIterator.next();
-    assertEquals(Duration.of(10, MINUTES), growBanana2.startOffset());
-    assertEquals(SerializedValue.of(2), growBanana2.serializedActivity().getArguments().get("quantity"));
+    assertTrue(
+        growBananas.stream().anyMatch(
+            $ -> Objects.equals($.startOffset(), Duration.of(-10, MINUTES))
+                 && SerializedValue.of(1).equals($.serializedActivity().getArguments().get("quantity"))
+        )
+    );
+    assertTrue(
+        growBananas.stream().anyMatch(
+            $ -> Objects.equals($.startOffset(), Duration.of(10, MINUTES))
+                 && SerializedValue.of(2).equals($.serializedActivity().getArguments().get("quantity"))
+        )
+    );
   }
 
   /**

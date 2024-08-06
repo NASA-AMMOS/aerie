@@ -11,24 +11,30 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class SchedulePlanGrounder {
   public static Optional<List<ActivityInstance>> groundSchedule(
-      final List<SchedulingActivityDirective> schedulingActivityDirectiveList,
+      final List<SchedulingActivity> schedulingActivityList,
       final Duration planDuration
   ){
-    final var grounded = new HashMap<ActivityDirectiveId, ActivityInstance>();
+    final var groundedDirectives = new HashMap<ActivityDirectiveId, ActivityInstance>();
 
-    final var idMap = schedulingActivityDirectiveList
+    final var idMap = schedulingActivityList
         .stream()
-        .map(a -> Pair.of(new ActivityDirectiveId(a.getId().id()), a))
+        .map(a -> Pair.of(a.id(), a))
+        .filter($ -> $.getKey() != null)
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 
-    final var converted = schedulingActivityDirectiveList
+    final var maxDirectiveId = idMap.keySet()
+        .stream().map(ActivityDirectiveId::id)
+        .max(Long::compare);
+
+    final var converted = schedulingActivityList
         .stream()
         .map(a -> Pair.of(
-            new ActivityDirectiveId(a.id().id()),
+            a.id(),
             new ActivityDirective(
                 a.startOffset(),
                 a.type().getName(),
@@ -36,6 +42,7 @@ public class SchedulePlanGrounder {
                 (a.anchorId() == null) ? null : new ActivityDirectiveId(a.anchorId().id()),
                 a.anchoredToStart()
             )))
+        .filter($ -> $.getKey() != null)
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
     final var converter = new StartOffsetReducer(planDuration, converted);
     var computed = converter.compute();
@@ -45,11 +52,11 @@ public class SchedulePlanGrounder {
       Duration offset = Duration.ZERO;
       final var idActivity = directive.getKey();
       if(idActivity != null){
-        if(grounded.get(idActivity) == null){
+        if(groundedDirectives.get(idActivity) == null){
           return Optional.empty();
         } else {
-          final var alreadyGroundedAct = grounded.get(idActivity);
-          offset = alreadyGroundedAct.interval.end;
+          final var alreadyGroundedAct = groundedDirectives.get(idActivity);
+          offset = alreadyGroundedAct.interval().end;
         }
       }
       for(final Pair<ActivityDirectiveId, Duration> dependentDirective : directive.getValue()) {
@@ -60,13 +67,32 @@ public class SchedulePlanGrounder {
         if(dependentOriginalActivity.duration() == null){
           return Optional.empty();
         }
-        grounded.put(dependentId, new ActivityInstance(
+        groundedDirectives.put(dependentId, new ActivityInstance(
             dependentId.id(),
             dependentOriginalActivity.type().getName(),
             dependentOriginalActivity.arguments(),
-            Interval.between(startTime, startTime.plus(dependentOriginalActivity.duration()))));
+            Interval.between(startTime, startTime.plus(dependentOriginalActivity.duration())),
+            Optional.of(new ActivityDirectiveId(dependentId.id()))
+        ));
       }
     }
-    return Optional.of(grounded.values().stream().toList());
+    final var result = new java.util.ArrayList<>(groundedDirectives.values().stream().toList());
+
+    final var instanceIdCounter = new AtomicLong(maxDirectiveId.orElse(0L) + 1L);
+    result.addAll(
+        schedulingActivityList
+            .stream()
+            .filter($ -> $.id() == null)
+            .map($ -> new ActivityInstance(
+                instanceIdCounter.getAndIncrement(),
+                $.type().getName(),
+                $.arguments(),
+                Interval.between($.startOffset(), $.startOffset().plus($.duration())),
+                Optional.empty()
+            ))
+            .toList()
+    );
+
+    return Optional.of(result);
   }
 }

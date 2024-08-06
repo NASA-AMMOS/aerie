@@ -22,7 +22,7 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
   public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
     return new DiscreteProfile(
-        Segment.of(bounds, activity.parameters.get(this.parameterName))
+        Segment.of(bounds, activity.parameters().get(this.parameterName))
     );
   }
 

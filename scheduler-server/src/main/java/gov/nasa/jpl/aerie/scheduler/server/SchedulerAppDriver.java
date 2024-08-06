@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
-import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
@@ -48,7 +48,7 @@ public final class SchedulerAppDriver {
     //load the service configuration options
     final var config = loadConfiguration();
 
-    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
+    final var merlinDatabaseService = new GraphQLMerlinDatabaseService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
     final var permissionsService = new PermissionsService(new GraphQLPermissionsService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret()));
 
     final var stores = loadStores(config);
@@ -58,7 +58,7 @@ public final class SchedulerAppDriver {
     final var schedulerService = new SchedulerService(stores.results());
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
-    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
+    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinDatabaseService);
 
     //establish bindings to the service layers
     final var bindings = new SchedulerBindings(

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -40,10 +40,11 @@ public class LongDurationPlanTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1year, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2year, d1min, null, true));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t3year, d1min, null, true));
+    final var idGenerator = new DirectiveIdGenerator(0);
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1year, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2year, d1min, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t3year, d1min, null, true, false));
     return plan;
   }
 

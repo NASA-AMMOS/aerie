@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.scheduler.server.models.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.structExpressionF;
@@ -20,7 +20,7 @@ public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.Acti
 
   private final Map<String, ActivityType> activityTypesByName = new HashMap<>();
 
-  public ActivityTemplateJsonParser(MerlinService.MissionModelTypes activityTypes){
+  public ActivityTemplateJsonParser(MerlinDatabaseService.MissionModelTypes activityTypes){
     activityTypes.activityTypes().forEach((actType)-> activityTypesByName.put(actType.name(), actType));
   }
 

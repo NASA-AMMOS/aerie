@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -43,13 +43,13 @@ public class SimulationResultsConverter {
    * @return an activity instance suitable for a constraint model SimulationResult
    */
   public static gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
-      long id, SimulatedActivity driverActivity, final Instant startTime)
+      long id, ActivityInstance driverActivity, final Instant startTime)
   {
     final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration());
     final var activityInterval = Interval.between(startT, endT);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
-        activityInterval);
+        activityInterval, driverActivity.directiveId());
   }
 }

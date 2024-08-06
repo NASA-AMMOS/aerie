@@ -17,7 +17,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.se
 public final class TypescriptCodeGenerationService {
   private TypescriptCodeGenerationService() { }
 
-  public static String generateTypescriptTypesFromMissionModel(final MerlinService.MissionModelTypes missionModelTypes) {
+  public static String generateTypescriptTypesFromMissionModel(final MerlinDatabaseService.MissionModelTypes missionModelTypes) {
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {
       activityTypeCodes.add(getActivityTypeInformation(activityType));

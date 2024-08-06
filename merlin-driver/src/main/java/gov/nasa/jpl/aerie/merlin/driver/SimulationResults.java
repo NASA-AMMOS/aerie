@@ -20,16 +20,16 @@ public final class SimulationResults {
   public final Duration duration;
   public final Map<String, ResourceProfile<RealDynamics>> realProfiles;
   public final Map<String, ResourceProfile<SerializedValue>> discreteProfiles;
-  public final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
-  public final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities;
+  public final Map<ActivityInstanceId, ActivityInstance> simulatedActivities;
+  public final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
   public final Map<Duration, List<EventGraph<EventRecord>>> events;
 
     public SimulationResults(
         final Map<String, ResourceProfile<RealDynamics>> realProfiles,
         final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
-        final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-        final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
+        final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+        final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
         final Instant startTime,
         final Duration duration,
         final List<Triple<Integer, String, ValueSchema>> topics,
