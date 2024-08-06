@@ -1,6 +1,7 @@
-# Streamline Locator Guide
+# Streamline Modeler's Guide
 
-This guide is meant to help you find useful classes and methods in the streamline library.
+This guide is meant to help you find useful classes and methods in the streamline library,
+and to suggest patterns, techniques, and tips to consider when writing models.
 
 The guide is organized first by the structure of the streamline package itself, and second by use cases.
 If you have a specific use case, it may first be worth checking the use cases, where you may find code examples
