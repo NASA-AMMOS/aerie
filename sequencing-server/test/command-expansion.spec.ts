@@ -5,7 +5,7 @@ import {
   insertActivityDirective,
   removeActivityDirective,
 } from './testUtils/ActivityDirective.js';
-import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
+import { insertDictionary, removeDictionary } from './testUtils/Dictionary';
 import {
   expand,
   getExpandedSequence,
@@ -22,17 +22,30 @@ import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } 
 import { getGraphQLClient, waitMs } from './testUtils/testUtils';
 import { insertSequence, linkActivityInstance } from './testUtils/Sequence.js';
 import { insertParcel, removeParcel } from './testUtils/Parcel';
+import { DictionaryType } from '../src/types/types';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let commandDictionaryId: number;
+let channelDictionaryId: number;
+let parameterDictionaryId: number;
 let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
-  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
-  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'expansionTestParcel')).parcelId;
+  commandDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.COMMAND)).id;
+  channelDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.CHANNEL)).id;
+  parameterDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.PARAMETER)).id;
+  parcelId = (
+    await insertParcel(
+      graphqlClient,
+      commandDictionaryId,
+      channelDictionaryId,
+      parameterDictionaryId,
+      'expansionTestParcel',
+    )
+  ).parcelId;
 });
 
 beforeEach(async () => {
@@ -47,7 +60,9 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await removeParcel(graphqlClient, parcelId);
-  await removeCommandDictionary(graphqlClient, commandDictionaryId);
+  await removeDictionary(graphqlClient, commandDictionaryId, DictionaryType.COMMAND);
+  await removeDictionary(graphqlClient, channelDictionaryId, DictionaryType.CHANNEL);
+  await removeDictionary(graphqlClient, parameterDictionaryId, DictionaryType.PARAMETER);
 });
 
 afterEach(async () => {
@@ -493,8 +508,9 @@ describe('expansion', () => {
     expect(testProvidedExpansionSetId).toBeNumber();
 
     const testProvidedResp = await getExpansionSet(graphqlClient, testProvidedExpansionSetId);
-    expect(testProvidedResp.expansion_set_by_pk.name).toBe(name);
-    expect(testProvidedResp.expansion_set_by_pk.description).toBe(description);
+    expect(testProvidedResp).not.toBeNull();
+    expect(testProvidedResp?.name).toBe(name);
+    expect(testProvidedResp?.description).toBe(description);
 
     const testDefaultExpansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
     expect(testDefaultExpansionSetId).not.toBeNull();
@@ -502,8 +518,65 @@ describe('expansion', () => {
     expect(testDefaultExpansionSetId).toBeNumber();
 
     const testDefaultResp = await getExpansionSet(graphqlClient, testDefaultExpansionSetId);
-    expect(testDefaultResp.expansion_set_by_pk.name).toBe('');
-    expect(testDefaultResp.expansion_set_by_pk.description).toBe('');
+    expect(testDefaultResp).not.toBeNull();
+    expect(testDefaultResp?.name).toBe('');
+    expect(testDefaultResp?.description).toBe('');
+
+    // Cleanup
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, testProvidedExpansionSetId);
+    await removeExpansionSet(graphqlClient, testProvidedExpansionSetId);
+  });
+
+  it('should handle optional channel and parameter dictionaries', async () => {
+    // Remove the optional dictionarys
+    await removeDictionary(graphqlClient, channelDictionaryId, DictionaryType.CHANNEL);
+    await removeDictionary(graphqlClient, parameterDictionaryId, DictionaryType.PARAMETER);
+
+    const expansionId = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: {
+    activityInstance: ActivityType,
+    channelDictionary: ChannelDictionary | null,
+    parameterDictionaries : ParameterDictionary[]
+    }): ExpansionReturn {
+      return [
+        A\`2023-091T10:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.GROW_BANANA({ quantity: 10, durationSecs: 7200 })
+      ];
+    }
+    `,
+      parcelId,
+    );
+    const name = 'test name';
+    const description = 'test desc';
+
+    const testProvidedExpansionSetId = await insertExpansionSet(
+      graphqlClient,
+      parcelId,
+      missionModelId,
+      [expansionId],
+      description,
+      name,
+    );
+    expect(testProvidedExpansionSetId).not.toBeNull();
+    expect(testProvidedExpansionSetId).toBeDefined();
+    expect(testProvidedExpansionSetId).toBeNumber();
+
+    const testProvidedResp = await getExpansionSet(graphqlClient, testProvidedExpansionSetId);
+    expect(testProvidedResp?.name).toBe(name);
+    expect(testProvidedResp?.description).toBe(description);
+
+    const testDefaultExpansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [expansionId]);
+    expect(testDefaultExpansionSetId).not.toBeNull();
+    expect(testDefaultExpansionSetId).toBeDefined();
+    expect(testDefaultExpansionSetId).toBeNumber();
+
+    const testDefaultResp = await getExpansionSet(graphqlClient, testDefaultExpansionSetId);
+    expect(testDefaultResp?.name).toBe('');
+    expect(testDefaultResp?.description).toBe('');
 
     // Cleanup
     await removeExpansion(graphqlClient, expansionId);

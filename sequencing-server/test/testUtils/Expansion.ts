@@ -29,6 +29,35 @@ export async function insertExpansion(
   return res.addCommandExpansionTypeScript.id;
 }
 
+export async function getExpansion(
+  graphqlClient: GraphQLClient,
+  expansionId: number,
+): Promise<{
+  id: number;
+  expansion_logic: string;
+  name: string;
+  parcel_id: number;
+}> {
+  const res = await graphqlClient.request<{
+    expansion_rule_by_pk: any;
+  }>(
+    gql`
+      query GetExpansion($expansionId: Int!) {
+        expansion_rule_by_pk(id: $expansionId) {
+          id
+          expansion_logic
+          name
+          parcel_id
+        }
+      }
+    `,
+    {
+      expansionId,
+    },
+  );
+  return res.expansion_rule_by_pk;
+}
+
 export async function removeExpansion(graphqlClient: GraphQLClient, expansionId: number): Promise<void> {
   return graphqlClient.request(
     gql`
@@ -85,13 +114,29 @@ export async function insertExpansionSet(
   return res.createExpansionSet.id;
 }
 
-export async function getExpansionSet(graphqlClient: GraphQLClient, expansionSetId: number): Promise<any> {
-  return graphqlClient.request(
+export async function getExpansionSet(
+  graphqlClient: GraphQLClient,
+  expansionSetId: number,
+): Promise<{
+  id: number;
+  name: string;
+  description: string;
+  mission_model_id: number;
+  parcel_id: number;
+  expansion_rules: { id: number }[];
+} | null> {
+  const res = await graphqlClient.request(
     gql`
-      query GetExpansionRule($expansionSetId: Int!) {
+      query GetExpansionSet($expansionSetId: Int!) {
         expansion_set_by_pk(id: $expansionSetId) {
+          id
           name
           description
+          mission_model_id
+          parcel_id
+          expansion_rules {
+            id
+          }
         }
       }
     `,
@@ -99,6 +144,8 @@ export async function getExpansionSet(graphqlClient: GraphQLClient, expansionSet
       expansionSetId,
     },
   );
+
+  return res.expansion_set_by_pk;
 }
 
 export async function removeExpansionSet(graphqlClient: GraphQLClient, expansionSetId: number): Promise<void> {
