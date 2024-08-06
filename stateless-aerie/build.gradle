@@ -40,6 +40,8 @@ test {
   testLogging {
     exceptionFormat = 'full'
   }
+  // Allow security manager so it can be overridden with mock for unit tests
+  systemProperty("java.security.manager", "allow")
 }
 
 jacocoTestReport {
