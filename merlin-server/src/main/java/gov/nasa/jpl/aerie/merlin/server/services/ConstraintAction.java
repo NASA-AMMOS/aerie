@@ -75,7 +75,7 @@ public class ConstraintAction {
       final var simDuration = resultsHandle$
           .map(SimulationResultsHandle::duration)
           .orElse(Duration.of(
-              plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
+              plan.simulationStartTimestamp.toInstant().until(plan.simulationEndTimestamp.toInstant(), ChronoUnit.MICROS),
               Duration.MICROSECONDS));
       final var simOffset = Duration.of(
           plan.startTimestamp.toInstant().until(simStartTime, ChronoUnit.MICROS),
