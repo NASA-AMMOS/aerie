@@ -7,7 +7,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -131,5 +134,52 @@ public class CLIArgumentsTest {
       BlockExitSecurityManager.uninstall();
     }
 
+    /**
+     * When verbose is on, progress is reported prior to simulation results.
+     */
+    @Test
+    void verboseOn() throws IOException {
+      Main.main(new String[]{"simulate",
+                             "-m", "../examples/foo-missionmodel/build/libs/foo-missionmodel.jar",
+                             "-p", "src/test/resources/simpleFooPlan.json",
+                             // Extent interval cranked way up to guarantee no extent is printed (5000s)
+                             "-i", "5000000000",
+                             "--verbose"});
+      outputStream.flush();
+      try(final var reader = new BufferedReader(new FileReader("src/test/resources/simpleFooPlanResults.json"))) {
+        final var fileLines = reader.lines().toList();
+        final var outputLines = out.toString().split("\n");
+
+        assertEquals(fileLines.size() + 4, outputLines.length);
+
+        assertEquals("Parsing plan src/test/resources/simpleFooPlan.json...", outputLines[0]);
+        assertEquals("Loading mission model ../examples/foo-missionmodel/build/libs/foo-missionmodel.jar...", outputLines[1]);
+        assertEquals("Simulating Plan...", outputLines[2]);
+        assertEquals("Writing Results...", outputLines[3]);
+        for(int i = 0; i < fileLines.size(); ++i) {
+         assertEquals(fileLines.get(i), outputLines[i+4]);
+        }
+      }
+    }
+
+    /**
+     * When verbose is off, only simulation results are output.
+     */
+    @Test
+    void verboseOff() throws IOException {
+      Main.main(new String[]{"simulate",
+                             "-m", "../examples/foo-missionmodel/build/libs/foo-missionmodel.jar",
+                             "-p", "src/test/resources/simpleFooPlan.json"});
+      outputStream.flush();
+      try(final var reader = new BufferedReader(new FileReader("src/test/resources/simpleFooPlanResults.json"))) {
+        final var fileLines = reader.lines().toList();
+        final var outputLines = out.toString().split("\n");
+
+        assertEquals(fileLines.size(), outputLines.length);
+        for(int i = 0; i < fileLines.size(); ++i) {
+         assertEquals(fileLines.get(i), outputLines[i]);
+        }
+      }
+    }
   }
 }
