@@ -152,7 +152,7 @@ public class SimulationResultsWriter {
 
   private void print(JsonGenerator resultsGenerator, StringWriter stringWriter) {
     resultsGenerator.flush();
-    System.out.print(stringWriter);
+    System.out.print(stringWriter.toString().trim());
     // StringWriter.flush() does nothing, so we must clear the underlying buffer manually
     stringWriter.getBuffer().setLength(0);
     stringWriter.getBuffer().trimToSize(); // deallocates used buffer memory
