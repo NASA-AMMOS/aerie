@@ -180,7 +180,6 @@ public class SimulationResultsWriter {
     else { resultsGenerator.write("canceled", JsonValue.FALSE); }
   }
 
-  // TODO: compute from temp files
   private JsonObject buildProfiles(
       final Map<String, ResourceProfile<RealDynamics>> realProfiles,
       final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
