@@ -26,6 +26,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Procedure;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -320,13 +321,16 @@ public class PrioritySolver implements Solver {
       satisfyCompositeGoal(compositeAndGoal);
     } else if (goal instanceof OptionGoal optionGoal) {
       satisfyOptionGoal(optionGoal);
+    } else if (goal instanceof Procedure procedure) {
+      if (!analysisOnly) {
+        procedure.run(plan.getEvaluation(), plan, problem.getMissionModel(), this.problem::getActivityType, this.simulationFacade, this.idGenerator);
+      }
     } else {
       satisfyGoalGeneral(goal);
     }
     this.checkSimBeforeEvaluatingGoal = goal.simulateAfter;
     this.checkSimBeforeInsertingActivities = checkSimConfig;
   }
-
 
   private void satisfyOptionGoal(OptionGoal goal) throws SchedulingInterruptedException{
       if (goal.hasOptimizer()) {
