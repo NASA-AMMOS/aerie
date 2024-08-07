@@ -1,27 +1,20 @@
 package gov.nasa.jpl.aerie.stateless;
 
-import gov.nasa.jpl.aerie.merlin.driver.resources.StreamingSimulationResourceManager;
 import gov.nasa.jpl.aerie.stateless.simulation.CanceledListener;
 import gov.nasa.jpl.aerie.stateless.simulation.ResourceFileStreamer;
 import gov.nasa.jpl.aerie.stateless.simulation.SimulationExtentConsumer;
 import gov.nasa.jpl.aerie.stateless.simulation.SimulationResultsWriter;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
+import gov.nasa.jpl.aerie.stateless.simulation.SimulationUtility;
 import org.apache.commons.cli.*;
 
 import javax.json.Json;
@@ -112,58 +105,42 @@ public class Main {
     // Load the mission model
     try {
       if (verbose) { System.out.println("Loading mission model "+modelJarPath+"..."); }
-      final var model = MissionModelLoader.loadMissionModel(
-          plan.simulationStartTimestamp.toInstant(),
-          SerializedValue.of(plan.configuration),
+      final var model = SimulationUtility.instantiateMissionModel(
           modelJarPath,
-          modelJarPath.getFileName().toString(),
-          ""
+          plan.simulationStartTimestamp.toInstant(),
+          plan.configuration
       );
 
       return new Arguments.SimulationArguments<>(model, plan, verbose, outputFilePath, extentUpdatePeriod);
-    } catch (MissionModelLoader.MissionModelLoadException e) {
-      throw new RuntimeException("Error while loading mission model file: "+modelJarPath,e);
+    } catch (MissionModelLoader.MissionModelLoadException | MissionModelLoader.MissionModelInstantiationException e) {
+      throw new RuntimeException("Error while loading mission model at: "+modelJarPath, e);
     }
   }
 
   private static void simulate(Arguments.SimulationArguments<?> simArgs) {
     if (simArgs.verbose()) { System.out.println("Simulating Plan..."); }
 
+    Thread shutdownHook = null;
     final var rfs = new ResourceFileStreamer();
-    final var rmgr = new StreamingSimulationResourceManager(rfs);
     final var canceledListener = new CanceledListener();
-    final var extentConsumer = simArgs.verbose? new SimulationExtentConsumer(simArgs.extentUpdatePeriod) : new SimulationExtentConsumer();
-
-    final var planDuration = Duration.of(simArgs.plan.startTimestamp.microsUntil(simArgs.plan.endTimestamp),
-                                     Duration.MICROSECOND);
-    final var simulationDuration = Duration.of(simArgs.plan.simulationStartTimestamp.microsUntil(simArgs.plan.simulationEndTimestamp),
-                                     Duration.MICROSECOND);
 
     // Cancel support
-    Thread shutdownHook = null;
-    final var resultsThread = new Callable<SimulationResults>() {
-        @Override
-        public SimulationResults call() {
-          return SimulationDriver.simulate(
-          simArgs.missionModel,
-          simArgs.plan.activityDirectives,
-          simArgs.plan.simulationStartTimestamp.toInstant(),
-          simulationDuration,
-          simArgs.plan.startTimestamp.toInstant(),
-          planDuration,
+    try (final var extentConsumer = simArgs.verbose
+            ? new SimulationExtentConsumer(simArgs.extentUpdatePeriod)
+            : new SimulationExtentConsumer();
+         final var simUtil = new SimulationUtility(rfs)
+    ) {
+      final var resultsFuture = simUtil.simulate(
+          simArgs.missionModel(),
+          simArgs.plan(),
           canceledListener,
-          extentConsumer,
-          rmgr);
-        }
-      };
-
-    try(final var exec = Executors.newSingleThreadExecutor()) {
-      final Future<SimulationResults> f = exec.submit(resultsThread);
+          extentConsumer
+      );
 
       shutdownHook = new Thread(() -> {
         canceledListener.cancel();
         try {
-          final var results = f.get();
+          final var results = resultsFuture.get();
 
           if (simArgs.verbose()) { System.out.println("Writing Results..."); }
           final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan, rfs);
@@ -180,8 +157,8 @@ public class Main {
 
       // Surround awaiting sim results in a thread to output partial results during SIGINT
       Runtime.getRuntime().addShutdownHook(shutdownHook);
-      final var results = f.get();
-      if(!canceledListener.get()) {
+      final var results = resultsFuture.get();
+      if (!canceledListener.get()) {
         // Avoid two threads writing to the output file at the same time
         Runtime.getRuntime().removeShutdownHook(shutdownHook);
 
@@ -193,8 +170,12 @@ public class Main {
         );
       }
     } catch (ExecutionException e) {
-      if(e.getCause() instanceof SimulationException se) {
-        writeSimulationException(se);
+      if (e.getCause() instanceof SimulationException se) {
+        // Write Formatted Sim Exception to std.err
+        final Map<String,String> config = Map.of(JsonGenerator.PRETTY_PRINTING, "");
+        try(final var jsonWriter = Json.createWriterFactory(config).createWriter(System.err)) {
+          jsonWriter.writeObject(SimulationUtility.formatSimulationException(se));
+        }
         System.exit(1);
       }
       throw new RuntimeException(e);
@@ -202,35 +183,12 @@ public class Main {
       throw new RuntimeException(e);
     } catch (IllegalStateException ise) {
       // If this is the message, it must've come from Runtime.getRuntime().removeShutdownHook and can be safely ignored
-      if(!ise.getMessage().contains("Shutdown in progress")) throw ise;
+      if (!ise.getMessage().contains("Shutdown in progress")) throw ise;
     } finally {
-      extentConsumer.close();
       // Try-catch wrapping in case this is executed while the shutdown hook is running.
-      try {
-        Runtime.getRuntime().removeShutdownHook(shutdownHook);
-      } catch (IllegalStateException ise) {}
+      try { Runtime.getRuntime().removeShutdownHook(shutdownHook); }
+      catch (IllegalStateException ise) {}
     }
-  }
-
-  private static void writeSimulationException(SimulationException ex) {
-    final var dataBuilder = Json.createObjectBuilder()
-                                  .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
-                                  .add("utcTimeDoy", SimulationException.formatInstant(ex.instant));
-      ex.directiveId.ifPresent(directiveId -> dataBuilder.add("executingDirectiveId", directiveId.id()));
-      ex.activityType.ifPresent(activityType -> dataBuilder.add("executingActivityType", activityType));
-      ex.activityStackTrace.ifPresent(activityStackTrace -> dataBuilder.add("activityStackTrace", activityStackTrace));
-
-      final var exception = Json.createObjectBuilder()
-                                .add("type", "SIMULATION_EXCEPTION")
-                                .add("message", ex.cause.getMessage())
-                                .add("data", dataBuilder)
-                                .add("trace", ex.cause.toString())
-                                .build();
-
-      final Map<String,String> config = Map.of(JsonGenerator.PRETTY_PRINTING, "");
-      try(final var jsonWriter = Json.createWriterFactory(config).createWriter(System.err)) {
-        jsonWriter.writeObject(exception);
-      }
   }
 
   /**
