@@ -50,9 +50,6 @@ public record SimulationAgent (
       return;
     }
 
-    final var planDuration = Duration.of(
-        plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
-        Duration.MICROSECONDS);
     final var simDuration = Duration.of(
         plan.simulationStartTimestamp.toInstant().until(plan.simulationEndTimestamp.toInstant(), ChronoUnit.MICROS),
         Duration.MICROSECONDS);
@@ -85,7 +82,7 @@ public record SimulationAgent (
                 plan.simulationStartTimestamp.toInstant(),
                 simDuration,
                 plan.startTimestamp.toInstant(),
-                planDuration,
+                plan.duration(),
                 plan.activityDirectives,
                 plan.configuration),
             extentListener::updateValue,
