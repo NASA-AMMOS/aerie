@@ -82,7 +82,7 @@ SELECT derivation_group.id,
    array_agg(DISTINCT sources.type) AS event_types,
    count(DISTINCT c.event_key) AS derived_total
   FROM merlin.derivation_group
-    JOIN ( SELECT external_source.id AS source_id,
+    LEFT JOIN ( SELECT external_source.id AS source_id,
            external_source.key,
            count(a.event_key) AS contained_events,
 		   external_event_type.name AS type,
@@ -95,7 +95,7 @@ SELECT derivation_group.id,
                   FROM merlin.external_event) a ON a.source_id = external_source.id
 			JOIN merlin.external_event_type ON external_event_type.id = a.event_type_id
          GROUP BY external_source.id, external_source.key, external_source.derivation_group_id, external_source.valid_at, type) sources ON sources.derivation_group_id = derivation_group.id
-    JOIN ( SELECT derived_events.event_key,
+    LEFT JOIN ( SELECT derived_events.event_key,
            derived_events.derivation_group_id
           FROM merlin.derived_events) c ON c.derivation_group_id = derivation_group.id
  GROUP BY derivation_group.id, derivation_group.name, derivation_group.source_type_id;
