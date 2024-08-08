@@ -35,7 +35,7 @@ execute function util_functions.set_updated_at();
 ---- Add the new workspace_id column to the user_sequence table
 
 alter table sequencing.user_sequence
-  add column workspace_id jsonb,
+  add column workspace_id integer,
 
   add foreign key (workspace_id)
     references sequencing.parcel (id)
