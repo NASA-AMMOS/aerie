@@ -51,3 +51,5 @@ values ('Workspace 1', 'Aerie Legacy');
 
 update sequencing.user_sequence
   set workspace_id = 1;
+
+call migrations.mark_migration_applied('9');
