@@ -10,9 +10,14 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public final class SimulationUtility {
-  private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
+  private static MissionModel<?> makeMissionModel(
+      final MissionModelBuilder builder,
+      final Instant planStart,
+      final Configuration config)
+  {
     final var factory = new GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
@@ -20,10 +25,40 @@ public final class SimulationUtility {
     return builder.build(model, registry);
   }
 
-  public static SimulationResults
-  simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration) {
+  public static <Model> SimulationDriver<Model>
+  getDriver(final Duration simulationDuration)
+  {
+    return getDriver(simulationDuration, false);
+  }
+
+  public static <Model> SimulationDriver<Model>
+  getDriver(final Duration simulationDuration, boolean runDaemons)
+  {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
-    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath, Configuration.DEFAULT_INITIAL_CONDITIONS);
+    final var config = new Configuration(
+        Configuration.DEFAULT_PLANT_COUNT,
+        Configuration.DEFAULT_PRODUCER,
+        dataPath,
+        Configuration.DEFAULT_INITIAL_CONDITIONS,
+        runDaemons);
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
+
+    var driver = new SimulationDriver(
+        missionModel,
+        simulationDuration,
+        SimulationDriver.defaultUseResourceTracker);
+    return driver;
+  }
+
+  public static SimulationResultsInterface
+  simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration) {
+    return simulate(schedule, simulationDuration, false);
+  }
+
+  public static SimulationResultsInterface
+  simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration, boolean runDaemons) {
+    final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
+    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath, Configuration.DEFAULT_INITIAL_CONDITIONS, runDaemons);
     final var startTime = Instant.now();
     final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
@@ -37,14 +72,15 @@ public final class SimulationUtility {
         () -> false);
   }
 
+  private static long _counter = 0;
+
   @SafeVarargs
   public static Map<ActivityDirectiveId, ActivityDirective> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
-    final var schedule = new HashMap<ActivityDirectiveId, ActivityDirective>();
-    long counter = 0;
+    final var schedule = new TreeMap<ActivityDirectiveId, ActivityDirective>();
 
     for (final var activitySpec : activitySpecs) {
       schedule.put(
-          new ActivityDirectiveId(counter++),
+          new ActivityDirectiveId(_counter++),
           new ActivityDirective(activitySpec.getLeft(), activitySpec.getRight(), null, true));
     }
 

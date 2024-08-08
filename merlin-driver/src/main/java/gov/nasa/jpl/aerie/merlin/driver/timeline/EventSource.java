@@ -6,6 +6,6 @@ public interface EventSource {
   void freeze();
 
   interface Cursor {
-    void stepUp(Cell<?> cell);
+    <State> Cell<State> stepUp(Cell<State> cell);
   }
 }

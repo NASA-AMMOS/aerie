@@ -83,11 +83,12 @@ public final class SimulationUtility {
   }
 
   public static MissionModel<?> getBananaMissionModel(){
-    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"), Configuration.DEFAULT_INITIAL_CONDITIONS);
+    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"), Configuration.DEFAULT_INITIAL_CONDITIONS, false);
     return makeMissionModel(new MissionModelBuilder(), config);
   }
 
-  public static SchedulerModel getBananaSchedulerModel(){
+  public static SchedulerModel
+  getBananaSchedulerModel(){
     return new gov.nasa.jpl.aerie.banananation.generated.GeneratedSchedulerModel();
   }
 }

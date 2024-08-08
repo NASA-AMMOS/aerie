@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.worker.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -151,7 +151,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   }
 
   @Override
-  public Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(final PlanMetadata planMetadata)
+  public Optional<Pair<SimulationResultsInterface, DatasetId>> getSimulationResults(final PlanMetadata planMetadata)
   {
     return Optional.empty();
   }
@@ -187,7 +187,7 @@ class MockMerlinService implements MerlinService.OwnerRole {
   @Override
   public DatasetId storeSimulationResults(
           final PlanMetadata planMetadata,
-          final SimulationResults results,
+          final SimulationResultsInterface results,
           final Map<ActivityDirectiveId, ActivityDirectiveId> activityIdCorrespondance)
   {
     return new DatasetId(0);

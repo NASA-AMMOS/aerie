@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
@@ -9,6 +10,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
@@ -21,8 +24,92 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public final class SimulationDriver {
-  public static <Model> SimulationResults simulate(
+public final class SimulationDriver<Model> {
+
+  private static boolean debug = false;
+
+  public static final boolean defaultUseResourceTracker = false;
+
+  public SubInstantDuration curTime() {
+    if (engine == null) {
+      return SubInstantDuration.ZERO;
+    }
+    return engine.curTime();
+  }
+
+  public void setCurTime(SubInstantDuration time) {
+    this.engine.setCurTime(time);
+  }
+
+  public void setCurTime(Duration time) {
+    this.engine.setCurTime(time);
+  }
+
+
+  private SimulationEngine engine;
+  private ResourceTracker resourceTracker = null;
+  private final boolean useResourceTracker;
+  private final MissionModel<Model> missionModel;
+  private Instant startTime;
+  private final Duration planDuration;
+  private JobSchedule.Batch<SimulationEngine.JobId> batch;
+
+  private static final Topic<ActivityDirectiveId> activityTopic = SimulationEngine.defaultActivityTopic;
+
+  private Topic<Topic<?>> queryTopic = new Topic<>();
+
+  /** Whether we're rerunning the simulation, in which case we reuse past results and have an old SimulationEngine */
+  private boolean rerunning = false;
+
+  public SimulationDriver(MissionModel<Model> missionModel, Duration planDuration, final boolean useResourceTracker) {
+    this(missionModel, Instant.now(), planDuration, useResourceTracker);
+  }
+
+  public SimulationDriver(
+      MissionModel<Model> missionModel, Instant startTime, Duration planDuration,
+      boolean useResourceTracker)
+  {
+    this.missionModel = missionModel;
+    this.startTime = startTime;
+    this.planDuration = planDuration;
+    this.useResourceTracker = useResourceTracker;
+    initSimulation(planDuration);
+    batch = null;
+  }
+
+
+  public void initSimulation(final Duration simDuration) {
+    if (debug) System.out.println("SimulationDriver.initSimulation()");
+    // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
+    this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
+    if (this.engine != null) this.engine.close();
+    SimulationEngine oldEngine = rerunning ? this.engine : null;
+
+    this.engine = new SimulationEngine(startTime, missionModel, oldEngine, resourceTracker);
+    if (useResourceTracker) {
+      this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
+      engine.resourceTracker = this.resourceTracker; // yes, this looks strange following the lines above
+    }
+
+    // Begin tracking any resources that have not already been simulated.
+    trackResources();
+
+    // Start daemon task(s) immediately, before anything else happens.
+    try {
+      startDaemons(curTime().duration());
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+
+    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
+    engine.scheduleTask(
+        simDuration,
+        executor -> $ -> TaskStatus.completed(Unit.UNIT),
+        null); // TODO: skip this if rerunning? and end time is same?
+  }
+
+
+  public static <Model> SimulationResultsInterface simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
@@ -38,29 +125,84 @@ public final class SimulationDriver {
         simulationDuration,
         planStartTime,
         planDuration,
+        defaultUseResourceTracker,
         simulationCanceled,
         $ -> {},
         new InMemorySimulationResourceManager());
   }
 
-  public static <Model> SimulationResults simulate(
+  public static <Model> SimulationResultsInterface simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration,
+      final boolean useResourceTracker,
+      final Supplier<Boolean> simulationCanceled,
+      final Consumer<Duration> simulationExtentConsumer,
+      final SimulationResourceManager resourceManager
+  )
+  {
+    var driver = new SimulationDriver<>(
+        missionModel, simulationStartTime, simulationDuration,
+        useResourceTracker);
+    return driver.simulate(
+        schedule, simulationStartTime, simulationDuration,
+        planStartTime, planDuration,
+        simulationCanceled, simulationExtentConsumer,
+        resourceManager);
+  }
+
+  public SimulationResultsInterface simulate(
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration
+  ) {
+    return simulate(
+        schedule, simulationStartTime, simulationDuration,
+        planStartTime, planDuration,
+        true, () -> false, $ -> {},
+        new InMemorySimulationResourceManager());
+  }
+
+  public SimulationResultsInterface simulate(
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration,
+      final Supplier<Boolean> simulationCanceled,
+      final Consumer<Duration> simulationExtentConsumer
+  ) {
+    return simulate(
+        schedule, simulationStartTime, simulationDuration,
+        planStartTime, planDuration,
+        true, simulationCanceled, simulationExtentConsumer,
+        new InMemorySimulationResourceManager());
+  }
+
+  public static <Model> SimulationResultsInterface simulate(
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration,
+      final boolean doComputeResults,
       final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer,
       final SimulationResourceManager resourceManager
   ) {
-    try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
+      if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
+
+      if (engine.scheduledDirectives == null) {
+        engine.scheduledDirectives = new HashMap<>(schedule);
+      }
 
       /* The current real time. */
-      simulationExtentConsumer.accept(Duration.ZERO);
-
-      // Specify a topic on which tasks can log the activity they're associated with.
-      final var activityTopic = new Topic<ActivityDirectiveId>();
+      simulationExtentConsumer.accept(curTime().duration());
 
       try {
         engine.init(missionModel.getResources(), missionModel.getDaemon());
@@ -118,15 +260,88 @@ public final class SimulationDriver {
         throw new SimulationException(engine.getElapsedTime(), simulationStartTime, ex);
       }
 
-      final var topics = missionModel.getTopics();
-      return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
+      // A query depends on an event if
+      // - that event has the same topic as the query
+      // - that event occurs causally before the query
+
+      // Let A be an event or query issued by task X, and B be either an event or query issued by task Y
+      // A flows to B if B is causally after A and
+      // - X = Y
+      // - X spawned Y causally after A
+      // - Y called X, and emitted B after X terminated
+      // - Transitively: if A flows to C and C flows to B, A flows to B
+      // tstill not enough...?
+
+      if (doComputeResults) {
+        final var topics = missionModel.getTopics();
+        return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
+      } else {
+        return null;
+      }
+  }
+
+
+  public SimulationResultsInterface diffAndSimulate(
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
+      Instant simulationStartTime,
+      Duration simulationDuration,
+      Instant planStartTime,
+      Duration planDuration) {
+    return diffAndSimulate(
+        activityDirectives, simulationStartTime, simulationDuration,
+        planStartTime, planDuration,
+        true, () -> false, $ -> {});
+  }
+
+  public SimulationResultsInterface diffAndSimulate(
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
+      Instant simulationStartTime,
+      Duration simulationDuration,
+      Instant planStartTime,
+      Duration planDuration,
+      boolean doComputeResults,
+      final Supplier<Boolean> simulationCanceled,
+      final Consumer<Duration> simulationExtentConsumer) {
+    Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
+    engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
+    if (engine.oldEngine != null) {
+      engine.directivesDiff = engine.oldEngine.diffDirectives(activityDirectives);
+      if (debug) System.out.println("SimulationDriver: engine.directivesDiff = " + engine.directivesDiff);
+      engine.oldEngine.scheduledDirectives = null;  // only keep the full schedule for the current engine to save space
+      directives = new HashMap<>(engine.directivesDiff.get("added"));
+      directives.putAll(engine.directivesDiff.get("modified"));
+      engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE, null));
+      //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
+      engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(k));
+    }
+    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationCanceled, simulationExtentConsumer);
+  }
+
+  private void startDaemons(Duration time) throws Throwable {
+    if (!this.rerunning) {
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
+      engine.step(Duration.MAX_VALUE, $ -> {});
+    }
+  }
+
+  private void trackResources() {
+    // Begin tracking any resources that have not already been simulated.
+    for (final var entry : missionModel.getResources().entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+      if (useResourceTracker) {
+        resourceTracker.track(name, resource);
+      } else {
+        engine.trackResource(name, resource, Duration.ZERO);
+      }
     }
   }
 
   // This method is used as a helper method for executing unit tests
   public static <Model, Return>
-  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-    try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
+  void simulateTask(final TaskFactory<Return> task) {
+    if (debug) System.out.println("SimulationDriver.simulateTask(" + task + ")");
+
       // Track resources and kick off daemon tasks
       try {
         engine.init(missionModel.getResources(), missionModel.getDaemon());
@@ -135,7 +350,7 @@ public final class SimulationDriver {
       }
 
       // Schedule the task.
-      final var spanId = engine.scheduleTask(Duration.ZERO, task);
+      final var spanId = engine.scheduleTask(curTime().duration(), task, null);
 
       // Drive the engine until the scheduled task completes.
       while (!engine.getSpan(spanId).isComplete()) {
@@ -145,6 +360,10 @@ public final class SimulationDriver {
           throw new RuntimeException("Exception thrown while simulating tasks", t);
         }
       }
+
+    if (useResourceTracker) {
+      engine.generateResourceProfiles(curTime().duration());  // REVIEW: Is this necessary?
+      // Okay to keep here since work is not lost for resourceTracker.
     }
   }
 
@@ -166,14 +385,18 @@ public final class SimulationDriver {
 
       final TaskFactory<?> task = deserializeActivity(missionModel, serializedDirective);
 
-      engine.scheduleTask(startOffset, makeTaskFactory(
-          directiveId,
-          task,
-          schedule,
-          resolved,
-          missionModel,
-          activityTopic
-      ));
+      engine.scheduleTask(
+          startOffset,
+          makeTaskFactory(
+              directiveId,
+              task,
+              schedule,
+              resolved,
+              missionModel,
+              activityTopic
+              ),
+          null
+      );
     }
   }
 
@@ -204,7 +427,7 @@ public final class SimulationDriver {
       final var task = taskFactory.create(executor);
       return Task
           .callingWithSpan(
-              Task.emitting(directiveId, activityTopic)
+              Task.emitting(directiveId, activityTopic) //SRS HERE change to starting()
                   .andThen(task))
           .andThen(
               Task.spawning(
@@ -228,5 +451,25 @@ public final class SimulationDriver {
                           .formatted(serializedDirective.getTypeName(), ex.toString()));
     }
     return task;
+  }
+
+  public SimulationResultsInterface computeResults(Instant startTime, Duration simDuration) {
+    return engine.computeResults(startTime, simDuration, SimulationEngine.defaultActivityTopic);
+  }
+
+  public SimulationEngine getEngine() {
+    return engine;
+  }
+
+  public MissionModel<Model> getMissionModel() {
+    return missionModel;
+  }
+
+  public Instant getStartTime() {
+    return startTime;
+  }
+
+  public Duration getPlanDuration() {
+    return planDuration;
   }
 }

@@ -67,6 +67,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SchedulingIntegrationTests {
+  public static boolean defaultUseResourceTracker = false;
 
   public static final PlanningHorizon PLANNING_HORIZON = new PlanningHorizon(
       TimeUtility.fromDOY("2021-001T00:00:00"),
@@ -2215,7 +2216,8 @@ public class SchedulingIntegrationTests {
         desc.libPath(),
         Path.of(""),
         PlanOutputMode.UpdateInputPlanWithNewActivities,
-        schedulingDSLCompiler);
+        schedulingDSLCompiler,
+        defaultUseResourceTracker);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
     agent.schedule(new ScheduleRequest(new SpecificationId(1L), new SpecificationRevisionData(1L, 1L)), writer, () -> false, cachedEngineStoreCapacity);

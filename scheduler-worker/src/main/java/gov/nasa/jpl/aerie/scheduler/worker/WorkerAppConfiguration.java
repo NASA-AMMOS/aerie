@@ -12,5 +12,6 @@ public record WorkerAppConfiguration(
     Path missionRuleJarPath,
     PlanOutputMode outputMode,
     String hasuraGraphQlAdminSecret,
-    int maxCachedSimulationEngines
+    int maxCachedSimulationEngines,
+    boolean useResourceTracker
 ) { }

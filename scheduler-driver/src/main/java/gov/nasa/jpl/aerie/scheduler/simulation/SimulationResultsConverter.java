@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
@@ -22,16 +23,16 @@ public class SimulationResultsConverter {
    * @param driverResults the recorded results of a simulation run from the simulation driver
    * @return the same results rearranged to be suitable for use by the constraint evaluation engine
    */
-  public static gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(SimulationResults driverResults){
-    final var activities =  driverResults.simulatedActivities.entrySet().stream()
-                                                             .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
+  public static gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(SimulationResultsInterface driverResults){
+    final var activities =  driverResults.getSimulatedActivities().entrySet().stream()
+                                                             .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.getStartTime()))
                                                              .collect(Collectors.toList());
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-        driverResults.startTime,
-        Interval.between(Duration.ZERO, driverResults.duration),
+        driverResults.getStartTime(),
+        Interval.between(Duration.ZERO, driverResults.getDuration()),
         activities,
-        Maps.transformValues(driverResults.realProfiles, $ -> LinearProfile.fromSimulatedProfile($.segments())),
-        Maps.transformValues(driverResults.discreteProfiles, $ -> DiscreteProfile.fromSimulatedProfile($.segments()))
+        Maps.transformValues(driverResults.getRealProfiles(), $ -> LinearProfile.fromSimulatedProfile($.segments())),
+        Maps.transformValues(driverResults.getDiscreteProfiles(), $ -> DiscreteProfile.fromSimulatedProfile($.segments()))
     );
   }
 
