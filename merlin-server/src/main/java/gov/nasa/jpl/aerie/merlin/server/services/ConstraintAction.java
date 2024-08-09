@@ -71,15 +71,11 @@ public class ConstraintAction {
     if (!constraintCode.isEmpty()) {
       final var simStartTime = resultsHandle$
           .map(gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle::startTime)
-          .orElse(plan.startTimestamp.toInstant());
+          .orElse(plan.simulationStartInstant());
       final var simDuration = resultsHandle$
           .map(SimulationResultsHandle::duration)
-          .orElse(Duration.of(
-              plan.simulationStartTimestamp.toInstant().until(plan.simulationEndTimestamp.toInstant(), ChronoUnit.MICROS),
-              Duration.MICROSECONDS));
-      final var simOffset = Duration.of(
-          plan.startTimestamp.toInstant().until(simStartTime, ChronoUnit.MICROS),
-          Duration.MICROSECONDS);
+          .orElse(plan.simulationDuration());
+      final var simOffset = plan.simulationOffset();
 
       final var activities = new ArrayList<ActivityInstance>();
       final var simulatedActivities = resultsHandle$
@@ -138,7 +134,7 @@ public class ConstraintAction {
         final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult constraintCompilationResult;
         try {
           constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
-              plan.missionModelId,
+              plan.missionModelId(),
               Optional.of(planId),
               Optional.of(simDatasetId),
               constraint.definition()

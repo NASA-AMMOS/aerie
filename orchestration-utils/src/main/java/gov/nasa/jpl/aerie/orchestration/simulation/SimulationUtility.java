@@ -133,7 +133,7 @@ public class SimulationUtility implements AutoCloseable {
       public SimulationResults call() {
         return SimulationDriver.simulate(
             model,
-            plan.activityDirectives,
+            plan.activityDirectives(),
             plan.simulationStartTimestamp.toInstant(),
             simulationDuration,
             plan.planStartInstant(),

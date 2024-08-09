@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
@@ -20,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -280,19 +280,19 @@ public final class LocalMissionModelService implements MissionModelService {
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
-   * @param message The parameters defining the simulation to perform.
+   * @param plan The plan to be simulated. Contains the parameters defining the simulation to perform.
    * @return A set of samples over the course of the simulation.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
   public SimulationResults runSimulation(
-      final CreateSimulationMessage message,
+      final Plan plan,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
       final SimulationResourceManager resourceManager)
   throws NoSuchMissionModelException
   {
-    final var config = message.configuration();
+    final var config = plan.simulationConfiguration();
     if (config.isEmpty()) {
       log.warn(
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
@@ -301,14 +301,14 @@ public final class LocalMissionModelService implements MissionModelService {
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     return SimulationDriver.simulate(
         loadAndInstantiateMissionModel(
-            message.missionModelId(),
-            message.simulationStartTime(),
+            plan.missionModelId(),
+            plan.planStartInstant(),
             SerializedValue.of(config)),
-        message.activityDirectives(),
-        message.simulationStartTime(),
-        message.simulationDuration(),
-        message.planStartTime(),
-        message.planDuration(),
+        plan.activityDirectives(),
+        plan.simulationStartInstant(),
+        plan.simulationDuration(),
+        plan.planStartInstant(),
+        plan.duration(),
         canceledListener,
         simulationExtentConsumer,
         resourceManager);
