@@ -122,7 +122,7 @@ public class PlanJsonParser {
       final var simEndTime = pgTimestampP.parse(configObject.get("simulation_end_time")).getSuccessOrThrow();
       final var config = PlanJsonParser.parseSimulationConfiguration(configObject.getJsonObject("arguments"));
 
-      plan.configuration.putAll(config);
+      plan.simulationConfiguration().putAll(config);
       plan.simulationStartTimestamp = simStartTime;
       plan.simulationEndTimestamp = simEndTime;
 

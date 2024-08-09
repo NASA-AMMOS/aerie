@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -17,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,11 +47,7 @@ public final class StubPlanService implements PlanService {
         null,
         true
     );
-
-    EXISTENT_PLAN = new Plan();
-    EXISTENT_PLAN.name = "existent";
-    EXISTENT_PLAN.missionModelId = "abc";
-    EXISTENT_PLAN.activityDirectives = Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
+    EXISTENT_PLAN = new Plan("existent", new MissionModelId(1), new Timestamp(Instant.now()), new Timestamp(Instant.now()), Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY));
   }
 
 

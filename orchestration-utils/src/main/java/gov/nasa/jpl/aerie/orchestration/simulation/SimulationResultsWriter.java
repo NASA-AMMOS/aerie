@@ -380,7 +380,7 @@ public class SimulationResultsWriter {
     return Json.createObjectBuilder()
                .add("startTime", plan.simulationStartTimestamp.toString())
                .add("endTime",plan.simulationEndTimestamp.toString())
-               .add("arguments", simulationArgumentsP.unparse(plan.configuration))
+               .add("arguments", simulationArgumentsP.unparse(plan.simulationConfiguration()))
                .build();
   }
 

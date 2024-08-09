@@ -76,9 +76,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   public CreatedPlan storePlan(final Plan other) {
     final PlanId planId = new PlanId(this.nextPlanId++);
     final Plan plan = new Plan(other);
-    final List<ActivityDirectiveId> activityIds =
-        other.activityDirectives != null ? List.copyOf(plan.activityDirectives.keySet()) : List.of();
-    if (other.activityDirectives == null) plan.activityDirectives = new HashMap<>();
+    final List<ActivityDirectiveId> activityIds = List.copyOf(plan.activityDirectives().keySet());
 
     this.plans.put(planId, Pair.of(0L, plan));
     return new CreatedPlan(planId, activityIds);
@@ -101,7 +99,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     final var revision = entry.getLeft() + 1;
 
     final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
-    plan.activityDirectives.put(activityId, activity);
+    plan.activityDirectives().put(activityId, activity);
     this.plans.put(planId, Pair.of(revision, plan));
 
     return activityId;
@@ -114,7 +112,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     final var plan = entry.getRight();
     final var revision = entry.getLeft() + 1;
 
-    plan.activityDirectives.clear();
+    plan.activityDirectives().clear();
     this.plans.put(planId, Pair.of(revision, plan));
   }
 

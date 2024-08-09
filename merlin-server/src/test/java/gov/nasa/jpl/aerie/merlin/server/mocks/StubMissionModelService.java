@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
@@ -195,13 +195,13 @@ public final class StubMissionModelService implements MissionModelService {
 
   @Override
   public SimulationResults runSimulation(
-      final CreateSimulationMessage message,
+      final Plan plan,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
       final SimulationResourceManager resourceManager
   ) throws NoSuchMissionModelException {
-    if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
-      throw new NoSuchMissionModelException(message.missionModelId());
+    if (!Objects.equals(plan.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(plan.missionModelId());
     }
 
     return SUCCESSFUL_SIMULATION_RESULTS;

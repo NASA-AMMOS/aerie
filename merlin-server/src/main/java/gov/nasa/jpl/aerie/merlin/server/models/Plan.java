@@ -5,59 +5,66 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * A representation of a grounded plan. Contains the necessary information to be simulated.
+ */
 public final class Plan {
-  public String name;
-  public String missionModelId;
-  public Timestamp startTimestamp;
-  public Timestamp endTimestamp;
-  public Map<ActivityDirectiveId, ActivityDirective> activityDirectives;
-  public Map<String, SerializedValue> configuration = new HashMap<>();
+  // Set-once fields
+  private final String name;
+  private final MissionModelId missionModelId;
+  private final Timestamp startTimestamp;
+  private final Timestamp endTimestamp;
+  private final Map<ActivityDirectiveId, ActivityDirective> activityDirectives;
+  private final Map<String, SerializedValue> configuration;
+
+  // Simulation start and end times can be freely updated
   public Timestamp simulationStartTimestamp;
   public Timestamp simulationEndTimestamp;
 
-  public Plan() {}
-
-  public Plan(final Plan other) {
-    this.name = other.name;
-    this.missionModelId = other.missionModelId;
-    this.startTimestamp = other.startTimestamp;
-    this.endTimestamp = other.endTimestamp;
-    this.simulationStartTimestamp = other.simulationStartTimestamp;
-    this.simulationEndTimestamp = other.simulationEndTimestamp;
-
-    if (other.activityDirectives != null) {
-      this.activityDirectives = new HashMap<>();
-      this.activityDirectives.putAll(other.activityDirectives);
-    }
-
-    if (other.configuration != null) this.configuration = new HashMap<>(other.configuration);
-  }
-
   public Plan(
       final String name,
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives
-  )
-  {
-    this.name = name;
-    this.missionModelId = missionModelId;
-    this.startTimestamp = startTimestamp;
-    this.endTimestamp = endTimestamp;
-    this.activityDirectives = (activityDirectives != null) ? Map.copyOf(activityDirectives) : null;
-    this.configuration = null;
-    this.simulationStartTimestamp = startTimestamp;
-    this.simulationEndTimestamp = endTimestamp;
+  ) {
+    this(
+        name,
+        missionModelId,
+        startTimestamp,
+        endTimestamp,
+        activityDirectives,
+        null,
+        startTimestamp,
+        endTimestamp);
+  }
+
+  public Plan(
+      String name,
+      Timestamp startTimestamp,
+      Timestamp endTimestamp,
+      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
+      Map<String, SerializedValue> simulationConfig
+  ) {
+    this(
+        name,
+        null,
+        startTimestamp,
+        endTimestamp,
+        activityDirectives,
+        simulationConfig,
+        startTimestamp,
+        endTimestamp);
   }
 
   public Plan(
       final String name,
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
@@ -69,29 +76,72 @@ public final class Plan {
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
-    this.activityDirectives = (activityDirectives != null) ? Map.copyOf(activityDirectives) : null;
-    if (configuration != null) this.configuration = new HashMap<>(configuration);
+    this.activityDirectives = (activityDirectives != null) ? new HashMap<>(activityDirectives) : new HashMap<>();
+    this.configuration = (configuration != null) ? new HashMap<>(configuration) : new HashMap<>();
     this.simulationStartTimestamp = simulationStartTimestamp;
     this.simulationEndTimestamp = simulationEndTimestamp;
   }
 
-  public Plan(
-      String name,
-      Timestamp startTimestamp,
-      Timestamp endTimestamp,
-      Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
-      Map<String, SerializedValue> simulationConfig) {
-    this.name = name;
-    this.startTimestamp = startTimestamp;
-    this.endTimestamp = endTimestamp;
-    this.activityDirectives = activityDirectives;
-    this.configuration = simulationConfig;
-    this.simulationStartTimestamp = startTimestamp;
-    this.simulationEndTimestamp = endTimestamp;
+  public Plan(final Plan other) {
+    this.name = other.name;
+    this.missionModelId = other.missionModelId;
+    this.startTimestamp = other.startTimestamp;
+    this.endTimestamp = other.endTimestamp;
+    this.simulationStartTimestamp = other.simulationStartTimestamp;
+    this.simulationEndTimestamp = other.simulationEndTimestamp;
+    this.activityDirectives = new HashMap<>(other.activityDirectives);
+    this.configuration = new HashMap<>(other.configuration);
   }
 
+  /**
+   * Get the plan's name.
+   */
+  public String name() {return name;}
+
+  /**
+   * Get the id of the mission model this plan will work with.
+   */
+  public MissionModelId missionModelId() {return missionModelId;}
+
+  /**
+   * Get the start of the plan as an Instant.
+   */
+  public Instant planStartInstant() {return startTimestamp.toInstant();}
+
+  /**
+   * Get the duration of the plan.
+   */
   public Duration duration() {
     return Duration.of(startTimestamp.microsUntil(endTimestamp), Duration.MICROSECOND);
+  }
+
+  /**
+   * Get the map of grounded activity directives in this plan.
+   */
+  public Map<ActivityDirectiveId, ActivityDirective> activityDirectives() {return activityDirectives;}
+
+  /**
+   * Get the requested simulation configuration.
+   */
+  public Map<String, SerializedValue> simulationConfiguration() {return configuration;}
+
+  /**
+   * Get the requested simulation start time as an Instant.
+   */
+  public Instant simulationStartInstant() {return simulationStartTimestamp.toInstant();}
+
+  /**
+   * Get the requested simulation duration.
+   */
+  public Duration simulationDuration() {
+    return Duration.of(simulationStartTimestamp.microsUntil(simulationEndTimestamp), Duration.MICROSECOND);
+  }
+
+  /**
+   * Get the offset between the start time of the plan and the requested start time of simulation.
+   */
+  public Duration simulationOffset() {
+    return Duration.of(startTimestamp.microsUntil(simulationStartTimestamp), Duration.MICROSECOND);
   }
 
   @Override

@@ -109,7 +109,7 @@ public class Main {
       final var model = SimulationUtility.instantiateMissionModel(
           modelJarPath,
           plan.simulationStartTimestamp.toInstant(),
-          plan.configuration
+          plan.simulationConfiguration()
       );
 
       return new Arguments.SimulationArguments<>(model, plan, verbose, outputFilePath, extentUpdatePeriod);
