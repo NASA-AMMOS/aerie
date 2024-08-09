@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.stateless;
+package gov.nasa.jpl.aerie.orchestration;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;

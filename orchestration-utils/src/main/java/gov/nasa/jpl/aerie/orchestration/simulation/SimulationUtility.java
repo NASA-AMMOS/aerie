@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.stateless.simulation;
+package gov.nasa.jpl.aerie.orchestration.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
-import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfiles;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.resources.StreamingSimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
@@ -44,7 +43,7 @@ public class SimulationUtility implements AutoCloseable {
    * Create a new SimulationUtility that manages resources using a StreamingSimulationResourceManager.
    * @param resourceStreamer a Consumer defining how the ResourceManager will stream resources.
    */
-  public SimulationUtility(Consumer<ResourceProfiles> resourceStreamer) {
+  public SimulationUtility(ResourceFileStreamer resourceStreamer) {
     this.exec = Executors.newSingleThreadExecutor();
     rmgr = new StreamingSimulationResourceManager(resourceStreamer);
   }
@@ -135,7 +134,7 @@ public class SimulationUtility implements AutoCloseable {
             plan.activityDirectives,
             plan.simulationStartTimestamp.toInstant(),
             simulationDuration,
-            plan.startTimestamp.toInstant(),
+            plan.planStartInstant(),
             plan.duration(),
             canceledListener,
             extentConsumer,
@@ -158,11 +157,11 @@ public class SimulationUtility implements AutoCloseable {
       ex.activityStackTrace.ifPresent(activityStackTrace -> dataBuilder.add("activityStackTrace", activityStackTrace));
 
       return Json.createObjectBuilder()
-                                .add("type", "SIMULATION_EXCEPTION")
-                                .add("message", ex.cause.getMessage())
-                                .add("data", dataBuilder)
-                                .add("trace", ex.cause.toString())
-                                .build();
+                 .add("type", "SIMULATION_EXCEPTION")
+                 .add("message", ex.cause.getMessage())
+                 .add("data", dataBuilder)
+                 .add("trace", ex.cause.toString())
+                 .build();
   }
 
   @Override
