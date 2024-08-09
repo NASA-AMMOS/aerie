@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.stateless.simulation;
+package gov.nasa.jpl.aerie.orchestration.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
