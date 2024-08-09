@@ -150,7 +150,7 @@ public class AutomaticValidationTests {
     final var activityValidations = hasura.getActivityValidations(planId);
     final ActivityValidation activityValidation = activityValidations.get((long) activityId);
     assertEquals(
-        new ActivityValidation.NoSuchMissionModelFailure("no such mission model", "0"),
+        new ActivityValidation.NoSuchMissionModelFailure("no such mission model", 0),
         activityValidation
     );
   }

@@ -61,21 +61,21 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, MissionModelJar> getMissionModels() {
+  public Map<MissionModelId, MissionModelJar> getMissionModels() {
     return this.missionModelRepository.getAllMissionModels();
   }
 
   @Override
-  public MissionModelJar getMissionModelById(final String id) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModelById(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try {
-      return this.missionModelRepository.getMissionModel(id);
+      return this.missionModelRepository.getMissionModel(missionModelId);
     } catch (MissionModelRepository.NoSuchMissionModelException ex) {
-      throw new NoSuchMissionModelException(id, ex);
+      throw new NoSuchMissionModelException(missionModelId, ex);
     }
   }
 
   @Override
-  public Map<String, ValueSchema> getResourceSchemas(final String missionModelId)
+  public Map<String, ValueSchema> getResourceSchemas(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
@@ -98,7 +98,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public Map<String, ActivityType> getActivityTypes(final String missionModelId)
+  public Map<String, ActivityType> getActivityTypes(final MissionModelId missionModelId)
   throws NoSuchMissionModelException
   {
     try {
@@ -119,7 +119,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    */
   @Override
-  public List<ValidationNotice> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
+  public List<ValidationNotice> validateActivityArguments(final MissionModelId missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException, MissionModelLoadException, InstantiationException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
@@ -131,12 +131,12 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   public List<BulkArgumentValidationResponse> validateActivityArgumentsBulk(
-      final MissionModelId modelId,
+      final MissionModelId missionModelId,
       final List<ActivityDirectiveForValidation> activities) {
     // load mission model once for all activities
     ModelType<?, ?> modelType;
     try {
-      modelType = this.loadMissionModelType(modelId.toString());
+      modelType = this.loadMissionModelType(missionModelId);
       // try and catch NoSuchMissionModel here, so we can serialize it out to each activity validation
       // rather than catching it at a higher level in the workerLoop itself
     } catch (NoSuchMissionModelException e) {
@@ -188,7 +188,7 @@ public final class LocalMissionModelService implements MissionModelService {
    */
   @Override
   public Map<ActivityDirectiveId, ActivityInstantiationFailure>
-  validateActivityInstantiations(final String missionModelId,
+  validateActivityInstantiations(final MissionModelId missionModelId,
                                  final Map<ActivityDirectiveId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
@@ -218,7 +218,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
   @Override
   public List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final List<SerializedActivity> serializedActivities)
   throws NoSuchMissionModelException, MissionModelLoadException {
       final var modelType = this.loadMissionModelType(missionModelId);
@@ -249,7 +249,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<ValidationNotice> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public List<ValidationNotice> validateModelArguments(final MissionModelId missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
          InstantiationException
@@ -260,14 +260,14 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<Parameter> getModelParameters(final String missionModelId)
+  public List<Parameter> getModelParameters(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     return this.loadMissionModelType(missionModelId).getConfigurationType().getParameters();
   }
 
   @Override
-  public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public Map<String, SerializedValue> getModelEffectiveArguments(final MissionModelId missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
          InstantiationException
@@ -315,7 +315,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshModelParameters(final String missionModelId)
+  public void refreshModelParameters(final MissionModelId missionModelId)
   throws NoSuchMissionModelException
   {
     try {
@@ -326,7 +326,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshActivityTypes(final String missionModelId)
+  public void refreshActivityTypes(final MissionModelId missionModelId)
   throws NoSuchMissionModelException
   {
     try {
@@ -349,7 +349,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshResourceTypes(final String missionModelId)
+  public void refreshResourceTypes(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException {
     try {
       final var model = this.loadAndInstantiateMissionModel(missionModelId);
@@ -359,7 +359,7 @@ public final class LocalMissionModelService implements MissionModelService {
     }
   }
 
-  private ModelType<?, ?> loadMissionModelType(final String missionModelId)
+  private ModelType<?, ?> loadMissionModelType(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {
@@ -381,7 +381,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModel<?> loadAndInstantiateMissionModel(final String missionModelId)
+  private MissionModel<?> loadAndInstantiateMissionModel(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     return loadAndInstantiateMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
@@ -398,7 +398,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   private MissionModel<?> loadAndInstantiateMissionModel(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Instant planStart,
       final SerializedValue configuration)
   throws NoSuchMissionModelException, MissionModelLoadException

@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 
@@ -55,7 +56,7 @@ public class ConstraintsDSLCompilationService {
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
   synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Optional<PlanId> planId,
       final Optional<SimulationDatasetId> simulationDatasetId,
       final String constraintTypescript

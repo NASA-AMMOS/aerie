@@ -4,6 +4,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 
@@ -21,7 +22,7 @@ public class TypescriptCodeGenerationServiceAdapter {
     this.planService = planService;
   }
 
-  public String generateTypescriptTypes(final String missionModelId, final Optional<PlanId> planId, final Optional<SimulationDatasetId> simulationDatasetId)
+  public String generateTypescriptTypes(final MissionModelId missionModelId, final Optional<PlanId> planId, final Optional<SimulationDatasetId> simulationDatasetId)
   throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
   {
     return TypescriptCodeGenerationService
@@ -30,7 +31,7 @@ public class TypescriptCodeGenerationServiceAdapter {
             resourceSchemas(missionModelService, missionModelId, planService, planId, simulationDatasetId));
   }
 
-  static Map<String, TypescriptCodeGenerationService.ActivityType> activityTypes(final MissionModelService missionModelService, final String missionModelId)
+  static Map<String, TypescriptCodeGenerationService.ActivityType> activityTypes(final MissionModelService missionModelService, final MissionModelId missionModelId)
   throws MissionModelService.NoSuchMissionModelException
   {
     return missionModelService
@@ -50,7 +51,7 @@ public class TypescriptCodeGenerationServiceAdapter {
   }
   static Map<String, ValueSchema> resourceSchemas(
       final MissionModelService missionModelService,
-      final String modelId,
+      final MissionModelId modelId,
       final PlanService planService,
       final Optional<PlanId> planId,
       final Optional<SimulationDatasetId> simulationDatasetId

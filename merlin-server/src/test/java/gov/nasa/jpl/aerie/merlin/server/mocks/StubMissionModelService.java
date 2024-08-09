@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
@@ -26,8 +27,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class StubMissionModelService implements MissionModelService {
-  public static final String EXISTENT_MISSION_MODEL_ID = "abc";
-  public static final String NONEXISTENT_MISSION_MODEL_ID = "def";
+  public static final MissionModelId EXISTENT_MISSION_MODEL_ID = new MissionModelId(1L);
+  public static final MissionModelId NONEXISTENT_MISSION_MODEL_ID = new MissionModelId(-1L);
   public static final MissionModelJar EXISTENT_MISSION_MODEL;
 
   public static final String EXISTENT_ACTIVITY_TYPE = "activity";
@@ -102,12 +103,12 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, MissionModelJar> getMissionModels() {
+  public Map<MissionModelId, MissionModelJar> getMissionModels() {
     return Map.of(EXISTENT_MISSION_MODEL_ID, EXISTENT_MISSION_MODEL);
   }
 
   @Override
-  public MissionModelJar getMissionModelById(final String missionModelId) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModelById(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(missionModelId);
     }
@@ -116,7 +117,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, ValueSchema> getResourceSchemas(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<String, ValueSchema> getResourceSchemas(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(missionModelId);
     }
@@ -125,7 +126,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, ActivityType> getActivityTypes(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<String, ActivityType> getActivityTypes(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(missionModelId);
     }
@@ -137,7 +138,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<ValidationNotice> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
+  public List<ValidationNotice> validateActivityArguments(final MissionModelId missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException
   {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
@@ -157,7 +158,7 @@ public final class StubMissionModelService implements MissionModelService {
 
   @Override
   public Map<ActivityDirectiveId, ActivityInstantiationFailure> validateActivityInstantiations(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Map<ActivityDirectiveId, SerializedActivity> activities)
   throws LocalMissionModelService.MissionModelLoadException
   {
@@ -166,26 +167,26 @@ public final class StubMissionModelService implements MissionModelService {
 
   @Override
   public List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
-      String missionModelId,
+      MissionModelId missionModelId,
       List<SerializedActivity> serializedActivities) {
     return List.of();
   }
 
   @Override
-  public List<ValidationNotice> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public List<ValidationNotice> validateModelArguments(final MissionModelId missionModelId, final Map<String, SerializedValue> arguments)
   throws LocalMissionModelService.MissionModelLoadException
   {
     return List.of();
   }
 
   @Override
-  public List<Parameter> getModelParameters(final String missionModelId) {
+  public List<Parameter> getModelParameters(final MissionModelId missionModelId) {
     return List.of();
   }
 
   @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Map<String, SerializedValue> arguments)
   throws LocalMissionModelService.MissionModelLoadException
   {
@@ -207,11 +208,11 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshModelParameters(final String missionModelId) throws NoSuchMissionModelException {}
+  public void refreshModelParameters(final MissionModelId missionModelId) throws NoSuchMissionModelException {}
 
   @Override
-  public void refreshActivityTypes(final String missionModelId) throws NoSuchMissionModelException {}
+  public void refreshActivityTypes(final MissionModelId missionModelId) throws NoSuchMissionModelException {}
 
   @Override
-  public void refreshResourceTypes(final String missionModelId) throws NoSuchMissionModelException {}
+  public void refreshResourceTypes(final MissionModelId missionModelId) throws NoSuchMissionModelException {}
 }
