@@ -587,7 +587,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeNoSuchMissionModelException(final MissionModelService.NoSuchMissionModelException ex) {
     return Json.createObjectBuilder()
         .add("message", "no such mission model")
-        .add("mission_model_id", ex.missionModelId)
+        .add("mission_model_id", ex.missionModelId.id())
         .build();
   }
 

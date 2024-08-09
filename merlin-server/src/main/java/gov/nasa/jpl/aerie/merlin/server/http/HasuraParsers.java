@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
@@ -18,6 +17,7 @@ import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.datasetIdP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.missionModelIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.simulationDatasetIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.timestampP;
@@ -47,7 +47,7 @@ public abstract class HasuraParsers {
 
   public static final JsonParser<HasuraAction<HasuraAction.MissionModelInput>> hasuraMissionModelActionP
       = hasuraActionF(productP
-                          .field("missionModelId", stringP)
+                          .field("missionModelId", missionModelIdP)
                           .map(HasuraAction.MissionModelInput::new, HasuraAction.MissionModelInput::missionModelId));
 
   public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
@@ -82,7 +82,7 @@ public abstract class HasuraParsers {
   public static final JsonParser<HasuraAction<HasuraAction.ConstraintsInput>> hasuraConstraintsCodeAction
       = hasuraActionF(
           productP
-              .field("missionModelId", stringP)
+              .field("missionModelId", missionModelIdP)
               .optionalField("planId", nullableP(planIdP))
               .map(
                   untuple((modelId, planId) -> new HasuraAction.ConstraintsInput(modelId, planId.flatMap($ -> $))),
@@ -95,18 +95,18 @@ public abstract class HasuraParsers {
       .field("event", productP
           .field("data", productP
               .field("new", productP
-                  .field("id", longP)
+                  .field("id", missionModelIdP)
                   .rest())
               .rest())
           .rest())
       .rest()
       .map(
-          untuple(missionModelId -> new HasuraMissionModelEvent(String.valueOf(missionModelId))),
-          $ -> tuple(Long.parseLong($.missionModelId())));
+          untuple(HasuraMissionModelEvent::new),
+          $ -> tuple($.missionModelId()));
 
   private static final JsonParser<HasuraAction.MissionModelArgumentsInput> hasuraMissionModelArgumentsInputP
       = productP
-      .field("missionModelId", stringP)
+      .field("missionModelId", missionModelIdP)
       .field("modelArguments", mapP(serializedValueP))
       .map(
           untuple(HasuraAction.MissionModelArgumentsInput::new),
@@ -117,7 +117,7 @@ public abstract class HasuraParsers {
 
   private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
       = productP
-      .field("missionModelId", stringP)
+      .field("missionModelId", missionModelIdP)
       .field("activityTypeName", stringP)
       .field("activityArguments", mapP(serializedValueP))
       .map(
@@ -135,7 +135,7 @@ public abstract class HasuraParsers {
   public static final JsonParser<HasuraAction<HasuraAction.ActivityBulkInput>> hasuraActivityBulkActionP
       = hasuraActionF(
           productP
-              .field("missionModelId", stringP)
+              .field("missionModelId", missionModelIdP)
               .field("activities", listP(hasuraActivityBulkItemP))
               .map(
                   untuple(HasuraAction.ActivityBulkInput::new),

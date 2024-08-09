@@ -53,12 +53,12 @@ type Mutation {
 }
 
 type Query {
-  getModelEffectiveArguments(missionModelId: ID!, modelArguments: ModelArguments!): EffectiveArgumentsResponse
+  getModelEffectiveArguments(missionModelId: Int!, modelArguments: ModelArguments!): EffectiveArgumentsResponse
 }
 
 type Query {
   getActivityEffectiveArguments(
-    missionModelId: ID!
+    missionModelId: Int!
     activityTypeName: String!
     activityArguments: ActivityArguments!
   ): EffectiveArgumentsResponse
@@ -67,7 +67,7 @@ type Query {
 
 type Query {
   getActivityEffectiveArgumentsBulk(
-    missionModelId: ID!
+    missionModelId: Int!
     activities: [EffectiveArgumentsInput!]!
   ): [EffectiveArgumentsResponse!]!
 }
@@ -81,7 +81,7 @@ type Query {
 }
 
 type Query {
-  resourceTypes(missionModelId: ID!): [ResourceType!]!
+  resourceTypes(missionModelId: Int!): [ResourceType!]!
 }
 
 type Query {
@@ -93,7 +93,7 @@ type Query {
 }
 
 type Query {
-  constraintsDslTypescript(missionModelId: ID!, planId: Int): DslTypescriptResponse
+  constraintsDslTypescript(missionModelId: Int!, planId: Int): DslTypescriptResponse
 }
 
 type Query {
@@ -111,13 +111,13 @@ type Query {
 type Query {
   validateActivityArguments(
     activityTypeName: String!
-    missionModelId: ID!
+    missionModelId: Int!
     activityArguments: ActivityArguments!
   ): ValidationResponse
 }
 
 type Query {
-  validateModelArguments(missionModelId: ID!, modelArguments: ModelArguments!): ValidationResponse
+  validateModelArguments(missionModelId: Int!, modelArguments: ModelArguments!): ValidationResponse
 }
 
 type Query {

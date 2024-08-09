@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public final class Plan {
   public String name;
-  public String missionModelId;
+  public MissionModelId missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
   public Map<ActivityDirectiveId, ActivityDirective> activityDirectives;
@@ -38,12 +38,11 @@ public final class Plan {
 
   public Plan(
       final String name,
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives
-  )
-  {
+  ) {
     this.name = name;
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
@@ -56,7 +55,7 @@ public final class Plan {
 
   public Plan(
       final String name,
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives,

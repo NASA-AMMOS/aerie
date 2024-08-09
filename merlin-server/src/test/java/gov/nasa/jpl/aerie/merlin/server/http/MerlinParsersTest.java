@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
@@ -83,7 +84,7 @@ public final class MerlinParsersTest {
               .build())
           .add("input", Json
               .createObjectBuilder()
-              .add("missionModelId", "1")
+              .add("missionModelId", 1)
               .build())
           .add("session_variables", Json
               .createObjectBuilder()
@@ -94,7 +95,7 @@ public final class MerlinParsersTest {
 
       final var expected = new HasuraAction<>(
           "testAction",
-          new HasuraAction.MissionModelInput("1"),
+          new HasuraAction.MissionModelInput(new MissionModelId(1L)),
           new HasuraAction.Session("aerie_admin", null));
 
       assertEquals(expected, hasuraMissionModelActionP.parse(json).getSuccessOrThrow());
@@ -109,7 +110,7 @@ public final class MerlinParsersTest {
               .build())
           .add("input", Json
               .createObjectBuilder()
-              .add("missionModelId", "1")
+              .add("missionModelId", 1)
               .build())
           .add("session_variables", Json
               .createObjectBuilder()
@@ -121,7 +122,7 @@ public final class MerlinParsersTest {
 
       final var expected = new HasuraAction<>(
           "testAction",
-          new HasuraAction.MissionModelInput("1"),
+          new HasuraAction.MissionModelInput(new MissionModelId(1L)),
           new HasuraAction.Session("aerie_admin", "userId"));
 
       assertEquals(expected, hasuraMissionModelActionP.parse(json).getSuccessOrThrow());
@@ -147,7 +148,7 @@ public final class MerlinParsersTest {
         .add("id", "8907a407-28a5-440a-8de6-240b80c58a8b")
         .build();
 
-    final var expected = new HasuraMissionModelEvent("1");
+    final var expected = new HasuraMissionModelEvent(new MissionModelId(1L));
 
     assertEquals(expected, hasuraMissionModelEventTriggerP.parse(json).getSuccessOrThrow());
   }
