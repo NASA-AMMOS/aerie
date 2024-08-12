@@ -317,6 +317,7 @@ public class CheckpointSimulationDriver {
     return new SimulationResultsComputerInputs(
         engine,
         simulationStartTime,
+        elapsedTime,
         activityTopic,
         missionModel.getTopics().values(),
         activityToSpan,

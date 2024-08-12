@@ -14,24 +14,26 @@ import java.util.Set;
 public record SimulationResultsComputerInputs(
     SimulationEngine engine,
     Instant simulationStartTime,
+    Duration elapsedTime,
     Topic<ActivityDirectiveId> activityTopic,
     Iterable<MissionModel.SerializableTopic<?>> serializableTopics,
     Map<ActivityDirectiveId, SpanId> activityDirectiveIdTaskIdMap,
     SimulationResourceManager resourceManager){
 
-  public SimulationResults computeResults(final Set<String> resourceNames){
+  public SimulationResultsInterface computeResults(final Set<String> resourceNames){
     return engine.computeResults(
         this.simulationStartTime(),
+        this.elapsedTime(),
         this.activityTopic(),
         this.serializableTopics(),
-        this.resourceManager,
-        resourceNames
+        this.resourceManager
     );
   }
 
-  public SimulationResults computeResults(){
+  public SimulationResultsInterface computeResults(){
     return engine.computeResults(
         this.simulationStartTime(),
+        this.elapsedTime(),
         this.activityTopic(),
         this.serializableTopics(),
         this.resourceManager
