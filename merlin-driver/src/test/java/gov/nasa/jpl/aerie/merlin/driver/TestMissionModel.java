@@ -51,9 +51,9 @@ public class TestMissionModel {
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> new OneStepTask<>($ -> {
-        $.emit(this, delayedActivityDirectiveInputTopic);
+        $.startActivity(this, delayedActivityDirectiveInputTopic);
         return TaskStatus.delayed(oneMinute, new OneStepTask<>($$ -> {
-          $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
+          $$.endActivity(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
         }));
       });
@@ -76,7 +76,7 @@ public class TestMissionModel {
     @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> new OneStepTask<>(scheduler -> {
-        scheduler.emit(this, decomposingActivityDirectiveInputTopic);
+        scheduler.startActivity(this, decomposingActivityDirectiveInputTopic);
         return TaskStatus.delayed(
             Duration.ZERO,
             new OneStepTask<>($ -> {
@@ -94,7 +94,7 @@ public class TestMissionModel {
                       "Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                           ex.toString()));
                 }
-                $$.emit(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
+                $$.endActivity(Unit.UNIT, decomposingActivityDirectiveOutputTopic);
                 return TaskStatus.completed(Unit.UNIT);
               }));
             }));
@@ -142,7 +142,7 @@ public class TestMissionModel {
   };
 
   private static final LinkedHashMap<Topic<?>, MissionModel.SerializableTopic<?>> _topics = new LinkedHashMap<>();
-  {
+  static {
     _topics.put(delayedActivityDirectiveInputTopic,
                 new MissionModel.SerializableTopic<>(
                     "ActivityType.Input.DelayActivityDirective",
