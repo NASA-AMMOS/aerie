@@ -78,16 +78,18 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
     }
     return _realProfiles;
   }
-  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> _realProfiles = null;
+  private Map<String, ResourceProfile<RealDynamics>> _realProfiles = null;
 
   // We need to pass startTimes for both to know from where they are offset?  We don't want to assume that the two
   // simulations had the same timeframe.
-  static <D> Pair<ValueSchema, List<ProfileSegment<D>>> mergeProfiles(Instant tOld, Instant tNew, String resourceName,
-                                                                      Pair<ValueSchema, List<ProfileSegment<D>>> pOld,
-                                                                      Pair<ValueSchema, List<ProfileSegment<D>>> pNew,
-                                                                      TemporalEventSource timeline) {
+  static <D> ResourceProfile<D> mergeProfiles(
+      Instant tOld, Instant tNew, String resourceName,
+      ResourceProfile<D> pOld, ResourceProfile<D> pNew,
+      TemporalEventSource timeline) {
     // We assume that the two ValueSchemas are the same and don't check for the sake of minimizing computation.
-    return Pair.of(pOld.getLeft(), mergeSegmentLists(tOld, tNew, resourceName,  pOld.getRight(), pNew.getRight(), timeline));
+    return ResourceProfile.of(
+        pOld.schema(),
+        mergeSegmentLists(tOld, tNew, resourceName,  pOld.segments(), pNew.segments(), timeline));
   }
 
   static private int ctr = 0;
@@ -125,16 +127,15 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
     var sNew = listNew.stream();
 
     // translate the segment extents into time elapsed.
-    var ssOld = sOld.map(p -> {
+    Stream<Triple<Duration, Integer, ProfileSegment<D>>> ssOld = sOld.map(p -> {
       var r =  Triple.of(elapsed[0], 1, p);  // This middle index distinguishes old vs new and orders new before old when at the same time.
       elapsed[0] = elapsed[0].plus(p.extent());
       return r;
     });
-    var ssNew = sNew.map(p -> {
+    Stream<Triple<Duration, Integer, ProfileSegment<D>>> ssNew = sNew.map(p -> {
       var r =  Triple.of(elapsed[1], 0, p);
       elapsed[1] = elapsed[1].plus(p.extent());
-      final Triple<Duration, Integer, ProfileSegment<D>> r1 = r;
-      return r1;
+      return r;
     });
 
     // Place a dummy triple at the end of the sorted triples since we need to look at two triples to handle ties in triples with the same time.
@@ -257,7 +258,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
                                                                                   resourceName[0], p1, p2, timeline)));
     return _discreteProfiles;
   }
-  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> _discreteProfiles = null;
+  private Map<String, ResourceProfile<SerializedValue>> _discreteProfiles = null;
 
   @Override
   public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
