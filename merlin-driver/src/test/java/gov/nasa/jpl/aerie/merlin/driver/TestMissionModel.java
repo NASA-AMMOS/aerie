@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -140,29 +141,37 @@ public class TestMissionModel {
     }
   };
 
+  private static final LinkedHashMap<Topic<?>, MissionModel.SerializableTopic<?>> _topics = new LinkedHashMap<>();
+  {
+    _topics.put(delayedActivityDirectiveInputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Input.DelayActivityDirective",
+                    delayedActivityDirectiveInputTopic,
+                    testModelOutputType));
+    _topics.put(delayedActivityDirectiveOutputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Output.DelayActivityDirective",
+                    delayedActivityDirectiveOutputTopic,
+                    testModelOutputType));
+    _topics.put(decomposingActivityDirectiveInputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Input.DecomposingActivityDirective",
+                    decomposingActivityDirectiveInputTopic,
+                    testModelOutputType));
+    _topics.put(decomposingActivityDirectiveOutputTopic,
+                new MissionModel.SerializableTopic<>(
+                    "ActivityType.Output.DecomposingActivityDirective",
+                    decomposingActivityDirectiveOutputTopic,
+                    testModelOutputType));
+  }
+
   public static MissionModel<Object> missionModel() {
     return new MissionModel<>(
         new Object(),
         new LiveCells(new TemporalEventSource()),
         Map.of(),
-        List.of(
-            new MissionModel.SerializableTopic<>(
-                "ActivityType.Input.DelayActivityDirective",
-                delayedActivityDirectiveInputTopic,
-                testModelOutputType),
-            new MissionModel.SerializableTopic<>(
-                "ActivityType.Output.DelayActivityDirective",
-                delayedActivityDirectiveOutputTopic,
-                testModelOutputType),
-            new MissionModel.SerializableTopic<>(
-                "ActivityType.Input.DecomposingActivityDirective",
-                decomposingActivityDirectiveInputTopic,
-                testModelOutputType),
-            new MissionModel.SerializableTopic<>(
-                "ActivityType.Output.DecomposingActivityDirective",
-                decomposingActivityDirectiveOutputTopic,
-                testModelOutputType)),
-        List.of(),
+        _topics,
+        Map.of(),
         DirectiveTypeRegistry.extract(
             new ModelType<>() {
 
