@@ -139,7 +139,6 @@ services:
         -Xmx34g
       #UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
       UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
-      USE_RESOURCE_TRACKER: "false"
     image: "aerie_merlin_worker_1"
     ports: ["5007:5005", "27187:8080"]
     restart: always
@@ -167,7 +166,6 @@ services:
         -Xmx34g
       #UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
       UNTRUE_PLAN_START: "${UNTRUE_PLAN_START:-2030-01-01T00:00:00Z}"
-      USE_RESOURCE_TRACKER: "false"
     image: "aerie_merlin_worker_2"
     ports: ["5008:5005", "27188:8080"]
     restart: always

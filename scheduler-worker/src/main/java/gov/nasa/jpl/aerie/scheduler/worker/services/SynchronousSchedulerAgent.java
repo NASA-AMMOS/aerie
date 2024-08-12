@@ -95,8 +95,7 @@ public record SynchronousSchedulerAgent(
     Path goalsJarPath,
     PlanOutputMode outputMode,
     SchedulingDSLCompilationService schedulingDSLCompilationService,
-    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades,
-    boolean useResourceTracker
+    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades
 )
     implements SchedulerAgent
 {
@@ -118,10 +117,9 @@ public record SynchronousSchedulerAgent(
       Path modelJarsDir,
       Path goalsJarPath,
       PlanOutputMode outputMode,
-      SchedulingDSLCompilationService schedulingDSLCompilationService,
-      boolean useResourceTracker) {
+      SchedulingDSLCompilationService schedulingDSLCompilationService) {
     this(specificationService, merlinService, modelJarsDir, goalsJarPath, outputMode,
-         schedulingDSLCompilationService, new HashMap<>(), useResourceTracker);
+         schedulingDSLCompilationService, new HashMap<>());
   }
 
   /**
@@ -166,8 +164,7 @@ public record SynchronousSchedulerAgent(
               planMetadata.modelConfiguration(),
               planMetadata.horizon().getStartInstant(),
               new MissionModelId(planMetadata.modelId())),
-          canceledListener,
-          useResourceTracker);
+          canceledListener);
         final var problem = new Problem(
             schedulerMissionModel.missionModel(),
             planningHorizon,
@@ -369,15 +366,13 @@ public record SynchronousSchedulerAgent(
       final SchedulerModel schedulerModel,
       final InMemoryCachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration simEngineConfig,
-      final Supplier<Boolean> canceledListener,
-      boolean useResourceTracker) {
+      final Supplier<Boolean> canceledListener) {
     final var key = Pair.of(planId, planningHorizon);
     var facade = this.simulationFacades.get(key);
     if (facade == null) {
       facade = new CheckpointSimulationFacade(
           missionModel, schedulerModel, cachedEngineStore,
-          planningHorizon, simEngineConfig, canceledListener,
-          useResourceTracker);
+          planningHorizon, simEngineConfig, canceledListener);
       this.simulationFacades.put(key, facade);
     }
     return f;

@@ -27,7 +27,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public final class MerlinWorkerAppDriver {
-  public static boolean defaultUseResourceTracker = false;
 
   public static void main(String[] args) throws InterruptedException {
     final var configuration = loadConfiguration();
@@ -64,8 +63,7 @@ public final class MerlinWorkerAppDriver {
     final var simulationAgent = new SimulationAgent(
         planController,
         missionModelController,
-        configuration.simulationProgressPollPeriodMillis(),
-        configuration.useResourceTracker());
+        configuration.simulationProgressPollPeriodMillis());
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
@@ -134,8 +132,7 @@ public final class MerlinWorkerAppDriver {
                           getEnv("MERLIN_DB_PASSWORD", ""),
                           "aerie"),
         Integer.parseInt(getEnv("SIMULATION_PROGRESS_POLL_PERIOD_MILLIS", "5000")),
-        Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
-        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", defaultUseResourceTracker ? "true" : "false"))
+        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
     );
   }
 }

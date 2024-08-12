@@ -2216,8 +2216,7 @@ public class SchedulingIntegrationTests {
         desc.libPath(),
         Path.of(""),
         PlanOutputMode.UpdateInputPlanWithNewActivities,
-        schedulingDSLCompiler,
-        defaultUseResourceTracker);
+        schedulingDSLCompiler);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
     agent.schedule(new ScheduleRequest(new SpecificationId(1L), new SpecificationRevisionData(1L, 1L)), writer, () -> false, cachedEngineStoreCapacity);
