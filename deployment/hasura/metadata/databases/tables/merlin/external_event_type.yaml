@@ -36,17 +36,10 @@ insert_permissions:
     permission:
       columns: [name]
       check: {}
-update_permissions:
-  - role: aerie_admin
-    permission:
-      columns: [name]
-      filter: {}
-#  - role: user # justified???
-#    permission:
-#      columns: [valid_at, metadata]
-#      filter: {}
 delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
-  # user deletions too???
+  - role: user
+    permission:
+      filter: {}

@@ -45,17 +45,10 @@ insert_permissions:
     permission:
       columns: [name, source_type_id]
       check: {}
-update_permissions:
-  - role: aerie_admin
-    permission:
-      columns: [name, source_type_id]
-      filter: {}
-#  - role: user # justified???
-#    permission:
-#      columns: [valid_at, metadata]
-#      filter: {}
 delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
-  # user deletions too???
+  - role: user
+    permission:
+      filter: {}
