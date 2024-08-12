@@ -67,7 +67,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SchedulingIntegrationTests {
-  public static boolean defaultUseResourceTracker = false;
 
   public static final PlanningHorizon PLANNING_HORIZON = new PlanningHorizon(
       TimeUtility.fromDOY("2021-001T00:00:00"),

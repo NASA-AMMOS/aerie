@@ -16,8 +16,7 @@ public record CreateSimulationMessage(
   Instant planStartTime,
   Duration planDuration,
   Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
-  Map<String, SerializedValue> configuration,
-  boolean useResourceTracker
+  Map<String, SerializedValue> configuration
 )
 {
   public CreateSimulationMessage {

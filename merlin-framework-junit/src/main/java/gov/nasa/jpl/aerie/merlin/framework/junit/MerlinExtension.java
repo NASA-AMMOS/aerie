@@ -29,8 +29,6 @@ import java.util.Objects;
 public final class MerlinExtension
     implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback
 {
-  public static boolean defaultUseResourceTracker = false;
-
   private State getState(final ExtensionContext context) {
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
@@ -159,8 +157,7 @@ public final class MerlinExtension
           });
 
       try {
-        var driver = new SimulationDriver<Unit>(this.missionModel, Instant.now(), Duration.MAX_VALUE,
-                                                defaultUseResourceTracker);
+        var driver = new SimulationDriver<Unit>(this.missionModel, Instant.now(), Duration.MAX_VALUE);
         driver.simulateTask(task);
       } catch (final WrappedException ex) {
         throw ex.wrapped;

@@ -326,8 +326,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
     SimulationResultsInterface results;
     if (driver == null || !doingIncrementalSim) {
-      driver = new SimulationDriver<>(missionModel, message.planStartTime(), message.planDuration(),
-                                      message.useResourceTracker());
+      driver = new SimulationDriver<>(missionModel, message.planStartTime(), message.planDuration());
       simulationDrivers.put(planInfo, driver);
       results = driver.simulate(
           message.activityDirectives(),
@@ -335,7 +334,6 @@ public final class LocalMissionModelService implements MissionModelService {
           message.simulationDuration(),
           message.planStartTime(),
           message.planDuration(),
-          true,
           canceledListener,
           simulationExtentConsumer);
     } else {

@@ -28,8 +28,6 @@ public final class SimulationDriver<Model> {
 
   private static boolean debug = false;
 
-  public static final boolean defaultUseResourceTracker = false;
-
   public SubInstantDuration curTime() {
     if (engine == null) {
       return SubInstantDuration.ZERO;
@@ -47,8 +45,6 @@ public final class SimulationDriver<Model> {
 
 
   private SimulationEngine engine;
-  private ResourceTracker resourceTracker = null;
-  private final boolean useResourceTracker;
   private final MissionModel<Model> missionModel;
   private Instant startTime;
   private final Duration planDuration;
@@ -61,18 +57,12 @@ public final class SimulationDriver<Model> {
   /** Whether we're rerunning the simulation, in which case we reuse past results and have an old SimulationEngine */
   private boolean rerunning = false;
 
-  public SimulationDriver(MissionModel<Model> missionModel, Duration planDuration, final boolean useResourceTracker) {
-    this(missionModel, Instant.now(), planDuration, useResourceTracker);
-  }
-
   public SimulationDriver(
-      MissionModel<Model> missionModel, Instant startTime, Duration planDuration,
-      boolean useResourceTracker)
+      MissionModel<Model> missionModel, Instant startTime, Duration planDuration)
   {
     this.missionModel = missionModel;
     this.startTime = startTime;
     this.planDuration = planDuration;
-    this.useResourceTracker = useResourceTracker;
     initSimulation(planDuration);
     batch = null;
   }
@@ -85,11 +75,7 @@ public final class SimulationDriver<Model> {
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
 
-    this.engine = new SimulationEngine(startTime, missionModel, oldEngine, resourceTracker);
-    if (useResourceTracker) {
-      this.resourceTracker = new ResourceTracker(engine, missionModel.getInitialCells());
-      engine.resourceTracker = this.resourceTracker; // yes, this looks strange following the lines above
-    }
+    this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
 
     // Begin tracking any resources that have not already been simulated.
     trackResources();
@@ -125,7 +111,6 @@ public final class SimulationDriver<Model> {
         simulationDuration,
         planStartTime,
         planDuration,
-        defaultUseResourceTracker,
         simulationCanceled,
         $ -> {},
         new InMemorySimulationResourceManager());
@@ -138,15 +123,13 @@ public final class SimulationDriver<Model> {
       final Duration simulationDuration,
       final Instant planStartTime,
       final Duration planDuration,
-      final boolean useResourceTracker,
       final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer,
       final SimulationResourceManager resourceManager
   )
   {
     var driver = new SimulationDriver<>(
-        missionModel, simulationStartTime, simulationDuration,
-        useResourceTracker);
+        missionModel, simulationStartTime, simulationDuration);
     return driver.simulate(
         schedule, simulationStartTime, simulationDuration,
         planStartTime, planDuration,
@@ -329,11 +312,7 @@ public final class SimulationDriver<Model> {
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      if (useResourceTracker) {
-        resourceTracker.track(name, resource);
-      } else {
-        engine.trackResource(name, resource, Duration.ZERO);
-      }
+      engine.trackResource(name, resource, Duration.ZERO);
     }
   }
 
@@ -360,11 +339,6 @@ public final class SimulationDriver<Model> {
           throw new RuntimeException("Exception thrown while simulating tasks", t);
         }
       }
-
-    if (useResourceTracker) {
-      engine.generateResourceProfiles(curTime().duration());  // REVIEW: Is this necessary?
-      // Okay to keep here since work is not lost for resourceTracker.
-    }
   }
 
   private static <Model> void scheduleActivities(

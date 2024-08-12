@@ -45,8 +45,7 @@ public final class SimulationUtility {
 
     var driver = new SimulationDriver(
         missionModel,
-        simulationDuration,
-        SimulationDriver.defaultUseResourceTracker);
+        simulationDuration);
     return driver;
   }
 

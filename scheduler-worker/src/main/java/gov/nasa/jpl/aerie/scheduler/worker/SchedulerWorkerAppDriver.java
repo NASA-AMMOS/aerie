@@ -31,8 +31,6 @@ import org.slf4j.LoggerFactory;
 public final class SchedulerWorkerAppDriver {
   private static final Logger logger = LoggerFactory.getLogger(SchedulerWorkerAppDriver.class);
 
-  public static boolean defaultUseResourceTracker = false;
-
   public static void main(String[] args) throws Exception {
     final var config = loadConfiguration();
 
