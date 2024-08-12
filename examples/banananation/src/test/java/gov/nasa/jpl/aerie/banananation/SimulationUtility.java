@@ -41,11 +41,11 @@ public final class SimulationUtility {
         dataPath,
         Configuration.DEFAULT_INITIAL_CONDITIONS,
         runDaemons);
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
+    final var simStartTime = Instant.EPOCH;
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), simStartTime, config);
 
     var driver = new SimulationDriver(
-        missionModel,
-        simulationDuration);
+        missionModel, simStartTime, simulationDuration);
     return driver;
   }
 

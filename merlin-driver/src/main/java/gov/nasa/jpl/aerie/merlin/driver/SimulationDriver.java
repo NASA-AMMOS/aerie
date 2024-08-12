@@ -75,7 +75,7 @@ public final class SimulationDriver<Model> {
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
 
-    this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
+    this.engine = new SimulationEngine(missionModel.getInitialCells(), startTime, missionModel, oldEngine);
 
     // Begin tracking any resources that have not already been simulated.
     trackResources();
@@ -132,7 +132,7 @@ public final class SimulationDriver<Model> {
         missionModel, simulationStartTime, simulationDuration);
     return driver.simulate(
         schedule, simulationStartTime, simulationDuration,
-        planStartTime, planDuration,
+        planStartTime, planDuration, true,
         simulationCanceled, simulationExtentConsumer,
         resourceManager);
   }
@@ -167,7 +167,7 @@ public final class SimulationDriver<Model> {
         new InMemorySimulationResourceManager());
   }
 
-  public static <Model> SimulationResultsInterface simulate(
+  public SimulationResultsInterface simulate(
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
       final Duration simulationDuration,
@@ -220,7 +220,7 @@ public final class SimulationDriver<Model> {
         engineLoop:
         while (!simulationCanceled.get()) {
           if(simulationCanceled.get()) break;
-          final var status = engine.step(simulationDuration);
+          final var status = engine.step(simulationDuration,simulationExtentConsumer);
           switch (status) {
             case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
             case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
@@ -253,11 +253,12 @@ public final class SimulationDriver<Model> {
       // - X spawned Y causally after A
       // - Y called X, and emitted B after X terminated
       // - Transitively: if A flows to C and C flows to B, A flows to B
-      // tstill not enough...?
+      // still not enough...?
 
       if (doComputeResults) {
-        final var topics = missionModel.getTopics();
-        return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
+        final var topics = missionModel.getTopics().values();
+        return engine.computeResults(
+            simulationStartTime, engine.getElapsedTime(), activityTopic, topics, resourceManager);
       } else {
         return null;
       }
@@ -273,7 +274,8 @@ public final class SimulationDriver<Model> {
     return diffAndSimulate(
         activityDirectives, simulationStartTime, simulationDuration,
         planStartTime, planDuration,
-        true, () -> false, $ -> {});
+        true, () -> false, $ -> {},
+        new InMemorySimulationResourceManager());
   }
 
   public SimulationResultsInterface diffAndSimulate(
@@ -284,7 +286,8 @@ public final class SimulationDriver<Model> {
       Duration planDuration,
       boolean doComputeResults,
       final Supplier<Boolean> simulationCanceled,
-      final Consumer<Duration> simulationExtentConsumer) {
+      final Consumer<Duration> simulationExtentConsumer,
+      final SimulationResourceManager resourceManager) {
     Map<ActivityDirectiveId, ActivityDirective> directives = activityDirectives;
     engine.scheduledDirectives = new HashMap<>(activityDirectives);  // was null before this
     if (engine.oldEngine != null) {
@@ -297,7 +300,9 @@ public final class SimulationDriver<Model> {
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(k));
     }
-    return this.simulate(directives, simulationStartTime, simulationDuration, planStartTime, planDuration, doComputeResults, simulationCanceled, simulationExtentConsumer);
+    return this.simulate(
+        directives, simulationStartTime, simulationDuration, planStartTime, planDuration,
+        doComputeResults, simulationCanceled, simulationExtentConsumer, resourceManager);
   }
 
   private void startDaemons(Duration time) throws Throwable {
@@ -317,7 +322,7 @@ public final class SimulationDriver<Model> {
   }
 
   // This method is used as a helper method for executing unit tests
-  public static <Model, Return>
+  public <Return>
   void simulateTask(final TaskFactory<Return> task) {
     if (debug) System.out.println("SimulationDriver.simulateTask(" + task + ")");
 
@@ -334,7 +339,7 @@ public final class SimulationDriver<Model> {
       // Drive the engine until the scheduled task completes.
       while (!engine.getSpan(spanId).isComplete()) {
         try {
-          engine.step(Duration.MAX_VALUE);
+          engine.step(Duration.MAX_VALUE, $->{});
         } catch (Throwable t) {
           throw new RuntimeException("Exception thrown while simulating tasks", t);
         }
@@ -428,7 +433,9 @@ public final class SimulationDriver<Model> {
   }
 
   public SimulationResultsInterface computeResults(Instant startTime, Duration simDuration) {
-    return engine.computeResults(startTime, simDuration, SimulationEngine.defaultActivityTopic);
+    final var topics = missionModel.getTopics().values();
+    return engine.computeResults(
+        startTime, simDuration, activityTopic, topics, new InMemorySimulationResourceManager());
   }
 
   public SimulationEngine getEngine() {
