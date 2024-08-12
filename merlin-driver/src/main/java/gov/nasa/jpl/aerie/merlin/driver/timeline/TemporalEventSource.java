@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   private static boolean debug = false;
+  private boolean frozen = false;
   public LiveCells liveCells;
   private MissionModel<?> missionModel;
   //public SlabList<TimePoint> points = new SlabList<>();  // This is not used for stepping Cells anymore.  Remove?
@@ -107,6 +108,9 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   // when there is nothing in the old or new graph filling that spot.  Otherwise, we can ignore it.
   public void add(final EventGraph<Event> graph, Duration time, final int stepIndexAtTime,
                   final Topic<Topic<?>> queryTopic) {
+    if (this.frozen) {
+      throw new IllegalStateException("Cannot add to frozen TemporalEventSource");
+    }
     if (debug) System.out.println("TemporalEventSource:add(" + graph + ", " + time + ", " + stepIndexAtTime + ")");
     List<TimePoint.Commit> commits = commitsByTime.get(time);
     if (debug) System.out.println("TemporalEventSource:add(): commits = " + commits);
@@ -176,6 +180,9 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * @param time the time as a Duration when the events occur
    */
   protected void addIndices(final TimePoint.Commit commit, Duration time, Set<Topic<?>> topics) {
+    if (this.frozen) {
+      throw new IllegalStateException("Cannot add to frozen TemporalEventSource");
+    }
     final var finalTopics = topics == null ? extractTopics(commit.events) : topics;
     final var tasks = extractTasks(commit.events);
     timeForEventGraph.put(commit.events, time);
@@ -1150,6 +1157,6 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   }
 
   public void freeze() {
-    this.points.freeze();
+    this.frozen = true;
   }
 }
