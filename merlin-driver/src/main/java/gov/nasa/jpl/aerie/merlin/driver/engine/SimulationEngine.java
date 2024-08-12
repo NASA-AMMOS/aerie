@@ -405,8 +405,7 @@ public final class SimulationEngine implements AutoCloseable {
       if (debug) System.out.println("step(): perform job batch at " + nextTime + " : " + batch.jobs().stream().map($ -> $.getClass()).toList());
       if (batch.jobs().isEmpty()) return new Status.NoJobs();
       final var results = performJobs(batch.jobs(), cells, curTime(), Duration.MAX_VALUE, getMissionModel().queryTopic);
-      for (final var commit : results.commits()) {
-        var tip = commit.getLeft();
+      for (final var tip : results.commits()) {
 
         if (!(tip instanceof EventGraph.Empty) ||
             (!batch.jobs().isEmpty() && batch.jobs().stream().findFirst().get() instanceof JobId.TaskJobId)) {
@@ -1385,7 +1384,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Topic<Topic<?>> queryTopic
   ) throws SpanException {
     switch (job) {
-      case JobId.TaskJobId j -> this.stepTask(j.id(), frame, currentTime);
+      case JobId.TaskJobId j -> this.stepTask(j.id(), frame, currentTime, queryTopic);
       case JobId.SignalJobId j -> this.stepTask(this.waitingTasks.remove(j.id()), frame, currentTime, queryTopic);
       case JobId.ConditionJobId j -> this.updateCondition(j.id(), frame, currentTime, maximumTime, queryTopic);
       case JobId.ResourceJobId j -> this.updateResource(j.id(), frame, currentTime, resourceUpdates);
@@ -1609,18 +1608,18 @@ public final class SimulationEngine implements AutoCloseable {
                                                       (commits.stream().noneMatch(c -> c.topics().contains(t)) &&  // assumes replaced EventGraphs in current timeline
                                                        topicsRemoved.contains(t)));
           if (skipResourceEvaluation) {
-            this.timeline.removedResourceSegments.computeIfAbsent(currentTime.duration(), $ -> new HashSet<>()).add(resource.id());
+            this.timeline.removedResourceSegments.computeIfAbsent(currentTime.duration(), $ -> new HashSet<>()).add(resourceId.id());
           }
           if (debug) System.out.println("check for removed effects for resource " + resourceId.id() + " at " + currentTime.duration() + "; skipResourceEvaluation = " + skipResourceEvaluation);
         }
       }
     }
 
-    final var querier = new EngineQuerier(frame);
+    final var querier = new EngineQuerier(currentTime, frame);
     if (!skipResourceEvaluation) {
       resourceUpdates.add(new ResourceUpdates.ResourceUpdate<>(
           querier,
-          currentTime,
+          currentTime.duration(),
           resourceId,
           this.resources.get(resourceId)));
       if (debug) System.out.println("resource " + resourceId.id() + " updates");
@@ -1634,7 +1633,7 @@ public final class SimulationEngine implements AutoCloseable {
       if (debug) System.out.println("querier, " + querier + " subscribing " + resourceId.id() + " to referenced topics: " + querier.referencedTopics);
     }
 
-    final var expiry = querier.expiry.map(d -> currentTime.duration().plus((Duration)d));
+    final Optional<Duration> expiry = querier.expiry.map(d -> currentTime.duration().plus((Duration)d));
     if (expiry.isPresent()) {
       this.scheduledJobs.schedule(JobId.forResource(resourceId), SubInstant.Resources.at(expiry.get()));
     }
@@ -2006,7 +2005,7 @@ public final class SimulationEngine implements AutoCloseable {
       final HashMap<SerializableTopic<?>, Integer> serializableTopicToId) {
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
     var time = Duration.ZERO;
-    for (var point : combinedTimeline.points()) {
+    for (var point : combinedTimeline) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
         time = time.plus(delta.delta());
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
