@@ -37,7 +37,7 @@ public class SimulationResults implements SimulationResultsInterface {
       final Instant startTime,
       final Duration duration,
       final List<Triple<Integer, String, ValueSchema>> topics,
-      final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
+      final SortedMap<Duration, List<EventGraph<EventRecord>>> events)
   {
     this(realProfiles, discreteProfiles, simulatedActivities, new HashSet<>(),
          unfinishedActivities, startTime, duration, topics, events);
@@ -111,7 +111,7 @@ public class SimulationResults implements SimulationResultsInterface {
   }
 
   @Override
-  public Map<Duration, List<List<EventGraph<EventRecord>>>> getEvents() {
+  public Map<Duration, List<EventGraph<EventRecord>>> getEvents() {
     return events;
   }
 

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
@@ -289,7 +290,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   }
 
   @Override
-  public Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> getEvents() {
+  public Map<Duration, List<EventGraph<EventRecord>>> getEvents() {
     if (_events != null) return _events;
     // TODO: REVIEW -- Is this right?  Is it the best way to do it?  What about SimulationEngine.getCommitsByTime(),
     //       which already combined them?  Notice the adjustment for sim start time differences!

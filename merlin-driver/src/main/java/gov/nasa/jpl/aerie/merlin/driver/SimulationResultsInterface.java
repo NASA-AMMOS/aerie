@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -43,5 +44,5 @@ public interface SimulationResultsInterface {
 
   List<Triple<Integer, String, ValueSchema>> getTopics();
 
-  Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> getEvents();
+  Map<Duration, List<EventGraph<EventRecord>>> getEvents();
 }
