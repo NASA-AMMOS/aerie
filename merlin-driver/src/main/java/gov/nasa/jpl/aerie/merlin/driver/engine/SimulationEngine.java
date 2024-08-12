@@ -169,9 +169,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final ExecutorService executor;
 
   /* The top-level simulation timeline. */
-  private final TemporalEventSource timeline;
   private final TemporalEventSource referenceTimeline;
-  private final LiveCells cells;
   private Duration elapsedTime;
 
   public SimulationEngine(
@@ -305,19 +303,17 @@ public final class SimulationEngine implements AutoCloseable {
     Pair<List<Topic<?>>, SubInstantDuration> earliestConditionTopics = null;
 
     if (oldEngine != null && nextTime.noShorterThan(curTime().duration())) {
-      if (resourceTracker == null) {
-        // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
-        // by index=1, and the window searched must be 1 index before the current time.
-        earliestStaleTopics = earliestStaleTopics(curTime().minus(1), nextTime);  // TODO: might want to not limit by nextTime and cache for future iterations
-        if (debug) System.out.println("earliestStaleTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestStaleTopics);
-        staleTopicTime = earliestStaleTopics.getRight().plus(1);
-        nextTime = SubInstantDuration.min(nextTime, staleTopicTime);
+      // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
+      // by index=1, and the window searched must be 1 index before the current time.
+      earliestStaleTopics = earliestStaleTopics(curTime().minus(1), nextTime);  // TODO: might want to not limit by nextTime and cache for future iterations
+      if (debug) System.out.println("earliestStaleTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestStaleTopics);
+      staleTopicTime = earliestStaleTopics.getRight().plus(1);
+      nextTime = SubInstantDuration.min(nextTime, staleTopicTime);
 
-        earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime().minus(1), SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)));
-        if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime().minus(1) + ", " + SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)) + ") = " + earliestStaleTopicOldEvents);
-        staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight().plus(1);
-        nextTime = SubInstantDuration.min(nextTime, staleTopicOldEventTime);
-      }
+      earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime().minus(1), SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)));
+      if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime().minus(1) + ", " + SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)) + ") = " + earliestStaleTopicOldEvents);
+      staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight().plus(1);
+      nextTime = SubInstantDuration.min(nextTime, staleTopicOldEventTime);
 
       earliestStaleReads = earliestStaleReads(
           curTime(),
@@ -363,7 +359,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     if (oldEngine != null) {
 
-      if (resourceTracker == null && staleTopicTime.isEqualTo(nextTime)) {
+      if (staleTopicTime.isEqualTo(nextTime)) {
         if (debug) System.out.println("earliestStaleTopics at " + nextTime + " = " + earliestStaleTopics);
         for (Topic<?> topic : earliestStaleTopics.getLeft()) {
           invalidateTopic(topic, nextTime.duration());
@@ -371,7 +367,7 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
 
-      if (resourceTracker == null && staleTopicOldEventTime.isEqualTo(nextTime)) {
+      if (staleTopicOldEventTime.isEqualTo(nextTime)) {
         if (debug) System.out.println("nextStaleTopicOldEvents at " + nextTime + " = " + earliestStaleTopicOldEvents);
         for (Topic<?> topic : earliestStaleTopicOldEvents
             .getLeft()
@@ -1564,7 +1560,6 @@ public final class SimulationEngine implements AutoCloseable {
     if (debug) System.out.println("SimulationEngine.updateResource(" + resource + ", " + currentTime + ")");
     // We want to avoid saving profile segments if they aren't changing.  We also don't want to compute the resource if
     // none of the cells on which it depends are stale.
-    assert resourceTracker == null;
     boolean skipResourceEvaluation = false;
     Set<Topic<?>> referencedTopics = null;
     if (oldEngine != null) {
