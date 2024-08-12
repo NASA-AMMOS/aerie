@@ -35,7 +35,7 @@ public final class MissionModelLoader {
         final var service = loadMissionModelProvider(path, name, version);
         final var modelType = service.getModelType();
         final var builder = new MissionModelBuilder();
-          return loadMissionModel(planStart, missionModelConfig, modelType, builder);
+        return loadMissionModel(planStart, missionModelConfig, modelType, builder);
     }
 
     private static <Config, Model>
