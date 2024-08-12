@@ -35,6 +35,9 @@ ALTER TABLE ONLY merlin.external_source
 
 COMMENT ON CONSTRAINT logical_source_identifiers ON merlin.external_source IS 'The tuple (key, derivation_group_id) must be unique!';
 
+
+
+
 -- Create table for external events
 CREATE TABLE merlin.external_event (
     id integer NOT NULL,
@@ -48,6 +51,7 @@ CREATE TABLE merlin.external_event (
 
 COMMENT ON TABLE merlin.external_event IS 'A table for externally imported events.';
 
+
 -- Ensure the id is serial.
 CREATE SEQUENCE merlin.external_event_id_seq
     AS integer
@@ -59,6 +63,7 @@ CREATE SEQUENCE merlin.external_event_id_seq
 
 ALTER SEQUENCE merlin.external_event_id_seq OWNED BY merlin.external_event.id;
 ALTER TABLE ONLY merlin.external_event ALTER COLUMN id SET DEFAULT nextval('merlin.external_event_id_seq'::regclass);
+
 
 -- Set primary key
 ALTER TABLE ONLY merlin.external_event
@@ -75,6 +80,9 @@ COMMENT ON CONSTRAINT logical_event_identifiers ON merlin.external_event IS 'The
 -- Add foreign key linking the source_id to the id of an external_source entry
 ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT "source_id -> external_source.id" FOREIGN KEY (source_id) REFERENCES merlin.external_source(id);
+
+
+
 
 -- Create table for external source types
 CREATE TABLE merlin.external_source_type (
@@ -109,6 +117,9 @@ ALTER TABLE ONLY merlin.external_source_type
 -- Update merlin.external_source.source_type_id to link it to merlin.external_source_type.id
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
+
+
+
 
 -- Create a table to represent derivation groups for external sources
 CREATE TABLE merlin.derivation_group (
@@ -164,12 +175,16 @@ BEFORE INSERT OR UPDATE ON merlin.external_source
 FOR EACH ROW
 EXECUTE FUNCTION ensure_source_type_match();
 
+
+
+
 -- Create table for plan/external event links
 CREATE TABLE merlin.plan_derivation_group (
     id integer NOT NULL,
     plan_id integer NOT NULL,
     derivation_group_id integer NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    owner text
 );
 
 COMMENT ON TABLE merlin.plan_derivation_group IS 'A table for linking externally imported event sources & plans.';
@@ -205,6 +220,9 @@ ALTER TABLE ONLY merlin.plan_derivation_group
 ALTER TABLE ONLY merlin.plan_derivation_group
     ADD CONSTRAINT fk_plan_id FOREIGN KEY (plan_id) REFERENCES merlin.plan(id);
 
+
+
+
 -- Create table for external event types
 CREATE TABLE merlin.external_event_type (
     id integer NOT NULL,
@@ -233,6 +251,9 @@ ALTER TABLE ONLY merlin.external_event_type
 
 ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT "event_type_id -> external_event_type" FOREIGN KEY (event_type_id) REFERENCES merlin.external_event_type(id);
+
+
+
 
 -- Add trigger to manually clean up empty plan_derivation_group links, derivation_groups, external_source_types,
 --    and external_event_types (in that order) on source delete. Note that external_event and external_source_event_types
@@ -288,6 +309,12 @@ GRANT EXECUTE ON FUNCTION merlin.cleanup_on_external_source_delete() TO aerie;
 CREATE OR REPLACE TRIGGER cleanup_on_external_source_delete
 AFTER DELETE ON merlin.external_source
 	FOR EACH ROW EXECUTE FUNCTION cleanup_on_external_source_delete();
+--ALTER TRIGGER cleanup_on_external_source_delete
+--    OWNER TO aerie;
+--GRANT EXECUTE ON TRIGGER cleanup_on_external_source_delete TO aerie;
+
+
+
 
 -- Create a table to track which sources the user has and has not seen added/removed
 CREATE TABLE ui.seen_sources

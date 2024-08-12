@@ -3,7 +3,8 @@ CREATE TABLE merlin.plan_derivation_group (
     id integer NOT NULL,
     plan_id integer NOT NULL,
     derivation_group_id integer NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    owner text
 );
 
 COMMENT ON TABLE merlin.plan_derivation_group IS 'A table for linking externally imported event sources & plans.';
