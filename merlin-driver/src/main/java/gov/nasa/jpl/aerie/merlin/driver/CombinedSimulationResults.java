@@ -302,7 +302,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
                  .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (list1, list2) -> list2));
     return _events;
   }
-  private Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> _events = null;
+  private Map<Duration, List<EventGraph<EventRecord>>> _events = null;
 
   @Override
   public String toString() {
