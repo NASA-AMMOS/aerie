@@ -119,7 +119,6 @@ public final class SimulationEngine implements AutoCloseable {
   private final HashMap<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
   private final Set<SimulatedActivityId> removedActivities = new HashSet<>();
   private final HashMap<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
-  private final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
   private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
@@ -2081,7 +2080,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var activityResults = computeActivitySimulationResults(startTime, spanInfo);
 
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
-    for (final var serializableTopic : serializableTopics.values()) {
+    for (final var serializableTopic : serializableTopics) {
       serializableTopicToId.put(serializableTopic, this.topics.size());
       this.topics.add(Triple.of(this.topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
@@ -2101,19 +2100,26 @@ public final class SimulationEngine implements AutoCloseable {
                                  startTime,
                                  elapsedTime,
                                  this.topics,
-                                 this.serializedTimeline);
-    return getCombinedSimulationResults();
+                                 serializedTimeline);
+    return getCombinedSimulationResults(serializableTopics, resourceManager);
   }
 
-  public SimulationResultsInterface getCombinedSimulationResults() {
+  public SimulationResultsInterface getCombinedSimulationResults(
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final SimulationResourceManager resourceManager) {
     if (this.simulationResults == null ) {
-      return computeResults(this.startTime, Duration.MAX_VALUE, defaultActivityTopic);
+      return computeResults(
+          this.startTime, Duration.MAX_VALUE,
+          defaultActivityTopic, serializableTopics, resourceManager);
       //      return computeResults(this.startTime, curTime(), defaultActivityTopic);
     }
     if (oldEngine == null) {
       return this.simulationResults;
     }
-    return new CombinedSimulationResults(this.simulationResults, oldEngine.getCombinedSimulationResults(), timeline);
+    return new CombinedSimulationResults(
+        this.simulationResults,
+        oldEngine.getCombinedSimulationResults(serializableTopics, resourceManager),
+        timeline);
   }
 
   public Span getSpan(SpanId spanId) {
