@@ -103,8 +103,8 @@ public class CheckpointSimulationFacadeTest {
     final var actTypeA = activityTypes.get("ControllableDurationActivity");
     plan.add(SchedulingActivityDirective.of(actTypeA, t0, HOUR.times(200), null, true));
     final var results = newSimulationFacade.simulateNoResultsAllActivities(plan).computeResults();
-    assertEquals(H.getEndAerie(), results.duration);
-    assert(results.unfinishedActivities.size() == 1);
+    assertEquals(H.getEndAerie(), results.getDuration());
+    assert(results.getUnfinishedActivities().size() == 1);
   }
 
 }
