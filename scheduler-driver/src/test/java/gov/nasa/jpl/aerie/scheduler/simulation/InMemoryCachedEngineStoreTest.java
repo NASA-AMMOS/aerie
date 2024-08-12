@@ -36,43 +36,46 @@ public class InMemoryCachedEngineStoreTest {
   }
 
   public static CachedSimulationEngine getCachedEngine1(){
+    final var model = SimulationUtility.getFooMissionModel();
     return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(1), new ActivityDirective(Duration.HOUR, "ActivityType1", Map.of(), null, true),
             new ActivityDirectiveId(2), new ActivityDirective(Duration.HOUR, "ActivityType2", Map.of(), null, true)
         ),
-        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
+        new SimulationEngine(model.getInitialCells(),Instant.EPOCH,model,null),
         null,
-        SimulationUtility.getFooMissionModel(),
+        model,
         new InMemorySimulationResourceManager()
     );
   }
 
   public static CachedSimulationEngine getCachedEngine2(){
+    final var model = SimulationUtility.getFooMissionModel();
     return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(3), new ActivityDirective(Duration.HOUR, "ActivityType3", Map.of(), null, true),
             new ActivityDirectiveId(4), new ActivityDirective(Duration.HOUR, "ActivityType4", Map.of(), null, true)
         ),
-        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
+        new SimulationEngine(model.getInitialCells(),Instant.EPOCH,model,null),
         null,
-        SimulationUtility.getFooMissionModel(),
+        model,
         new InMemorySimulationResourceManager()
     );
   }
 
   public static CachedSimulationEngine getCachedEngine3(){
+    final var model = SimulationUtility.getFooMissionModel();
     return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
             new ActivityDirectiveId(5), new ActivityDirective(Duration.HOUR, "ActivityType5", Map.of(), null, true),
             new ActivityDirectiveId(6), new ActivityDirective(Duration.HOUR, "ActivityType6", Map.of(), null, true)
         ),
-        new SimulationEngine(SimulationUtility.getFooMissionModel().getInitialCells()),
+        new SimulationEngine(model.getInitialCells(),Instant.EPOCH,model,null),
         null,
-        SimulationUtility.getFooMissionModel(),
+        model,
         new InMemorySimulationResourceManager()
     );
   }
