@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -66,7 +67,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   private Duration _duration = null;
 
   @Override
-  public Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> getRealProfiles() {
+  public Map<String, ResourceProfile<RealDynamics>> getRealProfiles() {
     String[] resourceName = new String[] {null};
     if (_realProfiles == null) {
       _realProfiles = Stream.of(or.getRealProfiles(), nr.getRealProfiles()).flatMap(m -> m.entrySet().stream())
@@ -244,7 +245,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   }
 
   @Override
-  public Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> getDiscreteProfiles() {
+  public Map<String, ResourceProfile<SerializedValue>> getDiscreteProfiles() {
     final String[] resourceName = new String[] {null};
     if (_discreteProfiles == null)
       _discreteProfiles = Stream.of(or.getDiscreteProfiles(), nr.getDiscreteProfiles()).flatMap(m -> m.entrySet().stream())

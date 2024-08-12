@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfile;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -32,9 +33,9 @@ public interface SimulationResultsInterface {
 
   Duration getDuration();
 
-  Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> getRealProfiles();
+  Map<String, ResourceProfile<RealDynamics>> getRealProfiles();
 
-  Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> getDiscreteProfiles();
+  Map<String, ResourceProfile<SerializedValue>> getDiscreteProfiles();
 
   Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities();
 
