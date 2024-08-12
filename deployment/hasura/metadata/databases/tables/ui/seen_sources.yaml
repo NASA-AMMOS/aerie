@@ -24,12 +24,23 @@ insert_permissions:
     permission:
       columns: '*'
       check: {}
+  - role: user
+    permission:
+      columns: '*'
+      check: {}
 update_permissions:
   - role: aerie_admin
     permission:
       columns: '*'
       filter: {}
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
 delete_permissions:
   - role: aerie_admin
+    permission:
+      filter: {}
+  - role: user
     permission:
       filter: {}
