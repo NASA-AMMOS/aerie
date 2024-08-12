@@ -51,7 +51,7 @@ public final class IncrementalSimTest {
 
     // Add PeelBanana at time = 5
     var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("fruitProfile = " + fruitProfile);
 
     assertEquals(1, simulationResults.getSimulatedActivities().size());
@@ -63,7 +63,7 @@ public final class IncrementalSimTest {
     // Remove PeelBanana (back to empty schedule)
     driver.initSimulation(simDuration);
     simulationResults = driver.diffAndSimulate(new HashMap<>(), startTime, simDuration, startTime, simDuration);
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("fruitProfile = " + fruitProfile);
 
     assertEquals(0, simulationResults.getSimulatedActivities().size());
@@ -73,7 +73,7 @@ public final class IncrementalSimTest {
     // Add PeelBanana at time = 3
     driver.initSimulation(simDuration);
     simulationResults = driver.diffAndSimulate(schedule2, startTime, simDuration, startTime, simDuration);
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("fruitProfile = " + fruitProfile);
 
     assertEquals(1, simulationResults.getSimulatedActivities().size());
@@ -104,7 +104,7 @@ public final class IncrementalSimTest {
 
     assertEquals(0, simulationResults.getSimulatedActivities().size());
 
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     assertEquals(4.0, fruitProfile.get(fruitProfile.size()-1).dynamics().initial);
   }
 
@@ -133,7 +133,7 @@ public final class IncrementalSimTest {
     simulationResults = driver.diffAndSimulate(schedule2, startTime, simDuration, startTime, simDuration);
 
     assertEquals(1, simulationResults.getSimulatedActivities().size());
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     assertEquals(3.0, fruitProfile.get(fruitProfile.size()-1).dynamics().initial);
   }
 
@@ -169,7 +169,7 @@ public final class IncrementalSimTest {
     simulationResults = driver.diffAndSimulate(schedule, startTime, simDuration, startTime, simDuration);
 
     assertEquals(2, simulationResults.getSimulatedActivities().size());
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("fruit profile = " + fruitProfile);
 
     assertEquals(3, fruitProfile.size());
@@ -206,13 +206,13 @@ public final class IncrementalSimTest {
     final var startTime = Instant.now();
     var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
 
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("fruit profile = " + fruitProfile);
 
     driver.initSimulation(simDuration);
     simulationResults = driver.simulate(schedule2, startTime, simDuration, startTime, simDuration);
 
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("fruit profile = " + fruitProfile);
 
     assertEquals(3, simulationResults.getSimulatedActivities().size());
@@ -287,13 +287,13 @@ public final class IncrementalSimTest {
     // simulate the schedule for a baseline to compare against incremental sim
     var driver = SimulationUtility.getDriver(simDuration, false);
     var simulationResults = driver.simulate(schedule1, startTime, simDuration, startTime, simDuration);
-    final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
 
     // create a new driver to start over
     driver = SimulationUtility.getDriver(simDuration, false);
     simulationResults = driver.simulate(schedule2, startTime, simDuration, startTime, simDuration);
 
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
 
     // now do incremental sim on schedule
     driver.initSimulation(simDuration);
@@ -301,7 +301,7 @@ public final class IncrementalSimTest {
     if (debug) System.out.println("correct      fruit profile = " + correctFruitProfile);
     if (debug) System.out.println("partial      fruit profile = " + fruitProfile);
 
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("inc sim      fruit profile = " + fruitProfile);
     List<ProfileSegment<RealDynamics>> diff = subtract(fruitProfile, correctFruitProfile);
     if (debug) System.out.println("inc sim diff fruit profile = " + diff);
@@ -325,7 +325,7 @@ public final class IncrementalSimTest {
     // simulate the schedule for a baseline to compare against incremental sim
     var driver = SimulationUtility.getDriver(simDuration, true);
     var simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
-    final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     String correctResProfile = driver.getEngine().resources.get(new ResourceId("/fruit")).profile().segments().toString();
 
     if (debug) System.out.println("schedule = " + simulationResults.getSimulatedActivities());
@@ -335,7 +335,7 @@ public final class IncrementalSimTest {
     driver = SimulationUtility.getDriver(simDuration, true);
     simulationResults = driver.simulate(emptySchedule, startTime, simDuration, startTime, simDuration);
 
-    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     String fruitResProfile = driver.getEngine().resources.get(new ResourceId("/fruit")).profile().segments().toString();
 
     // now do incremental sim on schedule
@@ -345,7 +345,7 @@ public final class IncrementalSimTest {
     if (debug) System.out.println("correct        fruit profile = " + correctFruitProfile);
     if (debug) System.out.println("empty schedule fruit profile = " + fruitProfile);
 
-    fruitProfile = simulationResults.getRealProfiles().get("/fruit").getRight();
+    fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     if (debug) System.out.println("inc sim        fruit profile = " + fruitProfile);
     List<ProfileSegment<RealDynamics>> diff = subtract(fruitProfile, correctFruitProfile);
     if (debug) System.out.println("inc sim diff   fruit profile = " + diff);
