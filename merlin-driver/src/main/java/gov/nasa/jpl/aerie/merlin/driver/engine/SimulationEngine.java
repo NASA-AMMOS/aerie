@@ -241,6 +241,9 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var entry : other.spanContributorCount.entrySet()) {
       spanContributorCount.put(entry.getKey(), new MutableInt(entry.getValue().getValue()));
     }
+    oldEngine = other.oldEngine;
+    startTime = other.startTime;
+    missionModel = other.missionModel;
   }
 
   /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
@@ -254,7 +257,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Start daemon task(s) immediately, before anything else happens.
-    this.scheduleTask(Duration.ZERO, daemons);
+    this.scheduleTask(Duration.ZERO, daemons, null);
     {
       final var batch = this.extractNextJobs(Duration.MAX_VALUE);
       final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
