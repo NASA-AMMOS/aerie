@@ -1557,7 +1557,7 @@ public final class SimulationEngine implements AutoCloseable {
       final SubInstantDuration currentTime,
       final ResourceUpdates resourceUpdates) {
     if (this.closed) throw new IllegalStateException("Cannot update resource on closed simulation engine");
-    if (debug) System.out.println("SimulationEngine.updateResource(" + resource + ", " + currentTime + ")");
+    if (debug) System.out.println("SimulationEngine.updateResource(" + resourceId + ", " + currentTime + ")");
     // We want to avoid saving profile segments if they aren't changing.  We also don't want to compute the resource if
     // none of the cells on which it depends are stale.
     boolean skipResourceEvaluation = false;
@@ -1583,15 +1583,15 @@ public final class SimulationEngine implements AutoCloseable {
         //   And, with staleness, we can determine that we need not invalidate a topic in some cases.
 
         // Check if any of the resource's referenced topics are stale
-        referencedTopics = this.referencedTopics.get(resource); //this.waitingResources.getTopics(resource);
-        if (debug) System.out.println("topics for resource " + resource.id() + " at " + currentTime + ": " + referencedTopics);
+        referencedTopics = this.referencedTopics.get(resourceId); //this.waitingResources.getTopics(resource);
+        if (debug) System.out.println("topics for resource " + resourceId.id() + " at " + currentTime + ": " + referencedTopics);
         var resourceIsStale = referencedTopics.stream().anyMatch(t -> timeline.isTopicStale(t, currentTime));
-        if (debug) System.out.println("topic is stale for " + resource.id() + " at " + currentTime + ": " +
+        if (debug) System.out.println("topic is stale for " + resourceId.id() + " at " + currentTime + ": " +
                                       referencedTopics.stream().map(t -> "" + t + "=" +
                                                                          timeline.isTopicStale(t, currentTime)).toList());
         if (debug) System.out.println("timeline.staleTopics: " + timeline.staleTopics);
         if (!resourceIsStale) {
-          if (debug) System.out.println("skipping evaluation of resource " + resource.id() + " at " + currentTime);
+          if (debug) System.out.println("skipping evaluation of resource " + resourceId.id() + " at " + currentTime);
           skipResourceEvaluation = true;
         } else {
           // Check for the case where the effect is removed.  If the timeline has events at this time, but they do not
@@ -1608,7 +1608,7 @@ public final class SimulationEngine implements AutoCloseable {
           if (skipResourceEvaluation) {
             this.timeline.removedResourceSegments.computeIfAbsent(currentTime.duration(), $ -> new HashSet<>()).add(resource.id());
           }
-          if (debug) System.out.println("check for removed effects for resource " + resource.id() + " at " + currentTime.duration() + "; skipResourceEvaluation = " + skipResourceEvaluation);
+          if (debug) System.out.println("check for removed effects for resource " + resourceId.id() + " at " + currentTime.duration() + "; skipResourceEvaluation = " + skipResourceEvaluation);
         }
       }
     }
@@ -1620,15 +1620,15 @@ public final class SimulationEngine implements AutoCloseable {
           currentTime,
           resourceId,
           this.resources.get(resourceId)));
-      if (debug) System.out.println("resource " + resourceId + " updates");
+      if (debug) System.out.println("resource " + resourceId.id() + " updates");
       referencedTopics = querier.referencedTopics;
     }
 
     // Even if we aren't going to update the resource profile, we need to at least re-subscribe to the old cell topics
     if (referencedTopics != null && !referencedTopics.isEmpty()) {
       this.waitingResources.subscribeQuery(resourceId, referencedTopics);
-      this.referencedTopics.put(resource, referencedTopics);
-      if (debug) System.out.println("querier, " + querier + " subscribing " + resource.id() + " to referenced topics: " + querier.referencedTopics);
+      this.referencedTopics.put(resourceId, referencedTopics);
+      if (debug) System.out.println("querier, " + querier + " subscribing " + resourceId.id() + " to referenced topics: " + querier.referencedTopics);
     }
 
     final var expiry = querier.expiry.map(d -> currentTime.duration().plus((Duration)d));
