@@ -29,19 +29,25 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, derivation_group_id, created_at, owner]
+      columns: [plan_id, derivation_group_id, created_at]
       check: {}
   - role: user
     permission:
-      columns: [plan_id, derivation_group_id, created_at, owner]
+      columns: [plan_id, derivation_group_id, created_at]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, derivation_group_id, created_at, owner]
+      columns: [plan_id, derivation_group_id, created_at]
+      filter: {}
+  - role: user
+    permission:
+      columns: [plan_id, derivation_group_id, created_at]
       filter: {}
 delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
-  # yser deletions too???
+  - role: user
+    permission:
+      filter: {}
