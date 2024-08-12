@@ -22,7 +22,7 @@ public record CachedSimulationEngine(
   }
 
   public static CachedSimulationEngine empty(final MissionModel<?> missionModel, final Instant simulationStartTime) {
-    final SimulationEngine engine = new SimulationEngine(missionModel.getInitialCells());
+    final SimulationEngine engine = new SimulationEngine(missionModel.getInitialCells(), simulationStartTime, missionModel, null);
 
     // Specify a topic on which tasks can log the activity they're associated with.
     final var activityTopic = new Topic<ActivityDirectiveId>();
