@@ -1820,7 +1820,7 @@ public final class SimulationEngine implements AutoCloseable {
     g.evaluate(spanInfoTrait, spanInfoTrait::atom).accept(spanInfo);
   }
 
-  public Map<String, ProfilingState<?>> generateResourceProfiles(final Duration simulationDuration) {
+  public Map<String, Resource<?>> generateResourceProfiles(final Duration simulationDuration) {
     return this.resources
                .entrySet()
                .stream()
