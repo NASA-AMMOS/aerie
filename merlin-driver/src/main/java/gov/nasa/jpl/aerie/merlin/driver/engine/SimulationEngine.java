@@ -2689,4 +2689,6 @@ public final class SimulationEngine implements AutoCloseable {
     }
     return combinedTimeline;
   }
+
+  public Map<ResourceId,Resource<?>> getResources() { return resources; }
 }
