@@ -359,7 +359,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  private CheckpointSimulationFacade getSimulationFacade(
+  private SimulationFacade getSimulationFacade(
       PlanId planId,
       PlanningHorizon planningHorizon,
       final MissionModel<?> missionModel,
@@ -375,7 +375,7 @@ public record SynchronousSchedulerAgent(
           planningHorizon, simEngineConfig, canceledListener);
       this.simulationFacades.put(key, facade);
     }
-    return f;
+    return facade;
   }
 
   private ExternalProfiles loadExternalProfiles(final PlanId planId)
@@ -523,7 +523,7 @@ public record SynchronousSchedulerAgent(
         schedulingIdToDirectiveId.put(act.getId(), elem.getKey());
         plan.add(act);
         if(initialSimulationResults.isPresent()){
-          for(final var simAct: initialSimulationResults.get().simulatedActivities.entrySet()){
+          for(final var simAct: initialSimulationResults.get().getSimulatedActivities().entrySet()){
             if(simAct.getValue().directiveId().isPresent() &&
                simAct.getValue().directiveId().get().equals(elem.getKey())){
                 mapSchedulingIdsToActivityIds.put(act.getId(), new ActivityDirectiveId(simAct.getKey().id()));
