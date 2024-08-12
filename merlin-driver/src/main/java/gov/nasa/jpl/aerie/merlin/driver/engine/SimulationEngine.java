@@ -2677,7 +2677,7 @@ public final class SimulationEngine implements AutoCloseable {
    */
   public TemporalEventSource combineTimeline() {
     final TemporalEventSource combinedTimeline = new TemporalEventSource();
-    for (final var timePoint : referenceTimeline.points()) {
+    for (final var timePoint : referenceTimeline) {
       if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
         combinedTimeline.add(t.delta());
       } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
