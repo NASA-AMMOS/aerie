@@ -281,7 +281,7 @@ public class CheckpointSimulationDriver {
           break;
         }
 
-        final var status = engine.step(simulationDuration);
+        final var status = engine.step(simulationDuration, simulationExtentConsumer);
         switch (status) {
           case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
           case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
@@ -318,7 +318,7 @@ public class CheckpointSimulationDriver {
         engine,
         simulationStartTime,
         activityTopic,
-        missionModel.getTopics(),
+        missionModel.getTopics().values(),
         activityToSpan,
         resourceManager);
   }
@@ -373,7 +373,8 @@ public class CheckpointSimulationDriver {
             computedStartTime,
             executor ->
                 Task.run(scheduler -> scheduler.emit(directiveIdToSchedule, activityTopic))
-                    .andThen(task.create(executor)));
+                    .andThen(task.create(executor)),
+            null);
         activityToTask.put(directiveIdToSchedule, taskId);
         if (resolved.containsKey(directiveIdToSchedule)) {
           toCheckForDependencyScheduling.put(directiveIdToSchedule, taskId);
