@@ -94,6 +94,41 @@ public class SimulationResultsWriter {
     };
   }
 
+  /**
+   * Create a SimulationResultsWriter that will write SimulationResults generated
+   * using an InMemorySimulationResourceManager.
+   * @param results The SimulationResults to be written
+   * @param plan The plan simulated
+   */
+  public SimulationResultsWriter(SimulationResults results, Plan plan) {
+    this.plan = plan;
+    this.extent = results.duration;
+    this.profilesTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildProfiles(results.realProfiles, results.discreteProfiles);
+      }
+    };
+    this.eventsTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildEvents(results.events,results.topics);
+      }
+    };
+    this.spansTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildSpans(results.simulatedActivities,results.unfinishedActivities, plan.simulationStartTimestamp);
+      }
+    };
+    this.simConfigTask = new RecursiveTask<>() {
+      @Override
+      protected JsonObject compute() {
+        return buildSimConfig(plan);
+      }
+    };
+  }
+
   /** Fork tasks to build subjsons in parallel **/
   private void forkSubTasks() {
     profilesTask.fork();
@@ -200,6 +235,58 @@ public class SimulationResultsWriter {
 
     if (canceled) { resultsGenerator.write("canceled", JsonValue.TRUE); }
     else { resultsGenerator.write("canceled", JsonValue.FALSE); }
+  }
+
+  /** Build up a JSON Object containing the resource profiles. */
+  private JsonObject buildProfiles(
+      final Map<String, ResourceProfile<RealDynamics>> realProfiles,
+      final Map<String, ResourceProfile<SerializedValue>> discreteProfiles
+  ) {
+    final var realProfileBuilder = Json.createArrayBuilder();
+    final var discreteProfileBuilder = Json.createArrayBuilder();
+
+    for (final var e : realProfiles.entrySet()) {
+      final var name = e.getKey();
+      final var profile = e.getValue();
+
+      // Precompute segments
+      final var segmentsBuilder = Json.createArrayBuilder();
+      profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
+                                                              .add("extent", s.extent().toString())
+                                                              .add("dynamics", realDynamicsP.unparse(s.dynamics()))));
+
+      final var profileBuilder = Json.createObjectBuilder()
+                                     .add("name", name)
+                                     .add("schema", valueSchemaP.unparse(profile.schema()))
+                                     .add("segments", segmentsBuilder);
+
+      // Append to the array builder
+      realProfileBuilder.add(profileBuilder);
+    }
+
+    for (final var e : discreteProfiles.entrySet()) {
+      final var name = e.getKey();
+      final var profile = e.getValue();
+
+      // Precompute segments
+      final var segmentsBuilder = Json.createArrayBuilder();
+      profile.segments().forEach(s -> segmentsBuilder.add(Json.createObjectBuilder()
+                                                              .add("extent", s.extent().toString())
+                                                              .add("dynamics", serializedValueP.unparse(s.dynamics()))));
+
+      final var profileBuilder = Json.createObjectBuilder()
+                                     .add("name", name)
+                                     .add("schema", valueSchemaP.unparse(profile.schema()))
+                                     .add("segments", segmentsBuilder);
+
+      // Append to the array builder
+      discreteProfileBuilder.add(profileBuilder);
+    }
+
+    return Json.createObjectBuilder()
+               .add("realProfiles", realProfileBuilder)
+               .add("discreteProfiles", discreteProfileBuilder)
+               .build();
   }
 
   /**
