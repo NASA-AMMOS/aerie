@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
@@ -27,6 +26,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkEffectiveArgumentResponse;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkArgumentValidationResponse;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;

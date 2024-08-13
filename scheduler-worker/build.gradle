@@ -108,6 +108,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
   implementation project(':merlin-driver')
+  implementation project(':type-utils')
   implementation project(':scheduler-driver')
   implementation project(':scheduler-server')
   implementation project(':parsing-utilities')

@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -28,8 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphFlattener;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -226,7 +226,7 @@ public class SimulationResultsWriter {
 
   /** Write the beginning and top-level fields of the results JSON */
   private void writeOpening(JsonGenerator resultsGenerator, boolean canceled) {
-    final Timestamp simEndTime = plan.simulationStartTimestamp.plusMicros(extent.in(Duration.MICROSECOND));
+    final var simEndTime = plan.simulationStartTimestamp.plusMicros(extent.in(Duration.MICROSECOND));
 
     resultsGenerator.writeStartObject();
     resultsGenerator.write("version", SCHEMA_VERSION);

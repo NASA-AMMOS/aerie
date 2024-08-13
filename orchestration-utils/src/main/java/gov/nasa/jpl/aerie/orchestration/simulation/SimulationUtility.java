@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.merlin.driver.resources.StreamingSimulationResourceMan
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.types.Plan;
 
 import javax.json.Json;
 import javax.json.JsonObject;

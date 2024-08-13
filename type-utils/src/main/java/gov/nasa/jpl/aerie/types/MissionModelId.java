@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server.models;
+package gov.nasa.jpl.aerie.types;
 
 public record MissionModelId(long id) {
   @Override

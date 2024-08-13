@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.graphql;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

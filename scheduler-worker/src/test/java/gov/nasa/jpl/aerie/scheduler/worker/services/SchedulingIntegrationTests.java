@@ -27,10 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -51,13 +48,16 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.SpecificationRevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleRequest;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -166,7 +166,7 @@ public class SchedulingIntegrationTests {
                             specification : {duration: Temporal.Duration.from({seconds: 10})}
                           })
         }
-          """, true)),List.of(createAutoMutex("GrowBanana")), PLANNING_HORIZON);
+        """, true)),List.of(createAutoMutex("GrowBanana")), PLANNING_HORIZON);
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
 
@@ -207,7 +207,7 @@ public class SchedulingIntegrationTests {
                                       specification : {occurrence: 10}
                                     })
                   }
-                    """, true)),List.of(createAutoMutex("GrowBanana")),PLANNING_HORIZON);
+                  """, true)),List.of(createAutoMutex("GrowBanana")),PLANNING_HORIZON);
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
@@ -655,7 +655,7 @@ public class SchedulingIntegrationTests {
     assertEquals(2, planByTime.get(MINUTES.times(10)).size());
     var lookingFor = false;
     final var expectedCreation = new SerializedActivity("GrowBanana",
-                                            Map.of("quantity", SerializedValue.of(1),
+                                                        Map.of("quantity", SerializedValue.of(1),
                                                    "growingDuration", SerializedValue.of(MINUTES.in(MICROSECONDS))));
     for(final var actAtTime10: planByTime.get(MINUTES.times(10))){
       if(actAtTime10.serializedActivity().equals(expectedCreation)){
@@ -751,7 +751,7 @@ public class SchedulingIntegrationTests {
                             specification : {duration: Temporal.Duration.from({seconds: 10})}
                           })
         }
-          """, true)),List.of(createAutoMutex("GrowBanana")), PLANNING_HORIZON);
+        """, true)),List.of(createAutoMutex("GrowBanana")), PLANNING_HORIZON);
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
 
@@ -2531,7 +2531,7 @@ public class SchedulingIntegrationTests {
             interval: Temporal.Duration.from({hours: 1})
           })
         }
-          """, true)),
+        """, true)),
         PLANNING_HORIZON);
     assertEquals(96, results.updatedPlan().size());
   }
@@ -2553,7 +2553,7 @@ public class SchedulingIntegrationTests {
                              interval: Temporal.Duration.from({ days: 30})
                            })
                        }
-            """, true)), PLANNING_HORIZON);
+          """, true)), PLANNING_HORIZON);
     //parent takes much more than 134 - 90 = 44 days to finish
     assertEquals(0, results.updatedPlan.size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
@@ -3261,7 +3261,7 @@ public class SchedulingIntegrationTests {
                     activityTemplate: ActivityTemplates.BananaNap(),
                     startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5 }))
                   })
-                    """, true, true)
+                  """, true, true)
           ),
           PLANNING_HORIZON);
 
@@ -3441,7 +3441,7 @@ public class SchedulingIntegrationTests {
                             specification : {occurrence: 1}
                           })
         }
-          """, true)),List.of(), PLANNING_HORIZON);
+        """, true)),List.of(), PLANNING_HORIZON);
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
 

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.Timestamp;
 
 import java.util.List;
 import java.util.Map;

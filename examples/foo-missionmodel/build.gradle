@@ -36,6 +36,7 @@ dependencies {
 
   implementation project(':merlin-framework')
   implementation project(':contrib')
+  implementation project(':type-utils')
 
   testImplementation project(':merlin-framework-junit')
   testImplementation 'org.assertj:assertj-core:3.24.2'

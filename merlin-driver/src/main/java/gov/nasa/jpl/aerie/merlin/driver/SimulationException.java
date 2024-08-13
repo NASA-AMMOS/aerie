@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 
 import java.time.Instant;
 import java.time.ZoneOffset;

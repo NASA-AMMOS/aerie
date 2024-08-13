@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
@@ -19,8 +18,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -407,9 +407,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
-    try (
-        final var postActivitiesAction = new PostSpansAction(connection);
-    ) {
+    try (final var postActivitiesAction = new PostSpansAction(connection)) {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
           .collect(Collectors.toMap(
               e -> e.getKey().id(),

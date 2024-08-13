@@ -1118,7 +1118,7 @@ public class BindingsTests {
         assertEquals(200, response.status());
         final var expectedBody = Json.createObjectBuilder()
                                          .add("status", "failure")
-                                         .add("reason", "No mission model exists with id `MissionModelId[id=-1]`")
+                                         .add("reason", "No mission model exists with id `-1`")
                                          .build();
         assertEquals(expectedBody, getBody(response));
       }

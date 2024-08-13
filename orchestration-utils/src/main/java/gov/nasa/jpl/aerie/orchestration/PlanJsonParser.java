@@ -1,8 +1,6 @@
 package gov.nasa.jpl.aerie.orchestration;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
@@ -10,8 +8,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.Timestamp;
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;

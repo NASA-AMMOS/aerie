@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 
 public record GenerateSchedulingLibAction(
     MerlinDatabaseService.ReaderRole merlinDatabaseService

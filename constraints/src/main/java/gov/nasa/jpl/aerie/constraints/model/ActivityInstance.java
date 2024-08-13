@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public record ActivityInstance(
