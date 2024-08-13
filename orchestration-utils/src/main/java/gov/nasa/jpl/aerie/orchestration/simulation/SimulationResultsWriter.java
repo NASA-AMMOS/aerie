@@ -52,9 +52,11 @@ public class SimulationResultsWriter {
   private final RecursiveTask<JsonObject> simConfigTask;
 
   private final Plan plan;
+  private final Duration extent;
 
   public SimulationResultsWriter(SimulationResults results, Plan plan, ResourceFileStreamer rfs) {
     this.plan = plan;
+    this.extent = results.duration;
     this.profilesTask = new RecursiveTask<>() {
       @Override
       protected JsonObject compute() {
@@ -93,13 +95,18 @@ public class SimulationResultsWriter {
     simConfigTask.fork();
   }
 
-  public void writeResults(CanceledListener canceledListener, SimulationExtentConsumer consumer) {
+  /**
+   * Write the formatted SimulationResult JSON to System.out
+   * @param canceledListener The CanceledListener used during simulation.
+   *    Used to determine if the results represent a canceled simulation.
+   */
+  public void writeResults(CanceledListener canceledListener) {
     final var stringWriter = new StringWriter();
     try(final var resultsJsonGenerator = Json.createGeneratorFactory(config).createGenerator(stringWriter)) {
       forkSubTasks();
 
       // Output the starting information
-      writeOpening(resultsJsonGenerator, canceledListener.get(), consumer);
+      writeOpening(resultsJsonGenerator, canceledListener.get());
       print(resultsJsonGenerator, stringWriter);
 
       // Join the forked tasks
@@ -118,7 +125,13 @@ public class SimulationResultsWriter {
     }
   }
 
-  public void writeResults(CanceledListener canceledListener, Path outputFilePath, SimulationExtentConsumer consumer) {
+  /**
+   * Write the formatted SimulationResult JSON to the specified file.
+   * @param canceledListener The CanceledListener used during simulation.
+   *    Used to determine if the results represent a canceled simulation.
+   * @param outputFilePath The file path to write results to.
+   */
+  public void writeResults(CanceledListener canceledListener, Path outputFilePath) {
     final var stringWriter = new StringWriter();
     try(final var resultsJsonGenerator = Json.createGeneratorFactory(config).createGenerator(stringWriter);
         final var fileWriter = new FileWriter(outputFilePath.toFile()))
@@ -126,7 +139,7 @@ public class SimulationResultsWriter {
       forkSubTasks();
 
       // Output the starting information
-      writeOpening(resultsJsonGenerator, canceledListener.get(), consumer);
+      writeOpening(resultsJsonGenerator, canceledListener.get());
       printFile(resultsJsonGenerator, stringWriter, fileWriter);
 
       // Join the forked tasks
@@ -167,9 +180,9 @@ public class SimulationResultsWriter {
     stringWriter.getBuffer().trimToSize(); // deallocates used buffer memory
   }
 
-  private void writeOpening(JsonGenerator resultsGenerator, boolean canceled, SimulationExtentConsumer consumer) {
-    final Timestamp simEndTime = plan.simulationStartTimestamp
-        .plusMicros(consumer.getLastAcceptedDuration().in(Duration.MICROSECOND));
+  /** Write the beginning and top-level fields of the results JSON */
+  private void writeOpening(JsonGenerator resultsGenerator, boolean canceled) {
+    final Timestamp simEndTime = plan.simulationStartTimestamp.plusMicros(extent.in(Duration.MICROSECOND));
 
     resultsGenerator.writeStartObject();
     resultsGenerator.write("version", SCHEMA_VERSION);
