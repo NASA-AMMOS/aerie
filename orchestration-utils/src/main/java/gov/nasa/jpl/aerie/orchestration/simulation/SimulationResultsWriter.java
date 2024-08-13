@@ -54,6 +54,13 @@ public class SimulationResultsWriter {
   private final Plan plan;
   private final Duration extent;
 
+  /**
+   * Creates a SimulationResultsWriter that will write SimulationResults generated
+   * using a StreamingResourceManager using the provided ResourceFileStreamer.
+   * @param results The SimulationResults to be written
+   * @param plan The Plan simulated
+   * @param rfs The ResourceFileStreamer used during the simulation
+   */
   public SimulationResultsWriter(SimulationResults results, Plan plan, ResourceFileStreamer rfs) {
     this.plan = plan;
     this.extent = results.duration;
@@ -87,8 +94,8 @@ public class SimulationResultsWriter {
     };
   }
 
+  /** Fork tasks to build subjsons in parallel **/
   private void forkSubTasks() {
-    // Fork tasks to build subjsons in parallel
     profilesTask.fork();
     eventsTask.fork();
     spansTask.fork();
@@ -163,6 +170,7 @@ public class SimulationResultsWriter {
     }
   }
 
+  /** Helper method that handles buffer management for printing to System.out */
   private void print(JsonGenerator resultsGenerator, StringWriter stringWriter) {
     resultsGenerator.flush();
     System.out.print(stringWriter.toString().trim());
@@ -171,6 +179,7 @@ public class SimulationResultsWriter {
     stringWriter.getBuffer().trimToSize(); // deallocates used buffer memory
   }
 
+  /** Helper method that handles buffer management for writing to a file */
   private void printFile(JsonGenerator resultsGenerator, StringWriter stringWriter, FileWriter fileWriter)
   throws IOException {
     resultsGenerator.flush();
@@ -193,6 +202,11 @@ public class SimulationResultsWriter {
     else { resultsGenerator.write("canceled", JsonValue.FALSE); }
   }
 
+  /**
+   * Build up a JSON Object containing the resource profiles.
+   * Prioritizes getting profile segments from ResourceFileStreamer,
+   * using the Maps as fallbacks should a resource file be missing.
+   */
   private JsonObject buildProfiles(
       final Map<String, ResourceProfile<RealDynamics>> realProfiles,
       final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
@@ -275,6 +289,7 @@ public class SimulationResultsWriter {
                .build();
   }
 
+  /** Build up a JSON Object containing the activity spans. */
   private JsonObject buildSpans(
       final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
       final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
@@ -349,6 +364,7 @@ public class SimulationResultsWriter {
                .build();
   }
 
+  /** Build up a JSON Object containing the simulation events. */
   private JsonObject buildEvents(final Map<Duration, List<EventGraph<EventRecord>>> events, final List<Triple<Integer, String, ValueSchema>> topics ) {
     final var eventArrayBuilder = Json.createArrayBuilder();
 
@@ -389,6 +405,7 @@ public class SimulationResultsWriter {
                .build();
   }
 
+  /** Build up a JSON Object containing the simulation configuration. */
   private JsonObject buildSimConfig(final Plan plan) {
     return Json.createObjectBuilder()
                .add("startTime", plan.simulationStartTimestamp.toString())
