@@ -147,8 +147,8 @@ public class Main {
           final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan, rfs);
 
           simArgs.outputFilePath().ifPresentOrElse(
-              p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
-              () -> resultsWriter.writeResults(canceledListener, extentConsumer)
+              p -> resultsWriter.writeResults(canceledListener, p),
+              () -> resultsWriter.writeResults(canceledListener)
           );
 
         } catch (InterruptedException | ExecutionException e) {
@@ -166,8 +166,8 @@ public class Main {
         if (simArgs.verbose()) { System.out.println("Writing Results..."); }
         final var resultsWriter = new SimulationResultsWriter(results, simArgs.plan, rfs);
         simArgs.outputFilePath().ifPresentOrElse(
-            p -> resultsWriter.writeResults(canceledListener, p, extentConsumer),
-            () -> resultsWriter.writeResults(canceledListener, extentConsumer)
+            p -> resultsWriter.writeResults(canceledListener, p),
+            () -> resultsWriter.writeResults(canceledListener)
         );
       }
     } catch (ExecutionException e) {
