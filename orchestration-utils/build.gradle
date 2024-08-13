@@ -5,9 +5,6 @@ plugins {
   id 'application'
 }
 
-group = 'gov.nasa.jpl.aerie.orchestration'
-version = 'v2.17.0'
-
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(21)
