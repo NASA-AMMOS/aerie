@@ -2636,7 +2636,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     public ExecutionState<Output> duplicate(Executor executor) {
-      return new ExecutionState<>(span, caller, state.duplicate(executor));
+      return new ExecutionState<>(span, caller, state.duplicate(executor), startOffset);
     }
   }
 
