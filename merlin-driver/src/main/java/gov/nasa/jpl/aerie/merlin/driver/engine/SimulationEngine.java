@@ -2221,9 +2221,6 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = (EngineCellId<?, State>) token;
 
-      // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
-      final var state$ = this.frame.getState(query.query());
-
       // Don't emit a noop event for the read if the task is not yet stale.
       // The time that this task becomes stale was determined when it was created.
       if (isTaskStale(this.activeTask, currentTime)) {
