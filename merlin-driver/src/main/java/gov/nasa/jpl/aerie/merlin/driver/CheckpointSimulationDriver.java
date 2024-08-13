@@ -319,7 +319,7 @@ public class CheckpointSimulationDriver {
         simulationStartTime,
         elapsedTime,
         activityTopic,
-        missionModel.getTopics().values(),
+        missionModel.getTopics(),
         activityToSpan,
         resourceManager);
   }

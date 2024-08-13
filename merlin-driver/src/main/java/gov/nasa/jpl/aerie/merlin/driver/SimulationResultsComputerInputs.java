@@ -16,7 +16,7 @@ public record SimulationResultsComputerInputs(
     Instant simulationStartTime,
     Duration elapsedTime,
     Topic<ActivityDirectiveId> activityTopic,
-    Iterable<MissionModel.SerializableTopic<?>> serializableTopics,
+    Map<Topic<?>, MissionModel.SerializableTopic<?>> serializableTopics,
     Map<ActivityDirectiveId, SpanId> activityDirectiveIdTaskIdMap,
     SimulationResourceManager resourceManager){
 

@@ -1863,7 +1863,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   private SpanInfo computeSpanInfo(
       final Topic<ActivityDirectiveId> activityTopic,
-      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
       final TemporalEventSource timeline
   ) {
     // Collect per-span information from the event graph.
@@ -1881,7 +1881,7 @@ public final class SimulationEngine implements AutoCloseable {
   public SimulationActivityExtract computeActivitySimulationResults(
       final Instant startTime,
       final Topic<ActivityDirectiveId> activityTopic,
-      final Iterable<SerializableTopic<?>> serializableTopics
+      final Map<Topic<?>, SerializableTopic<?>> serializableTopics
   ) {
     return computeActivitySimulationResults(
         startTime,
@@ -1999,7 +1999,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   private TreeMap<Duration, List<EventGraph<EventRecord>>> createSerializedTimeline(
       final TemporalEventSource combinedTimeline,
-      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
       final HashMap<SpanId, SimulatedActivityId> spanToActivities,
       final HashMap<SerializableTopic<?>, Integer> serializableTopicToId) {
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
@@ -2012,7 +2012,7 @@ public final class SimulationEngine implements AutoCloseable {
             event -> {
               // TODO can we do this more efficiently?
               EventGraph<EventRecord> output = EventGraph.empty();
-              for (final var serializableTopic : serializableTopics) {
+              for (final var serializableTopic : serializableTopics.values()) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
                   // If the event's `provenance` has no simulated activity id, search its ancestors to find the nearest
@@ -2064,7 +2064,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Instant startTime,
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
-      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
       final SimulationResourceManager resourceManager
   ) {
     if (debug) System.out.println("computeResults(startTime=" + startTime + ", elapsedTime=" + elapsedTime + "...) at time " + curTime());
@@ -2080,7 +2080,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var activityResults = computeActivitySimulationResults(startTime, spanInfo);
 
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
-    for (final var serializableTopic : serializableTopics) {
+    for (final var serializableTopic : serializableTopics.values()) {
       serializableTopicToId.put(serializableTopic, this.topics.size());
       this.topics.add(Triple.of(this.topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
@@ -2105,7 +2105,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public SimulationResultsInterface getCombinedSimulationResults(
-      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
       final SimulationResourceManager resourceManager) {
     if (this.simulationResults == null ) {
       return computeResults(

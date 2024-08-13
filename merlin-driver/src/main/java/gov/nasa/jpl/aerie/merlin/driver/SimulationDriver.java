@@ -256,7 +256,7 @@ public final class SimulationDriver<Model> {
       // still not enough...?
 
       if (doComputeResults) {
-        final var topics = missionModel.getTopics().values();
+        final var topics = missionModel.getTopics();
         return engine.computeResults(
             simulationStartTime, engine.getElapsedTime(), activityTopic, topics, resourceManager);
       } else {
@@ -433,7 +433,7 @@ public final class SimulationDriver<Model> {
   }
 
   public SimulationResultsInterface computeResults(Instant startTime, Duration simDuration) {
-    final var topics = missionModel.getTopics().values();
+    final var topics = missionModel.getTopics();
     return engine.computeResults(
         startTime, simDuration, activityTopic, topics, new InMemorySimulationResourceManager());
   }
