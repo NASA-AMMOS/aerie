@@ -16,10 +16,11 @@ java {
 
 jar {
   dependsOn(':parsing-utilities:jar')
-  dependsOn(':merlin-sdk:jar')
-  dependsOn(':merlin-driver:jar')
-  dependsOn(':constraints:jar')
+  dependsOn(':type-utils:jar')
   dependsOn(':orchestration-utils:jar')
+  dependsOn(':constraints:jar')
+  dependsOn(':merlin-driver:jar')
+  dependsOn(':merlin-sdk:jar')
 
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -55,9 +56,9 @@ javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/a
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
+  implementation project(':type-utils')
   implementation project(':orchestration-utils')
   implementation project(':merlin-driver')
-  implementation project(':merlin-server')
   implementation 'commons-cli:commons-cli:1.8.0'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'

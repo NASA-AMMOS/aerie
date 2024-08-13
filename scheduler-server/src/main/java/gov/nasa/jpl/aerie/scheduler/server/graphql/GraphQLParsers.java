@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.models.ActivityAttributesRecord;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.postgresql.util.PGInterval;
 

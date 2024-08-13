@@ -2,11 +2,11 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Timestamp;
 
 import java.util.Optional;
 

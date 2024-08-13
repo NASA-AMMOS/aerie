@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
 

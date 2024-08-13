@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server.models;
+package gov.nasa.jpl.aerie.types;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

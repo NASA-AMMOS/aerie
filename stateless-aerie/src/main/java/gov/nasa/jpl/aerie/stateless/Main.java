@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.orchestration.simulation.SimulationResultsWriter;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -16,6 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import gov.nasa.jpl.aerie.orchestration.simulation.SimulationUtility;
+import gov.nasa.jpl.aerie.types.Plan;
 import org.apache.commons.cli.*;
 
 import javax.json.Json;

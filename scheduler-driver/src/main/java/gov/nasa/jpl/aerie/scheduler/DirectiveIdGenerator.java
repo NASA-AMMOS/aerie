@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 public class DirectiveIdGenerator {
   private long counter;

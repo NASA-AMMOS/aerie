@@ -3,15 +3,15 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Timestamp;
 
 import javax.json.Json;
 import javax.json.JsonObject;

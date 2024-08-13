@@ -2,10 +2,10 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.Optional;
 

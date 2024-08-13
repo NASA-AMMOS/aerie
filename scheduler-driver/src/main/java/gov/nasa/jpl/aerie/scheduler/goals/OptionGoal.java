@@ -2,18 +2,15 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.solver.optimizers.Optimizer;
-import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.Optional;
 
 public class OptionGoal extends Goal {
 

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.Test;
 
 import javax.json.Json;

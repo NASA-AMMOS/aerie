@@ -2,9 +2,10 @@ package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.*;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;

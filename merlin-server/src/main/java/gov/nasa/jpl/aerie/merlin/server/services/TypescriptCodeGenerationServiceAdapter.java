@@ -4,9 +4,9 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 
 import java.util.HashMap;
 import java.util.Map;

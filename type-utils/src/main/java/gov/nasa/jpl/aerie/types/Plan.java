@@ -1,7 +1,5 @@
-package gov.nasa.jpl.aerie.merlin.server.models;
+package gov.nasa.jpl.aerie.types;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 

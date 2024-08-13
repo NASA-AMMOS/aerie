@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import java.util.Collection;
 import java.util.Map;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 /**
  * summary of results from running the scheduler, including goal satisfaction metrics and changes made

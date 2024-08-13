@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver;
+package gov.nasa.jpl.aerie.types;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -68,6 +68,6 @@ public final class SerializedActivity {
 
   @Override
   public String toString() {
-    return "SerializedActivity { typeName = " + this.typeName + ", arguments = " + this.arguments.toString() + " }";
+    return "SerializedActivity { typeName = " + this.typeName + ", arguments = " + this.arguments + " }";
   }
 }
