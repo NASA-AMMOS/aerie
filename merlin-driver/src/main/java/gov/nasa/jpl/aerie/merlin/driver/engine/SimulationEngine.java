@@ -1867,7 +1867,7 @@ public final class SimulationEngine implements AutoCloseable {
       final TemporalEventSource timeline
   ) {
     // Collect per-span information from the event graph.
-    final var spanInfo = new SpanInfo();
+    final var spanInfo = new SpanInfo(this);
 
     for (final var point : timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
