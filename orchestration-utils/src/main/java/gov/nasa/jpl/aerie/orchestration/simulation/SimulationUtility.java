@@ -102,21 +102,21 @@ public class SimulationUtility implements AutoCloseable {
 
   /**
    * Simulate a plan. Simulation will not be cancelable.
-   * @param model
-   * @param plan The plan to simulate
-   * @return A Future
+   * @param model The mission model to be used during simulation
+   * @param plan The plan to simulate. Contains the simulation configuration
+   * @return A Future to get the SimulationResults
    */
   public Future<SimulationResults> simulate(MissionModel<?> model, Plan plan) {
     return simulate(model, plan, () -> false, d -> {});
   }
 
   /**
-   *
-   * @param model
-   * @param plan
-   * @param canceledListener
-   * @param extentConsumer
-   * @return
+   * Simulate a plan
+   * @param model The mission model to be used during simulation
+   * @param plan The plan to simulate. Contains the simulation configuration
+   * @param canceledListener A boolean supplier to permit canceling of the simulation
+   * @param extentConsumer A duration consumer to receive updates on how much time has elapsed within the simulation
+   * @return A Future to get the SimulationResults
    */
   public Future<SimulationResults> simulate(
       MissionModel<?> model,
