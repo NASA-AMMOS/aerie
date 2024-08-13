@@ -259,9 +259,9 @@ public final class SimulationEngine implements AutoCloseable {
     this.scheduleTask(Duration.ZERO, daemons, null);
     {
       final var batch = this.extractNextJobs(Duration.MAX_VALUE);
-      final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+      final var results = this.performJobs(batch.jobs(), cells, curTime(), Duration.MAX_VALUE, missionModel.queryTopic);
       for (final var commit : results.commits()) {
-        timeline.add(commit);
+        timeline.add(commit, curTime().duration(), curTime().index(), missionModel.queryTopic);
       }
       if (results.error.isPresent()) {
         throw results.error.get();
