@@ -1,7 +1,7 @@
 -- Create table for external source types
 CREATE TABLE merlin.external_source_type (
     id integer NOT NULL,
-    name text NOT NULL
+    name text NOT NULL UNIQUE
 );
 
 COMMENT ON TABLE merlin.external_source_type IS 'A table for externally imported event source types.';
@@ -24,4 +24,4 @@ ALTER TABLE ONLY merlin.external_source_type
 
 -- Update merlin.external_source.source_type_id to link it to merlin.external_source_type.id
 ALTER TABLE ONLY merlin.external_source
-    ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
+    ADD CONSTRAINT "source_type_name -> external_source_type_name" FOREIGN KEY (source_type_name) REFERENCES merlin.external_source_type(name);

@@ -7,7 +7,7 @@ array_relationships:
   - name: external_event
     using:
       foreign_key_constraint_on:
-        column: event_type_id
+        column: event_type_name
         table:
           name: external_event
           schema: merlin

@@ -2,7 +2,7 @@
 CREATE TABLE merlin.external_source (
     id integer NOT NULL,
     key text NOT NULL,
-    source_type_id integer NOT NULL,
+    source_type_name text NOT NULL,
     derivation_group_id integer NOT NULL,
     valid_at timestamp with time zone NOT NULL,
     start_time timestamp with time zone NOT NULL,
@@ -29,7 +29,7 @@ ALTER TABLE ONLY merlin.external_source ALTER COLUMN id SET DEFAULT nextval('mer
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT external_source_pkey PRIMARY KEY (id);
 
--- Add uniqueness constraint for key/derivation_group_id tuple (we exclude source_type_id as derivation_group inherently addresses that, being a subclass of source types)
+-- Add uniqueness constraint for key/derivation_group_id tuple (we exclude source_type_name as derivation_group inherently addresses that, being a subclass of source types)
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT logical_source_identifiers UNIQUE (key, derivation_group_id);
 
@@ -42,7 +42,7 @@ COMMENT ON CONSTRAINT logical_source_identifiers ON merlin.external_source IS 'T
 CREATE TABLE merlin.external_event (
     id integer NOT NULL,
     key text NOT NULL,
-    event_type_id integer NOT NULL,
+    event_type_name text NOT NULL,
     source_id integer NOT NULL,
     start_time timestamp with time zone NOT NULL,
     duration interval NOT NULL,
@@ -70,11 +70,11 @@ ALTER TABLE ONLY merlin.external_event
     ADD CONSTRAINT external_event_pkey PRIMARY KEY (id);
 
 
--- Add uniqueness constraint for key/source_id/event_type_id tuple
+-- Add uniqueness constraint for key/source_id/event_type_name tuple
 ALTER TABLE ONLY merlin.external_event
-    ADD CONSTRAINT logical_event_identifiers UNIQUE (key, source_id, event_type_id);
+    ADD CONSTRAINT logical_event_identifiers UNIQUE (key, source_id, event_type_name);
 
-COMMENT ON CONSTRAINT logical_event_identifiers ON merlin.external_event IS 'The tuple (key, event_type_id, and source_id) must be unique!';
+COMMENT ON CONSTRAINT logical_event_identifiers ON merlin.external_event IS 'The tuple (key, event_type_name, and source_id) must be unique!';
 
 
 -- Add foreign key linking the source_id to the id of an external_source entry
@@ -87,7 +87,7 @@ ALTER TABLE ONLY merlin.external_event
 -- Create table for external source types
 CREATE TABLE merlin.external_source_type (
     id integer NOT NULL,
-    name text NOT NULL
+    name text NOT NULL UNIQUE
 );
 
 COMMENT ON TABLE merlin.external_source_type IS 'A table for externally imported event source types.';
@@ -108,15 +108,9 @@ ALTER TABLE ONLY merlin.external_source_type ALTER COLUMN id SET DEFAULT nextval
 ALTER TABLE ONLY merlin.external_source_type
     ADD CONSTRAINT external_source_type_pkey PRIMARY KEY (id);
 
--- TODO: Come back to this when we want to tackle versioning
--- Add uniqueness constraint for name & version
---ALTER TABLE ONLY merlin.external_source_type
---    ADD CONSTRAINT logical_identifiers UNIQUE (name, version);
--- COMMENT ON CONSTRAINT logical_identifiers ON merlin.external_source_type IS 'The tuple (name, version) must be unique!';
-
 -- Update merlin.external_source.source_type_id to link it to merlin.external_source_type.id
 ALTER TABLE ONLY merlin.external_source
-    ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
+    ADD CONSTRAINT "source_type_name -> external_source_type_name" FOREIGN KEY (source_type_name) REFERENCES merlin.external_source_type(name);
 
 
 
@@ -125,7 +119,7 @@ ALTER TABLE ONLY merlin.external_source
 CREATE TABLE merlin.derivation_group (
     id integer NOT NULL,
     name text NOT NULL,
-    source_type_id integer NOT NULL
+    source_type_name text NOT NULL
 );
 
 COMMENT ON TABLE merlin.derivation_group IS 'A table to represent the names of groups of sources to run derivation operations over.';
@@ -150,18 +144,18 @@ ALTER TABLE ONLY merlin.derivation_group
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "derivation_group_id -> derivation_group" FOREIGN KEY (derivation_group_id) REFERENCES merlin.derivation_group(id);
 
--- Add foreign key definition for source_type_id field, linking to external_source_type table
+-- Add foreign key definition for source_type_name field, linking to external_source_type table
 ALTER TABLE ONLY merlin.derivation_group
-    ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
+    ADD CONSTRAINT "source_type_name -> external_source_type_name" FOREIGN KEY (source_type_name) REFERENCES merlin.external_source_type(name);
 
 -- Ensure that added external source's source type match this derivation group's source type; requires a trigger and a function!
 CREATE OR REPLACE FUNCTION ensure_source_type_match()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- verify external_source.source_type_id = derivation_group.source_type_id
+  -- verify external_source.source_type_name = derivation_group.source_type_name
   PERFORM 1
   FROM merlin.derivation_group
-  WHERE derivation_group.id = NEW.derivation_group_id AND derivation_group.source_type_id = NEW.source_type_id;
+  WHERE derivation_group.id = NEW.derivation_group_id AND derivation_group.source_type_name = NEW.source_type_name;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'The source type from the newly added source and the source type of the derivation group do not match.';
@@ -226,7 +220,7 @@ ALTER TABLE ONLY merlin.plan_derivation_group
 -- Create table for external event types
 CREATE TABLE merlin.external_event_type (
     id integer NOT NULL,
-    name text NOT NULL
+    name text NOT NULL UNIQUE
 );
 
 COMMENT ON TABLE merlin.external_event_type IS 'A table for externally imported event types.';
@@ -250,7 +244,7 @@ ALTER TABLE ONLY merlin.external_event_type
 -- TODO: consider implementing versioning in a future batch of work
 
 ALTER TABLE ONLY merlin.external_event
-    ADD CONSTRAINT "event_type_id -> external_event_type" FOREIGN KEY (event_type_id) REFERENCES merlin.external_event_type(id);
+    ADD CONSTRAINT "event_type_name -> external_event_type" FOREIGN KEY (event_type_name) REFERENCES merlin.external_event_type(name);
 
 
 
@@ -270,7 +264,7 @@ CREATE OR REPLACE FUNCTION merlin.cleanup_on_external_source_delete()
 		WITH to_delete AS (
 			SELECT plan_derivation_group.id FROM merlin.plan_derivation_group
 				LEFT JOIN merlin.derivation_group ON derivation_group.id = plan_derivation_group.derivation_group_id
-				LEFT JOIN merlin.external_source ON derivation_group.source_type_id = external_source.source_type_id
+				LEFT JOIN merlin.external_source ON derivation_group.source_type_name = external_source.source_type_name
 				WHERE key IS NULL
 		)
 		DELETE FROM merlin.plan_derivation_group
@@ -278,7 +272,7 @@ CREATE OR REPLACE FUNCTION merlin.cleanup_on_external_source_delete()
 		-- STEP 2: DELETE LINGERING DGs:
 		WITH to_delete AS (
 			SELECT derivation_group.id, name FROM merlin.derivation_group
-				LEFT JOIN merlin.external_source ON derivation_group.source_type_id = external_source.source_type_id
+				LEFT JOIN merlin.external_source ON derivation_group.source_type_name = external_source.source_type_name
 				WHERE key IS NULL
 		)
 		DELETE FROM merlin.derivation_group
@@ -286,19 +280,19 @@ CREATE OR REPLACE FUNCTION merlin.cleanup_on_external_source_delete()
 		-- STEP 3: DELETE LINGERING EXTERNAL SOURCE TYPES
 		WITH to_delete AS (
 			SELECT external_source_type.id, name from merlin.external_source_type
-				LEFT JOIN merlin.external_source ON external_source_type.id = external_source.source_type_id
+				LEFT JOIN merlin.external_source ON external_source_type.name = external_source.source_type_name
 				WHERE key IS NULL
 		)
 		DELETE FROM merlin.external_source_type
 			WHERE id IN (SELECT id FROM to_delete);
 		-- STEP 4: DELETE LINGERING EXTERNAL_EVENT_TYPES
 		WITH to_delete AS (
-			SELECT external_event_type.id, name FROM merlin.external_event_type
-				LEFT JOIN merlin.external_event ON external_event.event_type_id = external_event_type.id
+			SELECT external_event_type.name, name FROM merlin.external_event_type
+				LEFT JOIN merlin.external_event ON external_event.event_type_name = external_event_type.name
 				WHERE key IS NULL
 		)
 		DELETE FROM merlin.external_event_type
-			WHERE id IN (SELECT id FROM to_delete);
+			WHERE name IN (SELECT name FROM to_delete);
 		-- STEP 5: RETURN
 		RETURN NULL;
 	end;

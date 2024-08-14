@@ -6,6 +6,7 @@ CREATE TABLE merlin.plan_derivation_group (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     owner text
 );
+-- TODO: use derivation_group_name & source_type_name instead of derivation_group_id
 
 COMMENT ON TABLE merlin.plan_derivation_group IS 'A table for linking externally imported event sources & plans.';
 

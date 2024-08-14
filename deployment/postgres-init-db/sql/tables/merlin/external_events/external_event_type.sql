@@ -1,7 +1,7 @@
 -- Create table for external event types
 CREATE TABLE merlin.external_event_type (
     id integer NOT NULL,
-    name text NOT NULL
+    name text NOT NULL UNIQUE
 );
 
 COMMENT ON TABLE merlin.external_event_type IS 'A table for externally imported event types.';
@@ -25,4 +25,4 @@ ALTER TABLE ONLY merlin.external_event_type
 -- TODO: consider implementing versioning in a future batch of work
 
 ALTER TABLE ONLY merlin.external_event
-    ADD CONSTRAINT "event_type_id -> external_event_type" FOREIGN KEY (event_type_id) REFERENCES merlin.external_event_type(id);
+    ADD CONSTRAINT "event_type_name -> external_event_type" FOREIGN KEY (event_type_name) REFERENCES merlin.external_event_type(name);

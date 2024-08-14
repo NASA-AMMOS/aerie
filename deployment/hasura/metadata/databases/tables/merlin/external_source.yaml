@@ -34,11 +34,11 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
       check: {}
   - role: user
     permission:
-      columns: [key, source_type_id, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
       check: {}
 # TODO: We **should** allow user and admin to change the derivation group ID to re-link a source to a new derivation group, but maybe in the future as we've pushed off creating
 #       a UI element to change derivation group to a later batch of work

@@ -9,7 +9,7 @@ object_relationships:
     foreign_key_constraint_on: source_id
 - name: external_event_type
   using:
-    foreign_key_constraint_on: event_type_id
+    foreign_key_constraint_on: event_type_name
 select_permissions:
   - role: aerie_admin
     permission:
@@ -29,11 +29,11 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, event_type_id, source_id, start_time, duration, properties]
+      columns: [key, event_type_name, source_id, start_time, duration, properties]
       check: {}
   - role: user
     permission:
-      columns: [key, event_type_id, source_id, start_time, duration, properties]
+      columns: [key, event_type_name, source_id, start_time, duration, properties]
       check: {}
 delete_permissions:
   - role: aerie_admin

@@ -1,8 +1,8 @@
 -- Create a table to represent derivation groups for external sources
 CREATE TABLE merlin.derivation_group (
-    id integer NOT NULL,
-    name text NOT NULL,
-    source_type_id integer NOT NULL
+    id integer NOT NULL, -- TODO: remove
+    name text NOT NULL, -- TODO: UNIQUE
+    source_type_name text NOT NULL -- TODO: UNIQUE
 );
 
 COMMENT ON TABLE merlin.derivation_group IS 'A table to represent the names of groups of sources to run derivation operations over.';
@@ -27,6 +27,8 @@ ALTER TABLE ONLY merlin.derivation_group
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT "derivation_group_id -> derivation_group" FOREIGN KEY (derivation_group_id) REFERENCES merlin.derivation_group(id);
 
--- Add foreign key definition for source_type_id field, linking to external_source_type table
+-- Add foreign key definition for source_type_name field, linking to external_source_type table
 ALTER TABLE ONLY merlin.derivation_group
-    ADD CONSTRAINT "source_type_id -> external_source_type" FOREIGN KEY (source_type_id) REFERENCES merlin.external_source_type(id);
+    ADD CONSTRAINT "source_type_name -> external_source_type_name" FOREIGN KEY (source_type_name) REFERENCES merlin.external_source_type(name);
+
+-- TODO: Composite fkey of (derivation_group_name, source_type_name)

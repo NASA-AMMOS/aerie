@@ -22,7 +22,7 @@ object_relationships:
         insertion_order: null
         column_mapping:
           event_id: id
-          event_type_id: event_type_id
+          event_type_name: event_type_name
           start_time: start_time
 select_permissions:
   - role: aerie_admin
