@@ -4,12 +4,10 @@ import gov.nasa.jpl.aerie.stateless.utils.BlockExitSecurityManager;
 import gov.nasa.jpl.aerie.stateless.utils.SystemExit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
-import javax.json.JsonReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
@@ -152,24 +150,27 @@ public class CLIArgumentsTest {
       outputStream.flush();
       try(final var reader = new BufferedReader(new FileReader("src/test/resources/simpleFooPlanResults.json"))) {
         final var fileLines = reader.lines().toList();
-        final var outputLines = out.toString().split("\n");
+        final var output = out.toString();
+        assertEquals(fileLines.size() + 4, output.split("\n").length);
 
-        assertEquals(fileLines.size() + 4, outputLines.length);
+        int truncateIndex = 0;
+        for(int i = 0; i < 4; ++i) {
+          truncateIndex = output.indexOf("\n", truncateIndex + 1);
+        }
 
-        assertEquals("Parsing plan src/test/resources/simpleFooPlan.json...", outputLines[0]);
-        assertEquals("Loading mission model ../examples/foo-missionmodel/build/libs/foo-missionmodel.jar...", outputLines[1]);
-        assertEquals("Simulating Plan...", outputLines[2]);
-        assertEquals("Writing Results...", outputLines[3]);
+        final var introLines = """
+            Parsing plan src/test/resources/simpleFooPlan.json...
+            Loading mission model ../examples/foo-missionmodel/build/libs/foo-missionmodel.jar...
+            Simulating Plan...
+            Writing Results...""";
+
+        assertEquals(introLines, output.substring(0, truncateIndex));
 
         try(final var fileReader = Json.createReader(new FileReader("src/test/resources/simpleFooPlanResults.json"));
-            final var outputReader = Json.createReader(new StringReader(String.join("\n", outputLines)))) {
+            final var outputReader = Json.createReader(new StringReader(output.substring(truncateIndex)))) {
           final var fileJson = fileReader.readObject();
           final var outputJson = outputReader.readObject();
           assertEquals(fileJson, outputJson);
-        }
-
-        for(int i = 0; i < fileLines.size(); ++i) {
-         assertEquals(fileLines.get(i), outputLines[i+4]);
         }
       }
     }
