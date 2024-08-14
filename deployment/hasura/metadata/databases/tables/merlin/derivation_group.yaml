@@ -11,7 +11,7 @@ object_relationships:
           name: external_source_type
           schema: merlin
         column_mapping:
-          source_type_id: id
+          source_type_name: name
 array_relationships:
   - name: external_source
     using:
@@ -39,11 +39,11 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name, source_type_id]
+      columns: [name, source_type_name]
       check: {}
   - role: user
     permission:
-      columns: [name, source_type_id]
+      columns: [name, source_type_name]
       check: {}
 delete_permissions:
   - role: aerie_admin

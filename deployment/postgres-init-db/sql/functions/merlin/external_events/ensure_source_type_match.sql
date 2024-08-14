@@ -2,10 +2,10 @@
 CREATE OR REPLACE FUNCTION ensure_source_type_match()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- verify external_source.source_type_id = derivation_group.source_type_id
+  -- verify external_source.source_type_name = derivation_group.source_type_name
   PERFORM 1
   FROM merlin.derivation_group
-  WHERE derivation_group.id = NEW.derivation_group_id AND derivation_group.source_type_id = NEW.source_type_id;
+  WHERE derivation_group.id = NEW.derivation_group_id AND derivation_group.source_type_name = NEW.source_type_name;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'The source type from the newly added source and the source type of the derivation group do not match.';

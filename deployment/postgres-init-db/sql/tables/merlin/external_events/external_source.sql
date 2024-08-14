@@ -2,7 +2,7 @@
 CREATE TABLE merlin.external_source (
     id integer NOT NULL,
     key text NOT NULL,
-    source_type_id integer NOT NULL,
+    source_type_name text NOT NULL,
     derivation_group_id integer NOT NULL,
     valid_at timestamp with time zone NOT NULL,
     start_time timestamp with time zone NOT NULL,
@@ -29,7 +29,7 @@ ALTER TABLE ONLY merlin.external_source ALTER COLUMN id SET DEFAULT nextval('mer
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT external_source_pkey PRIMARY KEY (id);
 
--- Add uniqueness constraint for key/derivation_group_id tuple (we exclude source_type_id as derivation_group inherently addresses that, being a subclass of source types)
+-- Add uniqueness constraint for key/derivation_group_id tuple (we exclude source_type_name as derivation_group inherently addresses that, being a subclass of source types)
 ALTER TABLE ONLY merlin.external_source
     ADD CONSTRAINT logical_source_identifiers UNIQUE (key, derivation_group_id);
 

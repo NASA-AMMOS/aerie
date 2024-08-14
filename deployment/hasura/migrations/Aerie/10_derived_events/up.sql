@@ -23,7 +23,7 @@ CREATE OR REPLACE VIEW merlin.derived_events
       source_id,
       event_id,
       event_key,
-      event_type_id,
+      event_type_name,
       derivation_group_id,
       start_time,
       source_range,
@@ -31,7 +31,7 @@ CREATE OR REPLACE VIEW merlin.derived_events
      FROM ( SELECT rule1_3.source_id,
               rule1_3.event_id,
               rule1_3.event_key,
-              rule1_3.event_type_id,
+              rule1_3.event_type_name,
               rule1_3.derivation_group_id,
               rule1_3.start_time,
               rule1_3.source_range,
@@ -40,7 +40,7 @@ CREATE OR REPLACE VIEW merlin.derived_events
              FROM ( SELECT sub.id AS source_id,
                       external_event.id AS event_id,
                       external_event.key AS event_key,
-                      external_event.event_type_id,
+                      external_event.event_type_name,
                       sub.derivation_group_id,
                       external_event.start_time,
                       sub.source_range,
@@ -90,10 +90,10 @@ SELECT derivation_group.id,
            external_source.valid_at
           FROM merlin.external_source
             JOIN ( SELECT external_event.source_id,
-					external_event.event_type_id,
+					external_event.event_type_name,
                    external_event.key AS event_key
                   FROM merlin.external_event) a ON a.source_id = external_source.id
-			JOIN merlin.external_event_type ON external_event_type.id = a.event_type_id
+			JOIN merlin.external_event_type ON external_event_type.id = a.event_type_name
          GROUP BY external_source.id, external_source.key, external_source.derivation_group_id, external_source.valid_at, type) sources ON sources.derivation_group_id = derivation_group.id
     LEFT JOIN ( SELECT derived_events.event_key,
            derived_events.derivation_group_id
