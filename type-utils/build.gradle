@@ -2,6 +2,15 @@ plugins {
     id 'java'
 }
 
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+
+  withJavadocJar()
+  withSourcesJar()
+}
+
 dependencies {
   implementation project(":merlin-sdk")
 
