@@ -2,8 +2,6 @@ package gov.nasa.jpl.aerie.contrib.streamline.debugging;
 
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 
-import java.time.Instant;
-
 public final class Logging {
     private Logging() {}
 
@@ -19,9 +17,9 @@ public final class Logging {
      * This is called when constructing a {@link gov.nasa.jpl.aerie.contrib.streamline.modeling.Registrar},
      * and does not need to be called directly by the model.
      */
-    public static void init(final Registrar registrar, final Instant planStart) {
+    public static void init(final Registrar registrar) {
         if (LOGGER == null) {
-            LOGGER = new Logger(registrar, planStart);
+            LOGGER = new Logger(registrar);
         } else {
             LOGGER.warning("Attempting to re-initialize primary logger. This attempt is being ignored.");
         }

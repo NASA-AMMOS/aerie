@@ -14,10 +14,6 @@ import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import java.time.Instant;
-import java.util.Collection;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.whenever;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentData;
@@ -31,7 +27,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteEf
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.waitUntil;
-import static java.util.stream.Collectors.joining;
 
 /**
  * Wrapper for {@link gov.nasa.jpl.aerie.merlin.framework.Registrar} specialized for {@link Resource}.
@@ -59,25 +54,13 @@ public class Registrar {
     Throw
   }
 
-  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final Instant planStart, final ErrorBehavior errorBehavior) {
+  public Registrar(final gov.nasa.jpl.aerie.merlin.framework.Registrar baseRegistrar, final ErrorBehavior errorBehavior) {
     Resources.init();
-    Logging.init(baseRegistrar, planStart);
+    Logging.init(baseRegistrar);
     this.baseRegistrar = baseRegistrar;
     this.errorBehavior = errorBehavior;
 
     discrete("numberOfErrors", numberOfErrors, new IntegerValueMapper());
-  }
-
-  private static String formatError(Throwable e, Collection<String> affectedResources) {
-    return "Error affecting %s:%n%s".formatted(
-        String.join(", ", affectedResources),
-        formatException(e));
-  }
-
-  private static String formatException(Throwable e) {
-    return ExceptionUtils.stream(e)
-        .map(ExceptionUtils::getMessage)
-        .collect(joining("\nCaused by: "));
   }
 
   public void setTrace() {
