@@ -114,7 +114,7 @@ public class Main {
 
       return new Arguments.SimulationArguments<>(model, plan, verbose, outputFilePath, extentUpdatePeriod);
     } catch (MissionModelLoader.MissionModelLoadException | MissionModelLoader.MissionModelInstantiationException e) {
-      throw new RuntimeException("Error while loading mission model at: "+modelJarPath, e);
+      throw new RuntimeException("Error while loading mission model: "+modelJarPath, e);
     }
   }
 
