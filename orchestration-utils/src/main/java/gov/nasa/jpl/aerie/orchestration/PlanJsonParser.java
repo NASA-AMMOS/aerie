@@ -117,7 +117,9 @@ public class PlanJsonParser {
    */
   public static void parseSimulationConfiguration(final Path filePath, final Plan plan) {
     try (final var fileReader = new FileReader(filePath.toString())) {
-      final var configObject = Json.createParser(fileReader).getObject();
+      final var parser = Json.createParser(fileReader);
+      parser.next();
+      final var configObject = parser.getObject();
 
       final var simStartTime = pgTimestampP.parse(configObject.get("simulation_start_time")).getSuccessOrThrow();
       final var simEndTime = pgTimestampP.parse(configObject.get("simulation_end_time")).getSuccessOrThrow();
