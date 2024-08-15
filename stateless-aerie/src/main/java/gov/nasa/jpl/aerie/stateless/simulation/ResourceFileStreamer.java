@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.resources.ResourceProfiles;
 import javax.json.Json;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -47,7 +48,7 @@ public class ResourceFileStreamer implements Consumer<ResourceProfiles> {
       ' (single quote)
       ' ' (space)
   */
-  private static final char[] EXCLUSION = {'<', '>', ':', '"', '\\', '/', '|', '?', '*', '.', ',', '+', '&', '\'', ' '};
+  private static final String[] EXCLUSION =  {"<", ">", ",", ":", "\"", "\\\\", "/", "|", "?", "*", ".","+", "&", "'"," "};
 
   @Override
   public void accept(final ResourceProfiles resourceProfile) {
@@ -89,8 +90,11 @@ public class ResourceFileStreamer implements Consumer<ResourceProfiles> {
    */
   public String getFileName(String resourceName) {
     if(fileNames.containsKey(resourceName)) return fileNames.get(resourceName);
+    // Create files in the temp directory, or the PWD if there is no set tmpdir
+    String dirname = System.getProperty("java.io.tmpdir", ".");
+    if(!dirname.endsWith("/")) dirname = dirname + "/"; // Append a Path deliminator if necessary
 
-    final var fileName = System.getProperty("java.io.tmpdir") + resourceName.replaceAll("[" + String.valueOf(EXCLUSION) + "]", "_") + uuid.toString()+".rsc";
+    final var fileName = dirname + resourceName.replaceAll("[" + Arrays.toString(EXCLUSION) + "]", "_") + uuid.toString()+".rsc";
     fileNames.put(resourceName, fileName);
     return fileName;
   }

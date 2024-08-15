@@ -60,6 +60,7 @@ dependencies {
   implementation 'commons-cli:commons-cli:1.8.0'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
   testRuntimeOnly(project(':examples:foo-missionmodel'))
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
