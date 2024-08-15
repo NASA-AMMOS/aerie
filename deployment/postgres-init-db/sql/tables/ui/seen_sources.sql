@@ -6,10 +6,12 @@ CREATE TABLE ui.seen_sources
     external_source_name text NOT NULL,
     external_source_type text NOT NULL,
     derivation_group text NOT NULL,
-    CONSTRAINT "user -> users.username" FOREIGN KEY ("user")
-        REFERENCES permissions.users (username) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+
+    constraint seen_sources_pkey
+      primary key (id),
+    constraint seen_sources_references_user
+      foreign key ("user")
+      references permissions.users (username) match simple
 );
 
 -- Ensure the id is serial
@@ -23,7 +25,3 @@ CREATE SEQUENCE ui.seen_sources_id_seq
 
 ALTER SEQUENCE ui.seen_sources_id_seq OWNED BY ui.seen_sources.id;
 ALTER TABLE ONLY ui.seen_sources ALTER COLUMN id SET DEFAULT nextval('ui.seen_sources_id_seq'::regclass);
-
--- Set primary key
-ALTER TABLE ONLY ui.seen_sources
-    ADD CONSTRAINT seen_sources_pkey PRIMARY KEY (id);

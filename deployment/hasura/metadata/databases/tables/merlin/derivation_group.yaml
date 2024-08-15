@@ -16,7 +16,9 @@ array_relationships:
   - name: external_source
     using:
       foreign_key_constraint_on:
-        column: derivation_group_id
+        columns:
+          - derivation_group_name
+          - source_type_name
         table:
           name: external_source
           schema: merlin

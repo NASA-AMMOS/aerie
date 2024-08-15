@@ -1,7 +1,10 @@
 -- Create table for external source types
 CREATE TABLE merlin.external_source_type (
     id integer NOT NULL,
-    name text NOT NULL UNIQUE
+    name text NOT NULL UNIQUE,
+
+    constraint external_source_type_pkey
+      primary key (id)
 );
 
 COMMENT ON TABLE merlin.external_source_type IS 'A table for externally imported event source types.';
@@ -17,11 +20,3 @@ CREATE SEQUENCE merlin.external_source_type_id_seq
 
 ALTER SEQUENCE merlin.external_source_type_id_seq OWNED BY merlin.external_source_type.id;
 ALTER TABLE ONLY merlin.external_source_type ALTER COLUMN id SET DEFAULT nextval('merlin.external_source_type_id_seq'::regclass);
-
--- Set primary key
-ALTER TABLE ONLY merlin.external_source_type
-    ADD CONSTRAINT external_source_type_pkey PRIMARY KEY (id);
-
--- Update merlin.external_source.source_type_id to link it to merlin.external_source_type.id
-ALTER TABLE ONLY merlin.external_source
-    ADD CONSTRAINT "source_type_name -> external_source_type_name" FOREIGN KEY (source_type_name) REFERENCES merlin.external_source_type(name);

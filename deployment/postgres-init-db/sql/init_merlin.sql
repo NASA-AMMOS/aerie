@@ -73,17 +73,16 @@ begin;
   \ir tables/merlin/merging/conflicting_activities.sql
 
   -- External Events
+  \ir tables/merlin/external_events/external_source_type.sql
+  \ir tables/merlin/external_events/external_event_type.sql
+  \ir tables/merlin/external_events/derivation_group.sql
   \ir tables/merlin/external_events/external_source.sql
   \ir tables/merlin/external_events/external_event.sql
-  \ir tables/merlin/external_events/external_source_type.sql
-  \ir tables/merlin/external_events/derivation_group.sql
   \ir tables/merlin/external_events/plan_derivation_group.sql
-  \ir tables/merlin/external_events/external_event_type.sql
 
   ------------
   -- Functions
   \ir functions/merlin/reanchoring_functions.sql
-  \ir functions/merlin/external_events/ensure_source_type_match.sql
   \ir functions/merlin/external_events/subtract_later_ranges.sql
 
   -- Snapshots
