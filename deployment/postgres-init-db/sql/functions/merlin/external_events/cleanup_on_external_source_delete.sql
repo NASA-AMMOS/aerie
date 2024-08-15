@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION merlin.cleanup_on_external_source_delete()
 		-- STEP 1: DELETE LINGERING plan->dg links:
 		WITH to_delete AS (
 			SELECT plan_derivation_group.id FROM merlin.plan_derivation_group
-				LEFT JOIN merlin.derivation_group ON derivation_group.id = plan_derivation_group.derivation_group_id
+				LEFT JOIN merlin.derivation_group ON derivation_group.name = plan_derivation_group.derivation_group_name
 				LEFT JOIN merlin.external_source ON derivation_group.source_type_name = external_source.source_type_name
 				WHERE key IS NULL
 		)
@@ -20,12 +20,12 @@ CREATE OR REPLACE FUNCTION merlin.cleanup_on_external_source_delete()
 			WHERE id IN (SELECT id FROM to_delete);
 		-- STEP 2: DELETE LINGERING DGs:
 		WITH to_delete AS (
-			SELECT derivation_group.id, name FROM merlin.derivation_group
+			SELECT derivation_group.name, name FROM merlin.derivation_group
 				LEFT JOIN merlin.external_source ON derivation_group.source_type_name = external_source.source_type_name
 				WHERE key IS NULL
 		)
 		DELETE FROM merlin.derivation_group
-			WHERE id IN (SELECT id FROM to_delete);
+			WHERE name IN (SELECT name FROM to_delete);
 		-- STEP 3: DELETE LINGERING EXTERNAL SOURCE TYPES
 		WITH to_delete AS (
 			SELECT external_source_type.id, name from merlin.external_source_type

@@ -3,10 +3,6 @@ table:
   schema: merlin
 configuration:
   custom_name: "external_source"
-object_relationships:
-- name: derivation_group
-  using:
-    foreign_key_constraint_on: derivation_group_id
 array_relationships:
   - name: external_events
     using:
@@ -34,22 +30,22 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_name, created_at]
       check: {}
   - role: user
     permission:
-      columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_id, created_at]
+      columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_name, created_at]
       check: {}
-# TODO: We **should** allow user and admin to change the derivation group ID to re-link a source to a new derivation group, but maybe in the future as we've pushed off creating
+# TODO: We **should** allow user and admin to change the derivation group name to re-link a source to a new derivation group, but maybe in the future as we've pushed off creating
 #       a UI element to change derivation group to a later batch of work
 #update_permissions:
 #  - role: aerie_admin
 #    permission:
-#      columns: [derivation_group_id]
+#      columns: [derivation_group_name]
 #      filter: {}
 #  - role: user
 #    permission:
-#      columns: [derivation_group_id]
+#      columns: [derivation_group_name]
 #      filter: {}
 delete_permissions:
   - role: aerie_admin

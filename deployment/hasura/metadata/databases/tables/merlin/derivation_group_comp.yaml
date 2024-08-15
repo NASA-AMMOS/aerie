@@ -11,7 +11,7 @@ object_relationships: # nothing for the arrays, can't grab string values and ass
           name: derivation_group
           schema: merlin
         column_mapping:
-          id: id
+          name: name
 select_permissions:
   - role: aerie_admin
     permission:
