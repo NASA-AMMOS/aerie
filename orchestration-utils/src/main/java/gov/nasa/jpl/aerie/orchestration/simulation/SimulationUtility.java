@@ -17,6 +17,8 @@ import gov.nasa.jpl.aerie.types.Plan;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
@@ -156,11 +158,15 @@ public class SimulationUtility implements AutoCloseable {
       ex.activityType.ifPresent(activityType -> dataBuilder.add("executingActivityType", activityType));
       ex.activityStackTrace.ifPresent(activityStackTrace -> dataBuilder.add("activityStackTrace", activityStackTrace));
 
+      final var sw = new StringWriter();
+      ex.cause.printStackTrace(new PrintWriter(sw, true));
+      final var stackTrace = sw.toString();
+
       return Json.createObjectBuilder()
                  .add("type", "SIMULATION_EXCEPTION")
                  .add("message", ex.cause.getMessage())
                  .add("data", dataBuilder)
-                 .add("trace", ex.cause.toString())
+                 .add("trace", stackTrace)
                  .build();
   }
 
