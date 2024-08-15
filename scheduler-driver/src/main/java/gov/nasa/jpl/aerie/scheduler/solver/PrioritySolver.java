@@ -39,14 +39,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -503,7 +496,7 @@ public class PrioritySolver implements Solver {
       } else if (missing instanceof MissingAssociationConflict missingAssociationConflict) {
         conflictSolverReturn = solveMissingAssociationConflict(missingAssociationConflict, goal);
       } else if(!analysisOnly && missing instanceof MissingActivityNetworkConflict missingActivityNetworkConflict){
-        conflictSolverReturn = solveActivityNetworkConflict(missingActivityNetworkConflict, goal);
+        conflictSolverReturn = solveActivityNetworkConflict(missingActivityNetworkConflict, goal, ScheduleAt.EARLIEST);
       } else if(!analysisOnly && missing instanceof MissingRecurrenceConflict missingRecurrenceConflict){
         conflictSolverReturn = solveMissingRecurrenceConflict(missingRecurrenceConflict, goal);
       }
@@ -661,7 +654,8 @@ public class PrioritySolver implements Solver {
 
   private ConflictSolverResult solveActivityNetworkConflict(
       final MissingActivityNetworkConflict missingActivityNetworkConflict,
-      final Goal goal
+      final Goal goal,
+      final ScheduleAt scheduleAt
   ) throws SchedulingInterruptedException
   {
     var satisfaction = ConflictSatisfaction.NOT_SAT;
@@ -694,7 +688,8 @@ public class PrioritySolver implements Solver {
                                                                                       1,
                                                                                       Optional.empty(),
                                                                                       Optional.of(true),
-                                                                                      Optional.empty());
+                                                                                      Optional.empty(),
+                                                                                      scheduleAt);
       final var satisfactionOfThisSubConflict = solveActivityTemplateConflict(derivedActivityTemplateConflict, goal, true);
       if(satisfactionOfThisSubConflict.satisfaction() == ConflictSatisfaction.SAT){
         //apply constraints to network
@@ -996,7 +991,8 @@ public class PrioritySolver implements Solver {
             missingTemplate,
             goal.getName() + "_" + java.util.UUID.randomUUID(),
             startWindows,
-            missing.getEvaluationEnvironment());
+            missing.getEvaluationEnvironment(),
+            missing.scheduleAt());
         if(act.isPresent()){
           if (missingTemplate.getAnchorId().isPresent()) {
             final SchedulingActivity predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
@@ -1158,17 +1154,27 @@ public class PrioritySolver implements Solver {
       final MissingActivityTemplateConflict missingConflict,
       final String name,
       final Windows windows,
-      final EvaluationEnvironment evaluationEnvironment) throws SchedulingInterruptedException
+      final EvaluationEnvironment evaluationEnvironment,
+      final ScheduleAt scheduleAt) throws SchedulingInterruptedException
   {
     //REVIEW: how to properly export any flexibility to instance?
     logger.info("Trying to create one activity, will loop through possible windows");
-    for (var window : windows.iterateEqualTo(true)) {
-      logger.info("Trying in window " + window);
-      var activity = instantiateActivity(missingConflict.getActTemplate(), name, window, missingConflict.getEvaluationEnvironment());
-      if (activity.isPresent()) {
-          return activity;
+    var iterator = scheduleAt == ScheduleAt.EARLIEST ? windows.iterator() : windows.reverseIterator();
+      while(iterator.hasNext()) {
+          final var segment = iterator.next();
+          if(segment.value()) {
+            logger.info("Trying in window " + segment.interval());
+            var activity = instantiateActivity(
+                missingConflict.getActTemplate(),
+                name,
+                segment.interval(),
+                missingConflict.getEvaluationEnvironment(),
+                scheduleAt);
+            if (activity.isPresent()) {
+              return activity;
+            }
+          }
       }
-    }
     return Optional.empty();
   }
 
@@ -1176,7 +1182,8 @@ public class PrioritySolver implements Solver {
       final ActivityExpression activityExpression,
       final String name,
       final Interval interval,
-      final EvaluationEnvironment evaluationEnvironment
+      final EvaluationEnvironment evaluationEnvironment,
+      final ScheduleAt scheduleAt
   ) throws SchedulingInterruptedException {
     final var planningHorizon = this.problem.getPlanningHorizon();
     final var envelopes = new ArrayList<Interval>();
@@ -1242,15 +1249,15 @@ public class PrioritySolver implements Solver {
         }
 
       };
-      return rootFindingHelper(f, history, solved);
+      return rootFindingHelper(f, history, solved, scheduleAt);
       //CASE 2: activity has a controllable duration
     } else if (activityExpression.type().getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
-      final var earliestStart = solved.start().start;
+      final var start = scheduleAt == ScheduleAt.EARLIEST ? solved.start().start : solved.start().end;
       final var instantiatedArguments = SchedulingActivity.instantiateArguments(
           activityExpression.arguments(),
-          earliestStart,
-          getLatestSimResultsUpTo(earliestStart, resourceNames).constraintsResults(),
+          start,
+          getLatestSimResultsUpTo(start, resourceNames).constraintsResults(),
           evaluationEnvironment,
           activityExpression.type());
 
@@ -1274,7 +1281,7 @@ public class PrioritySolver implements Solver {
       return Optional.of(SchedulingActivity.of(
           idGenerator.next(),
           activityExpression.type(),
-          earliestStart,
+          start,
           setActivityDuration,
           instantiatedArguments,
           null,
@@ -1288,17 +1295,17 @@ public class PrioritySolver implements Solver {
         return Optional.empty();
       }
 
-      final var earliestStart = solved.start().start;
+      final var start = scheduleAt == ScheduleAt.EARLIEST ? solved.start().start : solved.start().end;
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
       return Optional.of(SchedulingActivity.of(
           idGenerator.next(),
           activityExpression.type(),
-          earliestStart,
+          start,
           dt.duration(),
           SchedulingActivity.instantiateArguments(
               activityExpression.arguments(),
-              earliestStart,
-              getLatestSimResultsUpTo(earliestStart, resourceNames).constraintsResults(),
+              start,
+              getLatestSimResultsUpTo(start, resourceNames).constraintsResults(),
               evaluationEnvironment,
               activityExpression.type()),
           null,
@@ -1341,7 +1348,7 @@ public class PrioritySolver implements Solver {
         }
       };
 
-      return rootFindingHelper(f, history, solved);
+      return rootFindingHelper(f, history, solved, scheduleAt);
     } else {
       throw new UnsupportedOperationException("Unsupported duration type found: " + activityExpression.type().getDurationType());
     }
@@ -1350,7 +1357,8 @@ public class PrioritySolver implements Solver {
   private  Optional<SchedulingActivity> rootFindingHelper(
       final EquationSolvingAlgorithms.Function<Duration, ActivityMetadata> f,
       final HistoryWithActivity history,
-      final TaskNetworkAdapter.TNActData solved
+      final TaskNetworkAdapter.TNActData solved,
+      final ScheduleAt scheduleAt
   ) throws SchedulingInterruptedException {
     try {
       var endInterval = solved.end();
@@ -1363,7 +1371,7 @@ public class PrioritySolver implements Solver {
           .findRoot(
               f,
               history,
-              startInterval.start,
+              scheduleAt == ScheduleAt.EARLIEST ? startInterval.start : startInterval.end,
               endInterval.start.plus(durationHalfEndInterval),
               durationHalfEndInterval,
               durationHalfEndInterval,

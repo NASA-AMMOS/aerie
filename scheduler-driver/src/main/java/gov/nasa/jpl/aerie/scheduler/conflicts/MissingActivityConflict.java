@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 
 /**
  * describes an issue in a plan whereby a desired activity instance is absent
@@ -22,6 +23,8 @@ public abstract class MissingActivityConflict extends Conflict {
   {
     super(goal, environment);
   }
+
+  public abstract ScheduleAt scheduleAt();
 
   /**
    * {@inheritDoc}

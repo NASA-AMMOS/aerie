@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRe
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -305,7 +306,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
               1,
               anchorValue,
               Optional.of(this.persistentAnchor.equals(PersistentTimeAnchor.START)),
-              Optional.empty()
+              Optional.empty(),
+              ScheduleAt.EARLIEST
           ));
         } else {
             final var actsToAssociate = missingActAssociationsWithAnchor.isEmpty() ? missingActAssociationsWithoutAnchor : missingActAssociationsWithAnchor;

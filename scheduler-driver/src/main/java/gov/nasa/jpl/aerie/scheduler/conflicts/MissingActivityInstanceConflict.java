@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 
 /**
  * describes an issue in a plan caused by a specific activity instance missing
@@ -42,6 +43,11 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
       return "Conflict : missing activity instance " + this.instance + ". Produced by goal " + getGoal().getName();
     }
     return "Empty conflict";
+  }
+
+  @Override
+  public ScheduleAt scheduleAt() {
+    return ScheduleAt.EARLIEST;
   }
 
   /**

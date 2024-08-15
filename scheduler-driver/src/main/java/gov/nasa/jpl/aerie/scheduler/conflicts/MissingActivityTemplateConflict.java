@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 
 import java.util.Optional;
 
@@ -36,7 +37,8 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
       int cardinality,
       Optional<ActivityDirectiveId> anchorIdTo,
       Optional<Boolean> anchorToStart,
-      Optional<Duration> totalDuration)
+      Optional<Duration> totalDuration,
+      ScheduleAt scheduleAtEarliest)
   {
     super(goal, evaluationEnvironment);
 
@@ -50,6 +52,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
     this.anchorIdTo = anchorIdTo;
     this.anchorToStart = anchorToStart;
     this.totalDuration = totalDuration;
+    this.scheduleAt = scheduleAtEarliest;
   }
 
   //the number of times the activity needs to be inserted
@@ -67,12 +70,19 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
   //the desired total duration over the number of activities needed
   Optional<Duration> totalDuration;
 
+  ScheduleAt scheduleAt;
+
   public int getCardinality(){
     return cardinality;
   }
 
   public Optional<Duration> getTotalDuration(){
     return totalDuration;
+  }
+
+  @Override
+  public ScheduleAt scheduleAt() {
+    return scheduleAt;
   }
 
   /**

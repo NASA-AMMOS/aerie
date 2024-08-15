@@ -657,6 +657,10 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     return segments.iterateEqualTo(value);
   }
 
+  public Iterator<Segment<Boolean>> reverseIterator() {
+    return segments.reverseIterator();
+  }
+
   /** Delegated to {@link IntervalMap#stream} */
   public Stream<Segment<Boolean>> stream() {
     return segments.stream();
