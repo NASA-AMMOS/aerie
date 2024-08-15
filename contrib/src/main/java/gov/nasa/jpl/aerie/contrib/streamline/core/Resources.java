@@ -304,10 +304,37 @@ public final class Resources {
     return result;
   }
 
+  /**
+   * Reduce a collection of resources.
+   * <p>
+   *     Note on efficiency: For n operands, this method will create (n-2) intermediate resources,
+   *     plus the terminal result resource.
+   *     This overhead is often unnecessary. Consider using the methods linked below
+   *     for alternative implementations of reduce that may be more efficient.
+   *     There may also be efficient implementations of reduce on the relevant resource monad, like
+   *     {@link gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad#reduce}.
+   * </p>
+   *
+   * @see gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad#reduce(Collection, Object, BiFunction)
+   * @see gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad#reduce(Collection, Object, BiFunction, String)
+   */
   public static <D> Resource<D> reduce(Stream<? extends Resource<D>> operands, Resource<D> identity, BiFunction<Resource<D>, Resource<D>, Resource<D>> operation, String operationName) {
     return reduce(operands.toList(), identity, operation, operationName);
   }
 
+  /**
+   * Reduce a collection of resources.
+   * <p>
+   *     Note on efficiency: For n operands, this method will create O(n) intermediate resources.
+   *     This overhead is often unnecessary. Consider using the methods linked below
+   *     for alternative implementations of reduce that may be more efficient.
+   *     There may also be efficient implementations of reduce on the relevant resource monad, like
+   *     {@link gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad#reduce}.
+   * </p>
+   *
+   * @see gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad#reduce(Collection, Object, BiFunction)
+   * @see gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad#reduce(Collection, Object, BiFunction, String)
+   */
   public static <D> Resource<D> reduce(Collection<? extends Resource<D>> operands, Resource<D> identity, BiFunction<Resource<D>, Resource<D>, Resource<D>> operation, String operationName) {
     var result = operands.stream().reduce(identity, operation, operation::apply);
     name(result, operationName + argsFormat(operands), operands.toArray());

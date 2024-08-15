@@ -5,10 +5,10 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.stream.Stream;
+import java.util.Collection;
 
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.reduce;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.map;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.reduce;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Differentiable.differentiable;
 import static java.util.Arrays.stream;
@@ -49,11 +49,11 @@ public final class DifferentiableResources {
 
     @SafeVarargs
     public static Resource<Differentiable> add(Resource<Differentiable>... summands) {
-        return sum(stream(summands));
+        return sum(stream(summands).toList());
     }
 
-    public static Resource<Differentiable> sum(Stream<Resource<Differentiable>> summands) {
-        return reduce(summands, constant(0), map(Differentiable::add), "Sum");
+    public static Resource<Differentiable> sum(Collection<Resource<Differentiable>> summands) {
+        return reduce(summands, Differentiable.constant(0), Differentiable::add, "Sum");
     }
 
     public static Resource<Differentiable> subtract(Resource<Differentiable> left, Resource<Differentiable> right) {
@@ -64,11 +64,11 @@ public final class DifferentiableResources {
 
     @SafeVarargs
     public static Resource<Differentiable> multiply(Resource<Differentiable>... factors) {
-        return product(stream(factors));
+        return product(stream(factors).toList());
     }
 
-    public static Resource<Differentiable> product(Stream<Resource<Differentiable>> factors) {
-        return reduce(factors, constant(0), map(Differentiable::multiply), "Product");
+    public static Resource<Differentiable> product(Collection<Resource<Differentiable>> factors) {
+        return reduce(factors, Differentiable.constant(0), Differentiable::multiply, "Product");
     }
 
     public static Resource<Differentiable> divide(Resource<Differentiable> left, Resource<Differentiable> right) {
