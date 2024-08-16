@@ -1,17 +1,18 @@
 -- Create a function to subtract lists of time ranges
-CREATE OR REPLACE FUNCTION merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
-RETURNS tstzmultirange AS $$
-DECLARE
-	ret tstzmultirange := curr_date;
-	later_date tstzmultirange;
-BEGIN
-	FOREACH later_date IN ARRAY later_dates LOOP
+create or replace function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
+returns tstzmultirange
+language plpgsql as $$
+  declare
+	  ret tstzmultirange := curr_date;
+	  later_date tstzmultirange;
+begin
+	foreach later_date in array later_dates loop
 		ret := ret - later_date;
-	END LOOP;
-	RETURN ret;
-END;
-$$ LANGUAGE plpgsql;
+	end loop;
+	return ret;
+end
+$$;
 
-ALTER FUNCTION merlin.subtract_later_ranges(tstzmultirange, tstzmultirange[])
-    OWNER TO aerie;
-GRANT EXECUTE ON FUNCTION merlin.subtract_later_ranges(tstzmultirange, tstzmultirange[]) TO aerie;
+alter function merlin.subtract_later_ranges(tstzmultirange, tstzmultirange[])
+    owner to aerie;
+grant execute on function merlin.subtract_later_ranges(tstzmultirange, tstzmultirange[]) to aerie;
