@@ -11,6 +11,7 @@ create table ui.seen_sources
     constraint seen_sources_references_user
       foreign key (username)
       references permissions.users (username) match simple
+      on delete cascade
 );
 
 comment on table ui.seen_sources is e''
