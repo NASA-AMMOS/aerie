@@ -2,7 +2,7 @@
 create table merlin.external_event (
     key text not null,
     event_type_name text not null,
-	source_key text not null,
+	  source_key text not null,
     derivation_group_name text not null,
     start_time timestamp with time zone not null,
     duration interval not null,
