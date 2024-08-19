@@ -6,5 +6,5 @@
         from_env: AERIE_DATABASE_URL
       isolation_level: read-committed
       use_prepared_statements: false
-  tables: "!include Aerie/tables/tables.yaml"
-  functions: "!include Aerie/functions/functions.yaml"
+  tables: "!include tables/tables.yaml"
+  functions: "!include functions/functions.yaml"
