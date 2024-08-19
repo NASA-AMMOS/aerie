@@ -6,7 +6,13 @@ configuration:
 object_relationships:
 - name: external_source
   using:
-    foreign_key_constraint_on: source_id
+    foreign_key_constraint_on:
+      columns:
+        - key
+        - derivation_group_name
+      table:
+        name: external_source
+        schema: merlin
 - name: external_event_type
   using:
     foreign_key_constraint_on: event_type_name
@@ -29,11 +35,11 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, event_type_name, source_id, start_time, duration, properties]
+      columns: [key, event_type_name, source_key, derivation_group_name, start_time, duration, properties]
       check: {}
   - role: user
     permission:
-      columns: [key, event_type_name, source_id, start_time, duration, properties]
+      columns: [key, event_type_name, source_key, derivation_group_name, start_time, duration, properties]
       check: {}
 delete_permissions:
   - role: aerie_admin
