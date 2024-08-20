@@ -10,9 +10,9 @@ create table merlin.external_event (
     properties jsonb,
 
     constraint external_event_pkey
-      primary key (key, source_type_name, source_key, derivation_group_name, event_type_name),
+      primary key (key, source_key, derivation_group_name, event_type_name),
     constraint external_event_references_source_id
-      foreign key (source_key, source_type_name, derivation_group_name)
+      foreign key (source_key, derivation_group_name)
       references merlin.external_source (key, source_type_name, derivation_group_name),
     constraint external_event_references_event_type_name
       foreign key (event_type_name)
