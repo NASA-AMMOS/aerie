@@ -9,6 +9,7 @@ object_relationships:
     foreign_key_constraint_on:
       - source_key
       - derivation_group_name
+      - source_type_name
 - name: external_event_type
   using:
     foreign_key_constraint_on: event_type_name

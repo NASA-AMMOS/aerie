@@ -10,9 +10,14 @@ array_relationships:
         columns:
           - source_key
           - derivation_group_name
+          - source_type_name
         table:
           name: external_event
           schema: merlin
+object_relationships:
+  - name: external_source_type
+    using:
+      foreign_key_constraint_on: source_type_name
 select_permissions:
   - role: aerie_admin
     permission:
