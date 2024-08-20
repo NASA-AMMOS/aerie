@@ -10,7 +10,7 @@ create table merlin.external_source (
     metadata jsonb,
 
     constraint external_source_pkey
-      primary key (key, derivation_group_name),
+      primary key (key, source_type_name, derivation_group_name),
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
       references merlin.external_source_type(name),
