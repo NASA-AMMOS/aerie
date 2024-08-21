@@ -11,7 +11,6 @@ object_relationships:
           name: external_source
           schema: merlin
         column_mapping:
-          source_id: id
           derivation_group_name: derivation_group_name
   - name: external_event
     using:
@@ -21,7 +20,6 @@ object_relationships:
           name: external_event
         insertion_order: null
         column_mapping:
-          event_id: id
           event_type_name: event_type_name
           start_time: start_time
 select_permissions:

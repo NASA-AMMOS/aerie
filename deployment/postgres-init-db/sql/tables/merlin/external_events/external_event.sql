@@ -11,7 +11,7 @@ create table merlin.external_event (
 
     constraint external_event_pkey
       primary key (key, source_key, derivation_group_name, event_type_name),
-    constraint external_event_references_source_id
+    constraint external_event_references_source_key_derivation_group
       foreign key (source_key, derivation_group_name)
       references merlin.external_source (key, derivation_group_name),
     constraint external_event_references_event_type_name
