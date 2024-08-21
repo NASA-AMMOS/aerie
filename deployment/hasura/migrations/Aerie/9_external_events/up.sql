@@ -105,11 +105,11 @@ create table ui.seen_sources
 (
     username text not null,
     external_source_name text not null,
-    external_source_type text not null,
+    external_source_type text not null, -- included for ease of filtering, though not part of pkey
     derivation_group text not null,
 
     constraint seen_sources_pkey
-      primary key (username, external_source_name, derivation_group), -- is this a good pkey?
+      primary key (username, external_source_name, derivation_group),
     constraint seen_sources_references_user
       foreign key (username)
       references permissions.users (username) match simple
