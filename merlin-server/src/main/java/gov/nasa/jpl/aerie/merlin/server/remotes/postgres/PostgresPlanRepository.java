@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -50,7 +51,7 @@ public final class PostgresPlanRepository implements PlanRepository {
 
             plans.put(planId, new Plan(
                 record.name(),
-                Long.toString(record.missionModelId()),
+                new MissionModelId(record.missionModelId()),
                 record.startTime(),
                 record.endTime(),
                 activities
@@ -88,7 +89,7 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       return new Plan(
           planRecord.name(),
-          Long.toString(planRecord.missionModelId()),
+          new MissionModelId(planRecord.missionModelId()),
           planRecord.startTime(),
           planRecord.endTime(),
           activities,
@@ -109,7 +110,7 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       return new Plan(
           planRecord.name(),
-          Long.toString(planRecord.missionModelId()),
+          new MissionModelId(planRecord.missionModelId()),
           planRecord.startTime(),
           planRecord.endTime(),
           activities

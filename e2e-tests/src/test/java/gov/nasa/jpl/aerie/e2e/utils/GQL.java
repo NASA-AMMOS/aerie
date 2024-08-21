@@ -217,7 +217,7 @@ public enum GQL {
       }
     }"""),
   GET_EFFECTIVE_ACTIVITY_ARGUMENTS_BULK("""
-    query GetEffectiveActivityArgumentsBulk($modelId: ID!, $activities: [EffectiveArgumentsInput!]!) {
+    query GetEffectiveActivityArgumentsBulk($modelId: Int!, $activities: [EffectiveArgumentsInput!]!) {
       getActivityEffectiveArgumentsBulk(
         missionModelId: $modelId,
         activities: $activities
@@ -239,7 +239,7 @@ public enum GQL {
       }
     }"""),
   GET_EFFECTIVE_MODEL_ARGUMENTS("""
-    query GetEffectiveModelArguments($modelId: ID!, $modelArgs: ModelArguments!) {
+    query GetEffectiveModelArguments($modelId: Int!, $modelArgs: ModelArguments!) {
       getModelEffectiveArguments(missionModelId: $modelId, modelArguments: $modelArgs) {
         arguments
         errors

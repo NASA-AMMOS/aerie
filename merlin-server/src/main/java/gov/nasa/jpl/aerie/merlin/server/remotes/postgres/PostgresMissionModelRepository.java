@@ -25,7 +25,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public Map<String, MissionModelJar> getAllMissionModels() {
+  public Map<MissionModelId, MissionModelJar> getAllMissionModels() {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getAllMissionModelsAction = new GetAllModelsAction(connection)) {
         return getAllMissionModelsAction
@@ -33,7 +33,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
             .entrySet()
             .stream()
             .collect(Collectors.toMap(
-                e -> Long.toString(e.getKey()),
+                e -> new MissionModelId(e.getKey()),
                 e -> missionModelRecordToMissionModelJar(e.getValue())));
       }
     } catch (final SQLException ex) {
@@ -42,11 +42,11 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public MissionModelJar getMissionModel(final String missionModelId) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModel(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getMissionModelAction = new GetModelAction(connection)) {
         return getMissionModelAction
-            .get(toMissionModelId(missionModelId))
+            .get(missionModelId.id())
             .map(PostgresMissionModelRepository::missionModelRecordToMissionModelJar)
             .orElseThrow(NoSuchMissionModelException::new);
       }
@@ -56,10 +56,10 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public Map<String, ActivityType> getActivityTypes(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<String, ActivityType> getActivityTypes(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getActivityTypesAction = new GetActivityTypesAction(connection)) {
-        final var id = toMissionModelId(missionModelId);
+        final var id = missionModelId.id();
         final var result = new HashMap<String, ActivityType>();
         for (final var activityType: getActivityTypesAction.get(id)) {
           result.put(activityType.name(), activityType);
@@ -73,11 +73,11 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateModelParameters(final String missionModelId, final List<Parameter> modelParameters)
+  public void updateModelParameters(final MissionModelId missionModelId, final List<Parameter> modelParameters)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createModelParametersAction = new CreateModelParametersAction(connection)) {
-        final var id = toMissionModelId(missionModelId);
+        final var id = missionModelId.id();
         createModelParametersAction.apply(id, modelParameters);
       }
     } catch (final SQLException ex) {
@@ -87,11 +87,11 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
+  public void updateActivityTypes(final MissionModelId missionModelId, final Map<String, ActivityType> activityTypes)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var insertActivityTypesAction = new InsertActivityTypesAction(connection)) {
-        final var id = toMissionModelId(missionModelId);
+        final var id = missionModelId.id();
         insertActivityTypesAction.apply((int) id, activityTypes.values());
       }
     } catch (final SQLException ex) {
@@ -101,7 +101,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateResourceTypes(final String missionModelId, final Map<String, Resource<?>> resources)
+  public void updateResourceTypes(final MissionModelId missionModelId, final Map<String, Resource<?>> resources)
   throws NoSuchMissionModelException {
     final var resourceTypes = resources.entrySet()
                                        .stream()
@@ -111,7 +111,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
 
     try (final var connection = this.dataSource.getConnection()) {
       try (final var insertResourceTypesAction = new InsertResourceTypesAction(connection)) {
-        final long id = toMissionModelId(missionModelId);
+        final long id = missionModelId.id();
         insertResourceTypesAction.apply((int) id, resourceTypes);
       }
     } catch (final SQLException ex) {
@@ -137,16 +137,6 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       updateAction.apply(updates);
     } catch (SQLException ex) {
       throw new DatabaseException("Failed to update activity directive validations", ex);
-    }
-  }
-
-  private static long toMissionModelId(final String modelId)
-  throws NoSuchMissionModelException
-  {
-    try {
-      return Long.parseLong(modelId, 10);
-    } catch (final NumberFormatException ex) {
-      throw new NoSuchMissionModelException();
     }
   }
 
