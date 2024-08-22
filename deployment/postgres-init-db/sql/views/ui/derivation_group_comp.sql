@@ -1,28 +1,47 @@
+-- create a view that aggregates additional derivation group information
 create or replace view merlin.derivation_group_comp
  as
-select derivation_group.name,
-  derivation_group.source_type_name,
-  array_agg(distinct concat(sources.source_key, ', ', sources.derivation_group_name, ', ', sources.contained_events)) as sources,
-  array_agg(distinct sources.type) as event_types,
-  count(distinct c.event_key) as derived_total
- from merlin.derivation_group
-   left join ( select external_source.key as source_key,
-          external_source.derivation_group_name,
-          count(a.event_key) as contained_events,
-		   external_event_type.name as type,
-          external_source.valid_at
-         from merlin.external_source
-           join ( select external_event.source_key,
-					external_event.derivation_group_name,
-					external_event.event_type_name,
-                  external_event.key as event_key
-                 from merlin.external_event) a on a.source_key = external_source.key AND a.derivation_group_name = external_source.derivation_group_name
-			join merlin.external_event_type on external_event_type.name = a.event_type_name
-        group by external_source.key, external_source.derivation_group_name, external_source.valid_at, type) sources on sources.derivation_group_name = derivation_group.name
-   left join ( select derived_events.event_key,
-          derived_events.derivation_group_name
-         from merlin.derived_events) c on c.derivation_group_name = derivation_group.name
-group by derivation_group.name, derivation_group.source_type_name;
+select
+	name,
+	source_type_name,
+	sources,
+	array_agg(distinct event_type) as event_types,
+	derived_total
+	from (
+		select
+			name,
+			source_type_name,
+			array_agg(distinct concat(sources.source_key, ', ', sources.derivation_group_name, ', ', sources.contained_events)) as sources,
+			UNNEST(event_types) as event_type,
+			count(distinct c.event_key) as derived_total
+			from merlin.derivation_group
+			join (
+				select
+					source_key,
+					derivation_group_name,
+					count(key) as contained_events
+				from merlin.external_event
+				group by source_key, derivation_group_name
+				order by source_key
+			) sources on sources.derivation_group_name = derivation_group.name
+			join (
+				select
+					source_key,
+					derivation_group_name,
+					array_agg(distinct event_type_name) as event_types
+				from merlin.external_event
+				group by source_key, derivation_group_name
+				order by source_key
+			) types on types.derivation_group_name = derivation_group.name
+			left join (
+				select
+					derived_events.event_key,
+					derived_events.derivation_group_name
+			  	from merlin.derived_events
+			) c on c.derivation_group_name = derivation_group.name
+			group by name, source_type_name, event_types
+	)
+	group by name, source_type_name, sources, derived_total;
 
 alter view if exists merlin.derivation_group_comp owner to aerie;
 comment on view  merlin.derivation_group_comp is e''
