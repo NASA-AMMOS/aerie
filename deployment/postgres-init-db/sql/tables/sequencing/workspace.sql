@@ -24,6 +24,14 @@ comment on table sequencing.workspace is e''
   'A container for multiple sequences.';
 comment on column sequencing.workspace.name is e''
   'The name of the workspace.';
+comment on column sequencing.workspace.owner is e''
+  'The user responsible for this workspace.';
+comment on column sequencing.workspace.created_at is e''
+  'Time the workspace was created at.';
+comment on column sequencing.workspace.updated_at is e''
+  'Time the workspace was last updated.';
+comment on column sequencing.workspace.updated_by is e''
+  'THe user who last updated the workspace.';
 
 create trigger set_timestamp
   before update on sequencing.workspace

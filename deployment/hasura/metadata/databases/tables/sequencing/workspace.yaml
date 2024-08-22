@@ -3,6 +3,14 @@ table:
   schema: sequencing
 configuration:
   custom_name: "workspace"
+array_relationships:
+  - name: user_sequences
+    using:
+      foreign_key_constraint_on:
+        column: workspace_id
+        table:
+          name: user_sequence
+          schema: sequencing
 select_permissions:
   - role: aerie_admin
     permission:
@@ -22,25 +30,31 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name]
+      columns: [name, owner]
       check: {}
       set:
         owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [name]
+      columns: [name, owner]
       check: {}
       set:
         owner: "x-hasura-user-id"
+        updated_by: "x-hasura-user-id"
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [name]
+      columns: [name, owner]
       filter: {}
+      set:
+        updated_by: "x-hasura-user-id"
   - role: user
     permission:
-      columns: [name]
+      columns: [name, owner]
       filter: { "owner": { "_eq": "x-hasura-user-id" } }
+      set:
+        updated_by: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:

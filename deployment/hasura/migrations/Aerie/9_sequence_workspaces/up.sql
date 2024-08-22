@@ -26,6 +26,14 @@ comment on table sequencing.workspace is e''
   'A container for multiple sequences.';
 comment on column sequencing.workspace.name is e''
   'The name of the workspace.';
+comment on column sequencing.workspace.owner is e''
+  'The user responsible for this workspace.';
+comment on column sequencing.workspace.created_at is e''
+  'Time the workspace was created at.';
+comment on column sequencing.workspace.updated_at is e''
+  'Time the workspace was last updated.';
+comment on column sequencing.workspace.updated_by is e''
+  'THe user who last updated the workspace.';
 
 create trigger set_timestamp
   before update on sequencing.workspace
@@ -51,5 +59,8 @@ values ('Workspace 1', 'Aerie Legacy');
 
 update sequencing.user_sequence
   set workspace_id = 1;
+
+alter table sequencing.user_sequence
+  alter column workspace_id set not null;
 
 call migrations.mark_migration_applied('9');
