@@ -447,6 +447,10 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return this.segments.iterator();
   }
 
+  public Iterator<Segment<V>> reverseIterator() {
+    return this.segments.descendingIterator();
+  }
+
   /** Creates an iterable over the Intervals where this map is equal to a value */
   public Iterable<Interval> iterateEqualTo(final V value) {
     return () -> this.segments

@@ -89,8 +89,7 @@ public class TestApplyWhen {
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    //enveloppe of the foralltimein includes end time of an activity. Last activity starting at 16 would end after 17 and violate it.
   }
 
   @Test
@@ -122,7 +121,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
+    //enveloppe of the foralltimein includes end time of an activity. Last activity starting at 16 would end after 17 and violate it.
   }
 
   @Test
@@ -214,7 +213,8 @@ public class TestApplyWhen {
                             .durationIn(Duration.of(1, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
-        .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .separatedByAtLeast(Duration.of(0, Duration.SECONDS))
+        .separatedByAtMost(Duration.of(5, Duration.SECONDS))
         .withinPlanHorizon(planningHorizon)
         .build();
 
@@ -298,7 +298,8 @@ public class TestApplyWhen {
                             .durationIn(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
                             .build())
-        .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .separatedByAtMost(Duration.of(5, Duration.SECONDS))
+        .separatedByAtLeast(Duration.of(0, Duration.SECONDS))
         .withinPlanHorizon(planningHorizon)
         .build();
 
@@ -1307,7 +1308,8 @@ public class TestApplyWhen {
                             .ofType(activityTypeIndependent)
                             .durationIn(Duration.of(2, Duration.SECONDS))
                             .build())
-        .repeatingEvery(Duration.of(5, Duration.SECONDS))
+        .separatedByAtLeast(Duration.of(0, Duration.SECONDS))
+        .separatedByAtMost(Duration.of(5, Duration.SECONDS))
         .withinPlanHorizon(hor)
         .build();
 

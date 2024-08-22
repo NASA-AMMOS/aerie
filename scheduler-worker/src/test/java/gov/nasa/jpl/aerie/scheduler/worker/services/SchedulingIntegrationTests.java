@@ -147,7 +147,7 @@ public class SchedulingIntegrationTests {
       fail();
     }
     catch (AssertionError e) {
-      assertTrue(e.getMessage().contains("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!"));
+      assertTrue(e.getMessage().contains("Duration passed to RecurrenceGoal as the goal's maximum recurrence interval cannot be negative!"));
     }
     catch (Exception e) {
       fail(e.getMessage());
@@ -2617,7 +2617,8 @@ public class SchedulingIntegrationTests {
         new PlanningHorizon(
             TimeUtility.fromDOY("2022-318T00:00:00"),
             TimeUtility.fromDOY("2022-319T00:00:00")));
-    assertEquals(2, results.updatedPlan().size());
+    //scheduling condition forces the start to be in [23,24] but the strict every(2hrs) restricts to [22,22] which makes it fail totally.
+    assertEquals(1, results.updatedPlan().size());
   }
 
   /**

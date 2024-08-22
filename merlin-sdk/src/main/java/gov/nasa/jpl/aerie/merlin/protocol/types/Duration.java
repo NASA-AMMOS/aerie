@@ -376,6 +376,14 @@ public final class Duration implements Comparable<Duration> {
     return Duration.subtract(this, other);
   }
 
+  /**
+   * Returns the absolute value of this duration.
+   */
+  public Duration abs(){
+    if(this.shorterThan(ZERO)) return negate(this);
+    return this;
+  }
+
   /** @see Duration#subtract(Duration, Duration) */
   public Duration minus(final long quantity, final Duration unit) throws ArithmeticException {
     return Duration.subtract(this, duration(quantity, unit));

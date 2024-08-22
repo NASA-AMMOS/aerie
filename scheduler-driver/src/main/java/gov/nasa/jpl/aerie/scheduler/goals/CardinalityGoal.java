@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,7 +206,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
             nbToSchedule,
             Optional.empty(),
             Optional.empty(),
-            durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
+            durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty(),
+            ScheduleAt.EARLIEST));
       }
     }
 

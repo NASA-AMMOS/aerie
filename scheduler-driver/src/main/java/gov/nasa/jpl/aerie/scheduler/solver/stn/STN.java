@@ -6,8 +6,13 @@ import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
 import org.jgrapht.alg.shortestpath.NegativeCycleDetectedException;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
+import org.jgrapht.nio.DefaultAttribute;
+import org.jgrapht.nio.dot.DOTExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
 /**
  * Representation of a simple temporal network (Dechter, Meiri, and Pearl, 1991).
@@ -26,10 +31,19 @@ public class STN {
 
   private static final Logger logger = LoggerFactory.getLogger(STN.class);
 
-  public void print(){
-    for(var edge :graph.edgeSet()){
-      logger.info(edge.toString() + " "+graph.getEdgeWeight(edge));
-    }  }
+  public String toDOT() {
+    final var graphAsDot = new ByteArrayOutputStream();
+    // Export to DOT format
+    DOTExporter<String, DefaultWeightedEdge> exporter = new DOTExporter<>();
+    // Vertex ID and label providers
+    exporter.setVertexIdProvider(v -> v);
+    exporter.setVertexAttributeProvider(v -> Map.of("label", DefaultAttribute.createAttribute(v)));
+    // Edge attribute provider for weights
+    exporter.setEdgeAttributeProvider(e -> Map.of("label", DefaultAttribute.createAttribute(String.valueOf(graph.getEdgeWeight(e)))));
+    exporter.exportGraph(this.graph, graphAsDot);
+    return graphAsDot.toString();
+  }
+
   private final Graph<String, DefaultWeightedEdge> graph;
 
   private BellmanFordShortestPath<String, DefaultWeightedEdge> latestComputation;
@@ -57,6 +71,10 @@ public class STN {
   public void addBeforeCst(String tp1, String tp2){
     var e1 = getOrCreateEdge(tp2, tp1);
     graph.setEdgeWeight(e1, -0);
+  }
+
+  public void removeTimepoint(String tp1){
+    graph.removeVertex(tp1);
   }
 
   /*
@@ -93,7 +111,7 @@ public class STN {
     }
     try {
       algo = new BellmanFordShortestPath<>(graph);
-      var a = algo.getPaths(graph.vertexSet().iterator().next());
+      algo.getPaths(graph.vertexSet().iterator().next());
       ret = true;
     } catch (NegativeCycleDetectedException e) {
       logger.debug("Negative cycle ", e); //this is normal behavior, shouldn't be flagged as an error! If debugging is on, drop the stack trace.

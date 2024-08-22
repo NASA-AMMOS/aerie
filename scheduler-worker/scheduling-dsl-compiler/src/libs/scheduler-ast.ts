@@ -58,7 +58,9 @@ export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate<any>,
   activityFinder: ActivityExpression<any> | undefined,
-  interval: Temporal.Duration,
+  separatedByAtLeast: Temporal.Duration,
+  separatedByAtMost: Temporal.Duration,
+  previousActivityStartedAt: Temporal.Duration | undefined,
   shouldRollbackIfUnsatisfied: boolean
 }
 
