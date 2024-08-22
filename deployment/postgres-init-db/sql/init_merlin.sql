@@ -104,5 +104,5 @@ begin;
   \ir views/merlin/simulated_activity.sql
   \ir views/merlin/resource_profile.sql
   \ir views/merlin/derived_events.sql
-  \ir views/merlin/derivation_group_comp.sql -- consider putting this in ui part of schema
+  \ir views/ui/derivation_group_comp.sql -- consider putting this in ui part of schema
 end;
