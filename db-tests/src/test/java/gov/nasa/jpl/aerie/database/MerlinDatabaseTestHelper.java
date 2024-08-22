@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.database;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -19,6 +21,8 @@ final class MerlinDatabaseTestHelper {
   }
 
   record User(String name, String defaultRole, String session) {}
+  protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String properties) {}
+  protected record ExternalSource(String key, String source_type_name, String derivation_group_name, String valid_at, String start_time, String end_time, String created_at, String metadata){}
 
   User insertUser(final String username) throws SQLException {
     return insertUser(username, "aerie_admin");
@@ -283,6 +287,83 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
           """.formatted(name, user.name, user.name, definition));
       res.next();
       return res.getInt("constraint_id");
+    }
+  }
+
+  public void insertTypesForEvent(ExternalEvent externalEvent, ExternalSource externalSource) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      // create the event type
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO merlin.external_event_type VALUES ('%s');
+          """.formatted(externalEvent.event_type_name)
+      );
+
+      // create the source type
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO merlin.external_source_type VALUES ('%s');
+          """.formatted(externalSource.source_type_name)
+      );
+
+      // create the derivation_group
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO merlin.derivation_group VALUES ('%s', '%s');
+          """.formatted(externalEvent.derivation_group_name, externalSource.source_type_name)
+      );
+
+      // create the source
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO merlin.external_source VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');
+          """.formatted(
+              externalSource.key,
+              externalSource.source_type_name,
+              externalSource.derivation_group_name,
+              externalSource.valid_at,
+              externalSource.start_time,
+              externalSource.end_time,
+              externalSource.created_at,
+              externalSource.metadata
+          )
+      );
+
+      // create the event
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO merlin.external_event VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');
+          """.formatted(
+              externalEvent.key,
+              externalEvent.event_type_name,
+              externalEvent.source_key,
+              externalEvent.derivation_group_name,
+              externalEvent.start_time,
+              externalEvent.duration,
+              externalEvent.properties
+          )
+      );
+
+    }
+  }
+
+  // borrowed directly from: https://stackoverflow.com/questions/24229442/print-the-data-in-resultset-along-with-column-names
+  // useful in making new tests
+  public static void printRows(ResultSet resultSet) throws SQLException {
+    ResultSetMetaData rsmd = resultSet.getMetaData();
+    int columnsNumber = rsmd.getColumnCount();
+    while (resultSet.next()) {
+      for (int i = 1; i <= columnsNumber; i++) {
+        if (i > 1) System.out.print(",  ");
+        String columnValue = resultSet.getString(i);
+        System.out.print(columnValue + " " + rsmd.getColumnName(i));
+      }
+      System.out.println("");
     }
   }
 }
