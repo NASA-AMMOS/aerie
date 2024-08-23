@@ -351,8 +351,7 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
           """
           INSERT INTO
             merlin.external_event
-          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')
-          ON CONFLICT(key, source_key, derivation_group_name, event_type_name) DO NOTHING;
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');
           """.formatted(
               externalEvent.key,
               externalEvent.event_type_name,
@@ -368,6 +367,7 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
   }
 
   // borrowed directly from: https://stackoverflow.com/questions/24229442/print-the-data-in-resultset-along-with-column-names
+  // All credits go to StackOverflow user Zeb (who credited: https://coderwall.com/p/609ppa/printing-the-result-of-resultset)
   // useful in making new tests
   public static void printRows(ResultSet resultSet) throws SQLException {
     ResultSetMetaData rsmd = resultSet.getMetaData();

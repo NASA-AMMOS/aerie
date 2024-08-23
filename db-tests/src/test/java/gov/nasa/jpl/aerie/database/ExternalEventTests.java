@@ -54,10 +54,25 @@ public class ExternalEventTests {
   }
 
 
-  private record ExternalEventType(String name){}
-  private record ExternalSourceType(String name){}
-  private record DerivationGroup(String name, String source_type_name){}
-  private record DerivedExternalEvent(String source_key, String derivation_group_name, String event_key, String event_type_name, String start_time, String source_range, String valid_at){}
+
+  String st = "Test";
+  String dg = "Test Default";
+  String et = "Test";
+  String mt = "{}";
+  String ca = "2024-01-01T00:00:00Z";
+
+  // quicker external event creator, leveraging constants from source
+  ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
+    return new ExternalEvent(
+        key,
+        et,
+        source.key(),
+        source.derivation_group_name(),
+        start_time,
+        duration,
+        mt
+    );
+  }
 
   void compareLists(String[] expected, ResultSet res, String key) throws SQLException {
     ArrayList<String> actual = new ArrayList<>();
@@ -432,25 +447,6 @@ public class ExternalEventTests {
       }
     }
 
-    String st = "Test";
-    String dg = "Test Default";
-    String et = "Test";
-    String mt = "{}";
-    String ca = "2024-01-01T00:00:00Z";
-
-    // quicker external event creator, leveraging constants from defaultES
-    ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
-      return new ExternalEvent(
-          key,
-          et,
-          source.key(),
-          source.derivation_group_name(),
-          start_time,
-          duration,
-          mt
-      );
-    }
-
     ////////////////////////// RULE 1 //////////////////////////
     //  An External Event superceded by nothing will be present in the final, derived result.
     //     - test solitary event
@@ -764,19 +760,169 @@ public class ExternalEventTests {
     });
   }
 
-  // TODO: add test to ensure if event spills out of bounds of source, error thrown
+  // A source can have two (or more) events occurring at the same time, of the same type and all (BUT must have diff keys...see below)
+  @Test
+  void nEventsAtSameTime() {
+    ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:30:00Z", ca, mt);
 
-  // TODO: add tests about external source bounds
+    ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+    ExternalEvent e2 = createEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
+    ExternalEvent e3 = createEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
 
-  // TODO: add test demonstrating that a source can have two events occurring at the same time, of the same type and all (must have diff keys...see below)
+    assertDoesNotThrow(() -> {
+      merlinHelper.insertTypesForEvent(e1, A);
+      merlinHelper.insertTypesForEvent(e2, A);
+      merlinHelper.insertTypesForEvent(e3, A);
+    });
 
-  // TODO: add test demonstrating that two events, even if totally sparse, bearing same key in same source not possible
+    assertDoesNotThrow(() -> {
+      final var statement = connection.createStatement();
+      var res = statement.executeQuery("SELECT * FROM merlin.derived_events ORDER BY start_time, event_key ASC");
+      String[] expected_keys = {"a", "b", "c"};
+      compareLists(expected_keys, res, "event_key");
+    });
+  }
 
-  // TODO: add test demonstrating for sources that end time can't be < start time but can be =
+  // Two events, even if totally sparse, bearing same key in same source not possible
+  @Test
+  void noDuplicateEventsInSameSource() {
+    ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:30:00Z", ca, mt);
 
-  // TODO: add test throwing error if event is out of bounds of source (i.e. starts or ends before, starts or ends after)
+    ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+    ExternalEvent e2 = createEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
 
-  // test all constraints (namely duplicates and deletions)
-  // extra test for derived events that manages several derivation groups
+    assertDoesNotThrow(() -> {
+      merlinHelper.insertTypesForEvent(e1, A);
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      merlinHelper.insertTypesForEvent(e2, A);
+    });
+  }
+
+  // End time can't be < start time (but can be =)
+  @Test
+  void endTimeGEstartTime() {
+    ExternalSource failing = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", "2024-01-01T00:30:00Z", ca, mt);
+    ExternalSource succeeding = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+
+    assertDoesNotThrow(() -> {
+      final var statement = connection.createStatement();
+      // create the source type
+      statement.executeUpdate(
+         // language-sql
+         """
+         INSERT INTO
+           merlin.external_source_type
+         VALUES ('%s')
+         ON CONFLICT(name) DO NOTHING;
+         """.formatted(failing.source_type_name())
+      );
+
+       // create the derivation_group
+       statement.executeUpdate(
+         // language-sql
+         """
+         INSERT INTO
+           merlin.derivation_group
+         VALUES ('%s', '%s')
+         ON CONFLICT(name, source_type_name) DO NOTHING;
+         """.formatted(failing.derivation_group_name(), failing.source_type_name())
+       );
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      final var statement = connection.createStatement();
+      statement.executeUpdate(
+        // language-sql
+        """
+        INSERT INTO
+          merlin.external_source
+        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        ON CONFLICT(key, derivation_group_name) DO NOTHING;
+        """.formatted(
+          failing.key(),
+          failing.source_type_name(),
+          failing.derivation_group_name(),
+          failing.valid_at(),
+          failing.start_time(),
+          failing.end_time(),
+          failing.created_at(),
+          failing.metadata()
+        )
+      );
+    });
+
+    assertDoesNotThrow(() -> {
+      final var statement = connection.createStatement();
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO
+            merlin.external_source
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+          ON CONFLICT(key, derivation_group_name) DO NOTHING;
+          """.formatted(
+              succeeding.key(),
+              succeeding.source_type_name(),
+              succeeding.derivation_group_name(),
+              succeeding.valid_at(),
+              succeeding.start_time(),
+              succeeding.end_time(),
+              succeeding.created_at(),
+              succeeding.metadata()
+          )
+      );
+    });
+  }
+
+  // An error is encountered if event is out of bounds of source (i.e. starts or ends before, starts or ends after)
+  /*
+      Source :      +++++++++++++++
+      Before1: 1111
+      Before2:    2222
+      After1 :                   3333
+      After2 :                      4444
+   */
+  @Test
+  void externalEventSourceBounds() {
+    ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", "2024-01-01T02:00:00Z", ca, mt);
+
+    ExternalEvent legal = createEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
+    ExternalEvent completelyBefore = createEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
+    ExternalEvent beforeIntersect = createEvent("beforeIntersect", "2024-01-01T00:55:00Z", "00:25:00", A); // illegal!
+    ExternalEvent afterIntersect = createEvent("afterIntersect", "2024-01-01T01:45:00Z", "00:30:00", A); // illegal!
+    ExternalEvent completelyAfter = createEvent("completelyAfter", "2024-01-01T02:10:00Z", "00:15:00", A); // illegal!
+
+    assertDoesNotThrow(() -> {
+      merlinHelper.insertTypesForEvent(legal, A);
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      merlinHelper.insertTypesForEvent(completelyBefore, A);
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      merlinHelper.insertTypesForEvent(beforeIntersect, A);
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      merlinHelper.insertTypesForEvent(afterIntersect, A);
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      merlinHelper.insertTypesForEvent(completelyAfter, A);
+    });
+  }
+
+  // TODO: test all constraints (namely duplicates and deletions)
+  //    - duplicated source (works across DG, not in DG)
+  //    - duplicated DG (not at all allowable, even if diff source type)
+  //    - deleting DG with existing plan link
+  //    - deleting DG with source
+  //    - deleting source type with source
+  //    - deleting event type with event
+
+  // TODO: extra test for derived events that manages several derivation groups (do derivation test twice but with new DG name, should be no overlap!)
 
 }
