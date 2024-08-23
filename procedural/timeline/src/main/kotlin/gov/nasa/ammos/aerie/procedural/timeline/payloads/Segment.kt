@@ -14,7 +14,7 @@ data class Segment<V>(/***/ override val interval: Interval, /***/ @JvmField val
    *
    * @param f a function that takes `this` as argument and produces a new value.
    */
-  fun <W> mapValue(f: (Segment<V>) -> W) = Segment(interval, f(this))
+  inline fun <W> mapValue(f: (Segment<V>) -> W) = Segment(interval, f(this))
 
   /**
    * Create a new segment with the same value, on a new interval derived from this segment.
@@ -23,7 +23,7 @@ data class Segment<V>(/***/ override val interval: Interval, /***/ @JvmField val
    *
    * @param f a function that takes `this` as argument and produces a new interval.
    */
-  fun mapInterval(f: (Segment<V>) -> Interval) = Segment(f(this), value)
+  inline fun mapInterval(f: (Segment<V>) -> Interval) = Segment(f(this), value)
 
   /**
    * Creates a new segment with the same value on a new interval.
