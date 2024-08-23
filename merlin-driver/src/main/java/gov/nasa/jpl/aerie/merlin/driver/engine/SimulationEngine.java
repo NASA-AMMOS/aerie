@@ -1202,12 +1202,11 @@ public final class SimulationEngine implements AutoCloseable {
    */
   public boolean hasSimulatedResource(final String name) {
     final var id = new ResourceId(name);
-    final ProfilingState<?> state = this.resources.get(id);
+    final Resource<?> state = this.resources.get(id);
     if (state == null) {
       return false;
     }
-    final Profile<?> profile = state.profile();
-    return profile != null && profile.segments().size() > 0;
+    return true;
   }
 
   /**
@@ -2012,26 +2011,27 @@ public final class SimulationEngine implements AutoCloseable {
             event -> {
               // TODO can we do this more efficiently?
               EventGraph<EventRecord> output = EventGraph.empty();
+              var spanId = event.provenance() == null ? null : taskToSpanMap.get(event.provenance());
+              if (spanId == null) return output;
               for (final var serializableTopic : serializableTopics.values()) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
                   // If the event's `provenance` has no simulated activity id, search its ancestors to find the nearest
                   // simulated activity id, if one exists
-                  if (!spanToActivities.containsKey(event.provenance())) {
-                    var spanId = Optional.of(event.provenance());
-
+                  if (!spanToActivities.containsKey(spanId)) {
+                    var spanId2 = spanId;
                     while (true) {
-                      if (spanToActivities.containsKey(spanId.get())) {
-                        spanToActivities.put(event.provenance(), spanToActivities.get(spanId.get()));
+                      if (spanToActivities.containsKey(spanId2)) {
+                        spanToActivities.put(spanId, spanToActivities.get(spanId2));
                         break;
                       }
-                      spanId = this.getSpan(spanId.get()).parent();
-                      if (spanId.isEmpty()) {
+                      spanId2 = this.getSpan(spanId2).parent().orElse(null);
+                      if (spanId2 == null) {
                         break;
                       }
                     }
                   }
-                  var activitySpanID = Optional.of(spanToActivities.get(event.provenance()).id());
+                  var activitySpanID = Optional.of(spanToActivities.get(spanId).id());
                   output = EventGraph.concurrently(
                       output,
                       EventGraph.atom(
@@ -2674,19 +2674,21 @@ public final class SimulationEngine implements AutoCloseable {
    */
   public TemporalEventSource combineTimeline() {
     final TemporalEventSource combinedTimeline = new TemporalEventSource();
-    for (final var timePoint : referenceTimeline) {
-      if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
-        combinedTimeline.add(t.delta());
-      } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
-        combinedTimeline.add(t.events());
+    // TODO -- Would it make sense to use the getCombinedCommitsByTime() approach usign mergeMapsFirstWins() to combine these?
+    //      -- add() seems pretty heavy duty
+    for (final var entry : referenceTimeline.getCombinedCommitsByTime().entrySet()) {
+      var commits = entry.getValue();
+      int step = 0;   // TODO -- not sure if we can just increment the step number as we do in this loop -BJC
+      for (var c : commits) {
+        combinedTimeline.add(c.events(), entry.getKey(), step++, getMissionModel().queryTopic);
       }
     }
 
-    for (final var timePoint : timeline) {
-      if (timePoint instanceof TemporalEventSource.TimePoint.Delta t) {
-        combinedTimeline.add(t.delta());
-      } else if (timePoint instanceof TemporalEventSource.TimePoint.Commit t) {
-        combinedTimeline.add(t.events());
+    for (final var entry : timeline.getCombinedCommitsByTime().entrySet()) {
+      var commits = entry.getValue();
+      int step = 0;
+      for (var c : commits) {
+        combinedTimeline.add(c.events(), entry.getKey(), step++, getMissionModel().queryTopic);
       }
     }
     return combinedTimeline;
