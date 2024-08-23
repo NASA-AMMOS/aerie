@@ -235,19 +235,7 @@ public class ExternalEventTests {
     });
   }
 
-  // test each derived event rule individually
-  //  + verify that external source overlap works as expected
-  //  + rule 1: An External Event superceded by nothing will be present in the final, derived result.
-  //     - test solitary event, test event with stuff occurring before and after
-  //  + rule 2: An External Event partially superceded by a later External Source, but whose start time occurs before
-  //            the start of said External Source(s), will be present in the final, derived result.
-  //     - test apart covered in 1, so just test start_b > start_a, so a and b should show up (b is from a more valid source)
-  //  + rule 3: An External Event whose start is superseded by another External Source, even if its end occurs after the
-  //            end of said External Source, will be replaced by the contents of that External Source (whether they are
-  //            blank spaces, or other events).
-  //  + rule 4: An External Event who shares an ID with an External Event in a later External Source will always be
-  //            replaced.
-  //  + test ranges of sources
+  // test each derived event rule individually, starting with ranges of sources
   @Nested
   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   class DerivedEventsTests {
@@ -444,38 +432,38 @@ public class ExternalEventTests {
       }
     }
 
-    ExternalSource defaultES = new ExternalSource(
-        "rule_test.json",
-        "RuleTest",
-        "RuleTest Default",
-        "2024-01-01T00:00:00Z",
-        "2024-01-01T00:00:00Z",
-        "2024-01-07T00:00:00Z",
-        "2024-01-01T00:00:00Z",
-        "{}"
-    );
+    String st = "Test";
+    String dg = "Test Default";
+    String et = "Test";
+    String mt = "{}";
+    String ca = "2024-01-01T00:00:00Z";
 
     // quicker external event creator, leveraging constants from defaultES
-    ExternalEvent createEvent(String key, String start_time, String duration, String properties, ExternalSource source) {
+    ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
       return new ExternalEvent(
           key,
-          "RuleTest",
+          et,
           source.key(),
-          "RuleTest Default",
+          source.derivation_group_name(),
           start_time,
           duration,
-          properties
+          mt
       );
     }
 
     ////////////////////////// RULE 1 //////////////////////////
+    //  An External Event superceded by nothing will be present in the final, derived result.
+    //     - test solitary event
+    //     - test event with sources occurring before and after
+
     // test a solitary event, it vacuously shouldn't get superceded
     @Test
     void rule1_solitary() {
       assertDoesNotThrow(() -> {
 
-        ExternalEvent e = createEvent("e", "2024-01-01T01:00:00Z", "01:00:00", "{}", defaultES);
-        merlinHelper.insertTypesForEvent(e, defaultES);
+        ExternalSource eS = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+        ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
+        merlinHelper.insertTypesForEvent(e, eS);
       });
 
       assertDoesNotThrow(() -> {
@@ -489,24 +477,31 @@ public class ExternalEventTests {
 
         // only 1 result expected in set, it isn't superceded at all
         assertTrue(res.next());
-        assertEquals("e", res.getString("event_key"));
+        assertEquals("A.1", res.getString("event_key"));
         assertFalse(res.next());
       });
     }
 
-    // test a bookended event, none of the surrounding sources and their events can/should overwrite it
+    /*
+      Test a bookended event, none of the surrounding sources and their events can/should overwrite it:
+        A:     +++++aa++++++
+        B:  bb+++
+        C:                 +cc++++
+     */
     @Test
     void rule1_bookended() {
       assertDoesNotThrow(() -> {
-        ExternalSource beforeES = new ExternalSource("rule_test-1.json", "RuleTest", "RuleTest Default", "2024-01-02T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", "2024-01-01T00:00:00Z", "{}");
-        ExternalSource afterES = new ExternalSource("rule_test+1.json", "RuleTest", "RuleTest Default", "2024-01-02T00:00:00Z", "2024-01-01T02:00:00Z", "2024-01-01T03:00:00Z", "2024-01-01T00:00:00Z", "{}");
 
-        ExternalEvent e = createEvent("e", "2024-01-01T01:00:00Z", "01:00:00", "{}", defaultES);
-        ExternalEvent before = createEvent("before", "2024-01-01T00:00:00Z", "01:00:00", "{}", beforeES);
-        ExternalEvent after = createEvent("after", "2024-01-01T02:00:00Z", "01:00:00", "{}", afterES);
-        merlinHelper.insertTypesForEvent(e, defaultES);
-        merlinHelper.insertTypesForEvent(before, beforeES);
-        merlinHelper.insertTypesForEvent(after, afterES);
+        ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:30:00Z", "2024-01-01T02:00:00Z", ca, mt);
+        ExternalSource B = new ExternalSource("B", st, dg, "2024-01-02T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+        ExternalSource C = new ExternalSource("C", st, dg, "2024-01-03T00:00:00Z", "2024-01-01T01:30:00Z", "2024-01-01T03:00:00Z", ca, mt);
+
+        ExternalEvent e = createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
+        ExternalEvent before = createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
+        ExternalEvent after = createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
+        merlinHelper.insertTypesForEvent(e, A);
+        merlinHelper.insertTypesForEvent(before, B);
+        merlinHelper.insertTypesForEvent(after, C);
       });
 
       assertDoesNotThrow(() -> {
@@ -518,25 +513,35 @@ public class ExternalEventTests {
             """
         );
 
-        String[] expected_keys = {"before", "e", "after"};
+        String[] expected_keys = {"b", "a", "c"};
         compareLists(expected_keys, res, "event_key");
       });
     }
 
-    // repeat of the above but with empty sources - the point is that the replacement math is not between events but sources.
-    @Test
-    void rule1_bookended_empty() {
-      assertDoesNotThrow(() -> {
-        ExternalSource beforeES = new ExternalSource("rule_test-1.json", "RuleTest", "RuleTest Default", "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T03:00:00Z", "2024-01-01T00:00:00Z", "{}");
-        ExternalSource eES = new ExternalSource("rule_test.json", "RuleTest", "RuleTest Default", "2024-01-02T00:00:00Z", "2024-01-01T01:00:00Z", "2024-01-01T01:30:00Z", "2024-01-01T00:00:00Z", "{}");
-        ExternalSource afterES = new ExternalSource("rule_test+1.json", "RuleTest", "RuleTest Default", "2024-01-03T00:00:00Z", "2024-01-01T02:00:00Z", "2024-01-01T03:00:00Z", "2024-01-01T00:00:00Z", "{}");
+    ////////////////////////// RULE 2 //////////////////////////
+    //  An External Event partially superceded by a later External Source, but whose start time occurs before
+    //            the start of said External Source(s), will be present in the final, derived result.
+    //    - test basic case of second source starting in middle of existing event
 
-        ExternalEvent before = createEvent("before", "2024-01-01T00:00:00Z", "01:00:00", "{}", beforeES);
-        ExternalEvent e = createEvent("e", "2024-01-01T01:00:00Z", "01:00:00", "{}", eES); // TODO: THIS SHOULD FAIL...still included even though it spills out of its source's limits? WHEN THAT TEST IS FIXED MAKE THIS A 30 MINUTE EVENT...
-        ExternalEvent after = createEvent("after", "2024-01-01T02:00:00Z", "01:00:00", "{}", afterES);
-        merlinHelper.insertTypesForEvent(e, eES);
-        merlinHelper.insertTypesForEvent(before, beforeES);
-        merlinHelper.insertTypesForEvent(after, afterES);
+    /*
+      Testing sparse events was already covered in 1, so just test start_b > start_a, so a and b should show up (b is
+        from a more valid source):
+          A:  +++aaaaa
+          B:      b+bb++++
+          (a and both b's should be in result)
+     */
+    @Test
+    void rule2() {
+      assertDoesNotThrow(() -> {
+        ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+        ExternalSource B = new ExternalSource("B", st, dg, "2024-01-02T00:00:00Z", "2024-01-01T00:30:00Z", "2024-01-01T01:30:00Z", ca, mt);
+
+        ExternalEvent e = createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
+        ExternalEvent b1 = createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
+        ExternalEvent b2 = createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
+        merlinHelper.insertTypesForEvent(e, A);
+        merlinHelper.insertTypesForEvent(b1, B);
+        merlinHelper.insertTypesForEvent(b2, B);
       });
 
       assertDoesNotThrow(() -> {
@@ -548,22 +553,151 @@ public class ExternalEventTests {
             """
         );
 
-        String[] expected_ranges = {
-            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\"),[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}", // gets trimmed
-            "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\")}",
-            "{[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}"
-        };
-        compareLists(expected_ranges, res, "source_range");
+        String[] expected_keys = {"a", "b1", "b2"};
+        compareLists(expected_keys, res, "event_key");
       });
     }
 
-    // TODO: add test to ensure if event spills out of bounds of source, error thrown
+    ////////////////////////// RULE 3 //////////////////////////
+    //  An External Event whose start is superseded by another External Source, even if its end occurs after the
+    //            end of said External Source, will be replaced by the contents of that External Source (whether they are
+    //            blank spaces, or other events).
+    //    - test basic case of superceded source starting event that spills past superceding source, still won't show up
+    //    - test above case but with empty source (derived_events will be empty)
 
-    // TODO: add tests about external source bounds
+    /*
+      Basic case, wherein superceding source nullifies anything in A:
+          A:    +a+aaaaa
+          B:  b+bb++++
+          (only b's should be in result)
+     */
+    @Test
+    void rule3_basic() {
+      assertDoesNotThrow(() -> {
+        ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:30:00Z", "2024-01-01T01:30:00Z", ca, mt);
+        ExternalSource B = new ExternalSource("B", st, dg, "2024-01-02T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
 
-    ////////////////////////// RULE 2 //////////////////////////
+        ExternalEvent e1 = createEvent("a1", "2024-01-01T00:40:00Z", "00:10:00", A); // negated by B, very clearly
+        ExternalEvent e2 = createEvent("a2", "2024-01-01T00:55:00Z", "00:35:00", A); // even empty space in B neg should negate
+        ExternalEvent b1 = createEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
+        ExternalEvent b2 = createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
+        merlinHelper.insertTypesForEvent(e1, A);
+        merlinHelper.insertTypesForEvent(e2, A);
+        merlinHelper.insertTypesForEvent(b1, B);
+        merlinHelper.insertTypesForEvent(b2, B);
+      });
 
-    // TODO: rule 3 but with a totally empty source (should work)
+      assertDoesNotThrow(() -> {
+        final var statement = connection.createStatement();
+        final var res = statement.executeQuery(
+            // language-sql
+            """
+            SELECT * FROM merlin.derived_events ORDER BY start_time;
+            """
+        );
+
+        String[] expected_keys = {"b1", "b2"};
+        compareLists(expected_keys, res, "event_key");
+      });
+    }
+
+    /*
+      Empty source still nullifies all of A.
+          A:    +a+aaaaa
+          B:  ++++++++
+          (empty result)
+     */
+    @Test
+    void rule3_empty() {
+      assertDoesNotThrow(() -> {
+        ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:30:00Z", "2024-01-01T01:30:00Z", ca, mt);
+        ExternalSource B = new ExternalSource("B", st, dg, "2024-01-02T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+
+        ExternalEvent e1 = createEvent("a1", "2024-01-01T00:40:00Z", "00:10:00", A); // negated by empty space
+        ExternalEvent e2 = createEvent("a2", "2024-01-01T00:55:00Z", "00:35:00", A); // negated by empty space
+        merlinHelper.insertTypesForEvent(e1, A);
+        merlinHelper.insertTypesForEvent(e2, A);
+
+        // insert B as a source
+        final var statement = connection.createStatement();
+        statement.executeUpdate(
+            // language-sql
+            """
+            INSERT INTO
+              merlin.external_source
+            VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+            ON CONFLICT(key, derivation_group_name) DO NOTHING;
+            """.formatted(
+                B.key(),
+                B.source_type_name(),
+                B.derivation_group_name(),
+                B.valid_at(),
+                B.start_time(),
+                B.end_time(),
+                B.created_at(),
+                B.metadata()
+            )
+        );
+      });
+
+      assertDoesNotThrow(() -> {
+        final var statement = connection.createStatement();
+        final var res = statement.executeQuery(
+            // language-sql
+            """
+            SELECT * FROM merlin.derived_events ORDER BY start_time;
+            """
+        );
+
+        String[] expected_keys = {};
+        compareLists(expected_keys, res, "event_key");
+      });
+    }
+
+    ////////////////////////// RULE 4 //////////////////////////
+    //  An External Event who shares an ID with an External Event in a later External Source will always be
+    //            replaced.
+    //    - demonstrate with completely sparse events, different types too, but latest one wins
+
+    /*
+        Completely sparse sources, just to purely illustrate rule 4 and that it works.
+            A:                   ++++aaa+++++
+            B:                                  +++++aaaaa+
+            C:   +++++aaaa+++++
+     */
+    @Test
+    void rule4() {
+      assertDoesNotThrow(() -> {
+        ExternalSource A = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T01:30:00Z", "2024-01-01T02:30:00Z", ca, mt);
+        ExternalSource B = new ExternalSource("B", st, dg, "2024-01-02T00:00:00Z", "2024-01-01T03:00:00Z", "2024-01-01T04:00:00Z", ca, mt);
+        ExternalSource C = new ExternalSource("C", st, dg, "2024-01-03T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+
+        ExternalEvent e1 = createEvent("a", "2024-01-01T01:50:00Z", "00:10:00", A); // negated by empty space
+        ExternalEvent e2 = createEvent("a", "2024-01-01T03:40:00Z", "00:15:00", B); // negated by empty space
+        ExternalEvent e3 = createEvent("a", "2024-01-01T00:30:00Z", "00:20:00", C); // negated by empty space
+        merlinHelper.insertTypesForEvent(e1, A);
+        merlinHelper.insertTypesForEvent(e2, B);
+        merlinHelper.insertTypesForEvent(e3, C);
+      });
+
+      assertDoesNotThrow(() -> {
+        final var statement = connection.createStatement();
+        final var res = statement.executeQuery(
+            // language-sql
+            """
+            SELECT * FROM merlin.derived_events ORDER BY start_time;
+            """
+        );
+
+        String[] expected_keys = {"a"};
+        // only 1 expected result
+        assertTrue(res.next());
+        assertEquals("a", res.getString("event_key"));
+        assertEquals("C", res.getString("source_key"));
+        assertEquals("{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}", res.getString("source_range"));
+        assertFalse(res.next());
+      });
+    }
   }
 
   // Generally, no two sources, regardless of overlap, can have the same valid_at. We demonstrate this with sparse sources. Don't even need events to demonstrate.
@@ -630,7 +764,11 @@ public class ExternalEventTests {
     });
   }
 
-  // TODO: add test demonstrating that a source can have two events occurring at the same time, of the same type and all
+  // TODO: add test to ensure if event spills out of bounds of source, error thrown
+
+  // TODO: add tests about external source bounds
+
+  // TODO: add test demonstrating that a source can have two events occurring at the same time, of the same type and all (must have diff keys...see below)
 
   // TODO: add test demonstrating that two events, even if totally sparse, bearing same key in same source not possible
 
