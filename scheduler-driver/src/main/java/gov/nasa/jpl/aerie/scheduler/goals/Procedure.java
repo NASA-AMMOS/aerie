@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan;
 import gov.nasa.jpl.aerie.scheduler.plan.SchedulerToProcedurePlanAdapter;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.solver.ConflictSatisfaction;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -84,8 +85,8 @@ public class Procedure extends Goal {
     final var evaluation = eval.forGoal(this);
     for (final var activity : newActivities) {
       plan.add(activity);
-      evaluation.associate(activity, true);
+      evaluation.associate(activity, true, null);
     }
-    evaluation.setScore(0.0);
+    evaluation.setConflictSatisfaction(null, ConflictSatisfaction.SAT);
   }
 }
