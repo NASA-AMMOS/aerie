@@ -296,7 +296,10 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       statement.executeUpdate(
           // language-sql
           """
-          INSERT INTO merlin.external_event_type VALUES ('%s');
+          INSERT INTO
+            merlin.external_event_type
+          VALUES ('%s')
+          ON CONFLICT(name) DO NOTHING;
           """.formatted(externalEvent.event_type_name)
       );
 
@@ -304,7 +307,10 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       statement.executeUpdate(
           // language-sql
           """
-          INSERT INTO merlin.external_source_type VALUES ('%s');
+          INSERT INTO
+            merlin.external_source_type
+          VALUES ('%s')
+          ON CONFLICT(name) DO NOTHING;
           """.formatted(externalSource.source_type_name)
       );
 
@@ -312,7 +318,10 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       statement.executeUpdate(
           // language-sql
           """
-          INSERT INTO merlin.derivation_group VALUES ('%s', '%s');
+          INSERT INTO
+            merlin.derivation_group
+          VALUES ('%s', '%s')
+          ON CONFLICT(name, source_type_name) DO NOTHING;
           """.formatted(externalEvent.derivation_group_name, externalSource.source_type_name)
       );
 
@@ -320,7 +329,10 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       statement.executeUpdate(
           // language-sql
           """
-          INSERT INTO merlin.external_source VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');
+          INSERT INTO
+            merlin.external_source
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+          ON CONFLICT(key, derivation_group_name) DO NOTHING;
           """.formatted(
               externalSource.key,
               externalSource.source_type_name,
@@ -337,7 +349,10 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       statement.executeUpdate(
           // language-sql
           """
-          INSERT INTO merlin.external_event VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');
+          INSERT INTO
+            merlin.external_event
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')
+          ON CONFLICT(key, source_key, derivation_group_name, event_type_name) DO NOTHING;
           """.formatted(
               externalEvent.key,
               externalEvent.event_type_name,
