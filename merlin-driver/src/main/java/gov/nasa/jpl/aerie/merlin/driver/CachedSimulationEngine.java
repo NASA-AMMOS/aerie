@@ -27,7 +27,7 @@ public record CachedSimulationEngine(
     // Specify a topic on which tasks can log the activity they're associated with.
     final var activityTopic = new Topic<ActivityDirectiveId>();
     try {
-      engine.init(missionModel.getResources(), missionModel.getDaemon());
+      engine.init(false);
 
       return new CachedSimulationEngine(
           Duration.MIN_VALUE,

@@ -116,9 +116,9 @@ public final class SimulationEngine implements AutoCloseable {
 
   public final SpanInfo spanInfo = new SpanInfo(this);
 
-  private final HashMap<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
+  private Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
   private final Set<SimulatedActivityId> removedActivities = new HashSet<>();
-  private final HashMap<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
+  private Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
   private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
@@ -215,6 +215,7 @@ public final class SimulationEngine implements AutoCloseable {
     elapsedTime = other.elapsedTime;
 
     timeline = new TemporalEventSource();
+    setCurTime(other.curTime());
     cells = new LiveCells(timeline, other.cells);
     referenceTimeline = other.combineTimeline();
 
@@ -245,27 +246,32 @@ public final class SimulationEngine implements AutoCloseable {
     missionModel = other.missionModel;
   }
 
-  /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
-  public void init(Map<String, Resource<?>> resources, TaskFactory<Unit> daemons) throws Throwable {
-    // Begin tracking all resources.
-    for (final var entry : resources.entrySet()) {
+  private void startDaemons(Duration time) {
+    try {
+      scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
+      step(Duration.MAX_VALUE, $ -> {});
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void trackResources() {
+    // Begin tracking any resources that have not already been simulated.
+    for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-
-      this.trackResource(name, resource, elapsedTime);
+      trackResource(name, resource, Duration.ZERO);
     }
+  }
+
+  /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
+  public void init(boolean rerunning) {
+    // Begin tracking all resources.
+    trackResources();
 
     // Start daemon task(s) immediately, before anything else happens.
-    this.scheduleTask(Duration.ZERO, daemons, null);
-    {
-      final var batch = this.extractNextJobs(Duration.MAX_VALUE);
-      final var results = this.performJobs(batch.jobs(), cells, curTime(), Duration.MAX_VALUE, missionModel.queryTopic);
-      for (final var commit : results.commits()) {
-        timeline.add(commit, curTime().duration(), curTime().index(), missionModel.queryTopic);
-      }
-      if (results.error.isPresent()) {
-        throw results.error.get();
-      }
+    if (!rerunning) {
+      startDaemons(curTime().duration());
     }
   }
 
@@ -280,6 +286,8 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public Duration getElapsedTime() {
+    var ct = curTime();
+    elapsedTime = ct.longerThan(elapsedTime) ? ct.duration() : elapsedTime;
     return elapsedTime;
   }
 
@@ -354,6 +362,9 @@ public final class SimulationEngine implements AutoCloseable {
       elapsedTime = Duration.max(elapsedTime, maximumTime); // avoid lowering elapsed time
       return new Status.AtDuration();
     }
+    if (nextTime.noShorterThan(maximumTime) && !hasJobsScheduledThrough(maximumTime)) {
+      return new Status.NoJobs();
+    }
 
     Set<Topic<?>> invalidatedTopics = new HashSet<>();
     final var realResourceUpdates = new HashMap<String, Pair<ValueSchema, RealDynamics>>();
@@ -402,13 +413,13 @@ public final class SimulationEngine implements AutoCloseable {
       // Run the jobs in this batch.
       final var batch = extractNextJobs(maximumTime);
       if (debug) System.out.println("step(): perform job batch at " + nextTime + " : " + batch.jobs().stream().map($ -> $.getClass()).toList());
-      if (batch.jobs().isEmpty()) return new Status.NoJobs();
-      final var results = performJobs(batch.jobs(), cells, curTime(), Duration.MAX_VALUE, getMissionModel().queryTopic);
+      //if (batch.jobs().isEmpty()) return new Status.NoJobs();
+      final var results = performJobs(batch.jobs(), cells, curTime(), Duration.MAX_VALUE, MissionModel.queryTopic);
       for (final var tip : results.commits()) {
 
         if (!(tip instanceof EventGraph.Empty) ||
             (!batch.jobs().isEmpty() && batch.jobs().stream().findFirst().get() instanceof JobId.TaskJobId)) {
-          this.timeline.add(tip, curTime().duration(), stepIndexAtTime, missionModel.queryTopic);
+          this.timeline.add(tip, curTime().duration(), stepIndexAtTime, MissionModel.queryTopic);
           //updateTaskInfo(tip);
           if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
           else throw new RuntimeException(
@@ -434,7 +445,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     if (debug) System.out.println("step(): end -- time = " + curTime() + ", step " + stepIndexAtTime);
-    return new Status.Nominal(elapsedTime, realResourceUpdates, dynamicResourceUpdates);
+    return new Status.Nominal(getElapsedTime(), realResourceUpdates, dynamicResourceUpdates);
   }
 
   private static <Dynamics> RealDynamics extractRealDynamics(final ResourceUpdates.ResourceUpdate<Dynamics> update) {
@@ -1912,6 +1923,7 @@ public final class SimulationEngine implements AutoCloseable {
       directiveToSimulatedActivityId.put(entry.getValue(), simActId);
       usedSimulatedActivityIds.add(entry.getValue().id());
     }
+    // Create SimulatedActivtyIds for spans that don't have them.
     long counter = 1L;
     for (final var span : this.spans.keySet()) {
       if (!spanInfo.isActivity(span)) continue;
@@ -1993,7 +2005,7 @@ public final class SimulationEngine implements AutoCloseable {
         ));
       }
     });
-    return new SimulationActivityExtract(startTime, elapsedTime, simulatedActivities, unfinishedActivities);
+    return new SimulationActivityExtract(startTime, getElapsedTime(), simulatedActivities, unfinishedActivities);
   }
 
   private TreeMap<Duration, List<EventGraph<EventRecord>>> createSerializedTimeline(
@@ -2070,7 +2082,7 @@ public final class SimulationEngine implements AutoCloseable {
     if (debug) System.out.println("computeResults(startTime=" + startTime + ", elapsedTime=" + elapsedTime + "...) at time " + curTime());
     final var combinedTimeline = this.combineTimeline();
     // Collect per-task information from the event graph.
-    final var spanInfo = computeSpanInfo(activityTopic, serializableTopics, combinedTimeline);
+    //final var spanInfo = computeSpanInfo(activityTopic, serializableTopics, combinedTimeline);
 
     // Extract profiles for every resource.
     final var resourceProfiles = resourceManager.computeProfiles(elapsedTime);
@@ -2078,6 +2090,8 @@ public final class SimulationEngine implements AutoCloseable {
     final var discreteProfiles = resourceProfiles.discreteProfiles();
 
     final var activityResults = computeActivitySimulationResults(startTime, spanInfo);
+    simulatedActivities = activityResults.simulatedActivities;
+    unfinishedActivities = activityResults.unfinishedActivities;
 
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
     for (final var serializableTopic : serializableTopics.values()) {
@@ -2088,6 +2102,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var serializedTimeline = createSerializedTimeline(
         combinedTimeline,
         serializableTopics,
+        // TODO -- This is redundant to spanToSimulatedActivities() in computeActivitySimulationResults()
         spanToSimulatedActivities(spanInfo),
         serializableTopicToId
     );
@@ -2570,6 +2585,8 @@ public final class SimulationEngine implements AutoCloseable {
       SimulatedActivity simulatedActivity = simulatedActivities.get(activityDirectiveId);
       if (startOffset == null || startOffset == Duration.MAX_VALUE) {
         if (simulatedActivity != null) {
+          // TODO -- not possible to get here?  See println below.
+          System.out.println("It is not possible to reach this code because simulatedActivities should be empty.");
           Instant actStart = simulatedActivity.start();
           startOffset = Duration.minus(actStart, this.startTime);
         } else {
@@ -2586,11 +2603,15 @@ public final class SimulationEngine implements AutoCloseable {
       }
       // TODO: What if there is no activityDirectiveId?
       scheduleTask(startOffset, emitAndThen(activityDirectiveId, defaultActivityTopic, task), taskId);
+      // TODO: No need to emit(), right?  So, what about below instead?
+      // scheduleTask(startOffset, task, taskId);
     } else {
       // We have a TaskFactory even though it's not an activity or daemon -- maybe a cached TaskFactory to avoid rerunning parents
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
         scheduleTask(startOffset, factory, taskId);  // TODO: Emit something like with emitAndThen() in the isAct case below?
+        // TODO: Should that be       scheduler1.startActivity(activityId, activityTopic);
+        //       Maybe just throw an exception for this else case that probably shouldn't happen.
       } else {
         throw new RuntimeException("Can't reschedule task " + taskId + " at time offset " + startOffset +
                                    (factory == null ? " because there is no TaskFactory." : "."));
@@ -2680,7 +2701,7 @@ public final class SimulationEngine implements AutoCloseable {
       var commits = entry.getValue();
       int step = 0;   // TODO -- not sure if we can just increment the step number as we do in this loop -BJC
       for (var c : commits) {
-        combinedTimeline.add(c.events(), entry.getKey(), step++, getMissionModel().queryTopic);
+        combinedTimeline.add(c.events(), entry.getKey(), step++, MissionModel.queryTopic);
       }
     }
 
@@ -2688,7 +2709,7 @@ public final class SimulationEngine implements AutoCloseable {
       var commits = entry.getValue();
       int step = 0;
       for (var c : commits) {
-        combinedTimeline.add(c.events(), entry.getKey(), step++, getMissionModel().queryTopic);
+        combinedTimeline.add(c.events(), entry.getKey(), step++, MissionModel.queryTopic);
       }
     }
     return combinedTimeline;

@@ -24,7 +24,7 @@ public final class MissionModel<Model> {
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
   private final Map<Topic<?>, SerializableTopic<?>> topics;
-  public final Topic<Topic<?>> queryTopic = new Topic<>();
+  public static final Topic<Topic<?>> queryTopic = new Topic<>();
   private final DirectiveTypeRegistry<Model> directiveTypes;
   private final Map<String, TaskFactory<?>> daemons;
   private final Map<TaskFactory<?>, String> daemonIds;

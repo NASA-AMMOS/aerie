@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -77,15 +78,7 @@ public final class SimulationDriver<Model> {
 
     this.engine = new SimulationEngine(missionModel.getInitialCells(), startTime, missionModel, oldEngine);
 
-    // Begin tracking any resources that have not already been simulated.
-    trackResources();
-
-    // Start daemon task(s) immediately, before anything else happens.
-    try {
-      startDaemons(curTime().duration());
-    } catch (Throwable e) {
-      throw new RuntimeException(e);
-    }
+    engine.init(rerunning);
 
     // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
     engine.scheduleTask(
@@ -188,8 +181,6 @@ public final class SimulationDriver<Model> {
       simulationExtentConsumer.accept(curTime().duration());
 
       try {
-        engine.init(missionModel.getResources(), missionModel.getDaemon());
-
         // Get all activities as close as possible to absolute time
         // Schedule all activities.
         // Using HashMap explicitly because it allows `null` as a key.
@@ -217,6 +208,8 @@ public final class SimulationDriver<Model> {
 
         // Drive the engine until we're out of time or until simulation is canceled.
         // TERMINATION: Actually, we might never break if real time never progresses forward.
+//        Duration t = Duration.ZERO;
+//        while (!simulationCanceled.get() && (engine.hasJobsScheduledThrough(simulationDuration) || t.noLongerThan(simulationDuration))) {
         engineLoop:
         while (!simulationCanceled.get()) {
           if(simulationCanceled.get()) break;
@@ -326,13 +319,6 @@ public final class SimulationDriver<Model> {
   void simulateTask(final TaskFactory<Return> task) {
     if (debug) System.out.println("SimulationDriver.simulateTask(" + task + ")");
 
-      // Track resources and kick off daemon tasks
-      try {
-        engine.init(missionModel.getResources(), missionModel.getDaemon());
-      } catch (Throwable t) {
-        throw new RuntimeException("Exception thrown while starting daemon tasks", t);
-      }
-
       // Schedule the task.
       final var spanId = engine.scheduleTask(curTime().duration(), task, null);
 
@@ -402,13 +388,13 @@ public final class SimulationDriver<Model> {
               activityTopic)));
     }
 
-    return executor -> {
-      final var task = taskFactory.create(executor);
-      return Task
-          .callingWithSpan(
-              Task.emitting(directiveId, activityTopic) //SRS HERE change to starting()
-                  .andThen(task))
-          .andThen(
+    return executor -> scheduler0 ->
+        TaskStatus.calling(
+              InSpan.Fresh,
+              (TaskFactory<Output>) (executor1 -> scheduler1 -> {
+                scheduler1.startDirective(directiveId, activityTopic);
+                return taskFactory.create(executor1).step(scheduler1);
+              }),
               Task.spawning(
                   dependents
                       .stream()
@@ -417,7 +403,6 @@ public final class SimulationDriver<Model> {
                               TaskFactory.delaying(dependent.offset())
                                          .andThen(dependent.task()))
                       .toList()));
-    };
   }
 
   private static <Model> TaskFactory<?> deserializeActivity(MissionModel<Model> missionModel, SerializedActivity serializedDirective) {

@@ -165,7 +165,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public EventGraph<Event> withoutReadEvents(EventGraph<Event> graph) {
     EventGraph<Event> g = noReadEvents.get(graph);
     if (g == null) {
-      g = graph.filter(e -> e.topic() != missionModel.queryTopic);
+      g = graph.filter(e -> e.topic() != MissionModel.queryTopic);
       noReadEvents.put(graph, g);
     }
     return g;
@@ -1018,6 +1018,9 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       if (debug) System.out.println("getOrCreateCellInCache(" + topic + ", " + endTime + "): popped " + cell + " at " + entry.getKey());
       inner.remove(entry.getKey());
     } else {
+      if (missionModel == null) {
+        throw new NoSuchElementException("No MissionModel initial cells to copy!");
+      }
       cell = missionModel.getInitialCells().getCells(topic).stream().findFirst().orElseThrow().cell.duplicate();
       if (debug) System.out.println("getOrCreateCellInCache(" + topic + ", " + endTime + "): duplicated " + cell);
     }

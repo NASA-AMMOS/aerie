@@ -304,7 +304,7 @@ public final class LocalMissionModelService implements MissionModelService {
       final CreateSimulationMessage message,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
-      final SimulationResourceManager resourceManager)
+        final SimulationResourceManager resourceManager)
   throws NoSuchMissionModelException
   {
     long accumulatedCpuTime = 0;  // nanoseconds

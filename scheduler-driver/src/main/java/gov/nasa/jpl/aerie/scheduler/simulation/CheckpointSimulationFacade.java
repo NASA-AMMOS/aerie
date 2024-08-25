@@ -32,7 +32,7 @@ import static gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver.onceAl
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.scheduleFromPlan;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.updatePlanWithChildActivities;
 
-public class CheckpointSimulationFacade implements SimulationFacade {
+public class  CheckpointSimulationFacade implements SimulationFacade {
   private static final Logger LOGGER = LoggerFactory.getLogger(CheckpointSimulationFacade.class);
   private final MissionModel<?> missionModel;
   private final InMemoryCachedEngineStore cachedEngines;
