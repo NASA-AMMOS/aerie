@@ -127,6 +127,9 @@ public class EquationSolvingAlgorithms {
         final int maxIteration)
     throws ExceededMaxIterationException, SchedulingInterruptedException
     {
+      // the number of possible values may be less than the number of iterations, so stop after all have been visited.
+      long numTimepoints = max.in(Duration.MICROSECONDS) - min.in(Duration.MICROSECONDS) - 1;
+      long maxIters = Long.min(maxIteration, numTimepoints);
       var cur = init;
       int i = 0;
       do {
@@ -141,8 +144,8 @@ public class EquationSolvingAlgorithms {
           }
         }
         cur = chooseRandomX(min, max);
-        //if min == max, another call to random will have no effect and thus we should exit
-      } while(i < maxIteration && !min.isEqualTo(max));
+        //if all timepoints have been visited or min == max, another call to random will have no effect and thus we should exit
+      } while(i < maxIters);
       throw new ExceededMaxIterationException();
     }
 
