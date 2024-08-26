@@ -1,20 +1,15 @@
 package gov.nasa.jpl.aerie.database;
 
-import gov.nasa.jpl.aerie.database.PlanCollaborationTests.Activity;
 import org.junit.jupiter.api.*;
-import org.postgresql.util.PGInterval;
-import org.postgresql.util.PGobject;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLData;
 import java.sql.SQLException;
-import java.time.Duration;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
 import gov.nasa.jpl.aerie.database.MerlinDatabaseTestHelper.ExternalEvent;
 import gov.nasa.jpl.aerie.database.MerlinDatabaseTestHelper.ExternalSource;
 import org.postgresql.util.PSQLException;
@@ -86,14 +81,14 @@ public class ExternalEventTests {
     }
   }
 
-  void upload_source() throws SQLException {
+  void upload_source(String dg) throws SQLException {
     try (final var statement = connection.createStatement()) {
       // insert external source types
       statement.executeUpdate(
           // language=sql
           """
-          INSERT INTO merlin.external_source_type VALUES ('Derivation Test');
-          """
+          INSERT INTO merlin.external_source_type VALUES ('%s')
+          """.formatted(st)
       );
 
       // insert external event types
@@ -111,37 +106,37 @@ public class ExternalEventTests {
       statement.executeUpdate(
           // language=sql
           """
-          INSERT INTO merlin.derivation_group VALUES ('Derivation Test Default', 'Derivation Test');
-          """
+          INSERT INTO merlin.derivation_group VALUES ('%s', '%s');
+          """.formatted(dg, st)
       );
 
       // insert external sources
       statement.executeUpdate(
           // language=sql
           """
-          INSERT INTO merlin.external_source VALUES ('Derivation_Test_00.json', 'Derivation Test', 'Derivation Test Default', '2024-01-18 00:00:00+00', '2024-01-05 00:00:00+00', '2024-01-11 00:00:00+00', '2024-08-21 22:36:12.858009+00', '{}');
-          INSERT INTO merlin.external_source VALUES ('Derivation_Test_01.json', 'Derivation Test', 'Derivation Test Default', '2024-01-19 00:00:00+00', '2024-01-01 00:00:00+00', '2024-01-07 00:00:00+00', '2024-08-21 22:36:19.381275+00', '{}');
-          INSERT INTO merlin.external_source VALUES ('Derivation_Test_02.json', 'Derivation Test', 'Derivation Test Default', '2024-01-20 00:00:00+00', '2024-01-03 00:00:00+00', '2024-01-10 00:00:00+00', '2024-08-21 22:36:23.340941+00', '{}');
-          INSERT INTO merlin.external_source VALUES ('Derivation_Test_03.json', 'Derivation Test', 'Derivation Test Default', '2024-01-21 00:00:00+00', '2024-01-01 12:00:00+00', '2024-01-02 12:00:00+00', '2024-08-21 22:36:28.365244+00', '{}');
-          """
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_00.json', '%s', '%s', '2024-01-18 00:00:00+00', '2024-01-05 00:00:00+00', '2024-01-11 00:00:00+00', '2024-08-21 22:36:12.858009+00', '{}');
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_01.json', '%s', '%s', '2024-01-19 00:00:00+00', '2024-01-01 00:00:00+00', '2024-01-07 00:00:00+00', '2024-08-21 22:36:19.381275+00', '{}');
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_02.json', '%s', '%s', '2024-01-20 00:00:00+00', '2024-01-03 00:00:00+00', '2024-01-10 00:00:00+00', '2024-08-21 22:36:23.340941+00', '{}');
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_03.json', '%s', '%s', '2024-01-21 00:00:00+00', '2024-01-01 12:00:00+00', '2024-01-02 12:00:00+00', '2024-08-21 22:36:28.365244+00', '{}');
+          """.formatted(st, dg, st, dg, st, dg, st, dg)
       );
 
       // insert external events
       statement.executeUpdate(
           // language=sql
           """
-          INSERT INTO merlin.external_event VALUES ('2', 'DerivationD', 'Derivation_Test_00.json', 'Derivation Test Default', '2024-01-05 23:00:00+00', '01:10:00', '{"notes": "subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key", "rules": [3, 4], "should_present": false}');
-          INSERT INTO merlin.external_event VALUES ('7', 'DerivationC', 'Derivation_Test_00.json', 'Derivation Test Default', '2024-01-09 23:00:00+00', '02:00:00', '{"notes": "subsumed by test 02, even though end lies outside of 02, because start time during 01", "rules": [3], "should_present": false}');
-          INSERT INTO merlin.external_event VALUES ('8', 'DerivationB', 'Derivation_Test_00.json', 'Derivation Test Default', '2024-01-10 11:00:00+00', '01:05:00', '{"notes": "after everything, subsumed by nothing despite being from oldest file", "rules": [1], "should_present": true}');
-          INSERT INTO merlin.external_event VALUES ('1', 'DerivationA', 'Derivation_Test_01.json', 'Derivation Test Default', '2024-01-01 00:00:00+00', '02:10:00', '{"notes": "before everything, subsumed by nothing", "rules": [1], "should_present": true}');
-          INSERT INTO merlin.external_event VALUES ('2', 'DerivationA', 'Derivation_Test_01.json', 'Derivation Test Default', '2024-01-01 12:00:00+00', '02:10:00', '{"notes": "overwritten by key in later file, even with type change", "rules": [4], "should_present": false}');
-          INSERT INTO merlin.external_event VALUES ('3', 'DerivationB', 'Derivation_Test_01.json', 'Derivation Test Default', '2024-01-02 23:00:00+00', '03:00:00', '{"notes": "starts before next file though occurs during next file, still included", "rules": [2], "should_present": true}');
-          INSERT INTO merlin.external_event VALUES ('4', 'DerivationB', 'Derivation_Test_01.json', 'Derivation Test Default', '2024-01-05 21:00:00+00', '03:00:00', '{"notes": "start subsumed by 02, not included in final result", "rules": [3], "should_present": false}');
-          INSERT INTO merlin.external_event VALUES ('5', 'DerivationC', 'Derivation_Test_02.json', 'Derivation Test Default', '2024-01-05 23:00:00+00', '01:10:00', '{"notes": "not subsumed, optionally change this event to have key 6 and ensure this test fails", "rules": [1], "should_present": true}');
-          INSERT INTO merlin.external_event VALUES ('6', 'DerivationC', 'Derivation_Test_02.json', 'Derivation Test Default', '2024-01-06 12:00:00+00', '02:00:00', '{"notes": "not subsumed", "rules": [1], "should_present": true}');
-          INSERT INTO merlin.external_event VALUES ('2', 'DerivationB', 'Derivation_Test_02.json', 'Derivation Test Default', '2024-01-09 11:00:00+00', '01:05:00', '{"notes": "replaces 2 in test 01, despite different event type", "rules": [4], "should_present": true}');
-          INSERT INTO merlin.external_event VALUES ('9', 'DerivationC', 'Derivation_Test_03.json', 'Derivation Test Default', '2024-01-02 00:00:00+00', '01:00:00', '{"notes": "not subsumed", "rules": [1], "should_present": true}');
-          """
+          INSERT INTO merlin.external_event VALUES ('2', 'DerivationD', 'Derivation_Test_00.json', '%s', '2024-01-05 23:00:00+00', '01:10:00', '{"notes": "subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key", "rules": [3, 4], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('7', 'DerivationC', 'Derivation_Test_00.json', '%s', '2024-01-09 23:00:00+00', '02:00:00', '{"notes": "subsumed by test 02, even though end lies outside of 02, because start time during 01", "rules": [3], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('8', 'DerivationB', 'Derivation_Test_00.json', '%s', '2024-01-10 11:00:00+00', '01:05:00', '{"notes": "after everything, subsumed by nothing despite being from oldest file", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('1', 'DerivationA', 'Derivation_Test_01.json', '%s', '2024-01-01 00:00:00+00', '02:10:00', '{"notes": "before everything, subsumed by nothing", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('2', 'DerivationA', 'Derivation_Test_01.json', '%s', '2024-01-01 12:00:00+00', '02:10:00', '{"notes": "overwritten by key in later file, even with type change", "rules": [4], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('3', 'DerivationB', 'Derivation_Test_01.json', '%s', '2024-01-02 23:00:00+00', '03:00:00', '{"notes": "starts before next file though occurs during next file, still included", "rules": [2], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('4', 'DerivationB', 'Derivation_Test_01.json', '%s', '2024-01-05 21:00:00+00', '03:00:00', '{"notes": "start subsumed by 02, not included in final result", "rules": [3], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('5', 'DerivationC', 'Derivation_Test_02.json', '%s', '2024-01-05 23:00:00+00', '01:10:00', '{"notes": "not subsumed, optionally change this event to have key 6 and ensure this test fails", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('6', 'DerivationC', 'Derivation_Test_02.json', '%s', '2024-01-06 12:00:00+00', '02:00:00', '{"notes": "not subsumed", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('2', 'DerivationB', 'Derivation_Test_02.json', '%s', '2024-01-09 11:00:00+00', '01:05:00', '{"notes": "replaces 2 in test 01, despite different event type", "rules": [4], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('9', 'DerivationC', 'Derivation_Test_03.json', '%s', '2024-01-02 00:00:00+00', '01:00:00', '{"notes": "not subsumed", "rules": [1], "should_present": true}');
+          """.formatted(dg, dg, dg, dg, dg, dg, dg, dg, dg, dg, dg)
       );
     }
   }
@@ -149,14 +144,14 @@ public class ExternalEventTests {
   // verify a simple upload works
   @Test
   void uploadWithoutError() {
-    assertDoesNotThrow(this::upload_source);
+    assertDoesNotThrow(() -> upload_source(dg));
   }
 
   // test the upload works by confirming derived events associated with upload perform as expected
   @Test
   void basicDerivedEvents() {
     // upload all source data
-    assertDoesNotThrow(this::upload_source);
+    assertDoesNotThrow(() -> upload_source(dg));
 
     // check that derived events in our prewritten case has the correct keys
     assertDoesNotThrow(() -> {
@@ -178,7 +173,7 @@ public class ExternalEventTests {
   @Test
   void derivationGroupComp() {
     // upload all source data
-    assertDoesNotThrow(this::upload_source);
+    assertDoesNotThrow(() -> upload_source(dg));
 
     // check that derivation_group_comp has 1 entry, with 4 sources and 7 events
     assertDoesNotThrow(() -> {
@@ -216,7 +211,7 @@ public class ExternalEventTests {
     // though it is possible to rearrange this order, so long as events are deleted before their types, sources deleted
     //    before their types but after events, and derivation groups deleted after linked sources removed but before
     //    source types removed
-    assertDoesNotThrow(this::upload_source);
+    assertDoesNotThrow(() -> upload_source(dg));
     assertDoesNotThrow(() -> {
       final var statement = connection.createStatement();
 
@@ -233,7 +228,7 @@ public class ExternalEventTests {
     });
 
     // any other order throws an error; arbitrarily we delete external source types before derivation groups, breaking them:
-    assertDoesNotThrow(this::upload_source);
+    assertDoesNotThrow(() -> upload_source(dg));
     assertThrows(SQLException.class, () -> {
       final var statement = connection.createStatement();
 
@@ -915,14 +910,310 @@ public class ExternalEventTests {
     });
   }
 
-  // TODO: test all constraints (namely duplicates and deletions)
-  //    - duplicated source (works across DG, not in DG)
-  //    - duplicated DG (not at all allowable, even if diff source type)
-  //    - deleting DG with existing plan link
-  //    - deleting DG with source
-  //    - deleting source type with source
-  //    - deleting event type with event
+  // duplicated source
+  @Test
+  void duplicateSource() {
 
-  // TODO: extra test for derived events that manages several derivation groups (do derivation test twice but with new DG name, should be no overlap!)
+    ExternalSource failing = new ExternalSource(
+        "Derivation_Test_00.json",
+        "Derivation Test",
+        "Derivation Test Default",
+        "2024-01-18 00:00:00+00",
+        "2024-01-05 00:00:00+00",
+        "2024-01-11 00:00:00+00",
+        ca,
+        mt
+    ); // same name and dg
+    ExternalSource succeeding = new ExternalSource(
+        "Derivation_Test_00.json",
+        "Derivation Test",
+        "Derivation Test Default 2",
+        "2024-01-18 00:00:00+00",
+        "2024-01-05 00:00:00+00",
+        "2024-01-11 00:00:00+00",
+        ca,
+        mt
+    ); // same name, diff dg
 
+
+    assertDoesNotThrow(() -> upload_source(dg));
+    assertThrowsExactly(PSQLException.class, () -> {
+      final var statement = connection.createStatement();
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO
+            merlin.external_source
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+          """.formatted(
+              failing.key(),
+              failing.source_type_name(),
+              failing.derivation_group_name(),
+              failing.valid_at(),
+              failing.start_time(),
+              failing.end_time(),
+              failing.created_at(),
+              failing.metadata()
+          )
+      );
+    });
+
+    assertDoesNotThrow(() -> {
+      final var statement = connection.createStatement();
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO merlin.derivation_group VALUES ('Derivation Test Default 2', 'Derivation Test')
+          """
+      );
+      statement.executeUpdate(
+        // language-sql
+        """
+        INSERT INTO
+          merlin.external_source
+        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        """.formatted(
+            succeeding.key(),
+            succeeding.source_type_name(),
+            succeeding.derivation_group_name(),
+            succeeding.valid_at(),
+            succeeding.start_time(),
+            succeeding.end_time(),
+            succeeding.created_at(),
+            succeeding.metadata()
+        )
+      );
+    });
+  }
+
+  // duplicated dg name
+  @Test
+  void duplicatedDG() {
+    final AtomicReference<Statement> statement = new AtomicReference<Statement>();
+    assertDoesNotThrow(() -> {
+      upload_source(dg);
+      statement.set(connection.createStatement());
+      statement.get().executeUpdate("INSERT INTO merlin.external_source_type VALUES ('New Name');");
+    });
+
+    assertThrowsExactly(PSQLException.class, () -> {
+      statement.get().executeUpdate("INSERT INTO merlin.derivation_group VALUES ('%s', 'New Name');".formatted(dg));
+    });
+  }
+
+  // deleting DG with existing plan link
+  @Test
+  void deleteDGwithRemainingPlanLink() {
+    final AtomicReference<Statement> statement = new AtomicReference<Statement>();
+    assertDoesNotThrow(() -> {
+      statement.set(connection.createStatement());
+
+      // create plan with minimal input (doesn't require a model!)
+      statement.get().executeUpdate("INSERT INTO merlin.plan (name, duration, start_time) VALUES ('%s', '%s', '%s');"
+                                        .formatted("sample_plan", "00:20:00", "2024-01-01"));
+
+      // create a source type (no sources)
+      statement.get().executeUpdate("INSERT INTO merlin.external_source_type VALUES ('%s');"
+                                        .formatted(st));
+
+      // create a Derivation Group (no sources)
+      statement.get().executeUpdate("INSERT INTO merlin.derivation_group (name, source_type_name) VALUES ('%s', '%s');"
+                                        .formatted(dg, st));
+
+      // create a link
+      statement.get().executeUpdate("INSERT INTO merlin.plan_derivation_group VALUES ('%s', '%s');"
+                                        .formatted("1", dg));
+    });
+
+    // delete the DG (expect error)
+    assertThrowsExactly(PSQLException.class, () -> {
+      statement.get().executeUpdate("DELETE FROM merlin.plan_derivation_group WHERE name='%s';"
+                                        .formatted(dg));
+    });
+  }
+
+  // deleting DG with source
+  @Test
+  void deleteDGwithRemainingSource() {
+    ExternalSource src = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T00:30:00Z", ca, mt);
+
+    final AtomicReference<Statement> statement = new AtomicReference<Statement>();
+    assertDoesNotThrow(() -> {
+      statement.set(connection.createStatement());
+
+      // create a source type
+      statement.get().executeUpdate("INSERT INTO merlin.external_source_type VALUES ('%s');"
+                                        .formatted(st));
+
+      // create a Derivation Group
+      statement.get().executeUpdate("INSERT INTO merlin.derivation_group (name, source_type_name) VALUES ('%s', '%s');"
+                                        .formatted(dg, st));
+
+      // create a source
+      statement.get().executeUpdate("""
+          INSERT INTO
+            merlin.external_source
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+          ON CONFLICT(key, derivation_group_name) DO NOTHING;
+          """.formatted(
+          src.key(),
+          src.source_type_name(),
+          src.derivation_group_name(),
+          src.valid_at(),
+          src.start_time(),
+          src.end_time(),
+          src.created_at(),
+          src.metadata()
+      ));
+    });
+
+    // delete the DG (expect error)
+    assertThrowsExactly(PSQLException.class, () -> {
+      statement.get().executeUpdate("DELETE FROM merlin.derivation_group WHERE name='%s';"
+                                        .formatted(dg));
+    });
+  }
+
+  // deleting source type with source
+  @Test
+  void deleteSourceTypeWithRemainingSource() {
+    ExternalSource src = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T00:30:00Z", ca, mt);
+
+    final AtomicReference<Statement> statement = new AtomicReference<Statement>();
+    assertDoesNotThrow(() -> {
+      statement.set(connection.createStatement());
+
+      // create a source type
+      statement.get().executeUpdate("INSERT INTO merlin.external_source_type VALUES ('%s');"
+                                        .formatted(st));
+
+      // create a Derivation Group
+      statement.get().executeUpdate("INSERT INTO merlin.derivation_group (name, source_type_name) VALUES ('%s', '%s');"
+                                        .formatted(dg, st));
+
+      // create a source
+      statement.get().executeUpdate("""
+          INSERT INTO
+            merlin.external_source
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+          ON CONFLICT(key, derivation_group_name) DO NOTHING;
+          """.formatted(
+          src.key(),
+          src.source_type_name(),
+          src.derivation_group_name(),
+          src.valid_at(),
+          src.start_time(),
+          src.end_time(),
+          src.created_at(),
+          src.metadata()
+      ));
+    });
+
+    // delete the source type (expect error)
+    assertThrowsExactly(PSQLException.class, () -> {
+      statement.get().executeUpdate("DELETE FROM merlin.external_source_type WHERE name='%s';"
+                                        .formatted(st));
+    });
+  }
+
+  // deleting event type with event
+  @Test
+  void deleteEventTypeWithRemainingEvent() {
+    ExternalSource src = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T00:30:00Z", ca, mt);
+    ExternalEvent evt = createEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
+
+    final AtomicReference<Statement> statement = new AtomicReference<Statement>();
+    assertDoesNotThrow(() -> {
+      statement.set(connection.createStatement());
+
+      // insert the event and all types
+      merlinHelper.insertTypesForEvent(evt, src);
+    });
+
+    // delete the event type (expect error)
+    assertThrowsExactly(PSQLException.class, () -> {
+      statement.get().executeUpdate("DELETE FROM merlin.external_event_type WHERE name='%s';"
+                                        .formatted(et));
+    });
+  }
+
+  // Extra, comprehensive test for derived events that manages several derivation groups
+  //    (this entails a derivation test running twice but with a new DG name, and verifying no overlap!
+  //     this test is effectively vacuous but is a good sanity check.)
+  @Test
+  void superDerivedEvents() {
+    // upload all source data, but twice (using different dgs, to prove non overlap in derivation)
+    String dg2 = dg + "_2";
+
+    assertDoesNotThrow(() -> upload_source(dg));
+    assertDoesNotThrow(() -> {
+      final var statement = connection.createStatement();
+
+      // insert derivation groups
+      statement.executeUpdate(
+          // language=sql
+          """
+          INSERT INTO merlin.derivation_group VALUES ('%s', '%s');
+          """.formatted(dg2, st)
+      );
+
+      // insert external sources
+      statement.executeUpdate(
+          // language=sql
+          """
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_00_1.json', '%s', '%s', '2024-01-18 00:00:00+00', '2024-01-05 00:00:00+00', '2024-01-11 00:00:00+00', '2024-08-21 22:36:12.858009+00', '{}');
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_01_1.json', '%s', '%s', '2024-01-19 00:00:00+00', '2024-01-01 00:00:00+00', '2024-01-07 00:00:00+00', '2024-08-21 22:36:19.381275+00', '{}');
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_02_1.json', '%s', '%s', '2024-01-20 00:00:00+00', '2024-01-03 00:00:00+00', '2024-01-10 00:00:00+00', '2024-08-21 22:36:23.340941+00', '{}');
+          INSERT INTO merlin.external_source VALUES ('Derivation_Test_03_1.json', '%s', '%s', '2024-01-21 00:00:00+00', '2024-01-01 12:00:00+00', '2024-01-02 12:00:00+00', '2024-08-21 22:36:28.365244+00', '{}');
+          """.formatted(st, dg2, st, dg2, st, dg2, st, dg2)
+      );
+
+      // insert external events
+      statement.executeUpdate(
+          // language=sql
+          """
+          INSERT INTO merlin.external_event VALUES ('2', 'DerivationD', 'Derivation_Test_00_1.json', '%s', '2024-01-05 23:00:00+00', '01:10:00', '{"notes": "subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key", "rules": [3, 4], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('7', 'DerivationC', 'Derivation_Test_00_1.json', '%s', '2024-01-09 23:00:00+00', '02:00:00', '{"notes": "subsumed by test 02, even though end lies outside of 02, because start time during 01", "rules": [3], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('8', 'DerivationB', 'Derivation_Test_00_1.json', '%s', '2024-01-10 11:00:00+00', '01:05:00', '{"notes": "after everything, subsumed by nothing despite being from oldest file", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('1', 'DerivationA', 'Derivation_Test_01_1.json', '%s', '2024-01-01 00:00:00+00', '02:10:00', '{"notes": "before everything, subsumed by nothing", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('2', 'DerivationA', 'Derivation_Test_01_1.json', '%s', '2024-01-01 12:00:00+00', '02:10:00', '{"notes": "overwritten by key in later file, even with type change", "rules": [4], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('3', 'DerivationB', 'Derivation_Test_01_1.json', '%s', '2024-01-02 23:00:00+00', '03:00:00', '{"notes": "starts before next file though occurs during next file, still included", "rules": [2], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('4', 'DerivationB', 'Derivation_Test_01_1.json', '%s', '2024-01-05 21:00:00+00', '03:00:00', '{"notes": "start subsumed by 02, not included in final result", "rules": [3], "should_present": false}');
+          INSERT INTO merlin.external_event VALUES ('5', 'DerivationC', 'Derivation_Test_02_1.json', '%s', '2024-01-05 23:00:00+00', '01:10:00', '{"notes": "not subsumed, optionally change this event to have key 6 and ensure this test fails", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('6', 'DerivationC', 'Derivation_Test_02_1.json', '%s', '2024-01-06 12:00:00+00', '02:00:00', '{"notes": "not subsumed", "rules": [1], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('2', 'DerivationB', 'Derivation_Test_02_1.json', '%s', '2024-01-09 11:00:00+00', '01:05:00', '{"notes": "replaces 2 in test 01, despite different event type", "rules": [4], "should_present": true}');
+          INSERT INTO merlin.external_event VALUES ('9', 'DerivationC', 'Derivation_Test_03_1.json', '%s', '2024-01-02 00:00:00+00', '01:00:00', '{"notes": "not subsumed", "rules": [1], "should_present": true}');
+          """.formatted(dg2, dg2, dg2, dg2, dg2, dg2, dg2, dg2, dg2, dg2, dg2)
+      );
+    });
+
+    // check that derived events in our prewritten case has the correct keys
+    assertDoesNotThrow(() -> {
+      final var statement = connection.createStatement();
+
+      // verify everything is present
+      var res = statement.executeQuery(
+          // language-sql
+          """
+          SELECT * FROM merlin.derived_events ORDER BY start_time;
+          """
+      );
+      String[] expected_keys = {"1", "1", "9", "9", "3", "3", "5", "5", "6", "6", "2", "2", "8", "8"};
+      compareLists(expected_keys, res, "event_key");
+
+      // verify for a given dg expected keys are correct, no overlap inside dg
+      res = statement.executeQuery(
+          // language-sql
+          """
+          SELECT * FROM merlin.derived_events WHERE derivation_group_name = '%s' ORDER BY start_time;
+          """.formatted(dg2)
+      );
+      String[] expected_keys_2 = {"1", "9", "3", "5", "6", "2", "8"};
+      compareLists(expected_keys_2, res, "event_key");
+    });
+  }
+
+
+  // TODO: box all final var statement statements into an AtomicReference, like in DuplicatedDG
+  // TODO: uniform formatting and usage of %s
 }
