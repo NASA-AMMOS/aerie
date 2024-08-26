@@ -6,7 +6,7 @@ create table merlin.external_source (
     valid_at timestamp with time zone not null,
     start_time timestamp with time zone not null,
     end_time timestamp with time zone not null,
-    CHECK (end_time >= start_time),
+    CHECK (end_time > start_time),
     created_at timestamp with time zone default now() not null,
     metadata jsonb,
 
