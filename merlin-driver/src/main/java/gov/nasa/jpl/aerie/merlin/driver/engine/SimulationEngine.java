@@ -350,6 +350,7 @@ public final class SimulationEngine implements AutoCloseable {
     nextTime = SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, Integer.MAX_VALUE));
     setCurTime(nextTime);
     stepIndexAtTime = nextTime.index();
+    elapsedTime = Duration.max(elapsedTime, nextTime.duration());  // avoid lowering elapsed time
     // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
     //   even if they occur at the same real time.
 
@@ -359,10 +360,15 @@ public final class SimulationEngine implements AutoCloseable {
                                     + ") past maximum ("
                                     + maximumTime
                                     + ")");
-      elapsedTime = Duration.max(elapsedTime, maximumTime); // avoid lowering elapsed time
       return new Status.AtDuration();
     }
-    if (nextTime.noShorterThan(maximumTime) && !hasJobsScheduledThrough(maximumTime)) {
+    if (nextTime.noShorterThan(maximumTime) && !hasJobsScheduledThrough(maximumTime) &&
+        (oldEngine == null || nextTime.isEqualTo(Duration.MAX_VALUE))) {
+      // TODO -- This never returns Status.NoJobs. Is that okay?  The develop branch (before inc sim) may not, either.
+      //return new Status.NoJobs();
+      return new Status.AtDuration();
+    }
+    if (!hasJobsScheduledThrough(maximumTime) && oldEngine == null) {
       return new Status.NoJobs();
     }
 

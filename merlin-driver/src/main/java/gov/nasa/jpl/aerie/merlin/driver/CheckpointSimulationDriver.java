@@ -282,6 +282,7 @@ public class CheckpointSimulationDriver {
         }
 
         final var status = engine.step(simulationDuration, simulationExtentConsumer);
+        elapsedTime = engine.getElapsedTime();
         switch (status) {
           case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
           case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
