@@ -31,7 +31,7 @@ comment on column sequencing.workspace.created_at is e''
 comment on column sequencing.workspace.updated_at is e''
   'Time the workspace was last updated.';
 comment on column sequencing.workspace.updated_by is e''
-  'THe user who last updated the workspace.';
+  'The user who last updated the workspace.';
 
 create trigger set_timestamp
   before update on sequencing.workspace
