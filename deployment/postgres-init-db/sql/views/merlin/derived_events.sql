@@ -56,6 +56,5 @@ from ( select rule1_3.source_key,
 where rn = 1
 order by start_time;
 
-alter view if exists merlin.derived_events owner to aerie;
 comment on view  merlin.derived_events is e''
   'A view detailing all derived events from the ';

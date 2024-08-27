@@ -43,6 +43,5 @@ select
 	)
 	group by name, source_type_name, sources, derived_total;
 
-alter view if exists merlin.derivation_group_comp owner to aerie;
 comment on view  merlin.derivation_group_comp is e''
   'A view detailing all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. As such, a new view was created to lighten the load.';

@@ -12,7 +12,3 @@ begin
 	return ret;
 end
 $$;
-
-alter function merlin.subtract_later_ranges(tstzmultirange, tstzmultirange[])
-    owner to aerie;
-grant execute on function merlin.subtract_later_ranges(tstzmultirange, tstzmultirange[]) to aerie;
