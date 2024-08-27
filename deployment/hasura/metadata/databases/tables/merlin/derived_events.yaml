@@ -21,8 +21,9 @@ object_relationships:
         insertion_order: null
         column_mapping:
           event_type_name: event_type_name
-          start_time: start_time
           event_key: key
+          source_key: source_key
+          derivation_group_name: derivation_group_name
 select_permissions:
   - role: aerie_admin
     permission:
