@@ -114,7 +114,7 @@ public final class SimulationEngine implements AutoCloseable {
   public Map<ActivityDirectiveId, ActivityDirective> scheduledDirectives = null;
   public Map<String, Map<ActivityDirectiveId, ActivityDirective>> directivesDiff = null;
 
-  public final SpanInfo spanInfo = new SpanInfo(this);
+  public SpanInfo spanInfo = new SpanInfo(this);
 
   private Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
   private final Set<SimulatedActivityId> removedActivities = new HashSet<>();
@@ -244,6 +244,7 @@ public final class SimulationEngine implements AutoCloseable {
     oldEngine = other.oldEngine;
     startTime = other.startTime;
     missionModel = other.missionModel;
+    this.spanInfo = new SpanInfo(other.spanInfo, this);
   }
 
   private void startDaemons(Duration time) {
@@ -1731,6 +1732,10 @@ public final class SimulationEngine implements AutoCloseable {
     public SpanInfo(SimulationEngine engine) {
       this(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), engine);
     }
+    public SpanInfo(SpanInfo spanInfo, SimulationEngine engine) {
+      this(new HashMap<>(spanInfo.spanToPlannedDirective), new HashMap<>(spanInfo.directiveIdToSpanId),
+           new HashMap<>(spanInfo.input), new HashMap<>(spanInfo.output), engine);
+    }
 
     public boolean isActivity(final SpanId id) {
       return this.input.containsKey(id);
@@ -1853,21 +1858,20 @@ public final class SimulationEngine implements AutoCloseable {
       final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
       final SpanId spanId
   ) {
-    // Collect per-span information from the event graph.
-    final var spanInfo = new SpanInfo(this);
-    for (final var point : this.timeline) {
-      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
-
-      final var trait = new SpanInfo.Trait(serializableTopics, activityTopic);
-      p.events().evaluate(trait, trait::atom).accept(spanInfo);
-    }
-
     // Identify the nearest ancestor directive
     Optional<SpanId> directiveSpanId = Optional.of(spanId);
     while (directiveSpanId.isPresent() && !spanInfo.isDirective(directiveSpanId.get())) {
       directiveSpanId = this.getSpan(directiveSpanId.get()).parent();
     }
-    return directiveSpanId.map(spanInfo::getDirective);
+    var directiveId = directiveSpanId.map(spanInfo::getDirective);
+    if (directiveId.isEmpty() && oldEngine != null) {
+      System.err.println("WARNING!  Looking at child engine for directive id!");
+      directiveId = oldEngine.getDirectiveIdFromSpan(activityTopic, serializableTopics, spanId);
+      if (directiveId.isPresent()) {
+        System.err.println("WARNING!  Found directive id in child engine!");
+      }
+    }
+    return directiveId;
   }
 
   public record SimulationActivityExtract(
@@ -1882,6 +1886,9 @@ public final class SimulationEngine implements AutoCloseable {
       final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
       final TemporalEventSource timeline
   ) {
+    if (true) {
+      return this.spanInfo;
+    }
     // Collect per-span information from the event graph.
     final var spanInfo = new SpanInfo(this);
 
@@ -1901,7 +1908,7 @@ public final class SimulationEngine implements AutoCloseable {
   ) {
     return computeActivitySimulationResults(
         startTime,
-        computeSpanInfo(activityTopic, serializableTopics, combineTimeline())
+        this.spanInfo
     );
   }
 

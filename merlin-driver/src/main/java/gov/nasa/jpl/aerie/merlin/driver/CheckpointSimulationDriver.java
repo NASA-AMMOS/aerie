@@ -374,7 +374,7 @@ public class CheckpointSimulationDriver {
         final var taskId = engine.scheduleTask(
             computedStartTime,
             executor ->
-                Task.run(scheduler -> scheduler.emit(directiveIdToSchedule, activityTopic))
+                Task.run(scheduler -> scheduler.startDirective(directiveIdToSchedule, activityTopic))
                     .andThen(task.create(executor)),
             null);
         activityToTask.put(directiveIdToSchedule, taskId);
