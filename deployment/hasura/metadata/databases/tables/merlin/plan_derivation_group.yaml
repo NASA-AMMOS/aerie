@@ -29,20 +29,20 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, derivation_group_name, created_at]
+      columns: [plan_id, derivation_group_name, created_at, enabled]
       check: {}
   - role: user
     permission:
-      columns: [plan_id, derivation_group_name, created_at]
+      columns: [plan_id, derivation_group_name, created_at, enabled]
       check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, derivation_group_name, created_at]
+      columns: [plan_id, derivation_group_name, created_at, enabled]
       filter: {}
   - role: user
     permission:
-      columns: [plan_id, derivation_group_name, created_at]
+      columns: [created_at, enabled]
       filter: {}
 delete_permissions:
   - role: aerie_admin
