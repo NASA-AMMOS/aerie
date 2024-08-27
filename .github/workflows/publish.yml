@@ -7,18 +7,28 @@ on:
       - dev-[0-9]+.[0-9]+.[0-9]+
     tags:
       - v*
+  pull_request:
+    types:
+      # publish images for PRs labeled "publish" whenever changed/labeled
+      [opened, reopened, synchronize, labeled]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   OWNER: nasa-ammos
   IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
+  SHOULD_PUBLISH_IMAGES: ${{ (github.event_name != 'pull_request') || contains(github.event.pull_request.labels.*.name, 'publish') }}
+  SHOULD_PUBLISH_DEPLOYMENT: ${{ (github.event_name != 'pull_request') }}
 
 jobs:
   init:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      # set these as outputs to make available later, since `env` context isn't available in `jobs.if`
+      SHOULD_PUBLISH_IMAGES: ${{ env.SHOULD_PUBLISH_IMAGES }}
+      SHOULD_PUBLISH_DEPLOYMENT: ${{ env.SHOULD_PUBLISH_DEPLOYMENT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +44,7 @@ jobs:
   containers:
     runs-on: ubuntu-latest
     needs: init
+    if: needs.init.outputs.SHOULD_PUBLISH_IMAGES == 'true'
     permissions:
       contents: read
       packages: write
@@ -63,6 +74,9 @@ jobs:
             file: docker/Dockerfile.postgres
     name: ${{ matrix.components.image }}
     steps:
+      - name: Log SHOULD_PUBLISH_IMAGES
+        run: echo ${{ needs.init.outputs.SHOULD_PUBLISH_IMAGES }}
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-java@v4
@@ -119,6 +133,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     needs: containers
+    if: needs.init.outputs.SHOULD_PUBLISH_IMAGES == 'true'
     strategy:
       matrix:
         image:
@@ -155,6 +170,7 @@ jobs:
     name: gradle publish
     runs-on: ubuntu-latest
     needs: init
+    if: needs.init.outputs.SHOULD_PUBLISH_DEPLOYMENT == 'true'
     permissions:
       contents: read
       packages: write
