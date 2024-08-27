@@ -45,6 +45,8 @@ begin
 	return null;
 end;
 $func$;
+comment on function merlin.check_event_times() is e''
+ 'Check that any inserted event is fully in bounds of its source.';
 
 create trigger check_event_times
 after insert on merlin.external_event
