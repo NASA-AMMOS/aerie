@@ -22,33 +22,30 @@ comment on table merlin.external_event is e''
   'A table for externally imported events.';
 
 -- Add a trigger verifying that events fit into their sources
-CREATE OR REPLACE FUNCTION merlin.check_event_times()
- 	RETURNS TRIGGER
- 	LANGUAGE plpgsql AS
+create or replace function merlin.check_event_times()
+ 	returns trigger
+ 	language plpgsql as
 $func$
-DECLARE
+declare
 	source_start timestamp with time zone;
 	source_end timestamp with time zone;
 	event_start timestamp with time zone;
 	event_end timestamp with time zone;
-BEGIN
-  	SELECT start_time INTO source_start FROM merlin.external_source WHERE NEW.source_key = external_source.key AND NEW.derivation_group_name = external_source.derivation_group_name;
-  	SELECT end_time INTO source_end FROM merlin.external_source WHERE NEW.source_key = external_source.key AND NEW.derivation_group_name = external_source.derivation_group_name;
-    event_start := NEW.start_time;
-	event_end := NEW.start_time + NEW.duration;
-	IF event_start < source_start OR event_end < source_start THEN
-		RAISE EXCEPTION 'Event %s out of bounds of source %s', NEW.key, NEW.source_key;
-	END IF;
-	IF event_start > source_end OR event_end > source_end THEN
-		RAISE EXCEPTION 'Event %s out of bounds of source %s', NEW.key, NEW.source_key;
-	END IF;
-	RETURN NULL;
-END;
+begin
+  	select start_time into source_start from merlin.external_source where new.source_key = external_source.key and new.derivation_group_name = external_source.derivation_group_name;
+  	select end_time into source_end from merlin.external_source where new.source_key = external_source.key AND new.derivation_group_name = external_source.derivation_group_name;
+    event_start := new.start_time;
+	event_end := new.start_time + new.duration;
+	if event_start < source_start or event_end < source_start then
+		raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+	end if;
+	if event_start > source_end or event_end > source_end then
+		raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+	end if;
+	return null;
+end;
 $func$;
 
-ALTER FUNCTION merlin.check_event_times()
-    OWNER TO aerie;
-GRANT EXECUTE ON FUNCTION merlin.check_event_times() TO aerie;
-CREATE OR REPLACE TRIGGER check_event_times
-AFTER INSERT ON merlin.external_event
-	FOR EACH ROW EXECUTE FUNCTION merlin.check_event_times();
+create trigger check_event_times
+after insert on merlin.external_event
+	for each row execute function merlin.check_event_times();
